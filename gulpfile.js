@@ -121,23 +121,10 @@ gulp.task(tasks.typeScript, function () {
 });
 
 gulp.task(tasks.bundle, function() {
-    console.log("CHANGE to a webpack config for production");
-    var bundleDir = dir.build + 'js/app/boot.js'
-    return gulp.src(bundleDir)
-        .pipe(webpack({
-            module: {
-                loaders: [{ loader: 'raw-loader', test: /\.(css|html)$/ }]
-			}, 
-            plugins: [
-            new ContextReplacementPlugin(
-                /angular(\\|\/)core(\\|\/)@angular/,
-                path.resolve(__dirname, '../src')
-            )],
-            
-            output: {
-                filename: 'index.js'
-            }
-        })).pipe(gulp.dest(dir.build + 'js/'));
+     var bundleEntry = dir.ts + '/app/boot.ts'
+     return gulp.src(bundleEntry)
+         .pipe(webpack(require('./config/webpack.test.js')))
+         .pipe(gulp.dest(dir.build)); 
 });
 
 gulp.task(tasks.compress, function() {
