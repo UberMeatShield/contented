@@ -9,6 +9,7 @@ export class ContentedCmp implements OnInit {
     constructor() {
 
     }
+
     public ngOnInit() {
         console.log("Contented comp is alive.");
     }
