@@ -110,7 +110,7 @@ gulp.task(tasks.tslint, function () {
 
 // compiles *.ts files by tsconfig.json file and creates sourcemap files
 gulp.task(tasks.typeScript, function () {
-    console.log("Remove this and just use a webpack task for prod code build
+    console.log("Remove this and just use a webpack task for prod code build");
      var tsProject = ts.createProject('tsconfig.json');
      var tsResult = tsProject.src()
             .pipe(sourcemaps.init())
