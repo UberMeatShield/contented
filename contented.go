@@ -18,8 +18,8 @@ type HttpStdResults struct{
 }
 
 type HttpErrResults struct{
-	Error string `json:"error"`
-	Debug string `json:"debug"`
+    Error string `json:"error"`
+    Debug string `json:"debug"`
 }
 
 
@@ -30,12 +30,13 @@ func main() {
     flag.StringVar(&dir, "dir", ".", "Directory to serve files from")
     flag.Parse()
 
-	fmt.Println("Using this directory As the static root: ", dir)
+    fmt.Println("Using this directory As the static root: ", dir)
 
     router := mux.NewRouter()
     router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(dir))))
     router.HandleFunc("/content/", ListDefaultHandler)
     router.HandleFunc("/content/{dir_to_list}", ListSpecificHandler)
+    router.HandleFunc("/", Index)
 
     validDirs = getDirectoriesLookup(dir)
     srv := &http.Server{
@@ -47,6 +48,27 @@ func main() {
     }
     log.Fatal(srv.ListenAndServe())
     http.Handle("/", router)
+}
+
+
+// Replace this with nginx or something else better at serving static content (probably)
+func Index(w http.ResponseWriter, r *http.Request) {
+    body, err := ioutil.ReadFile("./static/app.html")
+
+    // Try to keep the same amount of headers
+    w.Header().Set("Server", "gophr")
+    w.Header().Set("Connection", "keep-alive")
+    w.Header().Set("Content-Type", "text/html")
+
+    if err != nil {
+        err_msg := "Could not find index.html" + err.Error()
+        w.Header().Set("Content-Length", fmt.Sprint(len(err_msg)))
+        fmt.Fprint(w, err_msg)
+    } else {
+		output := string(body)
+        w.Header().Set("Content-Length", fmt.Sprint(len(output)))
+        fmt.Fprint(w, output)
+    }
 }
 
 func ListDefaultHandler(w http.ResponseWriter, r *http.Request) {
