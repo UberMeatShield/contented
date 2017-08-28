@@ -36,7 +36,10 @@ func main() {
     router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(dir))))
     router.HandleFunc("/content/", ListDefaultHandler)
     router.HandleFunc("/content/{dir_to_list}", ListSpecificHandler)
+
+	// Host the index.html, also assume that all angular UI routes are going to be under contented
     router.HandleFunc("/", Index)
+    router.HandleFunc("/contented/{path}", Index)
 
     validDirs = getDirectoriesLookup(dir)
     srv := &http.Server{
