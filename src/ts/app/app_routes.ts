@@ -1,6 +1,6 @@
 import {NgModule} from '@angular/core';
 
-import {ContentedCmp} from './contented_cmp';
+import {ContentedCmp} from './../contented/contented_cmp';
 import {APP_BASE_HREF} from '@angular/common';
 import {RouterModule, Routes} from '@angular/router';
 

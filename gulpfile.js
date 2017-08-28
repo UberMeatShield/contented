@@ -123,7 +123,7 @@ gulp.task(tasks.typeScript, function () {
 gulp.task(tasks.bundle, function() {
      var bundleEntry = dir.ts + '/app/boot.ts'
      return gulp.src(bundleEntry)
-         .pipe(webpack(require('./config/webpack.test.js')))
+         .pipe(webpack(require('./config/webpack.js')))
          .pipe(gulp.dest(dir.build)); 
 });
 

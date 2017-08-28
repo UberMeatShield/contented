@@ -6,10 +6,8 @@ module.exports = function(config) {
         autoWatch: true,
         browsers: ['PhantomJS'],
         files: [
-            '../static/third-party/bower-components/font-awesome/css/font-awesome.min.css',
             '../node_modules/core-js/client/shim.js',
-            '../static/third-party/bower-components/jquery/dist/jquery.min.js',
-            '../karma/karma.entry.js'
+            '../config/karma.entry.js'
         ],
         frameworks: ['jasmine'],
         logLevel: config.LOG_DEBUG,
@@ -21,7 +19,7 @@ module.exports = function(config) {
             'karma.entry.js': ['webpack', 'sourcemap']
         },
         reporters: ['dots'],
-        webpack: require('./webpack.test.js'),
+        webpack: require('./webpack.js'),
         webpackServer: {
             noInfo: true
         }

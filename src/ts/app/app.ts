@@ -6,8 +6,6 @@ import {Http} from '@angular/http';
     template: require('./app.ng.html')
 })
 export class App implements OnInit {
-    public title = "Contented";
-
     constructor(private http: Http) {
 
     }
