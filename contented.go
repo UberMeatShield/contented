@@ -37,7 +37,7 @@ func main() {
     router.HandleFunc("/content/", ListDefaultHandler)
     router.HandleFunc("/content/{dir_to_list}", ListSpecificHandler)
 
-	// Host the index.html, also assume that all angular UI routes are going to be under contented
+    // Host the index.html, also assume that all angular UI routes are going to be under contented
     router.HandleFunc("/", Index)
     router.HandleFunc("/contented/{path}", Index)
 
@@ -68,7 +68,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
         w.Header().Set("Content-Length", fmt.Sprint(len(err_msg)))
         fmt.Fprint(w, err_msg)
     } else {
-		output := string(body)
+        output := string(body)
         w.Header().Set("Content-Length", fmt.Sprint(len(output)))
         fmt.Fprint(w, output)
     }
