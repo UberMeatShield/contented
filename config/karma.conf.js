@@ -21,7 +21,7 @@ module.exports = function(config) {
             'karma.entry.js': ['webpack', 'sourcemap']
         },
         reporters: ['dots'],
-        webpack: require('./webpack.test.js'),
+        webpack: require('./webpack.js'),
         webpackServer: {
             noInfo: true
         }
