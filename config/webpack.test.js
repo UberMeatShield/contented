@@ -1,4 +1,5 @@
 'use strict';
+
 const path = require('path');
 const webpack = require('webpack');
 
@@ -7,9 +8,9 @@ module.exports = {
         'app': './src/js/app/boot.ts'
     },
     output: {
-        filename: '[name].bundle.js'
+        filename: 'test.bundle.js'
     },
-    // devtool: 'inline-source-map',
+    devtool: 'inline-source-map',
     module: {
         rules: [
             {  

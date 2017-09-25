@@ -1,5 +1,4 @@
 require('core-js');
-//require('reflect-metadata');
 require('zone.js/dist/zone');
 require('zone.js/dist/long-stack-trace-zone');
 require('zone.js/dist/async-test');
@@ -14,7 +13,7 @@ const httpTesting = require('@angular/http/testing');
 const context = require.context('../src/', true, /\.spec\.ts$/);
 
 Error.stackTraceLimit = Infinity;
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 2000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 5000;
 
 coreTesting.TestBed.resetTestEnvironment();
 coreTesting.TestBed.initTestEnvironment(
