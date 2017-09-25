@@ -2,14 +2,14 @@ import {Injectable} from '@angular/core';
 import {Http, URLSearchParams, Request, RequestOptions, Headers} from '@angular/http';
 import {Observable} from 'rxjs';
 
-import * as _ from 'lodash'; 
+import * as _ from 'lodash';
 let base = window.location.origin + '/';
 export let ApiDef = {
     contented: {
         preview: base + '/content/',
         fulldir: base + '/content/{dir}'
     }
-}
+};
 
 
 @Injectable()
@@ -42,21 +42,21 @@ export class ContentedService {
         let parsed = err;
         if (err && err._body) {
             try {
-                parsed = JSON.parse(err._body)
+                parsed = JSON.parse(err._body);
                 parsed['status'] = err.status;
                 if (_.isEmpty(parsed)) {
                     parsed = {
-                        error: "No actual response data or response was somehow empty.", 
-                        debug: err._body, 
+                        error: "No actual response data or response was somehow empty.",
+                        debug: err._body,
                         status: err.status
                     };
                 }
-            } catch(e) {
+            } catch (e) {
                 parsed = {
                     "error": !_.isEmpty(err._body) ? "No JSON was returned in this error" : "Unknown error has occurred.",
                     "status": err.status,
                     "debug": err._body
-                }
+                };
             }
         }
         return Observable.fromPromise(Promise.reject(parsed));
