@@ -8,7 +8,7 @@ module.exports = {
         'app': './src/ts/app/boot.ts'
     },
     output: {
-        filename: '[name].bundle.js'
+        filename: 'test.bundle.js'
     },
     devtool: 'inline-source-map',
     module: {

@@ -7,7 +7,8 @@ module.exports = function(config) {
         browsers: ['PhantomJS'],
         files: [
             '../node_modules/core-js/client/shim.js',
-            '../config/karma.entry.js'
+            '../node_modules/jquery/dist/jquery.min.js',
+            '../build_config/karma.entry.js'
         ],
         frameworks: ['jasmine'],
         logLevel: config.LOG_DEBUG,
@@ -19,7 +20,7 @@ module.exports = function(config) {
             'karma.entry.js': ['webpack', 'sourcemap']
         },
         reporters: ['dots'],
-        webpack: require('./webpack.js'),
+        webpack: require('./webpack.test.js'),
         webpackServer: {
             noInfo: true
         }

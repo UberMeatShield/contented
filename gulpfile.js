@@ -5,147 +5,199 @@ var tslint = require('gulp-tslint');
 var runSequence = require('run-sequence');
 var sourcemaps = require('gulp-sourcemaps');
 var webpack = require('webpack-stream');
-var ContextReplacementPlugin = require('webpack').ContextReplacementPlugin; //Used to remove bad warnings in angular code
+var connect = require('gulp-connect');
 var open = require('gulp-open');
 var sass = require('gulp-sass');
 var KarmaServer = require('karma').Server;
 var path    = require('path');
 var shell = require('gulp-shell');
-var minify = require('gulp-minify');
+var uglify = require('gulp-uglify');
+var pump = require('pump');
+// var cache = require( 'gulp-memory-cache');
 
 
 var base = './';
 var app  = 'contented/';
 var dir = {
     base:  base,
-    Go: base, // Feels like this should be in a different directory?
+    typings: 'typings/',
     test:  base + 'src/test',
-    ts:    base + 'src/ts/',
+    ts:    base + 'src/ts/', 
     sass:  base + 'src/sass/',
     node:  base + 'node_modules/',
-    bower: base + 'bower_components/',
-    go:    base + app,
+    go:    base,
     build: base + 'static/build/',
     thirdparty:   base + 'static/third-party'
 };
 
 var tasks = {
-	defaultTask: 'default',
-	typeScript: 'build-ts',
+    defaultTask: 'default',
+    buildDeploy: 'buildDeploy',
+    watchers: 'watchers',
+
+    cleanSrc: 'cleanSource',
+    watchDoc: 'watchDoc',
+    copy: 'copy',
+    copySingleFiles: 'copySingleFiles',
+    copyLibCSS: 'copyLibCSS',
+    copyDocs: 'copyDocs',
+    copyFonts: 'copyFonts',
+
+    watchSass: 'watchSass',
+    buildSass: 'buildSass',
+
+    watchTypescript: 'watchTypescript',
     tslint: 'tslint',
-	copy: 'copy',
-    copySingleFiles: 'copy-single',
-	copyApp: 'copy-app',
-	cleanSrc: 'clean-source',
-    buildServer: 'build-server',
-
-    buildLib: 'build-lib',
-    bundle: 'bundle',
+    typescript: 'typescript', // Webpack bundle operation
+    testTypescript: 'testTypescript',
     compress: 'compress',
+    rebuildTypescript: 'rebuildTypescript',
 
-	watch: 'watch',
-	watcherRebuild: 'watcher-rebuild',
-
-    GoWatch: 'Go-watch',
-    GoTest: 'Go-test',
-    GoChanged: 'Go-changed',
-    GoRebuild: 'Go-rebuild',
-
-	buildSass: 'build-sass',
-    sassWatch: 'sass-watch',
-
-	tsTest: 'test'
+    watchGo: 'watchGo',
+    rebuildGo: 'rebuildGo',
+    changedGo: 'changedGo',
+    killGoServer: 'killGoServer',
+    serverGo: 'serverGo',
+    buildGo: 'buildGo',
+    testGo: 'testGo'
 };
 
 // Main task 
-gulp.task(tasks.defaultTask, function (cb) {
-	runSequence(
-        tasks.cleanSrc,
-        tasks.buildSass,
-		tasks.typeScript,
-        tasks.copy,
-        tasks.tslint,
-        tasks.compress,
-        tasks.tsTest,
-        tasks.GoWatch,
-        tasks.sassWatch,
-		tasks.watch
-    );
-});
+gulp.task(tasks.defaultTask, [tasks.rebuildTypescript, tasks.rebuildGo, tasks.watchers]);
 
-gulp.task(tasks.buildServer, function () {
-	return runSequence(
+
+// Watchers group tasks
+gulp.task(tasks.watchers, [tasks.watchGo, tasks.watchDoc, tasks.watchSass, tasks.watchTypescript]);
+
+
+gulp.task(tasks.buildDeploy, function (callback) {
+    runSequence(
         tasks.cleanSrc,
-        tasks.buildSass,
-		tasks.typeScript,
         tasks.copy,
-        tasks.compress
+        tasks.buildSass,
+        tasks.typescript,
+        tasks.compress,
+        callback
     );
 });
 
 // default task starts watcher. in order not to start it each change
-// watcher will run the task bellow
-gulp.task(tasks.watcherRebuild, function (cb) {
-	return runSequence(
-		tasks.cleanSrc,
+gulp.task(tasks.rebuildTypescript, function(callback) {
+    runSequence(
+        tasks.cleanSrc, 
+        tasks.copy,
         tasks.tslint,
-		tasks.typeScript,
-        tasks.copyApp,
         tasks.buildSass,
-        tasks.bundle,
-        tasks.tsTest,
-        cb
+        tasks.typescript,
+        tasks.compress,
+        tasks.testTypescript,
+        callback
     );
 });
 
+gulp.task(tasks.cleanSrc, function (cb) {
+    return del([
+         dir.build + '/**/*', 
+         dir.ts + 'maps/*'
+    ]);
+});
 
+// Typescript related tasks
+//===================================================
 gulp.task(tasks.tslint, function () {
     return gulp.src(dir.ts + '**/*.ts')
         .pipe(tslint({
             formatter: "verbose",
-            configuration: 'config/tslint.json'
+            configuration: 'build_config/tslint.json'
         })).pipe(tslint.report());
-        
 });
 
-// compiles *.ts files by tsconfig.json file and creates sourcemap files
-gulp.task(tasks.typeScript, function () {
-    console.log("Remove this and just use a webpack task for prod code build");
-     var tsProject = ts.createProject('tsconfig.json');
-     var tsResult = tsProject.src()
-            .pipe(sourcemaps.init())
-            .pipe(tsProject());
-     return tsResult.js
-           .pipe(sourcemaps.write())
-           .pipe(gulp.dest(dir.build));
-});
-
-gulp.task(tasks.bundle, function() {
-     var bundleEntry = dir.ts + '/app/boot.ts'
-     return gulp.src(bundleEntry)
-         .pipe(webpack(require('./config/webpack.js')))
-         .pipe(gulp.dest(dir.build)); 
-});
-
-gulp.task(tasks.compress, function() {
-    return gulp.src(dir.build + 'js/index.js')
-        .pipe(minify({
-            ext: { src: '.js', min: '.min.js'}
-        })).pipe(gulp.dest(dir.build + 'js/'));
-        
+// watcher (split into watch sass and watch ts)
+gulp.task(tasks.watchTypescript, function () {
+    gulp.watch([
+          dir.ts + '**/**.ts', 
+          dir.ts + '**/**.html',
+          dir.test + '**/**.ts', 
+          './tsconfig.json'
+        ], 
+        [tasks.rebuildTypescript]
+    );
 });
 
 
-gulp.task(tasks.copy, function(cb) {
-  runSequence(
-    tasks.copyApp,
+
+gulp.task(tasks.testTypescript, function (done) {
+    var singleRun = true; // Running not in single run doesn't seem faster / screws up watchers.
+    var karma = new KarmaServer({
+        configFile: __dirname + '/build_config/karma.conf.js',
+        'log-level': 'error',
+        singleRun: singleRun,
+    }, done).start();
+    return karma;
+});
+
+
+gulp.task(tasks.typescript, function() {
+    var bundleEntry = dir.ts + '/app/boot.ts'
+    return gulp.src(bundleEntry)
+        .pipe(webpack(require('./build_config/webpack.js')))
+        .pipe(gulp.dest(dir.build));
+});
+
+gulp.task(tasks.compress, function(callback) {
+    pump([
+        gulp.src(dir.build + 'app.bundle.js'),
+        // cache('js'), (did not seem to speed up the process at all)
+        uglify(),
+        gulp.dest(dir.build + 'min/')
+    ], callback);
+});
+
+
+// Initial tasks dealing with copying source. 
+// Delete all the gunk out of build directories.
+//=================================================
+gulp.task(tasks.copy, function(callback) {
+  var sequence = runSequence(
+    tasks.copyLibCSS,
+    tasks.copyFonts,
     tasks.copySingleFiles, 
-    tasks.bundle,
-    cb
+    tasks.copyDocs,
+    callback
   );
+  return sequence;
 });
 
-// Required to actually run an angluar application
+gulp.task(tasks.watchDoc, function() {
+    gulp.watch(dir.base + 'swagger.yaml', [tasks.copyDocs]);
+});
+
+gulp.task(tasks.copyFonts, function() {
+    return gulp.src([
+        dir.node + 'bootstrap/fonts/*'
+    ])
+    .pipe(gulp.dest(dir.thirdparty + '/fonts/'));
+});
+
+gulp.task(tasks.copyLibCSS, function() {
+    return gulp.src([
+        dir.node + 'simplemde/dist/simplemde.min.css',
+        dir.node + 'bootstrap/dist/css/bootstrap.min.css'
+    ])
+    .pipe(gulp.dest(dir.thirdparty + '/css/'));
+});
+
+gulp.task(tasks.copyDocs, function() {
+    //Not async safe, but doesn't really matter since we do no build
+    gulp.src([
+        dir.base + 'swagger.yaml'
+    ]).pipe(gulp.dest(dir.build));
+    
+    return gulp.src([
+      dir.node + 'swagger-ui/dist/**/*'
+    ], {base: dir.node}).pipe(gulp.dest(dir.thirdparty));
+});
+
 gulp.task(tasks.copySingleFiles, function() {
      return gulp.src([
         dir.node  + 'core-js/client/shim.min.js',
@@ -155,84 +207,73 @@ gulp.task(tasks.copySingleFiles, function() {
 });
 
 
-// copy *.html files (templates of components)
-// to apropriate directory under public/scripts
-gulp.task(tasks.copyApp, function () {
-    console.log("I think we can remove this stuff and just use the webpack build for all of it");
-
-	return gulp.src([
-      dir.ts + '**/**.html', 
-      dir.ts + '**/**.js',
-    ]).pipe(gulp.dest(dir.build + '/js'));
-});
-
-
-gulp.task(tasks.buildSass, function () {
-	return gulp.src(dir.sass + '/*.scss')
-		.pipe(sass())
-		.pipe(gulp.dest(dir.build + '/css'));
-});
-
-//  clean all generated/compiled files 
-//	only in both scripts/ directory
-gulp.task(tasks.cleanSrc, function (cb) {
-    return del([
-         dir.build + '/**/*', 
-         dir.ts + 'maps/*'
-    ]);
-});
-
-// watcher (split into watch sass and watch ts)
-gulp.task(tasks.watch, function () {
-	gulp.watch([
-          dir.ts + '**/**.ts', 
-          dir.ts + '**/**.html',
-          dir.test + '**/**.ts', 
-          './tsconfig.json'
-        ], 
-        [tasks.watcherRebuild]
-    );
-});
-
-// Watches the sass, rebuilds (which does the copy) on change
-gulp.task(tasks.sassWatch, function() {
+// SASS related operations (does the copy on build)
+//=================================================
+gulp.task(tasks.watchSass, function() {
     gulp.watch(
       [dir.sass + '**/**.scss'],
       [tasks.buildSass]
     );
 });
 
-// Watch our GO files, rebuild the app if they change
-gulp.task(tasks.GoWatch, function() {
+gulp.task(tasks.buildSass, function () {
+    return gulp.src(dir.sass + '/*.scss')
+        .pipe(sass())
+        .pipe(gulp.dest(dir.build + '/css'));
+});
+
+
+// PYTHON related code sections
+//=================================================
+gulp.task(tasks.watchGo, function() {
     gulp.watch(
-      [dir.Go + '/**/*.go'],
-      [tasks.GoChanged]
+      [dir.go + '/**/*.go',
+       dir.base + 'tests/**/*.go'
+      ],
+      [tasks.changedGo]
     );
 });
 
-gulp.task(tasks.GoChanged, function(cb) {
+gulp.task(tasks.changedGo, [tasks.rebuildGo]);
+
+gulp.task(tasks.rebuildGo, function(callback) {
+    var restartServer = function(res) { 
+        console.log("Waiting for server to die then restarting");
+        setTimeout(function() {
+            try {
+                gulp.src('./contented').pipe(
+                    shell(
+                      "echo 'Starting up server'; ./contented --dir static/content &"
+                    )
+                );
+            } catch (e) {
+                console.error("Failed to glp source anything", e);
+            }
+            callback(res);
+        }, 2000);
+    };
+
     runSequence(
-       //tasks.GoTest, 
-       tasks.GoRebuild, // Figure out how to properly run and restart this process
-       cb
+       tasks.killGoServer,
+       tasks.buildGo, 
+       tasks.testGo,
+       restartServer
     );
 });
 
-gulp.task(tasks.GoRebuild, shell.task([
-      "go build"
-    ])
-);
-
-gulp.task(tasks.GoTest, shell.task([
-      "go test"
+gulp.task(tasks.killGoServer, shell.task([
+      "killall contented || echo 'None running' "
     ])
 );
 
 
-gulp.task(tasks.tsTest, function (done) {
-	new KarmaServer({
-		configFile: __dirname + '/config/karma.conf.js',
-        'log-level': 'debug',
-		singleRun: true
-	}, done).start();
-});
+gulp.task(tasks.buildGo, shell.task([
+      "go build contented"
+    ])
+);
+
+gulp.task(tasks.testGo, shell.task([
+      'echo "Do GO TESTING" '
+    ])
+);
+
