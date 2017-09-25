@@ -5,8 +5,8 @@ import {APP_BASE_HREF} from '@angular/common';
 import {RouterModule, Routes} from '@angular/router';
 
 const appRoutes = [
-    {path: '', redirectTo: '/contented/main', pathMatch: 'full'},
-    {path: 'contented/main', component: ContentedCmp}
+    {path: '', redirectTo: '/ui/main', pathMatch: 'full'},
+    {path: 'ui/main', component: ContentedCmp}
 ];
 @NgModule({
     imports: [RouterModule.forRoot(appRoutes)],

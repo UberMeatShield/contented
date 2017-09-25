@@ -25,7 +25,7 @@ var dir = {
     ts:    base + 'src/ts/', 
     sass:  base + 'src/sass/',
     node:  base + 'node_modules/',
-    go:    base + app,
+    go:    base,
     build: base + 'static/build/',
     thirdparty:   base + 'static/third-party'
 };
@@ -54,9 +54,12 @@ var tasks = {
     rebuildTypescript: 'rebuildTypescript',
 
     watchGo: 'watchGo',
-    testGo: 'testGo',
+    rebuildGo: 'rebuildGo',
     changedGo: 'changedGo',
-    rebuildGo: 'rebuildGo'
+    killGoServer: 'killGoServer',
+    serverGo: 'serverGo',
+    buildGo: 'buildGo',
+    testGo: 'testGo'
 };
 
 // Main task 
@@ -227,19 +230,44 @@ gulp.task(tasks.watchGo, function() {
       [dir.go + '/**/*.go',
        dir.base + 'tests/**/*.go'
       ],
-      [tasks.pythonChanged]
+      [tasks.changedGo]
     );
 });
 
-gulp.task(tasks.changedGo, function(callback) {
+gulp.task(tasks.changedGo, [tasks.rebuildGo]);
+
+gulp.task(tasks.rebuildGo, function(callback) {
+    var restartServer = function(res) { 
+        console.log("Waiting for server to die then restarting");
+        setTimeout(function() {
+            try {
+                gulp.src('./contented').pipe(
+                    shell(
+                      "echo 'Starting up server'; ./contented --dir static/content &"
+                    )
+                );
+            } catch (e) {
+                console.error("Failed to glp source anything", e);
+            }
+            callback(res);
+        }, 2000);
+    };
+
     runSequence(
-       tasks.testGo, // (Hard to make this run unless I do it in the docker container)
-       tasks.rebuildGo,
-       callback
+       tasks.killGoServer,
+       tasks.buildGo, 
+       tasks.testGo,
+       restartServer
     );
 });
 
-gulp.task(tasks.rebuildGo, shell.task([
+gulp.task(tasks.killGoServer, shell.task([
+      "killall contented || echo 'None running' "
+    ])
+);
+
+
+gulp.task(tasks.buildGo, shell.task([
       "go build contented"
     ])
 );
