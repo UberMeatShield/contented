@@ -2,6 +2,7 @@ package utils
 
 import (
     "io/ioutil"
+	"log"
 )
 
 /**
@@ -29,6 +30,7 @@ func ListDirs(dir string, previewCount int) map[string][]string {
             listings[f.Name()] = GetDirContents(dir + f.Name(), previewCount)
         }
     }
+	log.Println("Reading from: ", dir, " With preview count", previewCount)
     return listings
 }
 
@@ -40,9 +42,10 @@ func GetDirContents(dir string, limit int) []string {
     imgs, _ := ioutil.ReadDir(dir)
 
     for _, img := range imgs {
-        if !img.IsDir() && len(arr) < limit + 1 {
+        if !img.IsDir() && len(arr) < (limit + 1) {
             arr = append(arr, img.Name())
         }
     }
+	log.Println("Limit for content dir was.", dir, " with limit", limit)
     return arr
 }

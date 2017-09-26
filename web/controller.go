@@ -7,12 +7,18 @@ import (
     "net/http"
     "io/ioutil"
     "gorilla/mux"
-	"contented/utils"
+    "contented/utils"
 )
 
-type HttpStdResults struct{
+type DirResults struct{
     Success bool `json:"success"`
     Results []string `json:"results"`
+    Path string `json:"path"`
+}
+
+type PreviewResults struct{
+    Success bool `json:"success"`
+    Results map[string][]string `json:"results"`
     Path string `json:"path"`
 }
 
@@ -25,7 +31,7 @@ var dir string
 var validDirs map[string]bool
 
 func SetupContented(router *mux.Router, contentDir string) {
-	dir = contentDir
+    dir = contentDir
     validDirs = utils.GetDirectoriesLookup(dir)
 
     router.PathPrefix("/contented/").Handler(http.StripPrefix("/contented/", http.FileServer(http.Dir(dir))))
@@ -66,7 +72,12 @@ func Index(w http.ResponseWriter, r *http.Request) {
 func ListDefaultHandler(w http.ResponseWriter, r *http.Request) {
     log.Println("Calling into ListDefault")
     w.Header().Set("Content-Type", "application/json")
-    j, _ := json.Marshal(utils.ListDirs(dir, 3))
+    response := PreviewResults{
+        true,
+        utils.ListDirs(dir, 4),
+        dir,
+    }
+    j, _ := json.Marshal(response)
     w.Write(j)
 }
 
@@ -88,9 +99,9 @@ func ListSpecificHandler(w http.ResponseWriter, r *http.Request) {
 /**
  * Get the response for a single specific directory
  */
-func getDirectory(dir string, argument string) HttpStdResults {
+func getDirectory(dir string, argument string) DirResults {
     path := dir + argument
-    response := HttpStdResults{
+    response := DirResults{
         true,
         utils.GetDirContents(path, 1000),
         "static/" + argument + "/",
