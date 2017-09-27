@@ -1,9 +1,15 @@
 <div class="contented-cmp">
   Contented Component Loaded
-  <div class="contented-dir row" name="" *ngFor="let dir of directories">
-    <div class="col-md-3" *ngFor="let previewPath of dir.getContentList()">
-      {{previewPath}}
-      <br>
+
+  FullScreen: {{fullScreen}}
+
+  <div class="contented-dir row" name="" *ngFor="let dir of getVisibleDirectories()">
+    <button type="button" class="btn btn-primary col-md-1" (click)="fullLoadDir(dir)">
+      {{dir.name}}
+    </button>
+    <div class="col-md-2" *ngFor="let previewPath of dir.getContentList()">
+    <!-- {{previewPath}} 
+      <br>-->
       <img [src]="previewPath" class="preview-content"> 
     </div>
     <br>
