@@ -2,16 +2,19 @@
   Contented Component Loaded
 
   FullScreen: {{fullScreen}}
+  <div *ngIf="fullScreen">
+    {{getCurrentLocation()}}
+    <contented-view [viewUrl]="currentViewItem"></contented-view>
+  </div>
 
   <div class="contented-dir row" name="" *ngFor="let dir of getVisibleDirectories()">
-    <button type="button" class="btn btn-primary col-md-1" (click)="fullLoadDir(dir)">
-      {{dir.name}}
-    </button>
-    <div class="col-md-2" *ngFor="let previewPath of dir.getContentList()">
-    <!-- {{previewPath}} 
-      <br>-->
-      <img [src]="previewPath" class="preview-content"> 
+    {{dir.name}}
+    <div class="row">
+      <div class="col-md-2" *ngFor="let previewPath of dir.getContentList()">
+        <img [src]="previewPath" class="preview-content"> 
+      </div>
     </div>
     <br>
+
   </div>
 </div>

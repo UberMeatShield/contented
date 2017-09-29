@@ -39,11 +39,14 @@ export class ContentedCmp implements OnInit {
 
     @Input() maxVisible: number = 2;
     @Input() idx: number = 0;
+    @Input() rowIdx: number = 0;
+
+    private currentViewItem: string;
     constructor(public _contentedService: ContentedService) {
 
     }
 
-    public fullScreen: boolean = false;
+    public fullScreen: boolean = true;
     public directories: Array<Directory>;
     public allD: Array<Directory>;
 
@@ -55,16 +58,24 @@ export class ContentedCmp implements OnInit {
         // down (s)
         // Left (a)
         switch (evt.key) {
-            case 'a':
+            case 'w':
                 this.prev();
                 break;
-            case 'd':
+            case 's':
                 this.next();
                 break;
+            case 'a':
+                this.rowPrev();
+                break;
+            case 'd':
+                this.rowNext();
+                break;
             case ' ':
+                this.currentViewItem = this.getCurrentLocation();
                 this.fullScreen = true;
                 break;
             case 'q':
+                this.currentViewItem = null;
                 this.fullScreen = false;
                 break;
             case 'f':
@@ -110,17 +121,51 @@ export class ContentedCmp implements OnInit {
         return [];
     }
 
+    public rowNext() {
+        let dirs = this.getVisibleDirectories();
+        if (!_.isEmpty(dirs)) {
+            let items = dirs[0].getContentList();
+            if (!_.isEmpty(items) && this.rowIdx < items.length) {
+                this.rowIdx++;
+                this.currentViewItem = this.getCurrentLocation();
+            }
+        }
+    }
+
+    public rowPrev() {
+        if (this.rowIdx > 0) {
+            this.rowIdx--;
+            this.currentViewItem = this.getCurrentLocation();
+        }
+    }
+
     public next() {
         if (this.allD && this.idx + 1 < this.allD.length) {
             this.idx++;
+            this.rowIdx = 0;
         }
     }
 
     public prev() {
         if (this.idx > 0) {
             this.idx--;
+            this.rowIdx = 0;
         }
     }
+
+    public getCurrentLocation() {
+        let dirs = this.getVisibleDirectories();
+        if (!_.isEmpty(dirs)) {
+            let dir = dirs[0];
+            if (dir && !_.isEmpty(dir.getContentList())) {
+                let contentList = dir.getContentList();
+                if (this.rowIdx >= 0 && this.rowIdx < contentList.length) {
+                    return contentList[this.rowIdx];
+                }
+            }
+        }
+    }
+
 
     public previewResults(response) {
         console.log("Results returned from the preview results.", response);
@@ -131,3 +176,4 @@ export class ContentedCmp implements OnInit {
         });
     }
 }
+

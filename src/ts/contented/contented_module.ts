@@ -3,12 +3,13 @@ import {BrowserModule} from '@angular/platform-browser';
 import {HttpModule} from '@angular/http';
 
 import {ContentedCmp} from './contented_cmp';
+import {ContentedViewCmp} from './contented_view_cmp';
 import {ContentedService} from './contented_service';
 
 @NgModule({
   imports: [BrowserModule, HttpModule],
-  declarations: [ContentedCmp],
-  exports: [ContentedCmp],
+  declarations: [ContentedCmp, ContentedViewCmp],
+  exports: [ContentedCmp, ContentedViewCmp],
   providers: [ContentedService]
 })
 export class ContentedModule {}
