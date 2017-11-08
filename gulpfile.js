@@ -23,7 +23,7 @@ var dir = {
     typings: 'typings/',
     test:  base + 'src/test',
     ts:    base + 'src/ts/', 
-    sass:  base + 'src/sass/',
+    sass:  base + 'src/scss/',
     node:  base + 'node_modules/',
     go:    base,
     build: base + 'static/build/',
@@ -76,7 +76,7 @@ gulp.task(tasks.buildDeploy, function (callback) {
         tasks.copy,
         tasks.buildSass,
         tasks.typescript,
-        tasks.compress,
+        // tasks.compress,
         callback
     );
 });
@@ -89,7 +89,7 @@ gulp.task(tasks.rebuildTypescript, function(callback) {
         tasks.tslint,
         tasks.buildSass,
         tasks.typescript,
-        tasks.compress,
+        // tasks.compress,
         tasks.testTypescript,
         callback
     );
@@ -181,7 +181,6 @@ gulp.task(tasks.copyFonts, function() {
 
 gulp.task(tasks.copyLibCSS, function() {
     return gulp.src([
-        dir.node + 'simplemde/dist/simplemde.min.css',
         dir.node + 'bootstrap/dist/css/bootstrap.min.css'
     ])
     .pipe(gulp.dest(dir.thirdparty + '/css/'));
@@ -243,7 +242,7 @@ gulp.task(tasks.rebuildGo, function(callback) {
             try {
                 gulp.src('./contented').pipe(
                     shell(
-                      "echo 'Starting up server'; ./contented --dir static/content &"
+                      "echo 'Starting up server'; ./contented --dir static/content/ &"
                     )
                 );
             } catch (e) {
@@ -262,7 +261,7 @@ gulp.task(tasks.rebuildGo, function(callback) {
 });
 
 gulp.task(tasks.killGoServer, shell.task([
-      "killall contented || echo 'None running' "
+      "killall -9 contented || echo 'None running' "
     ])
 );
 
