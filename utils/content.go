@@ -42,7 +42,7 @@ func GetDirContents(dir string, limit int) []string {
     imgs, _ := ioutil.ReadDir(dir)
 
     for _, img := range imgs {
-        if !img.IsDir() && len(arr) < (limit + 1) {
+        if !img.IsDir() && len(arr) < limit {
             arr = append(arr, img.Name())
         }
     }
