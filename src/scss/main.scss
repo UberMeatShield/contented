@@ -1,6 +1,15 @@
 .contented-cmp {
     .preview-content {
-        min-height: 20rem;
+        margin: 1rem;
         max-height: 40rem;
+        max-width: 40rem;
     }
+}
+
+.current-content-dir {
+    border: 1px solid #aaa;
+}
+
+.current-content-item {
+    border: 1px solid black;
 }

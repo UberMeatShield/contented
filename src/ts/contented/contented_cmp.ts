@@ -3,7 +3,6 @@ import {ContentedService, ApiDef} from './contented_service';
 
 import * as _ from 'lodash';
 
-
 class Directory {
     public path: string;
     public name: string;
@@ -102,9 +101,14 @@ export class ContentedCmp implements OnInit {
 
     public fullLoadDir(dir: Directory) {
         this._contentedService.getFullDirectory(dir.name).subscribe(
-            res => { dir.contents = _.get(res, 'results'); },
+            res => { this.dirResults(dir, res); },
             err => { console.error(err); }
         );
+    }
+
+    public dirResults(dir: Directory, response) {
+        console.log("Full Directory loading, what is in the results?", response);
+        dir.contents = _.get(response, 'results');
     }
 
     public reset() {
@@ -153,15 +157,37 @@ export class ContentedCmp implements OnInit {
         }
     }
 
-    public getCurrentLocation() {
+    public getCurrentDir() {
         let dirs = this.getVisibleDirectories();
         if (!_.isEmpty(dirs)) {
-            let dir = dirs[0];
-            if (dir && !_.isEmpty(dir.getContentList())) {
-                let contentList = dir.getContentList();
-                if (this.rowIdx >= 0 && this.rowIdx < contentList.length) {
-                    return contentList[this.rowIdx];
-                }
+            return dirs[0];
+        }
+        return null;
+    }
+
+    public calculatePageSizes() {
+        let width = document.body.offsetWidth;
+        let height = document.body.offsetHeight;
+
+        let imgWidth = Math.round(width / 4) > 40 ? Math.round(width / 4) : 40;
+        let imgHeight = Math.round(height / 3) > 40 ? Math.round(height / 3) : 40;
+        console.log("Image Height, Image Width", imgHeight, imgWidth);
+
+        // Could make this handle resize events pretty cleanly
+    }
+
+    public imgLoaded(evt) {
+        let img = evt.target;
+        console.log("Img Loaded", img.naturalHeight, img.naturalWidth, img);
+    }
+
+
+    public getCurrentLocation() {
+        let dir = this.getCurrentDir();
+        if (dir && !_.isEmpty(dir.getContentList())) {
+            let contentList = dir.getContentList();
+            if (this.rowIdx >= 0 && this.rowIdx < contentList.length) {
+                return contentList[this.rowIdx];
             }
         }
     }
