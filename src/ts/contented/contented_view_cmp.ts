@@ -10,4 +10,17 @@ export class ContentedViewCmp {
     constructor() {
 
     }
+
+    public maxWidth: number;
+    public maxHeight: number;
+    public calculateDimensions() {
+
+        // Probably need to do this off the current overall container
+        let width = document.body.clientWidth;
+        let height = document.body.clientHeight;
+
+        this.maxWidth = width - 20;
+        this.maxHeight = height - 20;
+    }
+
 }

@@ -7,14 +7,22 @@
     <contented-view [viewUrl]="currentViewItem"></contented-view>
   </div>
 
-  <div class="contented-dir row" name="" *ngFor="let dir of getVisibleDirectories()">
+
+  <div class="contented-dir" name="" [class.dimensions]="calculateDimensions()"
+      *ngFor="let dir of getVisibleDirectories()">
     {{dir.name}}
-    <div class="row">
-      <div class="col-md-2" *ngFor="let previewPath of dir.getContentList()">
-        <img [src]="previewPath" class="preview-content"> 
-      </div>
+
+    <div class="directory-contents" [class.current-content-dir]="dir == getCurrentDir()">
+      <span class="preview-content" *ngFor="let previewPath of dir.getContentList()">
+        <!-- Determine different content types? -->
+        <img  class="preview-img"
+          [width]="previewWidth"
+          [height]="previewHeight"
+          [src]="previewPath" 
+          (load)="imgLoaded($event)"
+        > 
+      </span>
     </div>
-    <br>
 
   </div>
 </div>
