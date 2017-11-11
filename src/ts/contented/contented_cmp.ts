@@ -36,18 +36,21 @@ class Directory {
 })
 export class ContentedCmp implements OnInit {
 
-    @Input() maxVisible: number = 2;
-    @Input() idx: number = 0;
-    @Input() rowIdx: number = 0;
+    @Input() maxVisible: number = 2; // How many of the loaded directories should we be viewing
+    @Input() rowIdx: number = 0; // Which row (directory) are we in
+    @Input() idx: number = 0; // Which item within the directory are we viewing
 
-    private currentViewItem: string;
+    public previewWidth: number; // Based on current client page sizes, scale the preview images natually
+    public previewHeight: number; // height for the previews ^
+
+    private currentViewItem: string; // The current indexed item that is considered selected
+    public fullScreen: boolean = true; // Should we view fullscreen the current item
+    public directories: Array<Directory>; // Current set of visible directories
+    public allD: Array<Directory>; // All the directories we have loaded
+
     constructor(public _contentedService: ContentedService) {
-
+        this.calculateDimensions();
     }
-
-    public fullScreen: boolean = true;
-    public directories: Array<Directory>;
-    public allD: Array<Directory>;
 
     @HostListener('document:keypress', ['$event'])
     public keyPress(evt: KeyboardEvent) {
@@ -189,6 +192,15 @@ export class ContentedCmp implements OnInit {
                 return contentList[this.rowIdx];
             }
         }
+    }
+
+    // TODO: Being called abusively in the directive rather than on page resize events
+    public calculateDimensions() {
+        let width = document.body.clientWidth;
+        let height = document.body.clientHeight;
+
+        this.previewWidth = (width / 4) - 20;
+        this.previewHeight = (height / this.maxVisible) - 20;
     }
 
     public previewResults(response) {
