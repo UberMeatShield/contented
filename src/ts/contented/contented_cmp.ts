@@ -69,23 +69,34 @@ export class ContentedCmp implements OnInit {
             case 'd':
                 this.rowNext();
                 break;
-            case ' ':
-                this.currentViewItem = this.getCurrentLocation();
-                this.fullScreen = true;
+            case 'e':
+                this.viewFullscreen();
                 break;
             case 'q':
-                this.currentViewItem = null;
-                this.fullScreen = false;
+                this.hideFullscreen();
                 break;
             case 'f':
-                let visible = this.getVisibleDirectories();
-                this.fullLoadDir(visible[0]);
+                this.fullLoad();
                 break;
             default:
                 break;
         }
     }
 
+    public fullLoad() {
+        let visible = this.getVisibleDirectories();
+        this.fullLoadDir(visible[0]);
+    }
+
+    public viewFullscreen() {
+        this.currentViewItem = this.getCurrentLocation();
+        this.fullScreen = true;
+    }
+
+    public hideFullscreen() {
+        this.currentViewItem = null;
+        this.fullScreen = false;
+    }
 
     public ngOnInit() {
         console.log("Contented comp is alive.");
@@ -165,22 +176,10 @@ export class ContentedCmp implements OnInit {
         return null;
     }
 
-    public calculatePageSizes() {
-        let width = document.body.offsetWidth;
-        let height = document.body.offsetHeight;
-
-        let imgWidth = Math.round(width / 4) > 40 ? Math.round(width / 4) : 40;
-        let imgHeight = Math.round(height / 3) > 40 ? Math.round(height / 3) : 40;
-        console.log("Image Height, Image Width", imgHeight, imgWidth);
-
-        // Could make this handle resize events pretty cleanly
-    }
-
     public imgLoaded(evt) {
         let img = evt.target;
         console.log("Img Loaded", img.naturalHeight, img.naturalWidth, img);
     }
-
 
     public getCurrentLocation() {
         let dir = this.getCurrentDir();
@@ -191,7 +190,6 @@ export class ContentedCmp implements OnInit {
             }
         }
     }
-
 
     public previewResults(response) {
         console.log("Results returned from the preview results.", response);

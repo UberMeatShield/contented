@@ -6,6 +6,16 @@
     }
 }
 
+.preview-image {
+    width: 250px;
+    height: 250px;
+    object-fit: contain;
+}
+
+.full-view-img {
+    object-fit: contain;
+}
+
 .current-content-dir {
     border: 1px solid #aaa;
 }
