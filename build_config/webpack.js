@@ -34,7 +34,7 @@ module.exports = {
     },
     plugins: [
          new webpack.ContextReplacementPlugin(
-             /angular(\\|\/)core(\\|\/)@angular/,
+             /(.+)?angular(\\|\/)core(.+)?/,
              path.resolve(__dirname, '../src')
          )
     ],
