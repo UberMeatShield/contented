@@ -1,7 +1,6 @@
 import {async, fakeAsync, getTestBed, tick, ComponentFixture, TestBed} from '@angular/core/testing';
 import {By} from '@angular/platform-browser';
-import {BaseRequestOptions, Http, Response, ResponseOptions} from '@angular/http';
-import {MockBackend, MockConnection} from '@angular/http/testing';
+import {HttpClientTestingModule} from '@angular/common/http/testing';
 import {DebugElement}    from '@angular/core';
 
 import { RouterTestingModule } from '@angular/router/testing'
@@ -15,30 +14,18 @@ describe('TestingContentedsCmp', () => {
     let fixture: ComponentFixture<ContentedCmp>;
     let service: ContentedService;
     let comp: ContentedCmp;
-    let mb: MockBackend;
     let el: HTMLElement;
     let de: DebugElement;
 
     beforeEach(async( () => { 
         TestBed.configureTestingModule({
-            imports: [RouterTestingModule, ContentedModule],
+            imports: [RouterTestingModule, ContentedModule, HttpClientTestingModule],
             providers: [
-                MockBackend,
-                BaseRequestOptions,
-                {
-                    provide: Http,
-                    deps: [MockBackend, BaseRequestOptions],
-                    useFactory: (mockBackend, options) => {
-                        return new Http(mockBackend, options);
-                    }
-                },
                 ContentedService
             ]
         }).compileComponents();
 
-        mb = TestBed.get(MockBackend);
         service = TestBed.get(ContentedService);
-
         fixture = TestBed.createComponent(ContentedCmp);
         comp = fixture.componentInstance;
 
