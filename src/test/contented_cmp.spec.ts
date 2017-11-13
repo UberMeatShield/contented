@@ -9,6 +9,7 @@ import {ContentedService} from '../ts/contented/contented_service';
 import {ContentedModule} from '../ts/contented/contented_module';
 
 import * as _ from 'lodash';
+import {MockData} from './mock/mock_data';
 
 describe('TestingContentedsCmp', () => {
     let fixture: ComponentFixture<ContentedCmp>;

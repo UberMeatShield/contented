@@ -12,17 +12,17 @@ import (
 
 type DirResults struct{
     Success bool `json:"success"`
-    Results []string `json:"results"`
+    Results utils.DirContents `json:"results"`
     Path string `json:"path"`
 }
 
 type PreviewResults struct{
     Success bool `json:"success"`
-    Results map[string][]string `json:"results"`
+    Results map[string]utils.DirContents `json:"results"`
     Path string `json:"path"`
 }
 
-type HttpErrResults struct{
+type HttpError struct{
     Error string `json:"error"`
     Debug string `json:"debug"`
 }
@@ -91,8 +91,14 @@ func ListSpecificHandler(w http.ResponseWriter, r *http.Request) {
         j, _ := json.Marshal(getDirectory(dir, argument))
         w.Write(j)
     } else {
-        j, _ := json.Marshal(map[string]string{"error": "This is not a valid directory: " + argument})
-        w.Write(j)
+		err := HttpError{
+			Error: "This is not a valid directory: " + argument,
+			Debug: "Not in valid dirs",
+		}
+        j, _ := json.Marshal(err)
+		w.WriteHeader(403)
+		w.Write(j)
+
     }
 }
 
@@ -100,7 +106,7 @@ func ListSpecificHandler(w http.ResponseWriter, r *http.Request) {
  * Get the response for a single specific directory
  */
 func getDirectory(dir string, argument string) DirResults {
-    path := dir + argument
+	path := dir + argument
     response := DirResults{
         true,
         utils.GetDirContents(path, 1000),

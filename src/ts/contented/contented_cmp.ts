@@ -6,12 +6,15 @@ import * as _ from 'lodash';
 class Directory {
     public path: string;
     public name: string;
+    public total: number;
     public contents: Array<string>;
 
     constructor(path, name, contents) {
         this.path = path || '';
         this.name = name || '';
-        this.contents = contents || [];
+
+        this.total = _.get(contents, 'total');
+        this.contents = _.get(contents, 'contents');
     }
 
     public getContentList() {
@@ -122,7 +125,7 @@ export class ContentedCmp implements OnInit {
 
     public dirResults(dir: Directory, response) {
         console.log("Full Directory loading, what is in the results?", response);
-        dir.contents = _.get(response, 'results');
+        dir.contents = _.get(response, 'results.contents');
     }
 
     public reset() {
