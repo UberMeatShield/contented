@@ -199,8 +199,8 @@ export class ContentedCmp implements OnInit {
 
     // TODO: Being called abusively in the directive rather than on page resize events
     public calculateDimensions() {
-        let width = document.body.clientWidth;
-        let height = document.body.clientHeight;
+        let width = !window['jasmine'] ? document.body.clientWidth : 800;
+        let height = !window['jasmine'] ? document.body.clientHeight : 800;
 
         this.previewWidth = (width / 4) - 20;
         this.previewHeight = (height / this.maxVisible) - 20;
@@ -209,7 +209,6 @@ export class ContentedCmp implements OnInit {
     public previewResults(response) {
         console.log("Results returned from the preview results.", response);
         let path = _.get(response, 'path');
-
         this.allD = _.map(_.get(response, 'results') || [], (contents, dir) => {
             return new Directory(path, dir, contents);
         });

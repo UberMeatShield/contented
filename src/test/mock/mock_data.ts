@@ -6,11 +6,11 @@ class MockLoader {
     }
 
     public getPreview() {
-        return require('preview.json');
+        return require('./preview.json');
     }
 
     public getFullDirectory() {
-        return require('./full_dir.json');
+        return require('./full.json');
     }
 
     public mockContentedService(service) {

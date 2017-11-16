@@ -1,0 +1,30 @@
+{
+  "success": true,
+  "results": {
+    "office": {
+      "total": 9,
+      "contents": [
+        "3bkHRgj.gif",
+        "95SWUMo.gif",
+        "9WeH5wA.gif",
+        "LfFW7p6.gif"
+      ]
+    },
+    "splash": {
+      "total": 1,
+      "contents": [
+        "MysteryMachine.png"
+      ]
+    },
+    "starwars": {
+      "total": 7,
+      "contents": [
+        "7y6lmfH.png",
+        "CSwHeRT.png",
+        "SlWbrY7.png",
+        "UZYuMXL.png"
+      ]
+    }
+  },
+  "path": "static\/content\/"
+}
