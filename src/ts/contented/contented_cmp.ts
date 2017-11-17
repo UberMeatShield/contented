@@ -4,23 +4,21 @@ import {ContentedService, ApiDef} from './contented_service';
 import * as _ from 'lodash';
 
 class Directory {
-    public path: string;
-    public name: string;
-    public total: number;
     public contents: Array<string>;
+    public total: number;
+    public path: string;
+    public id: string;
 
-    constructor(path, name, contents) {
-        this.path = path || '';
-        this.name = name || '';
-
-        this.total = _.get(contents, 'total');
-        this.contents = _.get(contents, 'contents');
+    constructor(dir: any) {
+        this.contents = _.get(dir, 'contents') || [];
+        this.total = _.get(dir, 'total') || 0;
+        this.path = _.get(dir, 'path') || '';
+        this.id = _.get(dir, 'id') || '';
     }
 
     public getContentList() {
         return _.map(this.contents, c => {
-            let link = ApiDef.base + this.trail(this.path, '/') + this.trail(this.name, '/') + c || '';
-            return link;
+            return ApiDef.base + this.trail(this.path, '/') + (c || '');
         });
     }
 
@@ -117,7 +115,7 @@ export class ContentedCmp implements OnInit {
     }
 
     public fullLoadDir(dir: Directory) {
-        this._contentedService.getFullDirectory(dir.name).subscribe(
+        this._contentedService.getFullDirectory(dir.id).subscribe(
             res => { this.dirResults(dir, res); },
             err => { console.error(err); }
         );
@@ -125,7 +123,7 @@ export class ContentedCmp implements OnInit {
 
     public dirResults(dir: Directory, response) {
         console.log("Full Directory loading, what is in the results?", response);
-        dir.contents = _.get(response, 'results.contents');
+        dir.contents = _.get(response, 'contents');
     }
 
     public reset() {
@@ -208,9 +206,8 @@ export class ContentedCmp implements OnInit {
 
     public previewResults(response) {
         console.log("Results returned from the preview results.", response);
-        let path = _.get(response, 'path');
-        this.allD = _.map(_.get(response, 'results') || [], (contents, dir) => {
-            return new Directory(path, dir, contents);
+        this.allD = _.map(_.get(response, 'results') || [], dir => {
+            return new Directory(dir);
         });
     }
 }

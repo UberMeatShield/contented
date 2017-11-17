@@ -10,16 +10,9 @@ import (
     "contented/utils"
 )
 
-type DirResults struct{
-    Success bool `json:"success"`
-    Results utils.DirContents `json:"results"`
-    Path string `json:"path"`
-}
-
 type PreviewResults struct{
     Success bool `json:"success"`
-    Results map[string]utils.DirContents `json:"results"`
-    Path string `json:"path"`
+    Results []utils.DirContents `json:"results"`
 }
 
 type HttpError struct{
@@ -73,9 +66,8 @@ func ListDefaultHandler(w http.ResponseWriter, r *http.Request) {
     log.Println("Calling into ListDefault")
     w.Header().Set("Content-Type", "application/json")
     response := PreviewResults{
-        true,
-        utils.ListDirs(dir, 4),
-        dir,
+		Success: true,
+		Results: utils.ListDirs(dir, 4),
     }
     j, _ := json.Marshal(response)
     w.Write(j)
@@ -98,19 +90,13 @@ func ListSpecificHandler(w http.ResponseWriter, r *http.Request) {
         j, _ := json.Marshal(err)
 		w.WriteHeader(403)
 		w.Write(j)
-
     }
 }
 
 /**
  * Get the response for a single specific directory
  */
-func getDirectory(dir string, argument string) DirResults {
+func getDirectory(dir string, argument string) utils.DirContents {
 	path := dir + argument
-    response := DirResults{
-        true,
-        utils.GetDirContents(path, 1000),
-        "static/" + argument + "/",
-    }
-    return response
+    return utils.GetDirContents(path, 1000, dir)
 }
