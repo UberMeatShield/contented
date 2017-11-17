@@ -8,8 +8,9 @@
   </div>
 
 
-  <div class="contented-dir" name="" [class.dimensions]="calculateDimensions()"
-      *ngFor="let dir of getVisibleDirectories()">
+  <div class="contented-dir" name="contents"
+    [class.dimensions]="calculateDimensions()"
+    *ngFor="let dir of getVisibleDirectories()">
     {{dir.name}}
 
     <div class="directory-contents" [class.current-content-dir]="dir == getCurrentDir()">
