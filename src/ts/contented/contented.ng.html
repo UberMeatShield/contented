@@ -11,12 +11,16 @@
   <div class="contented-dir" name="contents"
     [class.dimensions]="calculateDimensions()"
     *ngFor="let dir of getVisibleDirectories()">
-    {{dir.name}}
+    
+    <span class="dir-meta">
+      {{dir.id}} : {{dir?.contents?.length}} / {{dir.total}}
+    </span>
 
     <div class="directory-contents" [class.current-content-dir]="dir == getCurrentDir()">
       <span class="preview-content" *ngFor="let previewPath of dir.getContentList()">
         <!-- Determine different content types? -->
         <img  class="preview-img"
+          [class.current-img]="currentViewItem ? previewPath.match(currentViewItem) : false"
           [width]="previewWidth"
           [height]="previewHeight"
           [src]="previewPath" 
@@ -24,6 +28,5 @@
         > 
       </span>
     </div>
-
   </div>
 </div>

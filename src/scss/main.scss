@@ -6,6 +6,12 @@
     }
 }
 
+.current-img {
+    background-color: #aaa;
+    border: solid 1px #eee;
+    border-radius: 2px;
+}
+
 .preview-img {
     object-fit: contain;
 }
