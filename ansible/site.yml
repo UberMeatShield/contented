@@ -1,0 +1,7 @@
+---
+- name: Setup a golang server
+  hosts: all
+  remote_user: ubuntu
+
+  roles:
+    - contented

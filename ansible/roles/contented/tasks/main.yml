@@ -1,0 +1,14 @@
+---
+- name: Update the OS so that we can install go
+  apt: pkg={{item}} state=installed update_cache=true
+  become: true
+  with_items:
+    - curl
+    - vim
+    - wget
+
+- include: go.yml
+
+- name: Install depenedent packages
+  cwd: /home/vagrant/go/src
+  command: dep ensure

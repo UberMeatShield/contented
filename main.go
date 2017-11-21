@@ -6,7 +6,7 @@ import (
     "flag"
     "log"
     "net/http"
-    "gorilla/mux"
+    "github.com/gorilla/mux"
 	"contented/web"
 )
 
