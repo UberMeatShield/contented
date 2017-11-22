@@ -1,22 +1,19 @@
 {
-    "compilerOptions": {
-        "outDir": "static/build",
-        "target": "es5",
-        "module": "es2015",
-        "sourceMap": true,
-        "noImplicitAny": false,
-        "removeComments": true,
-        "moduleResolution": "node",
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
-        "inlineSources": true,
-        "preserveConstEnums": true,
-        "lib": ["es6", "dom"]
-    },
-    "include": [
-        "src/**/*"
+  "compileOnSave": false,
+  "compilerOptions": {
+    "outDir": "./static/build",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "target": "es5",
+    "typeRoots": [
+      "node_modules/@types"
     ],
-    "exclude": [
-       "node_modules"
+    "lib": [
+      "es2017",
+      "dom"
     ]
+  }
 }

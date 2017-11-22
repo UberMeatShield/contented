@@ -33,7 +33,7 @@ class Directory {
 
 @Component({
     selector: 'contented-main',
-    template: require('./contented.ng.html')
+    templateUrl: 'contented.ng.html'
 })
 export class ContentedCmp implements OnInit {
 

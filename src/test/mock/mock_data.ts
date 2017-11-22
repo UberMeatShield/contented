@@ -1,4 +1,7 @@
 import {Observable} from 'rxjs';
+
+declare var require: any;
+
 class MockLoader {
 
     public constructor() {
