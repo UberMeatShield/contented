@@ -1,0 +1,15 @@
+- name: Set the mounted directory to vagrant ownership (not root) so we can build and install into pkg
+  become: true
+  file:
+    path: /home/vagrant/go
+    owner: vagrant
+    group: vagrant
+
+- name: Create the static content location (sym links?)
+  file: path="/usr/local/gohttp/static" state=directory owner={{remote_user}} group={{remote_user}} mode=0775 recurse=yes
+  become: true
+
+- name: Create a place to dump logs (make logging exist)
+  file: path="/usr/local/gohttp/logs" state=directory owner={{remote_user}} group={{remote_user}} mode=0775 recurse=yes
+  become: true
+

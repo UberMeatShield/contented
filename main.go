@@ -6,8 +6,8 @@ import (
     "flag"
     "log"
     "net/http"
-    "gorilla/mux"
-	"contented/web"
+    "github.com/gorilla/mux"
+    "contented/web"
 )
 
 var dir string

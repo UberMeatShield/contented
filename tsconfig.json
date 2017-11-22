@@ -2,10 +2,10 @@
     "compilerOptions": {
         "outDir": "static/build",
         "target": "es5",
-        "module": "commonjs",
+        "module": "es2015",
         "sourceMap": true,
         "noImplicitAny": false,
-        "removeComments": false,
+        "removeComments": true,
         "moduleResolution": "node",
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,

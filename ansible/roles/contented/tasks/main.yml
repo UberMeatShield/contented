@@ -1,0 +1,24 @@
+---
+- name: Update the OS so that we can install go
+  apt: pkg={{item}} state=installed update_cache=true
+  become: true
+  with_items:
+    - curl
+    - vim
+    - wget
+
+- import_tasks: permissions.yml
+
+- import_tasks: go.yml
+
+# Create a task for getting the angular build fully working (much fun...)
+- name: Install depenedent go packages
+  command: dep ensure
+  args: 
+    chdir: /home/vagrant/go/src/contented/
+    creates: /home/vagrant/go/src/contented/vendor/github.com
+
+- name: Actually build the http binary
+  shell: /usr/local/go/bin/go build
+  args:
+    chdir: /home/vagrant/go/src/contented/
