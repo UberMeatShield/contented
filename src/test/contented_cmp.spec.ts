@@ -1,12 +1,12 @@
 import {async, fakeAsync, getTestBed, tick, ComponentFixture, TestBed} from '@angular/core/testing';
 import {By} from '@angular/platform-browser';
 import {HttpClientTestingModule} from '@angular/common/http/testing';
-import {DebugElement}    from '@angular/core';
+import {DebugElement} from '@angular/core';
 
-import { RouterTestingModule } from '@angular/router/testing'
-import {ContentedCmp} from '../ts/contented/contented_cmp';
-import {ContentedService} from '../ts/contented/contented_service';
-import {ContentedModule} from '../ts/contented/contented_module';
+import { RouterTestingModule } from '@angular/router/testing';
+import {ContentedCmp} from '../contented/contented_cmp';
+import {ContentedService} from '../contented/contented_service';
+import {ContentedModule} from '../contented/contented_module';
 
 import * as _ from 'lodash';
 import {MockData} from './mock/mock_data';
@@ -19,7 +19,7 @@ describe('TestingContentedsCmp', () => {
     let el: HTMLElement;
     let de: DebugElement;
 
-    beforeEach(async( () => { 
+    beforeEach(async( () => {
         TestBed.configureTestingModule({
             imports: [RouterTestingModule, ContentedModule, HttpClientTestingModule],
             providers: [

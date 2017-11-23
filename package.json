@@ -2,7 +2,7 @@
   "name": "contented",
   "version": "0.0.1",
   "authors": [
-      "UberMeatShield"
+    "UberMeatShield"
   ],
   "license": "MIT",
   "description": "GoLang starter project with some @angular",
@@ -15,7 +15,6 @@
     "@angular/animations": "^5.0.0",
     "@angular/common": "^5.0.0",
     "@angular/compiler": "^5.0.0",
-    "@angular/compiler-cli": "^5.0.0",
     "@angular/core": "^5.0.0",
     "@angular/forms": "^5.0.0",
     "@angular/http": "^5.0.0",
@@ -29,9 +28,12 @@
     "zone.js": "0.8.4"
   },
   "devDependencies": {
+    "@angular/cli": "^1.5.3",
+    "@angular/compiler-cli": "^5.0.0",
     "@types/jasmine": "^2.5.53",
     "@types/node": "^8.0.20",
     "awesome-typescript-loader": "^3.2.2",
+    "codelyzer": "^4.0.1",
     "del": "^2.2.0",
     "gulp": "~3.9.1",
     "gulp-clean": "^0.3.2",
@@ -59,7 +61,7 @@
     "run-sequence": "^1.2.2",
     "swagger-ui": "https://github.com/swagger-api/swagger-ui.git#master",
     "ts-loader": "^2.0.0",
-    "tslint": "^4.4.2",
+    "tslint": "^5.8.0",
     "tslint-loader": "^3.4.2",
     "typescript": "2.4.2",
     "webpack": "^3.5.4",

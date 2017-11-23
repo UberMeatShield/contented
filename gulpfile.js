@@ -22,7 +22,7 @@ var dir = {
     base:  base,
     typings: 'typings/',
     test:  base + 'src/test',
-    ts:    base + 'src/ts/', 
+    ts:    base + 'src/', 
     sass:  base + 'src/scss/',
     node:  base + 'node_modules/',
     go:    base,
@@ -67,16 +67,15 @@ gulp.task(tasks.defaultTask, [tasks.rebuildTypescript, tasks.rebuildGo, tasks.wa
 
 
 // Watchers group tasks
-gulp.task(tasks.watchers, [tasks.watchGo, tasks.watchDoc, tasks.watchSass, tasks.watchTypescript]);
+gulp.task(tasks.watchers, [tasks.watchTypescript, tasks.watchGo, tasks.watchDoc, tasks.watchSass]);
 
 
 gulp.task(tasks.buildDeploy, function (callback) {
     runSequence(
         tasks.cleanSrc,
+        tasks.typescript,
         tasks.copy,
         tasks.buildSass,
-        tasks.typescript,
-        // tasks.compress,
         callback
     );
 });
@@ -85,11 +84,10 @@ gulp.task(tasks.buildDeploy, function (callback) {
 gulp.task(tasks.rebuildTypescript, function(callback) {
     runSequence(
         tasks.cleanSrc, 
-        tasks.copy,
         tasks.tslint,
-        tasks.buildSass,
         tasks.typescript,
-        // tasks.compress,
+        tasks.buildSass,
+        tasks.copy,
         tasks.testTypescript,
         callback
     );
@@ -104,55 +102,32 @@ gulp.task(tasks.cleanSrc, function (cb) {
 
 // Typescript related tasks
 //===================================================
-gulp.task(tasks.tslint, function () {
-    return gulp.src(dir.ts + '**/*.ts')
-        .pipe(tslint({
-            formatter: "verbose",
-            configuration: 'build_config/tslint.json'
-        })).pipe(tslint.report());
-});
-
 // watcher (split into watch sass and watch ts)
 gulp.task(tasks.watchTypescript, function () {
     gulp.watch([
           dir.ts + '**/**.ts', 
           dir.ts + '**/**.html',
-          dir.test + '**/**.ts', 
-          './tsconfig.json'
+          dir.test + '**/**.ts'
         ], 
         [tasks.rebuildTypescript]
     );
 });
 
+gulp.task(tasks.tslint, shell.task([
+    'ng lint'
+]));
 
+gulp.task(tasks.testTypescript, shell.task([
+    'ng test --env dev'
+]));
 
-gulp.task(tasks.testTypescript, function (done) {
-    var singleRun = true; // Running not in single run doesn't seem faster / screws up watchers.
-    var karma = new KarmaServer({
-        configFile: __dirname + '/build_config/karma.conf.js',
-        'log-level': 'error',
-        singleRun: singleRun,
-    }, done).start();
-    return karma;
-});
+gulp.task(tasks.typescript, shell.task([
+    'ng build --env dev --deploy-url /' + dir.build
+]));
 
-
-gulp.task(tasks.typescript, function() {
-    var bundleEntry = dir.ts + '/app/boot.ts'
-    return gulp.src(bundleEntry)
-        .pipe(webpack(require('./build_config/webpack.js')))
-        .pipe(gulp.dest(dir.build));
-});
-
-gulp.task(tasks.compress, function(callback) {
-    pump([
-        gulp.src(dir.build + 'app.bundle.js'),
-        // cache('js'), (did not seem to speed up the process at all)
-        uglify(),
-        gulp.dest(dir.build + 'min/')
-    ], callback);
-});
-
+gulp.task(tasks.compress, shell.task([
+    'ng build --prod --deploy-url /' + dir.build
+]));
 
 // Initial tasks dealing with copying source. 
 // Delete all the gunk out of build directories.
@@ -265,14 +240,13 @@ gulp.task(tasks.killGoServer, shell.task([
     ])
 );
 
-
 gulp.task(tasks.buildGo, shell.task([
       "go build contented"
     ])
 );
 
 gulp.task(tasks.testGo, shell.task([
-      'echo "Do GO TESTING" '
+      'go test $(go list ./... | grep -v /vendor/)'
     ])
 );
 

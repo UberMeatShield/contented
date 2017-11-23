@@ -44,7 +44,7 @@ func SetupStatic(router *mux.Router, staticDir string) {
 
 // Replace this with nginx or something else better at serving static content (probably)
 func Index(w http.ResponseWriter, r *http.Request) {
-    body, err := ioutil.ReadFile("./static/app.html")
+    body, err := ioutil.ReadFile("./static/build/index.html")
 
     // Try to keep the same amount of headers
     w.Header().Set("Server", "gophr")

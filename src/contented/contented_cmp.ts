@@ -33,7 +33,7 @@ class Directory {
 
 @Component({
     selector: 'contented-main',
-    template: require('./contented.ng.html')
+    templateUrl: 'contented.ng.html'
 })
 export class ContentedCmp implements OnInit {
 
@@ -142,6 +142,7 @@ export class ContentedCmp implements OnInit {
 
     public rowNext() {
         let dirs = this.getVisibleDirectories();
+        this.idx = 0;
         if (!_.isEmpty(dirs)) {
             let items = dirs[0].getContentList();
             if (!_.isEmpty(items) && this.rowIdx < items.length) {
@@ -152,6 +153,7 @@ export class ContentedCmp implements OnInit {
     }
 
     public rowPrev() {
+        this.idx = 0;
         if (this.rowIdx > 0) {
             this.rowIdx--;
             this.currentViewItem = this.getCurrentLocation();

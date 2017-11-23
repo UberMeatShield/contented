@@ -24,14 +24,14 @@ func TestGetDirContents(t *testing.T) {
 
 func TestGetSpecificDir(t *testing.T) {
 	var count = 2
-	files := GetDirContents(testDir + "/dir3", 2)
+	files := GetDirContents(testDir + "/dir3", 2, "mocks")
 
-	if (len(files) != 2) {
-		t.Errorf("Did not limit the directory length, wanted %d found %d", count, len(files))
+	if (len(files.Contents) != 2) {
+		t.Errorf("Did not limit the directory length, wanted %d found %d", count, len(files.Contents))
 	}
 
-	files = GetDirContents(testDir + "/dir3", 10)
-	if (len(files) < 3) {
+	files = GetDirContents(testDir + "/dir3", 10, "mocks")
+	if (len(files.Contents) < 3) {
 		t.Error("There are more test files in this directory than 3")
 	}
 }
