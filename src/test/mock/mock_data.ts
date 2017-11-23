@@ -1,9 +1,10 @@
-import {Observable} from 'rxjs';
+import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/fromPromise';
 
 declare var require: any;
-
 class MockLoader {
 
+    public timeoutSpan = 100;
     public constructor() {
 
     }
@@ -22,11 +23,9 @@ class MockLoader {
     }
 
     // This will actually fake an async call to prove things require async ticks, better tests on cmps
-    public timeoutSpan = 100;
     public obs(response, shouldReject: boolean = false) {
         let val = response;
         let timeout = this.timeoutSpan;
- 
         return function() {
             console.log("Calling the damn method at least, promise not resolving?", timeout);
             let p = new Promise((resolve, reject) => {
@@ -38,5 +37,4 @@ class MockLoader {
         };
     }
 }
-
 export let MockData = new MockLoader();

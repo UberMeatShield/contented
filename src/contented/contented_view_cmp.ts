@@ -2,7 +2,7 @@ import {OnInit, Component, EventEmitter, Input, Output, HostListener} from '@ang
 
 @Component({
     selector: 'contented-view',
-    template: 'contented_view.ng.html'
+    templateUrl: './contented_view.ng.html'
 })
 export class ContentedViewCmp {
     @Input() viewUrl: string = '';
