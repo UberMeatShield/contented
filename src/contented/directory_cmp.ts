@@ -10,11 +10,9 @@ import {Directory} from './directory';
 export class DirectoryCmp implements OnInit {
 
     @Input() dir: Directory;
-    @Input() previewWidth: number; 
-    @Input() previewHeight: number; 
-
-    @Input() isCurrent: boolean;
-    @Input() idx: boolean;
+    @Input() previewWidth: number;
+    @Input() previewHeight: number;
+    @Input() currentViewItem: string;
 
     // @Output clickEvt: EventEmitter<any>;
 

@@ -4,5 +4,5 @@ export let ApiDef = {
     contented: {
         preview: base + 'content/',
         fulldir: base + 'content/{dir}'
-    }   
-};  
+    }
+};
