@@ -1,22 +1,12 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders, HttpParams, HttpErrorResponse} from '@angular/common/http';
 import {Observable} from 'rxjs/Observable';
+import {ApiDef} from './api_def';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/observable/fromPromise';
 
-
 import * as _ from 'lodash';
-let base = window.location.origin + '/';
-export let ApiDef = {
-    base: base,
-    contented: {
-        preview: base + 'content/',
-        fulldir: base + 'content/{dir}'
-    }
-};
-
-
 @Injectable()
 export class ContentedService {
 

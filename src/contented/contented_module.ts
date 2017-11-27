@@ -5,6 +5,7 @@ import {HttpModule} from '@angular/http';
 import {ContentedCmp} from './contented_cmp';
 import {ContentedViewCmp} from './contented_view_cmp';
 import {ContentedService} from './contented_service';
+import {Directory} from './directory';
 
 @NgModule({
   imports: [BrowserModule, HttpModule],
