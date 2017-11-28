@@ -1,15 +1,17 @@
 <div>
   <span class="dir-meta">
-    {{dir.id}} : {{dir?.contents?.length}} / {{dir.total}}
+    {{dir.id}} : {{dir?.contents?.length}} / {{dir.total}} {{currentViewItem}}
   </span>
-  <span class="preview-content" *ngFor="let previewPath of dir.getContentList()">
-    <!-- Determine different content types? -->
-    <img  class="preview-img"
-      [class.current-img]="currentViewItem ? previewPath.match(currentViewItem) : false"
-      [width]="previewWidth"
-      [height]="previewHeight"
-      [src]="previewPath" 
-      (load)="imgLoaded($event)"
-    > 
-  </span>
+  <div class="dir-contents">
+    <span class="preview-content" *ngFor="let previewPath of getVisibleSet()">
+      <!-- Determine different content types? -->
+      <img  class="preview-img"
+        [class.current-img]="currentViewItem ? previewPath.match(currentViewItem) : false"
+        [width]="previewWidth"
+        [height]="previewHeight"
+        [src]="previewPath" 
+        (load)="imgLoaded($event)"
+      > 
+    </span>
+  </div>
 </div>

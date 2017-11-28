@@ -1,19 +1,20 @@
 <div class="contented-cmp">
   Contented Component Loaded
+  FullScreen: {{fullScreen}} item {{currentViewItem}}
 
-  FullScreen: {{fullScreen}}
   <div *ngIf="fullScreen">
     {{getCurrentLocation()}}
     <contented-view [viewUrl]="currentViewItem"></contented-view>
   </div>
-
 
   <div class="contented-dir" name="contents"
     [class.dimensions]="calculateDimensions()"
     *ngFor="let dir of getVisibleDirectories()">
 
     <div class="directory-contents" [class.current-content-dir]="dir == getCurrentDir()">
-      <directory-cmp [dir]="dir" 
+      <directory-cmp 
+        [dir]="dir" 
+        [currentViewItem]="currentViewItem"
         [previewWidth]="previewWidth" 
         [previewHeight]="previewHeight"
       ></directory-cmp>

@@ -2,6 +2,7 @@ import {OnInit, Component, EventEmitter, Input, Output, HostListener} from '@ang
 import {ContentedService} from './contented_service';
 
 import {Directory} from './directory';
+import * as _ from 'lodash';
 
 @Component({
     selector: 'directory-cmp',
@@ -13,8 +14,10 @@ export class DirectoryCmp implements OnInit {
     @Input() previewWidth: number;
     @Input() previewHeight: number;
     @Input() currentViewItem: string;
+    @Input() maxRendered: number = 3; // Default setting for how many should be visible at any given time
 
     // @Output clickEvt: EventEmitter<any>;
+    public visibleSet: Array<string>;
 
     constructor() {
 
@@ -22,6 +25,13 @@ export class DirectoryCmp implements OnInit {
 
     public ngOnInit() {
         console.log("Directory Component loading up");
+    }
+
+
+    public getVisibleSet(currentItem = this.currentViewItem, max: number = this.maxRendered) {
+        this.visibleSet = null;
+        this.visibleSet = this.dir.getIntervalAround(currentItem, max, 1);
+        return this.visibleSet;
     }
 
     public imgLoaded(evt) {

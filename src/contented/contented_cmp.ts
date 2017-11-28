@@ -14,6 +14,7 @@ export class ContentedCmp implements OnInit {
     @Input() rowIdx: number = 0; // Which row (directory) are we in
     @Input() idx: number = 0; // Which item within the directory are we viewing
 
+    public loading: boolean = false;
     public previewWidth: number; // Based on current client page sizes, scale the preview images natually
     public previewHeight: number; // height for the previews ^
 
@@ -83,20 +84,25 @@ export class ContentedCmp implements OnInit {
     public loadDirs() {
         this._contentedService.getPreview().subscribe(
             res => { this.previewResults(res); },
-            console.error
-        );
-    }
-
-    public fullLoadDir(dir: Directory) {
-        this._contentedService.getFullDirectory(dir.id).subscribe(
-            res => { this.dirResults(dir, res); },
             err => { console.error(err); }
         );
     }
 
+    public fullLoadDir(dir: Directory) {
+        if (dir.count < dir.total) {
+            this.loading = true;
+            this._contentedService.getFullDirectory(dir.id)
+                .finally(() => {this.loading = false; })
+                .subscribe(
+                    res => { this.dirResults(dir, res); },
+                    err => { console.error(err); }
+                );
+        }
+    }
+
     public dirResults(dir: Directory, response) {
         console.log("Full Directory loading, what is in the results?", response);
-        dir.contents = _.get(response, 'contents');
+        dir.setContents(_.get(response, 'contents'));
     }
 
     public reset() {

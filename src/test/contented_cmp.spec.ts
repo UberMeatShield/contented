@@ -53,5 +53,8 @@ describe('TestingContentedsCmp', () => {
         let dirEls = $('.directory-contents', el);
         expect(dirEls.length).toBe(2, "The UI should contain exactly 2 preview directories.");
     }));
+
+    it('Should limit the total number of images to those that it can actually load?', () => {
+    });
 });
 

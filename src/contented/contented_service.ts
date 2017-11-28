@@ -1,10 +1,16 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders, HttpParams, HttpErrorResponse} from '@angular/common/http';
-import {Observable} from 'rxjs/Observable';
 import {ApiDef} from './api_def';
+
+// The manner in which RxJS does this is really stupid, saving 50K for hours of dev time is fail
+import {Observable} from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/observable/fromPromise';
+import 'rxjs/add/observable/forkJoin';
+import 'rxjs/add/operator/finally';
+import 'rxjs/add/operator/debounceTime';
+import 'rxjs/add/operator/distinctUntilChanged';
 
 import * as _ from 'lodash';
 @Injectable()
