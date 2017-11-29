@@ -19,7 +19,7 @@ export class ContentedCmp implements OnInit {
     public previewHeight: number; // height for the previews ^
 
     private currentViewItem: string; // The current indexed item that is considered selected
-    public fullScreen: boolean = true; // Should we view fullscreen the current item
+    public fullScreen: boolean = false; // Should we view fullscreen the current item
     public directories: Array<Directory>; // Current set of visible directories
     public allD: Array<Directory>; // All the directories we have loaded
 
@@ -27,13 +27,10 @@ export class ContentedCmp implements OnInit {
         this.calculateDimensions();
     }
 
+    // On the document keypress events, listen for them (probably need to set them only to component somehow)
     @HostListener('document:keypress', ['$event'])
     public keyPress(evt: KeyboardEvent) {
         console.log("Keypress", evt);
-
-        // Up (w)
-        // down (s)
-        // Left (a)
         switch (evt.key) {
             case 'w':
                 this.prev();
@@ -59,6 +56,7 @@ export class ContentedCmp implements OnInit {
             default:
                 break;
         }
+        this.setCurrentItem();
     }
 
     public fullLoad() {
@@ -72,7 +70,6 @@ export class ContentedCmp implements OnInit {
     }
 
     public hideFullscreen() {
-        this.currentViewItem = null;
         this.fullScreen = false;
     }
 
@@ -119,46 +116,55 @@ export class ContentedCmp implements OnInit {
         return [];
     }
 
-    public rowNext() {
-        let dirs = this.getVisibleDirectories();
-        this.idx = 0;
-        if (!_.isEmpty(dirs)) {
-            let items = dirs[0].getContentList();
-            if (!_.isEmpty(items) && this.rowIdx < items.length) {
-                this.rowIdx++;
-                this.currentViewItem = this.getCurrentLocation();
-            }
-        }
-    }
-
-    public rowPrev() {
-        this.idx = 0;
-        if (this.rowIdx > 0) {
-            this.rowIdx--;
-            this.currentViewItem = this.getCurrentLocation();
-        }
-    }
-
-    public next() {
-        if (this.allD && this.idx + 1 < this.allD.length) {
-            this.idx++;
-            this.rowIdx = 0;
-        }
-    }
-
-    public prev() {
-        if (this.idx > 0) {
-            this.idx--;
-            this.rowIdx = 0;
-        }
+    public setCurrentItem() {
+        this.currentViewItem = this.getCurrentLocation();
     }
 
     public getCurrentDir() {
-        let dirs = this.getVisibleDirectories();
-        if (!_.isEmpty(dirs)) {
-            return dirs[0];
+        if (this.idx < this.allD.length && this.idx >= 0) {
+            return this.allD[this.idx];
         }
         return null;
+    }
+
+    public rowNext() {
+        let dir = this.getCurrentDir();
+        let items = dir ? dir.getContentList() : [];
+        if (this.rowIdx < items.length) {
+            this.rowIdx++;
+            if (this.rowIdx === items.length) {
+                this.next();
+            }
+        }
+        this.setCurrentItem();
+    }
+
+    public rowPrev() {
+        if (this.rowIdx > 0) {
+            this.rowIdx--;
+        } else {
+            this.prev(true);
+        }
+    }
+
+    public next(selectFirst: boolean = true) {
+        if (this.allD && this.idx + 1 < this.allD.length) {
+            this.idx++;
+        }
+        if (selectFirst) {
+            this.rowIdx = 0;
+        }
+    }
+
+    public prev(selectLast: boolean = false) {
+        if (this.idx > 0) {
+            this.idx--;
+        }
+        if (selectLast) {
+            let dir = this.getCurrentDir();
+            let items = dir ? dir.getContentList() : [];
+            this.rowIdx = items.length - 1;
+        }
     }
 
     public imgLoaded(evt) {
@@ -190,6 +196,7 @@ export class ContentedCmp implements OnInit {
         this.allD = _.map(_.get(response, 'results') || [], dir => {
             return new Directory(dir);
         });
+        this.setCurrentItem();
     }
 }
 

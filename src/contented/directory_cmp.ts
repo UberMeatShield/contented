@@ -13,11 +13,13 @@ export class DirectoryCmp implements OnInit {
     @Input() dir: Directory;
     @Input() previewWidth: number;
     @Input() previewHeight: number;
+
     @Input() currentViewItem: string;
-    @Input() maxRendered: number = 3; // Default setting for how many should be visible at any given time
+    @Input() maxRendered: number = 8; // Default setting for how many should be visible at any given time
+    @Input() maxPrevItems: number = 2; // When scrolling through a dir, how many previous items should be visible
 
     // @Output clickEvt: EventEmitter<any>;
-    public visibleSet: Array<string>;
+    public visibleSet: Array<string>; // The currently visible set of items from in the directory
 
     constructor() {
 
@@ -30,13 +32,17 @@ export class DirectoryCmp implements OnInit {
 
     public getVisibleSet(currentItem = this.currentViewItem, max: number = this.maxRendered) {
         this.visibleSet = null;
-        this.visibleSet = this.dir.getIntervalAround(currentItem, max, 1);
+        this.visibleSet = this.dir.getIntervalAround(currentItem, max, this.maxPrevItems);
         return this.visibleSet;
     }
 
     public imgLoaded(evt) {
         let img = evt.target;
         console.log("Img Loaded", img.naturalHeight, img.naturalWidth, img);
+    }
+
+    public imgClicked(evt) {
+        console.log("Clicked this item", this.dir, evt);
     }
 }
 
