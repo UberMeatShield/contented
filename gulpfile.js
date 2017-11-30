@@ -1,20 +1,9 @@
 var gulp = require('gulp');
-var ts = require('gulp-typescript');
 var del = require('del');
-var tslint = require('gulp-tslint');
 var runSequence = require('run-sequence');
-var sourcemaps = require('gulp-sourcemaps');
-var webpack = require('webpack-stream');
-var connect = require('gulp-connect');
-var open = require('gulp-open');
 var sass = require('gulp-sass');
 var KarmaServer = require('karma').Server;
-var path    = require('path');
 var shell = require('gulp-shell');
-var uglify = require('gulp-uglify');
-var pump = require('pump');
-// var cache = require( 'gulp-memory-cache');
-
 
 var base = './';
 var app  = 'contented/';
@@ -48,7 +37,7 @@ var tasks = {
 
     watchTypescript: 'watchTypescript',
     tslint: 'tslint',
-    typescript: 'typescript', // Webpack bundle operation
+    typescript: 'typescript', 
     testTypescript: 'testTypescript',
     compress: 'compress',
     rebuildTypescript: 'rebuildTypescript',
