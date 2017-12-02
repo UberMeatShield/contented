@@ -12,7 +12,7 @@ import * as _ from 'lodash';
 import {MockData} from './mock/mock_data';
 
 declare var $;
-describe('TestingContentedsCmp', () => {
+describe('TestingContentedCmp', () => {
     let fixture: ComponentFixture<ContentedCmp>;
     let service: ContentedService;
     let comp: ContentedCmp;
@@ -48,10 +48,13 @@ describe('TestingContentedsCmp', () => {
 
         let dirs = comp.getVisibleDirectories();
         expect(dirs.length).toBe(comp.maxVisible, "Should only have the max visible directories present.");
+        expect(dirs.length <= comp.allD.length).toBe(true, "It should never have more data than we asked for.");
 
         fixture.detectChanges();
         let dirEls = $('.directory-contents', el);
-        expect(dirEls.length).toBe(2, "The UI should contain exactly 2 preview directories.");
+        expect(dirEls.length).toBe(comp.maxVisible, "We should have the elements rendered.");
+
+        expect($('.current-content-dir').length).toBe(1, "We should only have 1 selected dir");
     }));
 
 
