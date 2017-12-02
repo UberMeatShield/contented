@@ -55,12 +55,10 @@ describe('TestingDirectory', () => {
         let items = dir.getContentList();
         let item = items[1];
         let results = dir.getIntervalAround(item, 3, 1);
-        console.log("WTF results?", item, results);
         expect(results.length).toBe(3, "We should have 3 items with this selection");
 
         let finalItemTest = items[items.length - 1];
         let enoughResults = dir.getIntervalAround(finalItemTest, 4, 1);
-        console.log("WTF", finalItemTest, enoughResults);
         expect(enoughResults.length).toBe(4, "We should still have 3 results, (it should adjust the start)");
     });
 
