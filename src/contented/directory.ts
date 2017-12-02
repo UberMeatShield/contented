@@ -35,6 +35,10 @@ export class Directory {
          return this.visibleSet;
     }
 
+    public indexOf(item: string) {
+        return _.indexOf(this.getContentList(), item);
+    }
+
     public setContents(contents: Array<string>) {
         this.contents = _.isArray(contents) ? contents : [];
         this.count = this.contents.length;

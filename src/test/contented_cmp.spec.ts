@@ -54,7 +54,23 @@ describe('TestingContentedsCmp', () => {
         expect(dirEls.length).toBe(2, "The UI should contain exactly 2 preview directories.");
     }));
 
-    it('Should limit the total number of images to those that it can actually load?', () => {
-    });
+
+    it('Should handle a click event to show a particular image.', fakeAsync(() => {
+        MockData.mockContentedService(comp._contentedService);
+        fixture.detectChanges();
+        tick(2000);
+
+        expect(comp.fullScreen).toBe(false, "We should not be in fullsceen mode");
+        expect($('.contented-view-cmp').length).toBe(0, "It should now have a view component.");
+
+        fixture.detectChanges();
+        let imgs = $('.preview-img');
+        expect(imgs.length > 1).toBe(true, "A bunch of images should be visible");
+        expect(comp.fullScreen).toBe(false, "We should not be in fullsceen mode even after everything is loaded");
+
+        let toClick = $(imgs[3]).trigger('click');
+        expect(comp.fullScreen).toBe(true, "It should now have a selected item");
+        expect(comp.getCurrentLocation()).toBe(imgs[3].src, "It should have the current item as the image");
+    }));
 });
 

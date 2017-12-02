@@ -132,8 +132,8 @@ export class ContentedCmp implements OnInit {
         let items = dir ? dir.getContentList() : [];
         if (this.rowIdx < items.length) {
             this.rowIdx++;
-            if (this.rowIdx === items.length) {
-                this.next();
+            if (this.rowIdx === items.length && this.idx !== this.allD.length - 1) {
+                this.next(true);
             }
         }
         this.setCurrentItem();
@@ -142,7 +142,7 @@ export class ContentedCmp implements OnInit {
     public rowPrev() {
         if (this.rowIdx > 0) {
             this.rowIdx--;
-        } else {
+        } else if (this.idx !== 0) {
             this.prev(true);
         }
     }
@@ -197,6 +197,23 @@ export class ContentedCmp implements OnInit {
             return new Directory(dir);
         });
         this.setCurrentItem();
+    }
+
+    public dirItemClicked(evt) {
+        console.log("Click event, change currently selected indexes, directory etc", evt);
+        let dir = _.get(evt, 'dir');
+        let item = _.get(evt, 'item');
+        let idx = _.findIndex(this.allD, {id: dir ? dir.id : -1});
+        let rowIdx = dir ? dir.indexOf(item) : -1;
+
+        console.log("Found idx and row index: ", idx, rowIdx);
+        if (idx >= 0 && rowIdx >= 0) {
+            this.idx = idx;
+            this.rowIdx = rowIdx;
+            this.viewFullscreen();
+        } else {
+            console.error("Should not be able to click an item we cannot find.", dir, item);
+        }
     }
 }
 
