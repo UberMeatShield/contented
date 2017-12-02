@@ -38,13 +38,13 @@ export class DirectoryCmp implements OnInit {
         return this.visibleSet;
     }
 
+    // Could also add in full directory load information here
     public imgLoaded(evt) {
         let img = evt.target;
         console.log("Img Loaded", img.naturalHeight, img.naturalWidth, img);
     }
 
     public imgClicked(evt) {
-        console.log("Clicked this item", this.dir, evt);
         this.clickedItem.emit({dir: this.dir, item: evt});
     }
 }

@@ -86,7 +86,7 @@ export class ContentedCmp implements OnInit {
     }
 
     public fullLoadDir(dir: Directory) {
-        if (dir.count < dir.total) {
+        if (dir.count < dir.total && !this.loading) {
             this.loading = true;
             this._contentedService.getFullDirectory(dir.id)
                 .finally(() => {this.loading = false; })
