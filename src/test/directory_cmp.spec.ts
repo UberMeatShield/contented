@@ -14,7 +14,7 @@ import * as _ from 'lodash';
 import {MockData} from './mock/mock_data';
 
 declare var $;
-fdescribe('TestingContentedsCmp', () => {
+describe('TestingContentedsCmp', () => {
     let fixture: ComponentFixture<DirectoryCmp>;
     let service: ContentedService;
     let comp: DirectoryCmp;
@@ -70,8 +70,10 @@ fdescribe('TestingContentedsCmp', () => {
         // Now test that when we are on the last image it properly selects that
         comp.currentViewItem = items[items.length - 1]; // Choose the last item in the list.
         fixture.detectChanges();
-        expect($('.preview-img', el).length).toBe(2, "Should render the last selected item, plus 1 previous");
-
+        expect(comp.maxRendered < dir.contents.length).toBe(true, "If we have the same max as total contents this does nothing");
+        expect($('.preview-img', el).length).toBe(comp.maxRendered, "Should render the last selected item, plus 1 previous");
     });
+
+
 });
 

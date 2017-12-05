@@ -12,7 +12,7 @@ import * as _ from 'lodash';
 import {MockData} from './mock/mock_data';
 
 declare var $;
-describe('TestingContentedsCmp', () => {
+describe('TestingContentedCmp', () => {
     let fixture: ComponentFixture<ContentedCmp>;
     let service: ContentedService;
     let comp: ContentedCmp;
@@ -48,13 +48,32 @@ describe('TestingContentedsCmp', () => {
 
         let dirs = comp.getVisibleDirectories();
         expect(dirs.length).toBe(comp.maxVisible, "Should only have the max visible directories present.");
+        expect(dirs.length <= comp.allD.length).toBe(true, "It should never have more data than we asked for.");
 
         fixture.detectChanges();
         let dirEls = $('.directory-contents', el);
-        expect(dirEls.length).toBe(2, "The UI should contain exactly 2 preview directories.");
+        expect(dirEls.length).toBe(comp.maxVisible, "We should have the elements rendered.");
+
+        expect($('.current-content-dir').length).toBe(1, "We should only have 1 selected dir");
     }));
 
-    it('Should limit the total number of images to those that it can actually load?', () => {
-    });
+
+    it('Should handle a click event to show a particular image.', fakeAsync(() => {
+        MockData.mockContentedService(comp._contentedService);
+        fixture.detectChanges();
+        tick(2000);
+
+        expect(comp.fullScreen).toBe(false, "We should not be in fullsceen mode");
+        expect($('.contented-view-cmp').length).toBe(0, "It should now have a view component.");
+
+        fixture.detectChanges();
+        let imgs = $('.preview-img');
+        expect(imgs.length > 1).toBe(true, "A bunch of images should be visible");
+        expect(comp.fullScreen).toBe(false, "We should not be in fullsceen mode even after everything is loaded");
+
+        let toClick = $(imgs[3]).trigger('click');
+        expect(comp.fullScreen).toBe(true, "It should now have a selected item");
+        expect(comp.getCurrentLocation()).toBe(imgs[3].src, "It should have the current item as the image");
+    }));
 });
 

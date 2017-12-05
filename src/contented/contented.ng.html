@@ -17,7 +17,11 @@
         [currentViewItem]="currentViewItem"
         [previewWidth]="previewWidth" 
         [previewHeight]="previewHeight"
+        (clickedItem)="dirItemClicked($event)"
       ></directory-cmp>
+      <button *ngIf="dir.count < dir.total" class="btn btn-primary" (click)="fullLoadDir(dir)">
+        Load {{dir.total - dir.count}} Items (F)
+      </button>
     </div>
   </div>
 </div>

@@ -20,19 +20,30 @@ export class Directory {
     }
 
     // For use in determining what should actually be visible at any time
-    public getIntervalAround(currentItem: string = '', max: number = 4, before: number = 0) {
-         this.visibleSet = null;
+    public getIntervalAround(currentItem: string = '', requestedVisible: number = 4, before: number = 0) {
+        this.visibleSet = null;
 
-         let items = this.getContentList() || [];
-         let idx = 0;
-         if (currentItem) {
-             idx = _.indexOf(items, currentItem);
-             idx = idx >= 0 ? idx : 0;
-             idx = before && (idx - before > 0) ? idx - before : 0;
-         }
-         let end = idx + (max >= 1 ? max : 4);
-         this.visibleSet = items.slice(idx, end < items.length ? end : items.length) || [];
-         return this.visibleSet;
+        let items = this.getContentList() || [];
+        let start = 0;
+        let max = requestedVisible < items.length ? requestedVisible : items.length;
+
+        if (currentItem) {
+            start = _.indexOf(items, currentItem);
+            start = start >= 0 ? start : 0;
+            start = before && (start - before > 0) ? start - before : 0;
+        }
+        let end = start + (max >= 1 ? max : 4);
+            end = end < items.length ? end : items.length;
+        let interval = (end - start);
+        if (interval < max) {
+            start = start - (max - interval);
+        }
+        this.visibleSet = items.slice(start, end) || [];
+        return this.visibleSet;
+    }
+
+    public indexOf(item: string) {
+        return _.indexOf(this.getContentList(), item);
     }
 
     public setContents(contents: Array<string>) {
