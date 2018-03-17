@@ -53,10 +53,17 @@ export class ContentedCmp implements OnInit {
             case 'f':
                 this.fullLoad();
                 break;
+            case 'x':
+                this.saveItem();
+                break;
             default:
                 break;
         }
         this.setCurrentItem();
+    }
+
+    public saveItem() {
+        this._contentedService.download(this.getCurrentDir(), this.rowIdx);
     }
 
     public fullLoad() {

@@ -3,6 +3,7 @@ export let ApiDef = {
     base: base,
     contented: {
         preview: base + 'content/',
-        fulldir: base + 'content/{dir}'
+        fulldir: base + 'content/{dir}',
+        download: base + 'download/{id}/{filename}'
     }
 };

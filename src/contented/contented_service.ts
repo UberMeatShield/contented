@@ -1,5 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders, HttpParams, HttpErrorResponse} from '@angular/common/http';
+import {Directory} from './directory';
 import {ApiDef} from './api_def';
 
 // The manner in which RxJS does this is really stupid, saving 50K for hours of dev time is fail
@@ -28,6 +29,18 @@ export class ContentedService {
     public getPreview() {
         return this.http.get(ApiDef.contented.preview, this.options)
           .catch(err => this.handleError(err));
+    }
+
+    public download(dir: Directory, rowIdx: number) {
+        console.log("Attempting to download", dir, rowIdx);
+
+        let filename = dir && rowIdx >= 0 && rowIdx < dir.contents.length ? dir.contents[rowIdx] : '';
+        if (!filename) {
+            console.log("No file specified, wtf", rowIdx);
+        }
+        let downloadUrl = ApiDef.contented.download.replace('{id}', dir.id).replace('{filename}', filename);
+        console.log("DownloadURL", downloadUrl);
+        window.open(downloadUrl);
     }
 
     public getFullDirectory(dir: string) {

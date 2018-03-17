@@ -1,6 +1,10 @@
 <div class="contented-view-cmp">
   <span *ngIf="viewUrl" [class.recalculated]="calculateDimensions()">
-    <img class="full-view-img" [src]="viewUrl" [width]="maxWidth" [height]="maxHeight">
+    <img class="full-view-img" 
+      [src]="viewUrl" 
+      [width]="maxWidth" 
+      [height]="maxHeight"
+    >
   </span>
   {{viewUrl}}
   <span *ngIf="!viewUrl">
