@@ -1,6 +1,7 @@
 package web
 
 import (
+	"io"
     "fmt"
     "log"
     "encoding/json"
@@ -78,18 +79,25 @@ func ListDefaultHandler(w http.ResponseWriter, r *http.Request) {
 func DownloadHandler(w http.ResponseWriter, r *http.Request) {
     // w.Header().Add("Content-Disposition", "Attachment")
     fmt.Println("Calling into download handler")
-    w.Header().Set("Content-Type", "application/json")
 
     vars := mux.Vars(r)
     dir_to_list := vars["dir_to_list"]
     filename := vars["filename"]
     if validDirs[dir_to_list] {
-        var result = make(map[string]string)
-        result["dir"] = dir_to_list
-        result["filename"] = filename
-        j, _ := json.Marshal(result)
-        w.Write(j)
+
+		fileref := utils.GetFileContents(dir + dir_to_list, filename)
+		if fileref != nil {
+            w.Header().Set("Content-Disposition", "attachment; filename=" + filename)
+            w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
+		    io.Copy(w, fileref)
+		} else {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(403)
+			w.Write(invalidDirMsg(dir_to_list, filename))
+		}
+
     } else {
+		w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(403)
         w.Write(invalidDirMsg(dir_to_list, filename))
     }
@@ -119,6 +127,7 @@ func invalidDirMsg(directory string, filename string) []byte {
     j, _ := json.Marshal(err)
     return j
 }
+
 
 /**
  * Get the response for a single specific directory

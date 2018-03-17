@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"os"
+	"bufio"
     "io/ioutil"
 	"log"
 )
@@ -41,6 +43,17 @@ func ListDirs(dir string, previewCount int) []DirContents {
     }
 	log.Println("Reading from: ", dir, " With preview count", previewCount)
     return listings
+}
+
+/**
+ * Return a reader for the file contents
+ */
+func GetFileContents(dir string, filename string) *bufio.Reader {
+	f, err := os.Open(dir + "/" + filename)
+	if err != nil {
+		panic(err)
+	}
+    return bufio.NewReader(f)
 }
 
 /**
