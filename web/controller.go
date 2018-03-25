@@ -1,7 +1,7 @@
 package web
 
 import (
-	"io"
+    "io"
     "fmt"
     "log"
     "encoding/json"
@@ -28,7 +28,7 @@ var previewCount int
 func SetupContented(router *mux.Router, contentDir string, numToPreview int) {
     dir = contentDir
     validDirs = utils.GetDirectoriesLookup(dir)
-	previewCount = numToPreview
+    previewCount = numToPreview
 
     router.PathPrefix("/contented/").Handler(http.StripPrefix("/contented/", http.FileServer(http.Dir(dir))))
     router.HandleFunc("/content/", ListDefaultHandler)
@@ -87,19 +87,19 @@ func DownloadHandler(w http.ResponseWriter, r *http.Request) {
     filename := vars["filename"]
     if validDirs[dir_to_list] {
 
-		fileref := utils.GetFileContents(dir + dir_to_list, filename)
-		if fileref != nil {
+        fileref := utils.GetFileContents(dir + dir_to_list, filename)
+        if fileref != nil {
             w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
             w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
-		    io.Copy(w, fileref)
-		} else {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(403)
-			w.Write(invalidDirMsg(dir_to_list, filename))
-		}
+            io.Copy(w, fileref)
+        } else {
+            w.Header().Set("Content-Type", "application/json")
+            w.WriteHeader(403)
+            w.Write(invalidDirMsg(dir_to_list, filename))
+        }
 
     } else {
-		w.Header().Set("Content-Type", "application/json")
+        w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(403)
         w.Write(invalidDirMsg(dir_to_list, filename))
     }
