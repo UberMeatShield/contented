@@ -23,10 +23,12 @@ type HttpError struct{
 
 var dir string
 var validDirs map[string]bool
+var previewCount int
 
-func SetupContented(router *mux.Router, contentDir string) {
+func SetupContented(router *mux.Router, contentDir string, numToPreview int) {
     dir = contentDir
     validDirs = utils.GetDirectoriesLookup(dir)
+	previewCount = numToPreview
 
     router.PathPrefix("/contented/").Handler(http.StripPrefix("/contented/", http.FileServer(http.Dir(dir))))
     router.HandleFunc("/content/", ListDefaultHandler)
@@ -70,7 +72,7 @@ func ListDefaultHandler(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
     response := PreviewResults{
         Success: true,
-        Results: utils.ListDirs(dir, 4),
+        Results: utils.ListDirs(dir, previewCount),
     }
     j, _ := json.Marshal(response)
     w.Write(j)
@@ -87,7 +89,7 @@ func DownloadHandler(w http.ResponseWriter, r *http.Request) {
 
 		fileref := utils.GetFileContents(dir + dir_to_list, filename)
 		if fileref != nil {
-            w.Header().Set("Content-Disposition", "attachment; filename=" + filename)
+            w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
             w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
 		    io.Copy(w, fileref)
 		} else {
@@ -118,7 +120,7 @@ func ListSpecificHandler(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-
+// TODO: Make this a method that does the writting & just takes debug data
 func invalidDirMsg(directory string, filename string) []byte {
     err := HttpError{
         Error: "This is not a valid directory: " + directory + " " + filename,

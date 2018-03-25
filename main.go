@@ -10,17 +10,19 @@ import (
     "contented/web"
 )
 
-var dir string
-var port string = "8000"
 func main() {
+	var dir string
+	var port string = "8000"
+
     flag.StringVar(&dir, "dir", ".", "Directory to serve files from")
     flag.StringVar(&port, "port", "8000", "Port to run the webserver.")
+	previewCount := flag.Int("previewCount", 8, "Number of refrences to return by default")
     flag.Parse()
 
     fmt.Println("Using this directory As the static root: ", dir, port, "WAT")
 
     router := mux.NewRouter()
-	web.SetupContented(router, dir)
+	web.SetupContented(router, dir, *previewCount)
 	web.SetupStatic(router, "./static")
 
     srv := &http.Server{
