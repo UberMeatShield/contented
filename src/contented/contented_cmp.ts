@@ -194,8 +194,8 @@ export class ContentedCmp implements OnInit {
         let width = !window['jasmine'] ? document.body.clientWidth : 800;
         let height = !window['jasmine'] ? document.body.clientHeight : 800;
 
-        this.previewWidth = (width / 4) - 20;
-        this.previewHeight = (height / this.maxVisible) - 20;
+        this.previewWidth = (width / 4) - 35;
+        this.previewHeight = (height / this.maxVisible) - 35;
     }
 
     public previewResults(response) {
