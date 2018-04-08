@@ -6,6 +6,7 @@ import (
     "flag"
     "log"
     "net/http"
+    "testing"
     "github.com/gorilla/mux"
     "contented/unit"
     "contented/web"
@@ -33,7 +34,8 @@ func main() {
 
 func unit_test(server_url string) {
     fmt.Println("Run the unit tests instead")
-    unit.Prime()
+    t := testing.T{}
+    unit.IntegrationLoad(&t)
 }
 
 
