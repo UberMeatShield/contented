@@ -5,12 +5,10 @@ import {Http} from '@angular/http';
     selector: 'app-contented',
     templateUrl: 'app.ng.html'
 })
-export class App implements OnInit {
+export class App {
+
     constructor(private http: Http) {
 
-    }
-
-    ngOnInit() {
     }
 }
 

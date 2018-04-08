@@ -235,7 +235,7 @@ gulp.task(tasks.buildGo, shell.task([
 );
 
 gulp.task(tasks.testGo, shell.task([
-      'go test $(go list ./... | grep -v /vendor/)'
+      'go test -v $(go list ./... | grep -v /vendor/)'
     ])
 );
 
