@@ -11,7 +11,7 @@ import * as sass from 'gulp-sass';
 import * as del from 'del';
 
 let base: string = './';
-let appName: string = "ingestui"; // Normal app to build, compile and test
+let appName: string = "contented"; // Normal app to build, compile and test
 let app: string  = `${appName}/`;
 let dir = {
     base:  base,
