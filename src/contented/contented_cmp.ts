@@ -1,6 +1,7 @@
 import {OnInit, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
 import {ContentedService} from './contented_service';
 import {Directory} from './directory';
+import {finalize} from 'rxjs/operators';
 
 import * as _ from 'lodash';
 
@@ -96,7 +97,7 @@ export class ContentedCmp implements OnInit {
         if (dir.count < dir.total && !this.loading) {
             this.loading = true;
             this._contentedService.getFullDirectory(dir.id)
-                .finally(() => {this.loading = false; })
+                .pipe(finalize(() => {this.loading = false; }))
                 .subscribe(
                     res => { this.dirResults(dir, res); },
                     err => { console.error(err); }

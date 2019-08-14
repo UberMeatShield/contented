@@ -4,14 +4,8 @@ import {Directory} from './directory';
 import {ApiDef} from './api_def';
 
 // The manner in which RxJS does this is really stupid, saving 50K for hours of dev time is fail
-import {Observable} from 'rxjs/Observable';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/catch';
-import 'rxjs/add/observable/fromPromise';
-import 'rxjs/add/observable/forkJoin';
-import 'rxjs/add/operator/finally';
-import 'rxjs/add/operator/debounceTime';
-import 'rxjs/add/operator/distinctUntilChanged';
+import {Observable, from as observableFrom} from 'rxjs';
+import {catchError, map, finalize} from 'rxjs/operators';
 
 import * as _ from 'lodash';
 @Injectable()
@@ -28,7 +22,7 @@ export class ContentedService {
 
     public getPreview() {
         return this.http.get(ApiDef.contented.preview, this.options)
-          .catch(err => this.handleError(err));
+          .pipe(catchError(err => this.handleError(err)));
     }
 
     public download(dir: Directory, rowIdx: number) {
@@ -46,7 +40,7 @@ export class ContentedService {
     public getFullDirectory(dir: string) {
         let url = ApiDef.contented.fulldir.replace('{dir}', dir);
         return this.http.get(url, this.options)
-          .catch(err => this.handleError(err));
+          .pipe(catchError(err => this.handleError(err)));
     }
 
     public handleError(err: HttpErrorResponse) {
@@ -73,6 +67,6 @@ export class ContentedService {
         }
         parsed['url'] = err.url;
         parsed['code'] = err.status;
-        return Observable.fromPromise(Promise.reject(parsed));
+        return observableFrom(Promise.reject(parsed));
     }
 }
