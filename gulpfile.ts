@@ -17,12 +17,12 @@ let dir = {
     base:  base,
     test:  base + 'src/test',
     ts:    base + 'src/',
-    sass:  base + 'src/sass/',
+    sass:  base + 'src/scss/',
     node:  base + 'node_modules/',
     go:    base,
     deploy: 'static/build/',
-    build: base + app + 'static/build/',
-    thirdparty: base + app + 'static/thirdparty',
+    build: base + 'static/build/',
+    thirdparty: base + 'static/thirdparty',
 };
 
 // Generic execute with a resolve by spawning a child process
@@ -156,7 +156,7 @@ const goTest = (done) => {
 
 // Common group tasks that make up the real watchers and deployment
 // ===============================================
-const copy = series(copyLibCSS, copyFonts, copyDocs);
+const copy = series(copyLibCSS, copyFonts);  // , copyDocs);
 copy.description = "Copy all the various library fonts, css etc.";
 
 const qa = series(sassBuild, tslint, typescriptTests, goTest);
