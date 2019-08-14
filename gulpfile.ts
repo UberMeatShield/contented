@@ -132,36 +132,26 @@ const sassBuild = () => {
 // =================================================
 const watchGo = () => {
     watch(
-      [dir.go + '/**/*.go',
-       dir.base + 'tests/**/*.go'
-      ],
-      series(console.log)
-      // [goChanged]
+      [dir.go + '/**/*.go'],
+      [goChanged]
     );
 };
 
 
 const restartServer = (done) => {
-    console.log("Waiting for server to die then restarting");
     return execCmd('./contented',  ['--dir',  './static/content/', '&'], done);
 };
 
 const goKillServer = (done) => {
     return execCmd('pkill',  ['-9', 'contented'], done);
 };
-/*
-gulp.task(tasks.killGoServer, shell.task([
-    ])
-);
 
-gulp.task(tasks.buildGo, shell.task([
-      "go build contented"
-    ])
-);
-*/
+const goBuild = (done) => {
+    return execCmd("go", ["build", "contented"], done);
+};
 
 const goTest = (done) => {
-      execCmd('go', ['test', '-v', '$(go list ./... | grep -v /vendor/)'], done);
+      execCmd('go', ['test', '-v', './...'], done);
 };
 
 // Common group tasks that make up the real watchers and deployment
@@ -169,8 +159,7 @@ const goTest = (done) => {
 const copy = series(copyLibCSS, copyFonts, copyDocs);
 copy.description = "Copy all the various library fonts, css etc.";
 
-const qa = series(sassBuild, tslint, typescriptTests);
-// const qa = series(sassBuild, tslint, typescriptTests, testGo);
+const qa = series(sassBuild, tslint, typescriptTests, goTest);
 qa.description = "Run our tests and lint for go and typescript";
 
 const buildDev = series(clean, sassBuild, typescript, copy);
@@ -179,8 +168,8 @@ buildDev.description = "Faster no QA version that should get the webapp up and r
 const typescriptChanged = series(sassBuild, tslint, typescriptTests, copy);
 typescriptChanged.description = "After a typescript change:  sass compile, lint and running the tests.";
 
-// const goChanged = series(uwsgiRestart, pylint, goTest);
-// goChanged.description = "Kick the go server after a reboot"
+const goChanged = series(goTest, goKillServer, goBuild, restartServer);
+goChanged.description = "Kick the go server after a reboot";
 
 const buildDeploy = series(clean, sassBuild, typescriptProd, copy);
 buildDeploy.description = "The production build, fully compile the typescript / tree shake etc.";
@@ -242,7 +231,8 @@ export {
     sassWatch,
     goWatch,
     goTest,
-//    goChanged,
+    goBuild,
+    goChanged,
     goKillServer,
     qa,
     qaMonitor,
