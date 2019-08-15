@@ -21,6 +21,7 @@ let dir = {
     node:  base + 'node_modules/',
     go:    base,
     deploy: 'static/build/',
+    css: 'static/css/',
     build: base + 'static/build/',
     thirdparty: base + 'static/thirdparty',
 };
@@ -60,13 +61,13 @@ const tslint = (done) => {
 // Build our typescript, the default option is to use Angulars watching cli to only recompile changes
 const typescript = (done) => {
     let buildWatch = typeof done === 'function' ? 'false' : 'true';
-    let typescriptCmd = `ng build ${appName} --configuration=dev --watch=${buildWatch} --deploy-url ${dir.deploy}`;
+    let typescriptCmd = `ng build ${appName} --configuration=dev --watch=${buildWatch} --deploy-url /${dir.deploy}`;
     return ngExec(typescriptCmd, done);
 };
 
 // Full tree shaking production build, removes code, minify etc
 const typescriptProd = (done) => {
-    let cmd = `ng build ${appName}  --prod --no-progress --deploy-url ${dir.deploy}`;
+    let cmd = `ng build ${appName}  --prod --no-progress --deploy-url /${dir.deploy}`;
     return ngExec(cmd, done);
 };
 
@@ -79,7 +80,7 @@ const typescriptTests = (done) => {
 };
 
 // Remove old code that is copied, ensures we are actually building new code
-const clean = async () => {
+const clean = () => {
     let cleaning = [
          dir.build + '**/*',
          dir.ts + 'maps/*'
@@ -124,7 +125,7 @@ const copyDocs = async () => {
 const sassBuild = () => {
     return src(dir.sass + '/*.scss')
         .pipe(sass())
-        .pipe(dest(dir.build + '/css'));
+        .pipe(dest(dir.css));
 };
 
 
@@ -138,8 +139,12 @@ const watchGo = () => {
 };
 
 
+// This kicks off the server in the background, and we just immediately resolve
 const restartServer = (done) => {
-    return execCmd('./contented',  ['--dir',  './static/content/', '&'], done);
+    return new Promise((resolve, reject) => {
+        execCmd('./contented',  ['--dir',  './static/content/', '&'], resolve);
+        done();
+    });
 };
 
 const goKillServer = (done) => {
@@ -162,13 +167,14 @@ copy.description = "Copy all the various library fonts, css etc.";
 const qa = series(sassBuild, tslint, typescriptTests, goTest);
 qa.description = "Run our tests and lint for go and typescript";
 
-const buildDev = series(clean, sassBuild, typescript, copy);
+const buildDev = series(clean, typescript, sassBuild, copy);
 buildDev.description = "Faster no QA version that should get the webapp up and running.";
 
-const typescriptChanged = series(sassBuild, tslint, typescriptTests, copy);
+// Note with most of these changed task there is seperate process running the actual build
+const typescriptChanged = series(tslint, typescriptTests, typescript, sassBuild, copy);
 typescriptChanged.description = "After a typescript change:  sass compile, lint and running the tests.";
 
-const goChanged = series(goTest, goKillServer, goBuild, restartServer);
+const goChanged = series(goTest, goBuild, goKillServer, restartServer);
 goChanged.description = "Kick the go server after a reboot";
 
 const buildDeploy = series(clean, sassBuild, typescriptProd, copy);
@@ -181,14 +187,14 @@ const goWatch = async () => {
       [dir.go + '/**/*.go',
        dir.base + 'tests/**/*.go',
       ],
-      // series(goChanged)
-      series(console.log)
+      series(goChanged)
     );
 };
 
 const typescriptWatch = async () => {
+    typescriptTests(null); // Kick off a watcher which will run the tests
     typescript(null); // Running compile process for the UI Code (self watches)
-    typescriptTests(null); // Running compile to execute the tests in parallel (self watches)
+
     return watch([
           dir.ts + '**/**.ts',
           dir.ts + '**/**.html',
@@ -210,7 +216,8 @@ const sassWatch = async () => {
 const qaMonitor = series(qa, typescriptWatch, goWatch, sassWatch);
 qaMonitor.description = "Run our QA, then monitor for further changes";
 
-const defaultTasks = series(buildDev, qaMonitor);
+// const defaultTasks = series(clean, sassBuild, copy, qaMonitor, );
+const defaultTasks = series(clean, sassBuild, copy, goChanged, qaMonitor);
 defaultTasks.description = "The standard development watch / build";
 
 // Export all our various tasks
