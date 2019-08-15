@@ -1,6 +1,7 @@
 import {OnInit, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
 import {ContentedService} from './contented_service';
 import {Directory} from './directory';
+import {finalize} from 'rxjs/operators';
 
 import * as _ from 'lodash';
 
@@ -15,8 +16,8 @@ export class ContentedCmp implements OnInit {
     @Input() idx: number = 0; // Which item within the directory are we viewing
 
     public loading: boolean = false;
-    public previewWidth: number; // Based on current client page sizes, scale the preview images natually
-    public previewHeight: number; // height for the previews ^
+    public previewWidth: number = 200; // Based on current client page sizes, scale the preview images natually
+    public previewHeight: number = 200; // height for the previews ^
 
     private currentViewItem: string; // The current indexed item that is considered selected
     public fullScreen: boolean = false; // Should we view fullscreen the current item
@@ -24,8 +25,8 @@ export class ContentedCmp implements OnInit {
     public allD: Array<Directory>; // All the directories we have loaded
 
     constructor(public _contentedService: ContentedService) {
-        this.calculateDimensions();
     }
+
 
     // On the document keypress events, listen for them (probably need to set them only to component somehow)
     @HostListener('document:keypress', ['$event'])
@@ -82,21 +83,25 @@ export class ContentedCmp implements OnInit {
 
     public ngOnInit() {
         console.log("Contented comp is alive.");
+        this.calculateDimensions();
         this.loadDirs();
     }
 
     public loadDirs() {
-        this._contentedService.getPreview().subscribe(
-            res => { this.previewResults(res); },
-            err => { console.error(err); }
-        );
+        this.loading = true;
+        this._contentedService.getPreview()
+            .pipe(finalize(() => {this.loading = false; }))
+            .subscribe(
+                res => { this.previewResults(res); },
+                err => { console.error(err); }
+            );
     }
 
     public fullLoadDir(dir: Directory) {
         if (dir.count < dir.total && !this.loading) {
             this.loading = true;
             this._contentedService.getFullDirectory(dir.id)
-                .finally(() => {this.loading = false; })
+                .pipe(finalize(() => {this.loading = false; }))
                 .subscribe(
                     res => { this.dirResults(dir, res); },
                     err => { console.error(err); }
@@ -190,12 +195,13 @@ export class ContentedCmp implements OnInit {
     }
 
     // TODO: Being called abusively in the directive rather than on page resize events
+    @HostListener('window:resize', ['$event'])
     public calculateDimensions() {
         let width = !window['jasmine'] ? document.body.clientWidth : 800;
         let height = !window['jasmine'] ? document.body.clientHeight : 800;
 
-        this.previewWidth = (width / 4) - 35;
-        this.previewHeight = (height / this.maxVisible) - 35;
+        this.previewWidth = (width / 4) - 41;
+        this.previewHeight = (height / this.maxVisible) - 41;
     }
 
     public previewResults(response) {

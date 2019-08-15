@@ -1,5 +1,4 @@
-import {Observable} from 'rxjs/Observable';
-import 'rxjs/add/observable/fromPromise';
+import {Observable, from as observableFrom} from 'rxjs';
 
 declare var require: any;
 class MockLoader {
@@ -33,7 +32,7 @@ class MockLoader {
                     return shouldReject ? reject(val) : resolve(val);
                 }, timeout);
             });
-            return Observable.fromPromise(p);
+            return observableFrom(p);
         };
     }
 }
