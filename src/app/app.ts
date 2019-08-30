@@ -1,5 +1,4 @@
 import {Component, OnInit} from '@angular/core';
-import {Http} from '@angular/http';
 
 @Component({
     selector: 'app-contented',
@@ -7,7 +6,7 @@ import {Http} from '@angular/http';
 })
 export class App {
 
-    constructor(private http: Http) {
+    constructor() {
 
     }
 }
