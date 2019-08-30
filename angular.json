@@ -102,11 +102,6 @@
           }
         }
       }
-    },
-    "contented-e2e": {
-      "root": "",
-      "sourceRoot": "e2e",
-      "projectType": "application"
     }
   },
   "defaultProject": "contented",
