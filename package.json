@@ -17,8 +17,6 @@
     "@angular/common": "6.1.0",
     "@angular/core": "6.1.0",
     "@angular/forms": "6.1.0",
-    "@angular/material": "^6.1.0",
-    "@angular/material-moment-adapter": "^6.3.1",
     "@angular/platform-browser": "6.1.0",
     "@angular/platform-browser-dynamic": "6.1.0",
     "@angular/platform-server": "6.1.0",
