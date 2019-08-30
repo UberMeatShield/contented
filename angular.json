@@ -79,10 +79,7 @@
             "polyfills": "src/polyfills.ts",
             "tsConfig": "src/tsconfig.spec.json",
             "scripts": [],
-            "styles": [
-              "src/sass/main.scss",
-              "node_modules/@angular/material/prebuilt-themes/deeppurple-amber.css"
-            ],
+            "styles": [],
             "assets": [
               "src/assets",
               "src/favicon.ico"
