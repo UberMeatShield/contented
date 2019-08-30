@@ -1,6 +1,6 @@
 import {NgModule} from '@angular/core';
 import {BrowserModule} from '@angular/platform-browser';
-import {HttpModule} from '@angular/http';
+import {HttpClientModule} from '@angular/common/http';
 
 import {ContentedCmp} from './contented_cmp';
 import {DirectoryCmp} from './directory_cmp';
@@ -9,7 +9,7 @@ import {ContentedService} from './contented_service';
 import {Directory} from './directory';
 
 @NgModule({
-  imports: [BrowserModule, HttpModule],
+  imports: [BrowserModule, HttpClientModule],
   declarations: [ContentedCmp, ContentedViewCmp, DirectoryCmp],
   exports: [ContentedCmp, ContentedViewCmp],
   providers: [ContentedService]
