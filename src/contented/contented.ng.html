@@ -1,19 +1,28 @@
 <div class="contented-cmp">
   Contented Component Loaded
-  FullScreen: {{fullScreen}} item {{currentViewItem}}
 
   <div *ngIf="fullScreen">
     {{getCurrentLocation()}}
     <contented-view [viewUrl]="currentViewItem"></contented-view>
   </div>
 
-  <!-- 
-      Still occasionally has a resize conflict when rendering (window resize triggers / digest renders)
-      - Might need to debounce?
-      - Might need to only adjust over a certain ratio of alteration
-  -->
   <div class="contented-dir" name="contents" *ngFor="let dir of getVisibleDirectories()">
     <div class="directory-contents" [class.current-content-dir]="dir == getCurrentDir()">
+
+      <!-- Make this into a component maybe? -->
+      <div class="directory-meta">
+        <span class="bold">{{dir.id}}</span>
+        <span>
+          {{rowIdx}} / {{dir?.contents?.length}} name: {{currentViewItem}}
+          <span *ngIf="dir?.contents?.length < dir.total">
+            press (F) or: 
+            <button class="btn btn-primary" (click)="fullLoadDir(dir)">
+              Load ({{ dir.total - dir.count }}) Items
+            </button>
+          </span>
+        </span>
+      </div>
+
       <directory-cmp 
         [dir]="dir" 
         [currentViewItem]="currentViewItem"
@@ -21,9 +30,6 @@
         [previewHeight]="previewHeight"
         (clickedItem)="dirItemClicked($event)"
       ></directory-cmp>
-      <button *ngIf="dir.count < dir.total" class="btn btn-primary" (click)="fullLoadDir(dir)">
-        Load {{dir.total - dir.count}} Items (F)
-      </button>
     </div>
   </div>
 </div>
