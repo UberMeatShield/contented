@@ -11,6 +11,16 @@
         <span class="dir-name">{{dir?.id}}</span>
         <span>
           {{rowIdx}} / {{dir?.contents?.length}} name: {{currentViewItem}}
+          <mat-progress-bar
+            [value]="dir.count ? ((rowIdx + 1) * 100 / dir.count) : 1"
+            [color]="'primary'"
+            [bufferValue]="dir?.total"
+            [mode]="dir.count == dir.total ? 'determinate' : 'buffer'"
+          ></mat-progress-bar>
+
+          Styles are not good about recompile
+          Swap mode form buffer to something 
+          
           <span *ngIf="dir?.contents?.length < dir.total">
             press (F) or: 
             <button class="btn btn-primary" (click)="fullLoadDir(dir)">

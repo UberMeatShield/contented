@@ -20,7 +20,9 @@
               "src/assets",
               "src/favicon.ico"
             ],
-            "styles": [],
+            "styles": [
+               "node_modules/@angular/material/prebuilt-themes/deeppurple-amber.css"
+            ],
             "scripts": []
           },
           "configurations": {
