@@ -1,7 +1,7 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "outDir": "../static/build",
+    "outDir": "../static/tests",
     "baseUrl": "./",
     "types": [
       "jasmine",

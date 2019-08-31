@@ -20,6 +20,7 @@ export class ContentedCmp implements OnInit {
     public previewHeight: number = 200; // height for the previews ^
 
     private currentViewItem: string; // The current indexed item that is considered selected
+    public currentDir: Directory;
     public fullScreen: boolean = false; // Should we view fullscreen the current item
     public directories: Array<Directory>; // Current set of visible directories
     public allD: Array<Directory>; // All the directories we have loaded
@@ -134,7 +135,8 @@ export class ContentedCmp implements OnInit {
 
     public getCurrentDir() {
         if (this.idx < this.allD.length && this.idx >= 0) {
-            return this.allD[this.idx];
+            this.currentDir = this.allD[this.idx];
+            return this.currentDir;
         }
         return null;
     }
