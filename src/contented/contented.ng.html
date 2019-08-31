@@ -1,5 +1,5 @@
 <div class="contented-cmp">
-  Contented Component Loaded
+    Contented Component showing {{idx}} of {{allD?.length}} directories.
 
   <div *ngIf="fullScreen">
     {{getCurrentLocation()}}
@@ -11,7 +11,7 @@
 
       <!-- Make this into a component maybe? -->
       <div class="directory-meta">
-        <span class="bold">{{dir.id}}</span>
+        <span class="dir-name">{{dir.id}}</span>
         <span>
           {{rowIdx}} / {{dir?.contents?.length}} name: {{currentViewItem}}
           <span *ngIf="dir?.contents?.length < dir.total">
