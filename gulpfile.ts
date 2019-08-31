@@ -196,7 +196,7 @@ const goWatch = async () => {
 
 const typescriptWatch = async () => {
     // Kick off a watcher which will run the tests
-    //typescriptTests(null);
+    typescriptTests(null);
 
     // Running compile process for the UI Code (self watches)
     typescript(null);

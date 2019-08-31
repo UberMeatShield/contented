@@ -1,17 +1,14 @@
 <div class="contented-cmp">
-    Contented Component showing {{idx}} of {{allD?.length}} directories.
+  Contented Component showing {{idx}} of {{allD?.length}} directories.
 
   <div *ngIf="fullScreen">
-    {{getCurrentLocation()}}
-    <contented-view [viewUrl]="currentViewItem"></contented-view>
+    <contented-view [viewUrl]="getCurrentLocation()"></contented-view>
   </div>
 
   <div class="contented-dir" name="contents" *ngFor="let dir of getVisibleDirectories()">
     <div class="directory-contents" [class.current-content-dir]="dir == getCurrentDir()">
-
-      <!-- Make this into a component maybe? -->
-      <div class="directory-meta">
-        <span class="dir-name">{{dir.id}}</span>
+      <div class="directory-meta" *ngIf="!!dir">
+        <span class="dir-name">{{dir?.id}}</span>
         <span>
           {{rowIdx}} / {{dir?.contents?.length}} name: {{currentViewItem}}
           <span *ngIf="dir?.contents?.length < dir.total">
@@ -24,12 +21,14 @@
       </div>
 
       <directory-cmp 
-        [dir]="dir" 
-        [currentViewItem]="currentViewItem"
+        [directory]="dir" 
+        [currentViewItem]="getCurrentLocation()"
+        (clickedItem)="dirItemClicked($event)"
         [previewWidth]="previewWidth" 
         [previewHeight]="previewHeight"
-        (clickedItem)="dirItemClicked($event)"
       ></directory-cmp>
+      <!--
+      -->
     </div>
   </div>
 </div>
