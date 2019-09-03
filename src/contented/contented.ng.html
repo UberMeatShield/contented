@@ -8,26 +8,25 @@
   <div class="contented-dir" name="contents" *ngFor="let dir of getVisibleDirectories()">
     <div class="directory-contents" [class.current-content-dir]="dir == getCurrentDir()">
       <div class="directory-meta" *ngIf="!!dir">
-        <span class="dir-name">{{dir?.id}}</span>
-        <span class="dir-meta-text">
-          <span class="row-idx">{{rowIdx}}</span> / 
-          <span class="dir-max-count">{{dir?.contents?.length}}</span> name: 
-          <span class="current-item">{{currentViewItem}}</span>
+        <mat-progress-bar
+          [value]="dir.count ? ((rowIdx + 1) * 100 / dir.count) : 1"
+          [color]="'primary'"
+          [bufferValue]="dir?.total"
+          [mode]="dir.count == dir.total ? 'determinate' : 'buffer'"
+        ></mat-progress-bar>
 
-          <mat-progress-bar
-            [value]="dir.count ? ((rowIdx + 1) * 100 / dir.count) : 1"
-            [color]="'primary'"
-            [bufferValue]="dir?.total"
-            [mode]="dir.count == dir.total ? 'determinate' : 'buffer'"
-          ></mat-progress-bar>
-          
+        <div class="directory-meta-text">
+          <span class="dir-name">{{dir?.id}}</span>
+          <span class="row-idx"> {{rowIdx}}</span> / 
+          <span class="dir-max-count"> {{dir?.contents?.length}}</span> name: 
+          <span class="current-item"> {{currentViewItem}}</span>
           <span *ngIf="dir?.contents?.length < dir.total">
             press (F) or: 
             <button class="btn btn-primary" (click)="fullLoadDir(dir)">
               Load ({{ dir.total - dir.count }}) Items
             </button>
           </span>
-        </span>
+        </div>
       </div>
 
       <directory-cmp 

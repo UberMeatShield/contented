@@ -90,7 +90,6 @@ describe('TestingContentedCmp', () => {
         fixture.detectChanges();
 
         let preview = MockData.getPreview();
-
         let previewReq = httpMock.expectOne(req => req.url === ApiDef.contented.preview);
         let params: HttpParams = previewReq.request.params;
         previewReq.flush(preview);
@@ -103,6 +102,14 @@ describe('TestingContentedCmp', () => {
         expect(dirs.length).toBe(2, "There should be two directories present");
         expect(_.get(preview, 'results[0].id')).toBe($(dirs[0]).text(), 'It should have the dir id');
         expect(_.get(preview, 'results[1].id')).toBe($(dirs[1]).text(), 'It should have the dir id');
+
+        let progBars = $('mat-progress-bar');
+        expect(progBars.length).toBe(2, "We should have two rendered bars");
+        expect($(progBars.get(0)).attr('mode')).toBe('buffer', "First dir is not fully loaded");
+
+        // Fully load, check that it is not longer in buffer mode
+        // TODO: Go to the next dir
+        // Check the current row index (increase the loaded data), go next, check visibile state
     });
 });
 
