@@ -1,29 +1,44 @@
 <div class="contented-cmp">
-  Contented Component Loaded
-  FullScreen: {{fullScreen}} item {{currentViewItem}}
+  Contented Component showing {{idx}} of {{allD?.length}} directories.
 
   <div *ngIf="fullScreen">
-    {{getCurrentLocation()}}
-    <contented-view [viewUrl]="currentViewItem"></contented-view>
+    <contented-view [viewUrl]="getCurrentLocation()"></contented-view>
   </div>
 
-  <!-- 
-      Still occasionally has a resize conflict when rendering (window resize triggers / digest renders)
-      - Might need to debounce?
-      - Might need to only adjust over a certain ratio of alteration
-  -->
   <div class="contented-dir" name="contents" *ngFor="let dir of getVisibleDirectories()">
     <div class="directory-contents" [class.current-content-dir]="dir == getCurrentDir()">
+      <div class="directory-meta" *ngIf="!!dir">
+        <span class="dir-name">{{dir?.id}}</span>
+        <span>
+          {{rowIdx}} / {{dir?.contents?.length}} name: {{currentViewItem}}
+          <mat-progress-bar
+            [value]="dir.count ? ((rowIdx + 1) * 100 / dir.count) : 1"
+            [color]="'primary'"
+            [bufferValue]="dir?.total"
+            [mode]="dir.count == dir.total ? 'determinate' : 'buffer'"
+          ></mat-progress-bar>
+
+          Styles are not good about recompile
+          Swap mode form buffer to something 
+          
+          <span *ngIf="dir?.contents?.length < dir.total">
+            press (F) or: 
+            <button class="btn btn-primary" (click)="fullLoadDir(dir)">
+              Load ({{ dir.total - dir.count }}) Items
+            </button>
+          </span>
+        </span>
+      </div>
+
       <directory-cmp 
-        [dir]="dir" 
-        [currentViewItem]="currentViewItem"
+        [directory]="dir" 
+        [currentViewItem]="getCurrentLocation()"
+        (clickedItem)="dirItemClicked($event)"
         [previewWidth]="previewWidth" 
         [previewHeight]="previewHeight"
-        (clickedItem)="dirItemClicked($event)"
       ></directory-cmp>
-      <button *ngIf="dir.count < dir.total" class="btn btn-primary" (click)="fullLoadDir(dir)">
-        Load {{dir.total - dir.count}} Items (F)
-      </button>
+      <!--
+      -->
     </div>
   </div>
 </div>

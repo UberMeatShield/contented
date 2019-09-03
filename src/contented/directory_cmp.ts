@@ -10,7 +10,7 @@ import * as _ from 'lodash';
 })
 export class DirectoryCmp implements OnInit {
 
-    @Input() dir: Directory;
+    @Input() directory: Directory;
     @Input() previewWidth: number;
     @Input() previewHeight: number;
 
@@ -34,7 +34,7 @@ export class DirectoryCmp implements OnInit {
 
     public getVisibleSet(currentItem = this.currentViewItem, max: number = this.maxRendered) {
         this.visibleSet = null;
-        this.visibleSet = this.dir.getIntervalAround(currentItem, max, this.maxPrevItems);
+        this.visibleSet = this.directory.getIntervalAround(currentItem, max, this.maxPrevItems);
         return this.visibleSet;
     }
 
@@ -45,7 +45,7 @@ export class DirectoryCmp implements OnInit {
     }
 
     public imgClicked(evt) {
-        this.clickedItem.emit({dir: this.dir, item: evt});
+        this.clickedItem.emit({dir: this.directory, item: evt});
     }
 }
 

@@ -14,7 +14,7 @@ import * as _ from 'lodash';
 import {MockData} from './mock/mock_data';
 
 declare var $;
-describe('TestingContentedsCmp', () => {
+describe('TestingDirectoryCmp', () => {
     let fixture: ComponentFixture<DirectoryCmp>;
     let service: ContentedService;
     let comp: DirectoryCmp;
@@ -48,7 +48,7 @@ describe('TestingContentedsCmp', () => {
 
         comp.maxRendered = 3;
         comp.maxPrevItems = 0;
-        comp.dir = dir;
+        comp.directory = dir;
         fixture.detectChanges();
         expect($('.preview-img', el).length).toBe(comp.maxRendered, "We should at max have items visible = " + comp.maxRendered);
     }));
@@ -63,7 +63,7 @@ describe('TestingContentedsCmp', () => {
         comp.maxPrevItems = 1;
 
         // Check to ensure everything is rendering
-        comp.dir = dir;
+        comp.directory = dir;
         fixture.detectChanges();
         expect($('.preview-img', el).length).toBe(comp.maxRendered, "Should select second image");
 

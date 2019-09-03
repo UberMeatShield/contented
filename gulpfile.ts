@@ -34,6 +34,9 @@ const execCmd = (cmd, args, done) => {
             done();
         }
     });
+    call.on('disconnect', function() {
+        console.log("Lost the parent");
+    });
     return call;
 };
 
@@ -192,8 +195,11 @@ const goWatch = async () => {
 };
 
 const typescriptWatch = async () => {
-    typescriptTests(null); // Kick off a watcher which will run the tests
-    typescript(null); // Running compile process for the UI Code (self watches)
+    // Kick off a watcher which will run the tests
+    typescriptTests(null);
+
+    // Running compile process for the UI Code (self watches)
+    typescript(null);
 
     return watch([
           dir.ts + '**/**.ts',
