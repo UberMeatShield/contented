@@ -1,12 +1,14 @@
 import {async, fakeAsync, getTestBed, tick, ComponentFixture, TestBed} from '@angular/core/testing';
 import {By} from '@angular/platform-browser';
-import {HttpClientTestingModule} from '@angular/common/http/testing';
+import {HttpParams} from '@angular/common/http';
+import {HttpClientTestingModule, HttpTestingController} from '@angular/common/http/testing';
 import {DebugElement} from '@angular/core';
 
 import { RouterTestingModule } from '@angular/router/testing';
 import {ContentedCmp} from '../contented/contented_cmp';
 import {ContentedService} from '../contented/contented_service';
 import {ContentedModule} from '../contented/contented_module';
+import {ApiDef} from '../contented/api_def';
 
 import * as _ from 'lodash';
 import {MockData} from './mock/mock_data';
@@ -19,6 +21,8 @@ describe('TestingContentedCmp', () => {
     let el: HTMLElement;
     let de: DebugElement;
 
+    let httpMock: HttpTestingController;
+
     beforeEach(async( () => {
         TestBed.configureTestingModule({
             imports: [RouterTestingModule, ContentedModule, HttpClientTestingModule],
@@ -29,11 +33,16 @@ describe('TestingContentedCmp', () => {
 
         service = TestBed.get(ContentedService);
         fixture = TestBed.createComponent(ContentedCmp);
+        httpMock = TestBed.get(HttpTestingController);
         comp = fixture.componentInstance;
 
         de = fixture.debugElement.query(By.css('.contented-cmp'));
         el = de.nativeElement;
     }));
+
+    afterEach(() => {
+        httpMock.verify();
+    });
 
     it('Should create a contented component', () => {
         expect(comp).toBeDefined("We should have the Contented comp");
@@ -75,5 +84,25 @@ describe('TestingContentedCmp', () => {
         expect(comp.fullScreen).toBe(true, "It should now have a selected item");
         expect(comp.getCurrentLocation()).toBe(imgs[3].src, "It should have the current item as the image");
     }));
+
+    it("Should have a progress bar once the data is loaded", () => {
+        // Kick off a load and use the http controller mocks to return our preview
+        fixture.detectChanges();
+
+        let preview = MockData.getPreview();
+
+        let previewReq = httpMock.expectOne(req => req.url === ApiDef.contented.preview);
+        let params: HttpParams = previewReq.request.params;
+        previewReq.flush(preview);
+
+        expect(comp.loading).toBe(false, "It should be fine with loading the preview");
+        expect(comp.allD.length).toBeGreaterThan(0, "There should be a number of directories");
+        fixture.detectChanges();
+
+        let dirs = $('.dir-name');
+        expect(dirs.length).toBe(2, "There should be two directories present");
+        expect(_.get(preview, 'results[0].id')).toBe($(dirs[0]).text(), 'It should have the dir id');
+        expect(_.get(preview, 'results[1].id')).toBe($(dirs[1]).text(), 'It should have the dir id');
+    });
 });
 
