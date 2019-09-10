@@ -19,6 +19,7 @@ func main() {
     flag.StringVar(&dir, "dir", ".", "Directory to serve files from")
     flag.StringVar(&port, "port", "8000", "Port to run the webserver.")
     previewCount := flag.Int("previewCount", 8, "Number of refrences to return by default")
+    limitCount := flag.Int("limit", 2000, "Max default items returned")
 
     test := flag.Bool("test", false, "Instead of running a server, test the http calls against a running server")
     flag.Parse()
@@ -27,7 +28,7 @@ func main() {
     if *test == true { // Obviously requires a server up and running on another process
         unit_test(server_url)
     } else {
-        server(server_url, dir, *previewCount)
+        server(server_url, dir, *previewCount, *limitCount)
     }
 
 }
@@ -39,11 +40,11 @@ func unit_test(server_url string) {
 }
 
 
-func server(server_url string, dir string, previewCount int) {
+func server(server_url string, dir string, previewCount int, limitCount int) {
     fmt.Printf("Using this directory As the static root: %s with directory %s", server_url, dir)
 
     router := mux.NewRouter()
-    web.SetupContented(router, dir, previewCount)
+    web.SetupContented(router, dir, previewCount, limitCount)
     web.SetupStatic(router, "./static")
 
     srv := &http.Server{

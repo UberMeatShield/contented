@@ -3,6 +3,7 @@ package web
 import (
     "io"
     "fmt"
+    "strconv"
     "log"
     "encoding/json"
     "net/http"
@@ -24,11 +25,13 @@ type HttpError struct{
 var dir string
 var validDirs map[string]bool
 var previewCount int
+var defaultLimit int = 2000
 
-func SetupContented(router *mux.Router, contentDir string, numToPreview int) {
+func SetupContented(router *mux.Router, contentDir string, numToPreview int, limit int) {
     dir = contentDir
     validDirs = utils.GetDirectoriesLookup(dir)
     previewCount = numToPreview
+    defaultLimit = limit
 
     router.PathPrefix("/contented/").Handler(http.StripPrefix("/contented/", http.FileServer(http.Dir(dir))))
     router.HandleFunc("/content/", ListDefaultHandler)
@@ -111,8 +114,20 @@ func ListSpecificHandler(w http.ResponseWriter, r *http.Request) {
 
     vars := mux.Vars(r)
     argument := vars["dir_to_list"]
+
+    url_params := r.URL.Query() 
+
+    limit := defaultLimit
+    if val, ok := url_params["limit"]; ok {
+        limit, _ = strconv.Atoi(val[0])
+    }
+    offset := 0
+    if offs, ok := url_params["offset"]; ok {
+        offset, _ = strconv.Atoi(offs[0])
+    }
+
     if validDirs[argument] {
-        j, _ := json.Marshal(getDirectory(dir, argument))
+        j, _ := json.Marshal(getDirectory(dir, argument, limit, offset))
         w.Write(j)
     } else {
         w.WriteHeader(403)
@@ -134,7 +149,7 @@ func invalidDirMsg(directory string, filename string) []byte {
 /**
  * Get the response for a single specific directory
  */
-func getDirectory(dir string, argument string) utils.DirContents {
+func getDirectory(dir string, argument string, limit int, offset int) utils.DirContents {
     path := dir + argument
-    return utils.GetDirContents(path, 1000, dir)
+    return utils.GetDirContents(path, limit, offset, dir)
 }

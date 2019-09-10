@@ -131,17 +131,6 @@ const sassBuild = () => {
         .pipe(dest(dir.css));
 };
 
-
-// Go Related build and restarts
-// =================================================
-const watchGo = () => {
-    watch(
-      [dir.go + '/**/*.go'],
-      [goChanged]
-    );
-};
-
-
 // This kicks off the server in the background, and we just immediately resolve
 const restartServer = (done) => {
     return new Promise((resolve, reject) => {
@@ -186,12 +175,14 @@ buildDeploy.description = "The production build, fully compile the typescript / 
 // Watcher functions that observe code and take QA actions on change
 // ===============================================
 const goWatch = async () => {
-    return watch(
-      [dir.go + '/**/*.go',
-       dir.base + 'tests/**/*.go',
-      ],
-      series(goChanged)
-    );
+    let goWatching = [
+      dir.go + 'utils/*.go',
+      dir.go + 'web/*.go',
+      dir.go + 'main.go',
+      dir.base + 'tests/**/*.go',
+    ];
+    console.log("Watching the following", goWatching);
+    return watch(goWatching, goChanged);
 };
 
 const typescriptWatch = async () => {

@@ -26,15 +26,25 @@ func TestGetDirContents(t *testing.T) {
 
 func TestGetSpecificDir(t *testing.T) {
 	var count = 2
-	files := GetDirContents(testDir + "/dir3", 2, "mocks")
+	files := GetDirContents(testDir + "/dir3", 2, 0, "mocks")
 	if (len(files.Contents) != 2) {
 		t.Errorf("Did not limit the directory length, wanted %d found %d", count, len(files.Contents))
 	}
 
-	files = GetDirContents(testDir + "/dir3", 10, "mocks")
+	files = GetDirContents(testDir + "/dir3", 10, 0, "mocks")
 	if (len(files.Contents) < 3) {
 		t.Error("There are more test files in this directory than 3")
 	}
+
+    start_offset := 4
+    offset_files := GetDirContents(testDir + "/dir3", 3, start_offset, "mocks")
+    len_contents := len(offset_files.Contents)
+    if (len_contents != 1 ) {
+		t.Errorf("With the offset we should have only have 1 %d", len_contents)
+    }
+    if (offset_files.Total != 5) {
+		t.Error("There should be exactly 5 images in the dir")
+    }
 }
 
 
