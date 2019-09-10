@@ -17,9 +17,10 @@
 
         <div class="directory-meta-text">
           <span class="dir-name">{{dir?.id}}</span>
-          <span class="row-idx"> {{rowIdx}}</span> / 
-          <span class="dir-max-count"> {{dir?.contents?.length}}</span> name: 
-          <span class="current-item"> {{currentViewItem}}</span>
+          selected: <span class="row-idx"> {{rowIdx}}</span>  
+          loaded: <span class="dir-max-count"> {{dir?.contents?.length}}</span> 
+          total: {{dir?.total}}
+          name: <span class="current-item"> {{currentViewItem}}</span>
           <span *ngIf="dir?.contents?.length < dir.total">
             press (F) or: 
             <button class="btn btn-primary" (click)="fullLoadDir(dir)">

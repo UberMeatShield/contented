@@ -8,6 +8,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import {ContentedCmp} from '../contented/contented_cmp';
 import {ContentedService} from '../contented/contented_service';
 import {ContentedModule} from '../contented/contented_module';
+import {Directory} from '../contented/directory';
 import {ApiDef} from '../contented/api_def';
 
 import * as _ from 'lodash';
@@ -110,6 +111,36 @@ describe('TestingContentedCmp', () => {
         // Fully load, check that it is not longer in buffer mode
         // TODO: Go to the next dir
         // Check the current row index (increase the loaded data), go next, check visibile state
+    });
+
+
+    it('Should be able to load more contents in a dir', () => {
+        fixture.detectChanges();
+        let preview = MockData.getPreview();
+        let previewReq = httpMock.expectOne(req => req.url === ApiDef.contented.preview);
+        let params: HttpParams = previewReq.request.params;
+        previewReq.flush(preview);
+        fixture.detectChanges();
+
+        let dir: Directory = comp.getCurrentDir();
+        expect(dir).not.toBe(null);
+        expect(dir.count).toBeLessThan(dir.total, "There should be more to load");
+        let prevCount = dir.count;
+        expect(prevCount).not.toBe(0, "It should start with content");
+
+        service.LIMIT = 1;
+        comp.fullLoad();
+        let fullUrl = ApiDef.contented.fulldir.replace('{dir}', dir.id);
+        let fullReq = httpMock.expectOne(req => req.url === fullUrl);
+        let checkParams: HttpParams = fullReq.request.params;
+        expect(checkParams.get('limit')).toBe('1', "We set a different limit");
+        expect(checkParams.get('offset')).toBe('' + dir.count, "It should load more, not the beginning");
+
+        let firstLoad = MockData.getMockDir(dir.total - dir.count);
+        fullReq.flush(firstLoad);
+        expect(dir.count).toBeGreaterThan(prevCount, "We should have added more");
+        expect(dir.contents.indexOf(firstLoad.contents[0])).toBeGreaterThan(0, 'It should have added an element');
+        expect(dir.count).toBe(dir.total, "It should load all the data");
     });
 });
 

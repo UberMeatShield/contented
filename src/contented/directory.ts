@@ -47,9 +47,14 @@ export class Directory {
     }
 
     public setContents(contents: Array<string>) {
-        this.contents = _.isArray(contents) ? contents : [];
+        this.contents = contents || [];
         this.count = this.contents.length;
         this.renderable = null;
+    }
+
+    public addContents(contents: Array<string>) {
+        let merged = _.uniq((this.contents || []).concat(contents));
+        this.setContents(merged);
     }
 
     // This is the actual URL you can get a pointer to for the scroll / load
