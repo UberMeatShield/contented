@@ -108,24 +108,28 @@ func DownloadHandler(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-// argument := r.URL.Query().Get("dir_to_list")
+// Provide a full listing of a specific directory, not just the preview
 func ListSpecificHandler(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
 
     vars := mux.Vars(r)
     argument := vars["dir_to_list"]
 
+    // Pull out the limit and offset queries, provides pagination
     url_params := r.URL.Query() 
-
     limit := defaultLimit
     if val, ok := url_params["limit"]; ok {
         limit, _ = strconv.Atoi(val[0])
+        if limit > defaultLimit {
+            limit = defaultLimit // Still cannot ask for more than the startup specified
+        }
     }
     offset := 0
     if offs, ok := url_params["offset"]; ok {
         offset, _ = strconv.Atoi(offs[0])
     }
 
+    // Now actually return the results for a valid directory
     if validDirs[argument] {
         j, _ := json.Marshal(getDirectory(dir, argument, limit, offset))
         w.Write(j)
