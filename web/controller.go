@@ -120,7 +120,7 @@ func ListSpecificHandler(w http.ResponseWriter, r *http.Request) {
     limit := defaultLimit
     if val, ok := url_params["limit"]; ok {
         limit, _ = strconv.Atoi(val[0])
-        if limit > defaultLimit {
+        if limit <= 0 || limit > defaultLimit {
             limit = defaultLimit // Still cannot ask for more than the startup specified
         }
     }
