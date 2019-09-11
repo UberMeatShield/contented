@@ -99,9 +99,10 @@ export class ContentedCmp implements OnInit {
     }
 
     public fullLoadDir(dir: Directory) {
+        // This is being changed to just load more content up
         if (dir.count < dir.total && !this.loading) {
             this.loading = true;
-            this._contentedService.getFullDirectory(dir.id)
+            this._contentedService.loadMoreInDir(dir)
                 .pipe(finalize(() => {this.loading = false; }))
                 .subscribe(
                     res => { this.dirResults(dir, res); },
@@ -112,7 +113,8 @@ export class ContentedCmp implements OnInit {
 
     public dirResults(dir: Directory, response) {
         console.log("Full Directory loading, what is in the results?", response);
-        dir.setContents(_.get(response, 'contents'));
+        // TODO: merge the crap
+        dir.addContents(_.get(response, 'contents'));
     }
 
     public reset() {
