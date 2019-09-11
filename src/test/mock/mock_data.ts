@@ -1,4 +1,6 @@
+// TODO: This was from before the httpMock was actually good, just use httpMockController now
 import {Observable, from as observableFrom} from 'rxjs';
+import * as _ from 'lodash';
 
 declare var require: any;
 class MockLoader {
@@ -15,6 +17,17 @@ class MockLoader {
     public getFullDirectory() {
         return require('./full.json');
     }
+
+    public getMockDir(count: number, itemPrefix: string = 'item-') {
+         let total = 20;
+         let fakeDirResponse = {
+             total: total,
+             path: 'narp/',
+             id: 'test',
+             contents: _.map(_.range(0, count), idx => itemPrefix + idx)
+         };
+         return fakeDirResponse;
+     }
 
     public mockContentedService(service) {
         service.getPreview = this.obs(this.getPreview());

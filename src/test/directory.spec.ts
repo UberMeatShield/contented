@@ -23,20 +23,9 @@ describe('TestingDirectory', () => {
         });
     });
 
-    function getMockDir(count: number) {
-        let total = 20;
-        let fakeDirResponse = {
-            total: total,
-            path: 'narp/',
-            id: 'test',
-            contents: _.map(_.range(0, count), idx => 'item-' + idx)
-        };
-        return fakeDirResponse;
-    }
-
     it('Should be able to setup intervals successfully', () => {
         let total = 20;
-        let dir = new Directory(getMockDir(total));
+        let dir = new Directory(MockData.getMockDir(total));
         let contents = dir.getContentList();
         expect(contents.length).toBe(total, "We should have an entry for each item");
 
@@ -51,7 +40,7 @@ describe('TestingDirectory', () => {
     });
 
     it('Should manage to render the requested number each time, and best effort otherwise', () => {
-        let dir = new Directory(getMockDir(6));
+        let dir = new Directory(MockData.getMockDir(6));
         let items = dir.getContentList();
         let item = items[1];
         let results = dir.getIntervalAround(item, 3, 1);
@@ -62,5 +51,14 @@ describe('TestingDirectory', () => {
         expect(enoughResults.length).toBe(4, "We should still have 3 results, (it should adjust the start)");
     });
 
+    it('Should add more content with more data', () => {
+        let dir = new Directory(MockData.getMockDir(0));
+        dir.setContents(['a', 'b']);
+        dir.total = 5;
+        expect(dir.count).toBe(2, "We should have 2 results");
+        dir.addContents(['c', 'a', 'd']);
+        expect(dir.contents.length).toBe(4, "It should have added contents");
+        expect(dir.count).toBe(4, "The count should have updated");
+    });
 });
 

@@ -12,6 +12,8 @@ import * as _ from 'lodash';
 export class ContentedService {
 
     public options = null;
+    public LIMIT = 1000;
+
     constructor(private http: HttpClient) {
         let headers = new HttpHeaders({
             'Content-Type': 'application/json',
@@ -37,10 +39,23 @@ export class ContentedService {
         window.open(downloadUrl);
     }
 
-    public getFullDirectory(dir: string) {
+    public loadMoreInDir(dir: Directory, limit = 0) {
+        limit = limit || this.LIMIT;
+        return this.getFullDirectory(dir.id, dir.count, limit);
+    }
+
+    public getFullDirectory(dir: string, offset = 0, limit = 0) {
+        limit = limit || this.LIMIT;
+
         let url = ApiDef.contented.fulldir.replace('{dir}', dir);
-        return this.http.get(url, this.options)
-          .pipe(catchError(err => this.handleError(err)));
+        let params = new HttpParams()
+          .set('offset', '' + offset)
+          .set('limit', '' + limit);
+
+        return this.http.get(url, {
+            params: params,
+            headers: this.options.headers
+        }).pipe(catchError(err => this.handleError(err)));
     }
 
     public handleError(err: HttpErrorResponse) {
