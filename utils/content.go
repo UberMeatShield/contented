@@ -38,7 +38,7 @@ func ListDirs(dir string, previewCount int) []DirContents {
     for _, f := range files {
         if f.IsDir() {
 			id := f.Name()
-            listings = append(listings, GetDirContents(dir + id, previewCount, id))
+            listings = append(listings, GetDirContents(dir + id, previewCount, 0, id))
         }
     }
 	log.Println("Reading from: ", dir, " With preview count", previewCount)
@@ -56,21 +56,22 @@ func GetFileContents(dir string, filename string) *bufio.Reader {
     return bufio.NewReader(f)
 }
 
+
 /**
  *  Get all the content in a particular directory.
  */
-func GetDirContents(dir string, limit int, id string) DirContents {
+func GetDirContents(dir string, limit int, start_offset int, id string) DirContents {
     var arr = []string{}
     imgs, _ := ioutil.ReadDir(dir)
 
 	total := 0
-    for _, img := range imgs {
-        if !img.IsDir() && len(arr) < limit {
+    for idx, img := range imgs {
+        if !img.IsDir() && len(arr) < limit && idx >= start_offset {
             arr = append(arr, img.Name())
         }
 		total++
     }
-	log.Println("Limit for content dir was.", dir, " with limit", limit)
+    log.Println("Limit for content dir was.", dir, " with limit", limit, " offset: ", start_offset)
 	return DirContents{
 		Total: total,
 		Contents: arr,

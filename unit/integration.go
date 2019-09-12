@@ -25,7 +25,7 @@ func IntegrationLoad(t *testing.T) {
     json.Unmarshal(body, parsed)
 
     if len(parsed.Results) > 0 {
-        t.Log("Success loading content results from the server %d", len(parsed.Results))
+        t.Log("Success loading content results from the server", len(parsed.Results))
     } else {
         t.Error("Failed to load a valid result set.", parsed)
     }

@@ -12,7 +12,7 @@ import * as _ from 'lodash';
 export class ContentedService {
 
     public options = null;
-    public LIMIT = 1000;
+    public LIMIT = null; // Default limit will use the server limit in the query
 
     constructor(private http: HttpClient) {
         let headers = new HttpHeaders({
@@ -39,12 +39,13 @@ export class ContentedService {
         window.open(downloadUrl);
     }
 
-    public loadMoreInDir(dir: Directory, limit = 0) {
+    public loadMoreInDir(dir: Directory, limit = null) {
         limit = limit || this.LIMIT;
+        console.log("Wat", limit);
         return this.getFullDirectory(dir.id, dir.count, limit);
     }
 
-    public getFullDirectory(dir: string, offset = 0, limit = 0) {
+    public getFullDirectory(dir: string, offset = 0, limit = null) {
         limit = limit || this.LIMIT;
 
         let url = ApiDef.contented.fulldir.replace('{dir}', dir);
