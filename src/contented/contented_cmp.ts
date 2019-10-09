@@ -27,6 +27,8 @@ export class ContentedCmp implements OnInit {
     public directories: Array<Directory>; // Current set of visible directories
     public allD: Array<Directory>; // All the directories we have loaded
 
+    public wtf: any;
+
     constructor(public _contentedService: ContentedService, public route: ActivatedRoute) {
     }
 
@@ -87,21 +89,26 @@ export class ContentedCmp implements OnInit {
     public ngOnInit() {
         // Need to add tests
         // Need to load content if the idx is greater than content loaded (n times potentially)
+        this.idx = 666;
+        this.route.paramMap.pipe().subscribe(
+            (res: ParamMap) => {
+                this.setPosition(
+                    res.get('idx') ? parseInt(res.get('idx'), 10) : 0,
+                    res.get('rowIdx') ? parseInt(res.get('rowIdx'), 10) : 0
+                );
+            },
+            err => { console.error(err); }
+        );
 
         this.calculateDimensions();
         this.loadDirs(); // Do this after the param map load potentially
 
-        this.route.paramMap.pipe().subscribe(
-            (res: ParamMap) => {
-                try {
-                    //this.idx = Number.isInteger(res.get('idx')) ? 0 : parseInt(res.get('idx'));
-                    //this.rowIdx = parseInt(res.get('rowIdx'), 10);
-                } catch (err) {
-                    console.error("Failed to parse router args", err);
-                }
-            },
-            err => { console.error(err); }
-        );
+    }
+
+    // Mostly for tests since testing full routing params is a god damn pain.
+    public setPosition(idx: number, rowIdx: number) {
+        this.idx = idx;
+        this.rowIdx = rowIdx;
     }
 
     public loadDirs() {

@@ -29,7 +29,13 @@ describe('TestingContentedCmp', () => {
 
     beforeEach(async( () => {
         TestBed.configureTestingModule({
-            imports: [RouterTestingModule, ContentedModule, HttpClientTestingModule],
+            imports: [
+                RouterTestingModule.withRoutes(
+                    [{path: 'ui/:idx/:rowIdx', component: ContentedCmp}]
+                ),
+                ContentedModule,
+                HttpClientTestingModule
+            ],
             providers: [
                 ContentedService
             ]
@@ -43,17 +49,25 @@ describe('TestingContentedCmp', () => {
         de = fixture.debugElement.query(By.css('.contented-cmp'));
         el = de.nativeElement;
         router = TestBed.get(Router);
+        router.initialNavigation();
     }));
 
     afterEach(() => {
         httpMock.verify();
     });
 
-    it('handles routing arguments', fakeAsync(() => {
+    it('TODO: Fully handles routing arguments', fakeAsync(() => {
         // Should just setup other ajax calls
         MockData.mockContentedService(comp._contentedService);
-        router.initialNavigation();
-        tick();
+
+        router.navigate(['/ui/2/3']);
+        tick(100);
+        expect(router.url).toBe('/ui/2/3');
+
+        fixture.detectChanges();
+        tick(1000);
+        // TODO: Make a test that actually works with the damn activated route params
+        // expect(comp.idx).toBe(2, "It should pull the dir index from ");
     }));
 
     it('Should create a contented component', () => {
