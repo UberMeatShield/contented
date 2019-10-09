@@ -1,7 +1,9 @@
 import {OnInit, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
 import {ContentedService} from './contented_service';
 import {Directory} from './directory';
-import {finalize} from 'rxjs/operators';
+import {finalize, switchMap} from 'rxjs/operators';
+
+import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 
 import * as _ from 'lodash';
 
@@ -25,7 +27,7 @@ export class ContentedCmp implements OnInit {
     public directories: Array<Directory>; // Current set of visible directories
     public allD: Array<Directory>; // All the directories we have loaded
 
-    constructor(public _contentedService: ContentedService) {
+    constructor(public _contentedService: ContentedService, public route: ActivatedRoute) {
     }
 
 
@@ -83,9 +85,19 @@ export class ContentedCmp implements OnInit {
     }
 
     public ngOnInit() {
-        console.log("Contented comp is alive.");
+
+        // Need to add tests
+        // Need to load content if the idx is greater than content loaded (n times potentially)
+        this.route.paramMap.pipe().subscribe(
+            (res: ParamMap) => {
+                this.idx = parseInt(res.get('idx'), 10);
+                this.rowIdx = parseInt(res.get('rowIdx'), 10);
+            },
+            err => { console.error(err); }
+        );
+
         this.calculateDimensions();
-        this.loadDirs();
+        this.loadDirs(); // Do this after the param map load potentially
     }
 
     public loadDirs() {

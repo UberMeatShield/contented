@@ -41,6 +41,7 @@ func SetupContented(router *mux.Router, contentDir string, numToPreview int, lim
     // Host the index.html, also assume that all angular UI routes are going to be under contented
     router.HandleFunc("/", Index)
     router.HandleFunc("/ui/{path}", Index)
+    router.HandleFunc("/ui/{path}/{idx}", Index)
 }
 
 
