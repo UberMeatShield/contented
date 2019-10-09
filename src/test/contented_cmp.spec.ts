@@ -5,6 +5,8 @@ import {HttpClientTestingModule, HttpTestingController} from '@angular/common/ht
 import {DebugElement} from '@angular/core';
 
 import { RouterTestingModule } from '@angular/router/testing';
+import { Router } from '@angular/router';
+
 import {ContentedCmp} from '../contented/contented_cmp';
 import {ContentedService} from '../contented/contented_service';
 import {ContentedModule} from '../contented/contented_module';
@@ -21,6 +23,7 @@ describe('TestingContentedCmp', () => {
     let comp: ContentedCmp;
     let el: HTMLElement;
     let de: DebugElement;
+    let router: Router;
 
     let httpMock: HttpTestingController;
 
@@ -39,11 +42,19 @@ describe('TestingContentedCmp', () => {
 
         de = fixture.debugElement.query(By.css('.contented-cmp'));
         el = de.nativeElement;
+        router = TestBed.get(Router);
     }));
 
     afterEach(() => {
         httpMock.verify();
     });
+
+    it('handles routing arguments', fakeAsync(() => {
+        // Should just setup other ajax calls
+        MockData.mockContentedService(comp._contentedService);
+        router.initialNavigation();
+        tick();
+    }));
 
     it('Should create a contented component', () => {
         expect(comp).toBeDefined("We should have the Contented comp");
@@ -99,6 +110,7 @@ describe('TestingContentedCmp', () => {
         expect(comp.allD.length).toBeGreaterThan(0, "There should be a number of directories");
         fixture.detectChanges();
 
+        expect(comp.idx).toBe(0, "It should be on the default page");
         let dirs = $('.dir-name');
         expect(dirs.length).toBe(2, "There should be two directories present");
         expect(_.get(preview, 'results[0].id')).toBe($(dirs[0]).text(), 'It should have the dir id');

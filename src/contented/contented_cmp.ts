@@ -85,19 +85,23 @@ export class ContentedCmp implements OnInit {
     }
 
     public ngOnInit() {
-
         // Need to add tests
         // Need to load content if the idx is greater than content loaded (n times potentially)
-        this.route.paramMap.pipe().subscribe(
-            (res: ParamMap) => {
-                this.idx = parseInt(res.get('idx'), 10);
-                this.rowIdx = parseInt(res.get('rowIdx'), 10);
-            },
-            err => { console.error(err); }
-        );
 
         this.calculateDimensions();
         this.loadDirs(); // Do this after the param map load potentially
+
+        this.route.paramMap.pipe().subscribe(
+            (res: ParamMap) => {
+                try {
+                    //this.idx = Number.isInteger(res.get('idx')) ? 0 : parseInt(res.get('idx'));
+                    //this.rowIdx = parseInt(res.get('rowIdx'), 10);
+                } catch (err) {
+                    console.error("Failed to parse router args", err);
+                }
+            },
+            err => { console.error(err); }
+        );
     }
 
     public loadDirs() {
