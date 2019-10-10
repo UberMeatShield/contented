@@ -57,7 +57,7 @@ export class ContentedCmp implements OnInit {
                 this.hideFullscreen();
                 break;
             case 'f':
-                this.fullLoad();
+                this.loadMore();
                 break;
             case 'x':
                 this.saveItem();
@@ -72,9 +72,9 @@ export class ContentedCmp implements OnInit {
         this._contentedService.download(this.getCurrentDir(), this.rowIdx);
     }
 
-    public fullLoad() {
+    public loadMore() {
         let visible = this.getVisibleDirectories();
-        this.fullLoadDir(visible[0]);
+        this.loadMoreInDir(visible[0]);
     }
 
     public viewFullscreen() {
@@ -116,12 +116,14 @@ export class ContentedCmp implements OnInit {
         this._contentedService.getPreview()
             .pipe(finalize(() => {this.loading = false; }))
             .subscribe(
-                res => { this.previewResults(res); },
+                res => {
+                    this.previewResults(res);
+                },
                 err => { console.error(err); }
             );
     }
 
-    public fullLoadDir(dir: Directory) {
+    public loadMoreInDir(dir: Directory) {
         // This is being changed to just load more content up
         if (dir.count < dir.total && !this.loading) {
             this.loading = true;
@@ -231,12 +233,33 @@ export class ContentedCmp implements OnInit {
         this.previewHeight = (height / this.maxVisible) - 41;
     }
 
-    public previewResults(response) {
-        console.log("Results returned from the preview results.", response);
-        this.allD = _.map(_.get(response, 'results') || [], dir => {
-            return new Directory(dir);
-        });
-        this.setCurrentItem();
+    public previewResults(directories: Array<Directory>) {
+        console.log("Results returned from the preview results.", directories);
+        this.allD = directories;
+        this.loadView(this.idx, this.rowIdx);
+        return this.allD;
+
+    }
+
+    public loadView(idx, rowIdx) {
+        let currDir = this.getCurrentDir();
+        if (rowIdx >= currDir.total) {
+            rowIdx = 0;
+        }
+
+        this.idx = idx;
+        this.rowIdx = rowIdx;
+
+        if (rowIdx < currDir.count) {
+            this.setCurrentItem();
+        } else if (this.rowIdx < currDir.total) {
+            this._contentedService.fullLoadDir(currDir, this.rowIdx).subscribe(
+                res => {
+                    this.setCurrentItem();
+                },
+                err => {console.error("Failed to load", err); }
+            );
+        }
     }
 
     public dirItemClicked(evt) {

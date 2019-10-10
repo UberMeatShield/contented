@@ -4,7 +4,7 @@ import {Directory} from './directory';
 import {ApiDef} from './api_def';
 
 // The manner in which RxJS does this is really stupid, saving 50K for hours of dev time is fail
-import {Observable, from as observableFrom} from 'rxjs';
+import {Observable, forkJoin, from as observableFrom} from 'rxjs';
 import {catchError, map, finalize} from 'rxjs/operators';
 
 import * as _ from 'lodash';
@@ -24,7 +24,14 @@ export class ContentedService {
 
     public getPreview() {
         return this.http.get(ApiDef.contented.preview, this.options)
-          .pipe(catchError(err => this.handleError(err)));
+            .pipe(
+                map(res => {
+                    return _.map(_.get(res, 'results'), dir => {
+                        return new Directory(dir);
+                    });
+                }),
+                catchError(err => this.handleError(err))
+            );
     }
 
     public download(dir: Directory, rowIdx: number) {
@@ -37,6 +44,35 @@ export class ContentedService {
         let downloadUrl = ApiDef.contented.download.replace('{id}', dir.id).replace('{filename}', filename);
         console.log("DownloadURL", downloadUrl);
         window.open(downloadUrl);
+    }
+
+    public fullLoadDir(dir, limit = null) {
+        limit = limit || this.LIMIT;
+        if (dir.count === dir.total) {
+            return observableFrom(Promise.resolve(dir));
+        }
+        let p = new Promise((resolve, reject) => {
+            let calls = [];
+
+            // Build out a call to load all the possible data (all at once, it is fast)
+            for (let i = dir.count; i < dir.total; i += limit) {
+                calls.push(
+                    this.getFullDirectory(dir, i, limit)
+                );
+            }
+
+            // Join all the results and let the call function resolve once the dir is updated.
+            return forkJoin(calls).subscribe(
+                results => {
+                    _.each(results, r => {
+                        dir.addContents(_.get(r, 'contents'));
+                    });
+                    resolve(dir);
+                },
+                err => { reject(err); }
+            );
+        });
+        return observableFrom(p);
     }
 
     public loadMoreInDir(dir: Directory, limit = null) {

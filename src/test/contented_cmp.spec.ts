@@ -155,7 +155,7 @@ describe('TestingContentedCmp', () => {
         expect(prevCount).not.toBe(0, "It should start with content");
 
         service.LIMIT = 1;
-        comp.fullLoad();
+        comp.loadMore();
         let fullUrl = ApiDef.contented.fulldir.replace('{dir}', dir.id);
         let fullReq = httpMock.expectOne(req => req.url === fullUrl);
         let checkParams: HttpParams = fullReq.request.params;
