@@ -51,18 +51,15 @@ export class ContentedService {
         if (dir.count === dir.total) {
             return observableFrom(Promise.resolve(dir));
         }
+        // Build out a call to load all the possible data (all at once, it is fast)
         let p = new Promise((resolve, reject) => {
             let calls = [];
-
-            // Build out a call to load all the possible data (all at once, it is fast)
             for (let i = dir.count; i < dir.total; i += limit) {
-                calls.push(
-                    this.getFullDirectory(dir, i, limit)
-                );
+                calls.push(this.getFullDirectory(dir.id, i, limit));
             }
 
             // Join all the results and let the call function resolve once the dir is updated.
-            return forkJoin(calls).subscribe(
+            return forkJoin(calls).pipe().subscribe(
                 results => {
                     _.each(results, r => {
                         dir.addContents(_.get(r, 'contents'));

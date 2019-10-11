@@ -1,6 +1,6 @@
 import {async, fakeAsync, getTestBed, tick, ComponentFixture, TestBed} from '@angular/core/testing';
 import {By} from '@angular/platform-browser';
-import {HttpParams} from '@angular/common/http';
+import {HttpParams, HttpRequest} from '@angular/common/http';
 import {HttpClientTestingModule, HttpTestingController} from '@angular/common/http/testing';
 import {DebugElement} from '@angular/core';
 
@@ -68,5 +68,43 @@ describe('TestingContentedService', () => {
         previewReq.flush(preview);
         expect(reallyRan).toBe(true);
     });
+
+    it('Can load the entire directory', fakeAsync(() => {
+        let dirs: Array<Directory> = null;
+        service.getPreview().subscribe(
+            (previewDirs: Array<Directory>) => {
+                dirs = previewDirs;
+            },
+            err => {
+                fail(err);
+            }
+        );
+        let preview = _.clone(MockData.getPreview());
+
+        let total = 30;
+        preview['results'][0].total = total;
+        let previewReq = httpMock.expectOne(req => req.url === ApiDef.contented.preview);
+        let params: HttpParams = previewReq.request.params;
+        previewReq.flush(preview);
+
+        expect(dirs.length).toBeGreaterThan(1, "Should have directories");
+        expect(dirs[0].total).toEqual(total);
+
+        let fullDir = dirs[0];
+        expect(fullDir.count).toBeLessThan(fullDir.total, "We should not be loaded");
+
+        let loaded: Directory;
+        let expectedNumberCalls = fullDir.total - fullDir.count;
+        service.fullLoadDir(fullDir, 1).subscribe(
+            (dir: Directory) => {
+                loaded = dir;
+            }, err => { fail(err); }
+        );
+        let url = ApiDef.contented.fulldir.replace('{dir}', fullDir.id);
+        let calls = httpMock.match((req: HttpRequest<any>) => {
+            return req.url === url;
+        });
+        expect(calls.length).toBe(expectedNumberCalls, "We should continue to load");
+    }));
 });
 
