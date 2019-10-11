@@ -246,7 +246,6 @@ export class ContentedCmp implements OnInit {
         if (rowIdx >= currDir.total) {
             rowIdx = 0;
         }
-
         this.idx = idx;
         this.rowIdx = rowIdx;
 
@@ -254,7 +253,8 @@ export class ContentedCmp implements OnInit {
             this.setCurrentItem();
         } else if (this.rowIdx < currDir.total) {
             this._contentedService.fullLoadDir(currDir, this.rowIdx).subscribe(
-                res => {
+                (dir: Directory) => {
+                    console.log("Fully loaded up the directory", dir);
                     this.setCurrentItem();
                 },
                 err => {console.error("Failed to load", err); }
