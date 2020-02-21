@@ -5,6 +5,8 @@ import {HttpClientTestingModule, HttpTestingController} from '@angular/common/ht
 import {DebugElement} from '@angular/core';
 
 import { RouterTestingModule } from '@angular/router/testing';
+import { Router } from '@angular/router';
+
 import {ContentedCmp} from '../contented/contented_cmp';
 import {ContentedService} from '../contented/contented_service';
 import {ContentedModule} from '../contented/contented_module';
@@ -21,12 +23,19 @@ describe('TestingContentedCmp', () => {
     let comp: ContentedCmp;
     let el: HTMLElement;
     let de: DebugElement;
+    let router: Router;
 
     let httpMock: HttpTestingController;
 
     beforeEach(async( () => {
         TestBed.configureTestingModule({
-            imports: [RouterTestingModule, ContentedModule, HttpClientTestingModule],
+            imports: [
+                RouterTestingModule.withRoutes(
+                    [{path: 'ui/:idx/:rowIdx', component: ContentedCmp}]
+                ),
+                ContentedModule,
+                HttpClientTestingModule
+            ],
             providers: [
                 ContentedService
             ]
@@ -39,11 +48,27 @@ describe('TestingContentedCmp', () => {
 
         de = fixture.debugElement.query(By.css('.contented-cmp'));
         el = de.nativeElement;
+        router = TestBed.get(Router);
+        router.initialNavigation();
     }));
 
     afterEach(() => {
         httpMock.verify();
     });
+
+    it('TODO: Fully handles routing arguments', fakeAsync(() => {
+        // Should just setup other ajax calls
+        MockData.mockContentedService(comp._contentedService);
+
+        router.navigate(['/ui/2/3']);
+        tick(100);
+        expect(router.url).toBe('/ui/2/3');
+
+        fixture.detectChanges();
+        tick(1000);
+        // TODO: Make a test that actually works with the damn activated route params
+        // expect(comp.idx).toBe(2, "It should pull the dir index from ");
+    }));
 
     it('Should create a contented component', () => {
         expect(comp).toBeDefined("We should have the Contented comp");
@@ -99,6 +124,7 @@ describe('TestingContentedCmp', () => {
         expect(comp.allD.length).toBeGreaterThan(0, "There should be a number of directories");
         fixture.detectChanges();
 
+        expect(comp.idx).toBe(0, "It should be on the default page");
         let dirs = $('.dir-name');
         expect(dirs.length).toBe(2, "There should be two directories present");
         expect(_.get(preview, 'results[0].id')).toBe($(dirs[0]).text(), 'It should have the dir id');
@@ -129,7 +155,7 @@ describe('TestingContentedCmp', () => {
         expect(prevCount).not.toBe(0, "It should start with content");
 
         service.LIMIT = 1;
-        comp.fullLoad();
+        comp.loadMore();
         let fullUrl = ApiDef.contented.fulldir.replace('{dir}', dir.id);
         let fullReq = httpMock.expectOne(req => req.url === fullUrl);
         let checkParams: HttpParams = fullReq.request.params;

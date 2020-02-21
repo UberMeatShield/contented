@@ -1,7 +1,9 @@
 import {OnInit, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
 import {ContentedService} from './contented_service';
 import {Directory} from './directory';
-import {finalize} from 'rxjs/operators';
+import {finalize, switchMap} from 'rxjs/operators';
+
+import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 
 import * as _ from 'lodash';
 
@@ -25,7 +27,9 @@ export class ContentedCmp implements OnInit {
     public directories: Array<Directory>; // Current set of visible directories
     public allD: Array<Directory>; // All the directories we have loaded
 
-    constructor(public _contentedService: ContentedService) {
+    public wtf: any;
+
+    constructor(public _contentedService: ContentedService, public route: ActivatedRoute) {
     }
 
 
@@ -53,7 +57,7 @@ export class ContentedCmp implements OnInit {
                 this.hideFullscreen();
                 break;
             case 'f':
-                this.fullLoad();
+                this.loadMore();
                 break;
             case 'x':
                 this.saveItem();
@@ -68,9 +72,9 @@ export class ContentedCmp implements OnInit {
         this._contentedService.download(this.getCurrentDir(), this.rowIdx);
     }
 
-    public fullLoad() {
+    public loadMore() {
         let visible = this.getVisibleDirectories();
-        this.fullLoadDir(visible[0]);
+        this.loadMoreInDir(visible[0]);
     }
 
     public viewFullscreen() {
@@ -83,9 +87,28 @@ export class ContentedCmp implements OnInit {
     }
 
     public ngOnInit() {
-        console.log("Contented comp is alive.");
+        // Need to add tests
+        // Need to load content if the idx is greater than content loaded (n times potentially)
+        this.idx = 666;
+        this.route.paramMap.pipe().subscribe(
+            (res: ParamMap) => {
+                this.setPosition(
+                    res.get('idx') ? parseInt(res.get('idx'), 10) : 0,
+                    res.get('rowIdx') ? parseInt(res.get('rowIdx'), 10) : 0
+                );
+            },
+            err => { console.error(err); }
+        );
+
         this.calculateDimensions();
-        this.loadDirs();
+        this.loadDirs(); // Do this after the param map load potentially
+
+    }
+
+    // Mostly for tests since testing full routing params is a god damn pain.
+    public setPosition(idx: number, rowIdx: number) {
+        this.idx = idx;
+        this.rowIdx = rowIdx;
     }
 
     public loadDirs() {
@@ -93,12 +116,14 @@ export class ContentedCmp implements OnInit {
         this._contentedService.getPreview()
             .pipe(finalize(() => {this.loading = false; }))
             .subscribe(
-                res => { this.previewResults(res); },
+                res => {
+                    this.previewResults(res);
+                },
                 err => { console.error(err); }
             );
     }
 
-    public fullLoadDir(dir: Directory) {
+    public loadMoreInDir(dir: Directory) {
         // This is being changed to just load more content up
         if (dir.count < dir.total && !this.loading) {
             this.loading = true;
@@ -208,12 +233,33 @@ export class ContentedCmp implements OnInit {
         this.previewHeight = (height / this.maxVisible) - 41;
     }
 
-    public previewResults(response) {
-        console.log("Results returned from the preview results.", response);
-        this.allD = _.map(_.get(response, 'results') || [], dir => {
-            return new Directory(dir);
-        });
-        this.setCurrentItem();
+    public previewResults(directories: Array<Directory>) {
+        console.log("Results returned from the preview results.", directories);
+        this.allD = directories;
+        this.loadView(this.idx, this.rowIdx);
+        return this.allD;
+
+    }
+
+    public loadView(idx, rowIdx) {
+        let currDir = this.getCurrentDir();
+        if (rowIdx >= currDir.total) {
+            rowIdx = 0;
+        }
+        this.idx = idx;
+        this.rowIdx = rowIdx;
+
+        if (rowIdx < currDir.count) {
+            this.setCurrentItem();
+        } else if (this.rowIdx < currDir.total) {
+            this._contentedService.fullLoadDir(currDir, this.rowIdx).subscribe(
+                (dir: Directory) => {
+                    console.log("Fully loaded up the directory", dir);
+                    this.setCurrentItem();
+                },
+                err => {console.error("Failed to load", err); }
+            );
+        }
     }
 
     public dirItemClicked(evt) {
