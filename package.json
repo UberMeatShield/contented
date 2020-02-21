@@ -54,6 +54,6 @@
     "tslint": "^5.19.0",
     "tslint-loader": "^3.5.4",
     "typescript": "3.5",
-    "yarn": "^1.17.3"
+    "yarn": "^1.22.0"
   }
 }
