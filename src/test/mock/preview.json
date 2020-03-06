@@ -4,10 +4,10 @@
     {
       "total": 9,
       "contents": [
-        "3bkHRgj.gif",
-        "95SWUMo.gif",
-        "9WeH5wA.gif",
-        "LfFW7p6.gif"
+        {"id": 0, "src": "3bkHRgj.gif"},
+        {"id": 1, "src": "95SWUMo.gif"},
+        {"id": 2, "src": "9WeH5wA.gif"},
+        {"id": 3, "src": "LfFW7p6.gif"}
       ],
       "path": "static\/content\/office",
       "id": "office"
@@ -23,10 +23,10 @@
     {
       "total": 7,
       "contents": [
-        "7y6lmfH.png",
-        "CSwHeRT.png",
-        "SlWbrY7.png",
-        "UZYuMXL.png"
+        {"id": 0, "src": "7y6lmfH.png"},
+        {"id": 1, "src": "CSwHeRT.png"},
+        {"id": 2, "src": "SlWbrY7.png"},
+        {"id": 3, "src": "UZYuMXL.png"}
       ],
       "path": "static\/content\/starwars",
       "id": "starwars"

@@ -108,7 +108,7 @@ describe('TestingContentedCmp', () => {
 
         let toClick = $(imgs[3]).trigger('click');
         expect(comp.fullScreen).toBe(true, "It should now have a selected item");
-        expect(comp.getCurrentLocation()).toBe(imgs[3].src, "It should have the current item as the image");
+        expect(comp.getCurrentLocation().fullPath).toBe(imgs[3].src, "It should have the current item as the image");
     }));
 
     it("Should have a progress bar once the data is loaded", () => {
@@ -162,10 +162,13 @@ describe('TestingContentedCmp', () => {
         expect(checkParams.get('limit')).toBe('1', "We set a different limit");
         expect(checkParams.get('offset')).toBe('' + dir.count, "It should load more, not the beginning");
 
-        let firstLoad = MockData.getMockDir(dir.total - dir.count);
+        let firstLoad = MockData.getMockDir(dir.total - dir.count, 'item-', dir.contents.length);
         fullReq.flush(firstLoad);
+
         expect(dir.count).toBeGreaterThan(prevCount, "We should have added more");
-        expect(dir.contents.indexOf(firstLoad.contents[0])).toBeGreaterThan(0, 'It should have added an element');
+
+        let findId = _.get(firstLoad, 'contents[0].id');
+        expect(_.findIndex(dir.contents, {id: findId})).toBeGreaterThan(0, `We should have ${findId} in the contents`);
         expect(dir.count).toBe(dir.total, "It should load all the data");
     });
 });

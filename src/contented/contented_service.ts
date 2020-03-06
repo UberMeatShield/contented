@@ -37,7 +37,7 @@ export class ContentedService {
     public download(dir: Directory, rowIdx: number) {
         console.log("Attempting to download", dir, rowIdx);
 
-        let filename = dir && rowIdx >= 0 && rowIdx < dir.contents.length ? dir.contents[rowIdx] : '';
+        let filename = dir && rowIdx >= 0 && rowIdx < dir.contents.length ? dir.contents[rowIdx].src : '';
         if (!filename) {
             console.log("No file specified, wtf", rowIdx);
         }

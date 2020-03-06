@@ -1,13 +1,13 @@
 <div class="directory-cmp">
   <div class="dir-contents">
-    <span class="preview-content" *ngFor="let previewPath of getVisibleSet()">
+    <span class="preview-content" *ngFor="let imgContainer of getVisibleSet()">
       <img class="preview-img"
-        [class.current-img]="currentViewItem ? previewPath.match(currentViewItem) : false"
+        [class.current-img]="currentViewItem == imgContainer"
         [width]="previewWidth"
         [height]="previewHeight"
-        [src]="previewPath" 
+        [src]="imgContainer.fullPath" 
         (load)="imgLoaded($event)"
-        (click)="imgClicked(previewPath)"
+        (click)="imgClicked(imgContainer)"
       > 
     </span>
   </div>
