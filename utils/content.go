@@ -7,9 +7,15 @@ import (
 	"log"
 )
 
+type MediaContainer struct{
+	Id int `json:"id"`
+    Src string `json:"src"`
+	Type string `json:"type"`
+}
+
 type DirContents struct{
 	Total int `json:"total"`
-	Contents []string `json:"contents"`
+	Contents []MediaContainer `json:"contents"`
 	Path string `json:"path"`
 	Id string `json:"id"`
 }
@@ -61,13 +67,20 @@ func GetFileContents(dir string, filename string) *bufio.Reader {
  *  Get all the content in a particular directory.
  */
 func GetDirContents(dir string, limit int, start_offset int, id string) DirContents {
-    var arr = []string{}
+    var arr = []MediaContainer{}
     imgs, _ := ioutil.ReadDir(dir)
 
 	total := 0
     for idx, img := range imgs {
         if !img.IsDir() && len(arr) < limit && idx >= start_offset {
-            arr = append(arr, img.Name())
+
+            // TODO: Actually try and determine this
+            media := MediaContainer{
+                Id: idx,
+                Src: img.Name(),
+                Type: "image/jpg",
+            }
+            arr = append(arr, media)
         }
 		total++
     }

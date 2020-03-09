@@ -69,6 +69,7 @@ export class ContentedCmp implements OnInit {
     }
 
     public saveItem() {
+        console.log("We should save an item", this.getCurrentDir());
         this._contentedService.download(this.getCurrentDir(), this.rowIdx);
     }
 
