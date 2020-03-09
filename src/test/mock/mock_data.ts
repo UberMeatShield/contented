@@ -19,13 +19,20 @@ class MockLoader {
         return require('./full.json');
     }
 
-    public getMockDir(count: number, itemPrefix: string = 'item-') {
+    public getMockDir(count: number, itemPrefix: string = 'item-', offset: number = 0) {
          let total = 20;
+         let contents = _.map(_.range(0, count),
+             (idx) => {
+                 let id = idx + offset;
+                 return {src: itemPrefix + id, id: id};
+             }
+         );
+
          let fakeDirResponse = {
              total: total,
              path: 'narp/',
              id: 'test',
-             contents: _.map(_.range(0, count), idx => itemPrefix + idx)
+             contents: contents
          };
          return fakeDirResponse;
      }

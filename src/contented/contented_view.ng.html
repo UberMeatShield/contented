@@ -1,7 +1,7 @@
 <div class="contented-view-cmp">
   <span *ngIf="viewUrl" [class.recalculated]="calculateDimensions()">
     <img class="full-view-img" 
-      [src]="viewUrl" 
+      [src]="viewUrl.fullPath" 
       [width]="maxWidth" 
       [height]="maxHeight"
     >

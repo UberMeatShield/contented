@@ -2,7 +2,7 @@ import {async, fakeAsync, getTestBed, tick, ComponentFixture, TestBed} from '@an
 import {By} from '@angular/platform-browser';
 
 import * as _ from 'lodash';
-import {Directory} from './../contented/directory';
+import {Directory, ImgContainer} from './../contented/directory';
 import {MockData} from './mock/mock_data';
 
 describe('TestingDirectory', () => {
@@ -33,10 +33,13 @@ describe('TestingDirectory', () => {
         let interval = dir.getIntervalAround(contents[testIdx], 5, 1);
         expect(interval.length).toBe(5, "We should get a 3 item interval");
 
-        let targetIdx = _.indexOf(interval, contents[testIdx - 1]);
+        console.log("Wat", interval);
+
+        let targetIdx = dir.indexOf(contents[testIdx - 1], interval);
         expect(targetIdx).toBe(0, "It should be in the first result (the previous item)");
-        expect(_.indexOf(interval, contents[testIdx + 1])).toBe(2, "Should be the next item in the list");
-        expect(_.indexOf(interval, contents[testIdx - 2])).toBe(-1, "We should not have more than 1 item before the selected item");
+
+        expect(dir.indexOf(contents[testIdx + 1], interval)).toBe(2, "Should be the next item in the list");
+        expect(dir.indexOf(contents[testIdx - 2], interval)).toBe(-1, "We should not have more than 1 item before the selected item");
     });
 
     it('Should manage to render the requested number each time, and best effort otherwise', () => {
@@ -53,10 +56,18 @@ describe('TestingDirectory', () => {
 
     it('Should add more content with more data', () => {
         let dir = new Directory(MockData.getMockDir(0));
-        dir.setContents(['a', 'b']);
+        dir.setContents(dir.buildImgs([
+            {id: 0, src: 'a'},
+            {id: 1, src: 'b'}
+        ]));
+
         dir.total = 5;
         expect(dir.count).toBe(2, "We should have 2 results");
-        dir.addContents(['c', 'a', 'd']);
+        dir.addContents(dir.buildImgs([
+            {id: 2, src: 'c'},
+            {id: 0, src: 'a'},
+            {id: 3, src: 'd'},
+        ]));
         expect(dir.contents.length).toBe(4, "It should have added contents");
         expect(dir.count).toBe(4, "The count should have updated");
     });

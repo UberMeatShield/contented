@@ -1,15 +1,15 @@
 {
   "total": 9,
   "contents": [
-    "3bkHRgj.gif",
-    "95SWUMo.gif",
-    "9WeH5wA.gif",
-    "LfFW7p6.gif",
-    "NEr7P9e.gif",
-    "VWerqwN.gif",
-    "YejpHwz.gif",
-    "bu7JSpw.gif",
-    "myXzW2T.gif"
+    {"id": 0, "src": "3bkHRgj.gif"},
+    {"id": 1, "src": "95SWUMo.gif"},
+    {"id": 2, "src": "9WeH5wA.gif"},
+    {"id": 3, "src": "LfFW7p6.gif"},
+    {"id": 4, "src": "NEr7P9e.gif"},
+    {"id": 5, "src": "VWerqwN.gif"},
+    {"id": 6, "src": "YejpHwz.gif"},
+    {"id": 7, "src": "bu7JSpw.gif"},
+    {"id": 8, "src": "myXzW2T.gif"}
   ],
   "path": "static\/content\/office",
   "id": "static\/content\/"

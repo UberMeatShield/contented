@@ -1,6 +1,6 @@
 import {OnInit, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
 import {ContentedService} from './contented_service';
-import {Directory} from './directory';
+import {Directory, ImgContainer} from './directory';
 import {finalize, switchMap} from 'rxjs/operators';
 
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
@@ -21,7 +21,7 @@ export class ContentedCmp implements OnInit {
     public previewWidth: number = 200; // Based on current client page sizes, scale the preview images natually
     public previewHeight: number = 200; // height for the previews ^
 
-    private currentViewItem: string; // The current indexed item that is considered selected
+    private currentViewItem: ImgContainer; // The current indexed item that is considered selected
     public currentDir: Directory;
     public fullScreen: boolean = false; // Should we view fullscreen the current item
     public directories: Array<Directory>; // Current set of visible directories
@@ -69,6 +69,7 @@ export class ContentedCmp implements OnInit {
     }
 
     public saveItem() {
+        console.log("We should save an item", this.getCurrentDir());
         this._contentedService.download(this.getCurrentDir(), this.rowIdx);
     }
 
@@ -139,7 +140,9 @@ export class ContentedCmp implements OnInit {
     public dirResults(dir: Directory, response) {
         console.log("Full Directory loading, what is in the results?", response);
         // TODO: merge the crap
-        dir.addContents(_.get(response, 'contents'));
+        dir.addContents(
+            dir.buildImgs(_.get(response, 'contents'))
+        );
     }
 
     public reset() {
@@ -267,7 +270,7 @@ export class ContentedCmp implements OnInit {
         let dir = _.get(evt, 'dir');
         let item = _.get(evt, 'item');
         let idx = _.findIndex(this.allD, {id: dir ? dir.id : -1});
-        let rowIdx = dir ? dir.indexOf(item) : -1;
+        let rowIdx = dir ? _.findIndex(dir.contents, {id: item.id}) : -1;
 
         console.log("Found idx and row index: ", idx, rowIdx);
         if (idx >= 0 && rowIdx >= 0) {

@@ -30,6 +30,9 @@ let dir = {
 const execCmd = (cmd, args, done) => {
     const call = cp.spawn(cmd, args, {stdio: 'inherit'});
     call.on('exit', function(code) {
+        if (code !== 0) {
+            console.error(`FAILED RUN ${cmd} with ${args}`);
+        }
         if (typeof done === 'function') {
             done();
         }
@@ -140,7 +143,7 @@ const restartServer = (done) => {
 };
 
 const goKillServer = (done) => {
-    return execCmd('pkill',  ['-9', 'contented'], done);
+    return execCmd('pkill', ['contented'], done);
 };
 
 const goBuild = (done) => {
@@ -187,6 +190,7 @@ const goWatch = async () => {
 
 const typescriptWatch = async () => {
     // Kick off a watcher which will run the tests
+
     typescriptTests(null);
 
     // Running compile process for the UI Code (self watches)

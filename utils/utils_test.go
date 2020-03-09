@@ -45,6 +45,15 @@ func TestGetSpecificDir(t *testing.T) {
     if (offset_files.Total != 5) {
 		t.Error("There should be exactly 5 images in the dir")
     }
+
+    first_file := offset_files.Contents[0]
+    if (first_file.Id != 4) {
+		t.Errorf("Offset should change the initial id %d", first_file.Id)
+    }
+    if (first_file.Src != "hkacMG4.jpg") {
+		t.Errorf("Offset should change the initial file %s", first_file.Src)
+    }
+    
 }
 
 
