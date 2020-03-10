@@ -62,7 +62,7 @@ export class ContentedService {
             return forkJoin(calls).pipe().subscribe(
                 results => {
                     _.each(results, r => {
-                        dir.addContents(_.get(r, 'contents'));
+                        dir.addContents(dir.buildImgs(_.get(r, 'contents')));
                     });
                     resolve(dir);
                 },
