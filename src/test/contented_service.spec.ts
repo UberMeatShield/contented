@@ -71,7 +71,7 @@ describe('TestingContentedService', () => {
 
 
     it('Can load up a lot of data and get the offset right', fakeAsync(() => {
-        const total = 50000;
+        const total = 50001;
         let response = MockData.getMockDir(10000, 'i-', 0, total);
         let dir = new Directory(response);
 
@@ -84,18 +84,24 @@ describe('TestingContentedService', () => {
         let calls = httpMock.match((req: HttpRequest<any>) => {
             return req.url === url;
         });
-        expect(calls.length).toEqual(8, 'It should make a lot of calls');
+        expect(calls.length).toEqual(9, 'It should make a lot of calls');
 
-
+        let expectedMaxFound = false;
         _.each(calls, req => {
             const limit = parseInt(req.request.params.get('limit'), 10);
             const offset = parseInt(req.request.params.get('offset'), 10);
 
             expect(limit).toEqual(5000, 'The limit should be adjusted');
             expect(offset).toBeGreaterThan(9999, 'The offset should be increasing');
-
-            req.flush(MockData.getMockDir(limit, 'i-', offset, total));
+            if (offset === 50000) {
+               expectedMaxFound = true;
+            }
+            const toCreate = offset + limit < total ? limit : total - offset;
+            req.flush(MockData.getMockDir(toCreate, 'i-', offset, total));
         });
+        tick(1000);
+        expect(dir.contents.length).toEqual(total, 'It should load all content');
+        expect(dir.contents[total - 1].fullPath).toBeTruthy();
 
         httpMock.verify();
     }));

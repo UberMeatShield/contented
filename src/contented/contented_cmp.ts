@@ -27,8 +27,6 @@ export class ContentedCmp implements OnInit {
     public directories: Array<Directory>; // Current set of visible directories
     public allD: Array<Directory>; // All the directories we have loaded
 
-    public wtf: any;
-
     constructor(public _contentedService: ContentedService, public route: ActivatedRoute) {
     }
 

@@ -74,7 +74,7 @@ func GetDirContents(dir string, limit int, start_offset int, id string) DirConte
     for idx, img := range imgs {
         if !img.IsDir() && len(arr) < limit && idx >= start_offset {
 
-            // TODO: Actually try and determine this
+            // TODO: Actually try and determine the type of the file
             media := MediaContainer{
                 Id: idx,
                 Src: img.Name(),

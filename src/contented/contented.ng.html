@@ -15,9 +15,9 @@
           [mode]="dir.count == dir.total ? 'determinate' : 'buffer'"
         ></mat-progress-bar>
 
-        <div class="directory-meta-text">
+        <form class="directory-meta-text">
           <span class="dir-name">{{dir?.id}}</span>
-          selected: <span class="row-idx"> {{rowIdx}}</span>  
+          selected: <input name="rowIdx" type="number" [(ngModel)]="rowIdx">
           loaded: <span class="dir-max-count"> {{dir?.contents?.length}}</span> 
           total: {{dir?.total}}
           name: <span class="current-item"> {{currentViewItem}}</span>
@@ -27,7 +27,7 @@
               Load ({{ dir.total - dir.count }}) Items
             </button>
           </span>
-        </div>
+        </form>
       </div>
 
       <directory-cmp 
