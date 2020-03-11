@@ -12,7 +12,7 @@ import * as _ from 'lodash';
 export class ContentedService {
 
     public options = null;
-    public LIMIT = null; // Default limit will use the server limit in the query
+    public LIMIT = 5000; // Default limit will use the server limit in the query
 
     constructor(private http: HttpClient) {
         let headers = new HttpHeaders({
