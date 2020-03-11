@@ -47,10 +47,11 @@ export class ContentedService {
     }
 
     public fullLoadDir(dir, limit = null) {
-        limit = limit || this.LIMIT;
         if (dir.count === dir.total) {
             return observableFrom(Promise.resolve(dir));
         }
+
+        limit = limit || this.LIMIT || 2000;
         // Build out a call to load all the possible data (all at once, it is fast)
         let p = new Promise((resolve, reject) => {
             let calls = [];
@@ -68,6 +69,10 @@ export class ContentedService {
                         nope(err);
                     });
                 });
+
+                if (calls.length > 30) { // TODO: Make something else sensible here.
+                    break;
+                }
                 calls.push(observableFrom(delayP));
             }
 
@@ -87,7 +92,6 @@ export class ContentedService {
 
     public loadMoreInDir(dir: Directory, limit = null) {
         limit = limit || this.LIMIT;
-        console.log("Wat", limit);
         return this.getFullDirectory(dir.id, dir.count, limit);
     }
 
