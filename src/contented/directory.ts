@@ -89,14 +89,13 @@ export class Directory {
     }
 
     public setContents(contents: Array<ImgContainer>) {
-        this.contents = contents || [];
+        this.contents = _.sortBy(_.uniqBy(contents || [], 'id'), 'id');
         this.count = this.contents.length;
         this.renderable = null;
     }
 
     public addContents(contents: Array<ImgContainer>) {
-        let allData = (this.contents || []).concat(contents);
-        this.setContents(_.sortBy(_.uniqBy(allData, 'id'), 'id'));
+        this.setContents((this.contents || []).concat(contents));
     }
 
     // This is the actual URL you can get a pointer to for the scroll / load

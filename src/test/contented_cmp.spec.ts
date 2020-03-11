@@ -3,6 +3,7 @@ import {By} from '@angular/platform-browser';
 import {HttpParams} from '@angular/common/http';
 import {HttpClientTestingModule, HttpTestingController} from '@angular/common/http/testing';
 import {DebugElement} from '@angular/core';
+import {FormsModule} from '@angular/forms';
 
 import { RouterTestingModule } from '@angular/router/testing';
 import { Router } from '@angular/router';
@@ -33,6 +34,7 @@ describe('TestingContentedCmp', () => {
                 RouterTestingModule.withRoutes(
                     [{path: 'ui/:idx/:rowIdx', component: ContentedCmp}]
                 ),
+                FormsModule,
                 ContentedModule,
                 HttpClientTestingModule
             ],

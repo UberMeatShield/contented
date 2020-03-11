@@ -73,7 +73,7 @@ const typescript = (done) => {
 
 // Full tree shaking production build, removes code, minify etc
 const typescriptProd = (done) => {
-    let cmd = `ng build ${appName}  --prod --no-progress --deploy-url /${dir.deploy}`;
+    let cmd = `ng build ${appName} --prod --no-progress --deploy-url /${dir.deploy}`;
     return ngExec(cmd, done);
 };
 

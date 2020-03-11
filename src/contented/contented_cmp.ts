@@ -27,8 +27,6 @@ export class ContentedCmp implements OnInit {
     public directories: Array<Directory>; // Current set of visible directories
     public allD: Array<Directory>; // All the directories we have loaded
 
-    public wtf: any;
-
     constructor(public _contentedService: ContentedService, public route: ActivatedRoute) {
     }
 
@@ -90,7 +88,6 @@ export class ContentedCmp implements OnInit {
     public ngOnInit() {
         // Need to add tests
         // Need to load content if the idx is greater than content loaded (n times potentially)
-        this.idx = 666;
         this.route.paramMap.pipe().subscribe(
             (res: ParamMap) => {
                 this.setPosition(
@@ -103,7 +100,6 @@ export class ContentedCmp implements OnInit {
 
         this.calculateDimensions();
         this.loadDirs(); // Do this after the param map load potentially
-
     }
 
     // Mostly for tests since testing full routing params is a god damn pain.

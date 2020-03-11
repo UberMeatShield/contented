@@ -19,8 +19,7 @@ class MockLoader {
         return require('./full.json');
     }
 
-    public getMockDir(count: number, itemPrefix: string = 'item-', offset: number = 0) {
-         let total = 20;
+    public getMockDir(count: number, itemPrefix: string = 'item-', offset: number = 0, total = 20) {
          let contents = _.map(_.range(0, count),
              (idx) => {
                  let id = idx + offset;
