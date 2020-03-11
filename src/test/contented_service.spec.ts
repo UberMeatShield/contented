@@ -99,7 +99,7 @@ describe('TestingContentedService', () => {
             const toCreate = offset + limit < total ? limit : total - offset;
             req.flush(MockData.getMockDir(toCreate, 'i-', offset, total));
         });
-        tick(1000);
+        tick(100000);
         expect(dir.contents.length).toEqual(total, 'It should load all content');
         expect(dir.contents[total - 1].fullPath).toBeTruthy();
 

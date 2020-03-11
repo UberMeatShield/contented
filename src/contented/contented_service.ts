@@ -54,17 +54,26 @@ export class ContentedService {
         // Build out a call to load all the possible data (all at once, it is fast)
         let p = new Promise((resolve, reject) => {
             let calls = [];
+            let idx = 0;
             for (let offset = dir.count; offset < dir.total; offset += limit) {
-                calls.push(this.getFullDirectory(dir.id, offset, limit));
+                ++idx;
+                let delayP = new Promise((yes, nope) => {
+                    this.getFullDirectory(dir.id, offset, limit).subscribe(res => {
+                        _.delay(() => {
+                            dir.addContents(dir.buildImgs(_.get(res, 'contents')));
+                            yes(dir);
+                        }, idx * 500);
+                    }, err => {
+                        console.error('Failed to load', err);
+                        nope(err);
+                    });
+                });
+                calls.push(observableFrom(delayP));
             }
 
             // Join all the results and let the call function resolve once the dir is updated.
             return forkJoin(calls).pipe().subscribe(
                 results => {
-                    _.each(results, res => {
-                        dir.addContents(dir.buildImgs(_.get(res, 'contents')));
-                    });
-                    console.log('All Results for directory loaded', dir);
                     resolve(dir);
                 },
                 err => {
