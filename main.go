@@ -19,7 +19,7 @@ func main() {
     flag.StringVar(&dir, "dir", ".", "Directory to serve files from")
     flag.StringVar(&port, "port", "8000", "Port to run the webserver.")
     previewCount := flag.Int("previewCount", 8, "Number of refrences to return by default")
-    limitCount := flag.Int("limit", 2000, "Max default items returned")
+    limitCount := flag.Int("limit", web.DefaultLimit, "Max default items returned")
 
     test := flag.Bool("test", false, "Instead of running a server, test the http calls against a running server")
     flag.Parse()

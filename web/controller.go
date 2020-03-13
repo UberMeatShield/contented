@@ -25,13 +25,13 @@ type HttpError struct{
 var dir string
 var validDirs map[string]bool
 var previewCount int
-var defaultLimit int = 10000
+var DefaultLimit int = 10000
 
 func SetupContented(router *mux.Router, contentDir string, numToPreview int, limit int) {
     dir = contentDir
     validDirs = utils.GetDirectoriesLookup(dir)
     previewCount = numToPreview
-    defaultLimit = limit
+    DefaultLimit = limit
 
     router.PathPrefix("/contented/").Handler(http.StripPrefix("/contented/", http.FileServer(http.Dir(dir))))
     router.HandleFunc("/content/", ListDefaultHandler)
@@ -118,11 +118,11 @@ func ListSpecificHandler(w http.ResponseWriter, r *http.Request) {
 
     // Pull out the limit and offset queries, provides pagination
     url_params := r.URL.Query() 
-    limit := defaultLimit
+    limit := DefaultLimit
     if val, ok := url_params["limit"]; ok {
         limit, _ = strconv.Atoi(val[0])
-        if limit <= 0 || limit > defaultLimit {
-            limit = defaultLimit // Still cannot ask for more than the startup specified
+        if limit <= 0 || limit > DefaultLimit {
+            limit = DefaultLimit // Still cannot ask for more than the startup specified
         }
     }
     offset := 0
