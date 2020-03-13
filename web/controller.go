@@ -25,7 +25,7 @@ type HttpError struct{
 var dir string
 var validDirs map[string]bool
 var previewCount int
-var defaultLimit int = 2000
+var defaultLimit int = 10000
 
 func SetupContented(router *mux.Router, contentDir string, numToPreview int, limit int) {
     dir = contentDir
