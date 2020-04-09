@@ -27,7 +27,7 @@ export class ContentedCmp implements OnInit {
     public directories: Array<Directory>; // Current set of visible directories
     public allD: Array<Directory>; // All the directories we have loaded
 
-    constructor(public _contentedService: ContentedService, public route: ActivatedRoute) {
+    constructor(public _contentedService: ContentedService, public route: ActivatedRoute, public router: Router) {
     }
 
 
@@ -167,6 +167,10 @@ export class ContentedCmp implements OnInit {
         return null;
     }
 
+    public updateRoute() {
+        this.router.navigate([`/ui/${this.idx}/${this.rowIdx}`]);
+    }
+
     public rowNext() {
         let dir = this.getCurrentDir();
         let items = dir ? dir.getContentList() : [];
@@ -177,6 +181,7 @@ export class ContentedCmp implements OnInit {
             }
         }
         this.setCurrentItem();
+        this.updateRoute();
     }
 
     public rowPrev() {
@@ -185,6 +190,7 @@ export class ContentedCmp implements OnInit {
         } else if (this.idx !== 0) {
             this.prev(true);
         }
+        this.updateRoute();
     }
 
     public next(selectFirst: boolean = true) {
@@ -194,6 +200,7 @@ export class ContentedCmp implements OnInit {
         if (selectFirst) {
             this.rowIdx = 0;
         }
+        this.updateRoute();
     }
 
     public prev(selectLast: boolean = false) {
@@ -205,6 +212,7 @@ export class ContentedCmp implements OnInit {
             let items = dir ? dir.getContentList() : [];
             this.rowIdx = items.length - 1;
         }
+        this.updateRoute();
     }
 
     public imgLoaded(evt) {
