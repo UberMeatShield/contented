@@ -20,7 +20,7 @@
           selected: <input name="rowIdx" type="number" [(ngModel)]="rowIdx">
           loaded: <span class="dir-max-count"> {{dir?.contents?.length}}</span> 
           total: {{dir?.total}}
-          name: <span class="current-item"> {{currentViewItem}}</span>
+          name: <span class="current-item"> {{currentViewItem.fullPath}}</span>
           <span *ngIf="dir?.contents?.length < dir.total">
             press (F) or: 
             <button class="btn btn-primary" (click)="fullLoadDir(dir)">

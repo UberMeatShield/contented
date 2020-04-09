@@ -1,13 +1,15 @@
 <div class="contented-view-cmp">
+  <span *ngIf="viewUrl" class="max-full-url-path">
+    {{viewUrl?.fullPath}}
+  </span>
+  <span *ngIf="!viewUrl">
+    No Url selected
+  </span>
   <span *ngIf="viewUrl" [class.recalculated]="calculateDimensions()">
     <img class="full-view-img" 
       [src]="viewUrl.fullPath" 
       [width]="maxWidth" 
       [height]="maxHeight"
     >
-  </span>
-  {{viewUrl}}
-  <span *ngIf="!viewUrl">
-    No Url selected
   </span>
 </div>
