@@ -8,8 +8,8 @@ import (
     "net/http"
     "testing"
     "github.com/gorilla/mux"
-    "contented/unit"
-    "contented/web"
+    "github.com/contented/unit"
+    "github.com/contented/web"
 )
 
 func main() {
@@ -46,7 +46,6 @@ func server(server_url string, dir string, previewCount int, limitCount int) {
     router := mux.NewRouter()
     web.SetupContented(router, dir, previewCount, limitCount)
     web.SetupStatic(router, "./static")
-
     srv := &http.Server{
         Handler:      router,
         Addr:         server_url,

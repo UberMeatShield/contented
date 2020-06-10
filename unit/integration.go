@@ -5,8 +5,8 @@ import (
     "testing"
     "io/ioutil"
     "encoding/json"
-    "contented/web"
     "net/http"
+    "github.com/contented/web"
 )
 
 func IntegrationLoad(t *testing.T) {
