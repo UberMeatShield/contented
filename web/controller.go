@@ -9,7 +9,7 @@ import (
     "net/http"
     "io/ioutil"
     "github.com/gorilla/mux"
-    "contented/utils"
+    "github.com/contented/utils"
 )
 
 type PreviewResults struct{
