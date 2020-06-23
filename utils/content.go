@@ -88,7 +88,7 @@ func GetDirContents(dir string, limit int, start_offset int, id string) DirConte
 	return DirContents{
 		Total: total,
 		Contents: arr,
-		Path: dir,
+		Path: "static/" + id,
 		Id: id,
 	}
 }

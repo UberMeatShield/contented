@@ -2,7 +2,6 @@ package utils
 
 import "testing"
 import "time"
-// import "fmt"
 
 var testDir = "./../mocks/content"
 

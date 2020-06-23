@@ -1,59 +1,56 @@
 package main
 
 import (
+	"log"
     "fmt"
-    "time"
-    "flag"
-    "log"
-    "net/http"
-    "testing"
-    "github.com/gorilla/mux"
-    "github.com/contented/unit"
-    "github.com/contented/web"
+    "strconv"
+	"contented/actions"
+    "github.com/gobuffalo/envy"
 )
 
+// main is the starting point for your Buffalo application.
+// You can feel free and add to this `main` method, change
+// what it does, etc...
+// All we ask is that, at some point, you make sure to
+// call `app.Serve()`, unless you don't want to start your
+// application that is. :)
 func main() {
-    var dir string
-    var port string = "8000"
+	app := actions.App()
 
-    flag.StringVar(&dir, "dir", ".", "Directory to serve files from")
-    flag.StringVar(&port, "port", "8000", "Port to run the webserver.")
-    previewCount := flag.Int("previewCount", 8, "Number of refrences to return by default")
-    limitCount := flag.Int("limit", web.DefaultLimit, "Max default items returned")
+    dir, err := envy.MustGet("DIR")
+    limitCount, limErr := strconv.Atoi(envy.Get("LIMIT", "2000"))
+    previewCount, previewErr := strconv.Atoi(envy.Get("PREVIEW", "8"))
 
-    test := flag.Bool("test", false, "Instead of running a server, test the http calls against a running server")
-    flag.Parse()
-
-    server_url := "127.0.0.1:" + port
-    if *test == true { // Obviously requires a server up and running on another process
-        unit_test(server_url)
-    } else {
-        server(server_url, dir, *previewCount, *limitCount)
+    if err != nil {
+        panic(err)
+    } else if limErr != nil {
+        panic(limErr)
+    } else if previewErr != nil {
+        panic(previewErr)
     }
 
+    fmt.Println("Parsed the environment")
+    log.Printf("Dir %s Limit %d with preview count %d", dir, limitCount, previewCount)
+    actions.SetupContented(app, dir, previewCount, limitCount)
+	if err := app.Serve(); err != nil {
+		log.Fatal(err)
+	}
 }
 
-func unit_test(server_url string) {
-    fmt.Println("Run the unit tests instead")
-    t := testing.T{}
-    unit.IntegrationLoad(&t)
-}
+/*
+# Notes about `main.go`
 
+## SSL Support
 
-func server(server_url string, dir string, previewCount int, limitCount int) {
-    fmt.Printf("Using this directory As the static root: %s with directory %s", server_url, dir)
+We recommend placing your application behind a proxy, such as
+Apache or Nginx and letting them do the SSL heavy lifting
+for you. https://gobuffalo.io/en/docs/proxy
 
-    router := mux.NewRouter()
-    web.SetupContented(router, dir, previewCount, limitCount)
-    web.SetupStatic(router, "./static")
-    srv := &http.Server{
-        Handler:      router,
-        Addr:         server_url,
-        // Good practice: enforce timeouts for servers you create!
-        WriteTimeout: 18 * time.Second,
-        ReadTimeout:  18 * time.Second,
-    }
-    log.Fatal(srv.ListenAndServe())
-    http.Handle("/", router)
+## Buffalo Build
 
-}
+When `buffalo build` is run to compile your binary, this `main`
+function will be at the heart of that binary. It is expected
+that your `main` function will start your application using
+the `app.Serve()` method.
+
+*/

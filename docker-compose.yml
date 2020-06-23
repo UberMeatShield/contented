@@ -1,0 +1,13 @@
+version: "3"
+services:
+  db:
+    image: "postgres:10.7-alpine"
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: content_test
+      POSTGRES_HOST_AUTH_METHOD: trust
+    #volumes:
+    #  - ./migrate/up:/docker-entrypoint-initdb.d
+#volumes:
+#  migrate:

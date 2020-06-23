@@ -20,10 +20,10 @@ let dir = {
     sass:  base + 'src/scss/',
     node:  base + 'node_modules/',
     go:    base,
-    deploy: 'static/build/',
-    css: 'static/css/',
-    build: base + 'static/build/',
-    thirdparty: base + 'static/thirdparty',
+    deploy: 'public/build/',
+    css: 'public/css/',
+    build: base + 'public/build/',
+    thirdparty: base + 'public/thirdparty',
 };
 
 // Generic execute with a resolve by spawning a child process
@@ -134,24 +134,16 @@ const sassBuild = () => {
         .pipe(dest(dir.css));
 };
 
-// This kicks off the server in the background, and we just immediately resolve
-const restartServer = (done) => {
-    return new Promise((resolve, reject) => {
-        execCmd('./contented',  ['--dir',  './static/content/', '&'], resolve);
-        done();
-    });
-};
-
 const goKillServer = (done) => {
-    return execCmd('pkill', ['contented'], done);
+    return execCmd('pkill', ['buffalo'], done);
 };
 
 const goBuild = (done) => {
-    return execCmd("go", ["build", "contented"], done);
+    return execCmd("go", ["build"], done);
 };
 
 const goTest = (done) => {
-      execCmd('go', ['test', '-v', './...'], done);
+      execCmd('buffalo', ['test'], done);
 };
 
 // Common group tasks that make up the real watchers and deployment
@@ -169,24 +161,8 @@ buildDev.description = "Faster no QA version that should get the webapp up and r
 const typescriptChanged = series(tslint, typescriptTests, typescript, sassBuild, copy);
 typescriptChanged.description = "After a typescript change:  sass compile, lint and running the tests.";
 
-const goChanged = series(goTest, goBuild, goKillServer, restartServer);
-goChanged.description = "Kick the go server after a reboot";
-
 const buildDeploy = series(clean, sassBuild, typescriptProd, copy);
 buildDeploy.description = "The production build, fully compile the typescript / tree shake etc.";
-
-// Watcher functions that observe code and take QA actions on change
-// ===============================================
-const goWatch = async () => {
-    let goWatching = [
-      dir.go + 'utils/*.go',
-      dir.go + 'web/*.go',
-      dir.go + 'main.go',
-      dir.base + 'tests/**/*.go',
-    ];
-    console.log("Watching the following", goWatching);
-    return watch(goWatching, goChanged);
-};
 
 const typescriptWatch = async () => {
     // Kick off a watcher which will run the tests
@@ -214,11 +190,11 @@ const sassWatch = async () => {
 };
 
 // The default task and the most common watching / QA task.
-const qaMonitor = series(qa, typescriptWatch, goWatch, sassWatch);
+const qaMonitor = series(qa, typescriptWatch, sassWatch);
 qaMonitor.description = "Run our QA, then monitor for further changes";
 
 // const defaultTasks = series(clean, sassBuild, copy, qaMonitor, );
-const defaultTasks = series(clean, sassBuild, copy, goChanged, qaMonitor);
+const defaultTasks = series(clean, sassBuild, copy, qaMonitor);
 defaultTasks.description = "The standard development watch / build";
 
 // Export all our various tasks
@@ -237,10 +213,8 @@ export {
     watchDoc,
     sassBuild,
     sassWatch,
-    goWatch,
     goTest,
     goBuild,
-    goChanged,
     goKillServer,
     qa,
     qaMonitor,
