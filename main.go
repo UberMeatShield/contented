@@ -5,7 +5,7 @@ import (
     "fmt"
     "strconv"
 
-	"contentedactions"
+	"contented/actions"
     "github.com/gobuffalo/envy"
 )
 

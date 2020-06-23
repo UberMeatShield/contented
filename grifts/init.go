@@ -1,7 +1,7 @@
 package grifts
 
 import (
-	"contentedactions"
+	"contented/actions"
 
 	"github.com/gobuffalo/buffalo"
 )

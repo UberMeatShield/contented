@@ -1,5 +1,5 @@
-name = "content"
-bin = "bin/content"
+name = "contented"
+bin = "bin/contented"
 vcs = "git"
 with_pop = true
 with_sqlite = false
