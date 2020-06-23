@@ -8,7 +8,7 @@ import (
 	paramlogger "github.com/gobuffalo/mw-paramlogger"
 	"github.com/unrolled/secure"
 
-	"content/models"
+	"contentedmodels"
 
 	"github.com/gobuffalo/buffalo-pop/v2/pop/popmw"
 	contenttype "github.com/gobuffalo/mw-contenttype"
@@ -59,11 +59,11 @@ func App() *buffalo.App {
 		// Remove to disable this.
 		app.Use(popmw.Transaction(models.DB))
 
-        app.GET("/content/", ListDefaultHandler)
-        app.GET("/content/{dir_to_list}", ListSpecificHandler)
+        app.GET("/contented", ListDefaultHandler)
+        app.GET("/contented{dir_to_list}", ListSpecificHandler)
 
         // TODO: Just make the full path show the file directly?
-        app.GET("/content/{dir_to_list}/{filename}", DownloadHandler)
+        app.GET("/contented{dir_to_list}/{filename}", DownloadHandler)
         app.GET("/download/{dir_to_list}/{filename}", DownloadHandler)
 
          // Host the index.html, also assume that all angular UI routes are going to be under contented

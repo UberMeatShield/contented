@@ -11,7 +11,7 @@ import (
     "net/url"
     "net/http"
 //    "io/ioutil"
-    "content/utils"
+    "contentedutils"
     "github.com/gobuffalo/buffalo"
 )
 

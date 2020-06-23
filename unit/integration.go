@@ -11,7 +11,7 @@ import (
 
 func IntegrationLoad(t *testing.T) {
     fmt.Println("Attempting to call content link.")
-    res, err := http.Get("http://localhost:8000/content/")
+    res, err := http.Get("http://localhost:8000/contented")
     fmt.Println("Call has been sent out.")
 
     if err != nil {
