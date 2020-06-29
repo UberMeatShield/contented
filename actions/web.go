@@ -4,15 +4,16 @@ import (
     //"io"
     //"fmt"
 //    "url"
-    "strconv"
-    "log"
+  "os"
+  "strconv"
+  "log"
 //    "encoding/json"
 //    "net/http"
-    "net/url"
-    "net/http"
+  "net/url"
+  "net/http"
 //    "io/ioutil"
-    "contented/utils"
-    "github.com/gobuffalo/buffalo"
+  "contented/utils"
+  "github.com/gobuffalo/buffalo"
 )
 
 type PreviewResults struct{
@@ -25,39 +26,51 @@ type HttpError struct{
     Debug string `json:"debug"`
 }
 
+type DirConfigEntry struct{
+  Dir string
+  ValidDirs map[string]bool
+  PreviewCount int
+  Limit int
+}
+
 // HomeHandler is a default handler to serve up
 // a home page.
-var dir string
-var validDirs map[string]bool
-var previewCount int
 var DefaultLimit int = 10000
+var cfg = DirConfigEntry{
+    Dir: "",
+    PreviewCount: 8,
+    Limit: DefaultLimit,
+}
 
 func SetupContented(app *buffalo.App, contentDir string, numToPreview int, limit int) {
-    dir = contentDir
-    validDirs = utils.GetDirectoriesLookup(dir)
-    previewCount = numToPreview
     DefaultLimit = limit
 
-    app.ServeFiles("/static", http.Dir(dir))
+    cfg.Dir = contentDir
+    cfg.ValidDirs = utils.GetDirectoriesLookup(cfg.Dir)
+    cfg.PreviewCount = numToPreview
+    cfg.Limit = limit
+
+    app.ServeFiles("/static", http.Dir(cfg.Dir))
 }
 
 func ListDefaultHandler(c buffalo.Context) error {
-    log.Println("Calling into ListDefault")
+    path, _ := os.Executable()
+    log.Printf("Calling into ListDefault run_dir: %s looking at dir: %s", path, cfg.Dir)
     response := PreviewResults{
         Success: true,
-        Results: utils.ListDirs(dir, previewCount),
+        Results: utils.ListDirs(cfg.Dir, cfg.PreviewCount),
     }
     return c.Render(200, r.JSON(response))
 }
 
 func DownloadHandler(c buffalo.Context) error {
-    log.Println("Calling into download handler")
 
     dir_to_list := c.Param("dir_to_list")
     filename := c.Param("filename")
 
-    if validDirs[dir_to_list] {
-        fileref := utils.GetFileContents(dir + dir_to_list, filename)
+    log.Printf("Calling into download handler with filename %s under %s", dir_to_list, filename)
+    if cfg.ValidDirs[dir_to_list] {
+        fileref := utils.GetFileContents(cfg.Dir + dir_to_list, filename)
         if fileref != nil {
             return c.Render(200, r.Download(c, filename, fileref))
         } 
@@ -80,11 +93,11 @@ func ListSpecificHandler(c buffalo.Context) error {
     }
     offset, _ = strconv.Atoi(GetKeyVal(c, "offset", "0"))
 
-    log.Printf("Limit %d with offset %d in dir %s", limit, offset, dir)
+    log.Printf("Limit %d with offset %d in dir %s", limit, offset, cfg.Dir)
 
     // Now actually return the results for a valid directory
-    if validDirs[argument] {
-        return c.Render(200, r.JSON(getDirectory(dir, argument, limit, offset)))
+    if cfg.ValidDirs[argument] {
+        return c.Render(200, r.JSON(getDirectory(cfg.Dir, argument, limit, offset)))
     } 
     return c.Render(403, r.JSON(invalidDirMsg(argument, "")))
 }
