@@ -1,8 +1,8 @@
 package main
 
 import (
+    "os"
 	"log"
-    "fmt"
     "strconv"
 	"contented/actions"
     "github.com/gobuffalo/envy"
@@ -18,8 +18,8 @@ func main() {
 	app := actions.App()
 
     dir, err := envy.MustGet("DIR")
-    limitCount, limErr := strconv.Atoi(envy.Get("LIMIT", "2000"))
-    previewCount, previewErr := strconv.Atoi(envy.Get("PREVIEW", "8"))
+    limitCount, limErr := strconv.Atoi(envy.Get("LIMIT", strconv.Itoa(actions.DefaultLimit)))
+    previewCount, previewErr := strconv.Atoi(envy.Get("PREVIEW", strconv.Itoa(actions.DefaultPreviewCount)))
 
     if err != nil {
         panic(err)
@@ -27,10 +27,11 @@ func main() {
         panic(limErr)
     } else if previewErr != nil {
         panic(previewErr)
+    } else if  _, noDirErr := os.Stat(dir); os.IsNotExist(noDirErr) {
+        panic(noDirErr)
     }
 
-    fmt.Println("Parsed the environment")
-    log.Printf("Dir %s Limit %d with preview count %d", dir, limitCount, previewCount)
+    log.Printf("Parsed Env. Dir %s Limit %d with preview count %d", dir, limitCount, previewCount)
     actions.SetupContented(app, dir, previewCount, limitCount)
 	if err := app.Serve(); err != nil {
 		log.Fatal(err)
