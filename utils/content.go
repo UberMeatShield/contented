@@ -39,6 +39,8 @@ func GetDirectoriesLookup(legal string) map[string]bool {
  */
 func ListDirs(dir string, previewCount int) []DirContents {
 	// Get the current listings, check they passed in a legal key
+	log.Printf("ListDirs Reading from: %s with preview count %d", dir, previewCount)
+
 	var listings []DirContents
     files, _ := ioutil.ReadDir(dir)
     for _, f := range files {
@@ -47,7 +49,6 @@ func ListDirs(dir string, previewCount int) []DirContents {
             listings = append(listings, GetDirContents(dir + id, previewCount, 0, id))
         }
     }
-	log.Println("Reading from: ", dir, " With preview count", previewCount)
     return listings
 }
 
