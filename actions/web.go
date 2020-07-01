@@ -5,6 +5,7 @@ import (
     //"fmt"
 //    "url"
   "os"
+  "strings"
   "strconv"
   "log"
 //    "encoding/json"
@@ -34,22 +35,26 @@ type DirConfigEntry struct{
 }
 
 // HomeHandler is a default handler to serve up
-// a home page.
-var DefaultLimit int = 10000
+var DefaultLimit int = 10000  // The max limit set by environment variable
+var DefaultPreviewCount int = 8
 var cfg = DirConfigEntry{
     Dir: "",
-    PreviewCount: 8,
+    PreviewCount: DefaultPreviewCount,
     Limit: DefaultLimit,
 }
 
 func SetupContented(app *buffalo.App, contentDir string, numToPreview int, limit int) {
-    DefaultLimit = limit
+    if !strings.HasSuffix(contentDir, "/") {
+         contentDir = contentDir + "/"
+    }
+    log.Printf("Setting up the content directory with %s", contentDir)
 
     cfg.Dir = contentDir
     cfg.ValidDirs = utils.GetDirectoriesLookup(cfg.Dir)
     cfg.PreviewCount = numToPreview
     cfg.Limit = limit
 
+    // TODO: Somehow need to move the dir into App, but first we want to validate the dir...
     app.ServeFiles("/static", http.Dir(cfg.Dir))
 }
 

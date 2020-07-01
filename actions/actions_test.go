@@ -6,6 +6,7 @@ import (
   "encoding/json"
   "net/http"
   "testing"
+  "contented/utils"
   "github.com/gobuffalo/envy"
   "github.com/gobuffalo/packr/v2"
   "github.com/gobuffalo/suite"
@@ -17,8 +18,8 @@ type ActionSuite struct {
 
 func TestMain(m *testing.M) {
     dir, err := envy.MustGet("DIR")
-
     cfg.Dir = dir  // Absolute path to our known test data
+    cfg.ValidDirs = utils.GetDirectoriesLookup(cfg.Dir)
 
     if err != nil {
         fmt.Println("DIR ENV REQUIRED$ export=DIR=`pwd`/mocks/content/ && buffalo test")
@@ -44,6 +45,19 @@ func (as *ActionSuite) Test_ContentList() {
     }
 }
 
+func (as *ActionSuite) Test_ContentDirLoad() {
+    res := as.JSON("/content/dir1").Get()
+    as.Equal(http.StatusOK, res.Code)
+
+    resObj := utils.DirContents{}
+    json.NewDecoder(res.Body).Decode(&resObj)
+    as.Equal(resObj.Total, 11, "It should have a known number of images")
+}
+
+func (as *ActionSuite) Test_ContentDirDownload() {
+    res := as.HTML("/content/dir1/6DPrYve.jpg").Get()
+    as.Equal(http.StatusOK, res.Code)
+}
 
 func Test_ActionSuite(t *testing.T) {
 	action, err := suite.NewActionWithFixtures(App(), packr.New("Test_ActionSuite", "../fixtures"))

@@ -89,7 +89,7 @@ func GetDirContents(dir string, limit int, start_offset int, id string) DirConte
 	return DirContents{
 		Total: total,
 		Contents: arr,
-		Path: "static/" + id,
+		Path: "static/" + id,   // from env.DIR. static/ is a configured FileServer for all content
 		Id: id,
 	}
 }
