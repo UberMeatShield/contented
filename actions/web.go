@@ -1,18 +1,13 @@
 package actions
 
 import (
-    //"io"
-    //"fmt"
-//    "url"
   "os"
+  "fmt"
   "strings"
   "strconv"
   "log"
-//    "encoding/json"
-//    "net/http"
   "net/url"
   "net/http"
-//    "io/ioutil"
   "contented/utils"
   "github.com/gobuffalo/buffalo"
 )
@@ -68,11 +63,31 @@ func ListDefaultHandler(c buffalo.Context) error {
     return c.Render(200, r.JSON(response))
 }
 
+func ViewHandler(c buffalo.Context) error {
+    dir_to_list := c.Param("dir_to_list")
+    file_id := c.Param("file_id")
+
+    log.Printf("Calling into view handler with filename %s under %s", dir_to_list, file_id)
+    if cfg.ValidDirs[dir_to_list] {
+        file_ref, err := utils.GetFileRefById(cfg.Dir + dir_to_list, file_id)
+        if err != nil {
+            return c.Error(404, err)
+        }
+        if file_ref == nil {
+            return c.Error(404, fmt.Errorf("File was not found with id %s", file_id))
+        }
+        derp := make(map[string]string)
+        derp["Filename"] = file_ref.Name()
+        log.Printf("Found this filename", file_ref.Name())
+        c.Render(200, r.JSON(derp))
+    } 
+    return c.Render(404, r.JSON(invalidDirMsg(dir_to_list, file_id)))
+}
+
 func DownloadHandler(c buffalo.Context) error {
 
     dir_to_list := c.Param("dir_to_list")
     filename := c.Param("filename")
-
     log.Printf("Calling into download handler with filename %s under %s", dir_to_list, filename)
     if cfg.ValidDirs[dir_to_list] {
         fileref := utils.GetFileContents(cfg.Dir + dir_to_list, filename)
@@ -86,7 +101,7 @@ func DownloadHandler(c buffalo.Context) error {
 
 // Provide a full listing of a specific directory, not just the preview
 func ListSpecificHandler(c buffalo.Context) error {
-    argument := c.Param("dir_to_list")
+    dirId := c.Param("dir_to_list")
 
     // Pull out the limit and offset queries, provides pagination
     limit := DefaultLimit
@@ -101,10 +116,10 @@ func ListSpecificHandler(c buffalo.Context) error {
     log.Printf("Limit %d with offset %d in dir %s", limit, offset, cfg.Dir)
 
     // Now actually return the results for a valid directory
-    if cfg.ValidDirs[argument] {
-        return c.Render(200, r.JSON(getDirectory(cfg.Dir, argument, limit, offset)))
+    if cfg.ValidDirs[dirId] {
+        return c.Render(200, r.JSON(getDirectory(cfg.Dir, dirId, limit, offset)))
     } 
-    return c.Render(403, r.JSON(invalidDirMsg(argument, "")))
+    return c.Render(403, r.JSON(invalidDirMsg(dirId, "")))
 }
 
 func GetKeyVal(c buffalo.Context, key string, defaultVal string) string {
@@ -121,9 +136,10 @@ func GetKeyVal(c buffalo.Context, key string, defaultVal string) string {
 /**
  * Get the response for a single specific directory
  */
-func getDirectory(dir string, argument string, limit int, offset int) utils.DirContents {
-    path := dir + argument
-    return utils.GetDirContents(path, limit, offset, dir)
+func getDirectory(rootDir string, dirId string, limit int, offset int) utils.DirContents {
+    // TODO: Do a lookup based on dir ID?
+    fqPathToDir := rootDir + dirId
+    return utils.GetDirContents(fqPathToDir, limit, offset, dirId)
 }
 
 // TODO: Make this a method that does the writting & just takes debug data

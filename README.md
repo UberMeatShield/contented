@@ -24,11 +24,18 @@ The app is currently split into an angular setup, a gulp helpfile (in Typescript
 
     $ yarn install
     $ yarn run gulp buildDeploy  # Running just yarn run gulp will kick off the dev builds and watchers
-	$ export DIR=/path/containing/image_directories && buffalo dev
+	$ export DIR=`pwd`/mocks/content/ && buffalo dev
+	$ export DIR=`pwd`/mocks/content/ && buffalo test
 
 ## What Next?
 
-Help files, API docs etc
+Need to add in something around tests and exporting the dir path.
+
+## What this does
+
+This is pretty much just a holder for getting GoLang, GoBuffalo and Angular trying to play together.
+
+Browser over a set of images (expand to video?)
 
 wasd => Navigate up and down
 f => Fully load all the directory contents

@@ -57,6 +57,9 @@ func (as *ActionSuite) Test_ContentDirLoad() {
 func (as *ActionSuite) Test_ContentDirDownload() {
     res := as.HTML("/content/dir1/6DPrYve.jpg").Get()
     as.Equal(http.StatusOK, res.Code)
+    
+    header := res.Header()
+    as.Equal("image/jpeg", header.Get("Content-Type"))
 }
 
 func Test_ActionSuite(t *testing.T) {

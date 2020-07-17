@@ -5,10 +5,11 @@ import (
 	"bufio"
     "io/ioutil"
 	"log"
+    "strconv"
 )
 
 type MediaContainer struct{
-	Id int `json:"id"`
+	Id string `json:"id"`
     Src string `json:"src"`
 	Type string `json:"type"`
 }
@@ -63,33 +64,56 @@ func GetFileContents(dir string, filename string) *bufio.Reader {
     return bufio.NewReader(f)
 }
 
+/**
+ * Get the file we want to lookup by ID (eventually this should be DB or just memory)
+ */
+func GetFileRefById(dir string, file_id_str string) (os.FileInfo, error) {
+    imgs, err := ioutil.ReadDir(dir)
+    if err != nil {
+        return nil, err    
+    }
+    file_id, ferr := strconv.Atoi(file_id_str)
+    if ferr != nil {
+        return nil, ferr
+    }
+    if file_id > len(imgs) || file_id <= 0 {
+        return nil, nil
+    }
+    return imgs[file_id], nil
+}
 
 /**
  *  Get all the content in a particular directory.
  */
-func GetDirContents(dir string, limit int, start_offset int, id string) DirContents {
+func GetDirContents(fqDirPath string, limit int, start_offset int, id string) DirContents {
     var arr = []MediaContainer{}
-    imgs, _ := ioutil.ReadDir(dir)
+    imgs, _ := ioutil.ReadDir(fqDirPath)
 
 	total := 0
     for idx, img := range imgs {
         if !img.IsDir() && len(arr) < limit && idx >= start_offset {
-
-            // TODO: Actually try and determine the type of the file
-            media := MediaContainer{
-                Id: idx,
-                Src: img.Name(),
-                Type: "image/jpg",
-            }
+            media := getMediaContainer(strconv.Itoa(idx), img)
             arr = append(arr, media)
         }
 		total++
     }
-    log.Println("Limit for content dir was.", dir, " with limit", limit, " offset: ", start_offset)
+    log.Println("Limit for content dir was.", fqDirPath, " with limit", limit, " offset: ", start_offset)
 	return DirContents{
 		Total: total,
 		Contents: arr,
 		Path: "static/" + id,   // from env.DIR. static/ is a configured FileServer for all content
 		Id: id,
 	}
+}
+
+
+func getMediaContainer(id string, fileInfo os.FileInfo) MediaContainer {
+    content_type := "image/jpg"
+
+    media := MediaContainer{
+        Id: id,
+        Src: fileInfo.Name(),
+        Type: content_type,
+    }
+    return media
 }
