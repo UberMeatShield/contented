@@ -6,6 +6,7 @@ import (
   "strings"
   "strconv"
   "log"
+  "path/filepath"
   "net/url"
   "net/http"
   "contented/utils"
@@ -76,16 +77,16 @@ func ViewHandler(c buffalo.Context) error {
         if file_ref == nil {
             return c.Error(404, fmt.Errorf("File was not found with id %s", file_id))
         }
-        derp := make(map[string]string)
-        derp["Filename"] = file_ref.Name()
-        log.Printf("Found this filename", file_ref.Name())
-        c.Render(200, r.JSON(derp))
-    } 
-    return c.Render(404, r.JSON(invalidDirMsg(dir_to_list, file_id)))
+        fname := filepath.Join(cfg.Dir, dir_to_list, file_ref.Name())
+        log.Printf("Found this filename: %s", file_ref.Name())
+        http.ServeFile(c.Response(), c.Request(), fname)
+        return nil
+    } else {
+        return c.Render(404, r.JSON(invalidDirMsg(dir_to_list, file_id)))
+    }
 }
 
 func DownloadHandler(c buffalo.Context) error {
-
     dir_to_list := c.Param("dir_to_list")
     filename := c.Param("filename")
     log.Printf("Calling into download handler with filename %s under %s", dir_to_list, filename)

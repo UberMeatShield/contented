@@ -46,7 +46,7 @@ func ListDirs(dir string, previewCount int) []DirContents {
     files, _ := ioutil.ReadDir(dir)
     for _, f := range files {
         if f.IsDir() {
-			id := f.Name()
+			id := f.Name()  // This should definitely be some other ID format => Lookup
             listings = append(listings, GetDirContents(dir + id, previewCount, 0, id))
         }
     }
@@ -110,6 +110,9 @@ func GetDirContents(fqDirPath string, limit int, start_offset int, id string) Di
 func getMediaContainer(id string, fileInfo os.FileInfo) MediaContainer {
     content_type := "image/jpg"
 
+    // TODO: https://golangcode.com/get-the-content-type-of-file/  
+    // TODO: Need to cache this data (Loading all the file directory on preview is probably dumb)
+    // TODO: Need to add the unique ID for each dir (are they uniq?)
     media := MediaContainer{
         Id: id,
         Src: fileInfo.Name(),
