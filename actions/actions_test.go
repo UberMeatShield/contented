@@ -54,9 +54,19 @@ func (as *ActionSuite) Test_ContentDirLoad() {
     as.Equal(resObj.Total, 11, "It should have a known number of images")
 }
 
-func (as *ActionSuite) Test_ContentDirDownload() {
-    res := as.HTML("/content/dir1/6DPrYve.jpg").Get()
+func (as *ActionSuite) Test_ViewRef() {
+    res := as.HTML("/view/dir1/1").Get()
     as.Equal(http.StatusOK, res.Code)
+    header := res.Header()
+    as.Equal("image/jpeg", header.Get("Content-Type"))
+}
+
+func (as *ActionSuite) Test_ContentDirDownload() {
+    res := as.HTML("/download/dir1/6DPrYve.jpg").Get()
+    as.Equal(http.StatusOK, res.Code)
+    
+    header := res.Header()
+    as.Equal("image/jpeg", header.Get("Content-Type"))
 }
 
 func Test_ActionSuite(t *testing.T) {

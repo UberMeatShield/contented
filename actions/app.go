@@ -7,13 +7,12 @@ import (
 	forcessl "github.com/gobuffalo/mw-forcessl"
 	paramlogger "github.com/gobuffalo/mw-paramlogger"
 	"github.com/unrolled/secure"
-
-	"contented/models"
-
 	"github.com/gobuffalo/buffalo-pop/v2/pop/popmw"
 	contenttype "github.com/gobuffalo/mw-contenttype"
 	"github.com/gobuffalo/x/sessions"
 	"github.com/rs/cors"
+
+	"contented/models"
 )
 
 // ENV is used to help switch settings based on where the
@@ -63,7 +62,8 @@ func App() *buffalo.App {
         app.GET("/content/{dir_to_list}", ListSpecificHandler)
 
         // TODO: Just make the full path show the file directly?
-        app.GET("/content/{dir_to_list}/{filename}", DownloadHandler)
+        app.GET("/view/{dir_to_list}/{file_id}", ViewHandler)
+        app.GET("/content/{dir_to_list}/{filename}", DownloadHandler)  // This needs to change
         app.GET("/download/{dir_to_list}/{filename}", DownloadHandler)
 
          // Host the index.html, also assume that all angular UI routes are going to be under contented
