@@ -24,7 +24,7 @@ export class ImgContainer {
     }
 
     public setPath(path: string) {
-        this.fullPath = `${ApiDef.base}${trail(path, '/')}${this.src}`;
+        this.fullPath = `${ApiDef.base}${trail(path, '/')}${this.id}`;
     }
 }
 

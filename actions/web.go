@@ -25,7 +25,7 @@ type HttpError struct{
 
 type DirConfigEntry struct{
   Dir string
-  ValidDirs map[string]bool
+  ValidDirs map[string]string
   PreviewCount int
   Limit int
 }
@@ -64,12 +64,33 @@ func ListDefaultHandler(c buffalo.Context) error {
     return c.Render(200, r.JSON(response))
 }
 
+// Definitely should just make a hash lookup of dirname => dir Obj and dir_id => dir Obj
+func isValidDir(dir_id string) bool {
+    if _, ok := cfg.ValidDirs[dir_id]; ok {
+        return true
+    }
+    return false
+}
+
+func getDirName(dir_id string) string {
+    if val, ok := cfg.ValidDirs[dir_id]; ok {
+        return val
+    }
+    return ""
+}
+
 func ViewHandler(c buffalo.Context) error {
-    dir_to_list := c.Param("dir_to_list")
+    dir_id := c.Param("dir_id")
     file_id := c.Param("file_id")
 
+    valid_dir := isValidDir(dir_id)
+    dir_to_list := ""
+    if valid_dir {
+        dir_to_list = getDirName(dir_id)
+    }
+
     log.Printf("Calling into view handler with filename %s under %s", dir_to_list, file_id)
-    if cfg.ValidDirs[dir_to_list] {
+    if valid_dir {
         file_ref, err := utils.GetFileRefById(cfg.Dir + dir_to_list, file_id)
         if err != nil {
             return c.Error(404, err)
@@ -90,7 +111,8 @@ func DownloadHandler(c buffalo.Context) error {
     dir_to_list := c.Param("dir_to_list")
     filename := c.Param("filename")
     log.Printf("Calling into download handler with filename %s under %s", dir_to_list, filename)
-    if cfg.ValidDirs[dir_to_list] {
+
+    if isValidDir(dir_to_list) {
         fileref := utils.GetFileContents(cfg.Dir + dir_to_list, filename)
         if fileref != nil {
             return c.Render(200, r.Download(c, filename, fileref))
@@ -117,7 +139,7 @@ func ListSpecificHandler(c buffalo.Context) error {
     log.Printf("Limit %d with offset %d in dir %s", limit, offset, cfg.Dir)
 
     // Now actually return the results for a valid directory
-    if cfg.ValidDirs[dirId] {
+    if isValidDir(dirId) {
         return c.Render(200, r.JSON(getDirectory(cfg.Dir, dirId, limit, offset)))
     } 
     return c.Render(403, r.JSON(invalidDirMsg(dirId, "")))

@@ -62,7 +62,7 @@ func App() *buffalo.App {
         app.GET("/content/{dir_to_list}", ListSpecificHandler)
 
         // TODO: Just make the full path show the file directly?
-        app.GET("/view/{dir_to_list}/{file_id}", ViewHandler)
+        app.GET("/view/{dir_id}/{file_id}", ViewHandler)
         app.GET("/content/{dir_to_list}/{filename}", DownloadHandler)  // This needs to change
         app.GET("/download/{dir_to_list}/{filename}", DownloadHandler)
 

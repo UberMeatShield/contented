@@ -16,14 +16,21 @@ func TestGetDirContents(t *testing.T) {
     var dirs = []string{"dir1", "dir2", "dir3", "screens"}
     count := 0
     for _, dir := range dirs {
-        if !lookup[dir] {
-            t.Errorf("Failed to get a lookup for this dir %s", dir)
-        } else {
+        if _, ok := lookup[dir]; ok {
             count++
+        } else {
+            t.Errorf("Failed to get a lookup for this dir %s", dir)
         }
     }
     if (count != 4) {
         t.Error("Failed to actually test the API")
+    }
+}
+
+func TestDirId(t *testing.T) {
+    id1 := GetDirId("dir1") 
+    if id1 != "4c1f6165302b81fd587e79db729a5a05ea130ea35602a76dcf0dd96a2366f33c" {
+        t.Errorf("Failed to hash correctly %s", id1)
     }
 }
 
@@ -34,8 +41,14 @@ func TestGetFileRefById(t *testing.T) {
         t.Errorf("There should be contents inside of this test dir")
     }
     contents := dir_c.Contents
-    entry_1 := contents[1]
 
+    entry_0 := contents[0]
+    f0, err0 := GetFileRefById(fq_dir, entry_0.Id)
+    if err0 != nil || f0 == nil {
+        t.Errorf("Failed to lookup %s found err %s", entry_0.Src, err0)
+    }
+
+    entry_1 := contents[1]
     f1, err := GetFileRefById(fq_dir, entry_1.Id)
     if err != nil || f1 == nil {
         t.Errorf("Failed to lookup %s found err %s", entry_1.Id, err)

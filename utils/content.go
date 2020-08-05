@@ -6,6 +6,8 @@ import (
     "io/ioutil"
 	"log"
     "strconv"
+    "crypto/sha256"
+    "encoding/hex"
 )
 
 type MediaContainer struct{
@@ -19,21 +21,26 @@ type DirContents struct{
 	Contents []MediaContainer `json:"contents"`
 	Path string `json:"path"`
 	Id string `json:"id"`
+    Name string `json:"name"`
 }
 
 /**
  *  Check if a directory is a legal thing to view
  */
-func GetDirectoriesLookup(legal string) map[string]bool {
-    var listings = make(map[string]bool)
+func GetDirectoriesLookup(legal string) map[string]string {
+    var listings = make(map[string]string)
     files, _ := ioutil.ReadDir(legal)
     for _, f := range files {
         if f.IsDir() {
-            listings[f.Name()] = true
+            name := f.Name()
+            id := GetDirId(name)
+            listings[name] = name
+            listings[id] = name
         }
     }
     return listings
 }
+
 
 /**
  * Grab a small preview list of all items in the directory.
@@ -47,6 +54,8 @@ func ListDirs(dir string, previewCount int) []DirContents {
     for _, f := range files {
         if f.IsDir() {
 			id := f.Name()  // This should definitely be some other ID format => Lookup
+
+            // Has the Name?
             listings = append(listings, GetDirContents(dir + id, previewCount, 0, id))
         }
     }
@@ -76,7 +85,7 @@ func GetFileRefById(dir string, file_id_str string) (os.FileInfo, error) {
     if ferr != nil {
         return nil, ferr
     }
-    if file_id > len(imgs) || file_id <= 0 {
+    if file_id > len(imgs) || file_id < 0 {
         return nil, nil
     }
     return imgs[file_id], nil
@@ -85,7 +94,7 @@ func GetFileRefById(dir string, file_id_str string) (os.FileInfo, error) {
 /**
  *  Get all the content in a particular directory.
  */
-func GetDirContents(fqDirPath string, limit int, start_offset int, id string) DirContents {
+func GetDirContents(fqDirPath string, limit int, start_offset int, dirname string) DirContents {
     var arr = []MediaContainer{}
     imgs, _ := ioutil.ReadDir(fqDirPath)
 
@@ -98,14 +107,23 @@ func GetDirContents(fqDirPath string, limit int, start_offset int, id string) Di
 		total++
     }
     log.Println("Limit for content dir was.", fqDirPath, " with limit", limit, " offset: ", start_offset)
+
+    id := GetDirId(dirname)
 	return DirContents{
 		Total: total,
 		Contents: arr,
-		Path: "static/" + id,   // from env.DIR. static/ is a configured FileServer for all content
+		Path: "view/" + id,   // from env.DIR. static/ is a configured FileServer for all content
 		Id: id,
+        Name: dirname,
 	}
 }
 
+
+func GetDirId(name string) string{
+    h := sha256.New()
+    h.Write([]byte(name))
+    return  hex.EncodeToString(h.Sum(nil))
+}
 
 func getMediaContainer(id string, fileInfo os.FileInfo) MediaContainer {
     content_type := "image/jpg"
