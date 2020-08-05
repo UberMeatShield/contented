@@ -62,11 +62,17 @@ func (as *ActionSuite) Test_ViewRef() {
 }
 
 func (as *ActionSuite) Test_ContentDirDownload() {
-    res := as.HTML("/download/dir1/6DPrYve.jpg").Get()
+    res := as.HTML("/download/dir1/0").Get()
     as.Equal(http.StatusOK, res.Code)
-    
     header := res.Header()
     as.Equal("image/jpeg", header.Get("Content-Type"))
+
+    dir_id_url := "/download/9d553cdef482947b97b5beda2dc594c7c818a69a49e04f044f4505bc223a3535/1"
+    res1 := as.HTML(dir_id_url).Get()
+    as.Equal(http.StatusOK, res1.Code)
+    header1 := res1.Header()
+    as.Equal("image/jpeg", header1.Get("Content-Type"))
+
 }
 
 func Test_ActionSuite(t *testing.T) {

@@ -72,12 +72,14 @@ func isValidDir(dir_id string) bool {
     return false
 }
 
+// Should hash the lookup with actual directory objects (but perhaps without contents)
 func getDirName(dir_id string) string {
     if val, ok := cfg.ValidDirs[dir_id]; ok {
         return val
     }
     return ""
 }
+
 
 func ViewHandler(c buffalo.Context) error {
     dir_id := c.Param("dir_id")
@@ -108,17 +110,27 @@ func ViewHandler(c buffalo.Context) error {
 }
 
 func DownloadHandler(c buffalo.Context) error {
-    dir_to_list := c.Param("dir_to_list")
-    filename := c.Param("filename")
-    log.Printf("Calling into download handler with filename %s under %s", dir_to_list, filename)
+    dir_id := c.Param("dir_id")  // This can be the current directory or directory name
+    file_id := c.Param("file_id")
 
-    if isValidDir(dir_to_list) {
-        fileref := utils.GetFileContents(cfg.Dir + dir_to_list, filename)
-        if fileref != nil {
-            return c.Render(200, r.Download(c, filename, fileref))
+    valid_dir := isValidDir(dir_id)
+    dir_to_list := ""
+    if valid_dir {
+        dir_to_list = getDirName(dir_id)
+    }
+
+    log.Printf("Calling into view handler with filename %s under %s", dir_to_list, file_id)
+    if valid_dir {
+        file_ref, err := utils.GetFileRefById(cfg.Dir + dir_to_list, file_id)
+        if err != nil{
+            return c.Error(404, err)
+        }
+        file_contents := utils.GetFileContents(cfg.Dir + dir_to_list, file_ref.Name())
+        if file_ref != nil {
+            return c.Render(200, r.Download(c, file_ref.Name(), file_contents))
         } 
     } 
-    return c.Render(403, r.JSON(invalidDirMsg(dir_to_list, filename)))
+    return c.Render(403, r.JSON(invalidDirMsg(dir_to_list, file_id)))
 }
 
 
