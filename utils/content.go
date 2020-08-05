@@ -25,17 +25,17 @@ type DirContents struct{
 }
 
 /**
- *  Check if a directory is a legal thing to view
+ *  Builds a lookup of all the valid sub directories under our root / file host.
  */
-func GetDirectoriesLookup(legal string) map[string]string {
-    var listings = make(map[string]string)
-    files, _ := ioutil.ReadDir(legal)
+func GetDirectoriesLookup(legal string) map[string]os.FileInfo {
+    var listings = make(map[string] os.FileInfo)
+    files, _ := ioutil.ReadDir(legal)  // HAte
     for _, f := range files {
         if f.IsDir() {
             name := f.Name()
             id := GetDirId(name)
-            listings[name] = name
-            listings[id] = name
+            listings[name] = f
+            listings[id] = f
         }
     }
     return listings

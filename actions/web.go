@@ -24,10 +24,10 @@ type HttpError struct{
 }
 
 type DirConfigEntry struct{
-  Dir string
-  ValidDirs map[string]string
-  PreviewCount int
-  Limit int
+  Dir string  // The root of our loading (path to top level container directory)
+  ValidDirs map[string]os.FileInfo  // List of directories under the main element
+  PreviewCount int  // How many files should be listed for a preview
+  Limit int // The absolute max you can load in a single operation
 }
 
 // HomeHandler is a default handler to serve up
@@ -36,7 +36,7 @@ var DefaultPreviewCount int = 8
 var cfg = DirConfigEntry{
     Dir: "",
     PreviewCount: DefaultPreviewCount,
-    Limit: DefaultLimit,
+    Limit: DefaultLimit, 
 }
 
 func SetupContented(app *buffalo.App, contentDir string, numToPreview int, limit int) {
@@ -74,8 +74,8 @@ func isValidDir(dir_id string) bool {
 
 // Should hash the lookup with actual directory objects (but perhaps without contents)
 func getDirName(dir_id string) string {
-    if val, ok := cfg.ValidDirs[dir_id]; ok {
-        return val
+    if dir, ok := cfg.ValidDirs[dir_id]; ok {
+        return dir.Name()
     }
     return ""
 }
