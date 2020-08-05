@@ -27,9 +27,13 @@ type DirContents struct{
 /**
  *  Builds a lookup of all the valid sub directories under our root / file host.
  */
-func GetDirectoriesLookup(legal string) map[string]os.FileInfo {
+func GetDirectoriesLookup(rootDir string) map[string]os.FileInfo {
     var listings = make(map[string] os.FileInfo)
-    files, _ := ioutil.ReadDir(legal)  // HAte
+    files, err := ioutil.ReadDir(rootDir)  // HAte
+    if err != nil {
+        panic("The main directory could not be read: " + rootDir)
+    }
+
     for _, f := range files {
         if f.IsDir() {
             name := f.Name()

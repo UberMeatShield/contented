@@ -80,6 +80,10 @@ func getDirName(dir_id string) string {
     return ""
 }
 
+// TODO: GetDir(dir_id) (os.FileInfo, error)
+// TODO: GetFileInfo(dir_id, file_id) (os.FileInfo, error)
+// TODO: GetFileContents(dir_id, file_id) (os.File, error)
+
 
 func ViewHandler(c buffalo.Context) error {
     dir_id := c.Param("dir_id")
