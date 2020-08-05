@@ -125,8 +125,8 @@ func DownloadHandler(c buffalo.Context) error {
         if err != nil{
             return c.Error(404, err)
         }
-        file_contents := utils.GetFileContents(cfg.Dir + dir_to_list, file_ref.Name())
         if file_ref != nil {
+            file_contents := utils.GetFileContents(cfg.Dir + dir_to_list, file_ref.Name())
             return c.Render(200, r.Download(c, file_ref.Name(), file_contents))
         } 
     } 
