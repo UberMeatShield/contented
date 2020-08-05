@@ -135,6 +135,7 @@ func DownloadHandler(c buffalo.Context) error {
 
 
 // Provide a full listing of a specific directory, not just the preview
+// TODO: convert to directory ID or name (Make it smarter)
 func ListSpecificHandler(c buffalo.Context) error {
     dirId := c.Param("dir_to_list")
 
