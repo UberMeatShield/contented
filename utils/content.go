@@ -70,7 +70,11 @@ func ListDirs(dir string, previewCount int) []DirContents {
  * Return a reader for the file contents
  */
 func GetFileContents(dir string, filename string) *bufio.Reader {
-	f, err := os.Open(dir + "/" + filename)
+    return GetFileContentsByFqName(dir + "/" + filename)
+}
+
+func GetFileContentsByFqName(fq_name string) *bufio.Reader {
+	f, err := os.Open(fq_name)
 	if err != nil {
 		panic(err)
 	}

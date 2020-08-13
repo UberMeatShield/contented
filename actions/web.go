@@ -2,7 +2,8 @@ package actions
 
 import (
   "os"
-  "fmt"
+  //"fmt"
+  "errors"
   "strings"
   "strconv"
   "log"
@@ -72,69 +73,81 @@ func isValidDir(dir_id string) bool {
     return false
 }
 
-// Should hash the lookup with actual directory objects (but perhaps without contents)
-func getDirName(dir_id string) string {
+// TODO: Move all this into utils?
+// Only a file info, seemingly there is no way to further list from this?
+func getDir(dir_id string) (os.FileInfo, error) {
     if dir, ok := cfg.ValidDirs[dir_id]; ok {
-        return dir.Name()
+        return dir, nil
     }
-    return ""
+    return nil, errors.New("Directory not found: " + dir_id)
 }
 
-// TODO: GetDir(dir_id) (os.FileInfo, error)
-// TODO: GetFileInfo(dir_id, file_id) (os.FileInfo, error)
-// TODO: GetFileContents(dir_id, file_id) (os.File, error)
+// Should hash the lookup with actual directory objects (but perhaps without contents)
+func getDirName(dir_id string) (string, error) {
+    dir, err := getDir(dir_id)
+    if err == nil {
+        return dir.Name(), nil
+    }
+    return "", err
+}
 
+// Helper for getting the current file info
+func getFileInfo(dir_id string, file_id string) (os.FileInfo, error) {
+    dir_name, err := getDirName(dir_id)
+    if err == nil {
+        return  utils.GetFileRefById(cfg.Dir + dir_name, file_id)
+    }
+    return nil, err
+}
 
+// This seems to be a bit cleaner
+func getFullFilePath(dir_id string, file_id string) (string, error) {
+    log.Printf("Searching dir_id(%s) and file_id(%s)", dir_id, file_id)
+    dir_name, d_err := getDirName(dir_id)
+    if d_err != nil {
+        return "", d_err
+    }
+    file_ref, err := getFileInfo(dir_id, file_id)
+    if err != nil {
+        return "", err
+    }
+    fname := filepath.Join(cfg.Dir, dir_name, file_ref.Name())
+    log.Printf("dir_id(%s) and file_id(%s) this directory name: %s", dir_id, file_id, fname)
+    return fname, nil
+}
+
+// Provides a view of the file (will not open as an attachment)
 func ViewHandler(c buffalo.Context) error {
     dir_id := c.Param("dir_id")
     file_id := c.Param("file_id")
 
-    valid_dir := isValidDir(dir_id)
-    dir_to_list := ""
-    if valid_dir {
-        dir_to_list = getDirName(dir_id)
-    }
-
-    log.Printf("Calling into view handler with filename %s under %s", dir_to_list, file_id)
-    if valid_dir {
-        file_ref, err := utils.GetFileRefById(cfg.Dir + dir_to_list, file_id)
-        if err != nil {
-            return c.Error(404, err)
-        }
-        if file_ref == nil {
-            return c.Error(404, fmt.Errorf("File was not found with id %s", file_id))
-        }
-        fname := filepath.Join(cfg.Dir, dir_to_list, file_ref.Name())
-        log.Printf("Found this filename: %s", file_ref.Name())
+    fname, err := getFullFilePath(dir_id, file_id)
+    if err == nil {
+        log.Printf("Found this filename to view: %s", fname)
         http.ServeFile(c.Response(), c.Request(), fname)
         return nil
-    } else {
-        return c.Render(404, r.JSON(invalidDirMsg(dir_to_list, file_id)))
     }
+    log.Printf("Failed to find the file reference  %s", err)
+    return c.Error(404, err)
 }
 
+// Provides a download handler by directory id and file id
 func DownloadHandler(c buffalo.Context) error {
     dir_id := c.Param("dir_id")  // This can be the current directory or directory name
     file_id := c.Param("file_id")
 
-    valid_dir := isValidDir(dir_id)
-    dir_to_list := ""
-    if valid_dir {
-        dir_to_list = getDirName(dir_id)
-    }
-
-    log.Printf("Calling into view handler with filename %s under %s", dir_to_list, file_id)
-    if valid_dir {
-        file_ref, err := utils.GetFileRefById(cfg.Dir + dir_to_list, file_id)
-        if err != nil{
-            return c.Error(404, err)
-        }
-        if file_ref != nil {
-            file_contents := utils.GetFileContents(cfg.Dir + dir_to_list, file_ref.Name())
+    fname, err := getFullFilePath(dir_id, file_id)
+    if err == nil {
+        file_ref, f_err := getFileInfo(dir_id, file_id)
+        if f_err == nil {
+            log.Printf("Providing a download to this filename  %s", fname)
+            file_contents := utils.GetFileContentsByFqName(fname)
             return c.Render(200, r.Download(c, file_ref.Name(), file_contents))
-        } 
-    } 
-    return c.Render(403, r.JSON(invalidDirMsg(dir_to_list, file_id)))
+        }
+        log.Printf("Failed to find the file reference for dir_id(%s) and file_id(%s) err %s", dir_id, file_id, f_err)
+        return c.Error(404, f_err)
+    }
+    return c.Error(404, err)
 }
 
 
