@@ -156,7 +156,7 @@ func DownloadHandler(c buffalo.Context) error {
 // Provide a full listing of a specific directory, not just the preview
 // TODO: convert to directory ID or name (Make it smarter)
 func ListSpecificHandler(c buffalo.Context) error {
-    dirId := c.Param("dir_to_list")
+    dir_id := c.Param("dir_id")
 
     // Pull out the limit and offset queries, provides pagination
     limit := DefaultLimit
@@ -171,10 +171,14 @@ func ListSpecificHandler(c buffalo.Context) error {
     log.Printf("Limit %d with offset %d in dir %s", limit, offset, cfg.Dir)
 
     // Now actually return the results for a valid directory
-    if isValidDir(dirId) {
-        return c.Render(200, r.JSON(getDirectory(cfg.Dir, dirId, limit, offset)))
+    if isValidDir(dir_id) {
+        contents, err := getDirectory(cfg.Dir, dir_id, limit, offset)
+        if err == nil {
+            return c.Render(200, r.JSON(contents))
+        }
+        return c.Error(404, err)
     } 
-    return c.Render(403, r.JSON(invalidDirMsg(dirId, "")))
+    return c.Render(403, r.JSON(invalidDirMsg(dir_id, "")))
 }
 
 func GetKeyVal(c buffalo.Context, key string, defaultVal string) string {
@@ -191,10 +195,15 @@ func GetKeyVal(c buffalo.Context, key string, defaultVal string) string {
 /**
  * Get the response for a single specific directory
  */
-func getDirectory(rootDir string, dirId string, limit int, offset int) utils.DirContents {
+func getDirectory(rootDir string, dir_id string, limit int, offset int) (utils.DirContents, error) {
     // TODO: Do a lookup based on dir ID?
-    fqPathToDir := rootDir + dirId
-    return utils.GetDirContents(fqPathToDir, limit, offset, dirId)
+    dir_name, err := getDirName(dir_id) 
+    if err == nil{
+        fq_dirname := filepath.Join(cfg.Dir, dir_name)
+        log.Printf("Loading up all the contents in %s", fq_dirname)
+        return utils.GetDirContents(fq_dirname, limit, offset, dir_id), nil
+    }
+    return utils.DirContents{}, errors.New("This directory was not find")
 }
 
 // TODO: Make this a method that does the writting & just takes debug data
