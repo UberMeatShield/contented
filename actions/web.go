@@ -24,6 +24,7 @@ type HttpError struct{
     Debug string `json:"debug"`
 }
 
+// TODO: this might be useful to add into the utils
 type DirConfigEntry struct{
   Dir string  // The root of our loading (path to top level container directory)
   ValidDirs map[string]os.FileInfo  // List of directories under the main element
@@ -40,6 +41,7 @@ var cfg = DirConfigEntry{
     Limit: DefaultLimit, 
 }
 
+// Builds out information given the application and the content directory
 func SetupContented(app *buffalo.App, contentDir string, numToPreview int, limit int) {
     if !strings.HasSuffix(contentDir, "/") {
          contentDir = contentDir + "/"
@@ -74,7 +76,7 @@ func isValidDir(dir_id string) bool {
 }
 
 // TODO: Move all this into utils?
-// Only a file info, seemingly there is no way to further list from this?
+// Only a file info, seemingly there is no way to further list from this (aka look ad dir contents)
 func getDir(dir_id string) (os.FileInfo, error) {
     if dir, ok := cfg.ValidDirs[dir_id]; ok {
         return dir, nil
