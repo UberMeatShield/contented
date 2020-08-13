@@ -16,7 +16,9 @@
         ></mat-progress-bar>
 
         <form class="directory-meta-text">
-          <span class="dir-name">{{dir?.id}}</span>
+          <span class="dir-name">
+            <a href="/content/{{dir?.id}}">{{dir?.name}}</a>
+          </span>
           selected: <input name="rowIdx" type="number" [(ngModel)]="rowIdx">
           loaded: <span class="dir-max-count"> {{dir?.contents?.length}}</span> 
           total: {{dir?.total}}
