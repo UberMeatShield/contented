@@ -59,12 +59,11 @@ func App() *buffalo.App {
 		app.Use(popmw.Transaction(models.DB))
 
         app.GET("/content/", ListDefaultHandler)
-        app.GET("/content/{dir_to_list}", ListSpecificHandler)
+        app.GET("/content/{dir_id}", ListSpecificHandler)
 
         // TODO: Just make the full path show the file directly?
-        app.GET("/view/{dir_to_list}/{file_id}", ViewHandler)
-        app.GET("/content/{dir_to_list}/{filename}", DownloadHandler)  // This needs to change
-        app.GET("/download/{dir_to_list}/{filename}", DownloadHandler)
+        app.GET("/view/{dir_id}/{file_id}", ViewHandler)
+        app.GET("/download/{dir_id}/{file_id}", DownloadHandler)
 
          // Host the index.html, also assume that all angular UI routes are going to be under contented
          app.GET("/", AngularIndex)

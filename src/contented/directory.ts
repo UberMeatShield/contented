@@ -24,7 +24,7 @@ export class ImgContainer {
     }
 
     public setPath(path: string) {
-        this.fullPath = `${ApiDef.base}${trail(path, '/')}${this.src}`;
+        this.fullPath = `${ApiDef.base}${trail(path, '/')}${this.id}`;
     }
 }
 
@@ -33,6 +33,7 @@ export class Directory {
     public total: number;
     public count: number;
     public path: string;
+    public name: string;
     public id: string;
 
     // All potential items that can be rendered from the contents
@@ -43,6 +44,7 @@ export class Directory {
         this.total = _.get(dir, 'total') || 0;
         this.path = _.get(dir, 'path') || '';
         this.id = _.get(dir, 'id') || '';
+        this.name = _.get(dir, 'name') || '';
 
         this.setContents(this.buildImgs(_.get(dir, 'contents') || []));
     }
@@ -60,8 +62,7 @@ export class Directory {
             start = this.indexOf(currentItem);
             start = start >= 0 ? start : 0;
             start = (before && (start - before > 0)) ? (start - before) : 0;
-
-            console.log("What is the start", currentItem.id, start, max);
+            // console.log("What is the start for the loading interval", currentItem.id, start, max);
         }
 
         let end = start + (max >= 1 ? max : 4);

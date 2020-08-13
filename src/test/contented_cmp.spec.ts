@@ -81,7 +81,7 @@ describe('TestingContentedCmp', () => {
         MockData.mockContentedService(comp._contentedService);
         fixture.detectChanges();
         tick(2000);
-        expect(comp.allD.length).toBe(3, "We should have 3 directories set");
+        expect(comp.allD.length).toBe(4, "We should have 4 directories set");
 
         let dirs = comp.getVisibleDirectories();
         expect(dirs.length).toBe(comp.maxVisible, "Should only have the max visible directories present.");
@@ -129,8 +129,8 @@ describe('TestingContentedCmp', () => {
         expect(comp.idx).toBe(0, "It should be on the default page");
         let dirs = $('.dir-name');
         expect(dirs.length).toBe(2, "There should be two directories present");
-        expect(_.get(preview, 'results[0].id')).toBe($(dirs[0]).text(), 'It should have the dir id');
-        expect(_.get(preview, 'results[1].id')).toBe($(dirs[1]).text(), 'It should have the dir id');
+        expect(_.get(preview, 'results[0].name')).toBe($(dirs[0]).text(), 'It should have the dir name');
+        expect(_.get(preview, 'results[1].name')).toBe($(dirs[1]).text(), 'It should have the dir name');
 
         let progBars = $('mat-progress-bar');
         expect(progBars.length).toBe(2, "We should have two rendered bars");

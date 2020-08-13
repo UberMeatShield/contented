@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders, HttpParams, HttpErrorResponse} from '@angular/common/http';
-import {Directory} from './directory';
+import {Directory, ImgContainer} from './directory';
 import {ApiDef} from './api_def';
 
 // The manner in which RxJS does this is really stupid, saving 50K for hours of dev time is fail
@@ -34,14 +34,16 @@ export class ContentedService {
             );
     }
 
+    // TODO: Make all the test mock data new and or recent
     public download(dir: Directory, rowIdx: number) {
         console.log("Attempting to download", dir, rowIdx);
 
+        let img: ImgContainer = dir.contents[rowIdx];
         let filename = dir && rowIdx >= 0 && rowIdx < dir.contents.length ? dir.contents[rowIdx].src : '';
         if (!filename) {
             console.log("No file specified, wtf", rowIdx);
         }
-        let downloadUrl = ApiDef.contented.download.replace('{id}', dir.id).replace('{filename}', filename);
+        let downloadUrl = ApiDef.contented.download.replace('{id}', dir.id).replace('{file_id}', '' + img.id);
         console.log("DownloadURL", downloadUrl);
         window.open(downloadUrl);
     }
