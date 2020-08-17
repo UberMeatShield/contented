@@ -1,6 +1,6 @@
 .contented-cmp {
     .preview-content {
-        margin: 1rem;
+        margin: 0.5rem;
         max-height: 40rem;
         max-width: 40rem;
     }
@@ -26,4 +26,8 @@
 
 .current-content-item {
     border: 1px solid black;
+}
+
+.directory-contents {
+  margin: 0 0 2rem 0;
 }
