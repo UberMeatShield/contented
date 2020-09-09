@@ -3,6 +3,7 @@ package utils
 import (
   "testing"
   "time"
+  "path/filepath"
   "github.com/gobuffalo/envy"
 )
 
@@ -25,6 +26,31 @@ func TestGetDirContents(t *testing.T) {
     if (count != 4) {
         t.Error("Failed to actually test the API")
     }
+}
+
+func TestContentType(t *testing.T) {
+    imgName := "mqlbyUo"
+    dirPath := filepath.Join(testDir, "dir1")
+
+    // Test out determining content type from content (this is a jpg)
+    contentType, err := GetMimeType(dirPath, imgName)
+    if err != nil {
+        t.Errorf("There should be a valid mime type %s", err)
+    }
+    if contentType != "image/jpeg" {
+        t.Errorf("The content type returned was %s", contentType)
+    }
+
+    // Next test out a PNG type
+    pngName := "9IpU5O7_is_png"
+    pngType, pngErr := GetMimeType(dirPath, pngName)
+    if pngErr != nil {
+      t.Errorf("Failed to determine png type %s", pngErr)
+    }
+    if pngType != "image/png" {
+      t.Errorf("Failed to determine content type %s", pngType)
+    }
+
 }
 
 func TestDirId(t *testing.T) {
@@ -106,6 +132,7 @@ func example(sleep int, msg string, reply chan string) {
 }
 
 
+
 func TestChannels(t *testing.T) {
     learn := make(chan string)
 
@@ -114,7 +141,7 @@ func TestChannels(t *testing.T) {
     go example(500, "derp", learn)
     a, b := <-learn, <-learn
     if a != "derp" {
-        t.Errorf("Should return wtf %s", a)
+        t.Errorf("Should return derp %s", a)
     }
     if b != "wtf" {
         t.Errorf("What the actual fuck %s", b)

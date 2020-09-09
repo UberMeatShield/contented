@@ -1,26 +1,33 @@
 package utils
 
 import (
-	"os"
-	"bufio"
+    "os"
+    "bufio"
+    "io"
     "io/ioutil"
-	"log"
+    "net/http"
+    "log"
+    "mime"
+    "path/filepath"
     "strconv"
     "crypto/sha256"
     "encoding/hex"
 )
 
+const sniffLen = 512
+
 type MediaContainer struct{
-	Id string `json:"id"`
+    Id string `json:"id"`
     Src string `json:"src"`
-	Type string `json:"type"`
+    Type string `json:"type"`
+    Preview string `json:"preview"`
 }
 
 type DirContents struct{
-	Total int `json:"total"`
-	Contents []MediaContainer `json:"contents"`
-	Path string `json:"path"`
-	Id string `json:"id"`
+    Total int `json:"total"`
+    Contents []MediaContainer `json:"contents"`
+    Path string `json:"path"`
+    Id string `json:"id"`
     Name string `json:"name"`
 }
 
@@ -29,7 +36,7 @@ type DirContents struct{
  */
 func GetDirectoriesLookup(rootDir string) map[string]os.FileInfo {
     var listings = make(map[string] os.FileInfo)
-    files, err := ioutil.ReadDir(rootDir)  // HAte
+    files, err := ioutil.ReadDir(rootDir)
     if err != nil {
         panic("The main directory could not be read: " + rootDir)
     }
@@ -50,14 +57,14 @@ func GetDirectoriesLookup(rootDir string) map[string]os.FileInfo {
  * Grab a small preview list of all items in the directory.
  */
 func ListDirs(dir string, previewCount int) []DirContents {
-	// Get the current listings, check they passed in a legal key
-	log.Printf("ListDirs Reading from: %s with preview count %d", dir, previewCount)
+    // Get the current listings, check they passed in a legal key
+    log.Printf("ListDirs Reading from: %s with preview count %d", dir, previewCount)
 
-	var listings []DirContents
+    var listings []DirContents
     files, _ := ioutil.ReadDir(dir)
     for _, f := range files {
         if f.IsDir() {
-			id := f.Name()  // This should definitely be some other ID format => Lookup
+            id := f.Name()  // This should definitely be some other ID format => Lookup
 
             // Has the Name?
             listings = append(listings, GetDirContents(dir + id, previewCount, 0, id))
@@ -74,10 +81,10 @@ func GetFileContents(dir string, filename string) *bufio.Reader {
 }
 
 func GetFileContentsByFqName(fq_name string) *bufio.Reader {
-	f, err := os.Open(fq_name)
-	if err != nil {
-		panic(err)
-	}
+    f, err := os.Open(fq_name)
+    if err != nil {
+        panic(err)
+    }
     return bufio.NewReader(f)
 }
 
@@ -106,24 +113,24 @@ func GetDirContents(fqDirPath string, limit int, start_offset int, dirname strin
     var arr = []MediaContainer{}
     imgs, _ := ioutil.ReadDir(fqDirPath)
 
-	total := 0
+    total := 0
     for idx, img := range imgs {
         if !img.IsDir() && len(arr) < limit && idx >= start_offset {
-            media := getMediaContainer(strconv.Itoa(idx), img)
+            media := getMediaContainer(strconv.Itoa(idx), img, fqDirPath)
             arr = append(arr, media)
         }
-		total++
+        total++
     }
     log.Println("Limit for content dir was.", fqDirPath, " with limit", limit, " offset: ", start_offset)
 
     id := GetDirId(dirname)
-	return DirContents{
-		Total: total,
-		Contents: arr,
-		Path: "view/" + id,   // from env.DIR. static/ is a configured FileServer for all content
-		Id: id,
+    return DirContents{
+        Total: total,
+        Contents: arr,
+        Path: "view/" + id,   // from env.DIR. static/ is a configured FileServer for all content
+        Id: id,
         Name: dirname,
-	}
+    }
 }
 
 
@@ -133,8 +140,33 @@ func GetDirId(name string) string{
     return  hex.EncodeToString(h.Sum(nil))
 }
 
-func getMediaContainer(id string, fileInfo os.FileInfo) MediaContainer {
-    content_type := "image/jpg"
+// Make a guess at the content type of the file (might be wrong based on file extension)
+func GetMimeType(path string, filename string) (string, error) {
+    name := filepath.Join(path, filename)
+    ctype := mime.TypeByExtension(filepath.Ext(name))
+
+    if ctype == "" {
+        // read a chunk to decide between utf-8 text and binary
+        content, _ := os.Open(name)
+
+        var buf [sniffLen]byte
+        n, _ := io.ReadFull(content, buf[:])
+        ctype = http.DetectContentType(buf[:n])
+        _, err := content.Seek(0, io.SeekStart) // rewind to output whole file
+        if err != nil {
+            return "error", err
+        }
+    }
+    return ctype, nil
+}
+
+func getMediaContainer(id string, fileInfo os.FileInfo, path string) MediaContainer {
+
+    contentType, err := GetMimeType(path, fileInfo.Name())
+    if err != nil {
+        log.Printf("Failed to determine contentType: %s", err)
+        contentType = "image/jpeg"
+    }
 
     // TODO: https://golangcode.com/get-the-content-type-of-file/  
     // TODO: Need to cache this data (Loading all the file directory on preview is probably dumb)
@@ -142,7 +174,7 @@ func getMediaContainer(id string, fileInfo os.FileInfo) MediaContainer {
     media := MediaContainer{
         Id: id,
         Src: fileInfo.Name(),
-        Type: content_type,
+        Type: contentType,
     }
     return media
 }
