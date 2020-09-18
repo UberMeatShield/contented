@@ -29,7 +29,7 @@ func TestGetDirContents(t *testing.T) {
 }
 
 func TestContentType(t *testing.T) {
-    imgName := "mqlbyUo"
+    imgName := "this_is_jp_eg"
     dirPath := filepath.Join(testDir, "dir1")
 
     // Test out determining content type from content (this is a jpg)
@@ -42,7 +42,7 @@ func TestContentType(t *testing.T) {
     }
 
     // Next test out a PNG type
-    pngName := "9IpU5O7_is_png"
+    pngName := "this_is_p_ng"
     pngType, pngErr := GetMimeType(dirPath, pngName)
     if pngErr != nil {
       t.Errorf("Failed to determine png type %s", pngErr)
@@ -108,19 +108,19 @@ func TestGetSpecificDir(t *testing.T) {
     start_offset := 4
     offset_files := GetDirContents(testDir + "/dir3", 3, start_offset, "mocks")
     len_contents := len(offset_files.Contents)
-    if (len_contents != 1 ) {
-		t.Errorf("With the offset we should have only have 1 %d", len_contents)
+    if (len_contents != 2) {
+		t.Errorf("With the offset we should have only have 2 %d", len_contents)
     }
-    if (offset_files.Total != 5) {
-		t.Error("There should be exactly 5 images in the dir")
+    if (offset_files.Total != 6) {
+		t.Error("There should be exactly 6 images in the dir")
     }
 
     first_file := offset_files.Contents[0]
     if (first_file.Id != "4") {
 		t.Errorf("Offset should change the initial id %s", first_file.Id)
     }
-    if (first_file.Src != "hkacMG4.jpg") {
-		t.Errorf("Offset should change the initial file %s", first_file.Src)
+    if (first_file.Src != "fff&text=04-dir3.png") {
+		t.Errorf("Offset should change the initial filename %s", first_file.Src)
     }
 }
 
