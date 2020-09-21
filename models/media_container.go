@@ -2,19 +2,21 @@ package models
 
 import (
 	"encoding/json"
+	"time"
+
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gobuffalo/validate/v3"
 	"github.com/gofrs/uuid"
-	"time"
 )
+
 // MediaContainer is used by pop to map your media_containers database table to your go code.
 type MediaContainer struct {
-    ID uuid.UUID `json:"id" db:"id"`
-    CreatedAt time.Time `json:"created_at" db:"created_at"`
-    UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
-    Src string `json:"src" db:"src"`
-    Type string `json:"type db:"type"`
-    Preview string `json:"preview" db:"preview"`
+	ID        uuid.UUID `json:"id" db:"id"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	Src       string    `json:"src" db:"src"`
+	Type      string    `json:"type db:"type"`
+	Preview   string    `json:"preview" db:"preview"`
 }
 
 // String is not required by pop and may be deleted

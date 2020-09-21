@@ -2,19 +2,21 @@ package models
 
 import (
 	"encoding/json"
+	"time"
+
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gobuffalo/validate/v3"
 	"github.com/gofrs/uuid"
-	"time"
 )
+
 // Container is used by pop to map your containers database table to your go code.
 type Container struct {
-    ID uuid.UUID `json:"id" db:"id"`
-    Total int `json:"total" "db:total"`
-    Path string `json:"path" "db:path"`
-    Name string `json:"name" "db:name"`
-    CreatedAt time.Time `json:"created_at" db:"created_at"`
-    UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	ID        uuid.UUID `json:"id" db:"id"`
+	Total     int       `json:"total" db:"total"`
+	Path      string    `json:"path" db:"path"`
+	Name      string    `json:"name" db:"name"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 }
 
 // String is not required by pop and may be deleted

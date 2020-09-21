@@ -1,9 +1,10 @@
 package actions
 
 import (
-    "io"
-    "io/ioutil"
+	"io"
+	"io/ioutil"
 	"net/http"
+
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/render"
 )
@@ -16,17 +17,17 @@ func HomeHandler(c buffalo.Context) error {
 
 // Replace this with nginx or something else better at serving static content (probably)
 func AngularIndex(c buffalo.Context) error {
-    index := "./public/build/index.html" // make this configuration from somewhere?
+	index := "./public/build/index.html" // make this configuration from somewhere?
 
-    // TODO:  I guess this is dumb if I have to read the thing anyway...
-    body, err_read := ioutil.ReadFile(index)
-    if err_read != nil {
-        err_msg := "Could not find index.html: " + err_read.Error()
-        return c.Render(http.StatusNotFound, r.JSON(map[string]string{"error": err_msg}))
-    } else {
-        return c.Render(http.StatusOK, r.Func("text/html", func(w io.Writer, d render.Data) error {
-            _, err := w.Write([]byte(body))
-            return err
-        }))
-    }
+	// TODO:  I guess this is dumb if I have to read the thing anyway...
+	body, err_read := ioutil.ReadFile(index)
+	if err_read != nil {
+		err_msg := "Could not find index.html: " + err_read.Error()
+		return c.Render(http.StatusNotFound, r.JSON(map[string]string{"error": err_msg}))
+	} else {
+		return c.Render(http.StatusOK, r.Func("text/html", func(w io.Writer, d render.Data) error {
+			_, err := w.Write([]byte(body))
+			return err
+		}))
+	}
 }
