@@ -1,0 +1,7 @@
+create_table("media_containers") {
+	t.Column("id", "uuid", {primary: true})
+	t.Column("src", "string", {"default": ""})
+	t.Column("type", "string", {"default": ""})
+	t.Column("preview", "string", {"default": ""})
+	t.Timestamps()
+}
