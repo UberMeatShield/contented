@@ -15,7 +15,6 @@ func (ms *ModelSuite) Test_Container() {
 		Name:  "test_dir",
 	}
 	ms.DB.Create(&c)
-
 	ms.NotZero(c.ID)
 }
 
