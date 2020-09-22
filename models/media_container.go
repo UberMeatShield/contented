@@ -15,7 +15,7 @@ type MediaContainer struct {
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 	Src       string    `json:"src" db:"src"`
-	Type      string    `json:"type db:"type"`
+	Type      string    `json:"type" db:"type"`
 	Preview   string    `json:"preview" db:"preview"`
 }
 
