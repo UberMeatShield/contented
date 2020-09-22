@@ -69,5 +69,8 @@ func (as *ActionSuite) Test_ContainersResource_Destroy() {
 
     res := as.JSON("/containers/" + s.ID.String()).Delete()
     as.Equal(http.StatusOK, res.Code)
+
+    notFoundRes := as.JSON("/containers/" + s.ID.String()).Get()
+    as.Equal(http.StatusNotFound, notFoundRes.Code)
 }
 
