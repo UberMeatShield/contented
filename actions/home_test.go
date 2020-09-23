@@ -1,13 +1,12 @@
 package actions
 
 import (
-  "os"
-  "net/http"
+	"net/http"
+	"os"
 )
 
-
 func (as *ActionSuite) Test_HomeHandler() {
-    os.Chdir("../") // The Index file expects to be under the serve director/public/build
+	os.Chdir("../") // The Index file expects to be under the serve director/public/build
 	res := as.JSON("/").Get()
 
 	as.Equal(http.StatusOK, res.Code)

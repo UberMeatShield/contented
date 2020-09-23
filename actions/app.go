@@ -1,24 +1,25 @@
 package actions
 
 import (
-    "net/http"
+	"contented/models"
+	"net/http"
+
 	"github.com/gobuffalo/buffalo"
+	"github.com/gobuffalo/buffalo-pop/v2/pop/popmw"
 	"github.com/gobuffalo/envy"
+	contenttype "github.com/gobuffalo/mw-contenttype"
 	forcessl "github.com/gobuffalo/mw-forcessl"
 	paramlogger "github.com/gobuffalo/mw-paramlogger"
-	"github.com/unrolled/secure"
-	// "github.com/gobuffalo/buffalo-pop/v2/pop/popmw"
-	contenttype "github.com/gobuffalo/mw-contenttype"
 	"github.com/gobuffalo/x/sessions"
 	"github.com/rs/cors"
-
-	// "contented/models"
+	"github.com/unrolled/secure"
 )
 
 // ENV is used to help switch settings based on where the
 // application is being run. Default is "development".
 var ENV = envy.Get("GO_ENV", "development")
 var app *buffalo.App
+// var T *i18n.Translator  // TODO: Add in internationalization
 
 // App is where all routes and middleware for buffalo
 // should be defined. This is the nerve center of your
@@ -47,7 +48,7 @@ func App() *buffalo.App {
 		// Automatically redirect to SSL
 		app.Use(forceSSL())
 
-		// Log request parameters (filters apply).
+		// Log request parameters (filters apply) this should maybe be only in dev
 		app.Use(paramlogger.ParameterLogger)
 
 		// Set the request content type to JSON
@@ -56,26 +57,29 @@ func App() *buffalo.App {
 		// Wraps each request in a transaction.
 		//  c.Value("tx").(*pop.Connection)
 		// Remove to disable this.
-		// app.Use(popmw.Transaction(models.DB))
+		app.Use(popmw.Transaction(models.DB))
 
-        app.GET("/content/", ListDefaultHandler)
-        app.GET("/content/{dir_id}", ListSpecificHandler)
+        // Not exactly crud (since the DB API did not exist)
+		app.GET("/content/", ListDefaultHandler)
+		app.GET("/content/{dir_id}", ListSpecificHandler)
 
-        // TODO: Just make the full path show the file directly?
-        app.GET("/view/{dir_id}/{file_id}", ViewHandler)
-        app.GET("/download/{dir_id}/{file_id}", DownloadHandler)
+		// TODO: Just make the full path show the file directly?
+		app.GET("/view/{dir_id}/{file_id}", ViewHandler)
+		app.GET("/download/{dir_id}/{file_id}", DownloadHandler)
 
-         // Host the index.html, also assume that all angular UI routes are going to be under contented
-         app.GET("/", AngularIndex)
-         app.GET("/ui/{path}", AngularIndex)
-         app.GET("/ui/{path}/{idx}", AngularIndex)
+		// Host the index.html, also assume that all angular UI routes are going to be under contented
+		app.GET("/", AngularIndex)
+		app.GET("/ui/{path}", AngularIndex)
+		app.GET("/ui/{path}/{idx}", AngularIndex)
 
-         // Need to make the file serving location smarter (serve the dir + serve static?)
-         app.ServeFiles("/public/build", http.Dir("public/build"))
-         app.ServeFiles("/public/css", http.Dir("public/css"))
+		// Need to make the file serving location smarter (serve the dir + serve static?)
+		app.ServeFiles("/public/build", http.Dir("public/build"))
+		app.ServeFiles("/public/css", http.Dir("public/css"))
 
-         // The DIR env environment is then served under /static (see actions.SetupContented)
-         // app.ServeFiles("/static", http.Dir("X"))
+        app.Resource("/containers", ContainersResource{})
+        app.Resource("/media", MediaContainersResource{})
+		// The DIR env environment is then served under /static (see actions.SetupContented)
+		// app.ServeFiles("/static", http.Dir("X"))
 	}
 
 	return app

@@ -1,0 +1,7 @@
+create_table("containers") {
+	t.Column("id", "uuid", {primary: true})
+	t.Column("total", "integer", {"default": 0})
+	t.Column("path", "string", {"default": ""})
+	t.Column("name", "string", {"default": ""})
+	t.Timestamps()
+}

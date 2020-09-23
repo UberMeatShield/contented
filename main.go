@@ -1,11 +1,12 @@
 package main
 
 import (
-    "os"
-	"log"
-    "strconv"
 	"contented/actions"
-    "github.com/gobuffalo/envy"
+	"log"
+	"os"
+	"strconv"
+
+	"github.com/gobuffalo/envy"
 )
 
 // main is the starting point for your Buffalo application.
@@ -17,22 +18,22 @@ import (
 func main() {
 	app := actions.App()
 
-    dir, err := envy.MustGet("DIR")
-    limitCount, limErr := strconv.Atoi(envy.Get("LIMIT", strconv.Itoa(actions.DefaultLimit)))
-    previewCount, previewErr := strconv.Atoi(envy.Get("PREVIEW", strconv.Itoa(actions.DefaultPreviewCount)))
+	dir, err := envy.MustGet("DIR")
+	limitCount, limErr := strconv.Atoi(envy.Get("LIMIT", strconv.Itoa(actions.DefaultLimit)))
+	previewCount, previewErr := strconv.Atoi(envy.Get("PREVIEW", strconv.Itoa(actions.DefaultPreviewCount)))
 
-    if err != nil {
-        panic(err)
-    } else if limErr != nil {
-        panic(limErr)
-    } else if previewErr != nil {
-        panic(previewErr)
-    } else if  _, noDirErr := os.Stat(dir); os.IsNotExist(noDirErr) {
-        panic(noDirErr)
-    }
+	if err != nil {
+		panic(err)
+	} else if limErr != nil {
+		panic(limErr)
+	} else if previewErr != nil {
+		panic(previewErr)
+	} else if _, noDirErr := os.Stat(dir); os.IsNotExist(noDirErr) {
+		panic(noDirErr)
+	}
 
-    log.Printf("Parsed Env. Dir %s Limit %d with preview count %d", dir, limitCount, previewCount)
-    actions.SetupContented(app, dir, previewCount, limitCount)
+	log.Printf("Parsed Env. Dir %s Limit %d with preview count %d", dir, limitCount, previewCount)
+	actions.SetupContented(app, dir, previewCount, limitCount)
 	if err := app.Serve(); err != nil {
 		log.Fatal(err)
 	}
