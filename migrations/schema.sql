@@ -43,6 +43,7 @@ CREATE TABLE public.media_containers (
     src character varying(255) DEFAULT ''::character varying NOT NULL,
     type character varying(255) DEFAULT ''::character varying NOT NULL,
     preview character varying(255) DEFAULT ''::character varying NOT NULL,
+    container_id uuid,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL
 );
@@ -82,6 +83,14 @@ ALTER TABLE ONLY public.media_containers
 --
 
 CREATE UNIQUE INDEX schema_migration_version_idx ON public.schema_migration USING btree (version);
+
+
+--
+-- Name: media_containers media_containers_container_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.media_containers
+    ADD CONSTRAINT media_containers_container_id_fkey FOREIGN KEY (container_id) REFERENCES public.containers(id) ON DELETE CASCADE;
 
 
 --

@@ -1,5 +1,9 @@
 package models
 
+import (
+    "github.com/gobuffalo/nulls"
+)
+
 func (ms *ModelSuite) Test_Container() {
 	// ms.LoadFixture("Container")
 	// ms.LoadFixture("MediaContainer")
@@ -28,11 +32,25 @@ func (ms *ModelSuite) Test_Container_Query() {
 	ms.DB.Create(&c)
     ms.NotZero(c.ID)
 
-    containers := []Container{}
-    err := ms.DB.All(&containers)
+    mc1 := MediaContainer{
+      Src: "first",
+      ContainerID: nulls.NewUUID(c.ID),
+    }
+    mc2 := MediaContainer{
+      Src: "second",
+      ContainerID: nulls.NewUUID(c.ID),
+    }
+    ms.DB.Create(&mc1)
+    ms.DB.Create(&mc2)
+
+    load_back := Container{}
+    err := ms.DB.Eager().Find(&load_back, c.ID)
 
     if err != nil {
       ms.Fail("Could not query the DB %s", err)
+    }
+    if len(load_back.Contents) != 2 {
+      ms.Fail("Could not load up the contents media containers %s", load_back)
     }
 
 }
