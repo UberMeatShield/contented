@@ -154,12 +154,15 @@ func GetMimeType(path string, filename string) (string, error) {
 		if err != nil {
 			return "error", err
 		}
+
+        // TODO: Is this right?
+        defer content.Close()
 	}
 	return ctype, nil
 }
 
-func getMediaContainer(id string, fileInfo os.FileInfo, path string) MediaContainer {
 
+func getMediaContainer(id string, fileInfo os.FileInfo, path string) MediaContainer {
 	contentType, err := GetMimeType(path, fileInfo.Name())
 	if err != nil {
 		log.Printf("Failed to determine contentType: %s", err)
