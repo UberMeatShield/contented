@@ -3,9 +3,9 @@ package utils
 import (
     "os"
     "log"
-    //"image"
+    "image"
     "image/jpeg"
-    //"image/png"
+    "image/png"
     "path/filepath"
     "github.com/nfnt/resize"
 )
@@ -17,35 +17,50 @@ func MakePreviewPath(dstPath string) error {
     return nil
 }
 
-// TODO: Only run if image is over a certain size (wrapper method)
 
 // Make sure dstPath already exists before you call this
 func GetImagePreview(path string, filename string, dstPath string) (string, error) {
 
     // Does the preview already exist, return that
-    /*
     dstFile := filepath.Join(dstPath, "preview_" + filename)
     if _, e_err := os.Stat(dstFile); os.IsNotExist(e_err) {
         return dstFile, nil
     }
-    */
+
+    contentType, tErr := GetMimeType(path, filename)
+    if tErr != nil {
+        log.Fatal(tErr)
+        return "Could not determine img type", tErr
+    }
 
     // The file we are going to check about making a preview of
     fqFile := filepath.Join(path, filename)    
-    srcImg, err := os.Open(fqFile)
-    if err != nil {
-        log.Fatal(err)
-        return "Error Generating Preview", err
+    srcImg, fErr := os.Open(fqFile)
+    if fErr != nil {
+        log.Fatal(fErr)
+        return "Error Generating Preview", fErr
     }
     defer srcImg.Close()
 
-    img, dErr := jpeg.Decode(srcImg)
+    // Attempt to create previews for different media types
+    var img image.Image
+    var dErr error  
+
+    // HOW TO DO THIS in a sane extensible fashion?
+    if contentType == "image/png" {
+        img, dErr = png.Decode(srcImg)
+    } else if contentType == "image/jpeg" {
+        img, dErr = jpeg.Decode(srcImg)
+    } else {
+        log.Printf("No provided method for this file type %s", contentType)
+        return fqFile, nil
+    }
     if dErr != nil {
         log.Fatal(dErr)
     }
-    dstImg := resize.Resize(640, 0, img, resize.Lanczos3)
 
-    dstFile := filepath.Join(dstPath, "preview_" + filename)
+    // Now creat the preview image
+    dstImg := resize.Resize(640, 0, img, resize.Lanczos3)
     previewImg, errCreate := os.Create(dstFile)
 
     if errCreate != nil {
@@ -54,24 +69,7 @@ func GetImagePreview(path string, filename string, dstPath string) (string, erro
     }
     defer previewImg.Close()
 
+    // All previews should then be jpeg (change file extensioni?)
     jpeg.Encode(previewImg, dstImg, nil)
     return dstFile, nil
 }
-
-/*
-
-func main() {
-    imagePath, _ := os.Open("jellyfish.jpg")
-    defer imagePath.Close()
-    srcImage, _, _ := image.Decode(imagePath)
-
-    // Dimension of new thumbnail 80 X 80
-    dstImage := image.NewRGBA(image.Rect(0, 0, 80, 80))
-    // Thumbnail function of Graphics
-    graphics.Thumbnail(dstImage, srcImage)
-
-    newImage, _ := os.Create("thumbnail.jpg")
-    defer newImage.Close()
-    jpeg.Encode(newImage, dstImage, &jpeg.Options{jpeg.DefaultQuality})
-}
-*/
