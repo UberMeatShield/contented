@@ -62,10 +62,8 @@ func ListDirs(dir string, previewCount int) []DirContents {
 	var listings []DirContents
 	files, _ := ioutil.ReadDir(dir)
 	for _, f := range files {
-		if f.IsDir() {
-			id := f.Name() // This should definitely be some other ID format => Lookup
-
-			// Has the Name?
+	    if f.IsDir() {
+		    id := f.Name() // This should definitely be some other ID format => Lookup
 			listings = append(listings, GetDirContents(dir+id, previewCount, 0, id))
 		}
 	}
@@ -106,7 +104,7 @@ func GetFileRefById(dir string, file_id_str string) (os.FileInfo, error) {
 }
 
 /**
- *  Get all the content in a particular directory.
+ *  Get all the content in a particular directory (would be good to filter down to certain file types?)
  */
 func GetDirContents(fqDirPath string, limit int, start_offset int, dirname string) DirContents {
 	var arr = []MediaContainer{}
@@ -156,6 +154,7 @@ func GetMimeType(path string, filename string) (string, error) {
 	}
 	return ctype, nil
 }
+
 
 func SniffFileType(content *os.File) (string, error){
     var buf [sniffLen]byte
