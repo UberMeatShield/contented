@@ -114,11 +114,13 @@ func GetDirContents(fqDirPath string, limit int, start_offset int, dirname strin
 
 	total := 0
 	for idx, img := range imgs {
-		if !img.IsDir() && len(arr) < limit && idx >= start_offset {
-			media := getMediaContainer(strconv.Itoa(idx), img, fqDirPath)
-			arr = append(arr, media)
-		}
-		total++
+		if !img.IsDir() {
+            if len(arr) < limit && idx >= start_offset {
+                media := getMediaContainer(strconv.Itoa(idx), img, fqDirPath)
+                arr = append(arr, media)
+            }
+		    total++  // Only add a total for non-directory files (exclude other types?)
+	    }
 	}
 	log.Println("Limit for content dir was.", fqDirPath, " with limit", limit, " offset: ", start_offset)
 
@@ -145,20 +147,25 @@ func GetMimeType(path string, filename string) (string, error) {
 
 	if ctype == "" {
 		// read a chunk to decide between utf-8 text and binary
-		content, _ := os.Open(name)
-
-		var buf [sniffLen]byte
-		n, _ := io.ReadFull(content, buf[:])
-		ctype = http.DetectContentType(buf[:n])
-		_, err := content.Seek(0, io.SeekStart) // rewind to output whole file
-		if err != nil {
-			return "error", err
-		}
-
-        // TODO: Is this right?
+		content, errOpen := os.Open(name)
+        if errOpen != nil {
+            return "Error Reading File", errOpen
+        }
         defer content.Close()
+        return SniffFileType(content)
 	}
 	return ctype, nil
+}
+
+func SniffFileType(content *os.File) (string, error){
+    var buf [sniffLen]byte
+    n, _ := io.ReadFull(content, buf[:])
+    ctype := http.DetectContentType(buf[:n])
+    _, err := content.Seek(0, io.SeekStart) // rewind to output whole file
+    if err != nil {
+        return "error", err
+    }
+    return ctype, nil
 }
 
 

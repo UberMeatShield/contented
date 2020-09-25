@@ -28,7 +28,7 @@ func TestGetDirContents(t *testing.T) {
 	}
 }
 
-func TestContentType(t *testing.T) {
+func Test_ContentType(t *testing.T) {
 	imgName := "this_is_jp_eg"
 	dirPath := filepath.Join(testDir, "dir1")
 
@@ -53,14 +53,14 @@ func TestContentType(t *testing.T) {
 
 }
 
-func TestDirId(t *testing.T) {
+func Test_DirId(t *testing.T) {
 	id1 := GetDirId("dir1")
 	if id1 != "4c1f6165302b81fd587e79db729a5a05ea130ea35602a76dcf0dd96a2366f33c" {
 		t.Errorf("Failed to hash correctly %s", id1)
 	}
 }
 
-func TestGetFileRefById(t *testing.T) {
+func Test_GetFileRefById(t *testing.T) {
 	fq_dir := testDir + "/dir1"
 	dir_c := GetDirContents(fq_dir, 10, 0, "mocks")
 	if len(dir_c.Contents) < 8 {
@@ -93,7 +93,7 @@ func TestGetFileRefById(t *testing.T) {
 	}
 }
 
-func TestGetSpecificDir(t *testing.T) {
+func Test_GetSpecificDir(t *testing.T) {
 	var count = 2
 	files := GetDirContents(testDir+"/dir3", 2, 0, "mocks")
 	if len(files.Contents) != 2 {
@@ -131,7 +131,7 @@ func example(sleep int, msg string, reply chan string) {
 	reply <- msg
 }
 
-func TestChannels(t *testing.T) {
+func Test_Channels(t *testing.T) {
 	learn := make(chan string)
 
 	// Timeouts should mean the first returned value is going to be derp
