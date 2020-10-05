@@ -19,12 +19,14 @@ func MakePreviewPath(dstPath string) error {
 }
 
 
+
 func ShouldCreatePreview(f *os.File, fsize int64) (bool) {
     finfo, err := f.Stat()
     if err != nil {
         log.Printf("Error determining file stat for %s", err)
         return false
     }
+
     if finfo.Size() > fsize {
         // log.Printf("How big was the size %d", finfo.Size())
         return true
@@ -66,16 +68,15 @@ func CreateImagePreview(srcImg *os.File, dstFile string, contentType string) (st
     // Now creat the preview image
     dstImg := resize.Resize(640, 0, img, resize.Lanczos3)
     previewImg, errCreate := os.Create(dstFile)
-
     if errCreate != nil {
         log.Fatal(errCreate)
         return "Error" + dstFile, errCreate
     }
-    defer previewImg.Close()
 
     // All previews should then be jpeg (change file extensioni?)
     jpeg.Encode(previewImg, dstImg, nil)
-    return dstFile, nil
+    
+    return dstFile, previewImg.Close()
 }
 
 // Make sure dstPath already exists before you call this
