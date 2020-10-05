@@ -2,6 +2,7 @@ package utils
 
 import (
     "os"
+    "errors"
     "log"
     "image"
     "image/jpeg"
@@ -18,30 +19,32 @@ func MakePreviewPath(dstPath string) error {
 }
 
 
-// Make sure dstPath already exists before you call this
-func GetImagePreview(path string, filename string, dstPath string) (string, error) {
+func ShouldCreatePreview(f *os.File, fsize int64) (bool) {
+    finfo, err := f.Stat()
+    if err != nil {
+        log.Printf("Error determining file stat for %s", err)
+        return false
+    }
+    if finfo.Size() > fsize {
+        // log.Printf("How big was the size %d", finfo.Size())
+        return true
+    }
+    return false
+}
 
+//  No need to check
+func PreviewExists(filename string, dstPath string) (string, error) {
     // Does the preview already exist, return that
     dstFile := filepath.Join(dstPath, "preview_" + filename)
     if _, e_err := os.Stat(dstFile); os.IsNotExist(e_err) {
         return dstFile, nil
     }
+    return "", errors.New("Preview Already Exists: " + dstFile)
+}
 
-    contentType, tErr := GetMimeType(path, filename)
-    if tErr != nil {
-        log.Fatal(tErr)
-        return "Could not determine img type", tErr
-    }
 
-    // The file we are going to check about making a preview of
-    fqFile := filepath.Join(path, filename)    
-    srcImg, fErr := os.Open(fqFile)
-    if fErr != nil {
-        log.Fatal(fErr)
-        return "Error Generating Preview", fErr
-    }
-    defer srcImg.Close()
-
+// Break this down better using just a file object?
+func CreateImagePreview(srcImg *os.File, dstFile string, contentType string) (string, error){
     // Attempt to create previews for different media types
     var img image.Image
     var dErr error  
@@ -53,7 +56,8 @@ func GetImagePreview(path string, filename string, dstPath string) (string, erro
         img, dErr = jpeg.Decode(srcImg)
     } else {
         log.Printf("No provided method for this file type %s", contentType)
-        return fqFile, nil
+        fname, _ := srcImg.Stat()
+        return "", errors.New("Cannot handle type for file: " + fname.Name())
     }
     if dErr != nil {
         log.Fatal(dErr)
@@ -72,4 +76,36 @@ func GetImagePreview(path string, filename string, dstPath string) (string, erro
     // All previews should then be jpeg (change file extensioni?)
     jpeg.Encode(previewImg, dstImg, nil)
     return dstFile, nil
+}
+
+// Make sure dstPath already exists before you call this
+func GetImagePreview(path string, filename string, dstPath string, pIfSize int64) (string, error) {
+
+    // HMMM (if exists do not do anything)
+    dstFile, dErr := PreviewExists(filename, dstPath)
+    if dErr != nil {
+        return dstFile, dErr
+    }
+
+    // Try and determine the content type (required for doing encoding and decoding)
+    contentType, tErr := GetMimeType(path, filename)
+    if tErr != nil {
+        log.Fatal(tErr)
+        return "Could not determine img type", tErr
+    }
+
+    // The file we are going to check about making a preview of
+    fqFile := filepath.Join(path, filename)    
+    srcImg, fErr := os.Open(fqFile)
+    if fErr != nil {
+        log.Fatal(fErr)
+        return "Error Generating Preview", fErr
+    }
+    defer srcImg.Close()
+
+    // Check to see if the image is ACTUALLY over a certain size to be worth previewing
+    if ShouldCreatePreview(srcImg, pIfSize) == true {
+        return CreateImagePreview(srcImg, dstFile, contentType)
+    }
+    return filename, nil
 }

@@ -2,6 +2,7 @@ package grifts
 
 import (
 //    "path/filepath"
+    "strconv"
     "fmt"
     "contented/models"
     "contented/utils"
@@ -28,6 +29,16 @@ var _ = grift.Namespace("db", func() {
             return errors.WithStack(d_err)
         }
 
+        var size int64 = 1024 * 1000 * 2
+        psize := envy.Get("PREVIEW_IF_GREATER", "")
+        if psize != "" {
+            setSize, i_err := strconv.ParseInt(psize, 10, 64)
+            if i_err == nil {
+                size = setSize
+            }
+        }
+        fmt.Printf("Using size %d for preview creation", size)
+
         // Process all the directories and get a valid setup
         dirs := utils.ListDirs(dir_name, 4)
         fmt.Printf("Found %d directories.", len(dirs))
@@ -40,6 +51,7 @@ var _ = grift.Namespace("db", func() {
               Name: dir.Name,
             }
             models.DB.Create(dirObj)
+
 
             for _, fi := range dir.Contents {
               mc := &models.MediaContainer{
