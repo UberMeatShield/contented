@@ -39,7 +39,6 @@ func Test_JpegPreview(t *testing.T) {
         t.Errorf("File too small for psize found  %s and expected %s", expectNoPreview, testFile)
     }
 
-    /*
     pLoc, err := GetImagePreview(srcDir, testFile, dstDir, 10)
     if err != nil {
         t.Errorf("Error occurred creating preview %v", err)
@@ -48,7 +47,6 @@ func Test_JpegPreview(t *testing.T) {
     if expectDst != pLoc {
         t.Errorf("Failed to find the expected file location %s had %s", expectDst, pLoc)
     }
-    */
 }
 
 // Does it work when there is a png
