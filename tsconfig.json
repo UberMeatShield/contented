@@ -1,13 +1,14 @@
 {
   "compileOnSave": false,
+  "NARP": "module: \"es2020\" was initially in there, but gulp-typscript barfs",
   "compilerOptions": {
-    "module": "es2020",
     "outDir": "./static/build",
     "sourceMap": true,
     "declaration": false,
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
     "target": "es6",
     "typeRoots": [
       "node_modules/@types"
