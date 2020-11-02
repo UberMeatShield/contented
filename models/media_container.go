@@ -3,6 +3,7 @@ package models
 import (
 	"time"
 	"encoding/json"
+    //"contented/actions"
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gobuffalo/validate/v3"
 	"github.com/gofrs/uuid"
@@ -18,6 +19,10 @@ type MediaContainer struct {
 	Type      string    `json:"type" db:"type"`
 	Preview   string    `json:"preview" db:"preview"`
     ContainerID nulls.UUID `json:"container_id" db:"container_id"`
+
+    // Add this to the Container as well.
+    // idx
+    // is_active
 }
 
 

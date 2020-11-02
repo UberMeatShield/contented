@@ -1,7 +1,6 @@
 package actions
 
 import (
-	"contented/utils"
 	"errors"
 	"log"
 	"net/http"
@@ -10,7 +9,9 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-
+	"contented/utils"
+    "contented/models"
+    "github.com/gofrs/uuid"
 	"github.com/gobuffalo/buffalo"
 )
 
@@ -27,9 +28,11 @@ type HttpError struct {
 // TODO: this might be useful to add into the utils
 type DirConfigEntry struct {
 	Dir          string                 // The root of our loading (path to top level container directory)
-	ValidDirs    map[string]os.FileInfo // List of directories under the main element
 	PreviewCount int                    // How many files should be listed for a preview
 	Limit        int                    // The absolute max you can load in a single operation
+	ValidDirs    map[string]os.FileInfo // List of directories under the main element
+    ValidFiles   map[uuid.UUID]models.MediaContainer       // TEMP: List of all files found
+    ValidContainers  map[uuid.UUID]models.Container       // TEMP: List of all dirs found
 }
 
 // HomeHandler is a default handler to serve up
@@ -39,6 +42,9 @@ var cfg = DirConfigEntry{
 	Dir:          "",
 	PreviewCount: DefaultPreviewCount,
 	Limit:        DefaultLimit,
+    ValidDirs: map[string]os.FileInfo{},
+    ValidFiles: map[uuid.UUID]models.MediaContainer{},
+    ValidContainers: map[uuid.UUID]models.Container{},
 }
 
 // Builds out information given the application and the content directory
@@ -100,6 +106,28 @@ func getFileInfo(dir_id string, file_id string) (os.FileInfo, error) {
 		return utils.GetFileRefById(cfg.Dir+dir_name, file_id)
 	}
 	return nil, err
+}
+
+// How do I do this shit (lookup the dir?)
+// Store a list of the various file references
+func FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error) {
+    // TODO: Get a FileInfo reference (get parent dir too)
+	if f, ok := cfg.ValidFiles[file_id]; ok {
+        return &f, nil
+    }
+    return nil, errors.New("File not found")
+}
+
+func FindDirRef(dir_id uuid.UUID) (*models.Container, error) {
+	if d, ok := cfg.ValidContainers[dir_id]; ok {
+        return &d, nil
+    }
+    return nil, errors.New("Directory not found")
+}
+
+// Just a temp 
+func CacheFile(mc models.MediaContainer) {
+    cfg.ValidFiles[mc.ID] = mc
 }
 
 // This seems to be a bit cleaner

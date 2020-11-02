@@ -1,7 +1,6 @@
 package grifts
 
 import (
-//    "path/filepath"
     "strconv"
     "fmt"
     "contented/models"

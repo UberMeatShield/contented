@@ -1,16 +1,17 @@
 package actions
 
 import (
-	"contented/utils"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
 	"testing"
-
+    "github.com/gofrs/uuid"
 	"github.com/gobuffalo/envy"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/gobuffalo/suite"
+	"contented/utils"
+	"contented/models"
 )
 
 type ActionSuite struct {
@@ -73,7 +74,27 @@ func (as *ActionSuite) Test_ContentDirDownload() {
 	as.Equal(http.StatusOK, res1.Code)
 	header1 := res1.Header()
 	as.Equal("image/png", header1.Get("Content-Type"))
+}
 
+func (as *ActionSuite) Test_FindAndCache() {
+    mc1_id, _ := uuid.NewV4()
+    mc2_id, _ := uuid.NewV4()
+    mc1 := models.MediaContainer{ID: mc1_id, Src: "mc1"}
+    mc2 := models.MediaContainer{ID: mc2_id, Src: "mc2"}
+
+    CacheFile(mc1)
+    CacheFile(mc2)
+
+    as.Equal(len(cfg.ValidFiles), 2)
+
+    name1, _ := FindFileRef(mc1_id)
+    as.Equal(name1.Src, mc1.Src)
+    name2, _ := FindFileRef(mc2_id)
+    as.Equal(name2.Src, mc2.Src)
+
+    invalid, _ := uuid.NewV4()
+    _, err := FindFileRef(invalid)
+    as.Error(err)
 }
 
 func Test_ActionSuite(t *testing.T) {
