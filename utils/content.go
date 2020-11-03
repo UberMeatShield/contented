@@ -41,11 +41,12 @@ func GetDirectoriesLookup(rootDir string) map[string]os.FileInfo {
 		panic("The main directory could not be read: " + rootDir)
 	}
 
+    // TODO: This needs to probably paginate as well and should just return the Container
 	for _, f := range files {
 		if f.IsDir() {
 			name := f.Name()
 			id := GetDirId(name)
-			listings[name] = f
+            // listings[name] = f
 			listings[id] = f
 		}
 	}

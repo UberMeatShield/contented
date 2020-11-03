@@ -112,8 +112,8 @@ func getFileInfo(dir_id string, file_id string) (os.FileInfo, error) {
 // Store a list of the various file references
 func FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error) {
     // TODO: Get a FileInfo reference (get parent dir too)
-	if f, ok := cfg.ValidFiles[file_id]; ok {
-        return &f, nil
+	if mc, ok := cfg.ValidFiles[file_id]; ok {
+        return &mc, nil
     }
     return nil, errors.New("File not found")
 }
