@@ -122,7 +122,17 @@ func FindDirRef(dir_id uuid.UUID) (*models.Container, error) {
 	if d, ok := cfg.ValidContainers[dir_id]; ok {
         return &d, nil
     }
-    return nil, errors.New("Directory not found")
+    return nil, errors.New("Directory not found" + dir_id.String())
+}
+
+
+func FindActualFile(mc *models.MediaContainer) (string, error) {
+    dir, err := FindDirRef(mc.ContainerID.UUID)
+    if err != nil {
+        return "No Parent Found", err
+    }
+    path := filepath.Join(cfg.Dir, dir.Name)
+    return filepath.Join(path, mc.Src), nil
 }
 
 // Just a temp 

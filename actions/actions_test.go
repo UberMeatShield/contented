@@ -6,10 +6,12 @@ import (
 	"net/http"
 	"os"
 	"testing"
+    "path/filepath"
     "github.com/gofrs/uuid"
 	"github.com/gobuffalo/envy"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/gobuffalo/suite"
+    "github.com/gobuffalo/nulls"
 	"contented/utils"
 	"contented/models"
 )
@@ -124,6 +126,59 @@ func (as *ActionSuite) Test_FindAndCache() {
     invalid, _ := uuid.NewV4()
     _, err := FindFileRef(invalid)
     as.Error(err)
+}
+
+// Test if we can get the actual file using just a file ID
+func (as *ActionSuite) Test_FindAndLoadFile() {
+    init_fake_app()
+    as.Equal(len(cfg.ValidContainers), 4, "We should have 4 containers.")
+    as.Greater(len(cfg.ValidFiles), 15, "And a bunch of files")
+
+    for mc_id, _ := range cfg.ValidFiles {
+        mc_ref, fc_err := FindFileRef(mc_id)
+        as.NoError(fc_err, "And an initialized app should index correctly")
+
+        fq_path, err := FindActualFile(mc_ref)
+        as.NoError(err, "It should find all these files")
+
+        _, o_err := os.Stat(fq_path)
+        as.NoError(o_err, "The fully qualified path did not exist")
+    }
+}
+
+
+// This function is now how the init method should function till caching is implemented
+// As the internals / guts are functional using the new models the creation of models 
+// can be removed.
+func init_fake_app() {
+	cfg.ValidDirs = utils.GetDirectoriesLookup(cfg.Dir)
+
+    for _, f := range cfg.ValidDirs {
+        // Need to make this just return a container
+        dir_name := filepath.Join(cfg.Dir + f.Name())
+        dc := utils.GetDirContents(dir_name, 20, 0, f.Name())
+
+        c_id, _ := uuid.NewV4()
+        c := models.Container{
+            ID: c_id,
+            Name: dc.Name,    
+            Path: dc.Path,
+        }
+        cfg.ValidContainers[c.ID] = c
+
+        for _, todo_mc := range dc.Contents {
+            mc_id, _ := uuid.NewV4()
+
+            // print("Adding this content" + todo_mc.Src + "with ID: " + mc_id.String())
+            mc := models.MediaContainer{
+                ID: mc_id,
+                Src: todo_mc.Src,
+                Type: todo_mc.Type,
+                ContainerID: nulls.NewUUID(c.ID),
+            }
+            cfg.ValidFiles[mc.ID] = mc
+        } 
+    }
 }
 
 
