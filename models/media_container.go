@@ -34,6 +34,7 @@ func (m MediaContainer) String() string {
 
 // MediaContainers is not required by pop and may be deleted
 type MediaContainers []MediaContainer
+type MediaMap map[uuid.UUID]MediaContainer
 
 // String is not required by pop and may be deleted
 func (m MediaContainers) String() string {

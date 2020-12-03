@@ -6,12 +6,10 @@ import (
 	"net/http"
 	"os"
 	"testing"
-    "path/filepath"
     "github.com/gofrs/uuid"
 	"github.com/gobuffalo/envy"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/gobuffalo/suite"
-    "github.com/gobuffalo/nulls"
 	"contented/utils"
 	"contented/models"
 )
@@ -22,7 +20,8 @@ type ActionSuite struct {
 
 func TestMain(m *testing.M) {
 	dir, err := envy.MustGet("DIR")
-	cfg.Dir = dir // Absolute path to our known test data
+
+    cfg = utils.GetConfig(dir)
 	cfg.ValidDirs = utils.GetDirectoriesLookup(cfg.Dir)
 
 	if err != nil {
@@ -108,6 +107,8 @@ func (as *ActionSuite) Test_ContentDirDownload() {
 }
 
 func (as *ActionSuite) Test_FindAndCache() {
+    cfg.ValidFiles = map[uuid.UUID]models.MediaContainer{}
+
     mc1_id, _ := uuid.NewV4()
     mc2_id, _ := uuid.NewV4()
     mc1 := models.MediaContainer{ID: mc1_id, Src: "mc1"}
@@ -151,34 +152,7 @@ func (as *ActionSuite) Test_FindAndLoadFile() {
 // As the internals / guts are functional using the new models the creation of models 
 // can be removed.
 func init_fake_app() {
-	cfg.ValidDirs = utils.GetDirectoriesLookup(cfg.Dir)
-
-    for _, f := range cfg.ValidDirs {
-        // Need to make this just return a container
-        dir_name := filepath.Join(cfg.Dir + f.Name())
-        dc := utils.GetDirContents(dir_name, 20, 0, f.Name())
-
-        c_id, _ := uuid.NewV4()
-        c := models.Container{
-            ID: c_id,
-            Name: dc.Name,    
-            Path: dc.Path,
-        }
-        cfg.ValidContainers[c.ID] = c
-
-        for _, todo_mc := range dc.Contents {
-            mc_id, _ := uuid.NewV4()
-
-            // print("Adding this content" + todo_mc.Src + "with ID: " + mc_id.String())
-            mc := models.MediaContainer{
-                ID: mc_id,
-                Src: todo_mc.Src,
-                Type: todo_mc.Type,
-                ContainerID: nulls.NewUUID(c.ID),
-            }
-            cfg.ValidFiles[mc.ID] = mc
-        } 
-    }
+    cfg = utils.GetConfig(cfg.Dir)
 }
 
 

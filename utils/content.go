@@ -1,3 +1,4 @@
+// List of directories under the main element
 package utils
 
 import (
@@ -12,6 +13,9 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+    "contented/models"
+    "github.com/gofrs/uuid"
+    "github.com/gobuffalo/nulls"
 )
 
 const sniffLen = 512
@@ -25,10 +29,76 @@ type MediaContainer struct {
 
 type DirContents struct {
 	Total    int              `json:"total"`
-	Contents []MediaContainer `json:"contents"`
 	Path     string           `json:"path"`
 	Id       string           `json:"id"`
 	Name     string           `json:"name"`
+	Contents []MediaContainer `json:"contents"`
+}
+
+
+// TODO: this might be useful to add into the utils
+type DirConfigEntry struct {
+    Dir          string                 // The root of our loading (path to top level container directory)
+    PreviewCount int                    // How many files should be listed for a preview
+    Limit        int                    // The absolute max you can load in a single operation
+    Initialized bool
+    ValidDirs    map[string]os.FileInfo // List of directories under the main element
+    ValidFiles  models.MediaMap
+    ValidContainers  models.ContainerMap
+}
+
+/*
+ * Build out a valid configuration given the directory etc.
+ */
+func GetConfig(dir_root string) DirConfigEntry {
+
+    dir_lookup := GetDirectoriesLookup(dir_root)
+    containers, files := PopulatePreviews(dir_root, dir_lookup)
+
+    cfg := DirConfigEntry{
+        Initialized: true,
+        Dir:          dir_root,
+        PreviewCount: 8,
+        Limit:        16,  // I think this is configured elsewhere
+        ValidDirs: dir_lookup,
+        ValidFiles: files,
+        ValidContainers: containers,
+    }
+    return cfg
+}
+
+/**
+ *
+ */
+func PopulatePreviews(dir_root string, valid_dirs map[string]os.FileInfo) (models.ContainerMap, models.MediaMap){
+    containers := models.ContainerMap{}
+    files := models.MediaMap{}
+
+    for _, f := range valid_dirs {
+        // Need to make this just return a container
+        dir_name := filepath.Join(dir_root + f.Name())
+        dc := GetDirContents(dir_name, 20, 0, f.Name())
+
+        c_id, _ := uuid.NewV4()
+        c := models.Container{
+            ID: c_id,
+            Name: dc.Name,
+            Path: dc.Path,
+        }
+        containers[c.ID] = c
+
+        for _, todo_mc := range dc.Contents {
+            mc_id, _ := uuid.NewV4()
+            mc := models.MediaContainer{
+                ID: mc_id,
+                Src: todo_mc.Src,
+                Type: todo_mc.Type,
+                ContainerID: nulls.NewUUID(c.ID),
+            }
+            files[mc.ID] = mc
+        }
+    }
+    return containers, files
 }
 
 /**
@@ -108,7 +178,7 @@ func GetFileRefById(dir string, file_id_str string) (os.FileInfo, error) {
  *  Get all the content in a particular directory (would be good to filter down to certain file types?)
  */
 func GetDirContents(fqDirPath string, limit int, start_offset int, dirname string) DirContents {
-	var arr = []MediaContainer{}
+    var arr = []MediaContainer{}
 	imgs, _ := ioutil.ReadDir(fqDirPath)
 
 	total := 0

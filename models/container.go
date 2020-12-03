@@ -3,7 +3,6 @@ package models
 import (
 	"encoding/json"
 	"time"
-
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gobuffalo/validate/v3"
 	"github.com/gofrs/uuid"
@@ -28,6 +27,7 @@ func (c Container) String() string {
 
 // Containers is not required by pop and may be deleted
 type Containers []Container
+type ContainerMap map[uuid.UUID]Container
 
 // String is not required by pop and may be deleted
 func (c Containers) String() string {

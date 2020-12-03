@@ -25,27 +25,13 @@ type HttpError struct {
 	Debug string `json:"debug"`
 }
 
-// TODO: this might be useful to add into the utils
-type DirConfigEntry struct {
-	Dir          string                 // The root of our loading (path to top level container directory)
-	PreviewCount int                    // How many files should be listed for a preview
-	Limit        int                    // The absolute max you can load in a single operation
-	ValidDirs    map[string]os.FileInfo // List of directories under the main element
-    ValidFiles   map[uuid.UUID]models.MediaContainer       // TEMP: List of all files found
-    ValidContainers  map[uuid.UUID]models.Container       // TEMP: List of all dirs found
-}
 
 // HomeHandler is a default handler to serve up
 var DefaultLimit int = 10000 // The max limit set by environment variable
 var DefaultPreviewCount int = 8
-var cfg = DirConfigEntry{
-	Dir:          "",
-	PreviewCount: DefaultPreviewCount,
-	Limit:        DefaultLimit,
-    ValidDirs: map[string]os.FileInfo{},
-    ValidFiles: map[uuid.UUID]models.MediaContainer{},
-    ValidContainers: map[uuid.UUID]models.Container{},
-}
+
+// TODO: Create a new entry where it creates a new cfg (clean it)
+var cfg utils.DirConfigEntry
 
 // Builds out information given the application and the content directory
 func SetupContented(app *buffalo.App, contentDir string, numToPreview int, limit int) {
@@ -54,8 +40,7 @@ func SetupContented(app *buffalo.App, contentDir string, numToPreview int, limit
 	}
 	log.Printf("Setting up the content directory with %s", contentDir)
 
-	cfg.Dir = contentDir
-	cfg.ValidDirs = utils.GetDirectoriesLookup(cfg.Dir)
+    cfg = utils.GetConfig(contentDir)
 	cfg.PreviewCount = numToPreview
 	cfg.Limit = limit
 
