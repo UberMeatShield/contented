@@ -76,7 +76,6 @@ func (as *ActionSuite) Test_ViewRef() {
         res := as.HTML("/view/" + id + "/0").Get()
         as.Equal(http.StatusOK, res.Code)
         header := res.Header()
-
         as.Equal("image/png", header.Get("Content-Type"))
     }
 }
@@ -151,13 +150,13 @@ func (as *ActionSuite) Test_FindAndLoadFile() {
 func (as *ActionSuite) Test_PreviewFile() {
     init_fake_app()
 
+    valid := map[string]bool{"image/png": true, "image/jpeg": true}
     for mc_id, _ := range cfg.ValidFiles {
-	    res := as.JSON("/preview/" + mc_id.String()).Get()
+	    res := as.HTML("/preview/" + mc_id.String()).Get()
 	    as.Equal(http.StatusOK, res.Code)
 
-        resObj := map[string]string{}
-        json.NewDecoder(res.Body).Decode(&resObj)
-        as.Equal("Totally defined", resObj["path"])
+        header := res.Header()
+	    as.Contains(valid, header.Get("Content-Type"))
     }
 }
 

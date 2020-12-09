@@ -106,13 +106,12 @@ func PreviewHandler(c buffalo.Context) error {
     }
     fq_path, fq_err := FindActualFile(mc)
     if fq_err != nil {
+		log.Printf("File to preview not found on disk %s with err %s", fq_path, fq_err)
 	    return c.Error(404, fq_err)
     }
-	log.Printf("Found preview %s", fq_path)
-    
-    res := map[string]string{}
-    res["path"] = fq_path
-	return c.Render(200, r.JSON(res))
+	// log.Printf("Found this filename to view: %s", fq_path)
+	http.ServeFile(c.Response(), c.Request(), fq_path)
+	return nil
 }
 
 // How do I do this shit (lookup the dir?)
@@ -166,7 +165,7 @@ func CacheFile(mc models.MediaContainer) {
     cfg.ValidFiles[mc.ID] = mc
 }
 
-// This seems to be a bit cleaner
+// This seems to be a bit cleaner (Deprecate in favor of container loads)
 func getFullFilePath(dir_id string, file_id string) (string, error) {
 	log.Printf("Searching dir_id(%s) and file_id(%s)", dir_id, file_id)
 	dir_name, d_err := getDirName(dir_id)
@@ -182,7 +181,7 @@ func getFullFilePath(dir_id string, file_id string) (string, error) {
 	return fname, nil
 }
 
-// Provides a view of the file (will not open as an attachment)
+// Provides a view of the file (will not open as an attachment)  TODO: Convert to uuid version
 func ViewHandler(c buffalo.Context) error {
 	dir_id := c.Param("dir_id")
 	file_id := c.Param("file_id")
