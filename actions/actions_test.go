@@ -161,11 +161,33 @@ func (as *ActionSuite) Test_PreviewFile() {
 }
 
 
+func (as *ActionSuite) Test_PreviewWorking() {
+    init_fake_app()
+
+    for mc_id, mc := range cfg.ValidFiles {
+        if mc.Preview != "" {
+	        res := as.HTML("/preview/" + mc_id.String()).Get()
+	        as.Equal(http.StatusOK, res.Code)
+        } else {
+            mc.Preview = "TotallyInvalid should 404"
+            
+	        res := as.HTML("/preview/" + mc_id.String()).Get()
+	        as.Equal(http.StatusUnprocessableEntity, res.Code)
+        }
+    }
+}
+
+
 // This function is now how the init method should function till caching is implemented
 // As the internals / guts are functional using the new models the creation of models 
 // can be removed.
 func init_fake_app() {
     cfg = utils.GetConfig(cfg.Dir)
+    for _, mc := range cfg.ValidFiles {
+        if mc.Src == "this_is_p_ng" {
+            mc.Preview = "preview_this_is_p_ng"
+        }
+    }
 }
 
 
