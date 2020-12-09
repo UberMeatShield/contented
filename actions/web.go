@@ -93,6 +93,28 @@ func getFileInfo(dir_id string, file_id string) (os.FileInfo, error) {
 	return nil, err
 }
 
+
+// Find the preview of a file (if applicable currently it is just returning the full path)
+func PreviewHandler(c buffalo.Context) error {
+	file_id, bad_uuid := uuid.FromString(c.Param("file_id"))
+    if bad_uuid != nil {
+        return c.Error(400, bad_uuid)
+    }
+    mc, err := FindFileRef(file_id)
+    if err != nil {
+	    return c.Error(404, err)
+    }
+    fq_path, fq_err := FindActualFile(mc)
+    if fq_err != nil {
+	    return c.Error(404, fq_err)
+    }
+	log.Printf("Found preview %s", fq_path)
+    
+    res := map[string]string{}
+    res["path"] = fq_path
+	return c.Render(200, r.JSON(res))
+}
+
 // How do I do this shit (lookup the dir?)
 // Store a list of the various file references
 func FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error) {
@@ -110,14 +132,33 @@ func FindDirRef(dir_id uuid.UUID) (*models.Container, error) {
     return nil, errors.New("Directory not found" + dir_id.String())
 }
 
+// If a preview is found, return the path to that file otherwise use the actual file  
+func GetPreviewForMC(mc *models.MediaContainer) (string, error) {
+    src := mc.Src
+    if mc.Preview != "" {
+        src = mc.Preview
+    }
+    return GetFilePathInContainer(mc.ContainerID.UUID, src)
+}
 
+// Get the on disk location for the media container.
 func FindActualFile(mc *models.MediaContainer) (string, error) {
-    dir, err := FindDirRef(mc.ContainerID.UUID)
+    return GetFilePathInContainer(mc.ContainerID.UUID, mc.Src)
+}
+
+// Given a container ID and the src of a file in there, get a path and check if it exists
+func GetFilePathInContainer(cont_id uuid.UUID, src string) (string, error) {
+    dir, err := FindDirRef(cont_id)
     if err != nil {
         return "No Parent Found", err
     }
     path := filepath.Join(cfg.Dir, dir.Name)
-    return filepath.Join(path, mc.Src), nil
+    fq_path := filepath.Join(path, src)
+
+    if _, os_err := os.Stat(fq_path); os_err != nil {
+        return fq_path, os_err
+    }
+    return fq_path, nil
 }
 
 // Just a temp 

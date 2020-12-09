@@ -43,7 +43,7 @@ type DirConfigEntry struct {
     Limit        int                    // The absolute max you can load in a single operation
     Initialized bool
     ValidDirs    map[string]os.FileInfo // List of directories under the main element
-    ValidFiles  models.MediaMap
+    ValidFiles  models.MediaMap // TODO: Eventually remove this in favor of a startup + sqllite load
     ValidContainers  models.ContainerMap
 }
 
@@ -54,7 +54,6 @@ func GetConfig(dir_root string) DirConfigEntry {
 
     dir_lookup := GetDirectoriesLookup(dir_root)
     containers, files := PopulatePreviews(dir_root, dir_lookup)
-
     cfg := DirConfigEntry{
         Initialized: true,
         Dir:          dir_root,

@@ -67,6 +67,12 @@ func App() *buffalo.App {
 		app.GET("/view/{dir_id}/{file_id}", ViewHandler)
 		app.GET("/download/{dir_id}/{file_id}", DownloadHandler)
 
+        // Run grift?  Do dev from an actual DB instance?
+        app.GET("/preview/{file_id}", PreviewHandler)
+        // Convert to this in view and download
+        // app.GET("/view/{file_id}", PreviewHandler)
+        // app.GET("/download/{file_id}", PreviewHandler)
+
 		// Host the index.html, also assume that all angular UI routes are going to be under contented
 		app.GET("/", AngularIndex)
 		app.GET("/ui/{path}", AngularIndex)

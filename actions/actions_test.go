@@ -148,6 +148,20 @@ func (as *ActionSuite) Test_FindAndLoadFile() {
 }
 
 
+func (as *ActionSuite) Test_PreviewFile() {
+    init_fake_app()
+
+    for mc_id, _ := range cfg.ValidFiles {
+	    res := as.JSON("/preview/" + mc_id.String()).Get()
+	    as.Equal(http.StatusOK, res.Code)
+
+        resObj := map[string]string{}
+        json.NewDecoder(res.Body).Decode(&resObj)
+        as.Equal("Totally defined", resObj["path"])
+    }
+}
+
+
 // This function is now how the init method should function till caching is implemented
 // As the internals / guts are functional using the new models the creation of models 
 // can be removed.
