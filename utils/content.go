@@ -49,20 +49,21 @@ type DirConfigEntry struct {
 
 /*
  * Build out a valid configuration given the directory etc.
+ *
+ * Note we do not create a new instance, we are updating the overall app config.  
+ * TODO: Figure out how to do this "right" for a Buffalo app.
  */
-func GetConfig(dir_root string) DirConfigEntry {
-
+func InitConfig(dir_root string, cfg *DirConfigEntry) *DirConfigEntry {
     dir_lookup := GetDirectoriesLookup(dir_root)
     containers, files := PopulatePreviews(dir_root, dir_lookup)
-    cfg := DirConfigEntry{
-        Initialized: true,
-        Dir:          dir_root,
-        PreviewCount: 8,
-        Limit:        16,  // I think this is configured elsewhere
-        ValidDirs: dir_lookup,
-        ValidFiles: files,
-        ValidContainers: containers,
-    }
+    cfg.Dir = dir_root
+    cfg.PreviewCount = 8
+    cfg.Limit = 16
+    cfg.ValidDirs = dir_lookup
+    cfg.ValidContainers = containers
+    cfg.ValidFiles = files
+    cfg.Initialized = true 
+    // log.Printf("Initialized with %d containers and %d files", len(containers), len(files))
     return cfg
 }
 
@@ -77,6 +78,8 @@ func PopulatePreviews(dir_root string, valid_dirs map[string]os.FileInfo) (model
         // Need to make this just return a container
         dir_name := filepath.Join(dir_root + f.Name())
         dc := GetDirContents(dir_name, 20, 0, f.Name())
+
+        log.Printf("Searching in %s", dir_name)
 
         c_id, _ := uuid.NewV4()
         c := models.Container{
@@ -190,7 +193,7 @@ func GetDirContents(fqDirPath string, limit int, start_offset int, dirname strin
 		    total++  // Only add a total for non-directory files (exclude other types?)
 	    }
 	}
-	log.Println("Limit for content dir was.", fqDirPath, " with limit", limit, " offset: ", start_offset)
+	// log.Println("Limit for content dir was.", fqDirPath, " with limit", limit, " offset: ", start_offset)
 
 	id := GetDirId(dirname)
 	return DirContents{

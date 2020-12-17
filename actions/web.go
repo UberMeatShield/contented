@@ -31,7 +31,18 @@ var DefaultLimit int = 10000 // The max limit set by environment variable
 var DefaultPreviewCount int = 8
 
 // TODO: Create a new entry where it creates a new cfg (clean it)
-var cfg utils.DirConfigEntry
+var appCfg utils.DirConfigEntry = utils.DirConfigEntry{
+    Initialized: false,
+    Dir: "",
+    PreviewCount: DefaultPreviewCount,
+    Limit: DefaultLimit,
+}
+func GetCfg() *utils.DirConfigEntry {
+    return &appCfg
+}
+func SetCfg(c utils.DirConfigEntry) {
+    appCfg = c
+}
 
 // Builds out information given the application and the content directory
 func SetupContented(app *buffalo.App, contentDir string, numToPreview int, limit int) {
@@ -40,27 +51,27 @@ func SetupContented(app *buffalo.App, contentDir string, numToPreview int, limit
 	}
 	log.Printf("Setting up the content directory with %s", contentDir)
 
-    cfg = utils.GetConfig(contentDir)
-	cfg.PreviewCount = numToPreview
-	cfg.Limit = limit
+    utils.InitConfig(contentDir, &appCfg)
+	appCfg.PreviewCount = numToPreview
+	appCfg.Limit = limit
 
 	// TODO: Somehow need to move the dir into App, but first we want to validate the dir...
-	app.ServeFiles("/static", http.Dir(cfg.Dir))
+	app.ServeFiles("/static", http.Dir(appCfg.Dir))
 }
 
 func ListDefaultHandler(c buffalo.Context) error {
 	path, _ := os.Executable()
-	log.Printf("Calling into ListDefault run_dir: %s looking at dir: %s", path, cfg.Dir)
+	log.Printf("Calling into ListDefault run_dir: %s looking at dir: %s", path, appCfg.Dir)
 	response := PreviewResults{
 		Success: true,
-		Results: utils.ListDirs(cfg.Dir, cfg.PreviewCount),
+		Results: utils.ListDirs(appCfg.Dir, appCfg.PreviewCount),
 	}
 	return c.Render(200, r.JSON(response))
 }
 
 // Definitely should just make a hash lookup of dirname => dir Obj and dir_id => dir Obj
 func isValidDir(dir_id string) bool {
-	if _, ok := cfg.ValidDirs[dir_id]; ok {
+	if _, ok := appCfg.ValidDirs[dir_id]; ok {
 		return true
 	}
 	return false
@@ -69,7 +80,7 @@ func isValidDir(dir_id string) bool {
 // TODO: Move all this into utils?
 // Only a file info, seemingly there is no way to further list from this (aka look ad dir contents)
 func getDir(dir_id string) (os.FileInfo, error) {
-	if dir, ok := cfg.ValidDirs[dir_id]; ok {
+	if dir, ok := appCfg.ValidDirs[dir_id]; ok {
 		return dir, nil
 	}
 	return nil, errors.New("Directory not found: " + dir_id)
@@ -88,7 +99,7 @@ func getDirName(dir_id string) (string, error) {
 func getFileInfo(dir_id string, file_id string) (os.FileInfo, error) {
 	dir_name, err := getDirName(dir_id)
 	if err == nil {
-		return utils.GetFileRefById(cfg.Dir+dir_name, file_id)
+		return utils.GetFileRefById(appCfg.Dir+dir_name, file_id)
 	}
 	return nil, err
 }
@@ -104,12 +115,12 @@ func PreviewHandler(c buffalo.Context) error {
     if err != nil {
 	    return c.Error(404, err)
     }
-    fq_path, fq_err := FindActualFile(mc)
+    fq_path, fq_err := GetPreviewForMC(mc)
     if fq_err != nil {
 		log.Printf("File to preview not found on disk %s with err %s", fq_path, fq_err)
-	    return c.Error(404, fq_err)
+	    return c.Error(http.StatusUnprocessableEntity, fq_err)
     }
-	// log.Printf("Found this filename to view: %s", fq_path)
+	log.Printf("Found this pReview filename to view: %s for %s", fq_path, mc.ID.String())
 	http.ServeFile(c.Response(), c.Request(), fq_path)
 	return nil
 }
@@ -118,14 +129,14 @@ func PreviewHandler(c buffalo.Context) error {
 // Store a list of the various file references
 func FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error) {
     // TODO: Get a FileInfo reference (get parent dir too)
-	if mc, ok := cfg.ValidFiles[file_id]; ok {
+	if mc, ok := appCfg.ValidFiles[file_id]; ok {
         return &mc, nil
     }
     return nil, errors.New("File not found")
 }
 
 func FindDirRef(dir_id uuid.UUID) (*models.Container, error) {
-	if d, ok := cfg.ValidContainers[dir_id]; ok {
+	if d, ok := appCfg.ValidContainers[dir_id]; ok {
         return &d, nil
     }
     return nil, errors.New("Directory not found" + dir_id.String())
@@ -137,6 +148,7 @@ func GetPreviewForMC(mc *models.MediaContainer) (string, error) {
     if mc.Preview != "" {
         src = mc.Preview
     }
+    log.Printf("It should have a preview %s\n", mc.Preview)
     return GetFilePathInContainer(mc.ContainerID.UUID, src)
 }
 
@@ -151,7 +163,7 @@ func GetFilePathInContainer(cont_id uuid.UUID, src string) (string, error) {
     if err != nil {
         return "No Parent Found", err
     }
-    path := filepath.Join(cfg.Dir, dir.Name)
+    path := filepath.Join(appCfg.Dir, dir.Name)
     fq_path := filepath.Join(path, src)
 
     if _, os_err := os.Stat(fq_path); os_err != nil {
@@ -162,7 +174,7 @@ func GetFilePathInContainer(cont_id uuid.UUID, src string) (string, error) {
 
 // Just a temp 
 func CacheFile(mc models.MediaContainer) {
-    cfg.ValidFiles[mc.ID] = mc
+    appCfg.ValidFiles[mc.ID] = mc
 }
 
 // This seems to be a bit cleaner (Deprecate in favor of container loads)
@@ -176,7 +188,7 @@ func getFullFilePath(dir_id string, file_id string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	fname := filepath.Join(cfg.Dir, dir_name, file_ref.Name())
+	fname := filepath.Join(appCfg.Dir, dir_name, file_ref.Name())
 	log.Printf("dir_id(%s) and file_id(%s) this directory name: %s", dir_id, file_id, fname)
 	return fname, nil
 }
@@ -230,11 +242,11 @@ func ListSpecificHandler(c buffalo.Context) error {
 	}
 	offset, _ = strconv.Atoi(GetKeyVal(c, "offset", "0"))
 
-	log.Printf("Limit %d with offset %d in dir %s", limit, offset, cfg.Dir)
+	log.Printf("Limit %d with offset %d in dir %s", limit, offset, appCfg.Dir)
 
 	// Now actually return the results for a valid directory
 	if isValidDir(dir_id) {
-		contents, err := getDirectory(cfg.Dir, dir_id, limit, offset)
+		contents, err := getDirectory(appCfg.Dir, dir_id, limit, offset)
 		if err == nil {
 			return c.Render(200, r.JSON(contents))
 		}
@@ -261,7 +273,7 @@ func getDirectory(rootDir string, dir_id string, limit int, offset int) (utils.D
 	// TODO: Do a lookup based on dir ID?
 	dir_name, err := getDirName(dir_id)
 	if err == nil {
-		fq_dirname := filepath.Join(cfg.Dir, dir_name)
+		fq_dirname := filepath.Join(appCfg.Dir, dir_name)
 		log.Printf("Loading up all the contents in %s", fq_dirname)
 		return utils.GetDirContents(fq_dirname, limit, offset, dir_id), nil
 	}
