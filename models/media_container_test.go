@@ -15,9 +15,9 @@ func (ms *ModelSuite) Test_MediaContainer() {
 	ms.DB.Create(&mc)
 	ms.NotZero(mc.ID)
 
-    check := MediaContainer{}
-    q_err := ms.DB.Find(&check, mc.ID)
-    if q_err != nil {
-        ms.Fail("Could not query for this id" + mc.ID.String())
-    }
+	check := MediaContainer{}
+	q_err := ms.DB.Find(&check, mc.ID)
+	if q_err != nil {
+		ms.Fail("Could not query for this id" + mc.ID.String())
+	}
 }

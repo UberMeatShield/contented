@@ -3,6 +3,7 @@ package utils
 
 import (
 	"bufio"
+	"contented/models"
 	"crypto/sha256"
 	"encoding/hex"
 	"io"
@@ -13,9 +14,9 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-    "contented/models"
-    "github.com/gofrs/uuid"
-    "github.com/gobuffalo/nulls"
+
+	"github.com/gobuffalo/nulls"
+	"github.com/gofrs/uuid"
 )
 
 const sniffLen = 512
@@ -35,72 +36,71 @@ type DirContents struct {
 	Contents []MediaContainer `json:"contents"`
 }
 
-
 // TODO: this might be useful to add into the utils
 type DirConfigEntry struct {
-    Dir          string                 // The root of our loading (path to top level container directory)
-    PreviewCount int                    // How many files should be listed for a preview
-    Limit        int                    // The absolute max you can load in a single operation
-    Initialized bool
-    ValidDirs    map[string]os.FileInfo // List of directories under the main element
-    ValidFiles  models.MediaMap // TODO: Eventually remove this in favor of a startup + sqllite load
-    ValidContainers  models.ContainerMap
+	Dir             string // The root of our loading (path to top level container directory)
+	PreviewCount    int    // How many files should be listed for a preview
+	Limit           int    // The absolute max you can load in a single operation
+	Initialized     bool
+	ValidDirs       map[string]os.FileInfo // List of directories under the main element
+	ValidFiles      models.MediaMap        // TODO: Eventually remove this in favor of a startup + sqllite load
+	ValidContainers models.ContainerMap
 }
 
 /*
  * Build out a valid configuration given the directory etc.
  *
- * Note we do not create a new instance, we are updating the overall app config.  
+ * Note we do not create a new instance, we are updating the overall app config.
  * TODO: Figure out how to do this "right" for a Buffalo app.
  */
 func InitConfig(dir_root string, cfg *DirConfigEntry) *DirConfigEntry {
-    dir_lookup := GetDirectoriesLookup(dir_root)
-    containers, files := PopulatePreviews(dir_root, dir_lookup)
-    cfg.Dir = dir_root
-    cfg.PreviewCount = 8
-    cfg.Limit = 16
-    cfg.ValidDirs = dir_lookup
-    cfg.ValidContainers = containers
-    cfg.ValidFiles = files
-    cfg.Initialized = true 
-    // log.Printf("Initialized with %d containers and %d files", len(containers), len(files))
-    return cfg
+	dir_lookup := GetDirectoriesLookup(dir_root)
+	containers, files := PopulatePreviews(dir_root, dir_lookup)
+	cfg.Dir = dir_root
+	cfg.PreviewCount = 8
+	cfg.Limit = 16
+	cfg.ValidDirs = dir_lookup
+	cfg.ValidContainers = containers
+	cfg.ValidFiles = files
+	cfg.Initialized = true
+	// log.Printf("Initialized with %d containers and %d files", len(containers), len(files))
+	return cfg
 }
 
 /**
  *
  */
-func PopulatePreviews(dir_root string, valid_dirs map[string]os.FileInfo) (models.ContainerMap, models.MediaMap){
-    containers := models.ContainerMap{}
-    files := models.MediaMap{}
+func PopulatePreviews(dir_root string, valid_dirs map[string]os.FileInfo) (models.ContainerMap, models.MediaMap) {
+	containers := models.ContainerMap{}
+	files := models.MediaMap{}
 
-    for _, f := range valid_dirs {
-        // Need to make this just return a container
-        dir_name := filepath.Join(dir_root + f.Name())
-        dc := GetDirContents(dir_name, 20, 0, f.Name())
+	for _, f := range valid_dirs {
+		// Need to make this just return a container
+		dir_name := filepath.Join(dir_root + f.Name())
+		dc := GetDirContents(dir_name, 20, 0, f.Name())
 
-        log.Printf("Searching in %s", dir_name)
+		log.Printf("Searching in %s", dir_name)
 
-        c_id, _ := uuid.NewV4()
-        c := models.Container{
-            ID: c_id,
-            Name: dc.Name,
-            Path: dc.Path,
-        }
-        containers[c.ID] = c
+		c_id, _ := uuid.NewV4()
+		c := models.Container{
+			ID:   c_id,
+			Name: dc.Name,
+			Path: dc.Path,
+		}
+		containers[c.ID] = c
 
-        for _, todo_mc := range dc.Contents {
-            mc_id, _ := uuid.NewV4()
-            mc := models.MediaContainer{
-                ID: mc_id,
-                Src: todo_mc.Src,
-                Type: todo_mc.Type,
-                ContainerID: nulls.NewUUID(c.ID),
-            }
-            files[mc.ID] = mc
-        }
-    }
-    return containers, files
+		for _, todo_mc := range dc.Contents {
+			mc_id, _ := uuid.NewV4()
+			mc := models.MediaContainer{
+				ID:          mc_id,
+				Src:         todo_mc.Src,
+				Type:        todo_mc.Type,
+				ContainerID: nulls.NewUUID(c.ID),
+			}
+			files[mc.ID] = mc
+		}
+	}
+	return containers, files
 }
 
 /**
@@ -113,12 +113,12 @@ func GetDirectoriesLookup(rootDir string) map[string]os.FileInfo {
 		panic("The main directory could not be read: " + rootDir)
 	}
 
-    // TODO: This needs to probably paginate as well and should just return the Container
+	// TODO: This needs to probably paginate as well and should just return the Container
 	for _, f := range files {
 		if f.IsDir() {
 			name := f.Name()
 			id := GetDirId(name)
-            // listings[name] = f
+			// listings[name] = f
 			listings[id] = f
 		}
 	}
@@ -135,8 +135,8 @@ func ListDirs(dir string, previewCount int) []DirContents {
 	var listings []DirContents
 	files, _ := ioutil.ReadDir(dir)
 	for _, f := range files {
-	    if f.IsDir() {
-		    id := f.Name() // This should definitely be some other ID format => Lookup
+		if f.IsDir() {
+			id := f.Name() // This should definitely be some other ID format => Lookup
 			listings = append(listings, GetDirContents(dir+id, previewCount, 0, id))
 		}
 	}
@@ -180,21 +180,20 @@ func GetFileRefById(dir string, file_id_str string) (os.FileInfo, error) {
  *  Get all the content in a particular directory (would be good to filter down to certain file types?)
  */
 func GetDirContents(fqDirPath string, limit int, start_offset int, dirname string) DirContents {
-    var arr = []MediaContainer{}
+	var arr = []MediaContainer{}
 	imgs, _ := ioutil.ReadDir(fqDirPath)
 
 	total := 0
 	for idx, img := range imgs {
 		if !img.IsDir() {
-            if len(arr) < limit && idx >= start_offset {
-                media := getMediaContainer(strconv.Itoa(idx), img, fqDirPath)
-                arr = append(arr, media)
-            }
-		    total++  // Only add a total for non-directory files (exclude other types?)
-	    }
+			if len(arr) < limit && idx >= start_offset {
+				media := getMediaContainer(strconv.Itoa(idx), img, fqDirPath)
+				arr = append(arr, media)
+			}
+			total++ // Only add a total for non-directory files (exclude other types?)
+		}
 	}
 	// log.Println("Limit for content dir was.", fqDirPath, " with limit", limit, " offset: ", start_offset)
-
 	id := GetDirId(dirname)
 	return DirContents{
 		Total:    total,
@@ -219,27 +218,25 @@ func GetMimeType(path string, filename string) (string, error) {
 	if ctype == "" {
 		// read a chunk to decide between utf-8 text and binary
 		content, errOpen := os.Open(name)
-        if errOpen != nil {
-            return "Error Reading File", errOpen
-        }
-        defer content.Close()
-        return SniffFileType(content)
+		if errOpen != nil {
+			return "Error Reading File", errOpen
+		}
+		defer content.Close()
+		return SniffFileType(content)
 	}
 	return ctype, nil
 }
 
-
-func SniffFileType(content *os.File) (string, error){
-    var buf [sniffLen]byte
-    n, _ := io.ReadFull(content, buf[:])
-    ctype := http.DetectContentType(buf[:n])
-    _, err := content.Seek(0, io.SeekStart) // rewind to output whole file
-    if err != nil {
-        return "error", err
-    }
-    return ctype, nil
+func SniffFileType(content *os.File) (string, error) {
+	var buf [sniffLen]byte
+	n, _ := io.ReadFull(content, buf[:])
+	ctype := http.DetectContentType(buf[:n])
+	_, err := content.Seek(0, io.SeekStart) // rewind to output whole file
+	if err != nil {
+		return "error", err
+	}
+	return ctype, nil
 }
-
 
 func getMediaContainer(id string, fileInfo os.FileInfo, path string) MediaContainer {
 	contentType, err := GetMimeType(path, fileInfo.Name())

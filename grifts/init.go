@@ -2,7 +2,6 @@ package grifts
 
 import (
 	"contented/actions"
-
 	"github.com/gobuffalo/buffalo"
 )
 

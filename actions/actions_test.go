@@ -1,17 +1,18 @@
 package actions
 
 import (
+	"contented/models"
+	"contented/utils"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
 	"testing"
-    "github.com/gofrs/uuid"
+
 	"github.com/gobuffalo/envy"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/gobuffalo/suite"
-	"contented/utils"
-	"contented/models"
+	"github.com/gofrs/uuid"
 )
 
 type ActionSuite struct {
@@ -20,7 +21,7 @@ type ActionSuite struct {
 
 func TestMain(m *testing.M) {
 	dir, err := envy.MustGet("DIR")
-    fmt.Printf("Using this test directory %s", dir)
+	fmt.Printf("Using this test directory %s", dir)
 	if err != nil {
 		fmt.Println("DIR ENV REQUIRED$ export=DIR=`pwd`/mocks/content/ && buffalo test")
 		panic(err)
@@ -46,56 +47,56 @@ func (as *ActionSuite) Test_ContentList() {
 }
 
 func (as *ActionSuite) Test_ContentDirLoad() {
-    cfg := init_fake_app()
-    lookup := utils.GetDirectoriesLookup(cfg.Dir)
+	cfg := init_fake_app()
+	lookup := utils.GetDirectoriesLookup(cfg.Dir)
 
-    as.Equal(len(lookup), 4, "There should be 4 test directories")
+	as.Equal(len(lookup), 4, "There should be 4 test directories")
 
-    for id, f := range lookup {
-        res := as.JSON("/content/" + id).Get()
-        as.Equal(http.StatusOK, res.Code)
+	for id, f := range lookup {
+		res := as.JSON("/content/" + id).Get()
+		as.Equal(http.StatusOK, res.Code)
 
-        resObj := utils.DirContents{}
-        json.NewDecoder(res.Body).Decode(&resObj)
+		resObj := utils.DirContents{}
+		json.NewDecoder(res.Body).Decode(&resObj)
 
-        if f.Name() == "dir1" {
-            as.Equal(resObj.Total, 12, "It should have a known number of images")
-        }
-    }
+		if f.Name() == "dir1" {
+			as.Equal(resObj.Total, 12, "It should have a known number of images")
+		}
+	}
 }
 
 func (as *ActionSuite) Test_ViewRef() {
-    // Oof, that is rough... need a better way to select the file not by index but ID
-    cfg := init_fake_app()
-    lookup := utils.GetDirectoriesLookup(cfg.Dir)
+	// Oof, that is rough... need a better way to select the file not by index but ID
+	cfg := init_fake_app()
+	lookup := utils.GetDirectoriesLookup(cfg.Dir)
 
-    // TODO: Make it better about the type checking
-    // TODO: Make it always pass in the file ID
-    for id, _ := range lookup {
-        res := as.HTML("/view/" + id + "/0").Get()
-        as.Equal(http.StatusOK, res.Code)
-        header := res.Header()
-        as.Equal("image/png", header.Get("Content-Type"))
-    }
+	// TODO: Make it better about the type checking
+	// TODO: Make it always pass in the file ID
+	for id, _ := range lookup {
+		res := as.HTML("/view/" + id + "/0").Get()
+		as.Equal(http.StatusOK, res.Code)
+		header := res.Header()
+		as.Equal("image/png", header.Get("Content-Type"))
+	}
 }
 
 // Oof, that is rough... need a better way to select the file not by index but ID
 func (as *ActionSuite) Test_ContentDirDownload() {
-    cfg := init_fake_app()
-    lookup := utils.GetDirectoriesLookup(cfg.Dir)
+	cfg := init_fake_app()
+	lookup := utils.GetDirectoriesLookup(cfg.Dir)
 
-    valid := map[string]bool{"image/png": true, "image/jpeg": true}
-    
-    for id, f := range lookup {
-        res := as.HTML("/download/" + id + "/0").Get()
-        as.Equal(http.StatusOK, res.Code)
-        if f.Name() == "dir3" {
-            header := res.Header()
-	        as.Contains(valid, header.Get("Content-Type"))
-        }
-    }
+	valid := map[string]bool{"image/png": true, "image/jpeg": true}
 
-    // Make it so we know that there is only png in one dir, but iterate over all content
+	for id, f := range lookup {
+		res := as.HTML("/download/" + id + "/0").Get()
+		as.Equal(http.StatusOK, res.Code)
+		if f.Name() == "dir3" {
+			header := res.Header()
+			as.Contains(valid, header.Get("Content-Type"))
+		}
+	}
+
+	// Make it so we know that there is only png in one dir, but iterate over all content
 
 	dir_id_url := "/download/9d553cdef482947b97b5beda2dc594c7c818a69a49e04f044f4505bc223a3535/1"
 	res1 := as.HTML(dir_id_url).Get()
@@ -105,103 +106,111 @@ func (as *ActionSuite) Test_ContentDirDownload() {
 }
 
 func (as *ActionSuite) Test_FindAndCache() {
-    cfg := init_fake_app()
-    cfg.ValidFiles = map[uuid.UUID]models.MediaContainer{}
+	cfg := init_fake_app()
+	cfg.ValidFiles = map[uuid.UUID]models.MediaContainer{}
 
-    mc1_id, _ := uuid.NewV4()
-    mc2_id, _ := uuid.NewV4()
-    mc1 := models.MediaContainer{ID: mc1_id, Src: "mc1"}
-    mc2 := models.MediaContainer{ID: mc2_id, Src: "mc2"}
+	mc1_id, _ := uuid.NewV4()
+	mc2_id, _ := uuid.NewV4()
+	mc1 := models.MediaContainer{ID: mc1_id, Src: "mc1"}
+	mc2 := models.MediaContainer{ID: mc2_id, Src: "mc2"}
 
-    CacheFile(mc1)
-    CacheFile(mc2)
+	CacheFile(mc1)
+	CacheFile(mc2)
 
-    as.Equal(len(cfg.ValidFiles), 2)
+	as.Equal(len(cfg.ValidFiles), 2)
 
-    name1, _ := FindFileRef(mc1_id)
-    as.Equal(name1.Src, mc1.Src)
-    name2, _ := FindFileRef(mc2_id)
-    as.Equal(name2.Src, mc2.Src)
+	name1, _ := FindFileRef(mc1_id)
+	as.Equal(name1.Src, mc1.Src)
+	name2, _ := FindFileRef(mc2_id)
+	as.Equal(name2.Src, mc2.Src)
 
-    invalid, _ := uuid.NewV4()
-    _, err := FindFileRef(invalid)
-    as.Error(err)
+	invalid, _ := uuid.NewV4()
+	_, err := FindFileRef(invalid)
+	as.Error(err)
 }
 
 // Test if we can get the actual file using just a file ID
 func (as *ActionSuite) Test_FindAndLoadFile() {
-    cfg := init_fake_app()
+	cfg := init_fake_app()
 
-    as.Equal(true, cfg.Initialized)
-    as.Equal(4, len(cfg.ValidContainers), "We should have 4 containers.")
-    as.Greater(len(cfg.ValidFiles), 20, "And a bunch of files")
+	as.Equal(true, cfg.Initialized)
+	as.Equal(4, len(cfg.ValidContainers), "We should have 4 containers.")
+	as.Greater(len(cfg.ValidFiles), 20, "And a bunch of files")
 
-    for mc_id, _ := range cfg.ValidFiles {
-        mc_ref, fc_err := FindFileRef(mc_id)
-        as.NoError(fc_err, "And an initialized app should index correctly")
+	for mc_id, _ := range cfg.ValidFiles {
+		mc_ref, fc_err := FindFileRef(mc_id)
+		as.NoError(fc_err, "And an initialized app should index correctly")
 
-        fq_path, err := FindActualFile(mc_ref)
-        as.NoError(err, "It should find all these files")
+		fq_path, err := FindActualFile(mc_ref)
+		as.NoError(err, "It should find all these files")
 
-        _, o_err := os.Stat(fq_path)
-        as.NoError(o_err, "The fully qualified path did not exist")
-    }
+		_, o_err := os.Stat(fq_path)
+		as.NoError(o_err, "The fully qualified path did not exist")
+	}
 }
-
 
 // This checks that a preview loads when defined and otherwise falls back to the MC itself
 func (as *ActionSuite) Test_PreviewFile() {
-    cfg := init_fake_app()
-    valid := map[string]bool{"image/png": true, "image/jpeg": true}
-    for mc_id, _ := range cfg.ValidFiles {
-	    res := as.HTML("/preview/" + mc_id.String()).Get()
-	    as.Equal(http.StatusOK, res.Code)
+	cfg := init_fake_app()
+	valid := map[string]bool{"image/png": true, "image/jpeg": true}
+	for mc_id, _ := range cfg.ValidFiles {
+		res := as.HTML("/preview/" + mc_id.String()).Get()
+		as.Equal(http.StatusOK, res.Code)
 
-        header := res.Header()
-	    as.Contains(valid, header.Get("Content-Type"))
-    }
+		header := res.Header()
+		as.Contains(valid, header.Get("Content-Type"))
+	}
 }
 
+func (as *ActionSuite) Test_FullFile() {
+	cfg := init_fake_app()
+	valid := map[string]bool{"image/png": true, "image/jpeg": true}
+	for mc_id, _ := range cfg.ValidFiles {
+		res := as.HTML("/full/" + mc_id.String()).Get()
+		as.Equal(http.StatusOK, res.Code)
+
+		header := res.Header()
+		as.Contains(valid, header.Get("Content-Type"))
+	}
+}
 
 // This checks if previews are actually used if defined
 func (as *ActionSuite) Test_PreviewWorking() {
-    cfg := init_fake_app()
-    for mc_id, mc := range cfg.ValidFiles {
-        if mc.Preview != "" {
-            res := as.HTML("/preview/" + mc_id.String()).Get()
-	        as.Equal(http.StatusOK, res.Code)
-            fmt.Println("Not modified")
-        } 
-        /*  Mocking out a test that modifies the singleton is a pain in the ass
-        else {
-            wtf := appCfg.ValidFiles[mc.ID]
-            wtf.Preview = "TotallyInvalid should 422"
-		    fmt.Printf("This MC should use preview location %s\n", mc_id.String())
-	        res := as.HTML("/preview/" + mc_id.String()).Get()
-	        as.Equal(http.StatusUnprocessableEntity, res.Code)
-        }
-        */
-    }
+	cfg := init_fake_app()
+	for mc_id, mc := range cfg.ValidFiles {
+		if mc.Preview != "" {
+			res := as.HTML("/preview/" + mc_id.String()).Get()
+			as.Equal(http.StatusOK, res.Code)
+			fmt.Println("Not modified")
+		}
+		/*  Mocking out a test that modifies the singleton is a pain in the ass
+		        else {
+		            wtf := appCfg.ValidFiles[mc.ID]
+		            wtf.Preview = "TotallyInvalid should 422"
+				    fmt.Printf("This MC should use preview location %s\n", mc_id.String())
+			        res := as.HTML("/preview/" + mc_id.String()).Get()
+			        as.Equal(http.StatusUnprocessableEntity, res.Code)
+		        }
+		*/
+	}
 }
-
 
 // This function is now how the init method should function till caching is implemented
-// As the internals / guts are functional using the new models the creation of models 
+// As the internals / guts are functional using the new models the creation of models
 // can be removed.
-func init_fake_app() (*utils.DirConfigEntry){
+func init_fake_app() *utils.DirConfigEntry {
 	dir, _ := envy.MustGet("DIR")
-    fmt.Printf("Using directory %s\n", dir)
+	fmt.Printf("Using directory %s\n", dir)
 
-    cfg := GetCfg()
-    utils.InitConfig(dir, cfg)
-    for _, mc := range cfg.ValidFiles {
-        if mc.Src == "this_is_p_ng" {
-            mc.Preview = "preview_this_is_p_ng"
-        }
-    }
-    return cfg
+	cfg := GetCfg()
+	utils.InitConfig(dir, cfg)
+	for _, mc := range cfg.ValidFiles {
+		if mc.Src == "this_is_p_ng" {
+			mc.Preview = "preview_this_is_p_ng"
+		}
+	}
+	return cfg
 }
-
 
 func Test_ActionSuite(t *testing.T) {
 	action, err := suite.NewActionWithFixtures(App(), packr.New("Test_ActionSuite", "../fixtures"))

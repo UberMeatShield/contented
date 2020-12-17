@@ -1,30 +1,30 @@
 package models
 
 import (
-	"time"
 	"encoding/json"
-    //"contented/actions"
+	"time"
+
+	//"contented/actions"
+	"github.com/gobuffalo/nulls"
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gobuffalo/validate/v3"
 	"github.com/gofrs/uuid"
-    "github.com/gobuffalo/nulls"
 )
 
 // MediaContainer is used by pop to map your media_containers database table to your go code.
 type MediaContainer struct {
-	ID        uuid.UUID `json:"id" db:"id"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
-	Src       string    `json:"src" db:"src"`
-	Type      string    `json:"type" db:"type"`
-	Preview   string    `json:"preview" db:"preview"`
-    ContainerID nulls.UUID `json:"container_id" db:"container_id"`
+	ID          uuid.UUID  `json:"id" db:"id"`
+	CreatedAt   time.Time  `json:"created_at" db:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at" db:"updated_at"`
+	Src         string     `json:"src" db:"src"`
+	Type        string     `json:"type" db:"type"`
+	Preview     string     `json:"preview" db:"preview"`
+	ContainerID nulls.UUID `json:"container_id" db:"container_id"`
 
-    // Add this to the Container as well.
-    // idx
-    // is_active
+	// Add this to the Container as well.
+	// idx
+	// is_active
 }
-
 
 // String is not required by pop and may be deleted
 func (m MediaContainer) String() string {

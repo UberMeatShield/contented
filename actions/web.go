@@ -1,6 +1,8 @@
 package actions
 
 import (
+	"contented/models"
+	"contented/utils"
 	"errors"
 	"log"
 	"net/http"
@@ -9,10 +11,9 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"contented/utils"
-    "contented/models"
-    "github.com/gofrs/uuid"
+
 	"github.com/gobuffalo/buffalo"
+	"github.com/gofrs/uuid"
 )
 
 type PreviewResults struct {
@@ -25,23 +26,26 @@ type HttpError struct {
 	Debug string `json:"debug"`
 }
 
-
 // HomeHandler is a default handler to serve up
 var DefaultLimit int = 10000 // The max limit set by environment variable
 var DefaultPreviewCount int = 8
 
 // TODO: Create a new entry where it creates a new cfg (clean it)
+
+// TODO: Singletons are nice.. but not as clean in testing?
+// https://medium.com/@TobiasSchmidt89/the-singleton-object-oriented-design-pattern-in-golang-9f6ce75c21f7
 var appCfg utils.DirConfigEntry = utils.DirConfigEntry{
-    Initialized: false,
-    Dir: "",
-    PreviewCount: DefaultPreviewCount,
-    Limit: DefaultLimit,
+	Initialized:  false,
+	Dir:          "",
+	PreviewCount: DefaultPreviewCount,
+	Limit:        DefaultLimit,
 }
+
 func GetCfg() *utils.DirConfigEntry {
-    return &appCfg
+	return &appCfg
 }
 func SetCfg(c utils.DirConfigEntry) {
-    appCfg = c
+	appCfg = c
 }
 
 // Builds out information given the application and the content directory
@@ -51,7 +55,7 @@ func SetupContented(app *buffalo.App, contentDir string, numToPreview int, limit
 	}
 	log.Printf("Setting up the content directory with %s", contentDir)
 
-    utils.InitConfig(contentDir, &appCfg)
+	utils.InitConfig(contentDir, &appCfg)
 	appCfg.PreviewCount = numToPreview
 	appCfg.Limit = limit
 
@@ -104,22 +108,40 @@ func getFileInfo(dir_id string, file_id string) (os.FileInfo, error) {
 	return nil, err
 }
 
+func FullHandler(c buffalo.Context) error {
+	file_id, bad_uuid := uuid.FromString(c.Param("file_id"))
+	if bad_uuid != nil {
+		return c.Error(400, bad_uuid)
+	}
+	mc, err := FindFileRef(file_id)
+	if err != nil {
+		return c.Error(404, err)
+	}
+	fq_path, fq_err := FindActualFile(mc)
+	if fq_err != nil {
+		log.Printf("File to full view not found on disk %s with err %s", fq_path, fq_err)
+		return c.Error(http.StatusUnprocessableEntity, fq_err)
+	}
+	log.Printf("Full preview: %s for %s", fq_path, mc.ID.String())
+	http.ServeFile(c.Response(), c.Request(), fq_path)
+	return nil
+}
 
 // Find the preview of a file (if applicable currently it is just returning the full path)
 func PreviewHandler(c buffalo.Context) error {
 	file_id, bad_uuid := uuid.FromString(c.Param("file_id"))
-    if bad_uuid != nil {
-        return c.Error(400, bad_uuid)
-    }
-    mc, err := FindFileRef(file_id)
-    if err != nil {
-	    return c.Error(404, err)
-    }
-    fq_path, fq_err := GetPreviewForMC(mc)
-    if fq_err != nil {
+	if bad_uuid != nil {
+		return c.Error(400, bad_uuid)
+	}
+	mc, err := FindFileRef(file_id)
+	if err != nil {
+		return c.Error(404, err)
+	}
+	fq_path, fq_err := GetPreviewForMC(mc)
+	if fq_err != nil {
 		log.Printf("File to preview not found on disk %s with err %s", fq_path, fq_err)
-	    return c.Error(http.StatusUnprocessableEntity, fq_err)
-    }
+		return c.Error(http.StatusUnprocessableEntity, fq_err)
+	}
 	log.Printf("Found this pReview filename to view: %s for %s", fq_path, mc.ID.String())
 	http.ServeFile(c.Response(), c.Request(), fq_path)
 	return nil
@@ -128,53 +150,53 @@ func PreviewHandler(c buffalo.Context) error {
 // How do I do this shit (lookup the dir?)
 // Store a list of the various file references
 func FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error) {
-    // TODO: Get a FileInfo reference (get parent dir too)
+	// TODO: Get a FileInfo reference (get parent dir too)
 	if mc, ok := appCfg.ValidFiles[file_id]; ok {
-        return &mc, nil
-    }
-    return nil, errors.New("File not found")
+		return &mc, nil
+	}
+	return nil, errors.New("File not found")
 }
 
 func FindDirRef(dir_id uuid.UUID) (*models.Container, error) {
 	if d, ok := appCfg.ValidContainers[dir_id]; ok {
-        return &d, nil
-    }
-    return nil, errors.New("Directory not found" + dir_id.String())
+		return &d, nil
+	}
+	return nil, errors.New("Directory not found" + dir_id.String())
 }
 
-// If a preview is found, return the path to that file otherwise use the actual file  
+// If a preview is found, return the path to that file otherwise use the actual file
 func GetPreviewForMC(mc *models.MediaContainer) (string, error) {
-    src := mc.Src
-    if mc.Preview != "" {
-        src = mc.Preview
-    }
-    log.Printf("It should have a preview %s\n", mc.Preview)
-    return GetFilePathInContainer(mc.ContainerID.UUID, src)
+	src := mc.Src
+	if mc.Preview != "" {
+		src = mc.Preview
+	}
+	log.Printf("It should have a preview %s\n", mc.Preview)
+	return GetFilePathInContainer(mc.ContainerID.UUID, src)
 }
 
 // Get the on disk location for the media container.
 func FindActualFile(mc *models.MediaContainer) (string, error) {
-    return GetFilePathInContainer(mc.ContainerID.UUID, mc.Src)
+	return GetFilePathInContainer(mc.ContainerID.UUID, mc.Src)
 }
 
 // Given a container ID and the src of a file in there, get a path and check if it exists
 func GetFilePathInContainer(cont_id uuid.UUID, src string) (string, error) {
-    dir, err := FindDirRef(cont_id)
-    if err != nil {
-        return "No Parent Found", err
-    }
-    path := filepath.Join(appCfg.Dir, dir.Name)
-    fq_path := filepath.Join(path, src)
+	dir, err := FindDirRef(cont_id)
+	if err != nil {
+		return "No Parent Found", err
+	}
+	path := filepath.Join(appCfg.Dir, dir.Name)
+	fq_path := filepath.Join(path, src)
 
-    if _, os_err := os.Stat(fq_path); os_err != nil {
-        return fq_path, os_err
-    }
-    return fq_path, nil
+	if _, os_err := os.Stat(fq_path); os_err != nil {
+		return fq_path, os_err
+	}
+	return fq_path, nil
 }
 
-// Just a temp 
+// Just a temp (nuke asap)
 func CacheFile(mc models.MediaContainer) {
-    appCfg.ValidFiles[mc.ID] = mc
+	appCfg.ValidFiles[mc.ID] = mc
 }
 
 // This seems to be a bit cleaner (Deprecate in favor of container loads)

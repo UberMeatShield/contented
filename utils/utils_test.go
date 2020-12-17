@@ -14,11 +14,11 @@ var testDir, _ = envy.MustGet("DIR")
 func TestGetDirContents(t *testing.T) {
 	lookup := GetDirectoriesLookup(testDir)
 
-    if len(lookup) != 4 {
-        t.Fatal("The lookup did not return a valid lookup")
-    }
+	if len(lookup) != 4 {
+		t.Fatal("The lookup did not return a valid lookup")
+	}
 
-    var known_dirs = map[string]bool{"dir1": true, "dir2": true, "dir3": true, "screens": true}
+	var known_dirs = map[string]bool{"dir1": true, "dir2": true, "dir3": true, "screens": true}
 	count := 0
 	for _, dir := range lookup {
 		if _, ok := known_dirs[dir.Name()]; ok {
@@ -27,9 +27,9 @@ func TestGetDirContents(t *testing.T) {
 			t.Errorf("Failed to get a lookup for this dir %s", dir)
 		}
 	}
-    if count != 4 {
-        t.Error("Failed to actually test the API")
-    }
+	if count != 4 {
+		t.Error("Failed to actually test the API")
+	}
 }
 
 func Test_ContentType(t *testing.T) {
