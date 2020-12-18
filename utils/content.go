@@ -147,7 +147,7 @@ func ListDirs(dir string, previewCount int) []DirContents {
  * Return a reader for the file contents
  */
 func GetFileContents(dir string, filename string) *bufio.Reader {
-	return GetFileContentsByFqName(dir + "/" + filename)
+	return GetFileContentsByFqName(filepath.Join(dir, filename))
 }
 
 func GetFileContentsByFqName(fq_name string) *bufio.Reader {

@@ -66,11 +66,11 @@ func App() *buffalo.App {
 
 		// TODO: Just make the full path show the file directly?
 		app.GET("/view/{dir_id}/{file_id}", ViewHandler)
-		app.GET("/download/{dir_id}/{file_id}", DownloadHandler)
 
 		// Run grift?  Do dev from an actual DB instance?
 		app.GET("/preview/{file_id}", PreviewHandler)
 		app.GET("/full/{file_id}", FullHandler)
+		app.GET("/download/{file_id}", DownloadHandler)
 
 		// Convert to this in view and download
 		// app.GET("/view/{file_id}", PreviewHandler)

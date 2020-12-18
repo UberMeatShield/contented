@@ -147,6 +147,26 @@ func PreviewHandler(c buffalo.Context) error {
 	return nil
 }
 
+// Provides a download handler by directory id and file id
+func DownloadHandler(c buffalo.Context) error {
+    file_id, bad_uuid := uuid.FromString(c.Param("file_id"))
+    if bad_uuid != nil {
+        return c.Error(400, bad_uuid)
+    }
+    mc, err := FindFileRef(file_id)
+    if err != nil {
+        return c.Error(404, err)
+    }
+    fq_path, fq_err := FindActualFile(mc)
+    if fq_err != nil {
+        log.Printf("Cannot download file not on disk %s with err %s", fq_path, fq_err)
+        return c.Error(http.StatusUnprocessableEntity, fq_err)
+    }
+    finfo, _ := os.Stat(fq_path)
+    file_contents := utils.GetFileContentsByFqName(fq_path)
+    return c.Render(200, r.Download(c, finfo.Name(), file_contents))
+}
+
 // How do I do this shit (lookup the dir?)
 // Store a list of the various file references
 func FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error) {
@@ -154,14 +174,28 @@ func FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error) {
 	if mc, ok := appCfg.ValidFiles[file_id]; ok {
 		return &mc, nil
 	}
-	return nil, errors.New("File not found")
+    
+    // Fallback to the DB
+    mc_db := models.MediaContainer{}
+    err := models.DB.Find(&mc_db, file_id)
+    if err == nil {
+        return &mc_db, nil
+    } 
+	return nil, err
 }
 
 func FindDirRef(dir_id uuid.UUID) (*models.Container, error) {
 	if d, ok := appCfg.ValidContainers[dir_id]; ok {
 		return &d, nil
 	}
-	return nil, errors.New("Directory not found" + dir_id.String())
+
+    // Sketchy DB fallback
+    c_db := models.Container{}
+    err := models.DB.Find(&c_db, dir_id)
+    if err == nil {
+        return &c_db, nil
+    }
+	return nil, err
 }
 
 // If a preview is found, return the path to that file otherwise use the actual file
@@ -227,25 +261,6 @@ func ViewHandler(c buffalo.Context) error {
 		return nil
 	}
 	log.Printf("Failed to find the file reference  %s", err)
-	return c.Error(404, err)
-}
-
-// Provides a download handler by directory id and file id
-func DownloadHandler(c buffalo.Context) error {
-	dir_id := c.Param("dir_id") // This can be the current directory or directory name
-	file_id := c.Param("file_id")
-
-	fname, err := getFullFilePath(dir_id, file_id)
-	if err == nil {
-		file_ref, f_err := getFileInfo(dir_id, file_id)
-		if f_err == nil {
-			log.Printf("Providing a download to this filename  %s", fname)
-			file_contents := utils.GetFileContentsByFqName(fname)
-			return c.Render(200, r.Download(c, file_ref.Name(), file_contents))
-		}
-		log.Printf("Failed to find the file reference for dir_id(%s) and file_id(%s) err %s", dir_id, file_id, f_err)
-		return c.Error(404, f_err)
-	}
 	return c.Error(404, err)
 }
 

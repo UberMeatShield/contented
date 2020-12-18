@@ -49,7 +49,6 @@ func (as *ActionSuite) Test_ContentList() {
 func (as *ActionSuite) Test_ContentDirLoad() {
 	cfg := init_fake_app()
 	lookup := utils.GetDirectoriesLookup(cfg.Dir)
-
 	as.Equal(len(lookup), 4, "There should be 4 test directories")
 
 	for id, f := range lookup {
@@ -83,26 +82,16 @@ func (as *ActionSuite) Test_ViewRef() {
 // Oof, that is rough... need a better way to select the file not by index but ID
 func (as *ActionSuite) Test_ContentDirDownload() {
 	cfg := init_fake_app()
-	lookup := utils.GetDirectoriesLookup(cfg.Dir)
 
-	valid := map[string]bool{"image/png": true, "image/jpeg": true}
+    valid := map[string]bool{"image/png": true, "image/jpeg": true, "application/octet-stream": true}
 
-	for id, f := range lookup {
-		res := as.HTML("/download/" + id + "/0").Get()
+    // Hate
+	for mc_id, _ := range cfg.ValidFiles {
+		res := as.HTML("/download/" + mc_id.String()).Get()
 		as.Equal(http.StatusOK, res.Code)
-		if f.Name() == "dir3" {
-			header := res.Header()
-			as.Contains(valid, header.Get("Content-Type"))
-		}
-	}
-
-	// Make it so we know that there is only png in one dir, but iterate over all content
-
-	dir_id_url := "/download/9d553cdef482947b97b5beda2dc594c7c818a69a49e04f044f4505bc223a3535/1"
-	res1 := as.HTML(dir_id_url).Get()
-	as.Equal(http.StatusOK, res1.Code)
-	header1 := res1.Header()
-	as.Equal("image/png", header1.Get("Content-Type"))
+		header := res.Header()
+		as.Contains(valid, header.Get("Content-Type"))
+    }
 }
 
 func (as *ActionSuite) Test_FindAndCache() {

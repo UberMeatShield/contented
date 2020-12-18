@@ -56,7 +56,7 @@ var _ = grift.Namespace("db", func() {
               mc := &models.MediaContainer{
                   Src: fi.Src,
                   Type: fi.Type,
-                  Preview: "TBD",
+                  Preview: "",  // Need to run the create preview process
                   ContainerID: nulls.NewUUID(dirObj.ID),
               }
               models.DB.Create(mc)
