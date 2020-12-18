@@ -63,18 +63,12 @@ func App() *buffalo.App {
 		// Not exactly crud (since the DB API did not exist)
 		app.GET("/content/", ListDefaultHandler)
 		app.GET("/content/{dir_id}", ListSpecificHandler)
-
-		// TODO: Just make the full path show the file directly?
 		app.GET("/view/{dir_id}/{file_id}", ViewHandler)
 
 		// Run grift?  Do dev from an actual DB instance?
 		app.GET("/preview/{file_id}", PreviewHandler)
 		app.GET("/full/{file_id}", FullHandler)
 		app.GET("/download/{file_id}", DownloadHandler)
-
-		// Convert to this in view and download
-		// app.GET("/view/{file_id}", PreviewHandler)
-		// app.GET("/download/{file_id}", PreviewHandler)
 
 		// Host the index.html, also assume that all angular UI routes are going to be under contented
 		app.GET("/", AngularIndex)
@@ -85,10 +79,9 @@ func App() *buffalo.App {
 		app.ServeFiles("/public/build", http.Dir("public/build"))
 		app.ServeFiles("/public/css", http.Dir("public/css"))
 
+		// The DIR env environment is then served under /static (see actions.SetupContented)
 		app.Resource("/containers", ContainersResource{})
 		app.Resource("/media", MediaContainersResource{})
-		// The DIR env environment is then served under /static (see actions.SetupContented)
-		// app.ServeFiles("/static", http.Dir("X"))
 	}
 
 	return app
