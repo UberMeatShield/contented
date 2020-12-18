@@ -19,6 +19,7 @@ import (
 // application is being run. Default is "development".
 var ENV = envy.Get("GO_ENV", "development")
 var app *buffalo.App
+
 // var T *i18n.Translator  // TODO: Add in internationalization
 
 // App is where all routes and middleware for buffalo
@@ -59,13 +60,15 @@ func App() *buffalo.App {
 		// Remove to disable this.
 		app.Use(popmw.Transaction(models.DB))
 
-        // Not exactly crud (since the DB API did not exist)
+		// Not exactly crud (since the DB API did not exist)
 		app.GET("/content/", ListDefaultHandler)
 		app.GET("/content/{dir_id}", ListSpecificHandler)
-
-		// TODO: Just make the full path show the file directly?
 		app.GET("/view/{dir_id}/{file_id}", ViewHandler)
-		app.GET("/download/{dir_id}/{file_id}", DownloadHandler)
+
+		// Run grift?  Do dev from an actual DB instance?
+		app.GET("/preview/{file_id}", PreviewHandler)
+		app.GET("/full/{file_id}", FullHandler)
+		app.GET("/download/{file_id}", DownloadHandler)
 
 		// Host the index.html, also assume that all angular UI routes are going to be under contented
 		app.GET("/", AngularIndex)
@@ -76,10 +79,9 @@ func App() *buffalo.App {
 		app.ServeFiles("/public/build", http.Dir("public/build"))
 		app.ServeFiles("/public/css", http.Dir("public/css"))
 
-        app.Resource("/containers", ContainersResource{})
-        app.Resource("/media", MediaContainersResource{})
 		// The DIR env environment is then served under /static (see actions.SetupContented)
-		// app.ServeFiles("/static", http.Dir("X"))
+		app.Resource("/containers", ContainersResource{})
+		app.Resource("/media", MediaContainersResource{})
 	}
 
 	return app
