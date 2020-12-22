@@ -1,10 +1,12 @@
 package actions
 
 import (
+    "log"
 	"contented/models"
 	"fmt"
 	"net/http"
 
+    "github.com/gofrs/uuid"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gobuffalo/x/responder"
@@ -42,10 +44,23 @@ func (v MediaContainersResource) List(c buffalo.Context) error {
 	// Default values are "page=1" and "per_page=20".
 	q := tx.PaginateFromParams(c.Params())
 
-	// Retrieve all MediaContainers from the DB
-	if err := q.All(mediaContainers); err != nil {
-		return err
-	}
+    c_id := c.Param("container_id")
+    if c_id != "" {
+        log.Printf("Attempting to get media using %s", c_id, per_page)
+        container_id, err := uuid.FromString(c_id)
+        if err != nil {
+            return err
+        }
+        q_conn := q.Where("container_id = ?", container_id)
+        if q_err := q_conn.All(mediaContainers); q_err != nil {
+            return q_err
+        }
+    } else {
+        // Retrieve all MediaContainers from the DB
+        if err := q.All(mediaContainers); err != nil {
+            return err
+        }
+    }
 
 	return responder.Wants("html", func(c buffalo.Context) error {
 		// Add the paginator to the context so it can be used in the template.

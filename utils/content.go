@@ -45,6 +45,7 @@ type DirConfigEntry struct {
 	ValidDirs       map[string]os.FileInfo // List of directories under the main element
 	ValidFiles      models.MediaMap        // TODO: Eventually remove this in favor of a startup + sqllite load
 	ValidContainers models.ContainerMap
+    UseDatabase     bool
 }
 
 /*
@@ -63,7 +64,7 @@ func InitConfig(dir_root string, cfg *DirConfigEntry) *DirConfigEntry {
 	cfg.ValidContainers = containers
 	cfg.ValidFiles = files
 	cfg.Initialized = true
-	// log.Printf("Initialized with %d containers and %d files", len(containers), len(files))
+    cfg.UseDatabase = true  // TODO: Make it so we can read all the data from memory
 	return cfg
 }
 

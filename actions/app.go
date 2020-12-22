@@ -80,7 +80,8 @@ func App() *buffalo.App {
 		app.ServeFiles("/public/css", http.Dir("public/css"))
 
 		// The DIR env environment is then served under /static (see actions.SetupContented)
-		app.Resource("/containers", ContainersResource{})
+        cr := app.Resource("/containers", ContainersResource{})
+        cr.Resource("/media", MediaContainersResource{})
 		app.Resource("/media", MediaContainersResource{})
 	}
 

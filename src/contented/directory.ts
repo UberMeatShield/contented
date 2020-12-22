@@ -12,19 +12,18 @@ function trail(path: string, whatWith: string) {
 export class ImgContainer {
     public id: number;
     public src: string;
-    public fullPath: string;
+    public type_: string;
+    public container_id: string;
 
-    constructor(id: number, src: string, path: string = null) {
+    public previewUrl: string;
+    public fullUrl: string;
+
+    constructor(id: number, src: string) {
         this.id = id;
         this.src = src;
 
-        if (path) {
-            this.setPath(path);
-        }
-    }
-
-    public setPath(path: string) {
-        this.fullPath = `${ApiDef.base}${trail(path, '/')}${this.id}`;
+        this.previewUrl = `${ApiDef.contented.preview}${this.id}`;
+        this.fullUrl = `${ApiDef.contented.full}${this.id}`;
     }
 }
 
@@ -42,10 +41,8 @@ export class Directory {
 
     constructor(dir: any) {
         this.total = _.get(dir, 'total') || 0;
-        this.path = _.get(dir, 'path') || '';
         this.id = _.get(dir, 'id') || '';
         this.name = _.get(dir, 'name') || '';
-
         this.setContents(this.buildImgs(_.get(dir, 'contents') || []));
     }
 
@@ -85,7 +82,7 @@ export class Directory {
 
     public buildImgs(imgData: Array<any>) {
         return _.map(imgData, data => {
-            return new ImgContainer(data.id, data.src, this.path);
+            return new ImgContainer(data.id, data.src);
         });
     }
 
