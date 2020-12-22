@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func CreateResource(src string, container_id nulls.NewUUID, as *ActionSuite) models.MediaContainer {
+func CreateResource(src string, container_id nulls.UUID, as *ActionSuite) models.MediaContainer {
 	mc := &models.MediaContainer{
 		Src:     src,
 		Type:    "test",
@@ -35,8 +35,8 @@ func (as *ActionSuite) Test_MediaSubQuery() {
          Path:  "container/2/media",
          Name:  "Trash2",
     }
-    as.DB.Create(&c1)
-    as.DB.Create(&c2)
+    as.DB.Create(c1)
+    as.DB.Create(c2)
     as.NotZero(c1.ID)
     as.NotZero(c2.ID)
     // Add resources to both
@@ -50,7 +50,7 @@ func (as *ActionSuite) Test_MediaContainersResource_List() {
 
 func (as *ActionSuite) Test_MediaContainersResource_Show() {
 	src := "test_query"
-	mc := CreateResource(src, nil, as)
+	mc := CreateResource(src, nulls.UUID{}, as)
 	check := as.JSON("/media/" + mc.ID.String()).Get()
 	as.Equal(http.StatusOK, check.Code)
 
@@ -60,19 +60,19 @@ func (as *ActionSuite) Test_MediaContainersResource_Show() {
 }
 
 func (as *ActionSuite) Test_MediaContainersResource_Create() {
-	mc := CreateResource("test_create", nil, as)
+	mc := CreateResource("test_create", nulls.UUID{}, as)
 	as.NotZero(mc.ID)
 }
 
 func (as *ActionSuite) Test_MediaContainersResource_Update() {
-	mc := CreateResource("test_update", nil, as)
+	mc := CreateResource("test_update", nulls.UUID{}, as)
 	mc.Type = "Update Test"
 	up_res := as.JSON("/media/" + mc.ID.String()).Put(mc)
 	as.Equal(http.StatusOK, up_res.Code)
 }
 
 func (as *ActionSuite) Test_MediaContainersResource_Destroy() {
-	mc := CreateResource("Nuke Test", nil, as)
+	mc := CreateResource("Nuke Test", nulls.UUID{}, as)
 	del_res := as.JSON("/media/" + mc.ID.String()).Delete()
 	as.Equal(http.StatusOK, del_res.Code)
 }

@@ -46,7 +46,7 @@ func (v MediaContainersResource) List(c buffalo.Context) error {
 
     c_id := c.Param("container_id")
     if c_id != "" {
-        log.Printf("Attempting to get media using %s", c_id, per_page)
+        log.Printf("Attempting to get media using %s", c_id)
         container_id, err := uuid.FromString(c_id)
         if err != nil {
             return err
