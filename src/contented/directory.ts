@@ -23,7 +23,7 @@ export class ImgContainer {
         this.src = src;
 
         this.previewUrl = `${ApiDef.contented.preview}${this.id}`;
-        this.fullUrl = `${ApiDef.contented.full}${this.id}`;
+        this.fullUrl = `${ApiDef.contented.view}${this.id}`;
     }
 }
 

@@ -26,28 +26,6 @@ type HttpError struct {
 	Debug string `json:"debug"`
 }
 
-// HomeHandler is a default handler to serve up
-var DefaultLimit int = 10000 // The max limit set by environment variable
-var DefaultPreviewCount int = 8
-
-// TODO: Create a new entry where it creates a new cfg (clean it)
-
-// TODO: Singletons are nice.. but not as clean in testing?
-// https://medium.com/@TobiasSchmidt89/the-singleton-object-oriented-design-pattern-in-golang-9f6ce75c21f7
-var appCfg utils.DirConfigEntry = utils.DirConfigEntry{
-	Initialized:  false,
-	Dir:          "",
-	PreviewCount: DefaultPreviewCount,
-	Limit:        DefaultLimit,
-}
-
-func GetCfg() *utils.DirConfigEntry {
-	return &appCfg
-}
-func SetCfg(c utils.DirConfigEntry) {
-	appCfg = c
-}
-
 // Builds out information given the application and the content directory
 func SetupContented(app *buffalo.App, contentDir string, numToPreview int, limit int) {
 	if !strings.HasSuffix(contentDir, "/") {
@@ -165,67 +143,6 @@ func DownloadHandler(c buffalo.Context) error {
     finfo, _ := os.Stat(fq_path)
     file_contents := utils.GetFileContentsByFqName(fq_path)
     return c.Render(200, r.Download(c, finfo.Name(), file_contents))
-}
-
-// How do I do this shit (lookup the dir?)
-// Store a list of the various file references
-func FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error) {
-	// TODO: Get a FileInfo reference (get parent dir too)
-	if mc, ok := appCfg.ValidFiles[file_id]; ok {
-		return &mc, nil
-	}
-    
-    // Fallback to the DB
-    mc_db := models.MediaContainer{}
-    err := models.DB.Find(&mc_db, file_id)
-    if err == nil {
-        return &mc_db, nil
-    } 
-	return nil, err
-}
-
-func FindDirRef(dir_id uuid.UUID) (*models.Container, error) {
-	if d, ok := appCfg.ValidContainers[dir_id]; ok {
-		return &d, nil
-	}
-
-    // Sketchy DB fallback
-    c_db := models.Container{}
-    err := models.DB.Find(&c_db, dir_id)
-    if err == nil {
-        return &c_db, nil
-    }
-	return nil, err
-}
-
-// If a preview is found, return the path to that file otherwise use the actual file
-func GetPreviewForMC(mc *models.MediaContainer) (string, error) {
-	src := mc.Src
-	if mc.Preview != "" {
-		src = mc.Preview
-	}
-	log.Printf("It should have a preview %s\n", mc.Preview)
-	return GetFilePathInContainer(mc.ContainerID.UUID, src)
-}
-
-// Get the on disk location for the media container.
-func FindActualFile(mc *models.MediaContainer) (string, error) {
-	return GetFilePathInContainer(mc.ContainerID.UUID, mc.Src)
-}
-
-// Given a container ID and the src of a file in there, get a path and check if it exists
-func GetFilePathInContainer(cont_id uuid.UUID, src string) (string, error) {
-	dir, err := FindDirRef(cont_id)
-	if err != nil {
-		return "No Parent Found", err
-	}
-	path := filepath.Join(appCfg.Dir, dir.Name)
-	fq_path := filepath.Join(path, src)
-
-	if _, os_err := os.Stat(fq_path); os_err != nil {
-		return fq_path, os_err
-	}
-	return fq_path, nil
 }
 
 // Just a temp (nuke asap)

@@ -46,20 +46,22 @@ func (as *ActionSuite) Test_ContentList() {
 	}
 }
 
+// HATE
 func (as *ActionSuite) Test_ContentDirLoad() {
 	cfg := init_fake_app()
-	lookup := utils.GetDirectoriesLookup(cfg.Dir)
-	as.Equal(len(lookup), 4, "There should be 4 test directories")
+	as.Equal(len(cfg.ValidContainers), 4, "There should be 4 test directories")
 
-	for id, f := range lookup {
-		res := as.JSON("/content/" + id).Get()
+	for id, c := range cfg.ValidContainers {
+		res := as.JSON("/containers/" + id.String() + "/media").Get()
 		as.Equal(http.StatusOK, res.Code)
 
-		resObj := utils.DirContents{}
+		resObj := []models.Containers{}
 		json.NewDecoder(res.Body).Decode(&resObj)
 
-		if f.Name() == "dir1" {
-			as.Equal(resObj.Total, 12, "It should have a known number of images")
+		fmt.Printf("What was the result %s\n", resObj)
+
+		if c.Name == "dir1" {
+			as.Equal(len(resObj), 12, "It should have a known number of images")
 		}
 	}
 }

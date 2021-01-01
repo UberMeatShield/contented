@@ -39,6 +39,7 @@ func (as *ActionSuite) Test_MediaSubQuery() {
     as.DB.Create(c2)
     as.NotZero(c1.ID)
     as.NotZero(c2.ID)
+    as.Equal(c1.ID, "FINISH THIS TEST")
     // Add resources to both
     // Filter based on container
 }
