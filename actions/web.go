@@ -34,12 +34,29 @@ func SetupContented(app *buffalo.App, contentDir string, numToPreview int, limit
 	log.Printf("Setting up the content directory with %s", contentDir)
 
 	utils.InitConfig(contentDir, &appCfg)
+
+    SetupManager(&appCfg)
+    
 	appCfg.PreviewCount = numToPreview
 	appCfg.Limit = limit
 
 	// TODO: Somehow need to move the dir into App, but first we want to validate the dir...
 	app.ServeFiles("/static", http.Dir(appCfg.Dir))
 }
+
+
+func SetupManager(cfg *utils.DirConfigEntry) ContentManager {
+    if cfg.UseDatabase {
+        db_man := ContentManagerDB{cfg: cfg}
+        SetManager(db_man)
+    } else {
+        mem_man := ContentManagerMemory{cfg: cfg}
+        mem_man.Initialize()
+        SetManager(mem_man)
+    }
+    return GetManager()
+}
+
 
 func ListDefaultHandler(c buffalo.Context) error {
 	path, _ := os.Executable()

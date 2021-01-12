@@ -8,6 +8,7 @@ import (
     "contented/models"
     "contented/utils"
     "github.com/gofrs/uuid"
+//    "github.com/gobuffalo/buffalo"
 )
 
 // HomeHandler is a default handler to serve up
@@ -50,10 +51,11 @@ type ContentManager interface {
     FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error)
     FindDirRef(dir_id uuid.UUID) (*models.Container, error)
 
-    // GetOneContainer
-    // GetOneMediaContainer
-    // ListContainers
-    // ListMedia
+    GetContainer(c_id uuid.UUID) *models.Container
+    ListContainers() *models.Containers
+
+    GetMedia(media_id uuid.UUID) *models.MediaContainer
+    ListMedia(container_id uuid.UUID) *models.MediaContainers
 }
 
 
@@ -63,8 +65,12 @@ type ContentManagerDB struct {
 
 type ContentManagerMemory struct {
     cfg *utils.DirConfigEntry
+    ValidDirs       map[string]os.FileInfo
+    ValidMedia      models.MediaMap
+    ValidContainers models.ContainerMap
     validate string 
 }
+
 
 func (cm *ContentManagerDB) SetCfg(cfg *utils.DirConfigEntry) {
     cm.cfg = cfg
@@ -73,15 +79,98 @@ func (cm ContentManagerDB) GetCfg() *utils.DirConfigEntry {
     return cm.cfg
 }
 
+// Awkard GoLang interface support is awkward
+func (cm ContentManagerMemory) ListMedia(container_id uuid.UUID) *models.MediaContainers{
+    log.Printf("Get a list of media, we should have some %d", len(cm.ValidMedia))
+
+    m_arr := models.MediaContainers{}
+    for _, m := range cm.ValidMedia {
+        m_arr = append(m_arr, m)
+    }
+    return &m_arr
+}
+
+func (cm ContentManagerMemory) GetMedia(mc_id uuid.UUID) *models.MediaContainer {
+    log.Printf("Get a single media %s", mc_id)
+    if mc, ok := cm.ValidMedia[mc_id]; ok {
+        return &mc
+    }
+    return nil
+}
+
+func (cm ContentManagerMemory) ListContainers() *models.Containers {
+    log.Printf("List Containers")
+    c_arr := models.Containers{}
+    for _, c := range cm.ValidContainers {
+        c_arr = append(c_arr, c)
+    }
+    return &c_arr
+}
+
+func (cm ContentManagerMemory) GetContainer(c_id uuid.UUID) *models.Container {
+    log.Printf("Get a single contaienr %s", c_id)
+    if c, ok := cm.ValidContainers[c_id]; ok {
+        return &c
+    }
+    return nil
+}
+
+
+// Awkard GoLang interface support is awkward
+func (cm ContentManagerDB) ListMedia(c_id uuid.UUID) *models.MediaContainers {
+    log.Printf("Get a list of media from DB, we should have some %s", c_id.String())
+    mediaContainers := &models.MediaContainers{}
+    return mediaContainers
+}
+
+func (cm ContentManagerDB) GetMedia(mc_id uuid.UUID) *models.MediaContainer {
+    log.Printf("Get a single media %s", mc_id)
+    mediaContainer := &models.MediaContainer{}
+    return mediaContainer
+}
+
+func (cm ContentManagerDB) ListContainers() *models.Containers {
+    log.Printf("List Containers")
+    container := &models.Containers{}
+    return container
+}
+
+func (cm ContentManagerDB) GetContainer(mc_id uuid.UUID) *models.Container {
+    log.Printf("Get a single contaienr %s", mc_id)
+    container := &models.Container{}
+    return container
+}
+
+
 func (cm *ContentManagerMemory) SetCfg(cfg *utils.DirConfigEntry) {
     cm.cfg = cfg
     log.Printf("It should have a preview %s\n", cm.cfg.Dir)
     log.Printf("Using memory manager %s\n", cm.validate)
 }
+
 func (cm ContentManagerMemory) GetCfg() *utils.DirConfigEntry {
     log.Printf("Get the Config %s\n", cm.validate)
     log.Printf("Config is what %s", cm.cfg.Dir)
     return cm.cfg
+}
+
+func (cm *ContentManagerMemory) Initialize() {
+    dir_root := cm.cfg.Dir
+    log.Printf("Initializing Memory manager %s\n", dir_root)
+
+    dir_lookup := utils.GetDirectoriesLookup(dir_root)
+
+    // Move some of these
+    containers, files := utils.PopulatePreviews(dir_root, dir_lookup)
+    cm.ValidDirs = dir_lookup
+    cm.ValidContainers = containers
+    cm.ValidMedia = files
+    log.Printf("Found %d directories\n", len(cm.ValidDirs))
+}
+
+func (cm *ContentManagerDB) Initialize() {
+    // Connect to the DB
+    log.Printf("Make a DB connection here")
 }
 
 // Have this used by the resources?

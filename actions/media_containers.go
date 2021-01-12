@@ -62,6 +62,7 @@ func (v MediaContainersResource) List(c buffalo.Context) error {
         }
     }
 
+    // AKA nope on html
 	return responder.Wants("html", func(c buffalo.Context) error {
 		// Add the paginator to the context so it can be used in the template.
 		/*
@@ -80,16 +81,16 @@ func (v MediaContainersResource) List(c buffalo.Context) error {
 // Show gets the data for one MediaContainer. This function is mapped to
 // the path GET /media_containers/{media_container_id}
 func (v MediaContainersResource) Show(c buffalo.Context) error {
-	// Get the DB connection from the context
-	tx, ok := c.Value("tx").(*pop.Connection)
-	if !ok {
-		return fmt.Errorf("no transaction found")
-	}
 
 	// Allocate an empty MediaContainer
 	mediaContainer := &models.MediaContainer{}
 
 	// To find the MediaContainer the parameter media_container_id is used.
+	// Get the DB connection from the context
+	tx, ok := c.Value("tx").(*pop.Connection)
+	if !ok {
+		return fmt.Errorf("no transaction found")
+	}
 	if err := tx.Find(mediaContainer, c.Param("media_container_id")); err != nil {
 		return c.Error(http.StatusNotFound, err)
 	}
@@ -110,6 +111,9 @@ func (v MediaContainersResource) Show(c buffalo.Context) error {
 // Create adds a MediaContainer to the DB. This function is mapped to the
 // path POST /media_containers
 func (v MediaContainersResource) Create(c buffalo.Context) error {
+
+    // TODO: Check if we actually allow for this
+
 	// Allocate an empty MediaContainer
 	mediaContainer := &models.MediaContainer{}
 

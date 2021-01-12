@@ -62,3 +62,26 @@ func (as *ActionSuite) Test_AssignManager() {
     //as.Greater(len(memCfg.ValidFiles), 0, "There should be a config entry")
     //as.Equal(len(memCfg.ValidFiles), len(cfg.ValidFiles))
 }
+
+
+func (as *ActionSuite) Test_ManagerInitialize() {
+    cfg := init_fake_app()
+    cfg.UseDatabase = false
+    SetupManager(cfg)
+
+    man := GetManager()
+    as.NotNil(man, "It should have a manager defined after init")
+
+    containers := man.ListContainers()
+    as.NotNil(containers, "It should have containers")
+    as.Greater(len(*containers), 0, "It should have")
+
+    /*
+    for idx, c := range containers {
+        as.NotNil(man.ListMedia(c.ID))
+    }
+    */
+    // as.Greater(len(containers), 0, "There should be valid containers")
+    // as.Greater(len(man.ListMedia()), 0, "There should be valid files")
+
+}

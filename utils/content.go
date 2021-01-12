@@ -57,19 +57,21 @@ type DirConfigEntry struct {
 func InitConfig(dir_root string, cfg *DirConfigEntry) *DirConfigEntry {
 	dir_lookup := GetDirectoriesLookup(dir_root)
 	containers, files := PopulatePreviews(dir_root, dir_lookup)
-	cfg.Dir = dir_root
-	cfg.PreviewCount = 8
-	cfg.Limit = 16
 	cfg.ValidDirs = dir_lookup
 	cfg.ValidContainers = containers
 	cfg.ValidFiles = files
+
+	cfg.Dir = dir_root  // Always Common
+	cfg.PreviewCount = 8
+	cfg.Limit = 16
 	cfg.Initialized = true
     cfg.UseDatabase = true  // TODO: Make it so we can read all the data from memory
+
 	return cfg
 }
 
 /**
- *
+ *  TODO:  Require the number to preview and will be Memroy only
  */
 func PopulatePreviews(dir_root string, valid_dirs map[string]os.FileInfo) (models.ContainerMap, models.MediaMap) {
 	containers := models.ContainerMap{}
@@ -89,7 +91,6 @@ func PopulatePreviews(dir_root string, valid_dirs map[string]os.FileInfo) (model
 			Path: dc.Path,
 		}
 		containers[c.ID] = c
-
 		for _, todo_mc := range dc.Contents {
 			mc_id, _ := uuid.NewV4()
 			mc := models.MediaContainer{
