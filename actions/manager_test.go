@@ -14,9 +14,22 @@ import (
 	"github.com/gobuffalo/suite"
 	"github.com/gofrs/uuid"
 	"github.com/gobuffalo/envy"
+    "github.com/gobuffalo/buffalo"
     */
+    "context"
+    //"sync"
+    //"github.com/gobuffalo/logger"
+    "github.com/gobuffalo/buffalo"
 )
 
+func basicContext() buffalo.DefaultContext {
+	return buffalo.DefaultContext{
+		Context: context.Background(),
+		//logger:  buffalo.logger.New(logger.DebugLevel),
+		//data:    &sync.Map{},
+		//flash:   &Flash{data: make(map[string][]string)},
+	}
+}
 
 func (as *ActionSuite) Test_ManagerContainers() {
     cfg := init_fake_app()
@@ -64,6 +77,7 @@ func (as *ActionSuite) Test_AssignManager() {
 }
 
 
+
 func (as *ActionSuite) Test_ManagerInitialize() {
     cfg := init_fake_app()
     cfg.UseDatabase = false
@@ -72,9 +86,9 @@ func (as *ActionSuite) Test_ManagerInitialize() {
     man := GetManager()
     as.NotNil(man, "It should have a manager defined after init")
 
-    containers := man.ListContainers()
+    containers := man.ListContainersContext()
     as.NotNil(containers, "It should have containers")
-    as.Greater(len(*containers), 0, "It should have")
+    as.Equal(len(*containers), 4, "It should have 4 of them")
 
     /*
     for idx, c := range containers {

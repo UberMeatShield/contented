@@ -8,7 +8,7 @@ import (
     "contented/models"
     "contented/utils"
     "github.com/gofrs/uuid"
-//    "github.com/gobuffalo/buffalo"
+    "github.com/gobuffalo/buffalo"
 )
 
 // HomeHandler is a default handler to serve up
@@ -52,19 +52,24 @@ type ContentManager interface {
     FindDirRef(dir_id uuid.UUID) (*models.Container, error)
 
     GetContainer(c_id uuid.UUID) *models.Container
-    ListContainers() *models.Containers
+    ListContainers(page int, per_page int) *models.Containers
+    ListContainersContext() *models.Containers
 
     GetMedia(media_id uuid.UUID) *models.MediaContainer
-    ListMedia(container_id uuid.UUID) *models.MediaContainers
+    ListMedia(container_id uuid.UUID, page int, per_page int) *models.MediaContainers
+    ListMediaContext(container_id uuid.UUID) *models.MediaContainers
 }
 
 
 type ContentManagerDB struct {
     cfg *utils.DirConfigEntry
+    c buffalo.Context
 }
 
 type ContentManagerMemory struct {
     cfg *utils.DirConfigEntry
+    c buffalo.Context
+
     ValidDirs       map[string]os.FileInfo
     ValidMedia      models.MediaMap
     ValidContainers models.ContainerMap
@@ -79,8 +84,11 @@ func (cm ContentManagerDB) GetCfg() *utils.DirConfigEntry {
     return cm.cfg
 }
 
+func (cm ContentManagerMemory) ListMediaContext(c_id uuid.UUID) *models.MediaContainers{
+    return cm.ListMedia(c_id, int(1), cm.cfg.Limit)
+}
 // Awkard GoLang interface support is awkward
-func (cm ContentManagerMemory) ListMedia(container_id uuid.UUID) *models.MediaContainers{
+func (cm ContentManagerMemory) ListMedia(container_id uuid.UUID, page int, per_page int) *models.MediaContainers{
     log.Printf("Get a list of media, we should have some %d", len(cm.ValidMedia))
 
     m_arr := models.MediaContainers{}
@@ -98,7 +106,11 @@ func (cm ContentManagerMemory) GetMedia(mc_id uuid.UUID) *models.MediaContainer 
     return nil
 }
 
-func (cm ContentManagerMemory) ListContainers() *models.Containers {
+func (cm ContentManagerMemory) ListContainersContext() *models.Containers {
+    return cm.ListContainers(int(1), cm.cfg.Limit)
+}
+
+func (cm ContentManagerMemory) ListContainers(page int, per_page int) *models.Containers {
     log.Printf("List Containers")
     c_arr := models.Containers{}
     for _, c := range cm.ValidContainers {
@@ -116,8 +128,13 @@ func (cm ContentManagerMemory) GetContainer(c_id uuid.UUID) *models.Container {
 }
 
 
+
+func (cm ContentManagerDB) ListMediaContext(c_id uuid.UUID) *models.MediaContainers {
+    return cm.ListMedia(c_id, 1, cm.cfg.Limit)
+}
+
 // Awkard GoLang interface support is awkward
-func (cm ContentManagerDB) ListMedia(c_id uuid.UUID) *models.MediaContainers {
+func (cm ContentManagerDB) ListMedia(c_id uuid.UUID, page int, per_page int) *models.MediaContainers {
     log.Printf("Get a list of media from DB, we should have some %s", c_id.String())
     mediaContainers := &models.MediaContainers{}
     return mediaContainers
@@ -129,7 +146,11 @@ func (cm ContentManagerDB) GetMedia(mc_id uuid.UUID) *models.MediaContainer {
     return mediaContainer
 }
 
-func (cm ContentManagerDB) ListContainers() *models.Containers {
+func (cm ContentManagerDB) ListContainersContext() *models.Containers {
+    return cm.ListContainers(1, cm.cfg.Limit)
+}
+
+func (cm ContentManagerDB) ListContainers(page int, per_page int) *models.Containers {
     log.Printf("List Containers")
     container := &models.Containers{}
     return container
@@ -149,7 +170,7 @@ func (cm *ContentManagerMemory) SetCfg(cfg *utils.DirConfigEntry) {
 }
 
 func (cm ContentManagerMemory) GetCfg() *utils.DirConfigEntry {
-    log.Printf("Get the Config %s\n", cm.validate)
+    log.Printf("Get the Config Validate val %s\n", cm.validate)
     log.Printf("Config is what %s", cm.cfg.Dir)
     return cm.cfg
 }
