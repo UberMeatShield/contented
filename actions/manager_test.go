@@ -1,11 +1,11 @@
 package actions
 
 import (
+	"fmt"
 	//"contented/models"
 	//"contented/utils"
     /*
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"testing"
@@ -21,6 +21,13 @@ import (
     //"github.com/gobuffalo/logger"
     "github.com/gobuffalo/buffalo"
 )
+
+var expect_len = map[string]int{
+    "dir1": 12,
+    "dir2": 2,
+    "dir3": 6,
+    "screens": 3,
+}
 
 func basicContext() buffalo.DefaultContext {
 	return buffalo.DefaultContext{
@@ -90,11 +97,16 @@ func (as *ActionSuite) Test_ManagerInitialize() {
     as.NotNil(containers, "It should have containers")
     as.Equal(len(*containers), 4, "It should have 4 of them")
 
-    /*
-    for idx, c := range containers {
-        as.NotNil(man.ListMedia(c.ID))
+    for _, c := range *containers {
+        // fmt.Printf("Searching for this container %s with name %s\n", c.ID, c.Name)
+        media := man.ListMediaContext(c.ID)
+        as.NotNil(media)
+
+        media_len := len(*media)
+        // fmt.Printf("Media length was %d\n", media_len)
+        as.Greater(media_len, 0, "There should be a number of media")
+        as.Equal(expect_len[c.Name], media_len, "It should have this many instances: " + c.Name )
     }
-    */
     // as.Greater(len(containers), 0, "There should be valid containers")
     // as.Greater(len(man.ListMedia()), 0, "There should be valid files")
 

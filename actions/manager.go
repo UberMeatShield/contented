@@ -7,6 +7,7 @@ import (
     "path/filepath"
     "contented/models"
     "contented/utils"
+    // "github.com/gobuffalo/nulls"
     "github.com/gofrs/uuid"
     "github.com/gobuffalo/buffalo"
 )
@@ -61,11 +62,6 @@ type ContentManager interface {
 }
 
 
-type ContentManagerDB struct {
-    cfg *utils.DirConfigEntry
-    c buffalo.Context
-}
-
 type ContentManagerMemory struct {
     cfg *utils.DirConfigEntry
     c buffalo.Context
@@ -76,12 +72,30 @@ type ContentManagerMemory struct {
     validate string 
 }
 
-
-func (cm *ContentManagerDB) SetCfg(cfg *utils.DirConfigEntry) {
+func (cm *ContentManagerMemory) SetCfg(cfg *utils.DirConfigEntry) {
     cm.cfg = cfg
+    log.Printf("It should have a preview %s\n", cm.cfg.Dir)
+    log.Printf("Using memory manager %s\n", cm.validate)
 }
-func (cm ContentManagerDB) GetCfg() *utils.DirConfigEntry {
+
+func (cm ContentManagerMemory) GetCfg() *utils.DirConfigEntry {
+    log.Printf("Get the Config Validate val %s\n", cm.validate)
+    log.Printf("Config is what %s", cm.cfg.Dir)
     return cm.cfg
+}
+
+func (cm *ContentManagerMemory) Initialize() {
+    dir_root := cm.cfg.Dir
+    log.Printf("Initializing Memory manager %s\n", dir_root)
+
+    dir_lookup := utils.GetDirectoriesLookup(dir_root)
+
+    // Move some of these
+    containers, files := utils.PopulatePreviews(dir_root, dir_lookup)
+    cm.ValidDirs = dir_lookup
+    cm.ValidContainers = containers
+    cm.ValidMedia = files
+    log.Printf("Found %d directories\n", len(cm.ValidDirs))
 }
 
 func (cm ContentManagerMemory) ListMediaContext(c_id uuid.UUID) *models.MediaContainers{
@@ -89,12 +103,18 @@ func (cm ContentManagerMemory) ListMediaContext(c_id uuid.UUID) *models.MediaCon
 }
 // Awkard GoLang interface support is awkward
 func (cm ContentManagerMemory) ListMedia(container_id uuid.UUID, page int, per_page int) *models.MediaContainers{
-    log.Printf("Get a list of media, we should have some %d", len(cm.ValidMedia))
 
     m_arr := models.MediaContainers{}
     for _, m := range cm.ValidMedia {
-        m_arr = append(m_arr, m)
+        if m.ContainerID.Valid {
+            if m.ContainerID.UUID == container_id && len(m_arr) < (per_page + 1) {
+                m_arr = append(m_arr, m)
+            }
+        } else if len(m_arr) < (per_page + 1) {
+            m_arr = append(m_arr, m)
+        }
     }
+    log.Printf("Get a list of media, we should have some %d", len(m_arr))
     return &m_arr
 }
 
@@ -127,7 +147,34 @@ func (cm ContentManagerMemory) GetContainer(c_id uuid.UUID) *models.Container {
     return nil
 }
 
+func (cm ContentManagerMemory) FindDirRef(dir_id uuid.UUID) (*models.Container, error) {
+    // TODO: Get a FileInfo reference (get parent dir too)
+    if d, ok := appCfg.ValidContainers[dir_id]; ok {
+        return &d, nil
+    }
+    return nil, errors.New("Directory was not found in the current app")
+}
 
+func (cm ContentManagerMemory) FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error) {
+    if mc, ok := appCfg.ValidFiles[file_id]; ok {
+        return &mc, nil
+    }
+    return nil, errors.New("File was not found in the current list of files")
+}
+
+
+// DB version of content management
+type ContentManagerDB struct {
+    cfg *utils.DirConfigEntry
+    c buffalo.Context
+}
+
+func (cm *ContentManagerDB) SetCfg(cfg *utils.DirConfigEntry) {
+    cm.cfg = cfg
+}
+func (cm ContentManagerDB) GetCfg() *utils.DirConfigEntry {
+    return cm.cfg
+}
 
 func (cm ContentManagerDB) ListMediaContext(c_id uuid.UUID) *models.MediaContainers {
     return cm.ListMedia(c_id, 1, cm.cfg.Limit)
@@ -146,10 +193,12 @@ func (cm ContentManagerDB) GetMedia(mc_id uuid.UUID) *models.MediaContainer {
     return mediaContainer
 }
 
+// The default list using the current manager configuration
 func (cm ContentManagerDB) ListContainersContext() *models.Containers {
     return cm.ListContainers(1, cm.cfg.Limit)
 }
 
+// TODO: Add in support for actually doing the query using the current buffalo.Context
 func (cm ContentManagerDB) ListContainers(page int, per_page int) *models.Containers {
     log.Printf("List Containers")
     container := &models.Containers{}
@@ -162,41 +211,12 @@ func (cm ContentManagerDB) GetContainer(mc_id uuid.UUID) *models.Container {
     return container
 }
 
-
-func (cm *ContentManagerMemory) SetCfg(cfg *utils.DirConfigEntry) {
-    cm.cfg = cfg
-    log.Printf("It should have a preview %s\n", cm.cfg.Dir)
-    log.Printf("Using memory manager %s\n", cm.validate)
-}
-
-func (cm ContentManagerMemory) GetCfg() *utils.DirConfigEntry {
-    log.Printf("Get the Config Validate val %s\n", cm.validate)
-    log.Printf("Config is what %s", cm.cfg.Dir)
-    return cm.cfg
-}
-
-func (cm *ContentManagerMemory) Initialize() {
-    dir_root := cm.cfg.Dir
-    log.Printf("Initializing Memory manager %s\n", dir_root)
-
-    dir_lookup := utils.GetDirectoriesLookup(dir_root)
-
-    // Move some of these
-    containers, files := utils.PopulatePreviews(dir_root, dir_lookup)
-    cm.ValidDirs = dir_lookup
-    cm.ValidContainers = containers
-    cm.ValidMedia = files
-    log.Printf("Found %d directories\n", len(cm.ValidDirs))
-}
-
 func (cm *ContentManagerDB) Initialize() {
-    // Connect to the DB
+    // Connect to the DB using the context or some other option?
     log.Printf("Make a DB connection here")
 }
 
-// Have this used by the resources?
 func (cm ContentManagerDB) FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error) {
-    // Fallback to the DB
     mc_db := models.MediaContainer{}
     err := models.DB.Find(&mc_db, file_id)
     if err == nil {
@@ -206,28 +226,12 @@ func (cm ContentManagerDB) FindFileRef(file_id uuid.UUID) (*models.MediaContaine
 }
 
 func (cm ContentManagerDB) FindDirRef(dir_id uuid.UUID) (*models.Container, error) {
-    // Sketchy DB fallback  HATE
     c_db := models.Container{}
     err := models.DB.Find(&c_db, dir_id)
     if err == nil {
         return &c_db, nil
     }
     return nil, err
-}
-
-func (cm ContentManagerMemory) FindDirRef(dir_id uuid.UUID) (*models.Container, error) {
-    // TODO: Get a FileInfo reference (get parent dir too)
-    if d, ok := appCfg.ValidContainers[dir_id]; ok {
-        return &d, nil
-    }
-    return nil, errors.New("Directory was not found in the current app")
-}
-
-func (cm ContentManagerMemory) FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error) {
-    if mc, ok := appCfg.ValidFiles[file_id]; ok {
-        return &mc, nil
-    }
-    return nil, errors.New("File was not found in the current list of files")
 }
 
 // Store a list of the various file references
