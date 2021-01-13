@@ -107,10 +107,10 @@ func (cm ContentManagerMemory) ListMedia(container_id uuid.UUID, page int, per_p
     m_arr := models.MediaContainers{}
     for _, m := range cm.ValidMedia {
         if m.ContainerID.Valid {
-            if m.ContainerID.UUID == container_id && len(m_arr) < (per_page + 1) {
+            if m.ContainerID.UUID == container_id && len(m_arr) <= per_page {
                 m_arr = append(m_arr, m)
             }
-        } else if len(m_arr) < (per_page + 1) {
+        } else if len(m_arr) <= per_page {
             m_arr = append(m_arr, m)
         }
     }
