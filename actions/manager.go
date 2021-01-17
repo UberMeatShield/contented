@@ -7,7 +7,7 @@ import (
     "path/filepath"
     "contented/models"
     "contented/utils"
-    // "github.com/gobuffalo/nulls"
+    //"github.com/gobuffalo/nulls"
     "github.com/gofrs/uuid"
     "github.com/gobuffalo/buffalo"
 )
@@ -28,7 +28,6 @@ func SetManager(manager ContentManager) {
 
 // TODO: Remove all the old endpoints and endpoint tests
 // TODO: Add in a few more tests around data loading / pagination
-// TODO: Create an in memory version and have that be setup on app initialization
 // TODO: Fix the UI to actually load in the data
 // TODO: Add in index code into the data model
 // TODO: Make a manager have a config entry vs what I currently do
@@ -41,8 +40,17 @@ var appCfg utils.DirConfigEntry = utils.DirConfigEntry{
 func GetCfg() *utils.DirConfigEntry {
     return &appCfg
 }
-func SetCfg(c utils.DirConfigEntry) {
-    appCfg = c
+func SetCfg(cfg utils.DirConfigEntry) {
+    appCfg = cfg
+}
+
+// Set the current context so that this is slightly less painful
+var currentContext buffalo.Context
+func GetContext() *buffalo.Context {
+    return &currentContext
+}
+func SetContext(c buffalo.Context) {
+    currentContext = c
 }
 
 type ContentManager interface {
@@ -56,9 +64,10 @@ type ContentManager interface {
     ListContainers(page int, per_page int) *models.Containers
     ListContainersContext() *models.Containers
 
-    GetMedia(media_id uuid.UUID) *models.MediaContainer
+    GetMedia(media_id uuid.UUID) (*models.MediaContainer, error)
     ListMedia(container_id uuid.UUID, page int, per_page int) *models.MediaContainers
     ListMediaContext(container_id uuid.UUID) *models.MediaContainers
+    ListAllMedia(page int, per_page int) *models.MediaContainers
 }
 
 
@@ -101,16 +110,27 @@ func (cm *ContentManagerMemory) Initialize() {
 func (cm ContentManagerMemory) ListMediaContext(c_id uuid.UUID) *models.MediaContainers{
     return cm.ListMedia(c_id, int(1), cm.cfg.Limit)
 }
+
+func (cm ContentManagerMemory) ListAllMedia(page int, per_page int) *models.MediaContainers {
+    m_arr := models.MediaContainers{}
+    // idx := 0
+    for _, m := range cm.ValidMedia {
+        if len(m_arr) < per_page {
+            m_arr = append(m_arr, m)
+        }
+    }
+    return &m_arr
+}
+
 // Awkard GoLang interface support is awkward
 func (cm ContentManagerMemory) ListMedia(container_id uuid.UUID, page int, per_page int) *models.MediaContainers{
-
     m_arr := models.MediaContainers{}
     for _, m := range cm.ValidMedia {
         if m.ContainerID.Valid {
             if m.ContainerID.UUID == container_id && len(m_arr) <= per_page {
                 m_arr = append(m_arr, m)
             }
-        } else if len(m_arr) <= per_page {
+        } else if len(m_arr) < per_page {
             m_arr = append(m_arr, m)
         }
     }
@@ -118,12 +138,12 @@ func (cm ContentManagerMemory) ListMedia(container_id uuid.UUID, page int, per_p
     return &m_arr
 }
 
-func (cm ContentManagerMemory) GetMedia(mc_id uuid.UUID) *models.MediaContainer {
+func (cm ContentManagerMemory) GetMedia(mc_id uuid.UUID) (*models.MediaContainer, error) {
     log.Printf("Get a single media %s", mc_id)
     if mc, ok := cm.ValidMedia[mc_id]; ok {
-        return &mc
+        return &mc, nil
     }
-    return nil
+    return nil, errors.New("Media was not found in memory")
 }
 
 func (cm ContentManagerMemory) ListContainersContext() *models.Containers {
@@ -140,7 +160,7 @@ func (cm ContentManagerMemory) ListContainers(page int, per_page int) *models.Co
 }
 
 func (cm ContentManagerMemory) GetContainer(c_id uuid.UUID) *models.Container {
-    log.Printf("Get a single contaienr %s", c_id)
+    log.Printf("Get a single container %s", c_id)
     if c, ok := cm.ValidContainers[c_id]; ok {
         return &c
     }
@@ -149,14 +169,14 @@ func (cm ContentManagerMemory) GetContainer(c_id uuid.UUID) *models.Container {
 
 func (cm ContentManagerMemory) FindDirRef(dir_id uuid.UUID) (*models.Container, error) {
     // TODO: Get a FileInfo reference (get parent dir too)
-    if d, ok := appCfg.ValidContainers[dir_id]; ok {
+    if d, ok := cm.ValidContainers[dir_id]; ok {
         return &d, nil
     }
     return nil, errors.New("Directory was not found in the current app")
 }
 
 func (cm ContentManagerMemory) FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error) {
-    if mc, ok := appCfg.ValidFiles[file_id]; ok {
+    if mc, ok := cm.ValidMedia[file_id]; ok {
         return &mc, nil
     }
     return nil, errors.New("File was not found in the current list of files")
@@ -187,10 +207,15 @@ func (cm ContentManagerDB) ListMedia(c_id uuid.UUID, page int, per_page int) *mo
     return mediaContainers
 }
 
-func (cm ContentManagerDB) GetMedia(mc_id uuid.UUID) *models.MediaContainer {
+func (cm ContentManagerDB) GetMedia(mc_id uuid.UUID) (*models.MediaContainer, error) {
     log.Printf("Get a single media %s", mc_id)
     mediaContainer := &models.MediaContainer{}
-    return mediaContainer
+    return mediaContainer, nil
+}
+
+func (cm ContentManagerDB) ListAllMedia(page int, per_page int) *models.MediaContainers {
+    mediaContainers := &models.MediaContainers{}
+    return mediaContainers
 }
 
 // The default list using the current manager configuration
@@ -234,6 +259,7 @@ func (cm ContentManagerDB) FindDirRef(dir_id uuid.UUID) (*models.Container, erro
     return nil, err
 }
 
+/*
 // Store a list of the various file references
 func FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error) {
     // TODO: Get a FileInfo reference (get parent dir too)
@@ -249,13 +275,17 @@ func FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error) {
     }
     return nil, err
 }
+*/
 
+/*
 func FindDirRef(dir_id uuid.UUID) (*models.Container, error) {
+
+    man := GetManager.GetContainer(dir_id)
     if d, ok := appCfg.ValidContainers[dir_id]; ok {
         return &d, nil
     }
 
-    // Sketchy DB fallback  HATE
+    // Sketchy DB fallback
     c_db := models.Container{}
     err := models.DB.Find(&c_db, dir_id)
     if err == nil {
@@ -263,6 +293,7 @@ func FindDirRef(dir_id uuid.UUID) (*models.Container, error) {
     }
     return nil, err
 }
+*/
 
 // If a preview is found, return the path to that file otherwise use the actual file
 func GetPreviewForMC(mc *models.MediaContainer) (string, error) {
@@ -281,7 +312,8 @@ func FindActualFile(mc *models.MediaContainer) (string, error) {
 
 // Given a container ID and the src of a file in there, get a path and check if it exists
 func GetFilePathInContainer(cont_id uuid.UUID, src string) (string, error) {
-    dir, err := FindDirRef(cont_id)
+    man := GetManager()
+    dir, err := man.FindDirRef(cont_id)
     if err != nil {
         return "No Parent Found", err
     }

@@ -2,6 +2,7 @@ package actions
 
 import (
     "log"
+//    "errors"
 	"contented/models"
 	"fmt"
 	"net/http"
@@ -33,11 +34,23 @@ type MediaContainersResource struct {
 // GET /media_containers
 func (v MediaContainersResource) List(c buffalo.Context) error {
 	// Get the DB connection from the context
+
+    SetContext(c)
+    man := GetManager()
+    c_id, err := uuid.FromString(c.Param("container_id"))
+    if err != nil {
+        return c.Error(http.StatusBadRequest, err)
+    }
+    log.Printf("Attempting to get media using %s", c_id)
+
+    // TODO: Need to fix pagination in the Context setup
+    mediaContainers := man.ListMediaContext(c_id)
+
+    /*
 	tx, ok := c.Value("tx").(*pop.Connection)
 	if !ok {
 		return fmt.Errorf("no transaction found")
 	}
-
 	mediaContainers := &models.MediaContainers{}
 
 	// Paginate results. Params "page" and "per_page" control pagination.
@@ -61,6 +74,7 @@ func (v MediaContainersResource) List(c buffalo.Context) error {
             return err
         }
     }
+    */
 
     // AKA nope on html
 	return responder.Wants("html", func(c buffalo.Context) error {
@@ -82,6 +96,19 @@ func (v MediaContainersResource) List(c buffalo.Context) error {
 // the path GET /media_containers/{media_container_id}
 func (v MediaContainersResource) Show(c buffalo.Context) error {
 
+    //hate
+    SetContext(c)
+    man := GetManager()
+    uuid, err := uuid.FromString(c.Param("media_container_id"))
+    if err != nil {
+        return c.Error(http.StatusBadRequest, err)
+    }
+    mediaContainer, missing_err := man.GetMedia(uuid)
+    if missing_err != nil {
+		return c.Error(http.StatusNotFound, missing_err)
+    }
+
+    /*
 	// Allocate an empty MediaContainer
 	mediaContainer := &models.MediaContainer{}
 
@@ -94,6 +121,7 @@ func (v MediaContainersResource) Show(c buffalo.Context) error {
 	if err := tx.Find(mediaContainer, c.Param("media_container_id")); err != nil {
 		return c.Error(http.StatusNotFound, err)
 	}
+    */
 
 	return responder.Wants("html", func(c buffalo.Context) error {
 		/*
@@ -240,7 +268,6 @@ func (v MediaContainersResource) Destroy(c buffalo.Context) error {
 	if !ok {
 		return fmt.Errorf("no transaction found")
 	}
-
 	// Allocate an empty MediaContainer
 	mediaContainer := &models.MediaContainer{}
 
@@ -248,7 +275,6 @@ func (v MediaContainersResource) Destroy(c buffalo.Context) error {
 	if err := tx.Find(mediaContainer, c.Param("media_container_id")); err != nil {
 		return c.Error(http.StatusNotFound, err)
 	}
-
 	if err := tx.Destroy(mediaContainer); err != nil {
 		return err
 	}

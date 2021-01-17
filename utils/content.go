@@ -71,7 +71,7 @@ func InitConfig(dir_root string, cfg *DirConfigEntry) *DirConfigEntry {
 }
 
 /**
- *  TODO:  Require the number to preview and will be Memroy only
+ *  TODO:  Require the number to preview and will be Memory only supported.
  */
 func PopulatePreviews(dir_root string, valid_dirs map[string]os.FileInfo) (models.ContainerMap, models.MediaMap) {
 	containers := models.ContainerMap{}

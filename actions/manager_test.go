@@ -1,7 +1,7 @@
 package actions
 
 import (
-	"fmt"
+	//"fmt"
 	//"contented/models"
 	//"contented/utils"
     /*
@@ -97,6 +97,7 @@ func (as *ActionSuite) Test_ManagerInitialize() {
     as.NotNil(containers, "It should have containers")
     as.Equal(len(*containers), 4, "It should have 4 of them")
 
+    // Memory test working
     for _, c := range *containers {
         // fmt.Printf("Searching for this container %s with name %s\n", c.ID, c.Name)
         media := man.ListMediaContext(c.ID)
@@ -107,7 +108,4 @@ func (as *ActionSuite) Test_ManagerInitialize() {
         as.Greater(media_len, 0, "There should be a number of media")
         as.Equal(expect_len[c.Name], media_len, "It should have this many instances: " + c.Name )
     }
-    // as.Greater(len(containers), 0, "There should be valid containers")
-    // as.Greater(len(man.ListMedia()), 0, "There should be valid files")
-
 }

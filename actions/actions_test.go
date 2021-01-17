@@ -12,7 +12,7 @@ import (
 	"github.com/gobuffalo/envy"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/gobuffalo/suite"
-	"github.com/gofrs/uuid"
+	// "github.com/gofrs/uuid"
 )
 
 type ActionSuite struct {
@@ -31,28 +31,26 @@ func TestMain(m *testing.M) {
 }
 
 func (as *ActionSuite) Test_ContentList() {
-	res := as.JSON("/content/").Get()
+    init_fake_app()
+
+	res := as.JSON("/containers").Get()
 	as.Equal(http.StatusOK, res.Code)
-
-	resObj := PreviewResults{}
+	resObj := models.Containers{}
 	json.NewDecoder(res.Body).Decode(&resObj)
-	as.Equal(4, len(resObj.Results), "We should have this many directories present")
-
-	// Check all the directories have contents
-	for _, dir := range resObj.Results {
-		as.Greater(dir.Total, 0, "There should be multiple results")
-		as.NotNil(dir.Id, "There should be a directory ID")
-		as.Greater(len(dir.Contents), 0, "And all our test mocks have content")
-	}
+	as.Equal(4, len(resObj), "We should have this many dirs present")
 }
 
-// HATE
 func (as *ActionSuite) Test_ContentDirLoad() {
-	cfg := init_fake_app()
-	as.Equal(len(cfg.ValidContainers), 4, "There should be 4 test directories")
+	init_fake_app()
 
-	for id, c := range cfg.ValidContainers {
-		res := as.JSON("/containers/" + id.String() + "/media").Get()
+	res := as.JSON("/containers").Get()
+	as.Equal(http.StatusOK, res.Code)
+	cnts := models.Containers{}
+	json.NewDecoder(res.Body).Decode(&cnts)
+	as.Equal(4, len(cnts), "We should have this many dirs present")
+
+	for _, c := range cnts {
+		res := as.JSON("/containers/" + c.ID.String()  + "/media").Get()
 		as.Equal(http.StatusOK, res.Code)
 
 		resObj := []models.Containers{}
@@ -68,13 +66,15 @@ func (as *ActionSuite) Test_ContentDirLoad() {
 
 func (as *ActionSuite) Test_ViewRef() {
 	// Oof, that is rough... need a better way to select the file not by index but ID
-	cfg := init_fake_app()
-	lookup := utils.GetDirectoriesLookup(cfg.Dir)
+	init_fake_app()
+    man := GetManager()
+    mcs := man.ListAllMedia(2, 2)
+    as.Equal(2, len(*mcs), "It should have only two results")
 
 	// TODO: Make it better about the type checking
 	// TODO: Make it always pass in the file ID
-	for id, _ := range lookup {
-		res := as.HTML("/view/" + id + "/0").Get()
+	for _, mc := range *mcs {
+		res := as.HTML("/view/" + mc.ID.String()).Get()
 		as.Equal(http.StatusOK, res.Code)
 		header := res.Header()
 		as.Equal("image/png", header.Get("Content-Type"))
@@ -83,41 +83,22 @@ func (as *ActionSuite) Test_ViewRef() {
 
 // Oof, that is rough... need a better way to select the file not by index but ID
 func (as *ActionSuite) Test_ContentDirDownload() {
-	cfg := init_fake_app()
+	init_fake_app()
 
     valid := map[string]bool{"image/png": true, "image/jpeg": true, "application/octet-stream": true}
 
+	init_fake_app()
+    man := GetManager()
+    mcs := man.ListAllMedia(2, 2)
+    as.Equal(2, len(*mcs), "It should have only two results")
+
     // Hate
-	for mc_id, _ := range cfg.ValidFiles {
-		res := as.HTML("/download/" + mc_id.String()).Get()
+	for _, mc := range *mcs {
+		res := as.HTML("/download/" + mc.ID.String()).Get()
 		as.Equal(http.StatusOK, res.Code)
 		header := res.Header()
 		as.Contains(valid, header.Get("Content-Type"))
     }
-}
-
-func (as *ActionSuite) Test_FindAndCache() {
-	cfg := init_fake_app()
-	cfg.ValidFiles = map[uuid.UUID]models.MediaContainer{}
-
-	mc1_id, _ := uuid.NewV4()
-	mc2_id, _ := uuid.NewV4()
-	mc1 := models.MediaContainer{ID: mc1_id, Src: "mc1"}
-	mc2 := models.MediaContainer{ID: mc2_id, Src: "mc2"}
-
-	CacheFile(mc1)
-	CacheFile(mc2)
-
-	as.Equal(len(cfg.ValidFiles), 2)
-
-	name1, _ := FindFileRef(mc1_id)
-	as.Equal(name1.Src, mc1.Src)
-	name2, _ := FindFileRef(mc2_id)
-	as.Equal(name2.Src, mc2.Src)
-
-	invalid, _ := uuid.NewV4()
-	_, err := FindFileRef(invalid)
-	as.Error(err)
 }
 
 // Test if we can get the actual file using just a file ID
@@ -128,8 +109,11 @@ func (as *ActionSuite) Test_FindAndLoadFile() {
 	as.Equal(4, len(cfg.ValidContainers), "We should have 4 containers.")
 	as.Greater(len(cfg.ValidFiles), 20, "And a bunch of files")
 
-	for mc_id, _ := range cfg.ValidFiles {
-		mc_ref, fc_err := FindFileRef(mc_id)
+    man := GetManager()
+    mcs := man.ListAllMedia(1, 200)
+
+	for _, mc := range *mcs {
+		mc_ref, fc_err := man.FindFileRef(mc.ID)
 		as.NoError(fc_err, "And an initialized app should index correctly")
 
 		fq_path, err := FindActualFile(mc_ref)
@@ -195,11 +179,18 @@ func init_fake_app() *utils.DirConfigEntry {
 
 	cfg := GetCfg()
 	utils.InitConfig(dir, cfg)
-	for _, mc := range cfg.ValidFiles {
-		if mc.Src == "this_is_p_ng" {
-			mc.Preview = "preview_this_is_p_ng"
-		}
-	}
+    cfg.UseDatabase = false  // TODO: Make this something you pass in on init
+
+    // TODO: Assign the context into the manager
+    man := SetupManager(cfg)
+
+    for _, c := range *man.ListContainersContext() {
+        for _, mc := range *man.ListMediaContext(c.ID) {
+            if mc.Src == "this_is_p_ng" {
+                mc.Preview = "preview_this_is_p_ng"
+            }
+        }
+    }
 	return cfg
 }
 

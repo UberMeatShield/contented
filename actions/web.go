@@ -108,7 +108,9 @@ func FullHandler(c buffalo.Context) error {
 	if bad_uuid != nil {
 		return c.Error(400, bad_uuid)
 	}
-	mc, err := FindFileRef(file_id)
+    SetContext(c)
+    man := GetManager()
+	mc, err := man.FindFileRef(file_id)
 	if err != nil {
 		return c.Error(404, err)
 	}
@@ -124,14 +126,17 @@ func FullHandler(c buffalo.Context) error {
 
 // Find the preview of a file (if applicable currently it is just returning the full path)
 func PreviewHandler(c buffalo.Context) error {
+    SetContext(c)
 	file_id, bad_uuid := uuid.FromString(c.Param("file_id"))
 	if bad_uuid != nil {
 		return c.Error(400, bad_uuid)
 	}
-	mc, err := FindFileRef(file_id)
+    man := GetManager()
+	mc, err := man.FindFileRef(file_id)
 	if err != nil {
 		return c.Error(404, err)
 	}
+
 	fq_path, fq_err := GetPreviewForMC(mc)
 	if fq_err != nil {
 		log.Printf("File to preview not found on disk %s with err %s", fq_path, fq_err)
@@ -148,7 +153,10 @@ func DownloadHandler(c buffalo.Context) error {
     if bad_uuid != nil {
         return c.Error(400, bad_uuid)
     }
-    mc, err := FindFileRef(file_id)
+
+    SetContext(c)
+    man := GetManager()
+    mc, err := man.FindFileRef(file_id)
     if err != nil {
         return c.Error(404, err)
     }
