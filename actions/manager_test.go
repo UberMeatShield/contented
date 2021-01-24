@@ -39,7 +39,7 @@ func basicContext() buffalo.DefaultContext {
 }
 
 func (as *ActionSuite) Test_ManagerContainers() {
-    cfg := init_fake_app()
+    cfg := init_fake_app(false)
     mem := ContentManagerMemory{}
     mem.cfg = cfg
 
@@ -54,7 +54,7 @@ func (as *ActionSuite) Test_ManagerContainers() {
 
 
 func (as *ActionSuite) Test_ManagerMediaContainer() {
-    cfg := init_fake_app()
+    cfg := init_fake_app(false)
     mem := ContentManagerMemory{}
     mem.cfg = cfg
 
@@ -70,7 +70,7 @@ func (as *ActionSuite) Test_ManagerMediaContainer() {
 func (as *ActionSuite) Test_AssignManager() {
     mem := ContentManagerMemory{}
     mem.validate = "Memory"
-    cfg := init_fake_app()
+    cfg := init_fake_app(false)
     mem.SetCfg(cfg)
     SetManager(mem)
 
@@ -86,7 +86,7 @@ func (as *ActionSuite) Test_AssignManager() {
 
 
 func (as *ActionSuite) Test_ManagerInitialize() {
-    cfg := init_fake_app()
+    cfg := init_fake_app(false)
     cfg.UseDatabase = false
     SetupManager(cfg)
 
@@ -100,7 +100,8 @@ func (as *ActionSuite) Test_ManagerInitialize() {
     // Memory test working
     for _, c := range *containers {
         // fmt.Printf("Searching for this container %s with name %s\n", c.ID, c.Name)
-        media := man.ListMediaContext(c.ID)
+        media, err := man.ListMediaContext(c.ID)
+        as.NoError(err)
         as.NotNil(media)
 
         media_len := len(*media)

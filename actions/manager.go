@@ -3,11 +3,13 @@ package actions
 import (
     "log"
     "os"
+    "fmt"
     "errors"
     "path/filepath"
     "contented/models"
     "contented/utils"
     //"github.com/gobuffalo/nulls"
+    "github.com/gobuffalo/pop/v5"
     "github.com/gofrs/uuid"
     "github.com/gobuffalo/buffalo"
 )
@@ -60,14 +62,14 @@ type ContentManager interface {
     FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error)
     FindDirRef(dir_id uuid.UUID) (*models.Container, error)
 
-    GetContainer(c_id uuid.UUID) *models.Container
+    GetContainer(c_id uuid.UUID) (*models.Container, error)
     ListContainers(page int, per_page int) *models.Containers
     ListContainersContext() *models.Containers
 
     GetMedia(media_id uuid.UUID) (*models.MediaContainer, error)
-    ListMedia(container_id uuid.UUID, page int, per_page int) *models.MediaContainers
-    ListMediaContext(container_id uuid.UUID) *models.MediaContainers
-    ListAllMedia(page int, per_page int) *models.MediaContainers
+    ListMedia(container_id uuid.UUID, page int, per_page int) (*models.MediaContainers, error)
+    ListMediaContext(container_id uuid.UUID) (*models.MediaContainers, error)
+    ListAllMedia(page int, per_page int) (*models.MediaContainers, error)
 }
 
 
@@ -107,23 +109,22 @@ func (cm *ContentManagerMemory) Initialize() {
     log.Printf("Found %d directories\n", len(cm.ValidDirs))
 }
 
-func (cm ContentManagerMemory) ListMediaContext(c_id uuid.UUID) *models.MediaContainers{
+func (cm ContentManagerMemory) ListMediaContext(c_id uuid.UUID) (*models.MediaContainers, error) {
     return cm.ListMedia(c_id, int(1), cm.cfg.Limit)
 }
 
-func (cm ContentManagerMemory) ListAllMedia(page int, per_page int) *models.MediaContainers {
+func (cm ContentManagerMemory) ListAllMedia(page int, per_page int) (*models.MediaContainers, error) {
     m_arr := models.MediaContainers{}
-    // idx := 0
     for _, m := range cm.ValidMedia {
         if len(m_arr) < per_page {
             m_arr = append(m_arr, m)
         }
     }
-    return &m_arr
+    return &m_arr, nil
 }
 
 // Awkard GoLang interface support is awkward
-func (cm ContentManagerMemory) ListMedia(container_id uuid.UUID, page int, per_page int) *models.MediaContainers{
+func (cm ContentManagerMemory) ListMedia(container_id uuid.UUID, page int, per_page int) (*models.MediaContainers, error) {
     m_arr := models.MediaContainers{}
     for _, m := range cm.ValidMedia {
         if m.ContainerID.Valid {
@@ -135,11 +136,11 @@ func (cm ContentManagerMemory) ListMedia(container_id uuid.UUID, page int, per_p
         }
     }
     log.Printf("Get a list of media, we should have some %d", len(m_arr))
-    return &m_arr
+    return &m_arr, nil
 }
 
 func (cm ContentManagerMemory) GetMedia(mc_id uuid.UUID) (*models.MediaContainer, error) {
-    log.Printf("Get a single media %s", mc_id)
+    log.Printf("Memory Get a single media %s", mc_id)
     if mc, ok := cm.ValidMedia[mc_id]; ok {
         return &mc, nil
     }
@@ -159,12 +160,12 @@ func (cm ContentManagerMemory) ListContainers(page int, per_page int) *models.Co
     return &c_arr
 }
 
-func (cm ContentManagerMemory) GetContainer(c_id uuid.UUID) *models.Container {
+func (cm ContentManagerMemory) GetContainer(c_id uuid.UUID) (*models.Container, error) {
     log.Printf("Get a single container %s", c_id)
     if c, ok := cm.ValidContainers[c_id]; ok {
-        return &c
+        return &c, nil
     }
-    return nil
+    return nil, errors.New("Memory manager did not find this id" + c_id.String())
 }
 
 func (cm ContentManagerMemory) FindDirRef(dir_id uuid.UUID) (*models.Container, error) {
@@ -196,26 +197,59 @@ func (cm ContentManagerDB) GetCfg() *utils.DirConfigEntry {
     return cm.cfg
 }
 
-func (cm ContentManagerDB) ListMediaContext(c_id uuid.UUID) *models.MediaContainers {
+func (cm ContentManagerDB) ListMediaContext(c_id uuid.UUID) (*models.MediaContainers, error) {
     return cm.ListMedia(c_id, 1, cm.cfg.Limit)
 }
 
 // Awkard GoLang interface support is awkward
-func (cm ContentManagerDB) ListMedia(c_id uuid.UUID, page int, per_page int) *models.MediaContainers {
+func (cm ContentManagerDB) ListMedia(c_id uuid.UUID, page int, per_page int) (*models.MediaContainers, error) {
     log.Printf("Get a list of media from DB, we should have some %s", c_id.String())
+    c := *GetContext()
+    tx, ok := c.Value("tx").(*pop.Connection)
+    if !ok {
+        return nil, fmt.Errorf("no transaction found")
+    }
     mediaContainers := &models.MediaContainers{}
-    return mediaContainers
+
+    // Paginate results. Params "page" and "per_page" control pagination.
+    // Default values are "page=1" and "per_page=20".
+    // TODO: Make it paginate using the params not the context
+    q := tx.PaginateFromParams(c.Params())
+    q_conn := q.Where("container_id = ?", c_id)
+    if q_err := q_conn.All(mediaContainers); q_err != nil {
+        return nil, q_err
+    }
+
+    return mediaContainers, nil
 }
 
 func (cm ContentManagerDB) GetMedia(mc_id uuid.UUID) (*models.MediaContainer, error) {
     log.Printf("Get a single media %s", mc_id)
-    mediaContainer := &models.MediaContainer{}
-    return mediaContainer, nil
+    c := *GetContext()
+    tx, ok := c.Value("tx").(*pop.Connection)
+    if !ok {
+        return nil, fmt.Errorf("no transaction found")
+    }
+    container := &models.MediaContainer{}
+    if err := tx.Find(container, mc_id); err != nil {
+        return nil, err
+    }
+    return container, nil
 }
 
-func (cm ContentManagerDB) ListAllMedia(page int, per_page int) *models.MediaContainers {
+func (cm ContentManagerDB) ListAllMedia(page int, per_page int) (*models.MediaContainers, error) {
+    log.Printf("List all media DB manager")
+    c := *GetContext()
+    tx, ok := c.Value("tx").(*pop.Connection)
+    if !ok {
+        return nil, fmt.Errorf("no transaction found")
+    }
+    q := tx.PaginateFromParams(c.Params())
     mediaContainers := &models.MediaContainers{}
-    return mediaContainers
+    if err := q.All(mediaContainers); err != nil {
+        return nil, err
+    }
+    return mediaContainers, nil
 }
 
 // The default list using the current manager configuration
@@ -230,10 +264,20 @@ func (cm ContentManagerDB) ListContainers(page int, per_page int) *models.Contai
     return container
 }
 
-func (cm ContentManagerDB) GetContainer(mc_id uuid.UUID) *models.Container {
-    log.Printf("Get a single contaienr %s", mc_id)
+func (cm ContentManagerDB) GetContainer(mc_id uuid.UUID) (*models.Container, error) {
+    log.Printf("Get a single container %s", mc_id)
+    c := *GetContext()
+    tx, ok := c.Value("tx").(*pop.Connection)
+    if !ok {
+        return nil, fmt.Errorf("No transaction found")
+    }
+
+    // Allocate an empty Container
     container := &models.Container{}
-    return container
+    if err := tx.Find(container, c.Param("container_id")); err != nil {
+        return nil, err
+    }
+    return container, nil
 }
 
 func (cm *ContentManagerDB) Initialize() {

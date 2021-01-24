@@ -19,6 +19,33 @@ type ActionSuite struct {
 	*suite.Action
 }
 
+
+// This function is now how the init method should function till caching is implemented
+// As the internals / guts are functional using the new models the creation of models
+// can be removed.
+func init_fake_app(use_db bool) *utils.DirConfigEntry {
+	dir, _ := envy.MustGet("DIR")
+	fmt.Printf("Using directory %s\n", dir)
+
+	cfg := GetCfg()
+	utils.InitConfig(dir, cfg)
+    cfg.UseDatabase = use_db  // TODO: Make this something you pass in on init
+    man := SetupManager(cfg)
+
+    // TODO: Assign the context into the manager (force it?)
+    if cfg.UseDatabase {
+        for _, c := range *man.ListContainersContext() {
+            mcs, _ := man.ListMediaContext(c.ID)
+            for _, mc := range *mcs {
+                if mc.Src == "this_is_p_ng" {
+                    mc.Preview = "preview_this_is_p_ng"
+                }
+            }
+        }
+    }
+	return cfg
+}
+
 func TestMain(m *testing.M) {
 	dir, err := envy.MustGet("DIR")
 	fmt.Printf("Using this test directory %s", dir)
@@ -31,7 +58,7 @@ func TestMain(m *testing.M) {
 }
 
 func (as *ActionSuite) Test_ContentList() {
-    init_fake_app()
+    init_fake_app(false)
 
 	res := as.JSON("/containers").Get()
 	as.Equal(http.StatusOK, res.Code)
@@ -41,7 +68,7 @@ func (as *ActionSuite) Test_ContentList() {
 }
 
 func (as *ActionSuite) Test_ContentDirLoad() {
-	init_fake_app()
+	init_fake_app(false)
 
 	res := as.JSON("/containers").Get()
 	as.Equal(http.StatusOK, res.Code)
@@ -66,30 +93,31 @@ func (as *ActionSuite) Test_ContentDirLoad() {
 
 func (as *ActionSuite) Test_ViewRef() {
 	// Oof, that is rough... need a better way to select the file not by index but ID
-	init_fake_app()
+	init_fake_app(false)
     man := GetManager()
-    mcs := man.ListAllMedia(2, 2)
+    mcs, err := man.ListAllMedia(2, 2)
+    as.NoError(err)
     as.Equal(2, len(*mcs), "It should have only two results")
 
 	// TODO: Make it better about the type checking
 	// TODO: Make it always pass in the file ID
+    valid := map[string]bool{"image/png": true, "image/jpeg": true, "application/octet-stream": true}
 	for _, mc := range *mcs {
 		res := as.HTML("/view/" + mc.ID.String()).Get()
 		as.Equal(http.StatusOK, res.Code)
 		header := res.Header()
-		as.Equal("image/png", header.Get("Content-Type"))
+		as.Contains(valid, header.Get("Content-Type"))
 	}
 }
 
 // Oof, that is rough... need a better way to select the file not by index but ID
 func (as *ActionSuite) Test_ContentDirDownload() {
-	init_fake_app()
+	init_fake_app(false)
 
     valid := map[string]bool{"image/png": true, "image/jpeg": true, "application/octet-stream": true}
-
-	init_fake_app()
     man := GetManager()
-    mcs := man.ListAllMedia(2, 2)
+    mcs, err := man.ListAllMedia(2, 2)
+    as.NoError(err)
     as.Equal(2, len(*mcs), "It should have only two results")
 
     // Hate
@@ -103,14 +131,16 @@ func (as *ActionSuite) Test_ContentDirDownload() {
 
 // Test if we can get the actual file using just a file ID
 func (as *ActionSuite) Test_FindAndLoadFile() {
-	cfg := init_fake_app()
+	cfg := init_fake_app(false)
 
 	as.Equal(true, cfg.Initialized)
 	as.Equal(4, len(cfg.ValidContainers), "We should have 4 containers.")
 	as.Greater(len(cfg.ValidFiles), 20, "And a bunch of files")
 
+
     man := GetManager()
-    mcs := man.ListAllMedia(1, 200)
+    mcs, err := man.ListAllMedia(1, 200)
+    as.NoError(err)
 
 	for _, mc := range *mcs {
 		mc_ref, fc_err := man.FindFileRef(mc.ID)
@@ -126,10 +156,14 @@ func (as *ActionSuite) Test_FindAndLoadFile() {
 
 // This checks that a preview loads when defined and otherwise falls back to the MC itself
 func (as *ActionSuite) Test_PreviewFile() {
-	cfg := init_fake_app()
+	init_fake_app(false)
+    man := GetManager()
+    mcs, err := man.ListAllMedia(1, 200)
+    as.NoError(err)
+
 	valid := map[string]bool{"image/png": true, "image/jpeg": true}
-	for mc_id, _ := range cfg.ValidFiles {
-		res := as.HTML("/preview/" + mc_id.String()).Get()
+	for _, mc := range *mcs {
+		res := as.HTML("/preview/" + mc.ID.String()).Get()
 		as.Equal(http.StatusOK, res.Code)
 
 		header := res.Header()
@@ -138,10 +172,14 @@ func (as *ActionSuite) Test_PreviewFile() {
 }
 
 func (as *ActionSuite) Test_FullFile() {
-	cfg := init_fake_app()
+	init_fake_app(false)
+    man := GetManager()
+    mcs, err := man.ListAllMedia(1, 200)
+    as.NoError(err)
+
 	valid := map[string]bool{"image/png": true, "image/jpeg": true}
-	for mc_id, _ := range cfg.ValidFiles {
-		res := as.HTML("/full/" + mc_id.String()).Get()
+	for _, mc := range *mcs {
+		res := as.HTML("/view/" + mc.ID.String()).Get()
 		as.Equal(http.StatusOK, res.Code)
 
 		header := res.Header()
@@ -151,7 +189,7 @@ func (as *ActionSuite) Test_FullFile() {
 
 // This checks if previews are actually used if defined
 func (as *ActionSuite) Test_PreviewWorking() {
-	cfg := init_fake_app()
+	cfg := init_fake_app(false)
 	for mc_id, mc := range cfg.ValidFiles {
 		if mc.Preview != "" {
 			res := as.HTML("/preview/" + mc_id.String()).Get()
@@ -168,30 +206,6 @@ func (as *ActionSuite) Test_PreviewWorking() {
 		        }
 		*/
 	}
-}
-
-// This function is now how the init method should function till caching is implemented
-// As the internals / guts are functional using the new models the creation of models
-// can be removed.
-func init_fake_app() *utils.DirConfigEntry {
-	dir, _ := envy.MustGet("DIR")
-	fmt.Printf("Using directory %s\n", dir)
-
-	cfg := GetCfg()
-	utils.InitConfig(dir, cfg)
-    cfg.UseDatabase = false  // TODO: Make this something you pass in on init
-
-    // TODO: Assign the context into the manager
-    man := SetupManager(cfg)
-
-    for _, c := range *man.ListContainersContext() {
-        for _, mc := range *man.ListMediaContext(c.ID) {
-            if mc.Src == "this_is_p_ng" {
-                mc.Preview = "preview_this_is_p_ng"
-            }
-        }
-    }
-	return cfg
 }
 
 func Test_ActionSuite(t *testing.T) {

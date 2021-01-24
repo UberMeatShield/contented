@@ -76,16 +76,18 @@ func (v ContainersResource) List(c buffalo.Context) error {
 func (v ContainersResource) Show(c buffalo.Context) error {
 	// Get the DB connection from the context
 
-    SetContext(c)
-    man := GetManager()
     c_id, err := uuid.FromString(c.Param("container_id"))
     if err != nil {
         // return c.Error(http.StatusBadRequest, errors.New("Invalid Container ID"))
         return c.Error(http.StatusBadRequest, err)
     } // Hate
 
-    container := man.GetContainer(c_id)
-
+    SetContext(c)
+    man := GetManager()
+    container, err := man.GetContainer(c_id)
+    if err != nil {
+		return c.Error(http.StatusNotFound, err)
+    }
     /*
 	tx, ok := c.Value("tx").(*pop.Connection)
 	if !ok {
@@ -97,7 +99,6 @@ func (v ContainersResource) Show(c buffalo.Context) error {
 
 	// To find the Container the parameter container_id is used.
 	if err := tx.Find(container, c.Param("container_id")); err != nil {
-		return c.Error(http.StatusNotFound, err)
 	}
     */
 
@@ -122,9 +123,8 @@ func (v ContainersResource) Create(c buffalo.Context) error {
 
     // TODO: Reject if it is memory manager
 
-	container := &models.Container{}
-
 	// Bind container to the html form elements
+	container := &models.Container{}
 	if err := c.Bind(container); err != nil {
 		return err
 	}
@@ -238,7 +238,6 @@ func (v ContainersResource) Update(c buffalo.Context) error {
 // to the path DELETE /containers/{container_id}
 func (v ContainersResource) Destroy(c buffalo.Context) error {
 	// Get the DB connection from the context
-    
 	tx, ok := c.Value("tx").(*pop.Connection)
 	if !ok {
 		return fmt.Errorf("no transaction found")

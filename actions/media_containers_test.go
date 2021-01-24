@@ -25,6 +25,7 @@ func CreateResource(src string, container_id nulls.UUID, as *ActionSuite) models
 
 func (as *ActionSuite) Test_MediaSubQuery() {
     // Create 2 containers
+    init_fake_app(true)
     c1 := &models.Container{
          Total: 2,
          Path:  "container/1/media",
@@ -45,11 +46,13 @@ func (as *ActionSuite) Test_MediaSubQuery() {
 }
 
 func (as *ActionSuite) Test_MediaContainersResource_List() {
+    init_fake_app(true)
 	res := as.JSON("/media").Get()
 	as.Equal(http.StatusOK, res.Code)
 }
 
 func (as *ActionSuite) Test_MediaContainersResource_Show() {
+    init_fake_app(true)
 	src := "test_query"
 	mc := CreateResource(src, nulls.UUID{}, as)
 	check := as.JSON("/media/" + mc.ID.String()).Get()

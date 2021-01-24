@@ -44,7 +44,10 @@ func (v MediaContainersResource) List(c buffalo.Context) error {
     log.Printf("Attempting to get media using %s", c_id)
 
     // TODO: Need to fix pagination in the Context setup
-    mediaContainers := man.ListMediaContext(c_id)
+    mediaContainers, err := man.ListMediaContext(c_id)
+    if err != nil {
+        return c.Error(http.StatusBadRequest, err)
+    }
 
     /*
 	tx, ok := c.Value("tx").(*pop.Connection)
@@ -95,14 +98,15 @@ func (v MediaContainersResource) List(c buffalo.Context) error {
 // Show gets the data for one MediaContainer. This function is mapped to
 // the path GET /media_containers/{media_container_id}
 func (v MediaContainersResource) Show(c buffalo.Context) error {
-
-    //hate
     SetContext(c)
     man := GetManager()
+
+    // TODO: Make it actually just handle /media (page, number)
     uuid, err := uuid.FromString(c.Param("media_container_id"))
     if err != nil {
         return c.Error(http.StatusBadRequest, err)
     }
+
     mediaContainer, missing_err := man.GetMedia(uuid)
     if missing_err != nil {
 		return c.Error(http.StatusNotFound, missing_err)
