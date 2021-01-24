@@ -39,6 +39,7 @@ var appCfg utils.DirConfigEntry = utils.DirConfigEntry{
     PreviewCount: DefaultPreviewCount,
     Limit:        DefaultLimit,
 }
+
 func GetCfg() *utils.DirConfigEntry {
     return &appCfg
 }
@@ -302,42 +303,6 @@ func (cm ContentManagerDB) FindDirRef(dir_id uuid.UUID) (*models.Container, erro
     }
     return nil, err
 }
-
-/*
-// Store a list of the various file references
-func FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error) {
-    // TODO: Get a FileInfo reference (get parent dir too)
-    if mc, ok := appCfg.ValidFiles[file_id]; ok {
-        return &mc, nil
-    }
-
-    // Fallback to the DB
-    mc_db := models.MediaContainer{}
-    err := models.DB.Find(&mc_db, file_id)
-    if err == nil {
-        return &mc_db, nil
-    }
-    return nil, err
-}
-*/
-
-/*
-func FindDirRef(dir_id uuid.UUID) (*models.Container, error) {
-
-    man := GetManager.GetContainer(dir_id)
-    if d, ok := appCfg.ValidContainers[dir_id]; ok {
-        return &d, nil
-    }
-
-    // Sketchy DB fallback
-    c_db := models.Container{}
-    err := models.DB.Find(&c_db, dir_id)
-    if err == nil {
-        return &c_db, nil
-    }
-    return nil, err
-}
-*/
 
 // If a preview is found, return the path to that file otherwise use the actual file
 func GetPreviewForMC(mc *models.MediaContainer) (string, error) {

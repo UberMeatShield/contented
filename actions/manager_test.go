@@ -3,7 +3,7 @@ package actions
 import (
 	//"fmt"
 	//"contented/models"
-	//"contented/utils"
+	"contented/utils"
     /*
 	"encoding/json"
 	"net/http"
@@ -19,6 +19,7 @@ import (
     "context"
     //"sync"
     //"github.com/gobuffalo/logger"
+    "github.com/gobuffalo/envy"
     "github.com/gobuffalo/buffalo"
 )
 
@@ -39,48 +40,54 @@ func basicContext() buffalo.DefaultContext {
 }
 
 func (as *ActionSuite) Test_ManagerContainers() {
-    cfg := init_fake_app(false)
-    mem := ContentManagerMemory{}
-    mem.cfg = cfg
+    init_fake_app(false)
+    man := GetManager()
+    containers := man.ListContainersContext()
+    // as.NoError(err)
 
-    for id, _ := range cfg.ValidContainers {
-        c_mem, err := mem.FindDirRef(id)
+    for _, c := range *containers {
+        c_mem, err := man.FindDirRef(c.ID)
         if err != nil {
             as.Fail("It should not have an issue finding valid containers")
         }
-        as.Equal(c_mem.ID, id)
+        as.Equal(c_mem.ID, c.ID)
     }
 }
 
 
 func (as *ActionSuite) Test_ManagerMediaContainer() {
-    cfg := init_fake_app(false)
-    mem := ContentManagerMemory{}
-    mem.cfg = cfg
+    init_fake_app(false)
+    man := GetManager()
+    mcs, err := man.ListAllMedia(1, 9001)
+    as.NoError(err)
 
-    for id, _ := range cfg.ValidFiles {
-        cm, err := mem.FindFileRef(id)
+    for _, mc := range *mcs {
+        cm, err := man.FindFileRef(mc.ID)
         if err != nil {
             as.Fail("It should not have an issue finding valid containers")
         }
-        as.Equal(cm.ID, id)
+        as.Equal(cm.ID, mc.ID)
     }
 }
 
 func (as *ActionSuite) Test_AssignManager() {
+    dir, _ := envy.MustGet("DIR")
+    cfg := GetCfg()
+    utils.InitConfig(dir, cfg)
+
     mem := ContentManagerMemory{}
     mem.validate = "Memory"
-    cfg := init_fake_app(false)
     mem.SetCfg(cfg)
+    mem.Initialize()
+
     SetManager(mem)
-
-    as.Greater(len(cfg.ValidFiles), 0, "It should have valid files in the config")
-
-    var man ContentManager = GetManager()
+    man := GetManager()
     memCfg := man.GetCfg()
     as.NotNil(memCfg, "It should be defined")
-    //as.Greater(len(memCfg.ValidFiles), 0, "There should be a config entry")
-    //as.Equal(len(memCfg.ValidFiles), len(cfg.ValidFiles))
+
+    mcs, err := man.ListAllMedia(1, 9001)
+    as.NoError(err)
+    as.Greater(len(*mcs), 0, "It should have valid files in the manager")
 }
 
 

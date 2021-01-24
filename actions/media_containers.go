@@ -37,17 +37,33 @@ func (v MediaContainersResource) List(c buffalo.Context) error {
 
     SetContext(c)
     man := GetManager()
-    c_id, err := uuid.FromString(c.Param("container_id"))
-    if err != nil {
-        return c.Error(http.StatusBadRequest, err)
+
+    var mediaContainers *models.MediaContainers
+
+    // Optional params suuuuck in GoLang
+    c_id_str := c.Param("container_id")
+    if c_id_str != "" {
+        log.Printf("Attempting to get media using %s", c_id_str)
+        c_id, err := uuid.FromString(c_id_str)
+        if err != nil {
+            return c.Error(http.StatusBadRequest, err)
+        }
+        mcs, q_err := man.ListMediaContext(c_id)
+        if q_err != nil {
+            return c.Error(http.StatusBadRequest, err)
+        }
+        mediaContainers = mcs
+    } else {
+        log.Printf("List all Media No Restriction on the container ID")
+        mcs, err := man.ListAllMedia(1, man.GetCfg().Limit)
+        if err != nil {
+            return c.Error(http.StatusBadRequest, err)
+        }
+        mediaContainers = mcs
     }
-    log.Printf("Attempting to get media using %s", c_id)
+
 
     // TODO: Need to fix pagination in the Context setup
-    mediaContainers, err := man.ListMediaContext(c_id)
-    if err != nil {
-        return c.Error(http.StatusBadRequest, err)
-    }
 
     /*
 	tx, ok := c.Value("tx").(*pop.Connection)
