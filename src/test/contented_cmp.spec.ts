@@ -110,7 +110,7 @@ describe('TestingContentedCmp', () => {
 
         let toClick = $(imgs[3]).trigger('click');
         expect(comp.fullScreen).toBe(true, "It should now have a selected item");
-        expect(comp.getCurrentLocation().fullPath).toBe(imgs[3].src, "It should have the current item as the image");
+        expect(comp.getCurrentLocation().fullUrl).toBe(imgs[3].src, "It should have the current item as the image");
     }));
 
     it("Should have a progress bar once the data is loaded", () => {
@@ -129,7 +129,7 @@ describe('TestingContentedCmp', () => {
         expect(comp.idx).toBe(0, "It should be on the default page");
         let dirs = $('.dir-name');
         expect(dirs.length).toBe(2, "There should be two directories present");
-        expect(_.get(preview, 'results[0].name')).toBe($(dirs[0]).text(), 'It should have the dir name');
+        expect(_.get(preview, 'results[0].name')).toBe($(dirs[0]).text(), 'It should have the dir id');
         expect(_.get(preview, 'results[1].name')).toBe($(dirs[1]).text(), 'It should have the dir name');
 
         let progBars = $('mat-progress-bar');

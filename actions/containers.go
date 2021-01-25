@@ -4,7 +4,9 @@ import (
 	"contented/models"
 	"fmt"
 	"net/http"
+//    "errors"
 
+    "github.com/gofrs/uuid"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gobuffalo/x/responder"
@@ -31,21 +33,28 @@ type ContainersResource struct {
 // GET /containers
 func (v ContainersResource) List(c buffalo.Context) error {
 	// Get the DB connection from the context
+
+    SetContext(c)
+    man := GetManager()
+    containers := man.ListContainersContext()
+
+    // TODO figure out how to set the current context
+
+	// Paginate results. Params "page" and "per_page" control pagination.
+	// Default values are "page=1" and "per_page=20".
+    /*
 	tx, ok := c.Value("tx").(*pop.Connection)
 	if !ok {
 		return fmt.Errorf("no transaction found")
 	}
-
 	containers := &models.Containers{}
-
-	// Paginate results. Params "page" and "per_page" control pagination.
-	// Default values are "page=1" and "per_page=20".
 	q := tx.PaginateFromParams(c.Params())
 
 	// Retrieve all Containers from the DB
 	if err := q.All(containers); err != nil {
 		return err
 	}
+    */
 
 	return responder.Wants("html", func(c buffalo.Context) error {
 		// Add the paginator to the context so it can be used in the template.
@@ -66,6 +75,20 @@ func (v ContainersResource) List(c buffalo.Context) error {
 // the path GET /containers/{container_id}
 func (v ContainersResource) Show(c buffalo.Context) error {
 	// Get the DB connection from the context
+
+    c_id, err := uuid.FromString(c.Param("container_id"))
+    if err != nil {
+        // return c.Error(http.StatusBadRequest, errors.New("Invalid Container ID"))
+        return c.Error(http.StatusBadRequest, err)
+    } // Hate
+
+    SetContext(c)
+    man := GetManager()
+    container, err := man.GetContainer(c_id)
+    if err != nil {
+		return c.Error(http.StatusNotFound, err)
+    }
+    /*
 	tx, ok := c.Value("tx").(*pop.Connection)
 	if !ok {
 		return fmt.Errorf("no transaction found")
@@ -76,8 +99,8 @@ func (v ContainersResource) Show(c buffalo.Context) error {
 
 	// To find the Container the parameter container_id is used.
 	if err := tx.Find(container, c.Param("container_id")); err != nil {
-		return c.Error(http.StatusNotFound, err)
 	}
+    */
 
 	return responder.Wants("html", func(c buffalo.Context) error {
 		/*
@@ -97,9 +120,11 @@ func (v ContainersResource) Show(c buffalo.Context) error {
 // path POST /containers
 func (v ContainersResource) Create(c buffalo.Context) error {
 	// Allocate an empty Container
-	container := &models.Container{}
+
+    // TODO: Reject if it is memory manager
 
 	// Bind container to the html form elements
+	container := &models.Container{}
 	if err := c.Bind(container); err != nil {
 		return err
 	}

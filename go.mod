@@ -11,6 +11,7 @@ require (
 	github.com/gobuffalo/envy v1.9.0
 	github.com/gobuffalo/fizz v1.13.0 // indirect
 	github.com/gobuffalo/here v0.6.2 // indirect
+	github.com/gobuffalo/logger v1.0.3
 	github.com/gobuffalo/mw-contenttype v0.0.0-20190224202710-36c73cc938f3
 	github.com/gobuffalo/mw-csrf v1.0.0 // indirect
 	github.com/gobuffalo/mw-forcessl v0.0.0-20200131175327-94b2bd771862

@@ -101,7 +101,7 @@ describe('TestingContentedService', () => {
         });
         tick(100000);
         expect(dir.contents.length).toEqual(total, 'It should load all content');
-        expect(dir.contents[total - 1].fullPath).toBeTruthy();
+        expect(dir.contents[total - 1].fullUrl).toBeTruthy();
 
         httpMock.verify();
     }));

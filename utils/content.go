@@ -42,9 +42,7 @@ type DirConfigEntry struct {
 	PreviewCount    int    // How many files should be listed for a preview
 	Limit           int    // The absolute max you can load in a single operation
 	Initialized     bool
-	ValidDirs       map[string]os.FileInfo // List of directories under the main element
-	ValidFiles      models.MediaMap        // TODO: Eventually remove this in favor of a startup + sqllite load
-	ValidContainers models.ContainerMap
+    UseDatabase     bool
 }
 
 /*
@@ -54,23 +52,18 @@ type DirConfigEntry struct {
  * TODO: Figure out how to do this "right" for a Buffalo app.
  */
 func InitConfig(dir_root string, cfg *DirConfigEntry) *DirConfigEntry {
-	dir_lookup := GetDirectoriesLookup(dir_root)
-	containers, files := PopulatePreviews(dir_root, dir_lookup)
-	cfg.Dir = dir_root
+	cfg.Dir = dir_root  // Always Common
 	cfg.PreviewCount = 8
 	cfg.Limit = 16
-	cfg.ValidDirs = dir_lookup
-	cfg.ValidContainers = containers
-	cfg.ValidFiles = files
 	cfg.Initialized = true
-	// log.Printf("Initialized with %d containers and %d files", len(containers), len(files))
+    cfg.UseDatabase = true  // TODO: Make it so we can read all the data from memory
 	return cfg
 }
 
 /**
- *
+ *  TODO:  Require the number to preview and will be Memory only supported.
  */
-func PopulatePreviews(dir_root string, valid_dirs map[string]os.FileInfo) (models.ContainerMap, models.MediaMap) {
+func PopulateMemoryView(dir_root string, valid_dirs map[string]os.FileInfo) (models.ContainerMap, models.MediaMap) {
 	containers := models.ContainerMap{}
 	files := models.MediaMap{}
 
@@ -88,7 +81,6 @@ func PopulatePreviews(dir_root string, valid_dirs map[string]os.FileInfo) (model
 			Path: dc.Path,
 		}
 		containers[c.ID] = c
-
 		for _, todo_mc := range dc.Contents {
 			mc_id, _ := uuid.NewV4()
 			mc := models.MediaContainer{

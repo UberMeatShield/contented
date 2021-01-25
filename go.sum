@@ -139,6 +139,7 @@ github.com/gobuffalo/buffalo v0.15.5/go.mod h1:MeAI3aC7vGegr6Ruh+nfj0TvIoBhlLeO7
 github.com/gobuffalo/buffalo v0.16.12 h1:PzgNkHlq6Ih1PxCWuKxbjiHY6gckdR2zA4G6XCr/A0w=
 github.com/gobuffalo/buffalo v0.16.15 h1:rT44zqXTGsbC0pmOd6CJXwkeEoJ2+2SNaIXENmrFDqQ=
 github.com/gobuffalo/buffalo v0.16.15/go.mod h1:RNzCxBehFHSw/+xRKsc+5k8E/QVjbiFM22B8YyfdSTc=
+github.com/gobuffalo/buffalo v0.16.20 h1:IY4buYU25SNtm/gCgTCE8GEoVRdZvbsaQIpbBCY6VWA=
 github.com/gobuffalo/buffalo-docker v1.0.5/go.mod h1:NZ3+21WIdqOUlOlM2onCt7cwojYp4Qwlsngoolw8zlE=
 github.com/gobuffalo/buffalo-docker v1.0.6/go.mod h1:UlqKHJD8CQvyIb+pFq+m/JQW2w2mXuhxsaKaTj1X1XI=
 github.com/gobuffalo/buffalo-docker v1.0.7/go.mod h1:BdB8AhcmjwR6Lo3rDPMzyh/+eNjYnZ1TAO0eZeLkhig=
