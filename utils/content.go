@@ -13,8 +13,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
-
 	"github.com/gobuffalo/nulls"
 	"github.com/gofrs/uuid"
 )
@@ -33,7 +31,7 @@ type DirContents struct {
 	Path     string           `json:"path"`
 	Id       string           `json:"id"`
 	Name     string           `json:"name"`
-	Contents []MediaContainer `json:"contents"`
+	Contents models.MediaContainers `json:"contents"`
 }
 
 // TODO: this might be useful to add into the utils
@@ -151,35 +149,18 @@ func GetFileContentsByFqName(fq_name string) *bufio.Reader {
 }
 
 /**
- * Get the file we want to lookup by ID (eventually this should be DB or just memory)
- */
-func GetFileRefById(dir string, file_id_str string) (os.FileInfo, error) {
-	imgs, err := ioutil.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
-	file_id, ferr := strconv.Atoi(file_id_str)
-	if ferr != nil {
-		return nil, ferr
-	}
-	if file_id > len(imgs) || file_id < 0 {
-		return nil, nil
-	}
-	return imgs[file_id], nil
-}
-
-/**
  *  Get all the content in a particular directory (would be good to filter down to certain file types?)
  */
 func GetDirContents(fqDirPath string, limit int, start_offset int, dirname string) DirContents {
-	var arr = []MediaContainer{}
+	var arr = models.MediaContainers{}
 	imgs, _ := ioutil.ReadDir(fqDirPath)
 
 	total := 0
 	for idx, img := range imgs {
 		if !img.IsDir() {
 			if len(arr) < limit && idx >= start_offset {
-				media := getMediaContainer(strconv.Itoa(idx), img, fqDirPath)
+                id, _  := uuid.NewV4()
+				media := getMediaContainer(id, img, fqDirPath)
 				arr = append(arr, media)
 			}
 			total++ // Only add a total for non-directory files (exclude other types?)
@@ -230,7 +211,7 @@ func SniffFileType(content *os.File) (string, error) {
 	return ctype, nil
 }
 
-func getMediaContainer(id string, fileInfo os.FileInfo, path string) MediaContainer {
+func getMediaContainer(id uuid.UUID, fileInfo os.FileInfo, path string) models.MediaContainer {
 	contentType, err := GetMimeType(path, fileInfo.Name())
 	if err != nil {
 		log.Printf("Failed to determine contentType: %s", err)
@@ -240,8 +221,8 @@ func getMediaContainer(id string, fileInfo os.FileInfo, path string) MediaContai
 	// TODO: https://golangcode.com/get-the-content-type-of-file/
 	// TODO: Need to cache this data (Loading all the file directory on preview is probably dumb)
 	// TODO: Need to add the unique ID for each dir (are they uniq?)
-	media := MediaContainer{
-		Id:   id,
+	media := models.MediaContainer{
+		ID:   id,
 		Src:  fileInfo.Name(),
 		Type: contentType,
 	}

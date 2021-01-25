@@ -64,39 +64,6 @@ func Test_DirId(t *testing.T) {
 	}
 }
 
-func Test_GetFileRefById(t *testing.T) {
-	fq_dir := testDir + "/dir1"
-	dir_c := GetDirContents(fq_dir, 10, 0, "mocks")
-	if len(dir_c.Contents) < 8 {
-		t.Errorf("There should be contents inside of this test dir")
-	}
-	contents := dir_c.Contents
-
-	entry_0 := contents[0]
-	f0, err0 := GetFileRefById(fq_dir, entry_0.Id)
-	if err0 != nil || f0 == nil {
-		t.Errorf("Failed to lookup %s found err %s", entry_0.Src, err0)
-	}
-
-	entry_1 := contents[1]
-	f1, err := GetFileRefById(fq_dir, entry_1.Id)
-	if err != nil || f1 == nil {
-		t.Errorf("Failed to lookup %s found err %s", entry_1.Id, err)
-	}
-	if f1.Name() != entry_1.Src {
-		t.Errorf("Looked up id %s and expected %s but found %s", entry_1.Id, entry_1.Src, f1.Name())
-	}
-
-	entry_3 := contents[3]
-	f3, err3 := GetFileRefById(fq_dir, entry_3.Id)
-	if err3 != nil || f3 == nil {
-		t.Errorf("Failed to lookup %s found err %s", entry_3.Id, err)
-	}
-	if f3.Name() != entry_3.Src {
-		t.Errorf("Looked up id %s and expected %s but found %s", entry_3.Id, entry_3.Src, f3.Name())
-	}
-}
-
 func Test_GetSpecificDir(t *testing.T) {
 	var count = 2
 	files := GetDirContents(testDir+"/dir3", 2, 0, "mocks")
@@ -120,9 +87,6 @@ func Test_GetSpecificDir(t *testing.T) {
 	}
 
 	first_file := offset_files.Contents[0]
-	if first_file.Id != "4" {
-		t.Errorf("Offset should change the initial id %s", first_file.Id)
-	}
 	if first_file.Src != "fff&text=04-dir3.png" {
 		t.Errorf("Offset should change the initial filename %s", first_file.Src)
 	}
