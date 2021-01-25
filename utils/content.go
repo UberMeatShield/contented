@@ -79,6 +79,7 @@ func PopulateMemoryView(dir_root string, valid_dirs map[string]os.FileInfo) (mod
 			ID:   c_id,
 			Name: dc.Name,
 			Path: dc.Path,
+            Total: len(dc.Contents),
 		}
 		containers[c.ID] = c
 		for _, todo_mc := range dc.Contents {

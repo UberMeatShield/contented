@@ -20,10 +20,8 @@ type MediaContainer struct {
 	Type        string     `json:"type" db:"type"`
 	Preview     string     `json:"preview" db:"preview"`
 	ContainerID nulls.UUID `json:"container_id" db:"container_id"`
-
-	// Add this to the Container as well.
-	// idx
-	// is_active
+	Idx         int        `json:"idx" db:"idx"`
+	Active      bool       `json:"active" db:"active"`
 }
 
 // String is not required by pop and may be deleted
