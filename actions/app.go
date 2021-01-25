@@ -60,11 +60,6 @@ func App() *buffalo.App {
 		// Remove to disable this.
 		app.Use(popmw.Transaction(models.DB))
 
-		// Not exactly crud (since the DB API did not exist)
-		//app.GET("/content/", ListDefaultHandler)
-		//app.GET("/content/{dir_id}", ListSpecificHandler)
-		//app.GET("/view/{dir_id}/{file_id}", ViewHandler)
-
 		// Run grift?  Do dev from an actual DB instance?
 		app.GET("/preview/{file_id}", PreviewHandler)
 		app.GET("/view/{file_id}", FullHandler)

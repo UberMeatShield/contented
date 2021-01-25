@@ -103,7 +103,7 @@ func (cm *ContentManagerMemory) Initialize() {
     dir_lookup := utils.GetDirectoriesLookup(dir_root)
 
     // Move some of these
-    containers, files := utils.PopulatePreviews(dir_root, dir_lookup)
+    containers, files := utils.PopulateMemoryView(dir_root, dir_lookup)
     cm.ValidDirs = dir_lookup
     cm.ValidContainers = containers
     cm.ValidMedia = files

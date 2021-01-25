@@ -134,9 +134,6 @@ func (as *ActionSuite) Test_FindAndLoadFile() {
 	cfg := init_fake_app(false)
 
 	as.Equal(true, cfg.Initialized)
-	as.Equal(4, len(cfg.ValidContainers), "We should have 4 containers.")
-	as.Greater(len(cfg.ValidFiles), 20, "And a bunch of files")
-
 
     man := GetManager()
     mcs, err := man.ListAllMedia(1, 200)
@@ -189,22 +186,17 @@ func (as *ActionSuite) Test_FullFile() {
 
 // This checks if previews are actually used if defined
 func (as *ActionSuite) Test_PreviewWorking() {
-	cfg := init_fake_app(false)
-	for mc_id, mc := range cfg.ValidFiles {
+	init_fake_app(false)
+    man := GetManager()
+    mcs, err := man.ListAllMedia(1, 200)
+    as.NoError(err)
+
+	for _, mc := range *mcs {
 		if mc.Preview != "" {
-			res := as.HTML("/preview/" + mc_id.String()).Get()
+			res := as.HTML("/preview/" + mc.ID.String()).Get()
 			as.Equal(http.StatusOK, res.Code)
 			fmt.Println("Not modified")
 		}
-		/*  Mocking out a test that modifies the singleton is a pain in the ass
-		        else {
-		            wtf := appCfg.ValidFiles[mc.ID]
-		            wtf.Preview = "TotallyInvalid should 422"
-				    fmt.Printf("This MC should use preview location %s\n", mc_id.String())
-			        res := as.HTML("/preview/" + mc_id.String()).Get()
-			        as.Equal(http.StatusUnprocessableEntity, res.Code)
-		        }
-		*/
 	}
 }
 

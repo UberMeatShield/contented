@@ -40,9 +40,27 @@ func (as *ActionSuite) Test_MediaSubQuery() {
     as.DB.Create(c2)
     as.NotZero(c1.ID)
     as.NotZero(c2.ID)
-    as.Equal(c1.ID, "FINISH THIS TEST")
+
+    CreateResource("a", nulls.NewUUID(c1.ID), as)
+    CreateResource("b", nulls.NewUUID(c1.ID), as)
+    CreateResource("c", nulls.NewUUID(c2.ID), as)
+    CreateResource("d", nulls.NewUUID(c2.ID), as)
+    CreateResource("e", nulls.NewUUID(c2.ID), as)
+
+    res1 := as.JSON("/containers/" +  c1.ID.String() +  "/media").Get()
+    res2 := as.JSON("/containers/" +  c2.ID.String() +  "/media").Get()
+
+    as.Equal(http.StatusOK, res1.Code)
+    as.Equal(http.StatusOK, res2.Code)
     // Add resources to both
     // Filter based on container
+	validate1 := models.MediaContainers{}
+	validate2 := models.MediaContainers{}
+	json.NewDecoder(res1.Body).Decode(&validate1)
+	json.NewDecoder(res2.Body).Decode(&validate2)
+
+    as.Equal(len(validate1), 2, "There should be 2 media containers found")
+    as.Equal(len(validate2), 3, "There should be 3 in this one")
 }
 
 func (as *ActionSuite) Test_MediaContainersResource_List() {
