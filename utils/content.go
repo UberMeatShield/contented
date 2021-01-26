@@ -77,15 +77,17 @@ func PopulateMemoryView(dir_root string, valid_dirs map[string]os.FileInfo) (mod
 			ID:   c_id,
 			Name: dc.Name,
 			Path: dc.Path,
+            Total: len(dc.Contents),
 		}
 		containers[c.ID] = c
-		for _, todo_mc := range dc.Contents {
+		for idx, mc := range dc.Contents {
 			mc_id, _ := uuid.NewV4()
 			mc := models.MediaContainer{
 				ID:          mc_id,
-				Src:         todo_mc.Src,
-				Type:        todo_mc.Type,
+				Src:         mc.Src,
+				Type:        mc.Type,
 				ContainerID: nulls.NewUUID(c.ID),
+                Idx: idx,
 			}
 			files[mc.ID] = mc
 		}
@@ -126,8 +128,8 @@ func ListDirs(dir string, previewCount int) []DirContents {
 	files, _ := ioutil.ReadDir(dir)
 	for _, f := range files {
 		if f.IsDir() {
-			id := f.Name() // This should definitely be some other ID format => Lookup
-			listings = append(listings, GetDirContents(dir+id, previewCount, 0, id))
+			dir_name := f.Name() // This should definitely be some other ID format => Lookup
+			listings = append(listings, GetDirContents(dir + dir_name, previewCount, 0, dir_name))
 		}
 	}
 	return listings
