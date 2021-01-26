@@ -52,12 +52,13 @@ var _ = grift.Namespace("db", func() {
             models.DB.Create(dirObj)
 
 
-            for _, fi := range dir.Contents {
+            for idx, fi := range dir.Contents {
               mc := &models.MediaContainer{
                   Src: fi.Src,
                   Type: fi.Type,
                   Preview: "",  // Need to run the create preview process
                   ContainerID: nulls.NewUUID(dirObj.ID),
+                  Idx: idx,
               }
               models.DB.Create(mc)
             }
