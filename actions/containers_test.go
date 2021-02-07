@@ -47,6 +47,7 @@ func (as *ActionSuite) Test_ContainersResource_Create() {
 		Path:  "test/thing",
 	}
 	res := as.JSON("/containers").Post(c)
+    as.Equal(http.StatusCreated, res.Code, "It should be able to create")
 
 	resObj := models.Container{}
 	json.NewDecoder(res.Body).Decode(&resObj)

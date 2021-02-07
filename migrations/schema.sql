@@ -27,6 +27,7 @@ CREATE TABLE public.containers (
     total integer DEFAULT 0 NOT NULL,
     path character varying(255) DEFAULT ''::character varying NOT NULL,
     name character varying(255) DEFAULT ''::character varying NOT NULL,
+    active boolean DEFAULT TRUE,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL
 );
@@ -43,9 +44,9 @@ CREATE TABLE public.media_containers (
     src character varying(255) DEFAULT ''::character varying NOT NULL,
     type character varying(255) DEFAULT ''::character varying NOT NULL,
     preview character varying(255) DEFAULT ''::character varying NOT NULL,
-    idx integer DEFAULT 0 NOT NULL,
-    active boolean DEFAULT false NOT NULL,
     container_id uuid,
+    active boolean DEFAULT TRUE,
+    idx integer DEFAULT 0 NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL
 );

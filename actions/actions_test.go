@@ -33,8 +33,9 @@ func init_fake_app(use_db bool) *utils.DirConfigEntry {
     man := SetupManager(cfg)
 
     // TODO: Assign the context into the manager (force it?)
-    if cfg.UseDatabase {
-        for _, c := range *man.ListContainersContext() {
+    if cfg.UseDatabase == false {
+        cnts, _ := man.ListContainersContext()
+        for _, c := range *cnts {
             mcs, _ := man.ListMediaContext(c.ID)
             for _, mc := range *mcs {
                 if mc.Src == "this_is_p_ng" {

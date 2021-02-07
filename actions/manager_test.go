@@ -42,8 +42,8 @@ func basicContext() buffalo.DefaultContext {
 func (as *ActionSuite) Test_ManagerContainers() {
     init_fake_app(false)
     man := GetManager()
-    containers := man.ListContainersContext()
-    // as.NoError(err)
+    containers, err := man.ListContainersContext()
+    as.NoError(err)
 
     for _, c := range *containers {
         c_mem, err := man.FindDirRef(c.ID)
@@ -100,7 +100,8 @@ func (as *ActionSuite) Test_ManagerInitialize() {
     man := GetManager()
     as.NotNil(man, "It should have a manager defined after init")
 
-    containers := man.ListContainersContext()
+    containers, err := man.ListContainersContext()
+    as.NoError(err, "It should list all containers")
     as.NotNil(containers, "It should have containers")
     as.Equal(len(*containers), 4, "It should have 4 of them")
 
