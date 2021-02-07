@@ -19,13 +19,6 @@ import (
 
 const sniffLen = 512
 
-type MediaContainer struct {
-	Id      string `json:"id"`
-	Src     string `json:"src"`
-	Type    string `json:"type"`
-	Preview string `json:"preview"`
-}
-
 type DirContents struct {
 	Total    int              `json:"total"`
 	Path     string           `json:"path"`

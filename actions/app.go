@@ -79,7 +79,6 @@ func App() *buffalo.App {
         cr.Resource("/media", MediaContainersResource{})
 		app.Resource("/media", MediaContainersResource{})
 	}
-
 	return app
 }
 

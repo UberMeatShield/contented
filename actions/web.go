@@ -42,9 +42,11 @@ func SetupContented(app *buffalo.App, contentDir string, numToPreview int, limit
 
 func SetupManager(cfg *utils.DirConfigEntry) ContentManager {
     if cfg.UseDatabase {
+	    log.Printf("Setting up the DB Manager")
         db_man := ContentManagerDB{cfg: cfg}
         SetManager(db_man)
     } else {
+	    log.Printf("Setting up the memory Manager")
         mem_man := ContentManagerMemory{cfg: cfg}
         mem_man.Initialize()
         SetManager(mem_man)
