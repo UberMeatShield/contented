@@ -34,6 +34,8 @@ export class ContentedService {
             );
     }
 
+    // Do a preview load (should it be API?)
+
     // TODO: Make all the test mock data new and or recent
     public download(dir: Directory, rowIdx: number) {
         console.log("Attempting to download", dir, rowIdx);

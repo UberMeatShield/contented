@@ -28,7 +28,6 @@ func SetManager(manager ContentManager) {
     appManager = manager
 }
 
-// TODO: Remove all the old endpoints and endpoint tests
 // TODO: Add in a few more tests around data loading / pagination
 // TODO: Fix the UI to actually load in the data
 // TODO: Add in index code into the data model

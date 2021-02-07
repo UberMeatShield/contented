@@ -127,17 +127,17 @@ describe('TestingContentedService', () => {
         expect(dirs.length).toBeGreaterThan(1, "Should have directories");
         expect(dirs[0].total).toEqual(total);
 
-        let fullDir = dirs[0];
-        expect(fullDir.count).toBeLessThan(fullDir.total, "We should not be loaded");
+        let media = dirs[0];
+        expect(media.count).toBeLessThan(media.total, "We should not be loaded");
 
         let loaded: Directory;
-        let expectedNumberCalls = fullDir.total - fullDir.count;
-        service.fullLoadDir(fullDir, 1).subscribe(
+        let expectedNumberCalls = media.total - media.count;
+        service.fullLoadDir(media, 1).subscribe(
             (dir: Directory) => {
                 loaded = dir;
             }, err => { fail(err); }
         );
-        let url = ApiDef.contented.media.replace('{dir}', fullDir.id);
+        let url = ApiDef.contented.media.replace('{dirId}', media.id);
         let calls = httpMock.match((req: HttpRequest<any>) => {
             return req.url === url;
         });

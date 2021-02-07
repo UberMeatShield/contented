@@ -48,6 +48,7 @@ var _ = grift.Namespace("db", func() {
             dirObj := &models.Container{
               Path: dir_name,
               Name: dir.Name,
+              Total: len(dir.Contents),
             }
             models.DB.Create(dirObj)
 
