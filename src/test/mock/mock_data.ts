@@ -12,7 +12,7 @@ class MockLoader {
     }
 
     public getPreview() {
-        return require('./preview.json');
+        return require('./containers.json');
     }
 
     public getFullDirectory() {

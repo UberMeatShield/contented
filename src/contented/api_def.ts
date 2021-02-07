@@ -4,10 +4,10 @@ let base = window.location.origin + '/';
 export let ApiDef = {
     base: base,
     contented: {
-        preview: base + 'preview/',
         view: base + 'view/',
         download: base + 'download/',
-        fulldir: base + 'containers/{dirId}/media',
-        contents: base + 'containers/'
+        preview: base + 'preview/',
+        containers: base + 'containers/',
+        media: base + 'containers/{dirId}/media',
     }
 };

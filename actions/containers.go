@@ -36,10 +36,11 @@ func (v ContainersResource) List(c buffalo.Context) error {
 
     SetContext(c)
     man := GetManager()
-    containers := man.ListContainersContext()
-
+    containers, err := man.ListContainersContext()
+    if err != nil {
+        return c.Error(http.StatusBadRequest, err)
+    } 
     // TODO figure out how to set the current context
-
 	// Paginate results. Params "page" and "per_page" control pagination.
 	// Default values are "page=1" and "per_page=20".
     /*

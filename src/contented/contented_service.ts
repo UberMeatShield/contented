@@ -34,6 +34,8 @@ export class ContentedService {
             );
     }
 
+    // Do a preview load (should it be API?)
+
     // TODO: Make all the test mock data new and or recent
     public download(dir: Directory, rowIdx: number) {
         console.log("Attempting to download", dir, rowIdx);
@@ -100,7 +102,7 @@ export class ContentedService {
     public getFullDirectory(dir: string, offset = 0, limit = null) {
         limit = limit || this.LIMIT;
 
-        let url = ApiDef.contented.fulldir.replace('{dir}', dir);
+        let url = ApiDef.contented.media.replace('{dirId}', dir);
         let params = new HttpParams()
           .set('offset', '' + offset)
           .set('limit', '' + limit);

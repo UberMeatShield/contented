@@ -158,7 +158,7 @@ describe('TestingContentedCmp', () => {
 
         service.LIMIT = 1;
         comp.loadMore();
-        let fullUrl = ApiDef.contented.fulldir.replace('{dir}', dir.id);
+        let fullUrl = ApiDef.contented.media.replace('{dir}', dir.id);
         let fullReq = httpMock.expectOne(req => req.url === fullUrl);
         let checkParams: HttpParams = fullReq.request.params;
         expect(checkParams.get('limit')).toBe('1', "We set a different limit");
