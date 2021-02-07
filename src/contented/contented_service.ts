@@ -100,7 +100,7 @@ export class ContentedService {
     public getFullDirectory(dir: string, offset = 0, limit = null) {
         limit = limit || this.LIMIT;
 
-        let url = ApiDef.contented.fulldir.replace('{dir}', dir);
+        let url = ApiDef.contented.media.replace('{dirId}', dir);
         let params = new HttpParams()
           .set('offset', '' + offset)
           .set('limit', '' + limit);
