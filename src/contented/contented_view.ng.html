@@ -7,7 +7,7 @@
   </span>
   <span *ngIf="viewUrl" [class.recalculated]="calculateDimensions()">
     <img class="full-view-img" 
-      [src]="viewUrl.fullUrl" 
+      [src]="viewUrl?.fullUrl" 
       [width]="maxWidth" 
       [height]="maxHeight"
     >

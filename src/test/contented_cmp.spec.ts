@@ -18,7 +18,7 @@ import * as _ from 'lodash';
 import {MockData} from './mock/mock_data';
 
 declare var $;
-describe('TestingContentedCmp', () => {
+fdescribe('TestingContentedCmp', () => {
     let fixture: ComponentFixture<ContentedCmp>;
     let service: ContentedService;
     let comp: ContentedCmp;
@@ -96,12 +96,31 @@ describe('TestingContentedCmp', () => {
 
 
     it('Should handle a click event to show a particular image.', fakeAsync(() => {
-        MockData.mockContentedService(comp._contentedService);
         fixture.detectChanges();
         tick(2000);
 
+        let containers = MockData.getPreview();
+        let containersReq = httpMock.expectOne(req => req.url === ApiDef.contented.containers);
+        containersReq.flush(containers);
+
         expect(comp.fullScreen).toBe(false, "We should not be in fullsceen mode");
         expect($('.contented-view-cmp').length).toBe(0, "It should now have a view component.");
+        fixture.detectChanges();
+
+        let url = ApiDef.contented.media.replace("{dirId}", '' + containers[0].id);
+        let mediaReq = httpMock.expectOne(req => req.url === url);
+        mediaReq.flush(MockData.getMedia());
+        fixture.detectChanges();
+        tick(1000);
+
+        let d = comp.getCurrentDir();
+        expect(d).toBeDefined("There should be a current directory");
+        let cl = d.getContentList();
+        expect(cl).toBeDefined("We should have a content list");
+        expect(cl.length).toBeGreaterThan(0, "And we should have content");
+
+        let currLoc = comp.getCurrentLocation();
+        expect(currLoc).toBeDefined("It should have a current location set");
 
         fixture.detectChanges();
         let imgs = $('.preview-img');
@@ -109,69 +128,76 @@ describe('TestingContentedCmp', () => {
         expect(comp.fullScreen).toBe(false, "We should not be in fullsceen mode even after everything is loaded");
 
         let toClick = $(imgs[3]).trigger('click');
+        currLoc = comp.getCurrentLocation();
         expect(comp.fullScreen).toBe(true, "It should now have a selected item");
-        expect(comp.getCurrentLocation().fullUrl).toBe(imgs[3].src, "It should have the current item as the image");
+        expect(currLoc.fullUrl).toBe(imgs[3].src, "It should have the current item as the image");
     }));
 
     it("Should have a progress bar once the data is loaded", () => {
-        // Kick off a load and use the http controller mocks to return our preview
+        // Kick off a load and use the http controller mocks to return our containers
         fixture.detectChanges();
 
-        let preview = MockData.getPreview();
-        let previewReq = httpMock.expectOne(req => req.url === ApiDef.contented.preview);
-        let params: HttpParams = previewReq.request.params;
-        previewReq.flush(preview);
+        let containers = MockData.getPreview();
+        let containersReq = httpMock.expectOne(req => req.url === ApiDef.contented.containers);
+        let params: HttpParams = containersReq.request.params;
+        containersReq.flush(containers);
 
-        expect(comp.loading).toBe(false, "It should be fine with loading the preview");
+        expect(comp.loading).toBe(false, "It should be fine with loading the containers");
         expect(comp.allD.length).toBeGreaterThan(0, "There should be a number of directories");
         fixture.detectChanges();
+
+        let url = ApiDef.contented.media.replace("{dirId}", '' + containers[0].id);
+        let mediaReq = httpMock.expectOne(req => req.url === url);
+        mediaReq.flush(MockData.getMedia());
 
         expect(comp.idx).toBe(0, "It should be on the default page");
         let dirs = $('.dir-name');
         expect(dirs.length).toBe(2, "There should be two directories present");
-        expect(_.get(preview, 'results[0].name')).toBe($(dirs[0]).text(), 'It should have the dir id');
-        expect(_.get(preview, 'results[1].name')).toBe($(dirs[1]).text(), 'It should have the dir name');
+        expect(_.get(containers, '[0].name')).toBe($(dirs[0]).text(), 'It should have the dir id');
+        expect(_.get(containers, '[1].name')).toBe($(dirs[1]).text(), 'It should have the dir name');
 
         let progBars = $('mat-progress-bar');
         expect(progBars.length).toBe(2, "We should have two rendered bars");
         expect($(progBars.get(0)).attr('mode')).toBe('buffer', "First dir is not fully loaded");
-
-        // Fully load, check that it is not longer in buffer mode
-        // TODO: Go to the next dir
-        // Check the current row index (increase the loaded data), go next, check visibile state
     });
 
 
-    it('Should be able to load more contents in a dir', () => {
+    it('Should be able to load more contents in a dir', fakeAsync(() => {
         fixture.detectChanges();
-        let preview = MockData.getPreview();
-        let previewReq = httpMock.expectOne(req => req.url === ApiDef.contented.preview);
-        let params: HttpParams = previewReq.request.params;
-        previewReq.flush(preview);
+        let containers = MockData.getPreview();
+        let containersReq = httpMock.expectOne(req => req.url === ApiDef.contented.containers);
+        containersReq.flush(containers);
         fixture.detectChanges();
 
         let dir: Directory = comp.getCurrentDir();
         expect(dir).not.toBe(null);
         expect(dir.count).toBeLessThan(dir.total, "There should be more to load");
+
+        let url = ApiDef.contented.media.replace('{dirId}', dir.id);
+        let firstReq = httpMock.expectOne(req => req.url === url);
+        firstReq.flush({id: 'AnID', name: 'init', container_id: dir.id});
+        fixture.detectChanges();
+        tick(1000);
+
         let prevCount = dir.count;
-        expect(prevCount).not.toBe(0, "It should start with content");
+        expect(prevCount).toBe(1, "The default load has 1 item");
 
         service.LIMIT = 1;
         comp.loadMore();
-        let fullUrl = ApiDef.contented.media.replace('{dir}', dir.id);
-        let fullReq = httpMock.expectOne(req => req.url === fullUrl);
-        let checkParams: HttpParams = fullReq.request.params;
+        let loadReq = httpMock.expectOne(req => req.url === url);
+        let checkParams: HttpParams = loadReq.request.params;
         expect(checkParams.get('limit')).toBe('1', "We set a different limit");
         expect(checkParams.get('offset')).toBe('' + dir.count, "It should load more, not the beginning");
 
         let firstLoad = MockData.getMockDir(dir.total - dir.count, 'item-', dir.contents.length);
-        fullReq.flush(firstLoad);
+        loadReq.flush(firstLoad);
 
+        tick(10000);
         expect(dir.count).toBeGreaterThan(prevCount, "We should have added more");
 
-        let findId = _.get(firstLoad, 'contents[0].id');
+        let findId = _.get(firstLoad, '[0].id');
         expect(_.findIndex(dir.contents, {id: findId})).toBeGreaterThan(0, `We should have ${findId} in the contents`);
         expect(dir.count).toBe(dir.total, "It should load all the data");
-    });
+    }));
 });
 

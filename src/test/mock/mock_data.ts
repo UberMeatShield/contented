@@ -12,7 +12,18 @@ class MockLoader {
     }
 
     public getPreview() {
-        return require('./containers.json');
+        return _.clone(require('./containers.json'));
+    }
+
+    public getMedia(container_id = null, count = null) {
+        let media = _.clone(require('./media.json'));
+        if (container_id) {
+            _.each(media, m => {
+                m.container_id = container_id;
+            });
+        }
+        // TODO: Create fake media / id info if given a count
+        return media;
     }
 
     public getFullDirectory() {
@@ -20,21 +31,22 @@ class MockLoader {
     }
 
     public getMockDir(count: number, itemPrefix: string = 'item-', offset: number = 0, total = 20) {
-         let contents = _.map(_.range(0, count),
-             (idx) => {
-                 let id = idx + offset;
-                 return {src: itemPrefix + id, id: id};
-             }
-         );
+        let containerId = 'test';
+        let contents = _.map(_.range(0, count),
+            (idx) => {
+                let id = idx + offset;
+                return {src: itemPrefix + id, id: id, container_id: containerId};
+            }
+        );
 
-         let fakeDirResponse = {
-             total: total,
-             path: 'narp/',
-             id: 'test',
-             contents: contents
-         };
-         return fakeDirResponse;
-     }
+        let fakeDirResponse = {
+            total: total,
+            path: 'narp/',
+            id: containerId,
+            contents: contents
+        };
+        return fakeDirResponse;
+    }
 
     public mockContentedService(service) {
         let previewJson = this.getPreview();

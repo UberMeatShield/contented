@@ -134,11 +134,9 @@ export class ContentedCmp implements OnInit {
     }
 
     public dirResults(dir: Directory, response) {
-        console.log("Full Directory loading, what is in the results?", response);
+        console.log("Results loading, what is in the results?", response);
         // TODO: merge the crap
-        dir.addContents(
-            dir.buildImgs(_.get(response, 'contents'))
-        );
+        dir.addContents(dir.buildImgs(response));
     }
 
     public reset() {

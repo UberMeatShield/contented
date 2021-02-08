@@ -51,11 +51,12 @@ describe('TestingContentedService', () => {
         let preview = MockData.getPreview();
         service.getPreview().subscribe(
             (dirs: Array<Directory>) => {
-                expect(dirs.length).toEqual(preview['results'].length, "It should kick back data");
+                expect(dirs.length).toEqual(preview.length, "It should kick back data");
 
                 _.each(dirs, dir => {
-                    expect(dir.count).toBeGreaterThan(0, "All of them should have contents");
-                    expect(dir.count).toBe(dir.contents.length, "It should equal out");
+                    expect(dir.name).toBeDefined("It should have a name");
+                    expect(dir.total).toBeGreaterThan(0, "There should be a total");
+                    expect(dir.count).toBe(0, "We have not loaded data at this point");
                 });
                 reallyRan = true;
             },
@@ -63,7 +64,7 @@ describe('TestingContentedService', () => {
                 fail(err);
             }
         );
-        let previewReq = httpMock.expectOne(req => req.url === ApiDef.contented.preview);
+        let previewReq = httpMock.expectOne(req => req.url === ApiDef.contented.containers);
         let params: HttpParams = previewReq.request.params;
         previewReq.flush(preview);
         expect(reallyRan).toBe(true);
@@ -80,7 +81,7 @@ describe('TestingContentedService', () => {
 
         service.fullLoadDir(dir, 5000);
 
-        let url = ApiDef.contented.media.replace('{dir}', dir.id);
+        let url = ApiDef.contented.media.replace('{dirId}', dir.id);
         let calls = httpMock.match((req: HttpRequest<any>) => {
             return req.url === url;
         });
@@ -119,8 +120,8 @@ describe('TestingContentedService', () => {
         let preview = _.clone(MockData.getPreview());
 
         let total = 30;
-        preview['results'][0].total = total;
-        let previewReq = httpMock.expectOne(req => req.url === ApiDef.contented.preview);
+        preview[0].total = total;
+        let previewReq = httpMock.expectOne(req => req.url === ApiDef.contented.containers);
         let params: HttpParams = previewReq.request.params;
         previewReq.flush(preview);
 
