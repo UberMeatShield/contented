@@ -98,7 +98,9 @@ describe('TestingContentedService', () => {
                expectedMaxFound = true;
             }
             const toCreate = offset + limit < total ? limit : total - offset;
-            req.flush(MockData.getMockDir(toCreate, 'i-', offset, total));
+
+            let resN = MockData.getMockDir(toCreate, 'i-', offset, total);
+            req.flush(resN.contents);
         });
         tick(100000);
         expect(dir.contents.length).toEqual(total, 'It should load all content');

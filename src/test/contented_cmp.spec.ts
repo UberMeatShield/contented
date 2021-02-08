@@ -18,7 +18,7 @@ import * as _ from 'lodash';
 import {MockData} from './mock/mock_data';
 
 declare var $;
-fdescribe('TestingContentedCmp', () => {
+describe('TestingContentedCmp', () => {
     let fixture: ComponentFixture<ContentedCmp>;
     let service: ContentedService;
     let comp: ContentedCmp;
@@ -60,13 +60,13 @@ fdescribe('TestingContentedCmp', () => {
 
     it('TODO: Fully handles routing arguments', fakeAsync(() => {
         // Should just setup other ajax calls
-        MockData.mockContentedService(comp._contentedService);
-
         router.navigate(['/ui/2/3']);
         tick(100);
         expect(router.url).toBe('/ui/2/3');
 
         fixture.detectChanges();
+
+        MockData.handleCmpDefaultLoad(httpMock);
         tick(1000);
         // TODO: Make a test that actually works with the damn activated route params
         // expect(comp.idx).toBe(2, "It should pull the dir index from ");
@@ -78,8 +78,8 @@ fdescribe('TestingContentedCmp', () => {
     });
 
     it('Should be able to load up the basic data and render an image for each', fakeAsync(() => {
-        MockData.mockContentedService(comp._contentedService);
         fixture.detectChanges();
+        MockData.handleCmpDefaultLoad(httpMock);
         tick(2000);
         expect(comp.allD.length).toBe(4, "We should have 4 directories set");
 
@@ -190,9 +190,9 @@ fdescribe('TestingContentedCmp', () => {
         expect(checkParams.get('offset')).toBe('' + dir.count, "It should load more, not the beginning");
 
         let firstLoad = MockData.getMockDir(dir.total - dir.count, 'item-', dir.contents.length);
-        loadReq.flush(firstLoad);
-
+        loadReq.flush(firstLoad.contents);
         tick(10000);
+        fixture.detectChanges();
         expect(dir.count).toBeGreaterThan(prevCount, "We should have added more");
 
         let findId = _.get(firstLoad, '[0].id');

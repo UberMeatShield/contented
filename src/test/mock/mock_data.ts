@@ -1,6 +1,7 @@
 // TODO: This was from before the httpMock was actually good, just use httpMockController now
 import {Observable, from as observableFrom} from 'rxjs';
 import {Directory} from './../../contented/directory';
+import {ApiDef} from './../../contented/api_def';
 import * as _ from 'lodash';
 
 declare var require: any;
@@ -56,6 +57,17 @@ class MockLoader {
         service.getPreview = this.obs(dirs);
         service.getFullDirectory = this.obs(this.getFullDirectory());
     }
+
+    public handleCmpDefaultLoad(httpMock) {
+         let containers = this.getPreview();
+         let containersReq = httpMock.expectOne(req => req.url === ApiDef.contented.containers);
+         containersReq.flush(containers);
+
+         let url = ApiDef.contented.media.replace("{dirId}", '' + containers[0].id);
+         let mediaReq = httpMock.expectOne(req => req.url === url);
+         mediaReq.flush(MockData.getMedia());
+    }
+
 
     // This will actually fake an async call to prove things require async ticks, better tests on cmps
     public obs(response, shouldReject: boolean = false) {
