@@ -5,7 +5,7 @@
         [class.current-img]="currentViewItem == imgContainer"
         [width]="previewWidth"
         [height]="previewHeight"
-        [src]="imgContainer.fullUrl" 
+        [src]="imgContainer?.fullUrl" 
         (load)="imgLoaded($event)"
         (click)="imgClicked(imgContainer)"
       > 

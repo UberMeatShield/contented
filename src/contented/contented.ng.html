@@ -20,7 +20,7 @@
           <span class="dir-name">
             <a href="/content/{{dir?.id}}">{{dir?.name}}</a>
           </span>
-          <span class="current-item"> {{currentViewItem.fullUrl}}</span>
+          <span class="current-item"> {{currentViewItem?.fullUrl}}</span>
           showing {{idx + 1}} of {{allD?.length}} directories.
           <form class="directory-meta-text">
             Select: <input name="rowIdx" type="number" [(ngModel)]="rowIdx">

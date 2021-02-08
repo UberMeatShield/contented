@@ -13,12 +13,12 @@ describe('TestingDirectory', () => {
 
     it('Should be able to create a set of directory objects', () => {
         let dirResponse = MockData.getPreview();
-        let dirs = _.map(_.get(dirResponse, 'results'), data => {
+        let dirs = _.map(dirResponse, data => {
             return new Directory(data);
         });
         expect(dirs.length > 0).toBe(true, "It should actually have some responses.");
         _.each(dirs, dir => {
-            expect(dir.getContentList().length > 0).toBe(true, "We should have a content list and be able to build them out.");
+            expect(dir.total).toBeGreaterThan(0, "There should be contents");
             expect(dir.id).toBeDefined("We should have an id set for each dir.");
         });
     });

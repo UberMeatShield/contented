@@ -23,12 +23,10 @@ export class ContentedService {
     }
 
     public getPreview() {
-        return this.http.get(ApiDef.contented.preview, this.options)
+        return this.http.get(ApiDef.contented.containers, this.options)
             .pipe(
                 map(res => {
-                    return _.map(_.get(res, 'results'), dir => {
-                        return new Directory(dir);
-                    });
+                    return _.map(res, dir => new Directory(dir));
                 }),
                 catchError(err => this.handleError(err))
             );
@@ -62,15 +60,15 @@ export class ContentedService {
             let idx = 0;
             for (let offset = dir.count; offset < dir.total; offset += limit) {
                 ++idx;
-                let delayP = new Promise((yes, nope) => {
+                let delayP = new Promise((yupResolve, nopeReject) => {
                     this.getFullDirectory(dir.id, offset, limit).subscribe(res => {
                         _.delay(() => {
-                            dir.addContents(dir.buildImgs(_.get(res, 'contents')));
-                            yes(dir);
+                            dir.addContents(dir.buildImgs(res));
+                            yupResolve(dir);
                         }, idx * 500);
                     }, err => {
                         console.error('Failed to load', err);
-                        nope(err);
+                        nopeReject(err);
                     });
                 });
 

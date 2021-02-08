@@ -1,6 +1,7 @@
 // TODO: This was from before the httpMock was actually good, just use httpMockController now
 import {Observable, from as observableFrom} from 'rxjs';
 import {Directory} from './../../contented/directory';
+import {ApiDef} from './../../contented/api_def';
 import * as _ from 'lodash';
 
 declare var require: any;
@@ -12,7 +13,18 @@ class MockLoader {
     }
 
     public getPreview() {
-        return require('./containers.json');
+        return _.clone(require('./containers.json'));
+    }
+
+    public getMedia(container_id = null, count = null) {
+        let media = _.clone(require('./media.json'));
+        if (container_id) {
+            _.each(media, m => {
+                m.container_id = container_id;
+            });
+        }
+        // TODO: Create fake media / id info if given a count
+        return media;
     }
 
     public getFullDirectory() {
@@ -20,21 +32,22 @@ class MockLoader {
     }
 
     public getMockDir(count: number, itemPrefix: string = 'item-', offset: number = 0, total = 20) {
-         let contents = _.map(_.range(0, count),
-             (idx) => {
-                 let id = idx + offset;
-                 return {src: itemPrefix + id, id: id};
-             }
-         );
+        let containerId = 'test';
+        let contents = _.map(_.range(0, count),
+            (idx) => {
+                let id = idx + offset;
+                return {src: itemPrefix + id, id: id, container_id: containerId};
+            }
+        );
 
-         let fakeDirResponse = {
-             total: total,
-             path: 'narp/',
-             id: 'test',
-             contents: contents
-         };
-         return fakeDirResponse;
-     }
+        let fakeDirResponse = {
+            total: total,
+            path: 'narp/',
+            id: containerId,
+            contents: contents
+        };
+        return fakeDirResponse;
+    }
 
     public mockContentedService(service) {
         let previewJson = this.getPreview();
@@ -44,6 +57,17 @@ class MockLoader {
         service.getPreview = this.obs(dirs);
         service.getFullDirectory = this.obs(this.getFullDirectory());
     }
+
+    public handleCmpDefaultLoad(httpMock) {
+         let containers = this.getPreview();
+         let containersReq = httpMock.expectOne(req => req.url === ApiDef.contented.containers);
+         containersReq.flush(containers);
+
+         let url = ApiDef.contented.media.replace("{dirId}", '' + containers[0].id);
+         let mediaReq = httpMock.expectOne(req => req.url === url);
+         mediaReq.flush(MockData.getMedia());
+    }
+
 
     // This will actually fake an async call to prove things require async ticks, better tests on cmps
     public obs(response, shouldReject: boolean = false) {
