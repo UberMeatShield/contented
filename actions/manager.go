@@ -33,8 +33,8 @@ func SetCfg(cfg utils.DirConfigEntry) {
     appCfg = cfg
 }
 
-func GetManager(c buffalo.Context) ContentManager {
-    return CreateManager(&appCfg, &c)
+func GetManager(c *buffalo.Context) ContentManager {
+    return CreateManager(&appCfg, c)
 }
 
 
@@ -67,8 +67,8 @@ type ContentManager interface {
     ListContainersContext() (*models.Containers, error)
 
     GetMedia(media_id uuid.UUID) (*models.MediaContainer, error)
-    ListMedia(container_id uuid.UUID, page int, per_page int) (*models.MediaContainers, error)
-    ListMediaContext(container_id uuid.UUID) (*models.MediaContainers, error)
+    ListMedia(ContainerID uuid.UUID, page int, per_page int) (*models.MediaContainers, error)
+    ListMediaContext(ContainerID uuid.UUID) (*models.MediaContainers, error)
     ListAllMedia(page int, per_page int) (*models.MediaContainers, error)
 
     FindActualFile(mc *models.MediaContainer) (string, error)
@@ -150,11 +150,11 @@ func (cm ContentManagerMemory) ListAllMedia(page int, per_page int) (*models.Med
 }
 
 // Awkard GoLang interface support is awkward
-func (cm ContentManagerMemory) ListMedia(container_id uuid.UUID, page int, per_page int) (*models.MediaContainers, error) {
+func (cm ContentManagerMemory) ListMedia(ContainerID uuid.UUID, page int, per_page int) (*models.MediaContainers, error) {
     m_arr := models.MediaContainers{}
     for _, m := range cm.ValidMedia {
         if m.ContainerID.Valid {
-            if m.ContainerID.UUID == container_id && len(m_arr) <= per_page {
+            if m.ContainerID.UUID == ContainerID && len(m_arr) <= per_page {
                 m_arr = append(m_arr, m)
             }
         } else if len(m_arr) < per_page {
@@ -210,7 +210,7 @@ func (cm ContentManagerMemory) FindFileRef(file_id uuid.UUID) (*models.MediaCont
 }
 
 func (cm ContentManagerMemory) GetPreviewForMC(mc *models.MediaContainer) (string, error) {
-    dir, err := cm.FindDirRef(mc.ID)
+    dir, err := cm.FindDirRef(mc.ContainerID.UUID)
     if err != nil {
         return "DB Manager Preview no Parent Found", err
     }
@@ -223,7 +223,7 @@ func (cm ContentManagerMemory) GetPreviewForMC(mc *models.MediaContainer) (strin
 }
 
 func (cm ContentManagerMemory) FindActualFile(mc *models.MediaContainer) (string, error) {
-    dir, err := cm.FindDirRef(mc.ID)
+    dir, err := cm.FindDirRef(mc.ContainerID.UUID)
     if err != nil {
         return "DB Manager View no Parent Found", err
     }
@@ -368,7 +368,7 @@ func (cm ContentManagerDB) FindDirRef(dir_id uuid.UUID) (*models.Container, erro
 }
 
 func (cm ContentManagerDB) GetPreviewForMC(mc *models.MediaContainer) (string, error) {
-    dir, err := cm.FindDirRef(mc.ID)
+    dir, err := cm.FindDirRef(mc.ContainerID.UUID)
     if err != nil {
         return "DB Manager Preview no Parent Found", err
     }
@@ -381,7 +381,7 @@ func (cm ContentManagerDB) GetPreviewForMC(mc *models.MediaContainer) (string, e
 }
 
 func (cm ContentManagerDB) FindActualFile(mc *models.MediaContainer) (string, error) {
-    dir, err := cm.FindDirRef(mc.ID)
+    dir, err := cm.FindDirRef(mc.ContainerID.UUID)
     if err != nil {
         return "DB Manager View no Parent Found", err
     }

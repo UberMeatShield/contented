@@ -41,7 +41,7 @@ func FullHandler(c buffalo.Context) error {
 	if bad_uuid != nil {
 		return c.Error(400, bad_uuid)
 	}
-    man := GetManager(c)
+    man := GetManager(&c)
 	mc, err := man.FindFileRef(file_id)
 	if err != nil {
 		return c.Error(404, err)
@@ -62,7 +62,7 @@ func PreviewHandler(c buffalo.Context) error {
 	if bad_uuid != nil {
 		return c.Error(400, bad_uuid)
 	}
-    man := GetManager(c)
+    man := GetManager(&c)
 	mc, err := man.FindFileRef(file_id)
 	if err != nil {
 		return c.Error(404, err)
@@ -84,7 +84,7 @@ func DownloadHandler(c buffalo.Context) error {
     if bad_uuid != nil {
         return c.Error(400, bad_uuid)
     }
-    man := GetManager(c)
+    man := GetManager(&c)
     mc, err := man.FindFileRef(file_id)
     if err != nil {
         return c.Error(404, err)
