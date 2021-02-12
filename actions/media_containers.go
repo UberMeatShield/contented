@@ -35,9 +35,7 @@ type MediaContainersResource struct {
 func (v MediaContainersResource) List(c buffalo.Context) error {
 	// Get the DB connection from the context
 
-    SetContext(c)
-    man := GetManager()
-
+    man := GetManager(c)
     var mediaContainers *models.MediaContainers
 
     // Optional params suuuuck in GoLang
@@ -114,8 +112,7 @@ func (v MediaContainersResource) List(c buffalo.Context) error {
 // Show gets the data for one MediaContainer. This function is mapped to
 // the path GET /media_containers/{media_container_id}
 func (v MediaContainersResource) Show(c buffalo.Context) error {
-    SetContext(c)
-    man := GetManager()
+    man := GetManager(c)
 
     // TODO: Make it actually just handle /media (page, number)
     uuid, err := uuid.FromString(c.Param("media_container_id"))
