@@ -7,16 +7,31 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+    "context"
 	"testing"
-
+	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/envy"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/gobuffalo/suite"
-	// "github.com/gofrs/uuid"
 )
 
 type ActionSuite struct {
 	*suite.Action
+}
+
+
+func getContext(app *buffalo.App) buffalo.Context {
+
+    url := "/containers"
+    req, _ := http.NewRequest("GET", url, nil)
+
+    ctx := req.Context()
+    ctx = context.WithValue(ctx, "page", "1")
+    ctx = context.WithValue(ctx, "per_page", "10")
+
+    return &buffalo.DefaultContext{
+        Context: ctx,
+    }
 }
 
 
@@ -30,19 +45,20 @@ func init_fake_app(use_db bool) *utils.DirConfigEntry {
 	cfg := GetCfg()
 	utils.InitConfig(dir, cfg)
     cfg.UseDatabase = use_db  // TODO: Make this something you pass in on init
-    man := SetupManager(cfg)
 
     // TODO: Assign the context into the manager (force it?)
     if cfg.UseDatabase == false {
-        cnts, _ := man.ListContainersContext()
-        for _, c := range *cnts {
-            mcs, _ := man.ListMediaContext(c.ID)
-            for _, mc := range *mcs {
-                if mc.Src == "this_is_p_ng" {
-                    mc.Preview = "preview_this_is_p_ng"
-                }
-            }
+        memStorage := InitializeMemory(dir)
+
+        // cnts := memStorage.ValidContainers
+        // for _, c := range cnts {
+        mcs := memStorage.ValidMedia
+        for _, mc := range mcs {
+           if mc.Src == "this_is_p_ng" {
+               mc.Preview = "preview_this_is_p_ng"
+           }
         }
+       // }
     }
 	return cfg
 }
@@ -95,7 +111,10 @@ func (as *ActionSuite) Test_ContentDirLoad() {
 func (as *ActionSuite) Test_ViewRef() {
 	// Oof, that is rough... need a better way to select the file not by index but ID
 	init_fake_app(false)
-    man := GetManager()
+
+    app := as.App
+    ctx := getContext(app)
+    man := GetManager(&ctx)
     mcs, err := man.ListAllMedia(2, 2)
     as.NoError(err)
     as.Equal(2, len(*mcs), "It should have only two results")
@@ -116,7 +135,8 @@ func (as *ActionSuite) Test_ContentDirDownload() {
 	init_fake_app(false)
 
     valid := map[string]bool{"image/png": true, "image/jpeg": true, "application/octet-stream": true}
-    man := GetManager()
+    ctx := getContext(as.App)
+    man := GetManager(&ctx)
     mcs, err := man.ListAllMedia(2, 2)
     as.NoError(err)
     as.Equal(2, len(*mcs), "It should have only two results")
@@ -136,7 +156,8 @@ func (as *ActionSuite) Test_FindAndLoadFile() {
 
 	as.Equal(true, cfg.Initialized)
 
-    man := GetManager()
+    ctx := getContext(as.App)
+    man := GetManager(&ctx)
     mcs, err := man.ListAllMedia(1, 200)
     as.NoError(err)
 
@@ -144,7 +165,7 @@ func (as *ActionSuite) Test_FindAndLoadFile() {
 		mc_ref, fc_err := man.FindFileRef(mc.ID)
 		as.NoError(fc_err, "And an initialized app should index correctly")
 
-		fq_path, err := FindActualFile(mc_ref)
+		fq_path, err := man.FindActualFile(mc_ref)
 		as.NoError(err, "It should find all these files")
 
 		_, o_err := os.Stat(fq_path)
@@ -155,7 +176,8 @@ func (as *ActionSuite) Test_FindAndLoadFile() {
 // This checks that a preview loads when defined and otherwise falls back to the MC itself
 func (as *ActionSuite) Test_PreviewFile() {
 	init_fake_app(false)
-    man := GetManager()
+    ctx := getContext(as.App)
+    man := GetManager(&ctx)
     mcs, err := man.ListAllMedia(1, 200)
     as.NoError(err)
 
@@ -171,7 +193,8 @@ func (as *ActionSuite) Test_PreviewFile() {
 
 func (as *ActionSuite) Test_FullFile() {
 	init_fake_app(false)
-    man := GetManager()
+    ctx := getContext(as.App)
+    man := GetManager(&ctx)
     mcs, err := man.ListAllMedia(1, 200)
     as.NoError(err)
 
@@ -188,7 +211,8 @@ func (as *ActionSuite) Test_FullFile() {
 // This checks if previews are actually used if defined
 func (as *ActionSuite) Test_PreviewWorking() {
 	init_fake_app(false)
-    man := GetManager()
+    ctx := getContext(as.App)
+    man := GetManager(&ctx)
     mcs, err := man.ListAllMedia(1, 200)
     as.NoError(err)
 

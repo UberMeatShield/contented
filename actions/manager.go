@@ -114,25 +114,30 @@ func (cm ContentManagerMemory) GetContext() *buffalo.Context {
 
 // TODO:  Now THIS one can actually build out a singleton that is shared I guess.
 func (cm *ContentManagerMemory) Initialize() {
-    dir_root := cm.cfg.Dir
-    log.Printf("Initializing Memory manager %s\n", dir_root)
 
     // We only want the memory storage initialized one time ?  But allow for re-init?
     // Could toss the object into the manager but then that means even more code change.
     if memStorage.Initialized == false {
-        dir_lookup := utils.GetDirectoriesLookup(dir_root)
-        containers, files := utils.PopulateMemoryView(dir_root, dir_lookup)
-
-        memStorage.Initialized = true
-        memStorage.ValidDirs = dir_lookup
-        memStorage.ValidContainers = containers
-        memStorage.ValidMedia = files
+        memStorage = InitializeMemory(cm.cfg.Dir)
     }
     // Move some of these into an actual singleton.
     cm.ValidDirs = memStorage.ValidDirs
     cm.ValidContainers = memStorage.ValidContainers
     cm.ValidMedia = memStorage.ValidMedia
     log.Printf("Found %d directories\n", len(cm.ValidDirs))
+}
+
+func InitializeMemory(dir_root string) MemoryStorage {
+    log.Printf("Initializing Memory Storage %s\n", dir_root)
+    dir_lookup := utils.GetDirectoriesLookup(dir_root)
+    containers, files := utils.PopulateMemoryView(dir_root, dir_lookup)
+
+    memStorage.Initialized = true
+    memStorage.ValidDirs = dir_lookup
+    memStorage.ValidContainers = containers
+    memStorage.ValidMedia = files
+
+    return memStorage
 }
 
 func (cm ContentManagerMemory) ListMediaContext(c_id uuid.UUID) (*models.MediaContainers, error) {
