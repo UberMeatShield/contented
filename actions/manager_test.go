@@ -83,14 +83,18 @@ func (as *ActionSuite) Test_AssignManager() {
     mem.SetCfg(cfg)
     mem.Initialize()
 
-    ctx := getContext(app)
-    man := GetManager(&ctx)  // New Reference but should have the same count of media
-    memCfg := man.GetCfg()
+    memCfg := mem.GetCfg()
     as.NotNil(memCfg, "It should be defined")
-
     mcs, err := mem.ListAllMedia(1, 9001)
     as.NoError(err)
     as.Greater(len(*mcs), 0, "It should have valid files in the manager")
+
+    appCfg.UseDatabase = false
+    ctx := getContext(app)
+    man := GetManager(&ctx)  // New Reference but should have the same count of media
+    mcs_2, _ := man.ListAllMedia(1, 9000)
+
+    as.Equal(len(*mcs), len(*mcs_2), "A new instance should use the same storage")
 }
 
 

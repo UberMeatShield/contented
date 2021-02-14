@@ -18,6 +18,7 @@ type Container struct {
 	CreatedAt time.Time       `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time       `json:"updated_at" db:"updated_at"`
 	Contents  MediaContainers `json:"contents" has_many:"media_containers" db:"-"`
+    Active    bool            `json:"active" db:"active"`
 }
 
 // String is not required by pop and may be deleted
