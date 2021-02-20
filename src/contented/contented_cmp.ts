@@ -148,7 +148,12 @@ export class ContentedCmp implements OnInit {
         if (this.allD) {
             let start = this.idx < this.allD.length ? this.idx : this.allD.length - 1;
             let end = start + this.maxVisible <= this.allD.length ? start + this.maxVisible : this.allD.length;
-            return this.allD.slice(start, end);
+
+            let dirs = this.allD.slice(start, end);
+            _.each(dirs, dir => {
+                this._contentedService.initialLoad(dir);  // Only loads if dir.loadState = LoadStates.NotLoaded
+            });
+            return dirs;
         }
         return [];
     }

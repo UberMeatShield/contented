@@ -20,11 +20,12 @@ class MockLoader {
         let media = _.clone(require('./media.json'));
         if (container_id) {
             _.each(media, m => {
+                m.id = m.id + container_id;
                 m.container_id = container_id;
             });
         }
         // TODO: Create fake media / id info if given a count
-        return media;
+        return media.slice(0, count);
     }
 
     public getFullDirectory() {
@@ -42,30 +43,36 @@ class MockLoader {
 
         let fakeDirResponse = {
             total: total,
-            path: 'narp/',
+            path: `narp${containerId}/`,
+            name: containerId,  // Generate a UUID?
             id: containerId,
-            contents: contents
+            contents: contents  // Note the API does not currently return contents
         };
         return fakeDirResponse;
     }
 
-    public mockContentedService(service) {
-        let previewJson = this.getPreview();
-        let dirs = _.map(_.get(previewJson, 'results'), dir => {
-           return new Directory(dir);
-        });
-        service.getPreview = this.obs(dirs);
-        service.getFullDirectory = this.obs(this.getFullDirectory());
-    }
-
-    public handleCmpDefaultLoad(httpMock) {
+    public handleCmpDefaultLoad(httpMock, fixture = null) {
          let containers = this.getPreview();
          let containersReq = httpMock.expectOne(req => req.url === ApiDef.contented.containers);
          containersReq.flush(containers);
 
-         let url = ApiDef.contented.media.replace("{dirId}", '' + containers[0].id);
-         let mediaReq = httpMock.expectOne(req => req.url === url);
-         mediaReq.flush(MockData.getMedia());
+        if (fixture) {
+            fixture.detectChanges();
+            this.handleContainerMediaLoad(httpMock, containers);
+        }
+         //let url = ApiDef.contented.media.replace("{dirId}", '' + containers[0].id);
+         //let mediaReq = httpMock.expectOne(req => req.url === url);
+         //mediaReq.flush(MockData.getMedia());
+    }
+
+    public handleContainerMediaLoad(httpMock, dirs: Array<Directory>) {
+        _.each(dirs, dir => {
+            let url = ApiDef.contented.media.replace('{dirId}', dir.id);
+            let reqs = httpMock.match(r => r.url === url);
+            _.each(reqs, req => {
+                req.flush(MockData.getMedia(dir.dir, 2));
+            });
+        });
     }
 
 

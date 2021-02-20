@@ -27,6 +27,13 @@ export class ImgContainer {
     }
 }
 
+export enum LoadStates {
+    NotLoaded,
+    Loading,
+    Partial,
+    Complete
+}
+
 export class Directory {
     public contents: Array<ImgContainer>;
     public total: number;
@@ -34,6 +41,9 @@ export class Directory {
     public path: string;
     public name: string;
     public id: string;
+
+    // Set on the initial content loads
+    public loadState: LoadStates = LoadStates.NotLoaded;
 
     // All potential items that can be rendered from the contents
     public renderable: Array<ImgContainer>;
@@ -90,6 +100,12 @@ export class Directory {
         this.contents = _.sortBy(_.uniqBy(contents || [], 'id'), 'id');
         this.count = this.contents.length;
         this.renderable = null;
+
+        if (this.count === this.total) {
+            this.loadState = LoadStates.Complete;
+        } else if (this.loadState === LoadStates.Loading) {
+            this.loadState = LoadStates.Partial;
+        }
     }
 
     public addContents(contents: Array<ImgContainer>) {
