@@ -8,10 +8,13 @@ import (
     "path/filepath"
     "contented/models"
     "contented/utils"
+    "strconv"
     //"github.com/gobuffalo/nulls"
-    "github.com/gobuffalo/pop/v5"
     "github.com/gofrs/uuid"
     "github.com/gobuffalo/buffalo"
+    "github.com/gobuffalo/pop/v5"
+    //"github.com/gobuffalo/pop/v5/paginator"
+    //"github.com/gobuffalo/pop/v5/defaults"
 )
 
 // HomeHandler is a default handler to serve up
@@ -140,16 +143,47 @@ func InitializeMemory(dir_root string) MemoryStorage {
     return memStorage
 }
 
+
+func StringDefault(s1, s2 string) string {
+	if s1 == "" {
+		return s2
+	}
+	return s1
+}
+
+// Returns the offest and the limit from pagination params
+func GetPagination(params pop.PaginationParams, DefaultLimit int) (int, int) {
+	p := StringDefault(params.Get("page"), "1")
+	page, err := strconv.Atoi(p)
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	perPage := StringDefault(params.Get("per_page"), strconv.Itoa(DefaultLimit))
+	limit, err := strconv.Atoi(perPage)
+	if err != nil || limit < 1 {
+		limit = DefaultLimit
+	}
+    offset := (page - 1) * limit
+	return offset, limit
+}
+
 func (cm ContentManagerMemory) ListMediaContext(c_id uuid.UUID) (*models.MediaContainers, error) {
-    return cm.ListMedia(c_id, int(1), cm.cfg.Limit)
+    c := *cm.GetContext()
+    offset, limit := GetPagination(c.Params(), cm.cfg.Limit)
+    return cm.ListMedia(c_id, offset, limit)
 }
 
 func (cm ContentManagerMemory) ListAllMedia(page int, per_page int) (*models.MediaContainers, error) {
     m_arr := models.MediaContainers{}
+    offset := (page - 1) * per_page
+
+    idx := 0
     for _, m := range cm.ValidMedia {
-        if len(m_arr) < per_page {
+        if idx >= offset && len(m_arr) < per_page {
             m_arr = append(m_arr, m)
         }
+        idx++
     }
     return &m_arr, nil
 }
