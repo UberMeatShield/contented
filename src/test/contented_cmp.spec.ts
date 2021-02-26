@@ -176,8 +176,14 @@ describe('TestingContentedCmp', () => {
         let url = ApiDef.contented.media.replace('{dirId}', dir.id);
         let loadReq = httpMock.expectOne(req => req.url === url);
         let checkParams: HttpParams = loadReq.request.params;
-        expect(checkParams.get('limit')).toBe('1', "We set a different limit");
-        expect(checkParams.get('offset')).toBe('' + dir.count, "It should load more, not the beginning");
+        expect(checkParams.get('per_page')).toBe('1', "We set a different limit");
+
+
+        let page = parseInt(checkParams.get('page'), 10);
+        let offset = (page) * service.LIMIT;
+        expect(page).toBeGreaterThan(2, "It should load more, not the beginning");
+        expect(offset).toEqual(3, "Calculating the offset should be more than the current count");
+
         let media = MockData.getMedia(dir.id, service.LIMIT);
         loadReq.flush(media);
         fixture.detectChanges();

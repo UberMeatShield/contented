@@ -96,7 +96,7 @@ export class ContentedService {
         return this.getFullDirectory(dir.id, dir.count, limit);
     }
 
-    public getFullDirectory(dir: string, offset = 0, limit = null) {
+    public getFullDirectory(dir: string, offset: number = 0, limit: number = null) {
         let url = ApiDef.contented.media.replace('{dirId}', dir);
         return this.http.get(url, {
             params: this.getPaginationParams(offset, limit),
@@ -109,8 +109,8 @@ export class ContentedService {
             limit = this.LIMIT;
         }
         let params = new HttpParams()
-          .set('offset', '' + offset)
-          .set('limit', '' + limit);
+          .set('page', '' + (Math.floor(offset / limit) + 1))
+          .set('per_page', '' + limit);
         return params;
     }
 

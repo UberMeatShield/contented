@@ -70,6 +70,12 @@ describe('TestingContentedService', () => {
         expect(reallyRan).toBe(true);
     });
 
+    it("Will be able to get some pagination params correct", () => {
+        let params = service.getPaginationParams(1001, 100);
+        expect(params.get("page")).toEqual("11", "We should be on page 11");
+        expect(params.get("per_page")).toEqual("100", "The limits should not change");
+    });
+
 
     it('Can load up a lot of data and get the offset right', fakeAsync(() => {
         const total = 50001;
@@ -78,6 +84,7 @@ describe('TestingContentedService', () => {
 
         expect(dir.contents.length).toEqual(10000, 'Ensure the tests generates correclty');
         expect(dir.id).toBeTruthy();
+        expect(dir.count).toEqual(dir.contents.length, "It should have the right count");
 
         service.fullLoadDir(dir, 5000);
 
@@ -89,22 +96,25 @@ describe('TestingContentedService', () => {
 
         let expectedMaxFound = false;
         _.each(calls, req => {
-            const limit = parseInt(req.request.params.get('limit'), 10);
-            const offset = parseInt(req.request.params.get('offset'), 10);
+            const limit = parseInt(req.request.params.get('per_page'), 10);
+            const page = parseInt(req.request.params.get('page'), 10);
+            expect(page).toBeLessThan(12, "There should only be 9 page requests, we already loaded 2");
+            const offset = (page - 1) * limit;
 
             expect(limit).toEqual(5000, 'The limit should be adjusted');
             expect(offset).toBeGreaterThan(9999, 'The offset should be increasing');
-            if (offset === 50000) {
+            if (page ) {
                expectedMaxFound = true;
             }
-            const toCreate = offset + limit < total ? limit : total - offset;
+            const toCreate = (offset + limit) < total ? limit : (total - offset);
 
             let resN = MockData.getMockDir(toCreate, 'i-', offset, total);
+            expect(resN.contents.length).toEqual(toCreate, "It should create N entries");
             req.flush(resN.contents);
         });
         tick(100000);
         expect(dir.contents.length).toEqual(total, 'It should load all content');
-        expect(dir.contents[total - 1].fullUrl).toBeTruthy();
+        expect(expectedMaxFound).toEqual(true, "It should ");
 
         httpMock.verify();
     }));
