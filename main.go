@@ -16,7 +16,6 @@ import (
 // call `app.Serve()`, unless you don't want to start your
 // application that is. :)
 func main() {
-	app := actions.App()
 
     // Should I move this into the config itself?
 	dir, err := envy.MustGet("DIR")
@@ -37,11 +36,14 @@ func main() {
     } else if connErr != nil {
         panic(connErr)
     }
+
     appCfg := actions.GetCfg()
     appCfg.UseDatabase = useDatabase
 
 	log.Printf("Parsed Env. Dir %s Limit %d with preview count %d\n", dir, limitCount, previewCount)
     log.Printf("Use connection type of database %t\n", appCfg.UseDatabase)
+
+	app := actions.App(appCfg.UseDatabase)
 	actions.SetupContented(app, dir, previewCount, limitCount)
 	if err := app.Serve(); err != nil {
 		log.Fatal(err)

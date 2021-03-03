@@ -35,7 +35,7 @@ var app *buffalo.App
 // `ServeFiles` is a CATCH-ALL route, so it should always be
 // placed last in the route declarations, as it will prevent routes
 // declared after it to never be called.
-func App() *buffalo.App {
+func App(UseDatabase bool) *buffalo.App {
 	if app == nil {
 		app = buffalo.New(buffalo.Options{
 			Env:          ENV,
@@ -58,7 +58,9 @@ func App() *buffalo.App {
 		// Wraps each request in a transaction.
 		//  c.Value("tx").(*pop.Connection)
 		// Remove to disable this.
-		app.Use(popmw.Transaction(models.DB))
+        if UseDatabase == true {
+		    app.Use(popmw.Transaction(models.DB))
+        }
 
 		// Run grift?  Do dev from an actual DB instance?
 		app.GET("/preview/{file_id}", PreviewHandler)
