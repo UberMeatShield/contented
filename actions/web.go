@@ -29,9 +29,6 @@ func SetupContented(app *buffalo.App, contentDir string, numToPreview int, limit
 	log.Printf("Setting up the content directory with %s", contentDir)
 
 	utils.InitConfig(contentDir, &appCfg)
-
-    SetupManager(&appCfg)
-    
 	appCfg.PreviewCount = numToPreview
 	appCfg.Limit = limit
 
@@ -39,33 +36,17 @@ func SetupContented(app *buffalo.App, contentDir string, numToPreview int, limit
 	app.ServeFiles("/static", http.Dir(appCfg.Dir))
 }
 
-
-func SetupManager(cfg *utils.DirConfigEntry) ContentManager {
-    if cfg.UseDatabase {
-	    log.Printf("Setting up the DB Manager")
-        db_man := ContentManagerDB{cfg: cfg}
-        SetManager(db_man)
-    } else {
-	    log.Printf("Setting up the memory Manager")
-        mem_man := ContentManagerMemory{cfg: cfg}
-        mem_man.Initialize()
-        SetManager(mem_man)
-    }
-    return GetManager()
-}
-
 func FullHandler(c buffalo.Context) error {
 	file_id, bad_uuid := uuid.FromString(c.Param("file_id"))
 	if bad_uuid != nil {
 		return c.Error(400, bad_uuid)
 	}
-    SetContext(c)
-    man := GetManager()
+    man := GetManager(&c)
 	mc, err := man.FindFileRef(file_id)
 	if err != nil {
 		return c.Error(404, err)
 	}
-	fq_path, fq_err := FindActualFile(mc)
+	fq_path, fq_err := man.FindActualFile(mc)
 	if fq_err != nil {
 		log.Printf("File to full view not found on disk %s with err %s", fq_path, fq_err)
 		return c.Error(http.StatusUnprocessableEntity, fq_err)
@@ -77,18 +58,17 @@ func FullHandler(c buffalo.Context) error {
 
 // Find the preview of a file (if applicable currently it is just returning the full path)
 func PreviewHandler(c buffalo.Context) error {
-    SetContext(c)
 	file_id, bad_uuid := uuid.FromString(c.Param("file_id"))
 	if bad_uuid != nil {
 		return c.Error(400, bad_uuid)
 	}
-    man := GetManager()
+    man := GetManager(&c)
 	mc, err := man.FindFileRef(file_id)
 	if err != nil {
 		return c.Error(404, err)
 	}
 
-	fq_path, fq_err := GetPreviewForMC(mc)
+	fq_path, fq_err := man.GetPreviewForMC(mc)
 	if fq_err != nil {
 		log.Printf("File to preview not found on disk %s with err %s", fq_path, fq_err)
 		return c.Error(http.StatusUnprocessableEntity, fq_err)
@@ -104,14 +84,12 @@ func DownloadHandler(c buffalo.Context) error {
     if bad_uuid != nil {
         return c.Error(400, bad_uuid)
     }
-
-    SetContext(c)
-    man := GetManager()
+    man := GetManager(&c)
     mc, err := man.FindFileRef(file_id)
     if err != nil {
         return c.Error(404, err)
     }
-    fq_path, fq_err := FindActualFile(mc)
+    fq_path, fq_err := man.FindActualFile(mc)
     if fq_err != nil {
         log.Printf("Cannot download file not on disk %s with err %s", fq_path, fq_err)
         return c.Error(http.StatusUnprocessableEntity, fq_err)

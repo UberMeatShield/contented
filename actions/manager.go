@@ -8,10 +8,13 @@ import (
     "path/filepath"
     "contented/models"
     "contented/utils"
+    "strconv"
     //"github.com/gobuffalo/nulls"
-    "github.com/gobuffalo/pop/v5"
     "github.com/gofrs/uuid"
     "github.com/gobuffalo/buffalo"
+    "github.com/gobuffalo/pop/v5"
+    //"github.com/gobuffalo/pop/v5/paginator"
+    //"github.com/gobuffalo/pop/v5/defaults"
 )
 
 // HomeHandler is a default handler to serve up
@@ -19,19 +22,6 @@ var DefaultLimit int = 10000 // The max limit set by environment variable
 var DefaultPreviewCount int = 8
 
 // https://medium.com/@TobiasSchmidt89/the-singleton-object-oriented-design-pattern-in-golang-9f6ce75c21f7
-
-var appManager ContentManager
-func GetManager() ContentManager {
-    return appManager
-}
-func SetManager(manager ContentManager) {
-    appManager = manager
-}
-
-// TODO: Add in a few more tests around data loading / pagination
-// TODO: Fix the UI to actually load in the data
-// TODO: Add in index code into the data model
-// TODO: Make a manager have a config entry vs what I currently do
 var appCfg utils.DirConfigEntry = utils.DirConfigEntry{
     Initialized:  false,
     Dir:          "",
@@ -46,18 +36,31 @@ func SetCfg(cfg utils.DirConfigEntry) {
     appCfg = cfg
 }
 
-// Set the current context so that this is slightly less painful
-var currentContext buffalo.Context
-func GetContext() *buffalo.Context {
-    return &currentContext
+func GetManager(c *buffalo.Context) ContentManager {
+    return CreateManager(&appCfg, c)
 }
-func SetContext(c buffalo.Context) {
-    currentContext = c
+
+
+func CreateManager(cfg *utils.DirConfigEntry, c *buffalo.Context) ContentManager {
+    // Not really important for a DB manager, just need to look at it
+    if cfg.UseDatabase {
+        log.Printf("Setting up the DB Manager")
+        db_man := ContentManagerDB{cfg: cfg, c: c}
+        return db_man
+    } else {
+        // This should now be used to build the filesystem into memory one time.
+        log.Printf("Setting up the memory Manager")
+        mem_man := ContentManagerMemory{cfg: cfg, c: c}
+        mem_man.Initialize()  // Break this into a sensible initialization
+        return mem_man
+    }
 }
+
 
 type ContentManager interface {
     // SetCfg(c *utils.DirConfigEntry)
     GetCfg() *utils.DirConfigEntry
+    GetContext() *buffalo.Context
 
     FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error)
     FindDirRef(dir_id uuid.UUID) (*models.Container, error)
@@ -67,15 +70,27 @@ type ContentManager interface {
     ListContainersContext() (*models.Containers, error)
 
     GetMedia(media_id uuid.UUID) (*models.MediaContainer, error)
-    ListMedia(container_id uuid.UUID, page int, per_page int) (*models.MediaContainers, error)
-    ListMediaContext(container_id uuid.UUID) (*models.MediaContainers, error)
+    ListMedia(ContainerID uuid.UUID, page int, per_page int) (*models.MediaContainers, error)
+    ListMediaContext(ContainerID uuid.UUID) (*models.MediaContainers, error)
     ListAllMedia(page int, per_page int) (*models.MediaContainers, error)
+
+    FindActualFile(mc *models.MediaContainer) (string, error)
+    GetPreviewForMC(mc *models.MediaContainer) (string, error)
 }
 
 
+// GoLang is just making this awkward
+type MemoryStorage struct {
+    Initialized bool
+    ValidDirs       map[string]os.FileInfo
+    ValidMedia      models.MediaMap
+    ValidContainers models.ContainerMap
+}
+var memStorage MemoryStorage = MemoryStorage{Initialized: false}
+
 type ContentManagerMemory struct {
     cfg *utils.DirConfigEntry
-    c buffalo.Context
+    c *buffalo.Context
 
     ValidDirs       map[string]os.FileInfo
     ValidMedia      models.MediaMap
@@ -95,40 +110,90 @@ func (cm ContentManagerMemory) GetCfg() *utils.DirConfigEntry {
     return cm.cfg
 }
 
+func (cm ContentManagerMemory) GetContext() *buffalo.Context {
+    return cm.c
+}
+
+
+// TODO:  Now THIS one can actually build out a singleton that is shared I guess.
 func (cm *ContentManagerMemory) Initialize() {
-    dir_root := cm.cfg.Dir
-    log.Printf("Initializing Memory manager %s\n", dir_root)
 
-    dir_lookup := utils.GetDirectoriesLookup(dir_root)
-
-    // Move some of these
-    containers, files := utils.PopulateMemoryView(dir_root, dir_lookup)
-    cm.ValidDirs = dir_lookup
-    cm.ValidContainers = containers
-    cm.ValidMedia = files
+    // We only want the memory storage initialized one time ?  But allow for re-init?
+    // Could toss the object into the manager but then that means even more code change.
+    if memStorage.Initialized == false {
+        memStorage = InitializeMemory(cm.cfg.Dir)
+    }
+    // Move some of these into an actual singleton.
+    cm.ValidDirs = memStorage.ValidDirs
+    cm.ValidContainers = memStorage.ValidContainers
+    cm.ValidMedia = memStorage.ValidMedia
     log.Printf("Found %d directories\n", len(cm.ValidDirs))
 }
 
+func InitializeMemory(dir_root string) MemoryStorage {
+    log.Printf("Initializing Memory Storage %s\n", dir_root)
+    dir_lookup := utils.GetDirectoriesLookup(dir_root)
+    containers, files := utils.PopulateMemoryView(dir_root, dir_lookup)
+
+    memStorage.Initialized = true
+    memStorage.ValidDirs = dir_lookup
+    memStorage.ValidContainers = containers
+    memStorage.ValidMedia = files
+
+    return memStorage
+}
+
+
+func StringDefault(s1, s2 string) string {
+	if s1 == "" {
+		return s2
+	}
+	return s1
+}
+
+// Returns the offest and the limit from pagination params
+func GetPagination(params pop.PaginationParams, DefaultLimit int) (int, int) {
+	p := StringDefault(params.Get("page"), "1")
+	page, err := strconv.Atoi(p)
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	perPage := StringDefault(params.Get("per_page"), strconv.Itoa(DefaultLimit))
+	limit, err := strconv.Atoi(perPage)
+	if err != nil || limit < 1 {
+		limit = DefaultLimit
+	}
+    offset := (page - 1) * limit
+	return offset, limit
+}
+
 func (cm ContentManagerMemory) ListMediaContext(c_id uuid.UUID) (*models.MediaContainers, error) {
-    return cm.ListMedia(c_id, int(1), cm.cfg.Limit)
+    c := *cm.GetContext()
+    offset, limit := GetPagination(c.Params(), cm.cfg.Limit)
+    return cm.ListMedia(c_id, offset, limit)
 }
 
 func (cm ContentManagerMemory) ListAllMedia(page int, per_page int) (*models.MediaContainers, error) {
     m_arr := models.MediaContainers{}
+    offset := (page - 1) * per_page
+
+    idx := 0
     for _, m := range cm.ValidMedia {
-        if len(m_arr) < per_page {
+        if idx >= offset && len(m_arr) < per_page {
             m_arr = append(m_arr, m)
         }
+        idx++
     }
     return &m_arr, nil
 }
 
 // Awkard GoLang interface support is awkward
-func (cm ContentManagerMemory) ListMedia(container_id uuid.UUID, page int, per_page int) (*models.MediaContainers, error) {
+func (cm ContentManagerMemory) ListMedia(ContainerID uuid.UUID, page int, per_page int) (*models.MediaContainers, error) {
     m_arr := models.MediaContainers{}
     for _, m := range cm.ValidMedia {
         if m.ContainerID.Valid {
-            if m.ContainerID.UUID == container_id && len(m_arr) <= per_page {
+            if m.ContainerID.UUID == ContainerID && len(m_arr) <= per_page {
                 m_arr = append(m_arr, m)
             }
         } else if len(m_arr) < per_page {
@@ -183,11 +248,33 @@ func (cm ContentManagerMemory) FindFileRef(file_id uuid.UUID) (*models.MediaCont
     return nil, errors.New("File was not found in the current list of files")
 }
 
+func (cm ContentManagerMemory) GetPreviewForMC(mc *models.MediaContainer) (string, error) {
+    dir, err := cm.FindDirRef(mc.ContainerID.UUID)
+    if err != nil {
+        return "DB Manager Preview no Parent Found", err
+    }
+    src := mc.Src
+    if mc.Preview != "" {
+        src = mc.Preview
+    }
+    log.Printf("DB Manager loading %s preview %s\n", mc.ID.String(), src)
+    return GetFilePathInContainer(src, dir.Name)
+}
+
+func (cm ContentManagerMemory) FindActualFile(mc *models.MediaContainer) (string, error) {
+    dir, err := cm.FindDirRef(mc.ContainerID.UUID)
+    if err != nil {
+        return "DB Manager View no Parent Found", err
+    }
+    log.Printf("DB Manager View %s loading up %s\n", mc.ID.String(), mc.Src)
+    return GetFilePathInContainer(mc.Src, dir.Name)
+}
+
 
 // DB version of content management
 type ContentManagerDB struct {
     cfg *utils.DirConfigEntry
-    c buffalo.Context
+    c *buffalo.Context
 }
 
 func (cm *ContentManagerDB) SetCfg(cfg *utils.DirConfigEntry) {
@@ -197,6 +284,11 @@ func (cm ContentManagerDB) GetCfg() *utils.DirConfigEntry {
     return cm.cfg
 }
 
+func (cm ContentManagerDB) GetContext() *buffalo.Context {
+    return cm.c
+}
+
+
 func (cm ContentManagerDB) ListMediaContext(c_id uuid.UUID) (*models.MediaContainers, error) {
     return cm.ListMedia(c_id, 1, cm.cfg.Limit)
 }
@@ -204,7 +296,7 @@ func (cm ContentManagerDB) ListMediaContext(c_id uuid.UUID) (*models.MediaContai
 // Awkard GoLang interface support is awkward
 func (cm ContentManagerDB) ListMedia(c_id uuid.UUID, page int, per_page int) (*models.MediaContainers, error) {
     log.Printf("Get a list of media from DB, we should have some %s", c_id.String())
-    c := *GetContext()
+    c := *cm.GetContext()
     tx, ok := c.Value("tx").(*pop.Connection)
     if !ok {
         return nil, fmt.Errorf("no transaction found")
@@ -225,7 +317,7 @@ func (cm ContentManagerDB) ListMedia(c_id uuid.UUID, page int, per_page int) (*m
 
 func (cm ContentManagerDB) GetMedia(mc_id uuid.UUID) (*models.MediaContainer, error) {
     log.Printf("Get a single media %s", mc_id)
-    c := *GetContext()
+    c := *cm.GetContext()
     tx, ok := c.Value("tx").(*pop.Connection)
     if !ok {
         return nil, fmt.Errorf("no transaction found")
@@ -239,7 +331,7 @@ func (cm ContentManagerDB) GetMedia(mc_id uuid.UUID) (*models.MediaContainer, er
 
 func (cm ContentManagerDB) ListAllMedia(page int, per_page int) (*models.MediaContainers, error) {
     log.Printf("List all media DB manager")
-    c := *GetContext()
+    c := *cm.GetContext()
     tx, ok := c.Value("tx").(*pop.Connection)
     if !ok {
         return nil, fmt.Errorf("no transaction found")
@@ -260,7 +352,7 @@ func (cm ContentManagerDB) ListContainersContext() (*models.Containers, error) {
 // TODO: Add in support for actually doing the query using the current buffalo.Context
 func (cm ContentManagerDB) ListContainers(page int, per_page int) (*models.Containers, error) {
     log.Printf("DB List all containers")
-    c := *GetContext()
+    c := *cm.GetContext()
     tx, ok := c.Value("tx").(*pop.Connection)
     if !ok {
         return nil, fmt.Errorf("No transaction found")
@@ -277,7 +369,7 @@ func (cm ContentManagerDB) ListContainers(page int, per_page int) (*models.Conta
 
 func (cm ContentManagerDB) GetContainer(mc_id uuid.UUID) (*models.Container, error) {
     log.Printf("Get a single container %s", mc_id)
-    c := *GetContext()
+    c := *cm.GetContext()
     tx, ok := c.Value("tx").(*pop.Connection)
     if !ok {
         return nil, fmt.Errorf("No transaction found")
@@ -314,31 +406,32 @@ func (cm ContentManagerDB) FindDirRef(dir_id uuid.UUID) (*models.Container, erro
     return nil, err
 }
 
-// If a preview is found, return the path to that file otherwise use the actual file
-func GetPreviewForMC(mc *models.MediaContainer) (string, error) {
+func (cm ContentManagerDB) GetPreviewForMC(mc *models.MediaContainer) (string, error) {
+    dir, err := cm.FindDirRef(mc.ContainerID.UUID)
+    if err != nil {
+        return "DB Manager Preview no Parent Found", err
+    }
     src := mc.Src
     if mc.Preview != "" {
         src = mc.Preview
     }
-    log.Printf("It should have a preview %s\n", mc.Preview)
-    return GetFilePathInContainer(mc.ContainerID.UUID, src)
+    log.Printf("DB Manager loading %s preview %s\n", mc.ID.String(), src)
+    return GetFilePathInContainer(src, dir.Name)
 }
 
-// Get the on disk location for the media container.
-func FindActualFile(mc *models.MediaContainer) (string, error) {
-    return GetFilePathInContainer(mc.ContainerID.UUID, mc.Src)
+func (cm ContentManagerDB) FindActualFile(mc *models.MediaContainer) (string, error) {
+    dir, err := cm.FindDirRef(mc.ContainerID.UUID)
+    if err != nil {
+        return "DB Manager View no Parent Found", err
+    }
+    log.Printf("DB Manager View %s loading up %s\n", mc.ID.String(), mc.Src)
+    return GetFilePathInContainer(mc.Src, dir.Name)
 }
 
 // Given a container ID and the src of a file in there, get a path and check if it exists
-func GetFilePathInContainer(cont_id uuid.UUID, src string) (string, error) {
-    man := GetManager()
-    dir, err := man.FindDirRef(cont_id)
-    if err != nil {
-        return "No Parent Found", err
-    }
-    path := filepath.Join(appCfg.Dir, dir.Name)
+func GetFilePathInContainer(src string, dir_name string) (string, error) {
+    path := filepath.Join(appCfg.Dir, dir_name)
     fq_path := filepath.Join(path, src)
-
     if _, os_err := os.Stat(fq_path); os_err != nil {
         return fq_path, os_err
     }

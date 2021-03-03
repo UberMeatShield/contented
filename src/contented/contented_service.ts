@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders, HttpParams, HttpErrorResponse} from '@angular/common/http';
-import {Directory, ImgContainer} from './directory';
+import {Directory, ImgContainer, LoadStates} from './directory';
 import {ApiDef} from './api_def';
 
 // The manner in which RxJS does this is really stupid, saving 50K for hours of dev time is fail
@@ -93,22 +93,46 @@ export class ContentedService {
     }
 
     public loadMoreInDir(dir: Directory, limit = null) {
-        limit = limit || this.LIMIT;
         return this.getFullDirectory(dir.id, dir.count, limit);
     }
 
-    public getFullDirectory(dir: string, offset = 0, limit = null) {
-        limit = limit || this.LIMIT;
-
+    public getFullDirectory(dir: string, offset: number = 0, limit: number = null) {
         let url = ApiDef.contented.media.replace('{dirId}', dir);
-        let params = new HttpParams()
-          .set('offset', '' + offset)
-          .set('limit', '' + limit);
-
         return this.http.get(url, {
-            params: params,
+            params: this.getPaginationParams(offset, limit),
             headers: this.options.headers
         }).pipe(catchError(err => this.handleError(err)));
+    }
+
+    public getPaginationParams(offset: number = 0, limit: number = 0) {
+        if (limit <= 0 || limit == null) {
+            limit = this.LIMIT;
+        }
+        let params = new HttpParams()
+          .set('page', '' + (Math.floor(offset / limit) + 1))
+          .set('per_page', '' + limit);
+        return params;
+    }
+
+
+    // TODO: Create a pagination page for offset limit calculations
+    public initialLoad(dir: Directory) {
+        if (dir.loadState === LoadStates.NotLoaded) {
+            dir.loadState = LoadStates.Loading;
+
+            let url = ApiDef.contented.media.replace('{dirId}', dir.id);
+            this.http.get(url, {
+                params: this.getPaginationParams(1, this.LIMIT),
+                headers: this.options.headers
+            }).subscribe(
+                (imgData: Array<any>)  => {
+                    dir.addContents(dir.buildImgs(imgData));
+                },
+                err => {
+                    console.error("Failed to load directory dir", dir.id, err);
+                }
+            );
+        }
     }
 
     public handleError(err: HttpErrorResponse) {

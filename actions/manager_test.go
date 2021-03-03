@@ -41,7 +41,8 @@ func basicContext() buffalo.DefaultContext {
 
 func (as *ActionSuite) Test_ManagerContainers() {
     init_fake_app(false)
-    man := GetManager()
+    ctx := getContext(app)
+    man := GetManager(&ctx)
     containers, err := man.ListContainersContext()
     as.NoError(err)
 
@@ -57,7 +58,8 @@ func (as *ActionSuite) Test_ManagerContainers() {
 
 func (as *ActionSuite) Test_ManagerMediaContainer() {
     init_fake_app(false)
-    man := GetManager()
+    ctx := getContext(app)
+    man := GetManager(&ctx)
     mcs, err := man.ListAllMedia(1, 9001)
     as.NoError(err)
 
@@ -73,6 +75,7 @@ func (as *ActionSuite) Test_ManagerMediaContainer() {
 func (as *ActionSuite) Test_AssignManager() {
     dir, _ := envy.MustGet("DIR")
     cfg := GetCfg()
+    cfg.UseDatabase = false
     utils.InitConfig(dir, cfg)
 
     mem := ContentManagerMemory{}
@@ -80,14 +83,18 @@ func (as *ActionSuite) Test_AssignManager() {
     mem.SetCfg(cfg)
     mem.Initialize()
 
-    SetManager(mem)
-    man := GetManager()
-    memCfg := man.GetCfg()
+    memCfg := mem.GetCfg()
     as.NotNil(memCfg, "It should be defined")
-
-    mcs, err := man.ListAllMedia(1, 9001)
+    mcs, err := mem.ListAllMedia(1, 9001)
     as.NoError(err)
     as.Greater(len(*mcs), 0, "It should have valid files in the manager")
+
+    appCfg.UseDatabase = false
+    ctx := getContext(app)
+    man := GetManager(&ctx)  // New Reference but should have the same count of media
+    mcs_2, _ := man.ListAllMedia(1, 9000)
+
+    as.Equal(len(*mcs), len(*mcs_2), "A new instance should use the same storage")
 }
 
 
@@ -95,9 +102,9 @@ func (as *ActionSuite) Test_AssignManager() {
 func (as *ActionSuite) Test_ManagerInitialize() {
     cfg := init_fake_app(false)
     cfg.UseDatabase = false
-    SetupManager(cfg)
 
-    man := GetManager()
+    ctx := getContext(app)
+    man := GetManager(&ctx)
     as.NotNil(man, "It should have a manager defined after init")
 
     containers, err := man.ListContainersContext()

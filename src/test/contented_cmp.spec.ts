@@ -63,14 +63,20 @@ describe('TestingContentedCmp', () => {
         router.navigate(['/ui/2/3']);
         tick(100);
         expect(router.url).toBe('/ui/2/3');
-
         fixture.detectChanges();
-
-        MockData.handleCmpDefaultLoad(httpMock);
+        MockData.handleCmpDefaultLoad(httpMock, fixture);
         tick(1000);
         // TODO: Make a test that actually works with the damn activated route params
         // expect(comp.idx).toBe(2, "It should pull the dir index from ");
     }));
+
+    function handleContainerMediaLoad(dirs: Array<Directory>) {
+        _.each(dirs, dir => {
+            let url = ApiDef.contented.media.replace('{dirId}', dir.id);
+            let req = httpMock.expectOne(r => r.url === url);
+            req.flush(MockData.getMedia(dir.dir, 2));
+        });
+    }
 
     it('Should create a contented component', () => {
         expect(comp).toBeDefined("We should have the Contented comp");
@@ -79,7 +85,7 @@ describe('TestingContentedCmp', () => {
 
     it('Should be able to load up the basic data and render an image for each', fakeAsync(() => {
         fixture.detectChanges();
-        MockData.handleCmpDefaultLoad(httpMock);
+        MockData.handleCmpDefaultLoad(httpMock, fixture);
         tick(2000);
         expect(comp.allD.length).toBe(4, "We should have 4 directories set");
 
@@ -100,16 +106,10 @@ describe('TestingContentedCmp', () => {
         tick(2000);
 
         let containers = MockData.getPreview();
-        let containersReq = httpMock.expectOne(req => req.url === ApiDef.contented.containers);
-        containersReq.flush(containers);
+        MockData.handleCmpDefaultLoad(httpMock, fixture);
 
         expect(comp.fullScreen).toBe(false, "We should not be in fullsceen mode");
         expect($('.contented-view-cmp').length).toBe(0, "It should now have a view component.");
-        fixture.detectChanges();
-
-        let url = ApiDef.contented.media.replace("{dirId}", '' + containers[0].id);
-        let mediaReq = httpMock.expectOne(req => req.url === url);
-        mediaReq.flush(MockData.getMedia());
         fixture.detectChanges();
         tick(1000);
 
@@ -138,17 +138,11 @@ describe('TestingContentedCmp', () => {
         fixture.detectChanges();
 
         let containers = MockData.getPreview();
-        let containersReq = httpMock.expectOne(req => req.url === ApiDef.contented.containers);
-        let params: HttpParams = containersReq.request.params;
-        containersReq.flush(containers);
+        MockData.handleCmpDefaultLoad(httpMock, fixture);
 
         expect(comp.loading).toBe(false, "It should be fine with loading the containers");
         expect(comp.allD.length).toBeGreaterThan(0, "There should be a number of directories");
         fixture.detectChanges();
-
-        let url = ApiDef.contented.media.replace("{dirId}", '' + containers[0].id);
-        let mediaReq = httpMock.expectOne(req => req.url === url);
-        mediaReq.flush(MockData.getMedia());
 
         expect(comp.idx).toBe(0, "It should be on the default page");
         let dirs = $('.dir-name');
@@ -162,42 +156,39 @@ describe('TestingContentedCmp', () => {
     });
 
 
-    it('Should be able to load more contents in a dir', fakeAsync(() => {
+    it('Pull in more more contents in a dir', fakeAsync(() => {
         fixture.detectChanges();
-        let containers = MockData.getPreview();
-        let containersReq = httpMock.expectOne(req => req.url === ApiDef.contented.containers);
-        containersReq.flush(containers);
+
+        MockData.handleCmpDefaultLoad(httpMock, fixture);
         fixture.detectChanges();
+        tick(1000);
 
         let dir: Directory = comp.getCurrentDir();
         expect(dir).not.toBe(null);
         expect(dir.count).toBeLessThan(dir.total, "There should be more to load");
-
-        let url = ApiDef.contented.media.replace('{dirId}', dir.id);
-        let firstReq = httpMock.expectOne(req => req.url === url);
-        firstReq.flush({id: 'AnID', name: 'init', container_id: dir.id});
-        fixture.detectChanges();
-        tick(1000);
+        expect(dir.count).toEqual(2, "The default count should be 2 by default");
 
         let prevCount = dir.count;
-        expect(prevCount).toBe(1, "The default load has 1 item");
+        expect(prevCount).toBe(2, "The default load has 2 items");
 
         service.LIMIT = 1;
         comp.loadMore();
+        let url = ApiDef.contented.media.replace('{dirId}', dir.id);
         let loadReq = httpMock.expectOne(req => req.url === url);
         let checkParams: HttpParams = loadReq.request.params;
-        expect(checkParams.get('limit')).toBe('1', "We set a different limit");
-        expect(checkParams.get('offset')).toBe('' + dir.count, "It should load more, not the beginning");
+        expect(checkParams.get('per_page')).toBe('1', "We set a different limit");
 
-        let firstLoad = MockData.getMockDir(dir.total - dir.count, 'item-', dir.contents.length);
-        loadReq.flush(firstLoad.contents);
-        tick(10000);
+
+        let page = parseInt(checkParams.get('page'), 10);
+        let offset = (page) * service.LIMIT;
+        expect(page).toBeGreaterThan(2, "It should load more, not the beginning");
+        expect(offset).toEqual(3, "Calculating the offset should be more than the current count");
+
+        let media = MockData.getMedia(dir.id, service.LIMIT);
+        loadReq.flush(media);
         fixture.detectChanges();
-        expect(dir.count).toBeGreaterThan(prevCount, "We should have added more");
 
-        let findId = _.get(firstLoad, '[0].id');
-        expect(_.findIndex(dir.contents, {id: findId})).toBeGreaterThan(0, `We should have ${findId} in the contents`);
-        expect(dir.count).toBe(dir.total, "It should load all the data");
+        expect(dir.count).toEqual(3, "Now we should have loaded more based on the limit");
     }));
 });
 

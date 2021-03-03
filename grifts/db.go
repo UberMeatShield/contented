@@ -39,12 +39,12 @@ var _ = grift.Namespace("db", func() {
         fmt.Printf("Using size %d for preview creation", size)
 
         // Process all the directories and get a valid setup
-        dirs := utils.ListDirs(dir_name, 4)
+        dirs := utils.ListDirs(dir_name, 90001)
         fmt.Printf("Found %d directories.", len(dirs))
 
         // TODO: Need to do this in a single transaction
         for _, dir := range dirs {
-            fmt.Printf("Adding directory %s\n", dir.Name)
+            fmt.Printf("Adding directory %s with total media %d \n", dir.Name, len(dir.Contents))
             dirObj := &models.Container{
               Path: dir_name,
               Name: dir.Name,
