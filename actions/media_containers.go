@@ -60,39 +60,6 @@ func (v MediaContainersResource) List(c buffalo.Context) error {
         mediaContainers = mcs
     }
 
-
-    // TODO: Need to fix pagination in the Context setup
-
-    /*
-	tx, ok := c.Value("tx").(*pop.Connection)
-	if !ok {
-		return fmt.Errorf("no transaction found")
-	}
-	mediaContainers := &models.MediaContainers{}
-
-	// Paginate results. Params "page" and "per_page" control pagination.
-	// Default values are "page=1" and "per_page=20".
-	q := tx.PaginateFromParams(c.Params())
-
-    c_id := c.Param("container_id")
-    if c_id != "" {
-        log.Printf("Attempting to get media using %s", c_id)
-        container_id, err := uuid.FromString(c_id)
-        if err != nil {
-            return err
-        }
-        q_conn := q.Where("container_id = ?", container_id)
-        if q_err := q_conn.All(mediaContainers); q_err != nil {
-            return q_err
-        }
-    } else {
-        // Retrieve all MediaContainers from the DB
-        if err := q.All(mediaContainers); err != nil {
-            return err
-        }
-    }
-    */
-
     // AKA nope on html
 	return responder.Wants("html", func(c buffalo.Context) error {
 		// Add the paginator to the context so it can be used in the template.

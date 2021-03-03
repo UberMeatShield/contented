@@ -12,15 +12,17 @@ function trail(path: string, whatWith: string) {
 export class ImgContainer {
     public id: number;
     public src: string;
+    public idx: number;
     public type_: string;
     public container_id: string;
 
     public previewUrl: string;
     public fullUrl: string;
 
-    constructor(id: number, src: string) {
+    constructor(id: number, src: string, idx: number = 0) {
         this.id = id;
         this.src = src;
+        this.idx = idx;
 
         this.previewUrl = `${ApiDef.contented.preview}${this.id}`;
         this.fullUrl = `${ApiDef.contented.view}${this.id}`;
@@ -92,12 +94,12 @@ export class Directory {
 
     public buildImgs(imgData: Array<any>) {
         return _.map(imgData, data => {
-            return new ImgContainer(data.id, data.src);
+            return new ImgContainer(data.id, data.src, data.idx);
         });
     }
 
     public setContents(contents: Array<ImgContainer>) {
-        this.contents = _.sortBy(_.uniqBy(contents || [], 'id'), 'id');
+        this.contents = _.sortBy(_.uniqBy(contents || [], 'id'), 'idx');
         this.count = this.contents.length;
         this.renderable = null;
 
@@ -109,7 +111,9 @@ export class Directory {
     }
 
     public addContents(contents: Array<ImgContainer>) {
-        this.setContents((this.contents || []).concat(contents));
+        let sorted = _.sortBy((this.contents || []).concat(contents), 'idx');
+        console.log("What is going on", sorted);
+        this.setContents(sorted);
     }
 
     // This is the actual URL you can get a pointer to for the scroll / load

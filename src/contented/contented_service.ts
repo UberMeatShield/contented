@@ -13,6 +13,7 @@ export class ContentedService {
 
     public options = null;
     public LIMIT = 5000; // Default limit will use the server limit in the query
+    // public LIMIT = 1; // Default limit will use the server limit in the query
 
     constructor(private http: HttpClient) {
         let headers = new HttpHeaders({
@@ -122,7 +123,7 @@ export class ContentedService {
 
             let url = ApiDef.contented.media.replace('{dirId}', dir.id);
             this.http.get(url, {
-                params: this.getPaginationParams(1, this.LIMIT),
+                params: this.getPaginationParams(0, this.LIMIT),
                 headers: this.options.headers
             }).subscribe(
                 (imgData: Array<any>)  => {
