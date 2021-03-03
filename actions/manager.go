@@ -20,10 +20,12 @@ import (
 // HomeHandler is a default handler to serve up
 var DefaultLimit int = 10000 // The max limit set by environment variable
 var DefaultPreviewCount int = 8
+var DefaultUseDatabase bool = false
 
 // https://medium.com/@TobiasSchmidt89/the-singleton-object-oriented-design-pattern-in-golang-9f6ce75c21f7
 var appCfg utils.DirConfigEntry = utils.DirConfigEntry{
     Initialized:  false,
+    UseDatabase: true,
     Dir:          "",
     PreviewCount: DefaultPreviewCount,
     Limit:        DefaultLimit,
@@ -264,9 +266,9 @@ func (cm ContentManagerMemory) GetPreviewForMC(mc *models.MediaContainer) (strin
 func (cm ContentManagerMemory) FindActualFile(mc *models.MediaContainer) (string, error) {
     dir, err := cm.FindDirRef(mc.ContainerID.UUID)
     if err != nil {
-        return "DB Manager View no Parent Found", err
+        return "Memory Manager View no Parent Found", err
     }
-    log.Printf("DB Manager View %s loading up %s\n", mc.ID.String(), mc.Src)
+    log.Printf("Memory Manager View %s loading up %s\n", mc.ID.String(), mc.Src)
     return GetFilePathInContainer(mc.Src, dir.Name)
 }
 

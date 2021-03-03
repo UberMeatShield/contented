@@ -226,7 +226,7 @@ func (as *ActionSuite) Test_PreviewWorking() {
 }
 
 func Test_ActionSuite(t *testing.T) {
-	action, err := suite.NewActionWithFixtures(App(), packr.New("Test_ActionSuite", "../fixtures"))
+	action, err := suite.NewActionWithFixtures(App(true), packr.New("Test_ActionSuite", "../fixtures"))
 	if err != nil {
 		t.Fatal(err)
 	}
