@@ -18,9 +18,13 @@ import (
 func main() {
 	app := actions.App()
 
+    // Should I move this into the config itself?
 	dir, err := envy.MustGet("DIR")
 	limitCount, limErr := strconv.Atoi(envy.Get("LIMIT", strconv.Itoa(actions.DefaultLimit)))
+
+    // We need to get that actually get a default load somehow
 	previewCount, previewErr := strconv.Atoi(envy.Get("PREVIEW", strconv.Itoa(actions.DefaultPreviewCount)))
+    useDatabase, connErr := strconv.ParseBool(envy.Get("USE_DATABASE", strconv.FormatBool(actions.DefaultUseDatabase)))
 
 	if err != nil {
 		panic(err)
@@ -30,9 +34,14 @@ func main() {
 		panic(previewErr)
 	} else if _, noDirErr := os.Stat(dir); os.IsNotExist(noDirErr) {
 		panic(noDirErr)
-	}
+    } else if connErr != nil {
+        panic(connErr)
+    }
+    appCfg := actions.GetCfg()
+    appCfg.UseDatabase = useDatabase
 
-	log.Printf("Parsed Env. Dir %s Limit %d with preview count %d", dir, limitCount, previewCount)
+	log.Printf("Parsed Env. Dir %s Limit %d with preview count %d\n", dir, limitCount, previewCount)
+    log.Printf("Use connection type of database %t\n", appCfg.UseDatabase)
 	actions.SetupContented(app, dir, previewCount, limitCount)
 	if err := app.Serve(); err != nil {
 		log.Fatal(err)

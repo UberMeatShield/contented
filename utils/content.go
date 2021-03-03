@@ -44,10 +44,7 @@ type DirConfigEntry struct {
  */
 func InitConfig(dir_root string, cfg *DirConfigEntry) *DirConfigEntry {
 	cfg.Dir = dir_root  // Always Common
-	cfg.PreviewCount = 8
-	cfg.Limit = 16
 	cfg.Initialized = true
-    cfg.UseDatabase = true  // TODO: Make it so we can read all the data from memory
 	return cfg
 }
 
