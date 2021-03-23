@@ -97,43 +97,6 @@ func FindMedia(cnt models.Container, limit int, start_offset int) models.MediaCo
 }
 
 /**
- *  TODO:  Require the number to preview and will be Memory only supported.
- */
-func PopulateMemoryView(dir_root string, valid_dirs map[string]os.FileInfo) (models.ContainerMap, models.MediaMap) {
-	containers := models.ContainerMap{}
-	files := models.MediaMap{}
-
-	for _, f := range valid_dirs {
-		// Need to make this just return a container
-		dir_name := filepath.Join(dir_root, f.Name())
-		dc := GetDirContents(dir_name, 20, 0, f.Name())
-
-		log.Printf("Searching in %s", dir_name)
-
-		c_id, _ := uuid.NewV4()
-		c := models.Container{
-			ID:   c_id,
-			Name: dc.Name,
-			Path: dc.Path,
-            Total: len(dc.Contents),
-		}
-		containers[c.ID] = c
-		for idx, mc := range dc.Contents {
-			mc_id, _ := uuid.NewV4()
-			mc := models.MediaContainer{
-				ID:          mc_id,
-				Src:         mc.Src,
-				Type:        mc.Type,
-				ContainerID: nulls.NewUUID(c.ID),
-                Idx: idx,
-			}
-			files[mc.ID] = mc
-		}
-	}
-	return containers, files
-}
-
-/**
  *  Builds a lookup of all the valid sub directories under our root / file host.
  */
 func GetDirectoriesLookup(rootDir string) map[string]os.FileInfo {

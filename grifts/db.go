@@ -7,15 +7,15 @@ import (
     "contented/utils"
 	"github.com/markbates/grift/grift"
     "github.com/pkg/errors"
+    "github.com/gofrs/uuid"
     "github.com/gobuffalo/envy"
-    "github.com/gobuffalo/nulls"
+//    "github.com/gobuffalo/nulls"
 )
 
 var _ = grift.Namespace("db", func() {
 
 	grift.Desc("seed", "Populate the DB with a set of directory content.")
 	grift.Add("seed", func(c *grift.Context) error {
-
         // Clean out the current DB setup
         err := models.DB.TruncateAll()
         if err != nil {
@@ -39,38 +39,29 @@ var _ = grift.Namespace("db", func() {
         fmt.Printf("Using size %d for preview creation", size)
 
         // Process all the directories and get a valid setup
-        dirs := utils.ListDirs(dir_name, 90001)
-        fmt.Printf("Found %d directories.", len(dirs))
+        dirs := utils.FindContainers(dir_name)
+        fmt.Printf("Found %d directories.\n", len(dirs))
 
         // TODO: Need to do this in a single transaction
         for _, dir := range dirs {
-            fmt.Printf("Adding directory %s with total media %d \n", dir.Name, len(dir.Contents))
-            dirObj := &models.Container{
-              Path: dir_name,
-              Name: dir.Name,
-              Total: len(dir.Contents),
-            }
-            models.DB.Create(dirObj)
+            fmt.Printf("Adding directory %s with id %s %s\n", dir.Name, dir.ID, dir.Contents)
 
+            media := utils.FindMedia(dir, 90001, 0) // A more sensible limit?
+            fmt.Printf("Adding Media to %s with total media %d \n", dir.Name, len(media))
 
-            for idx, fi := range dir.Contents {
-              mc := &models.MediaContainer{
-                  Src: fi.Src,
-                  Type: fi.Type,
-                  Preview: "",  // Need to run the create preview process
-                  ContainerID: nulls.NewUUID(dirObj.ID),
-                  Idx: idx,
-              }
-              models.DB.Create(mc)
+            unset_uuid, _ := uuid.FromString("00000000-0000-0000-0000-000000000000")
+            dir.ID = unset_uuid
+            dir.Total = len(media)
+            models.DB.Create(&dir)
+            fmt.Printf("Created %s with id %s\n", dir.Name, dir.ID)
+
+            for _, mc := range media {
+              models.DB.Create(&mc)
             }
         }
-
 		// Add DB seeding stuff here
 		return nil
 	})
-
-    // Need to do a stanard lookup
-
     // Then add the content for the entire directory structure
 
     // Then add in linkage to the related models.

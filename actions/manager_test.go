@@ -123,5 +123,6 @@ func (as *ActionSuite) Test_ManagerInitialize() {
         // fmt.Printf("Media length was %d\n", media_len)
         as.Greater(media_len, 0, "There should be a number of media")
         as.Equal(expect_len[c.Name], media_len, "It should have this many instances: " + c.Name )
+        as.Greater(c.Total, 0, "All of them should have a total assigned")
     }
 }

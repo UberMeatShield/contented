@@ -31,6 +31,16 @@ func TestFindContainers(t *testing.T) {
 	}
 }
 
+func TestFindMedia(t *testing.T) {
+    containers := FindContainers(testDir)
+    for _, c := range containers {
+        media := FindMedia(c, 42, 0)
+        if len(media) == 0 {
+            t.Errorf("Failed to lookup media in container %s", c.Name)
+        }
+    }
+}
+
 func Test_ContentType(t *testing.T) {
 	imgName := "this_is_jp_eg"
 	dirPath := filepath.Join(testDir, "dir1")
@@ -53,9 +63,9 @@ func Test_ContentType(t *testing.T) {
 	if pngType != "image/png" {
 		t.Errorf("Failed to determine content type %s", pngType)
 	}
-
 }
 
+// Eh, kinda like some form of hashing
 func Test_DirId(t *testing.T) {
 	id1 := GetDirId("dir1")
 	if id1 != "4c1f6165302b81fd587e79db729a5a05ea130ea35602a76dcf0dd96a2366f33c" {
@@ -63,32 +73,35 @@ func Test_DirId(t *testing.T) {
 	}
 }
 
-func Test_GetSpecificDir(t *testing.T) {
-	var count = 2
-	files := GetDirContents(testDir+"/dir3", 2, 0, "mocks")
-	if len(files.Contents) != 2 {
-		t.Errorf("Did not limit the directory length, wanted %d found %d", count, len(files.Contents))
-	}
+func TestFindMediaOffset(t *testing.T) {
+    containers := FindContainers(testDir)
 
-	files = GetDirContents(testDir+"/dir3", 10, 0, "mocks")
-	if len(files.Contents) < 3 {
-		t.Error("There are more test files in this directory than 3")
-	}
+    expect_dir := false
+    expect_total := 6
+    for _, c := range containers {
+        if c.Name == "dir3" {
+            expect_dir = true
+            media := FindMedia(c, 2, 0)
+            if len(media) > 3 {
+		        t.Error("Limit failed to restrict contents")
+            }
+            allm := FindMedia(c, 42, 0)
+            total := len(allm)
 
-	start_offset := 4
-	offset_files := GetDirContents(testDir+"/dir3", 3, start_offset, "mocks")
-	len_contents := len(offset_files.Contents)
-	if len_contents != 2 {
-		t.Errorf("With the offset we should have only have 2 %d", len_contents)
-	}
-	if offset_files.Total != 6 {
-		t.Error("There should be exactly 6 images in the dir")
-	}
+            if total != expect_total {
+		        t.Errorf("There should be exactly n(%d) found but returned %d", expect_total, total)
+            }
 
-	first_file := offset_files.Contents[0]
-	if first_file.Src != "fff&text=04-dir3.png" {
-		t.Errorf("Offset should change the initial filename %s", first_file.Src)
-	}
+            offset := FindMedia(c, 6, 2)
+            if len(offset) != 4 {
+                t.Errorf("The offset should lower the total returned but we found %d", len(offset))
+            }
+        }
+    }
+
+    if expect_dir == false {
+        t.Fatal("The test directory dir3 was not found")
+    }
 }
 
 func example(sleep int, msg string, reply chan string) {
