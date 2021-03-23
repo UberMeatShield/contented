@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"strconv"
-
 	"github.com/gobuffalo/envy"
 )
 
@@ -18,7 +17,11 @@ import (
 func main() {
 
     // Should I move this into the config itself?
-	dir, err := envy.MustGet("DIR")
+    var err error
+	dir := envy.Get("DIR", "")
+    if dir == "" {
+        dir, err = envy.MustGet("CONTENT_DIR")  // From the .env file
+    }
 	limitCount, limErr := strconv.Atoi(envy.Get("LIMIT", strconv.Itoa(actions.DefaultLimit)))
 
     // We need to get that actually get a default load somehow

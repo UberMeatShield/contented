@@ -49,6 +49,54 @@ func InitConfig(dir_root string, cfg *DirConfigEntry) *DirConfigEntry {
 }
 
 /**
+ * Grab a small preview list of all items in the directory.
+ */
+func FindContainers(dir_root string) models.Containers {
+	// Get the current listings, check they passed in a legal key
+	log.Printf("FindContainers Reading from: %s", dir_root)
+
+	var listings = models.Containers{}
+	files, _ := ioutil.ReadDir(dir_root)
+	for _, f := range files {
+		if f.IsDir() {
+			dir_name := f.Name()
+            id, _  := uuid.NewV4()
+		    c := models.Container{
+		        ID:   id,
+                Name: dir_name,
+                Path: dir_root,
+            }
+            listings = append(listings, c)
+		}
+	}
+	return listings
+}
+
+/**
+ *  Get all the content in a particular directory (would be good to filter down to certain file types?)
+ */
+func FindMedia(cnt models.Container, limit int, start_offset int) models.MediaContainers {
+	var arr = models.MediaContainers{}
+    fqDirPath := filepath.Join(cnt.Path, cnt.Name)
+	imgs, _ := ioutil.ReadDir(fqDirPath)
+
+	total := 0
+	for idx, img := range imgs {
+		if !img.IsDir() {
+			if len(arr) < limit && idx >= start_offset {
+                id, _  := uuid.NewV4()
+				media := getMediaContainer(id, img, fqDirPath)
+                media.ContainerID = nulls.NewUUID(cnt.ID)
+                media.Idx = idx
+				arr = append(arr, media)
+			}
+			total++ // Only add a total for non-directory files (exclude other types?)
+		}
+	}
+    return arr
+}
+
+/**
  *  TODO:  Require the number to preview and will be Memory only supported.
  */
 func PopulateMemoryView(dir_root string, valid_dirs map[string]os.FileInfo) (models.ContainerMap, models.MediaMap) {
@@ -57,7 +105,7 @@ func PopulateMemoryView(dir_root string, valid_dirs map[string]os.FileInfo) (mod
 
 	for _, f := range valid_dirs {
 		// Need to make this just return a container
-		dir_name := filepath.Join(dir_root + f.Name())
+		dir_name := filepath.Join(dir_root, f.Name())
 		dc := GetDirContents(dir_name, 20, 0, f.Name())
 
 		log.Printf("Searching in %s", dir_name)
@@ -108,6 +156,22 @@ func GetDirectoriesLookup(rootDir string) map[string]os.FileInfo {
 }
 
 /**
+ * Return a reader for the file contents
+ */
+func GetFileContents(dir string, filename string) *bufio.Reader {
+	return GetFileContentsByFqName(filepath.Join(dir, filename))
+}
+
+func GetFileContentsByFqName(fq_name string) *bufio.Reader {
+	f, err := os.Open(fq_name)
+	if err != nil {
+		panic(err)
+	}
+	return bufio.NewReader(f)
+}
+
+
+/**
  * Grab a small preview list of all items in the directory.
  */
 func ListDirs(dir string, previewCount int) []DirContents {
@@ -123,21 +187,6 @@ func ListDirs(dir string, previewCount int) []DirContents {
 		}
 	}
 	return listings
-}
-
-/**
- * Return a reader for the file contents
- */
-func GetFileContents(dir string, filename string) *bufio.Reader {
-	return GetFileContentsByFqName(filepath.Join(dir, filename))
-}
-
-func GetFileContentsByFqName(fq_name string) *bufio.Reader {
-	f, err := os.Open(fq_name)
-	if err != nil {
-		panic(err)
-	}
-	return bufio.NewReader(f)
 }
 
 /**

@@ -84,7 +84,6 @@ type ContentManager interface {
 // GoLang is just making this awkward
 type MemoryStorage struct {
     Initialized bool
-    ValidDirs       map[string]os.FileInfo
     ValidMedia      models.MediaMap
     ValidContainers models.ContainerMap
 }
@@ -94,7 +93,6 @@ type ContentManagerMemory struct {
     cfg *utils.DirConfigEntry
     c *buffalo.Context
 
-    ValidDirs       map[string]os.FileInfo
     ValidMedia      models.MediaMap
     ValidContainers models.ContainerMap
     validate string 
@@ -126,25 +124,43 @@ func (cm *ContentManagerMemory) Initialize() {
         memStorage = InitializeMemory(cm.cfg.Dir)
     }
     // Move some of these into an actual singleton.
-    cm.ValidDirs = memStorage.ValidDirs
     cm.ValidContainers = memStorage.ValidContainers
     cm.ValidMedia = memStorage.ValidMedia
-    log.Printf("Found %d directories\n", len(cm.ValidDirs))
+    log.Printf("Found %d directories\n", len(cm.ValidContainers))
 }
 
 func InitializeMemory(dir_root string) MemoryStorage {
     log.Printf("Initializing Memory Storage %s\n", dir_root)
-    dir_lookup := utils.GetDirectoriesLookup(dir_root)
-    containers, files := utils.PopulateMemoryView(dir_root, dir_lookup)
+    containers, files := PopulateMemoryView(dir_root)
 
     memStorage.Initialized = true
-    memStorage.ValidDirs = dir_lookup
     memStorage.ValidContainers = containers
     memStorage.ValidMedia = files
 
     return memStorage
 }
 
+/**
+ *  TODO:  Require the number to preview and will be Memory only supported.
+ */
+func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap) {
+    containers := models.ContainerMap{}
+    files := models.MediaMap{}
+
+    log.Printf("Searching in %s", dir_root)
+
+    cnts := utils.FindContainers(dir_root)
+    for _, c := range cnts {
+        containers[c.ID] = c
+        media := utils.FindMedia(c, 90001, 0)  // TODO: Config this
+        c.Contents = media
+
+        for _, mc := range media {
+            files[mc.ID] = mc
+        }
+    }
+    return containers, files
+}
 
 func StringDefault(s1, s2 string) string {
 	if s1 == "" {
