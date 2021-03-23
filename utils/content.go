@@ -49,40 +49,52 @@ func InitConfig(dir_root string, cfg *DirConfigEntry) *DirConfigEntry {
 }
 
 /**
- *  TODO:  Require the number to preview and will be Memory only supported.
+ * Grab a small preview list of all items in the directory.
  */
-func PopulateMemoryView(dir_root string, valid_dirs map[string]os.FileInfo) (models.ContainerMap, models.MediaMap) {
-	containers := models.ContainerMap{}
-	files := models.MediaMap{}
+func FindContainers(dir_root string) models.Containers {
+	// Get the current listings, check they passed in a legal key
+	log.Printf("FindContainers Reading from: %s", dir_root)
 
-	for _, f := range valid_dirs {
-		// Need to make this just return a container
-		dir_name := filepath.Join(dir_root + f.Name())
-		dc := GetDirContents(dir_name, 20, 0, f.Name())
-
-		log.Printf("Searching in %s", dir_name)
-
-		c_id, _ := uuid.NewV4()
-		c := models.Container{
-			ID:   c_id,
-			Name: dc.Name,
-			Path: dc.Path,
-            Total: len(dc.Contents),
-		}
-		containers[c.ID] = c
-		for idx, mc := range dc.Contents {
-			mc_id, _ := uuid.NewV4()
-			mc := models.MediaContainer{
-				ID:          mc_id,
-				Src:         mc.Src,
-				Type:        mc.Type,
-				ContainerID: nulls.NewUUID(c.ID),
-                Idx: idx,
-			}
-			files[mc.ID] = mc
+	var listings = models.Containers{}
+	files, _ := ioutil.ReadDir(dir_root)
+	for _, f := range files {
+		if f.IsDir() {
+			dir_name := f.Name()
+            id, _  := uuid.NewV4()
+		    c := models.Container{
+		        ID:   id,
+                Name: dir_name,
+                Path: dir_root,
+                Active: true,
+            }
+            listings = append(listings, c)
 		}
 	}
-	return containers, files
+	return listings
+}
+
+/**
+ *  Get all the content in a particular directory (would be good to filter down to certain file types?)
+ */
+func FindMedia(cnt models.Container, limit int, start_offset int) models.MediaContainers {
+	var arr = models.MediaContainers{}
+    fqDirPath := filepath.Join(cnt.Path, cnt.Name)
+	imgs, _ := ioutil.ReadDir(fqDirPath)
+
+	total := 0
+	for idx, img := range imgs {
+		if !img.IsDir() {
+			if len(arr) < limit && idx >= start_offset {
+                id, _  := uuid.NewV4()
+				media := getMediaContainer(id, img, fqDirPath)
+                media.ContainerID = nulls.NewUUID(cnt.ID)
+                media.Idx = idx
+				arr = append(arr, media)
+			}
+			total++ // Only add a total for non-directory files (exclude other types?)
+		}
+	}
+    return arr
 }
 
 /**
@@ -108,24 +120,6 @@ func GetDirectoriesLookup(rootDir string) map[string]os.FileInfo {
 }
 
 /**
- * Grab a small preview list of all items in the directory.
- */
-func ListDirs(dir string, previewCount int) []DirContents {
-	// Get the current listings, check they passed in a legal key
-	log.Printf("ListDirs Reading from: %s with preview count %d", dir, previewCount)
-
-	var listings []DirContents
-	files, _ := ioutil.ReadDir(dir)
-	for _, f := range files {
-		if f.IsDir() {
-			dir_name := f.Name() // This should definitely be some other ID format => Lookup
-			listings = append(listings, GetDirContents(dir + dir_name, previewCount, 0, dir_name))
-		}
-	}
-	return listings
-}
-
-/**
  * Return a reader for the file contents
  */
 func GetFileContents(dir string, filename string) *bufio.Reader {
@@ -138,35 +132,6 @@ func GetFileContentsByFqName(fq_name string) *bufio.Reader {
 		panic(err)
 	}
 	return bufio.NewReader(f)
-}
-
-/**
- *  Get all the content in a particular directory (would be good to filter down to certain file types?)
- */
-func GetDirContents(fqDirPath string, limit int, start_offset int, dirname string) DirContents {
-	var arr = models.MediaContainers{}
-	imgs, _ := ioutil.ReadDir(fqDirPath)
-
-	total := 0
-	for idx, img := range imgs {
-		if !img.IsDir() {
-			if len(arr) < limit && idx >= start_offset {
-                id, _  := uuid.NewV4()
-				media := getMediaContainer(id, img, fqDirPath)
-				arr = append(arr, media)
-			}
-			total++ // Only add a total for non-directory files (exclude other types?)
-		}
-	}
-	// log.Println("Limit for content dir was.", fqDirPath, " with limit", limit, " offset: ", start_offset)
-	id := GetDirId(dirname)
-	return DirContents{
-		Total:    total,
-		Contents: arr,
-		Path:     "view/" + id, // from env.DIR. static/ is a configured FileServer for all content
-		Id:       id,
-		Name:     dirname,
-	}
 }
 
 func GetDirId(name string) string {
