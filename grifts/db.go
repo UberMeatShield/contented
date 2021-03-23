@@ -9,7 +9,7 @@ import (
     "github.com/pkg/errors"
     "github.com/gofrs/uuid"
     "github.com/gobuffalo/envy"
-//    "github.com/gobuffalo/nulls"
+    "github.com/gobuffalo/nulls"
 )
 
 var _ = grift.Namespace("db", func() {
@@ -44,11 +44,12 @@ var _ = grift.Namespace("db", func() {
 
         // TODO: Need to do this in a single transaction
         for _, dir := range dirs {
-            fmt.Printf("Adding directory %s with id %s %s\n", dir.Name, dir.ID, dir.Contents)
+            fmt.Printf("Adding directory %s with id %s\n", dir.Name, dir.ID)
 
             media := utils.FindMedia(dir, 90001, 0) // A more sensible limit?
             fmt.Printf("Adding Media to %s with total media %d \n", dir.Name, len(media))
 
+            // Use the database version of uuid generation (minimize the miniscule conflict)
             unset_uuid, _ := uuid.FromString("00000000-0000-0000-0000-000000000000")
             dir.ID = unset_uuid
             dir.Total = len(media)
@@ -56,7 +57,8 @@ var _ = grift.Namespace("db", func() {
             fmt.Printf("Created %s with id %s\n", dir.Name, dir.ID)
 
             for _, mc := range media {
-              models.DB.Create(&mc)
+                mc.ContainerID = nulls.NewUUID(dir.ID) 
+                models.DB.Create(&mc)
             }
         }
 		// Add DB seeding stuff here
