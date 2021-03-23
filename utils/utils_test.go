@@ -11,24 +11,23 @@ import (
 // Possibly make this some sort of global test helper function (harder to do in GoLang?)
 var testDir, _ = envy.MustGet("DIR")
 
-func TestGetDirContents(t *testing.T) {
-	lookup := GetDirectoriesLookup(testDir)
-
-	if len(lookup) != 4 {
-		t.Fatal("The lookup did not return a valid lookup")
-	}
+func TestFindContainers(t *testing.T) {
+    containers := FindContainers(testDir)
+    if len(containers) != 4 {
+        t.Fatal("There should be 4 containers in the mock")
+    }
 
 	var known_dirs = map[string]bool{"dir1": true, "dir2": true, "dir3": true, "screens": true}
 	count := 0
-	for _, dir := range lookup {
-		if _, ok := known_dirs[dir.Name()]; ok {
-			count++
-		} else {
-			t.Errorf("Failed to get a lookup for this dir %s", dir)
-		}
-	}
+    for _, c := range containers {
+		if _, ok := known_dirs[c.Name]; ok {
+            count++
+        } else {
+			t.Errorf("Failed to get a lookup for this dir %s", c.Name)
+        }
+    }
 	if count != 4 {
-		t.Error("Failed to actually test the API")
+		t.Error("Failed to pull in the known / expected directories")
 	}
 }
 
