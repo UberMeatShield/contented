@@ -123,6 +123,10 @@ func (v MediaContainersResource) Show(c buffalo.Context) error {
 // Create adds a MediaContainer to the DB. This function is mapped to the
 // path POST /media_containers
 func (v MediaContainersResource) Create(c buffalo.Context) error {
+    man := GetManager(&c)
+    if man.CanEdit() == false {
+        return fmt.Errorf("Edit not supported by this manager")
+    }
 
     // TODO: Check if we actually allow for this
 
@@ -185,6 +189,10 @@ func (v MediaContainersResource) Create(c buffalo.Context) error {
 // Update changes a MediaContainer in the DB. This function is mapped to
 // the path PUT /media_containers/{media_container_id}
 func (v MediaContainersResource) Update(c buffalo.Context) error {
+    man := GetManager(&c)
+    if man.CanEdit() == false {
+        return fmt.Errorf("Edit not supported by this manager")
+    }
 	// Get the DB connection from the context
 	tx, ok := c.Value("tx").(*pop.Connection)
 	if !ok {
@@ -247,6 +255,10 @@ func (v MediaContainersResource) Update(c buffalo.Context) error {
 // Destroy deletes a MediaContainer from the DB. This function is mapped
 // to the path DELETE /media_containers/{media_container_id}
 func (v MediaContainersResource) Destroy(c buffalo.Context) error {
+    man := GetManager(&c)
+    if man.CanEdit() == false {
+        return fmt.Errorf("Edit not supported by this manager")
+    }
 	// Get the DB connection from the context
 	tx, ok := c.Value("tx").(*pop.Connection)
 	if !ok {

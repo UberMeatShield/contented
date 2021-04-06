@@ -121,6 +121,10 @@ func (v ContainersResource) Create(c buffalo.Context) error {
 	// Allocate an empty Container
 
     // TODO: Reject if it is memory manager
+    man := GetManager(&c)
+    if man.CanEdit() == false {
+        return fmt.Errorf("Edit not supported by this manager")
+    }
 
 	// Bind container to the html form elements
 	container := &models.Container{}
@@ -178,6 +182,12 @@ func (v ContainersResource) Create(c buffalo.Context) error {
 // the path PUT /containers/{container_id}
 func (v ContainersResource) Update(c buffalo.Context) error {
 	// Get the DB connection from the context
+    man := GetManager(&c)
+    if man.CanEdit() == false {
+        return fmt.Errorf("Edit not supported by this manager")
+    }
+
+
 	tx, ok := c.Value("tx").(*pop.Connection)
 	if !ok {
 		return fmt.Errorf("no transaction found")
@@ -237,6 +247,11 @@ func (v ContainersResource) Update(c buffalo.Context) error {
 // to the path DELETE /containers/{container_id}
 func (v ContainersResource) Destroy(c buffalo.Context) error {
 	// Get the DB connection from the context
+    man := GetManager(&c)
+    if man.CanEdit() == false {
+        return fmt.Errorf("Edit not supported by this manager")
+    }
+
 	tx, ok := c.Value("tx").(*pop.Connection)
 	if !ok {
 		return fmt.Errorf("no transaction found")
