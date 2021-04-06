@@ -4,6 +4,7 @@ import (
 	//"fmt"
 	//"contented/models"
 	"contented/utils"
+    "net/http"
     /*
 	"encoding/json"
 	"net/http"
@@ -97,6 +98,24 @@ func (as *ActionSuite) Test_AssignManager() {
     as.Equal(len(*mcs), len(*mcs_2), "A new instance should use the same storage")
 }
 
+
+func (as *ActionSuite) Test_MemoryDenyEdit() {
+    cfg := init_fake_app(false)
+    cfg.UseDatabase = false
+    ctx := getContext(app)
+    man := GetManager(&ctx)
+
+    containers, err := man.ListContainersContext()
+    as.NoError(err, "It should list containers")
+
+    as.Greater(len(*containers), 0, "There should be containers")
+
+    for _, c := range *containers {
+        c.Name = "Update Should fail"
+        res := as.JSON("/containers/" + c.ID.String()).Put(&c)
+        as.Equal(http.StatusNotImplemented, res.Code)
+    }
+}
 
 
 func (as *ActionSuite) Test_ManagerInitialize() {

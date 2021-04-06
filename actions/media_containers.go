@@ -2,7 +2,7 @@ package actions
 
 import (
     "log"
-//    "errors"
+    "errors"
 	"contented/models"
 	"fmt"
 	"net/http"
@@ -125,7 +125,10 @@ func (v MediaContainersResource) Show(c buffalo.Context) error {
 func (v MediaContainersResource) Create(c buffalo.Context) error {
     man := GetManager(&c)
     if man.CanEdit() == false {
-        return fmt.Errorf("Edit not supported by this manager")
+        return c.Error(
+            http.StatusNotImplemented,
+            errors.New("Edit not supported by this manager"),
+        )
     }
 
     // TODO: Check if we actually allow for this
@@ -191,7 +194,10 @@ func (v MediaContainersResource) Create(c buffalo.Context) error {
 func (v MediaContainersResource) Update(c buffalo.Context) error {
     man := GetManager(&c)
     if man.CanEdit() == false {
-        return fmt.Errorf("Edit not supported by this manager")
+        return c.Error(
+            http.StatusNotImplemented,
+            errors.New("Edit not supported by this manager"),
+        )
     }
 	// Get the DB connection from the context
 	tx, ok := c.Value("tx").(*pop.Connection)
@@ -257,7 +263,10 @@ func (v MediaContainersResource) Update(c buffalo.Context) error {
 func (v MediaContainersResource) Destroy(c buffalo.Context) error {
     man := GetManager(&c)
     if man.CanEdit() == false {
-        return fmt.Errorf("Edit not supported by this manager")
+        return c.Error(
+            http.StatusNotImplemented,
+            errors.New("Edit not supported by this manager"),
+        )
     }
 	// Get the DB connection from the context
 	tx, ok := c.Value("tx").(*pop.Connection)

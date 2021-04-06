@@ -1,9 +1,10 @@
 package actions
 
 import (
-	"contented/models"
+    "errors"
 	"fmt"
 	"net/http"
+	"contented/models"
 //    "errors"
 
     "github.com/gofrs/uuid"
@@ -123,7 +124,10 @@ func (v ContainersResource) Create(c buffalo.Context) error {
     // TODO: Reject if it is memory manager
     man := GetManager(&c)
     if man.CanEdit() == false {
-        return fmt.Errorf("Edit not supported by this manager")
+        return c.Error(
+            http.StatusNotImplemented,
+            errors.New("Edit not supported by this manager"),
+        )
     }
 
 	// Bind container to the html form elements
@@ -184,7 +188,10 @@ func (v ContainersResource) Update(c buffalo.Context) error {
 	// Get the DB connection from the context
     man := GetManager(&c)
     if man.CanEdit() == false {
-        return fmt.Errorf("Edit not supported by this manager")
+        return c.Error(
+            http.StatusNotImplemented,
+            errors.New("Edit not supported by this manager"),
+        )
     }
 
 
@@ -249,7 +256,10 @@ func (v ContainersResource) Destroy(c buffalo.Context) error {
 	// Get the DB connection from the context
     man := GetManager(&c)
     if man.CanEdit() == false {
-        return fmt.Errorf("Edit not supported by this manager")
+        return c.Error(
+            http.StatusNotImplemented,
+            errors.New("Edit not supported by this manager"),
+        )
     }
 
 	tx, ok := c.Value("tx").(*pop.Connection)
