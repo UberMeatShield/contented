@@ -63,6 +63,7 @@ type ContentManager interface {
     // SetCfg(c *utils.DirConfigEntry)
     GetCfg() *utils.DirConfigEntry
     GetContext() *buffalo.Context
+    CanEdit() bool  // Do we support CRUD or just R
 
     FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error)
     FindDirRef(dir_id uuid.UUID) (*models.Container, error)
@@ -96,6 +97,10 @@ type ContentManagerMemory struct {
     ValidMedia      models.MediaMap
     ValidContainers models.ContainerMap
     validate string 
+}
+
+func (cm ContentManagerMemory) CanEdit() bool {
+    return false;
 }
 
 func (cm *ContentManagerMemory) SetCfg(cfg *utils.DirConfigEntry) {
@@ -301,6 +306,10 @@ func (cm *ContentManagerDB) SetCfg(cfg *utils.DirConfigEntry) {
 }
 func (cm ContentManagerDB) GetCfg() *utils.DirConfigEntry {
     return cm.cfg
+}
+
+func (cm ContentManagerDB) CanEdit() bool {
+    return true;
 }
 
 func (cm ContentManagerDB) GetContext() *buffalo.Context {
