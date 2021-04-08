@@ -2,7 +2,6 @@ package actions
 
 import (
 	//"fmt"
-	//"contented/models"
 	"contented/utils"
     "net/http"
     /*
@@ -117,6 +116,38 @@ func (as *ActionSuite) Test_MemoryDenyEdit() {
     }
 }
 
+func (as *ActionSuite) Test_MemoryManagerPaginate() {
+    cfg := init_fake_app(false)
+    cfg.UseDatabase = false
+
+    ctx := getContextParams(app, "/containers", "1", "2")
+    man := GetManager(&ctx)
+    as.Equal(man.CanEdit(), false, "Memory manager should not be editing")
+
+    // Hate
+    containers, err := man.ListContainers(1, 1)
+    as.NoError(err, "It should list with pagination")
+    as.Equal(1, len(*containers), "It should respect paging")
+
+    cnt := (*containers)[0]
+    as.NotNil(cnt, "There should be a container with 12 entries")
+    as.Equal(cnt.Total, 12, "There should be 12 test images in the first ORDERED containers")
+    as.NoError(err)
+    media_page_1, _ := man.ListMedia(cnt.ID, 1, 4)
+    as.Equal(len(*media_page_1), 4, "It should respect page size")
+
+    media_page_3, _ := man.ListMedia(cnt.ID, 3, 4)
+    as.Equal(len(*media_page_3), 4, "It should respect page size and get the last page")
+
+    as.NotEqual((*media_page_3)[3].ID, (*media_page_1)[3].ID, "Ensure it actually paged")
+
+    // Last container pagination check
+    l_cnts, _ := man.ListContainers(4, 1)
+    as.Equal(1, len(*l_cnts), "It should still return only as we are on the last page")
+    l_cnt := (*l_cnts)[0]
+    as.Equal(l_cnt.Total, 3, "There are 3 entries in the ordered test data last container")
+
+}
 
 func (as *ActionSuite) Test_ManagerInitialize() {
     cfg := init_fake_app(false)

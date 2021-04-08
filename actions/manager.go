@@ -152,13 +152,17 @@ func GetOffsetEnd(page int, per_page int, max int) (int, int) {
     if offset < 0 {
         offset = 0
     }
+
     end := offset + per_page
     if end > max {
         end = max
     }
+    // Maybe just toss a value error when asking for out of bounds
+    if offset >= max {
+        offset = end - 1
+    }
     return offset, end
 }
-
 
 /**
  *  TODO:  Require the number to preview and will be Memory only supported.
@@ -192,7 +196,7 @@ func StringDefault(s1, s2 string) string {
 }
 
 // Returns the offest and the limit from pagination params
-func GetPagination(params pop.PaginationParams, DefaultLimit int) (int, int) {
+func GetPagination(params pop.PaginationParams, DefaultLimit int) (int, int, int) {
 	p := StringDefault(params.Get("page"), "1")
 	page, err := strconv.Atoi(p)
 	if err != nil || page < 1 {
@@ -205,12 +209,12 @@ func GetPagination(params pop.PaginationParams, DefaultLimit int) (int, int) {
 		limit = DefaultLimit
 	}
     offset := (page - 1) * limit
-	return offset, limit
+	return offset, limit, page
 }
 
 func (cm ContentManagerMemory) ListMediaContext(c_id uuid.UUID) (*models.MediaContainers, error) {
     c := *cm.GetContext()
-    offset, limit := GetPagination(c.Params(), cm.cfg.Limit)
+    offset, limit, _ := GetPagination(c.Params(), cm.cfg.Limit)
     return cm.ListMedia(c_id, offset, limit)
 }
 
@@ -256,7 +260,9 @@ func (cm ContentManagerMemory) GetMedia(mc_id uuid.UUID) (*models.MediaContainer
 }
 
 func (cm ContentManagerMemory) ListContainersContext() (*models.Containers, error) {
-    return cm.ListContainers(int(1), cm.cfg.Limit)
+    c := *cm.GetContext()
+    _, per_page, page := GetPagination(c.Params(), cm.cfg.Limit)
+    return cm.ListContainers(page, per_page)
 }
 
 func (cm ContentManagerMemory) ListContainers(page int, per_page int) (*models.Containers, error) {

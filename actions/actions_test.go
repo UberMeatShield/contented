@@ -21,17 +21,22 @@ type ActionSuite struct {
 
 
 func getContext(app *buffalo.App) buffalo.Context {
+    return getContextParams(app, "/containers", "1", "10")
+}
 
-    url := "/containers"
+func getContextParams(app *buffalo.App, url string, page string, per_page string) buffalo.Context {
     req, _ := http.NewRequest("GET", url, nil)
 
+    // Setting a value here like this doesn't seem to work correctly.  The context will NOT
+    // Actually keep the param.  GoLang made this a huge pain to test vs a nice simple SetParam
     ctx := req.Context()
-    ctx = context.WithValue(ctx, "page", "1")
-    ctx = context.WithValue(ctx, "per_page", "10")
+    ctx = context.WithValue(ctx, "page", page)
+    ctx = context.WithValue(ctx, "per_page", per_page)
 
     return &buffalo.DefaultContext{
         Context: ctx,
     }
+
 }
 
 
