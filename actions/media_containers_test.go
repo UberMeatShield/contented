@@ -8,6 +8,7 @@ import (
 )
 
 func CreateResource(src string, container_id nulls.UUID, as *ActionSuite) models.MediaContainer {
+    init_fake_app(true)
 	mc := &models.MediaContainer{
 		Src:     src,
 		Type:    "test",
@@ -94,6 +95,7 @@ func (as *ActionSuite) Test_MediaContainersResource_Update() {
 }
 
 func (as *ActionSuite) Test_MediaContainersResource_Destroy() {
+    init_fake_app(true)
 	mc := CreateResource("Nuke Test", nulls.UUID{}, as)
 	del_res := as.JSON("/media/" + mc.ID.String()).Delete()
 	as.Equal(http.StatusOK, del_res.Code)

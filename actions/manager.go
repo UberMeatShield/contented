@@ -5,6 +5,7 @@ import (
     "os"
     "fmt"
     "errors"
+    "sort"
     "path/filepath"
     "contented/models"
     "contented/utils"
@@ -145,6 +146,24 @@ func InitializeMemory(dir_root string) MemoryStorage {
     return memStorage
 }
 
+// Used when doing pagination on the arrays of memory manager
+func GetOffsetEnd(page int, per_page int, max int) (int, int) {
+    offset := (page - 1) * per_page
+    if offset < 0 {
+        offset = 0
+    }
+
+    end := offset + per_page
+    if end > max {
+        end = max
+    }
+    // Maybe just toss a value error when asking for out of bounds
+    if offset >= max {
+        offset = end - 1
+    }
+    return offset, end
+}
+
 /**
  *  TODO:  Require the number to preview and will be Memory only supported.
  */
@@ -155,10 +174,11 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap) 
     log.Printf("Searching in %s", dir_root)
 
     cnts := utils.FindContainers(dir_root)
-    for _, c := range cnts {
+    for idx, c := range cnts {
         media := utils.FindMedia(c, 90001, 0)  // TODO: Config this
-        c.Contents = media
+        // c.Contents = media
         c.Total = len(media)
+        c.Idx = idx
         containers[c.ID] = c
 
         for _, mc := range media {
@@ -176,7 +196,7 @@ func StringDefault(s1, s2 string) string {
 }
 
 // Returns the offest and the limit from pagination params
-func GetPagination(params pop.PaginationParams, DefaultLimit int) (int, int) {
+func GetPagination(params pop.PaginationParams, DefaultLimit int) (int, int, int) {
 	p := StringDefault(params.Get("page"), "1")
 	page, err := strconv.Atoi(p)
 	if err != nil || page < 1 {
@@ -189,42 +209,45 @@ func GetPagination(params pop.PaginationParams, DefaultLimit int) (int, int) {
 		limit = DefaultLimit
 	}
     offset := (page - 1) * limit
-	return offset, limit
+	return offset, limit, page
 }
 
 func (cm ContentManagerMemory) ListMediaContext(c_id uuid.UUID) (*models.MediaContainers, error) {
     c := *cm.GetContext()
-    offset, limit := GetPagination(c.Params(), cm.cfg.Limit)
+    offset, limit, _ := GetPagination(c.Params(), cm.cfg.Limit)
     return cm.ListMedia(c_id, offset, limit)
 }
 
 func (cm ContentManagerMemory) ListAllMedia(page int, per_page int) (*models.MediaContainers, error) {
     m_arr := models.MediaContainers{}
     offset := (page - 1) * per_page
-
-    idx := 0
     for _, m := range cm.ValidMedia {
-        if idx >= offset && len(m_arr) < per_page {
-            m_arr = append(m_arr, m)
-        }
-        idx++
+        m_arr = append(m_arr, m)
     }
+    sort.SliceStable(m_arr, func(i, j int) bool {
+        return m_arr[i].Idx < m_arr[j].Idx
+    })
+    offset, end := GetOffsetEnd(page, per_page, len(m_arr))
+    m_arr = m_arr[offset : end]
     return &m_arr, nil
 }
 
 // Awkard GoLang interface support is awkward
 func (cm ContentManagerMemory) ListMedia(ContainerID uuid.UUID, page int, per_page int) (*models.MediaContainers, error) {
+
+    // TODO: Port to using the containers
     m_arr := models.MediaContainers{}
     for _, m := range cm.ValidMedia {
-        if m.ContainerID.Valid {
-            if m.ContainerID.UUID == ContainerID && len(m_arr) <= per_page {
-                m_arr = append(m_arr, m)
-            }
-        } else if len(m_arr) < per_page {
+        if m.ContainerID.Valid && m.ContainerID.UUID == ContainerID {
             m_arr = append(m_arr, m)
         }
     }
-    log.Printf("Get a list of media, we should have some %d", len(m_arr))
+    sort.SliceStable(m_arr, func(i, j int) bool {
+        return m_arr[i].Idx < m_arr[j].Idx
+    })
+    offset, end := GetOffsetEnd(page, per_page, len(m_arr))
+    m_arr = m_arr[offset : end]
+    log.Printf("Get a list of media offset(%d), end(%d) we should have some %d", offset, end, len(m_arr))
     return &m_arr, nil
 }
 
@@ -237,15 +260,25 @@ func (cm ContentManagerMemory) GetMedia(mc_id uuid.UUID) (*models.MediaContainer
 }
 
 func (cm ContentManagerMemory) ListContainersContext() (*models.Containers, error) {
-    return cm.ListContainers(int(1), cm.cfg.Limit)
+    c := *cm.GetContext()
+    _, per_page, page := GetPagination(c.Params(), cm.cfg.Limit)
+    return cm.ListContainers(page, per_page)
 }
 
 func (cm ContentManagerMemory) ListContainers(page int, per_page int) (*models.Containers, error) {
-    log.Printf("List Containers")
+    log.Printf("List Containers with page(%d) and per_page(%d)", page, per_page)
+
+    // TODO: Maybe just actually store the array on this
     c_arr := models.Containers{}
     for _, c := range cm.ValidContainers {
         c_arr = append(c_arr, c)
     }
+    sort.SliceStable(c_arr, func(i, j int) bool {
+        return c_arr[i].Idx < c_arr[j].Idx
+    })
+
+    offset, end := GetOffsetEnd(page, per_page, len(c_arr))
+    c_arr = c_arr[offset : end]
     return &c_arr, nil
 }
 
