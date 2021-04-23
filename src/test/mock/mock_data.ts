@@ -1,6 +1,6 @@
 // TODO: This was from before the httpMock was actually good, just use httpMockController now
 import {Observable, from as observableFrom} from 'rxjs';
-import {Directory} from './../../contented/directory';
+import {Directory, ImgContainer} from './../../contented/directory';
 import {ApiDef} from './../../contented/api_def';
 import * as _ from 'lodash';
 
@@ -60,9 +60,6 @@ class MockLoader {
             fixture.detectChanges();
             this.handleContainerMediaLoad(httpMock, containers);
         }
-         //let url = ApiDef.contented.media.replace("{dirId}", '' + containers[0].id);
-         //let mediaReq = httpMock.expectOne(req => req.url === url);
-         //mediaReq.flush(MockData.getMedia());
     }
 
     public handleContainerMediaLoad(httpMock, dirs: Array<Directory>) {
@@ -73,6 +70,12 @@ class MockLoader {
                 req.flush(MockData.getMedia(dir.dir, 2));
             });
         });
+    }
+
+    public getImg() {
+        let img = new ImgContainer();
+        img.fromJson(this.getMedia("10", 1)[0]);
+        return img;
     }
 
 

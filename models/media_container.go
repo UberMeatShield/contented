@@ -17,7 +17,7 @@ type MediaContainer struct {
 	CreatedAt   time.Time  `json:"created_at" db:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at" db:"updated_at"`
 	Src         string     `json:"src" db:"src"`
-	Type        string     `json:"type" db:"type"`
+	ContentType string     `json:"content_type" db:"content_type"`
 	Preview     string     `json:"preview" db:"preview"`
 	ContainerID nulls.UUID `json:"container_id" db:"container_id"`
 	Idx         int        `json:"idx" db:"idx"`
