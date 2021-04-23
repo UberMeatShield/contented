@@ -11,7 +11,7 @@ func CreateResource(src string, container_id nulls.UUID, as *ActionSuite) models
     init_fake_app(true)
 	mc := &models.MediaContainer{
 		Src:     src,
-		Type:    "test",
+		ContentType:    "test",
 		Preview: "",
         ContainerID: container_id,
 	}
@@ -89,7 +89,7 @@ func (as *ActionSuite) Test_MediaContainersResource_Create() {
 
 func (as *ActionSuite) Test_MediaContainersResource_Update() {
 	mc := CreateResource("test_update", nulls.UUID{}, as)
-	mc.Type = "Update Test"
+	mc.ContentType = "Update Test"
 	up_res := as.JSON("/media/" + mc.ID.String()).Put(mc)
 	as.Equal(http.StatusOK, up_res.Code)
 }

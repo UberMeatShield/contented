@@ -169,19 +169,19 @@ func SniffFileType(content *os.File) (string, error) {
 }
 
 func getMediaContainer(id uuid.UUID, fileInfo os.FileInfo, path string) models.MediaContainer {
+
+	// https://golangcode.com/get-the-content-type-of-file/
 	contentType, err := GetMimeType(path, fileInfo.Name())
 	if err != nil {
 		log.Printf("Failed to determine contentType: %s", err)
 		contentType = "image/jpeg"
 	}
 
-	// TODO: https://golangcode.com/get-the-content-type-of-file/
-	// TODO: Need to cache this data (Loading all the file directory on preview is probably dumb)
 	// TODO: Need to add the unique ID for each dir (are they uniq?)
 	media := models.MediaContainer{
 		ID:   id,
 		Src:  fileInfo.Name(),
-		Type: contentType,
+		ContentType: contentType,
 	}
 	return media
 }

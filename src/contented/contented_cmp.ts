@@ -21,7 +21,7 @@ export class ContentedCmp implements OnInit {
     public previewWidth: number = 200; // Based on current client page sizes, scale the preview images natually
     public previewHeight: number = 200; // height for the previews ^
 
-    private currentViewItem: ImgContainer; // The current indexed item that is considered selected
+    public currentViewItem: ImgContainer; // The current indexed item that is considered selected
     public currentDir: Directory;
     public fullScreen: boolean = false; // Should we view fullscreen the current item
     public directories: Array<Directory>; // Current set of visible directories

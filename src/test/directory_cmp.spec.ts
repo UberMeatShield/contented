@@ -70,8 +70,14 @@ describe('TestingDirectoryCmp', () => {
         // Now test that when we are on the last image it properly selects that
         comp.currentViewItem = items[items.length - 1]; // Choose the last item in the list.
         fixture.detectChanges();
-        expect(comp.maxRendered < dir.contents.length).toBe(true, "If we have the same max as total contents this does nothing");
-        expect($('.preview-img', el).length).toBe(comp.maxRendered, "Should render the last selected item, plus 1 previous");
+        expect(comp.maxRendered < dir.contents.length).toBe(
+            true,
+            "If we have the same max as total contents this does nothing"
+        );
+        expect($('.preview-img', el).length).toBe(
+            comp.maxRendered,
+            "Should render the last selected item, plus 1 previous"
+        );
     });
 
 

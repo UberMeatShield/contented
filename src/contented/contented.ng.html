@@ -1,7 +1,7 @@
 <div class="contented-cmp">
 
   <div *ngIf="fullScreen">
-    <contented-view [viewUrl]="getCurrentLocation()"></contented-view>
+    <contented-view [container]="getCurrentLocation()"></contented-view>
   </div>
 
   <!-- Fix this to be better about how to get the currDir -->

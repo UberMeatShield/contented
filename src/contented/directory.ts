@@ -10,20 +10,27 @@ function trail(path: string, whatWith: string) {
 }
 
 export class ImgContainer {
-    public id: number;
+    public id: string;
     public src: string;
     public idx: number;
-    public type_: string;
+    public content_type: string;
     public container_id: string;
 
     public previewUrl: string;
     public fullUrl: string;
 
-    constructor(id: number, src: string, idx: number = 0) {
-        this.id = id;
-        this.src = src;
-        this.idx = idx;
+    constructor(obj: any = {}) {
+        this.fromJson(obj);
+    }
 
+    public fromJson(raw: any) {
+        if (raw) {
+            Object.assign(this, raw);
+            this.links();
+        }
+    }
+
+    public links() {
         this.previewUrl = `${ApiDef.contented.preview}${this.id}`;
         this.fullUrl = `${ApiDef.contented.view}${this.id}`;
     }
@@ -93,9 +100,7 @@ export class Directory {
     }
 
     public buildImgs(imgData: Array<any>) {
-        return _.map(imgData, data => {
-            return new ImgContainer(data.id, data.src, data.idx);
-        });
+        return _.map(imgData, data => new ImgContainer(data));
     }
 
     public setContents(contents: Array<ImgContainer>) {
