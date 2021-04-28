@@ -1,5 +1,22 @@
 version: "3"
+
+# Build with docker build -f Dockerfile contented:latest
 services:
+  web:
+    image: "contented:latest"
+    ports: 
+      - "3000:3000"
+    volumes:
+      - ./mocks/content:/content        # Just change the volume to host the content
+      #- ./public:/public
+      #- ./bin/contented:/bin/contented  # buffalo build outside the app for dev
+    environment:
+      GO_ENV: "docker_development"
+      CONTENT_DIR: "/content"
+      USE_DATABASE: "false"
+      LIMIT: 5000
+      PREVIEW: 12
+
   db:
     image: "postgres:10.7-alpine"
     ports:

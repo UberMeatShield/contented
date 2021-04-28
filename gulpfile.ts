@@ -104,15 +104,11 @@ const watchDoc = () => {
 };
 
 const copyFonts = async () => {
-    return src([
-        dir.node + 'bootstrap/fonts/*'
-    ]).pipe(dest(dir.thirdparty + '/fonts/'));
+    return src([]).pipe(dest(dir.thirdparty + '/fonts/'));
 };
 
 const copyLibCSS = async () => {
-    return src([
-        dir.node + 'bootstrap/dist/css/bootstrap.min.css'
-    ]).pipe(dest(dir.thirdparty + '/css/'));
+    return src([]).pipe(dest(dir.thirdparty + '/css/'));
 };
 
 const copyDocs = async () => {
@@ -154,14 +150,14 @@ copy.description = "Copy all the various library fonts, css etc.";
 const qa = series(sassBuild, tslint, typescriptTests, goTest);
 qa.description = "Run our tests and lint for go and typescript";
 
-const buildDev = series(clean, typescript, sassBuild, copy);
+const buildDev = series(clean, typescript, sassBuild);
 buildDev.description = "Faster no QA version that should get the webapp up and running.";
 
 // Note with most of these changed task there is seperate process running the actual build
-const typescriptChanged = series(tslint, typescriptTests, typescript, sassBuild, copy);
+const typescriptChanged = series(tslint, typescriptTests, typescript, sassBuild);
 typescriptChanged.description = "After a typescript change:  sass compile, lint and running the tests.";
 
-const buildDeploy = series(clean, sassBuild, typescriptProd, copy);
+const buildDeploy = series(clean, sassBuild, typescriptProd);
 buildDeploy.description = "The production build, fully compile the typescript / tree shake etc.";
 
 const typescriptWatch = async () => {
