@@ -49,6 +49,7 @@ COPY --from=angular /contented/public/ /public/
 
 # Uncomment to run the binary in "production" mode:
 # ENV GO_ENV=production
+# ENV GO_ENV=development_docker
 
 # Bind the app to 0.0.0.0 so it can be seen from outside the container
 ENV ADDR=0.0.0.0

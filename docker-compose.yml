@@ -11,6 +11,7 @@ services:
       #- ./public:/public
       #- ./bin/contented:/bin/contented  # buffalo build outside the app for dev
     environment:
+      GO_ENV: "docker_development"
       CONTENT_DIR: "/content"
       USE_DATABASE: "false"
       LIMIT: 5000
