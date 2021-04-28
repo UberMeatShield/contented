@@ -7,8 +7,9 @@ services:
     ports: 
       - "3000:3000"
     volumes:
-      - ./public:/public
-      - ./mocks/content:/content   # Just change the root volume to host that content
+      - ./mocks/content:/content        # Just change the volume to host the content
+      #- ./public:/public
+      #- ./bin/contented:/bin/contented  # buffalo build outside the app for dev
     environment:
       CONTENT_DIR: "/content"
       USE_DATABASE: "false"

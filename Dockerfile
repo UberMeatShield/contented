@@ -1,5 +1,21 @@
 # This is a multi-stage Dockerfile and requires >= Docker 17.05
 # https://docs.docker.com/engine/userguide/eng-image/multistage-build/
+
+#======================================================================================
+# Build out the angular and front end code
+#======================================================================================
+FROM node:12 as angular
+
+RUN mkdir /contented
+WORKDIR /contented
+ADD . .
+
+RUN yarn install
+RUN yarn run gulp buildDeploy
+
+#======================================================================================
+# Build out the go binary
+#======================================================================================
 FROM gobuffalo/buffalo:v0.16.21 as builder
 
 ENV GO111MODULE on
@@ -16,15 +32,20 @@ COPY go.sum go.sum
 RUN go mod download
 
 ADD . .
-RUN buffalo build --static -o /bin/app
+RUN buffalo build --static -o /bin/contented
 
+
+#======================================================================================
+# The actual run environment
+#======================================================================================
 FROM alpine
 RUN apk add --no-cache bash
 RUN apk add --no-cache ca-certificates
 
 WORKDIR /bin/
 
-COPY --from=builder /bin/app .
+COPY --from=builder /bin/contented .
+COPY --from=angular /contented/public/ /public/
 
 # Uncomment to run the binary in "production" mode:
 # ENV GO_ENV=production
@@ -34,6 +55,9 @@ ENV ADDR=0.0.0.0
 
 EXPOSE 3000
 
+# TODO: For some reason out of container with no db works fine, in container tries to connect to the DB
+# even if no transactions are made.  Something about the config / connection pool needs a tweak.
+
 # Uncomment to run the migrations before running the binary:
 # CMD /bin/app migrate; /bin/app
-CMD exec /bin/app
+CMD exec /bin/contented

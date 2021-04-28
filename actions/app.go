@@ -1,9 +1,9 @@
 package actions
 
 import (
+    "log"
 	"contented/models"
 	"net/http"
-
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo-pop/v2/pop/popmw"
 	"github.com/gobuffalo/envy"
@@ -52,15 +52,17 @@ func App(UseDatabase bool) *buffalo.App {
 		// Log request parameters (filters apply) this should maybe be only in dev
 		app.Use(paramlogger.ParameterLogger)
 
+		// Wraps each request in a transaction. Remove to disable this.
+		//  c.Value("tx").(*pop.Connection)
+        if UseDatabase == true {
+            log.Printf("Connecting to the database %b \n", UseDatabase)
+		    app.Use(popmw.Transaction(models.DB))
+        } else {
+            log.Printf("This code will attempt to use memory management %b \n", UseDatabase)
+        }
+
 		// Set the request content type to JSON
 		app.Use(contenttype.Set("application/json"))
-
-		// Wraps each request in a transaction.
-		//  c.Value("tx").(*pop.Connection)
-		// Remove to disable this.
-        if UseDatabase == true {
-		    app.Use(popmw.Transaction(models.DB))
-        }
 
 		// Run grift?  Do dev from an actual DB instance?
 		app.GET("/preview/{file_id}", PreviewHandler)
