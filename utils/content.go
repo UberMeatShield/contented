@@ -34,6 +34,7 @@ type DirConfigEntry struct {
 	Limit           int    // The absolute max you can load in a single operation
 	Initialized     bool
     UseDatabase     bool
+    StaticResourcePath string
 }
 
 /*

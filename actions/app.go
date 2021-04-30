@@ -55,10 +55,10 @@ func App(UseDatabase bool) *buffalo.App {
         // Wraps each request in a transaction. Remove to disable this.
         //  c.Value("tx").(*pop.Connection)
         if UseDatabase == true {
-            log.Printf("Connecting to the database %b \n", UseDatabase)
+            log.Printf("Connecting to the database\n")
             app.Use(popmw.Transaction(models.DB))
         } else {
-            log.Printf("This code will attempt to use memory management %b \n", UseDatabase)
+            log.Printf("This code will attempt to use memory management \n")
         }
 
         // Set the request content type to JSON
@@ -75,8 +75,9 @@ func App(UseDatabase bool) *buffalo.App {
         app.GET("/ui/{path}/{idx}", AngularIndex)
 
         // Need to make the file serving location smarter (serve the dir + serve static?)
-        app.ServeFiles("/public/build", http.Dir("public/build"))
-        app.ServeFiles("/public/css", http.Dir("public/css"))
+        cfg := GetCfg()
+        app.ServeFiles("/public/build", http.Dir(cfg.StaticResourcePath))
+        app.ServeFiles("/public/css", http.Dir(cfg.StaticResourcePath))
 
         // The DIR env environment is then served under /static (see actions.SetupContented)
         cr := app.Resource("/containers", ContainersResource{})

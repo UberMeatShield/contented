@@ -10,8 +10,11 @@ RUN mkdir /contented
 WORKDIR /contented
 ADD . .
 
+# Clear out any Mac or other OS binaries from an external install
+RUN rm -rf public && rm -rf node_modules && mkdir -p public
 RUN yarn install
 RUN yarn run gulp buildDeploy
+RUN ls -la /contented/public && ls -la /contented/public/build/index.html
 
 #======================================================================================
 # Build out the go binary
@@ -45,7 +48,10 @@ RUN apk add --no-cache ca-certificates
 WORKDIR /bin/
 
 COPY --from=builder /bin/contented .
+
+RUN mkdir -p /public
 COPY --from=angular /contented/public/ /public/
+RUN ls -la /public/
 
 # Uncomment to run the binary in "production" mode:
 # ENV GO_ENV=production

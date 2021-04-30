@@ -6,8 +6,9 @@ import (
 )
 
 func (as *ActionSuite) Test_HomeHandler() {
+    init_fake_app(false)
 	os.Chdir("../") // The Index file expects to be under the serve director/public/build
-	res := as.JSON("/").Get()
+	res := as.HTML("/").Get()
 
 	as.Equal(http.StatusOK, res.Code)
 	as.Contains(res.Body.String(), "Loading Up Contented")

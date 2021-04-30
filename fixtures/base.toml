@@ -1,32 +1,40 @@
 [[scenario]]
-name = "lots of widgets"
+name = "base"
 
   [[scenario.table]]
-    name = "widgets"
+    name = "containers"
 
     [[scenario.table.row]]
       id = "<%= uuidNamed("widget") %>"
-      name = "This is widget #1"
-      body = "some widget body"
+      total = 1
+      path = "./mocks/content/"
+      name = "contain1"
+      active = true
+      idx = 0
       created_at = "<%= now() %>"
       updated_at = "<%= now() %>"
 
     [[scenario.table.row]]
       id = "<%= uuid() %>"
-      name = "This is widget #2"
-      body = "some widget body"
+      total = 0
+      path = "./mocks/content/"
+      name = "contain1"
+      active = true
+      idx = 0
       created_at = "<%= now() %>"
       updated_at = "<%= now() %>"
 
   [[scenario.table]]
-    name = "users"
+    name = "media_containers"
 
     [[scenario.table.row]]
       id = "<%= uuid() %>"
-      name = "Mark Bates"
-      admin = true
-      age = 41
-      widget_id = "<%= uuidNamed("widget") %>"
+      src = "a.png"
+      content_type = "image/png"
+      preview = ""
+      active = true
+      idx = 0
+      container_id = "<%= uuidNamed("widget") %>"
       created_at = "<%= now() %>"
       updated_at = "<%= now() %>"
 

@@ -49,7 +49,8 @@ func init_fake_app(use_db bool) *utils.DirConfigEntry {
 
 	cfg := GetCfg()
 	utils.InitConfig(dir, cfg)
-    cfg.UseDatabase = use_db  // TODO: Make this something you pass in on init
+    cfg.UseDatabase = use_db  // Set via .env or USE_DATABASE as an environment var
+    cfg.StaticResourcePath = "./public/build"
 
     // TODO: Assign the context into the manager (force it?)
     if cfg.UseDatabase == false {
