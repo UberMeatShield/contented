@@ -79,3 +79,27 @@ func (as *ActionSuite) Test_ContainersResource_Destroy() {
 	notFoundRes := as.JSON("/containers/" + s.ID.String()).Get()
 	as.Equal(http.StatusNotFound, notFoundRes.Code)
 }
+
+func (as *ActionSuite) Test_ContainerFixture() {
+    init_fake_app(true)
+    as.LoadFixture("base")
+
+    res := as.JSON("/containers").Get()
+    as.Equal(http.StatusOK, res.Code)
+
+    containers := models.Containers{}
+	json.NewDecoder(res.Body).Decode(&containers)
+
+    as.Equal(2, len(containers), "It should have loaded two fixtures")
+
+    var found *models.Container
+    for _, c := range containers {
+        if c.Name == "contain1" {
+            found = &c
+        }
+    }
+    as.NotNil(found, "If it had the fixture loaded we should have this name")
+
+    mediaRes := as.JSON("/containers/" + found.ID.String() + "/media").Get()
+    as.Equal(http.StatusOK, mediaRes.Code)
+}

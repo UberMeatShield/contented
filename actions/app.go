@@ -55,10 +55,10 @@ func App(UseDatabase bool) *buffalo.App {
         // Wraps each request in a transaction. Remove to disable this.
         //  c.Value("tx").(*pop.Connection)
         if UseDatabase == true {
-            log.Printf("Connecting to the database %b \n", UseDatabase)
+            log.Printf("Connecting to the database\n")
             app.Use(popmw.Transaction(models.DB))
         } else {
-            log.Printf("This code will attempt to use memory management %b \n", UseDatabase)
+            log.Printf("This code will attempt to use memory management \n")
         }
 
         // Set the request content type to JSON

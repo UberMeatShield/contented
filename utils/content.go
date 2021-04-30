@@ -33,6 +33,7 @@ type DirConfigEntry struct {
 	PreviewCount    int    // How many files should be listed for a preview
 	Limit           int    // The absolute max you can load in a single operation
 	Initialized     bool
+    IndexHtmlPath   string
     UseDatabase     bool
 }
 
