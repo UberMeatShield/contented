@@ -75,8 +75,9 @@ func App(UseDatabase bool) *buffalo.App {
         app.GET("/ui/{path}/{idx}", AngularIndex)
 
         // Need to make the file serving location smarter (serve the dir + serve static?)
-        app.ServeFiles("/public/build", http.Dir("public/build"))
-        app.ServeFiles("/public/css", http.Dir("public/css"))
+        cfg := GetCfg()
+        app.ServeFiles("/public/build", http.Dir(cfg.StaticResourcePath))
+        app.ServeFiles("/public/css", http.Dir(cfg.StaticResourcePath))
 
         // The DIR env environment is then served under /static (see actions.SetupContented)
         cr := app.Resource("/containers", ContainersResource{})

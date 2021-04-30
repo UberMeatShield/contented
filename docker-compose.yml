@@ -7,12 +7,12 @@ services:
     ports: 
       - "3000:3000"
     volumes:
-      - ./mocks/content:/content        # Just change the volume to host the content
-      #- ./public:/public
-      #- ./bin/contented:/bin/contented  # buffalo build outside the app for dev
+      - ./mocks/content:/content  # Just change the volume to host the content
+      #- ./public:/public         # If you want to build ng out of the container but mount it
     environment:
       GO_ENV: "docker_development"
       CONTENT_DIR: "/content"
+      STATIC_RESOURCE_PATH: "/public/build"
       USE_DATABASE: "false"
       LIMIT: 5000
       PREVIEW: 12

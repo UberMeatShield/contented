@@ -22,6 +22,7 @@ func main() {
     if dir == "" {
         dir, err = envy.MustGet("CONTENT_DIR")  // From the .env file
     }
+    staticDir := envy.Get("STATIC_RESOURCE_PATH", "./public/build")
 	limitCount, limErr := strconv.Atoi(envy.Get("LIMIT", strconv.Itoa(actions.DefaultLimit)))
 
     // We need to get that actually get a default load somehow
@@ -42,6 +43,7 @@ func main() {
 
     appCfg := actions.GetCfg()
     appCfg.UseDatabase = useDatabase
+    appCfg.StaticResourcePath = staticDir
 
 	log.Printf("Parsed Env. Dir %s Limit %d with preview count %d\n", dir, limitCount, previewCount)
     log.Printf("Use connection type of database %t\n", appCfg.UseDatabase)
