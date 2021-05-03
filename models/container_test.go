@@ -26,7 +26,7 @@ func (ms *ModelSuite) Test_Container_Query() {
 	c := Container{
 		Total: 2,
 		Path:  "query_test",
-		Name:  "Shit",
+		Name:  "KindaCrap",
 	}
 	ms.DB.Create(&c)
 	ms.NotZero(c.ID)

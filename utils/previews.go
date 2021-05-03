@@ -77,7 +77,7 @@ func CreateImagePreview(srcImg *os.File, dstFile string, contentType string) (st
 	return dstFile, previewImg.Close()
 }
 
-// Make sure dstPath already exists before you call this
+// Make sure dstPath already exists before you call this (MakePreviewPath)
 func GetImagePreview(path string, filename string, dstPath string, pIfSize int64) (string, error) {
 
 	// HMMM (if exists do not do anything)
