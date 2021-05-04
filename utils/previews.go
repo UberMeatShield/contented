@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-
 	"github.com/nfnt/resize"
 )
 
@@ -36,7 +35,7 @@ func ShouldCreatePreview(f *os.File, fsize int64) bool {
 //  No need to check
 func PreviewExists(filename string, dstPath string) (string, error) {
 	// Does the preview already exist, return that
-	dstFile := filepath.Join(dstPath, "preview_"+filename)
+	dstFile := filepath.Join(dstPath, "preview_" + filename)
 	if _, e_err := os.Stat(dstFile); os.IsNotExist(e_err) {
 		return dstFile, nil
 	}
@@ -73,7 +72,6 @@ func CreateImagePreview(srcImg *os.File, dstFile string, contentType string) (st
 
 	// All previews should then be jpeg (change file extensioni?)
 	jpeg.Encode(previewImg, dstImg, nil)
-
 	return dstFile, previewImg.Close()
 }
 

@@ -27,7 +27,7 @@ var expect_len = map[string]int{
     "dir1": 12,
     "dir2": 2,
     "dir3": 6,
-    "screens": 3,
+    "screens": 4,
 }
 
 func basicContext() buffalo.DefaultContext {
@@ -145,7 +145,7 @@ func (as *ActionSuite) Test_MemoryManagerPaginate() {
     l_cnts, _ := man.ListContainers(4, 1)
     as.Equal(1, len(*l_cnts), "It should still return only as we are on the last page")
     l_cnt := (*l_cnts)[0]
-    as.Equal(l_cnt.Total, 3, "There are 3 entries in the ordered test data last container")
+    as.Equal(l_cnt.Total, expect_len[l_cnt.Name], "There are 3 entries in the ordered test data last container")
 
 }
 

@@ -99,28 +99,6 @@ func FindMedia(cnt models.Container, limit int, start_offset int) models.MediaCo
 }
 
 /**
- *  Builds a lookup of all the valid sub directories under our root / file host.
- */
-func GetDirectoriesLookup(rootDir string) map[string]os.FileInfo {
-	var listings = make(map[string]os.FileInfo)
-	files, err := ioutil.ReadDir(rootDir)
-	if err != nil {
-		panic("The main directory could not be read: " + rootDir)
-	}
-
-	// TODO: This needs to probably paginate as well and should just return the Container
-	for _, f := range files {
-		if f.IsDir() {
-			name := f.Name()
-			id := GetDirId(name)
-			// listings[name] = f
-			listings[id] = f
-		}
-	}
-	return listings
-}
-
-/**
  * Return a reader for the file contents
  */
 func GetFileContents(dir string, filename string) *bufio.Reader {
@@ -170,7 +148,6 @@ func SniffFileType(content *os.File) (string, error) {
 }
 
 func getMediaContainer(id uuid.UUID, fileInfo os.FileInfo, path string) models.MediaContainer {
-
 	// https://golangcode.com/get-the-content-type-of-file/
 	contentType, err := GetMimeType(path, fileInfo.Name())
 	if err != nil {

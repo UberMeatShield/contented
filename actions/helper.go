@@ -1,7 +1,18 @@
 package actions
 
+/**
+*  These are helpers for use in grifts, but we want them compiling in the dev service in case of breaks.
+*
+* Bad code in a grift is harder to notice and the compilation with tests also seems a little broken. ie
+* you break the grift via main package changes and never notice.  You break the test in a grift directory
+* and then the compilation just failed with no error messages.
+*/
+
 import (
+    "os"
+    "log"
     "fmt"
+    "path/filepath"
     "contented/models"
     "contented/utils"
     "github.com/pkg/errors"
@@ -44,4 +55,61 @@ func CreateInitialStructure(dir_name string) error {
         }
     }
     return nil
+}
+
+
+func CreateAllPreviews(preview_above_size int64) error {
+    cnts := models.Containers{}
+    models.DB.All(&cnts)
+
+    if len(cnts) == 0 {
+        return errors.New("No Containers were found in the database")
+    }
+    for _, cnt := range cnts {
+        err := CreateContainerPreviews(&cnt, preview_above_size)    
+        if err != nil {
+            return err
+        }
+    }
+    return nil
+}
+
+func ClearContainerPreviews(c *models.Container) error {
+    dst := GetContainerPreviewDst(c) 
+    if _, err := os.Stat(dst); os.IsNotExist(err) {
+        return nil
+    }
+    r_err := os.RemoveAll(dst)
+    if r_err != nil {
+        log.Fatal(r_err)
+        return r_err
+    }
+    return nil
+}
+
+func GetContainerPreviewDst(c *models.Container) string {
+    return filepath.Join(appCfg.Dir, c.Name, "container_previews")
+}
+
+func CreateContainerPreviews(c *models.Container, preview_above_size int64) error {
+    // Reset the preview directory, then create it fresh
+    c_err := ClearContainerPreviews(c)
+    if c_err == nil {
+        err := utils.MakePreviewPath(GetContainerPreviewDst(c))
+        if err != nil {
+            log.Fatal(err)
+        }
+    }
+    return nil
+}
+
+func CreateMediaPreview(c *models.Container, mc *models.MediaContainer, fsize int64) (string, error) {
+    cntPath := filepath.Join(appCfg.Dir, c.Name)
+    dstPath := GetContainerPreviewDst(c)
+
+    _, exist_err :=  utils.PreviewExists(mc.Src, dstPath)
+    if exist_err != nil {
+        return "", exist_err
+    }
+    return utils.GetImagePreview(cntPath, mc.Src, dstPath, fsize)
 }

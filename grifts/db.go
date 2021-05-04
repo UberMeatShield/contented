@@ -24,7 +24,12 @@ var _ = grift.Namespace("db", func() {
         if d_err != nil {
             return errors.WithStack(d_err)
         }
+        // Clean out the current DB setup then builds a new one
+        return actions.CreateInitialStructure(dir_name)
+	})
+    // Then add the content for the entire directory structure
 
+	grift.Add("preview", func(c *grift.Context) error {
         // TODO: Strip this out into a different function
         var size int64 = 1024 * 1000 * 2
         psize := envy.Get("PREVIEW_IF_GREATER", "")
@@ -35,13 +40,7 @@ var _ = grift.Namespace("db", func() {
             }
         }
         fmt.Printf("Using size %d for preview creation", size)
-        // Clean out the current DB setup then builds a new one
-        return actions.CreateInitialStructure(dir_name)
-	})
-    // Then add the content for the entire directory structure
-
-	grift.Add("preview", func(c *grift.Context) error {
-        return nil
+        return actions.CreateAllPreviews(size)
 	})
     // Then add in linkage to the related models.
 })
