@@ -51,24 +51,10 @@ func CreateInitialStructure(dir_name string) error {
 
         for _, mc := range media {
             mc.ContainerID = nulls.NewUUID(dir.ID) 
-            models.DB.Create(&mc)
-        }
-    }
-    return nil
-}
-
-
-func CreateAllPreviews(preview_above_size int64) error {
-    cnts := models.Containers{}
-    models.DB.All(&cnts)
-
-    if len(cnts) == 0 {
-        return errors.New("No Containers were found in the database")
-    }
-    for _, cnt := range cnts {
-        err := CreateContainerPreviews(&cnt, preview_above_size)    
-        if err != nil {
-            return err
+            c_err := models.DB.Create(&mc)
+            if c_err != nil {
+                log.Fatal(c_err)
+            }
         }
     }
     return nil
@@ -91,6 +77,22 @@ func GetContainerPreviewDst(c *models.Container) string {
     return filepath.Join(appCfg.Dir, c.Name, "container_previews")
 }
 
+func CreateAllPreviews(preview_above_size int64) error {
+    cnts := models.Containers{}
+    models.DB.All(&cnts)
+
+    if len(cnts) == 0 {
+        return errors.New("No Containers were found in the database")
+    }
+    for _, cnt := range cnts {
+        err := CreateContainerPreviews(&cnt, preview_above_size)    
+        if err != nil {
+            return err
+        }
+    }
+    return nil
+}
+
 func CreateContainerPreviews(c *models.Container, preview_above_size int64) error {
     // Reset the preview directory, then create it fresh
     c_err := ClearContainerPreviews(c)
@@ -98,6 +100,24 @@ func CreateContainerPreviews(c *models.Container, preview_above_size int64) erro
         err := utils.MakePreviewPath(GetContainerPreviewDst(c))
         if err != nil {
             log.Fatal(err)
+        }
+    }
+    media := models.MediaContainers{}
+    q_err := models.DB.Where("container_id = ?", c.ID).All(&media)
+    if q_err != nil {
+        log.Fatal(q_err)
+        return q_err
+    }
+
+    for _, mc := range media {
+        prev_path, mc_err := CreateMediaPreview(c, &mc, preview_above_size)
+        if mc_err == nil {
+            log.Printf("Created a preview %s", prev_path)
+            mc.Preview = prev_path
+            models.DB.Update(&mc)
+        } else {
+            log.Fatal(mc_err)
+            return mc_err
         }
     }
     return nil

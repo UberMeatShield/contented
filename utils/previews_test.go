@@ -35,7 +35,7 @@ func Test_JpegPreview(t *testing.T) {
 	if err != nil {
 		t.Errorf("Failed to get a preview %v", err)
 	}
-	if expectNoPreview != testFile {
+	if expectNoPreview != testFile && expectNoPreview != "" {
 		t.Errorf("File too small for psize found  %s and expected %s", expectNoPreview, testFile)
 	}
 

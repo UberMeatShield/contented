@@ -104,5 +104,6 @@ func GetImagePreview(path string, filename string, dstPath string, pIfSize int64
 	if ShouldCreatePreview(srcImg, pIfSize) == true {
 		return CreateImagePreview(srcImg, dstFile, contentType)
 	}
-	return filename, nil
+    // No Preview is required
+	return "", nil
 }

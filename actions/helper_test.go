@@ -10,6 +10,7 @@ import (
 	//"os"
 	//"testing"
 	//"github.com/gobuffalo/buffalo"
+    "github.com/gobuffalo/nulls"
     "github.com/gofrs/uuid"
     "github.com/gobuffalo/envy"
 	// "github.com/gobuffalo/suite"
@@ -95,4 +96,45 @@ func (as *ActionSuite) Test_CreatePreview() {
     previews, read_err := ioutil.ReadDir(dstPath)
     as.Equal(len(previews), 4, "It should create 4 previews")
     as.NoError(read_err, "It should be able to read the directory")
+}
+
+func (as *ActionSuite) Test_CreateContainerPreviews() {
+
+    // Get a local not in DB setup for the container and media
+    c_pt, media := GetScreens()
+
+    err := models.DB.TruncateAll()
+    as.NoError(err, "It should dump the DB")
+    clear_err := ClearContainerPreviews(c_pt)
+    as.NoError(clear_err, "And we should clear the preview dir")
+
+    dstPath := GetContainerPreviewDst(c_pt)
+    empty, read_err := ioutil.ReadDir(dstPath)
+    as.Equal(len(empty), 0, "It should start completely empty")
+
+    // Now add the data into the database
+    c_err := models.DB.Create(c_pt)
+    as.NoError(c_err)
+    for _, mc := range media {
+        mc.ContainerID = nulls.NewUUID(c_pt.ID)
+        mc_err := models.DB.Create(&mc)
+        as.NoError(mc_err)
+        as.Equal(mc.Preview, "", "There should be no preview at this point")
+    }
+    // Create a bunch of previews
+    p_err := CreateContainerPreviews(c_pt, 0)
+    as.NoError(p_err, "An error happened creating the previews")
+
+    previews, read_err := ioutil.ReadDir(dstPath)
+    as.Equal(len(previews), 4, "It should create 4 previews")
+    as.NoError(read_err, "It should be able to read the directory")
+
+
+    media_check := models.MediaContainers{}
+    models.DB.Where("container_id = ?", c_pt.ID).All(&media_check)
+    as.Equal(len(media_check), 4, "We should just have 4 things to check")
+
+    for _, mc_check := range media_check {
+        as.NotEqual(mc_check.Preview, "", "It should now have a preview")
+    }
 }
