@@ -93,6 +93,7 @@ func CreateAllPreviews(preview_above_size int64) error {
     return nil
 }
 
+// TODO: Should this return a total of previews created or something?
 func CreateContainerPreviews(c *models.Container, preview_above_size int64) error {
     // Reset the preview directory, then create it fresh
     c_err := ClearContainerPreviews(c)
@@ -111,13 +112,15 @@ func CreateContainerPreviews(c *models.Container, preview_above_size int64) erro
 
     for _, mc := range media {
         prev_path, mc_err := CreateMediaPreview(c, &mc, preview_above_size)
-        if mc_err == nil {
-            log.Printf("Created a preview %s", prev_path)
-            mc.Preview = prev_path
-            models.DB.Update(&mc)
-        } else {
+        if mc_err != nil {
             log.Fatal(mc_err)
             return mc_err
+        } else {
+            if prev_path != "" {
+                log.Printf("Created a preview %s", prev_path)
+                mc.Preview = prev_path
+                models.DB.Update(&mc)
+            } 
         }
     }
     return nil

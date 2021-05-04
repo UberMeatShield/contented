@@ -138,3 +138,19 @@ func (as *ActionSuite) Test_CreateContainerPreviews() {
         as.NotEqual(mc_check.Preview, "", "It should now have a preview")
     }
 }
+
+
+func (as *ActionSuite) Test_PreviewAllData() {
+    err := models.DB.TruncateAll()
+    as.NoError(err, "Couldn't clean the DB")
+
+	dir, _ := envy.MustGet("DIR")
+    as.NotEmpty(dir, "The test must specify a directory to run on")
+
+    appCfg.Dir = dir
+    c_err := CreateInitialStructure(dir)
+    as.NoError(c_err, "Failed to build out the initial database")
+
+    all_created_err := CreateAllPreviews(1000 * 1024)
+    as.NoError(all_created_err, "Failed to create all previews")
+}
