@@ -12,6 +12,7 @@ import (
     "os"
     "log"
     "fmt"
+    "strings"
     "path/filepath"
     "contented/models"
     "contented/utils"
@@ -73,6 +74,7 @@ func ClearContainerPreviews(c *models.Container) error {
     return nil
 }
 
+// TODO: Move to utils or make it wrapped for some reason?
 func GetContainerPreviewDst(c *models.Container) string {
     return filepath.Join(appCfg.Dir, c.Name, "container_previews")
 }
@@ -117,7 +119,7 @@ func CreateContainerPreviews(c *models.Container, preview_above_size int64) erro
             return mc_err
         } else {
             if prev_path != "" {
-                log.Printf("Created a preview %s", prev_path)
+                log.Printf("Created a preview %s for mc %s", prev_path, mc.ID.String())
                 mc.Preview = prev_path
                 models.DB.Update(&mc)
             } 
@@ -134,5 +136,10 @@ func CreateMediaPreview(c *models.Container, mc *models.MediaContainer, fsize in
     if exist_err != nil {
         return "", exist_err
     }
-    return utils.GetImagePreview(cntPath, mc.Src, dstPath, fsize)
+    dstFqPath, err := utils.GetImagePreview(cntPath, mc.Src, dstPath, fsize)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    return strings.ReplaceAll(dstFqPath, cntPath, ""), err
 }

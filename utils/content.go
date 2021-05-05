@@ -80,9 +80,15 @@ func FindContainers(dir_root string) models.Containers {
 func FindMedia(cnt models.Container, limit int, start_offset int) models.MediaContainers {
 	var arr = models.MediaContainers{}
     fqDirPath := filepath.Join(cnt.Path, cnt.Name)
-	imgs, _ := ioutil.ReadDir(fqDirPath)
+	maybe_media, _ := ioutil.ReadDir(fqDirPath)
 
 	total := 0
+    imgs := []os.FileInfo{}  // To get indexing 'right' you have to exlcude directories
+	for _, img := range maybe_media {
+		if !img.IsDir() {
+            imgs = append(imgs, img)
+        }
+    }
 	for idx, img := range imgs {
 		if !img.IsDir() {
 			if len(arr) < limit && idx >= start_offset {

@@ -94,7 +94,7 @@ func TestFindMediaOffset(t *testing.T) {
 
             offset := FindMedia(c, 6, 2)
             if len(offset) != 4 {
-                t.Errorf("The offset should lower the total returned but we found %d", len(offset))
+                t.Errorf("The offset should lower the total returned but we found %d in %s", len(offset), c.Name)
             }
         }
     }

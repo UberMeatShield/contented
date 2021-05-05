@@ -5,6 +5,7 @@ import (
     "fmt"
     "contented/models"
     "contented/actions"
+    //"contented/utils"
 	"github.com/markbates/grift/grift"
     "github.com/pkg/errors"
     "github.com/gobuffalo/envy"
@@ -39,6 +40,12 @@ var _ = grift.Namespace("db", func() {
                 size = setSize
             }
         }
+        dir_name, d_err := envy.MustGet("DIR")
+        if d_err != nil {
+            return errors.WithStack(d_err)
+        }
+        cfg := actions.GetCfg()
+        cfg.Dir = dir_name
         fmt.Printf("Using size %d for preview creation", size)
         return actions.CreateAllPreviews(size)
 	})
