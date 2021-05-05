@@ -61,6 +61,7 @@ func CreateInitialStructure(dir_name string) error {
     return nil
 }
 
+// TODO: Move this code into manager (likely?)
 func ClearContainerPreviews(c *models.Container) error {
     dst := GetContainerPreviewDst(c) 
     if _, err := os.Stat(dst); os.IsNotExist(err) {

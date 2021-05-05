@@ -43,7 +43,7 @@ func Test_JpegPreview(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error occurred creating preview %v", err)
 	}
-	expectDst := filepath.Join(dstDir, "preview_"+testFile)
+	expectDst := filepath.Join(dstDir, testFile)
 	if expectDst != pLoc {
 		t.Errorf("Failed to find the expected file location %s had %s", expectDst, pLoc)
 	}
@@ -63,7 +63,7 @@ func Test_PngPreview(t *testing.T) {
 	if err != nil {
 		t.Errorf("Failed to get a preview %v", err)
 	}
-	expectDst := filepath.Join(dstDir, "preview_"+testFile)
+	expectDst := filepath.Join(dstDir, testFile)
 	if expectDst != pLoc {
 		t.Errorf("Failed to find the expected location %s was %s", expectDst, pLoc)
 	}
