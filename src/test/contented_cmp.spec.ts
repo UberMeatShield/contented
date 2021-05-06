@@ -130,7 +130,10 @@ describe('TestingContentedCmp', () => {
         let toClick = $(imgs[3]).trigger('click');
         currLoc = comp.getCurrentLocation();
         expect(comp.fullScreen).toBe(true, "It should now have a selected item");
-        expect(currLoc.fullUrl).toBe(imgs[3].src, "It should have the current item as the image");
+        expect(currLoc.fullUrl).toBe(
+            imgs[3].src.replace("preview", "view"),
+            "It should have the current item as the image but view"
+        );
     }));
 
     it("Should have a progress bar once the data is loaded", () => {
