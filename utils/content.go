@@ -80,9 +80,15 @@ func FindContainers(dir_root string) models.Containers {
 func FindMedia(cnt models.Container, limit int, start_offset int) models.MediaContainers {
 	var arr = models.MediaContainers{}
     fqDirPath := filepath.Join(cnt.Path, cnt.Name)
-	imgs, _ := ioutil.ReadDir(fqDirPath)
+	maybe_media, _ := ioutil.ReadDir(fqDirPath)
 
 	total := 0
+    imgs := []os.FileInfo{}  // To get indexing 'right' you have to exlcude directories
+	for _, img := range maybe_media {
+		if !img.IsDir() {
+            imgs = append(imgs, img)
+        }
+    }
 	for idx, img := range imgs {
 		if !img.IsDir() {
 			if len(arr) < limit && idx >= start_offset {
@@ -96,28 +102,6 @@ func FindMedia(cnt models.Container, limit int, start_offset int) models.MediaCo
 		}
 	}
     return arr
-}
-
-/**
- *  Builds a lookup of all the valid sub directories under our root / file host.
- */
-func GetDirectoriesLookup(rootDir string) map[string]os.FileInfo {
-	var listings = make(map[string]os.FileInfo)
-	files, err := ioutil.ReadDir(rootDir)
-	if err != nil {
-		panic("The main directory could not be read: " + rootDir)
-	}
-
-	// TODO: This needs to probably paginate as well and should just return the Container
-	for _, f := range files {
-		if f.IsDir() {
-			name := f.Name()
-			id := GetDirId(name)
-			// listings[name] = f
-			listings[id] = f
-		}
-	}
-	return listings
 }
 
 /**
@@ -170,7 +154,6 @@ func SniffFileType(content *os.File) (string, error) {
 }
 
 func getMediaContainer(id uuid.UUID, fileInfo os.FileInfo, path string) models.MediaContainer {
-
 	// https://golangcode.com/get-the-content-type-of-file/
 	contentType, err := GetMimeType(path, fileInfo.Name())
 	if err != nil {
