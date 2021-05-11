@@ -7,6 +7,7 @@ import (
     "log"
 	"contented/models"
 	"contented/utils"
+    "time"
 	//"os"
 	//"testing"
 	//"github.com/gobuffalo/buffalo"
@@ -31,6 +32,7 @@ func GetScreens() (*models.Container, models.MediaContainers){
         log.Panic("Could not find the screens directory")
     }
     media := utils.FindMedia(*screenCnt, 4, 0)
+    screenCnt.Total = len(media)
     return screenCnt, media
 }
 
@@ -99,7 +101,6 @@ func (as *ActionSuite) Test_CreatePreview() {
 }
 
 func (as *ActionSuite) Test_CreateContainerPreviews() {
-
     // Get a local not in DB setup for the container and media
     c_pt, media := GetScreens()
 
@@ -108,7 +109,10 @@ func (as *ActionSuite) Test_CreateContainerPreviews() {
     clear_err := ClearContainerPreviews(c_pt)
     as.NoError(clear_err, "And we should clear the preview dir")
 
+    // Ensure that we do have a valid destination path
     dstPath := GetContainerPreviewDst(c_pt)
+    dir_err := utils.MakePreviewPath(dstPath)
+    as.NoError(dir_err, "It should have created the preview path")
     empty, read_err := ioutil.ReadDir(dstPath)
     as.Equal(len(empty), 0, "It should start completely empty")
 
@@ -129,7 +133,6 @@ func (as *ActionSuite) Test_CreateContainerPreviews() {
     as.Equal(len(previews), 4, "It should create 4 previews")
     as.NoError(read_err, "It should be able to read the directory")
 
-
     media_check := models.MediaContainers{}
     models.DB.Where("container_id = ?", c_pt.ID).All(&media_check)
     as.Equal(len(media_check), 4, "We should just have 4 things to check")
@@ -137,6 +140,38 @@ func (as *ActionSuite) Test_CreateContainerPreviews() {
     for _, mc_check := range media_check {
         as.NotEqual(mc_check.Preview, "", "It should now have a preview")
     }
+}
+
+// hate
+func (as *ActionSuite) TestAsyncPreviews() {
+    c_pt, media := GetScreens()
+    err := models.DB.TruncateAll()
+    as.NoError(err, "It should dump the DB")
+    clear_err := ClearContainerPreviews(c_pt)
+    as.NoError(clear_err, "And we should clear the preview dir")
+
+    dstPath := GetContainerPreviewDst(c_pt)
+    dir_err := utils.MakePreviewPath(dstPath)
+    as.NoError(dir_err, "Did we createa preview path")
+
+    as.Greater(len(media), 3, "There should be some things to iterate over")
+    prevs := make(chan utils.ProcessingResult, c_pt.Total)
+    as.Equal(c_pt.Total, 4, "It should have four entries")
+    as.Equal(c_pt.Total, len(media), "Definitely it should equal our media")
+
+    as.Equal(c_pt.Name, "screens", "It should have a screens directory")
+    for _, mc := range media {
+        as.NotEqual(mc.Src, "", "It should have a source path")
+        go AsyncMediaPreview(c_pt, &mc, 0, prevs)
+    }
+    sleep := 1200
+    sleepTime := time.Duration(sleep) * time.Millisecond
+    time.Sleep(sleepTime)
+
+    as.Equal(len(prevs), 4, "It should have four elements at this point")
+    wat := <-prevs
+    as.NoError(wat.Err, "It should not have an error")
+    as.NotEqual(wat.Preview, "It should have a preview location")
 }
 
 

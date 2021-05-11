@@ -9,7 +9,16 @@ import (
 	"os"
 	"path/filepath"
 	"github.com/nfnt/resize"
+    "github.com/gofrs/uuid"
 )
+
+// Used in the case of async processing when creating Preview results
+type ProcessingResult struct {
+    C_ID uuid.UUID
+    MC_ID uuid.UUID
+    Preview string
+    Err error
+}
 
 func MakePreviewPath(dstPath string) error {
 	if _, err := os.Stat(dstPath); os.IsNotExist(err) {

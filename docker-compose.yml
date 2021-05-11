@@ -13,7 +13,7 @@ services:
       GO_ENV: "docker_development"
       CONTENT_DIR: "/content"
       STATIC_RESOURCE_PATH: "/public/build"
-      USE_DATABASE: "false"
+      USE_DATABASE: "true"
       LIMIT: 5000
       PREVIEW: 12
 
