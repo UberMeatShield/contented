@@ -27,6 +27,10 @@ run the db grift to populate the db.
 
     $ buffalo task db:seed
 
+Creating previews for larger images can be done only with the database version at this time (not memory).
+
+    $ buffalo task db:preview
+
 
 ###  Development
 Start by running yarn install in order to get all the required javascript and typescript installed.
@@ -39,8 +43,8 @@ Start by running yarn install in order to get all the required javascript and ty
     $ yr ng test contented --watch=true
 
 TODO: Make it so the base gulp run is a little smarter, buffalo dev is SUPPOSED to do solid reloads on file
-change but it is sketchy.  Using a raw go httpd server worked better using change detection 
-TODO: maybe stop using buffalow dev and instead rebuild and kick it manually...
+change but it is actually kinda sketchy.
+TODO: maybe stop using buffalo dev and instead rebuild and kick it manually...
 
 ## Starting the Application
 
@@ -52,9 +56,15 @@ mode seems to mostly restart buffalo correctly but sometimes doesn't notice a fi
 	$ export DIR=`pwd`/mocks/content/ && buffalo dev
 	$ export DIR=`pwd`/mocks/content/ && buffalo test
 
+Alternatively you can run it as a docker setup but that is a little rougher for dev.
+
+    $docker build -f Dockerfile -t contented . 
+    $docker-compose up -d
+
 ## What Next?
 
-Need to add in something around tests and exporting the dir path.
+Need to add in something around tests and exporting the dir path maybe just have the gulp process do a watch
+and kick off the tests again.  I keep hoping buffalo will add something like ng test --watch=true.
 
 ## What this does
 

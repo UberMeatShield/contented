@@ -141,6 +141,17 @@ func CreateMediaPreview(c *models.Container, mc *models.MediaContainer, fsize in
     if err != nil {
         log.Fatal(err)
     }
-
     return strings.ReplaceAll(dstFqPath, cntPath, ""), err
+}
+
+// In the case you want to do this in an more async manner (maybe important if it wraps video content)
+func AsyncMediaPreview(c *models.Container, mc *models.MediaContainer, fsize int64, reply chan<- utils.ProcessingResult) {
+    preview, err :=  CreateMediaPreview(c, mc, fsize)
+    pr := utils.ProcessingResult{
+        C_ID: c.ID,
+        MC_ID: mc.ID,
+        Preview: preview,
+        Err: err,
+    }
+    reply <- pr
 }
