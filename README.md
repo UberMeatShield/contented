@@ -1,6 +1,7 @@
 # Contented (Angular and GoBuffalo Setup / Playground)
 
-This is just a simple app for iterating over directories of images given a path.
+This is just a simple app for iterating over directories of images (eventually video) given a root path.  It can also create
+previews for larger images.
 
 Mostly it is an example code playground so you can browse images, see Angular keypress navigation events and hack around
 with the usual http downloads, headers and ajax support in GoLang.
@@ -11,7 +12,7 @@ This is done via docker right now, if you just do docker-compose up it will get 
 To enable database support you then edit the .env file and set USE_DATABASE="true".  By default it will just use memory
 to load up the contents in your DIR environment file (fully qualified).
 
-The first thing you need to do is open up the "database.yml" file and edit it to use the correct usernames, passwords, hosts, etc... that are appropriate for your environment.
+The first thing you need to do is open up the "database.yml" file and edit it to use the correct usernames, passwords, hosts, etc... that are appropriate for your environment.  These are correct for the default dev instance.
 
 ### Create Your Databases (Not required)
 
@@ -19,7 +20,7 @@ There is a docker compose file that you can use to bring up a postgres db for de
 
     $ docker-compose up -d
 
-	$ buffalo pop create -a
+    $ buffalo pop create -a
     $ buffalo pop reset
 
 To populate the DB with the test directory you can set an environment variable in DIR (fully qualified) and then
