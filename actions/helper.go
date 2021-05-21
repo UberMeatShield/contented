@@ -12,6 +12,7 @@ import (
     "os"
     "log"
     "fmt"
+    "time"
     "strings"
     "path/filepath"
     "contented/models"
@@ -113,6 +114,7 @@ func CreateContainerPreviews(c *models.Container, preview_above_size int64) erro
         return q_err
     }
 
+    // Database vs Previews locally
     for _, mc := range media {
         prev_path, mc_err := CreateMediaPreview(c, &mc, preview_above_size)
         if mc_err != nil {
@@ -126,6 +128,81 @@ func CreateContainerPreviews(c *models.Container, preview_above_size int64) erro
             } 
         }
     }
+    return nil
+}
+
+
+func StartWorker(w utils.PreviewWorker) {
+    sleepTime := time.Duration(w.Id) * time.Millisecond
+
+    fmt.Printf("Worker %d with sleep %d\n", w.Id, sleepTime)
+    // time.Sleep(sleepTime)
+
+    for pr := range w.In {
+        c := pr.C
+        mc := pr.Mc
+        fmt.Printf("Worker %d Doing a preview for %s\n", w.Id, mc.ID.String())
+        // time.Sleep(sleepTime)
+        preview, err :=  CreateMediaPreview(c, mc, pr.Size)
+        pr.Out <- utils.PreviewResult{
+            C_ID: c.ID,
+            MC_ID: mc.ID,
+            Preview: preview,
+            Err: err,
+        }
+    }
+}
+
+
+func CreateMediaPreviews(c *models.Container, media models.MediaContainers, fsize int64) error {
+    procs := 3
+
+    expected_total := len(media)
+    reply := make(chan utils.PreviewResult, expected_total)
+    input := make(chan utils.PreviewRequest, expected_total)
+
+    for i := 1; i < procs; i++ {
+        pw := utils.PreviewWorker{Id: i, In: input}
+        go StartWorker(pw)
+    }
+
+    mediaMap := models.MediaMap{}
+    for _, mc := range media {
+        mediaMap[mc.ID] = mc
+
+        ref_mc := mc
+        input <- utils.PreviewRequest{
+            C: c,
+            Mc: &ref_mc,
+            Out: reply,
+            Size: fsize,
+        }
+    }
+
+    // This could be a cleaner method I suppose.
+    // Exception handling should close the input and output
+    total := 0
+    for result := range reply {
+        total++
+        if total == expected_total {
+            close(input)  // Do I close this immediately
+            close(reply)
+        } 
+
+        if mc_update, ok := mediaMap[result.MC_ID]; ok {
+            if (result.Preview != "") {
+                mc_update.Preview = result.Preview
+            }
+            fmt.Printf("We found a reply around this %s id was %s \n", result.Preview, result.MC_ID)
+        } else {
+            fmt.Printf("Missing this response ID, something went wrong %s\n", result.MC_ID)
+        }
+        if result.Err != nil {
+            fmt.Printf("Failed to create a preview %s\n", result.Err)
+        }
+        fmt.Printf("Found a result for %s\n", result.MC_ID.String())
+    }
+    fmt.Printf("Done sleeping in the main method")
     return nil
 }
 
@@ -145,9 +222,10 @@ func CreateMediaPreview(c *models.Container, mc *models.MediaContainer, fsize in
 }
 
 // In the case you want to do this in an more async manner (maybe important if it wraps video content)
-func AsyncMediaPreview(c *models.Container, mc *models.MediaContainer, fsize int64, reply chan<- utils.ProcessingResult) {
+func AsyncMediaPreview(c *models.Container, mc *models.MediaContainer, fsize int64, reply chan<- utils.PreviewResult) {
+    fmt.Printf("Are we just getting the same damn id %s\n", mc.ID.String())
     preview, err :=  CreateMediaPreview(c, mc, fsize)
-    pr := utils.ProcessingResult{
+    pr := utils.PreviewResult{
         C_ID: c.ID,
         MC_ID: mc.ID,
         Preview: preview,
