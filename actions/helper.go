@@ -11,7 +11,6 @@ package actions
 import (
     "os"
     "log"
-    "fmt"
     "time"
     "strings"
     "path/filepath"
@@ -26,7 +25,7 @@ import (
 // Process all the directories and get a valid setup into the DB
 func CreateInitialStructure(dir_name string) error {
     dirs := utils.FindContainers(dir_name)
-    fmt.Printf("Found %d sub-directories.\n", len(dirs))
+    log.Printf("Found %d sub-directories.\n", len(dirs))
     if len(dirs) == 0 {
         return errors.New("No subdirectories found under path: " + dir_name)
     }
@@ -39,17 +38,17 @@ func CreateInitialStructure(dir_name string) error {
     // TODO: Need to do this in a single transaction vs partial
     // TODO: Print vs log... might need to setup logging in the Grift I guess
     for _, dir := range dirs {
-        fmt.Printf("Adding directory %s with id %s\n", dir.Name, dir.ID)
+        log.Printf("Adding directory %s with id %s\n", dir.Name, dir.ID)
 
         media := utils.FindMedia(dir, 90001, 0) // A more sensible limit?
-        fmt.Printf("Adding Media to %s with total media %d \n", dir.Name, len(media))
+        log.Printf("Adding Media to %s with total media %d \n", dir.Name, len(media))
 
         // Use the database version of uuid generation (minimize the miniscule conflict)
         unset_uuid, _ := uuid.FromString("00000000-0000-0000-0000-000000000000")
         dir.ID = unset_uuid
         dir.Total = len(media)
         models.DB.Create(&dir)
-        fmt.Printf("Created %s with id %s\n", dir.Name, dir.ID)
+        log.Printf("Created %s with id %s\n", dir.Name, dir.ID)
 
         for _, mc := range media {
             mc.ContainerID = nulls.NewUUID(dir.ID) 
@@ -99,7 +98,8 @@ func CreateAllPreviews(preview_above_size int64) error {
 
 // TODO: Should this return a total of previews created or something?
 func CreateContainerPreviews(c *models.Container, preview_above_size int64) error {
-    // Reset the preview directory, then create it fresh
+
+    // Reset the preview directory, then create it fresh (update tests if this changes)
     c_err := ClearContainerPreviews(c)
     if c_err == nil {
         err := utils.MakePreviewPath(GetContainerPreviewDst(c))
@@ -114,58 +114,35 @@ func CreateContainerPreviews(c *models.Container, preview_above_size int64) erro
         return q_err
     }
 
-    // Database vs Previews locally
-    for _, mc := range media {
-        prev_path, mc_err := CreateMediaPreview(c, &mc, preview_above_size)
-        if mc_err != nil {
-            log.Fatal(mc_err)
-            return mc_err
-        } else {
-            if prev_path != "" {
-                log.Printf("Created a preview %s for mc %s", prev_path, mc.ID.String())
-                mc.Preview = prev_path
-                models.DB.Update(&mc)
-            } 
+    update_list, err := CreateMediaPreviews(c, media, preview_above_size)
+    if err != nil {
+        return err 
+    }
+    for _, mc := range update_list {
+        if mc.Preview != "" {
+            log.Printf("Created a preview %s for mc %s", mc.Preview, mc.ID.String())
+            models.DB.Update(&mc)
         }
     }
     return nil
 }
 
+func CreateMediaPreviews(c *models.Container, media models.MediaContainers, fsize int64) (models.MediaContainers, error) {
+    cfg := GetCfg()
+    processors := cfg.CoreCount
 
-func StartWorker(w utils.PreviewWorker) {
-    sleepTime := time.Duration(w.Id) * time.Millisecond
-
-    fmt.Printf("Worker %d with sleep %d\n", w.Id, sleepTime)
-    // time.Sleep(sleepTime)
-
-    for pr := range w.In {
-        c := pr.C
-        mc := pr.Mc
-        fmt.Printf("Worker %d Doing a preview for %s\n", w.Id, mc.ID.String())
-        // time.Sleep(sleepTime)
-        preview, err :=  CreateMediaPreview(c, mc, pr.Size)
-        pr.Out <- utils.PreviewResult{
-            C_ID: c.ID,
-            MC_ID: mc.ID,
-            Preview: preview,
-            Err: err,
-        }
-    }
-}
-
-
-func CreateMediaPreviews(c *models.Container, media models.MediaContainers, fsize int64) error {
-    procs := 3
-
+    // We expect a result for every message so can create the channels in a way that they have a length
     expected_total := len(media)
     reply := make(chan utils.PreviewResult, expected_total)
     input := make(chan utils.PreviewRequest, expected_total)
 
-    for i := 1; i < procs; i++ {
+    // Starts the workers
+    for i := 0; i < processors; i++ {
         pw := utils.PreviewWorker{Id: i, In: input}
         go StartWorker(pw)
     }
 
+    // Queue up a bunch of preview work
     mediaMap := models.MediaMap{}
     for _, mc := range media {
         mediaMap[mc.ID] = mc
@@ -179,9 +156,11 @@ func CreateMediaPreviews(c *models.Container, media models.MediaContainers, fsiz
         }
     }
 
-    // This could be a cleaner method I suppose.
-    // Exception handling should close the input and output
+    // Exception handling should close the input and output probably
     total := 0
+    previews := models.MediaContainers{}
+
+    error_list := ""
     for result := range reply {
         total++
         if total == expected_total {
@@ -189,22 +168,48 @@ func CreateMediaPreviews(c *models.Container, media models.MediaContainers, fsiz
             close(reply)
         } 
 
+        // Get a list of just the preview items?  Or just update by reference?
         if mc_update, ok := mediaMap[result.MC_ID]; ok {
             if (result.Preview != "") {
+                log.Printf("We found a reply around this %s id was %s \n", result.Preview, result.MC_ID)
                 mc_update.Preview = result.Preview
+                previews = append(previews, mc_update)
+            } else {
+                log.Printf("No preview was needed for media %s", result.MC_ID)
             }
-            fmt.Printf("We found a reply around this %s id was %s \n", result.Preview, result.MC_ID)
         } else {
-            fmt.Printf("Missing this response ID, something went wrong %s\n", result.MC_ID)
+            log.Printf("Missing Response ID, something went wrong %s\n", result.MC_ID)
         }
         if result.Err != nil {
-            fmt.Printf("Failed to create a preview %s\n", result.Err)
+            log.Printf("ERROR: Failed to create a preview %s\n", result.Err)
+            error_list += "" + result.Err.Error()
         }
-        fmt.Printf("Found a result for %s\n", result.MC_ID.String())
+        log.Printf("Found a result for %s\n", result.MC_ID.String())
     }
-    fmt.Printf("Done sleeping in the main method")
-    return nil
+    if error_list != "" {
+        return previews, errors.New(error_list)
+    }
+    return previews, nil
 }
+
+func StartWorker(w utils.PreviewWorker) {
+    sleepTime := time.Duration(w.Id) * time.Millisecond
+    log.Printf("Worker %d with sleep %d\n", w.Id, sleepTime)
+    for pr := range w.In {
+        c := pr.C
+        mc := pr.Mc
+        log.Printf("Worker %d Doing a preview for %s\n", w.Id, mc.ID.String())
+        preview, err :=  CreateMediaPreview(c, mc, pr.Size)
+        pr.Out <- utils.PreviewResult{
+            C_ID: c.ID,
+            MC_ID: mc.ID,
+            Preview: preview,
+            Err: err,
+        }
+    }
+}
+
+
 
 func CreateMediaPreview(c *models.Container, mc *models.MediaContainer, fsize int64) (string, error) {
     cntPath := filepath.Join(appCfg.Dir, c.Name)
@@ -219,17 +224,4 @@ func CreateMediaPreview(c *models.Container, mc *models.MediaContainer, fsize in
         log.Fatal(err)
     }
     return strings.ReplaceAll(dstFqPath, cntPath, ""), err
-}
-
-// In the case you want to do this in an more async manner (maybe important if it wraps video content)
-func AsyncMediaPreview(c *models.Container, mc *models.MediaContainer, fsize int64, reply chan<- utils.PreviewResult) {
-    fmt.Printf("Are we just getting the same damn id %s\n", mc.ID.String())
-    preview, err :=  CreateMediaPreview(c, mc, fsize)
-    pr := utils.PreviewResult{
-        C_ID: c.ID,
-        MC_ID: mc.ID,
-        Preview: preview,
-        Err: err,
-    }
-    reply <- pr
 }

@@ -7,7 +7,7 @@ import (
     "log"
 	"contented/models"
 	"contented/utils"
-    "time"
+    //"time"
 	//"os"
 	//"testing"
 	//"github.com/gobuffalo/buffalo"
@@ -20,6 +20,7 @@ import (
 func GetScreens() (*models.Container, models.MediaContainers) {
 	dir, _ := envy.MustGet("DIR")
     appCfg.Dir = dir
+    appCfg.CoreCount = 3
     cnts := utils.FindContainers(dir)
 
     var screenCnt *models.Container = nil
@@ -148,34 +149,17 @@ func (as *ActionSuite) Test_CreateContainerPreviews() {
     }
 }
 
-func (as *ActionSuite) TestAsyncPreviews() {
-    c_pt, media := SetupScreensPreview(as)
-    
-    as.Greater(len(media), 3, "There should be some things to iterate over")
-    prevs := make(chan utils.PreviewResult, c_pt.Total)
-    as.Equal(c_pt.Total, 4, "It should have four entries")
-    as.Equal(c_pt.Total, len(media), "Definitely it should equal our media")
-    as.Equal(c_pt.Name, "screens", "It should have a screens directory")
-    for _, mc := range media {
-        as.NotEqual(mc.Src, "", "It should have a source path")
-        go AsyncMediaPreview(c_pt, &mc, 0, prevs)
-    }
-    sleep := 1200
-    sleepTime := time.Duration(sleep) * time.Millisecond
-    time.Sleep(sleepTime)
-
-    as.Equal(len(prevs), 4, "It should have four elements at this point")
-    wat := <-prevs
-    as.NoError(wat.Err, "It should not have an error")
-    as.NotEqual(wat.Preview, "It should have a preview location")
-}
-
 func (as *ActionSuite) TestAsyncContainerPreviews() {
     c_pt, media := SetupScreensPreview(as)
 
-    err := CreateMediaPreviews(c_pt, media, 0)
+    // On the DB side these would then need to be updated in the DB for linkage
+    previews, err := CreateMediaPreviews(c_pt, media, 0)
     as.NoError(err)
 
+    as.Equal(len(previews), len(media), "With size zero we should have 4 previews")
+    for _, p_mc := range previews {
+        as.NotEqual(p_mc.Preview, "", "All results should have a preview")
+    }
     // TODO: Validate the previews are created
     // Map the results back to the media containers
     // Maybe just return them vs update the DB
@@ -192,6 +176,6 @@ func (as *ActionSuite) Test_PreviewAllData() {
     c_err := CreateInitialStructure(dir)
     as.NoError(c_err, "Failed to build out the initial database")
 
-    all_created_err := CreateAllPreviews(1000 * 1024)
+    all_created_err := CreateAllPreviews(500 * 1024)
     as.NoError(all_created_err, "Failed to create all previews")
 }

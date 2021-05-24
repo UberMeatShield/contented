@@ -46,6 +46,10 @@ var _ = grift.Namespace("db", func() {
         }
         cfg := actions.GetCfg()
         cfg.Dir = dir_name
+        coreCount, cErr := strconv.Atoi(envy.Get("CORE_COUNT", strconv.Itoa(4)))
+        if cErr != nil {
+            cfg.CoreCount = coreCount
+        }
         fmt.Printf("Using size %d for preview creation", size)
         return actions.CreateAllPreviews(size)
 	})

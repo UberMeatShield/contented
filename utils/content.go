@@ -34,6 +34,7 @@ type DirConfigEntry struct {
 	Limit           int    // The absolute max you can load in a single operation
 	Initialized     bool
     UseDatabase     bool
+    CoreCount       int
     StaticResourcePath string
 }
 
@@ -46,6 +47,7 @@ type DirConfigEntry struct {
 func InitConfig(dir_root string, cfg *DirConfigEntry) *DirConfigEntry {
 	cfg.Dir = dir_root  // Always Common
 	cfg.Initialized = true
+    cfg.CoreCount = 4
 	return cfg
 }
 
