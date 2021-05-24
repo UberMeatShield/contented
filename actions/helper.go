@@ -220,7 +220,7 @@ func StartWorker(w utils.PreviewWorker) {
 }
 
 
-
+// This might not need to be a fatal on an error, but is nice for debugging now
 func CreateMediaPreview(c *models.Container, mc *models.MediaContainer, fsize int64) (string, error) {
     cntPath := filepath.Join(appCfg.Dir, c.Name)
     dstPath := GetContainerPreviewDst(c)
@@ -229,6 +229,8 @@ func CreateMediaPreview(c *models.Container, mc *models.MediaContainer, fsize in
     if exist_err != nil {
         return "", exist_err
     }
+
+    // TODO: ensure that other content does not explode...
     dstFqPath, err := utils.GetImagePreview(cntPath, mc.Src, dstPath, fsize)
     if err != nil {
         log.Fatal(err)
