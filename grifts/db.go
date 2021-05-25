@@ -46,7 +46,13 @@ var _ = grift.Namespace("db", func() {
         }
         cfg := actions.GetCfg()
         cfg.Dir = dir_name
-        fmt.Printf("Using size %d for preview creation", size)
+        coreCount, cErr := strconv.Atoi(envy.Get("CORE_COUNT", strconv.Itoa(4)))
+        if cErr == nil {
+            cfg.CoreCount = coreCount
+        } else {
+            cfg.CoreCount = 4
+        }
+        fmt.Printf("Using size %d for preview creation and starting with n cores %d", size, cfg.CoreCount)
         return actions.CreateAllPreviews(size)
 	})
     // Then add in linkage to the related models.

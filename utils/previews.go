@@ -8,16 +8,29 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+    "contented/models"
 	"github.com/nfnt/resize"
     "github.com/gofrs/uuid"
 )
 
 // Used in the case of async processing when creating Preview results
-type ProcessingResult struct {
+type PreviewResult struct {
     C_ID uuid.UUID
     MC_ID uuid.UUID
     Preview string
     Err error
+}
+
+type PreviewRequest struct {
+    C *models.Container
+    Mc *models.MediaContainer
+    Out chan PreviewResult
+    Size int64
+}
+
+type PreviewWorker struct {
+    Id int
+    In chan PreviewRequest
 }
 
 func MakePreviewPath(dstPath string) error {

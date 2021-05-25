@@ -7,7 +7,7 @@ import (
     "log"
 	"contented/models"
 	"contented/utils"
-    "time"
+    //"time"
 	//"os"
 	//"testing"
 	//"github.com/gobuffalo/buffalo"
@@ -17,9 +17,10 @@ import (
 	// "github.com/gobuffalo/suite"
 )
 
-func GetScreens() (*models.Container, models.MediaContainers){
+func GetScreens() (*models.Container, models.MediaContainers) {
 	dir, _ := envy.MustGet("DIR")
     appCfg.Dir = dir
+    appCfg.CoreCount = 3
     cnts := utils.FindContainers(dir)
 
     var screenCnt *models.Container = nil
@@ -34,6 +35,23 @@ func GetScreens() (*models.Container, models.MediaContainers){
     media := utils.FindMedia(*screenCnt, 4, 0)
     screenCnt.Total = len(media)
     return screenCnt, media
+}
+
+func SetupScreensPreview(as *ActionSuite) (*models.Container, models.MediaContainers) {
+    c_pt, media := GetScreens()
+    err := models.DB.TruncateAll()
+    as.NoError(err, "It should dump the DB")
+    clear_err := ClearContainerPreviews(c_pt)
+    as.NoError(clear_err, "And we should clear the preview dir")
+
+    dstPath := GetContainerPreviewDst(c_pt)
+    dir_err := utils.MakePreviewPath(dstPath)
+    as.NoError(dir_err, "Did we createa preview path")
+
+    empty, read_err := ioutil.ReadDir(dstPath)
+    as.Equal(len(empty), 0, "It should start completely empty")
+    as.NoError(read_err, "It should be able to read the dst directory")
+    return c_pt, media
 }
 
 func (as *ActionSuite) Test_InitialCreation() {
@@ -102,19 +120,7 @@ func (as *ActionSuite) Test_CreatePreview() {
 
 func (as *ActionSuite) Test_CreateContainerPreviews() {
     // Get a local not in DB setup for the container and media
-    c_pt, media := GetScreens()
-
-    err := models.DB.TruncateAll()
-    as.NoError(err, "It should dump the DB")
-    clear_err := ClearContainerPreviews(c_pt)
-    as.NoError(clear_err, "And we should clear the preview dir")
-
-    // Ensure that we do have a valid destination path
-    dstPath := GetContainerPreviewDst(c_pt)
-    dir_err := utils.MakePreviewPath(dstPath)
-    as.NoError(dir_err, "It should have created the preview path")
-    empty, read_err := ioutil.ReadDir(dstPath)
-    as.Equal(len(empty), 0, "It should start completely empty")
+    c_pt, media := SetupScreensPreview(as)
 
     // Now add the data into the database
     c_err := models.DB.Create(c_pt)
@@ -129,6 +135,7 @@ func (as *ActionSuite) Test_CreateContainerPreviews() {
     p_err := CreateContainerPreviews(c_pt, 0)
     as.NoError(p_err, "An error happened creating the previews")
 
+    dstPath := GetContainerPreviewDst(c_pt)
     previews, read_err := ioutil.ReadDir(dstPath)
     as.Equal(len(previews), 4, "It should create 4 previews")
     as.NoError(read_err, "It should be able to read the directory")
@@ -142,38 +149,21 @@ func (as *ActionSuite) Test_CreateContainerPreviews() {
     }
 }
 
-// hate
-func (as *ActionSuite) TestAsyncPreviews() {
-    c_pt, media := GetScreens()
-    err := models.DB.TruncateAll()
-    as.NoError(err, "It should dump the DB")
-    clear_err := ClearContainerPreviews(c_pt)
-    as.NoError(clear_err, "And we should clear the preview dir")
+func (as *ActionSuite) TestAsyncContainerPreviews() {
+    c_pt, media := SetupScreensPreview(as)
 
-    dstPath := GetContainerPreviewDst(c_pt)
-    dir_err := utils.MakePreviewPath(dstPath)
-    as.NoError(dir_err, "Did we createa preview path")
+    // On the DB side these would then need to be updated in the DB for linkage
+    previews, err := CreateMediaPreviews(c_pt, media, 0)
+    as.NoError(err)
 
-    as.Greater(len(media), 3, "There should be some things to iterate over")
-    prevs := make(chan utils.ProcessingResult, c_pt.Total)
-    as.Equal(c_pt.Total, 4, "It should have four entries")
-    as.Equal(c_pt.Total, len(media), "Definitely it should equal our media")
-
-    as.Equal(c_pt.Name, "screens", "It should have a screens directory")
-    for _, mc := range media {
-        as.NotEqual(mc.Src, "", "It should have a source path")
-        go AsyncMediaPreview(c_pt, &mc, 0, prevs)
+    as.Equal(len(previews), len(media), "With size zero we should have 4 previews")
+    for _, p_mc := range previews {
+        as.NotEqual(p_mc.Preview, "", "All results should have a preview")
     }
-    sleep := 1200
-    sleepTime := time.Duration(sleep) * time.Millisecond
-    time.Sleep(sleepTime)
-
-    as.Equal(len(prevs), 4, "It should have four elements at this point")
-    wat := <-prevs
-    as.NoError(wat.Err, "It should not have an error")
-    as.NotEqual(wat.Preview, "It should have a preview location")
+    // TODO: Validate the previews are created
+    // Map the results back to the media containers
+    // Maybe just return them vs update the DB
 }
-
 
 func (as *ActionSuite) Test_PreviewAllData() {
     err := models.DB.TruncateAll()
@@ -186,6 +176,6 @@ func (as *ActionSuite) Test_PreviewAllData() {
     c_err := CreateInitialStructure(dir)
     as.NoError(c_err, "Failed to build out the initial database")
 
-    all_created_err := CreateAllPreviews(1000 * 1024)
+    all_created_err := CreateAllPreviews(500 * 1024)
     as.NoError(all_created_err, "Failed to create all previews")
 }
