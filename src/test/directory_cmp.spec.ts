@@ -1,4 +1,4 @@
-import {async, fakeAsync, getTestBed, tick, ComponentFixture, TestBed} from '@angular/core/testing';
+import { fakeAsync, getTestBed, tick, ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import {By} from '@angular/platform-browser';
 import {HttpClientTestingModule} from '@angular/common/http/testing';
 import {DebugElement} from '@angular/core';
@@ -21,7 +21,7 @@ describe('TestingDirectoryCmp', () => {
     let el: HTMLElement;
     let de: DebugElement;
 
-    beforeEach(async( () => {
+    beforeEach(waitForAsync( () => {
         TestBed.configureTestingModule({
             imports: [RouterTestingModule, ContentedModule, HttpClientTestingModule],
             providers: [

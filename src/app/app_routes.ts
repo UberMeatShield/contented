@@ -9,7 +9,7 @@ const appRoutes = [
     {path: 'ui/:idx/:rowIdx', component: ContentedCmp}
 ];
 @NgModule({
-    imports: [RouterModule.forRoot(appRoutes)],
+    imports: [RouterModule.forRoot(appRoutes, { relativeLinkResolution: 'legacy' })],
     providers: [{provide: APP_BASE_HREF, useValue: ''}],
     exports: [RouterModule]
 })
