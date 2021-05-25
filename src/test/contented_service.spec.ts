@@ -1,4 +1,4 @@
-import {async, fakeAsync, getTestBed, tick, ComponentFixture, TestBed} from '@angular/core/testing';
+import { fakeAsync, getTestBed, tick, ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import {By} from '@angular/platform-browser';
 import {HttpParams, HttpRequest} from '@angular/common/http';
 import {HttpClientTestingModule, HttpTestingController} from '@angular/common/http/testing';
@@ -26,7 +26,7 @@ describe('TestingContentedService', () => {
 
     let httpMock: HttpTestingController;
 
-    beforeEach(async( () => {
+    beforeEach(waitForAsync( () => {
         TestBed.configureTestingModule({
             imports: [
                 ContentedModule,
