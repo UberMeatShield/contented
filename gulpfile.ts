@@ -7,7 +7,6 @@
  */
 import {src, dest, watch, parallel, series, task} from 'gulp';
 import * as cp from 'child_process';
-import * as sass from 'gulp-sass';
 import * as del from 'del';
 
 let base: string = './';
@@ -17,7 +16,6 @@ let dir = {
     base:  base,
     test:  base + 'src/test',
     ts:    base + 'src/',
-    sass:  base + 'src/scss/',
     node:  base + 'node_modules/',
     go:    base,
     deploy: 'public/build/',
@@ -122,14 +120,6 @@ const copyDocs = async () => {
     ]);
 };
 
-// Compile the scss => css and put it in the right build directory
-// =================================================
-const sassBuild = () => {
-    return src(dir.sass + '/*.scss')
-        .pipe(sass())
-        .pipe(dest(dir.css));
-};
-
 const goKillServer = (done) => {
     return execCmd('pkill', ['buffalo'], done);
 };
@@ -147,17 +137,17 @@ const goTest = (done) => {
 const copy = series(copyLibCSS, copyFonts);  // , copyDocs);
 copy.description = "Copy all the various library fonts, css etc.";
 
-const qa = series(sassBuild, tslint, typescriptTests, goTest);
+const qa = series(tslint, typescriptTests, goTest);
 qa.description = "Run our tests and lint for go and typescript";
 
-const buildDev = series(clean, typescript, sassBuild);
+const buildDev = series(clean, typescript);
 buildDev.description = "Faster no QA version that should get the webapp up and running.";
 
 // Note with most of these changed task there is seperate process running the actual build
-const typescriptChanged = series(tslint, typescriptTests, typescript, sassBuild);
-typescriptChanged.description = "After a typescript change:  sass compile, lint and running the tests.";
+const typescriptChanged = series(tslint, typescriptTests, typescript);
+typescriptChanged.description = "After a typescript change:  compile, lint and running the tests.";
 
-const buildDeploy = series(clean, sassBuild, typescriptProd);
+const buildDeploy = series(clean, typescriptProd);
 buildDeploy.description = "The production build, fully compile the typescript / tree shake etc.";
 
 const typescriptWatch = async () => {
@@ -178,19 +168,11 @@ const typescriptWatch = async () => {
     );
 };
 
-const sassWatch = async () => {
-    return watch(
-      [dir.sass + '**/**.scss'],
-      series(sassBuild)
-    );
-};
-
 // The default task and the most common watching / QA task.
-const qaMonitor = series(qa, typescriptWatch, sassWatch);
+const qaMonitor = series(qa, typescriptWatch);
 qaMonitor.description = "Run our QA, then monitor for further changes";
 
-// const defaultTasks = series(clean, sassBuild, copy, qaMonitor, );
-const defaultTasks = series(clean, sassBuild, copy, qaMonitor);
+const defaultTasks = series(clean, copy, qaMonitor);
 defaultTasks.description = "The standard development watch / build";
 
 // Export all our various tasks
@@ -207,8 +189,6 @@ export {
     copyFonts,
     copyDocs,
     watchDoc,
-    sassBuild,
-    sassWatch,
     goTest,
     goBuild,
     goKillServer,
