@@ -1,6 +1,8 @@
 <div class="contented-view-cmp">
   <span *ngIf="container" class="max-full-url-path">
-    {{container?.fullUrl}}
+    <a href="{{container?.fullUrl}}">
+      {{container.src}}({{container.content_type}})
+    </a>
   </span>
   <span *ngIf="!container">
     No Url selected
