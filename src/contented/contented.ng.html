@@ -17,10 +17,11 @@
 
       <mat-card class="directory-meta" *ngIf="!!dir">
         <mat-card-subtitle>
-          <span class="dir-name">
-            <a href="/content/{{dir?.id}}">{{dir?.name}}</a>
-          </span>
-          <span class="current-item"> {{currentViewItem?.fullUrl}}</span>
+          <a target="window" class="dir-name" href="/containers/{{dir?.id}}">{{dir?.name}}</a>
+          <span *ngIf="currentViewItem">/</span> 
+          <a target="window" class="current-item" *ngIf="currentViewItem" href="{{currentViewItem.fullUrl}}">
+            {{currentViewItem?.src}}
+          </a>
           showing {{idx + 1}} of {{allD?.length}} directories.
           <form class="directory-meta-text">
             Select: <input name="rowIdx" type="number" [(ngModel)]="rowIdx">
