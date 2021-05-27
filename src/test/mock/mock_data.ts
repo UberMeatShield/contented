@@ -64,7 +64,7 @@ class MockLoader {
 
     public handleContainerMediaLoad(httpMock, dirs: Array<Directory>) {
         _.each(dirs, dir => {
-            let url = ApiDef.contented.media.replace('{dirId}', dir.id);
+            let url = ApiDef.contented.media.replace('{cId}', dir.id);
             let reqs = httpMock.match(r => r.url === url);
             _.each(reqs, req => {
                 req.flush(MockData.getMedia(dir.dir, 2));

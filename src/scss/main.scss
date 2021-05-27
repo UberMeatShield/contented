@@ -1,5 +1,7 @@
 .contented-cmp {
 
+    height: 100%;
+
     .dir-contents {
        display: flex;
        flex-wrap: wrap;
@@ -9,6 +11,10 @@
       flex-shrink: 0;
       margin: 1rem;
     }
+}
+
+.current-item {
+  margin: 0 0 2rem 0;
 }
 
 .current-img {
@@ -23,8 +29,14 @@
     height: 100%;
 }
 
+.container-full-view {
+
+}
+
 .full-view-img {
     object-fit: contain;
+    width: 100%;
+    height: 100%;
 }
 
 .current-content-dir {

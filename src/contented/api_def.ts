@@ -5,10 +5,10 @@ export let ApiDef = {
     base: base,
     contented: {
         view: base + 'view/',
-        download: base + 'download/',
+        download: base + 'download/{mc_id}',
         preview: base + 'preview/',
         containers: base + 'containers/',
-        media: base + 'containers/{dirId}/media',
+        media: base + 'containers/{cId}/media',
         mediaAll: base + 'media'
     }
 };

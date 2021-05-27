@@ -236,8 +236,8 @@ export class ContentedCmp implements OnInit {
     // TODO: Being called abusively in the directive rather than on page resize events
     @HostListener('window:resize', ['$event'])
     public calculateDimensions() {
-        let width = !window['jasmine'] ? document.body.clientWidth : 800;
-        let height = !window['jasmine'] ? document.body.clientHeight : 800;
+        let width = !window['jasmine'] ? window.innerWidth : 800;
+        let height = !window['jasmine'] ? window.innerHeight : 800;
 
         this.previewWidth = (width / 4) - 41;
         this.previewHeight = (height / this.maxVisible) - 41;
