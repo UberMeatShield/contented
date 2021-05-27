@@ -3,7 +3,6 @@
     <div class="preview-content"
       style="width:{{previewWidth}}px; height: {{previewHeight}}px;"
       *ngFor="let imgContainer of getVisibleSet()">
-
       <img class="preview-img"
         [class.current-img]="currentViewItem == imgContainer"
         [src]="imgContainer?.previewUrl" 

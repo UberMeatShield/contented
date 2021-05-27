@@ -6,7 +6,6 @@
 
   <!-- Fix this to be better about how to get the currDir -->
   <div class="contented-dir" name="contents" *ngFor="let dir of getVisibleDirectories()">
-
     <div class="directory-contents" [class.current-content-dir]="dir == getCurrentDir()">
       <mat-progress-bar
         [value]="dir.count ? ((rowIdx + 1) * 100 / dir.count) : 1"

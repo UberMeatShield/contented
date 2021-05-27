@@ -98,7 +98,7 @@ export class ContentedService {
     }
 
     public getFullDirectory(dir: string, offset: number = 0, limit: number = null) {
-        let url = ApiDef.contented.media.replace('{dirId}', dir);
+        let url = ApiDef.contented.media.replace('{cId}', dir);
         return this.http.get(url, {
             params: this.getPaginationParams(offset, limit),
             headers: this.options.headers
@@ -121,7 +121,7 @@ export class ContentedService {
         if (dir.loadState === LoadStates.NotLoaded) {
             dir.loadState = LoadStates.Loading;
 
-            let url = ApiDef.contented.media.replace('{dirId}', dir.id);
+            let url = ApiDef.contented.media.replace('{cId}', dir.id);
             this.http.get(url, {
                 params: this.getPaginationParams(0, this.LIMIT),
                 headers: this.options.headers

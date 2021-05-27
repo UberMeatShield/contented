@@ -7,11 +7,8 @@
   <span *ngIf="!container">
     No Url selected
   </span>
-  <div *ngIf="container" class="container-full-view">
-    <img class="full-view-img" 
-      [src]="container?.fullUrl"
-      [width]="maxWidth"
-      [height]="maxHeight"
-    >
+  <div *ngIf="container" class="container-full-view" 
+    style="width:{{maxWidth}}px; height: {{maxHeight}}px;"> 
+    <img class="full-view-img" [src]="container?.fullUrl">
   </div>
 </div>

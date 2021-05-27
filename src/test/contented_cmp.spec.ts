@@ -72,7 +72,7 @@ describe('TestingContentedCmp', () => {
 
     function handleContainerMediaLoad(dirs: Array<Directory>) {
         _.each(dirs, dir => {
-            let url = ApiDef.contented.media.replace('{dirId}', dir.id);
+            let url = ApiDef.contented.media.replace('{cId}', dir.id);
             let req = httpMock.expectOne(r => r.url === url);
             req.flush(MockData.getMedia(dir.dir, 2));
         });
@@ -176,7 +176,7 @@ describe('TestingContentedCmp', () => {
 
         service.LIMIT = 1;
         comp.loadMore();
-        let url = ApiDef.contented.media.replace('{dirId}', dir.id);
+        let url = ApiDef.contented.media.replace('{cId}', dir.id);
         let loadReq = httpMock.expectOne(req => req.url === url);
         let checkParams: HttpParams = loadReq.request.params;
         expect(checkParams.get('per_page')).toBe('1', "We set a different limit");

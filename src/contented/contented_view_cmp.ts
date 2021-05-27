@@ -17,10 +17,9 @@ export class ContentedViewCmp {
 
     public calculateDimensions() {
         // Probably need to do this off the current overall container
-        let width = document.body.clientWidth;
-        let height = document.body.clientHeight;
+        let width = window.innerWidth; // document.body.clientWidth;
+        let height = window.innerHeight; // document.body.clientHeight;
 
-        // Just adds more min rendering size
         this.maxWidth = width - 20 > 0 ? width - 20 : 640;
         this.maxHeight = height - 20 > 0 ? height - 20 : 480;
     }
