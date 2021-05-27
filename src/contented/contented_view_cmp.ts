@@ -15,6 +15,7 @@ export class ContentedViewCmp {
         this.calculateDimensions();
     }
 
+    @HostListener('window:resize', ['$event'])
     public calculateDimensions() {
         // Probably need to do this off the current overall container
         let width = window.innerWidth; // document.body.clientWidth;
