@@ -41,6 +41,12 @@ func TestFindMedia(t *testing.T) {
     }
 }
 
+/*
+func Test_ContentTypeExclude(t *testing.T) {
+
+}
+*/
+
 func Test_ContentType(t *testing.T) {
 	imgName := "this_is_jp_eg"
 	dirPath := filepath.Join(testDir, "dir1")

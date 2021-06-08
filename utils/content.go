@@ -38,6 +38,17 @@ type DirConfigEntry struct {
     StaticResourcePath string
 }
 
+type MediaMatcher func(string, string) bool
+
+// Hate
+func ExcludeNoFiles(filename string, content_type string) bool {
+    return false
+}
+
+func IncludeAllFiles(filename string, content_type string) bool {
+    return true
+}
+
 /*
  * Build out a valid configuration given the directory etc.
  *
@@ -80,6 +91,12 @@ func FindContainers(dir_root string) models.Containers {
  *  Get all the content in a particular directory (would be good to filter down to certain file types?)
  */
 func FindMedia(cnt models.Container, limit int, start_offset int) models.MediaContainers {
+    return FindMediaMatcher(cnt, limit, start_offset, IncludeAllFiles, ExcludeNoFiles)
+}
+
+
+// Hate
+func FindMediaMatcher(cnt models.Container, limit int, start_offset int, yup MediaMatcher, nope MediaMatcher) models.MediaContainers {
 	var arr = models.MediaContainers{}
     fqDirPath := filepath.Join(cnt.Path, cnt.Name)
 	maybe_media, _ := ioutil.ReadDir(fqDirPath)
@@ -91,6 +108,7 @@ func FindMedia(cnt models.Container, limit int, start_offset int) models.MediaCo
             imgs = append(imgs, img)
         }
     }
+
 	for idx, img := range imgs {
 		if !img.IsDir() {
 			if len(arr) < limit && idx >= start_offset {
@@ -98,13 +116,17 @@ func FindMedia(cnt models.Container, limit int, start_offset int) models.MediaCo
 				media := getMediaContainer(id, img, fqDirPath)
                 media.ContainerID = nulls.NewUUID(cnt.ID)
                 media.Idx = idx
-				arr = append(arr, media)
+
+                if yup(media.Src, media.ContentType) && !nope(media.Src, media.ContentType) {
+				    arr = append(arr, media)
+                }
 			}
 			total++ // Only add a total for non-directory files (exclude other types?)
 		}
 	}
     return arr
 }
+
 
 /**
  * Return a reader for the file contents
