@@ -41,11 +41,21 @@ func TestFindMedia(t *testing.T) {
     }
 }
 
-/*
-func Test_ContentTypeExclude(t *testing.T) {
+// hate
+func Test_MediaMatcher(t *testing.T) {
+    containers := FindContainers(testDir)
 
+    FailAll := func(filename string, content_type string) bool {
+        return true // nothing should match
+    }
+
+    for _, cnt := range containers {
+        media := FindMediaMatcher(cnt, 0, 20, IncludeAllFiles, FailAll)
+        if len(media) != 0 {
+            t.Errorf("None of these should possibly match")
+        }
+    }
 }
-*/
 
 func Test_ContentType(t *testing.T) {
 	imgName := "this_is_jp_eg"

@@ -94,8 +94,8 @@ func FindMedia(cnt models.Container, limit int, start_offset int) models.MediaCo
     return FindMediaMatcher(cnt, limit, start_offset, IncludeAllFiles, ExcludeNoFiles)
 }
 
-
-// Hate
+// func yup(string, string) bool is a required positive check on the filename and content type (default .*)
+// func nope(string, string) bool is a negative check (ie no zip files) default (everything is fine)
 func FindMediaMatcher(cnt models.Container, limit int, start_offset int, yup MediaMatcher, nope MediaMatcher) models.MediaContainers {
 	var arr = models.MediaContainers{}
     fqDirPath := filepath.Join(cnt.Path, cnt.Name)
