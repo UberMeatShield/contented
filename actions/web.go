@@ -11,11 +11,6 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-type PreviewResults struct {
-	Success bool                `json:"success"`
-	Results []utils.DirContents `json:"results"`
-}
-
 type HttpError struct {
 	Error string `json:"error"`
 	Debug string `json:"debug"`

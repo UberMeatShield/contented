@@ -172,10 +172,11 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap) 
     files := models.MediaMap{}
 
     log.Printf("Searching in %s", dir_root)
+    cfg := GetCfg()
 
     cnts := utils.FindContainers(dir_root)
     for idx, c := range cnts {
-        media := utils.FindMedia(c, 90001, 0)  // TODO: Config this
+        media := utils.FindMediaMatcher(c, 90001, 0, cfg.IncFiles, cfg.ExcFiles)  // TODO: Config this
         // c.Contents = media
         c.Total = len(media)
         c.Idx = idx

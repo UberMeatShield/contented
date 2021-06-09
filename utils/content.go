@@ -2,6 +2,7 @@
 package utils
 
 import (
+    "regexp"
 	"bufio"
 	"contented/models"
 	"crypto/sha256"
@@ -19,12 +20,24 @@ import (
 
 const sniffLen = 512
 
-type DirContents struct {
-	Total    int              `json:"total"`
-	Path     string           `json:"path"`
-	Id       string           `json:"id"`
-	Name     string           `json:"name"`
-	Contents models.MediaContainers `json:"contents"`
+// Matchers that determine if you want to include specific filenames/content types
+type MediaMatcher func(string, string) bool
+
+func ExcludeNoFiles(filename string, content_type string) bool {
+    return false
+}
+
+func IncludeAllFiles(filename string, content_type string) bool {
+    return true
+}
+
+func CreateMatcher(filenameStrRE string, typesStrRE string) MediaMatcher {
+    filenameRE := regexp.MustCompile(filenameStrRE) 
+    typeRE := regexp.MustCompile(typesStrRE)
+
+    return func(filename string, content_type string) bool {
+        return filenameRE.MatchString(filename) && typeRE.MatchString(content_type)
+    }
 }
 
 // TODO: this might be useful to add into the utils
@@ -36,17 +49,10 @@ type DirConfigEntry struct {
     UseDatabase     bool
     CoreCount       int
     StaticResourcePath string
-}
 
-type MediaMatcher func(string, string) bool
-
-// Hate
-func ExcludeNoFiles(filename string, content_type string) bool {
-    return false
-}
-
-func IncludeAllFiles(filename string, content_type string) bool {
-    return true
+    // Matchers that will determine which media elements tend to be included
+    IncFiles MediaMatcher
+    ExcFiles MediaMatcher
 }
 
 /*
@@ -59,6 +65,8 @@ func InitConfig(dir_root string, cfg *DirConfigEntry) *DirConfigEntry {
 	cfg.Dir = dir_root  // Always Common
 	cfg.Initialized = true
     cfg.CoreCount = 4
+    cfg.IncFiles = IncludeAllFiles
+    cfg.ExcFiles = ExcludeNoFiles
 	return cfg
 }
 

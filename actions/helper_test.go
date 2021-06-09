@@ -160,7 +160,7 @@ func (as *ActionSuite) TestAsyncContainerPreviews() {
     for _, p_mc := range previews {
         as.NotEqual(p_mc.Preview, "", "All results should have a preview")
     }
-    // TODO: Validate the previews are created
+    // TODO: Validate the previews are created on disk
     // Map the results back to the media containers
     // Maybe just return them vs update the DB
 }

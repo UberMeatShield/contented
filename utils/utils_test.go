@@ -41,7 +41,6 @@ func TestFindMedia(t *testing.T) {
     }
 }
 
-// hate
 func Test_MediaMatcher(t *testing.T) {
     containers := FindContainers(testDir)
 
@@ -49,12 +48,18 @@ func Test_MediaMatcher(t *testing.T) {
         return true // nothing should match
     }
 
+    // The positive include all cases handled by using FindMedia tests (default include all matches)
     for _, cnt := range containers {
         media := FindMediaMatcher(cnt, 0, 20, IncludeAllFiles, FailAll)
         if len(media) != 0 {
-            t.Errorf("None of these should possibly match")
+            t.Errorf("All Files should be excluded")
+        }
+        inc_test := FindMediaMatcher(cnt, 0, 20, FailAll, ExcludeNoFiles)
+        if len(inc_test) != 0 {
+            t.Errorf("None of these should be included")
         }
     }
+
 }
 
 func Test_ContentType(t *testing.T) {
@@ -117,6 +122,23 @@ func TestFindMediaOffset(t *testing.T) {
 
     if expect_dir == false {
         t.Fatal("The test directory dir3 was not found")
+    }
+}
+
+func Test_CreateMatcher(t *testing.T) {
+    matcher := CreateMatcher(".jpg|.png|.gif", "image")
+
+    valid_fn := "derp.jpg" 
+    valid_mime := "image/jpeg"
+    valid := matcher(valid_fn, valid_mime)
+    if !valid {
+        t.Errorf("The matcher should have been ok with fn %s and mime %s", valid_fn, valid_mime)
+    }
+
+    invalid_fn := "zugzug.zip"
+    invalid := matcher(invalid_fn, valid_mime)
+    if invalid {
+        t.Errorf("Does not match fn %s and mime %s", invalid_fn, valid_mime)
     }
 }
 
