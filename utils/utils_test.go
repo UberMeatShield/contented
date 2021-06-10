@@ -140,6 +140,13 @@ func Test_CreateMatcher(t *testing.T) {
     if invalid {
         t.Errorf("Does not match fn %s and mime %s", invalid_fn, valid_mime)
     }
+
+    wild_matcher := CreateMatcher("", ".*")
+    // empty_or_wild := matcher(empty_fn, wild_mime)
+    empty_or_wild := wild_matcher(invalid_fn, "application/x-bzip")
+    if !empty_or_wild {
+        t.Errorf("This should be a wildcard or empty match")
+    }
 }
 
 func example(sleep int, msg string, reply chan string) {

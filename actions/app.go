@@ -3,6 +3,7 @@ package actions
 import (
     "log"
     "contented/models"
+    "contented/utils"
     "net/http"
     "github.com/gobuffalo/buffalo"
     "github.com/gobuffalo/buffalo-pop/v2/pop/popmw"
@@ -75,7 +76,7 @@ func App(UseDatabase bool) *buffalo.App {
         app.GET("/ui/{path}/{idx}", AngularIndex)
 
         // Need to make the file serving location smarter (serve the dir + serve static?)
-        cfg := GetCfg()
+        cfg := utils.GetCfg()
         app.ServeFiles("/public/build", http.Dir(cfg.StaticResourcePath))
         app.ServeFiles("/public/css", http.Dir(cfg.StaticResourcePath))
 

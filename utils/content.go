@@ -2,6 +2,8 @@
 package utils
 
 import (
+	"strconv"
+    "strings"
     "regexp"
 	"bufio"
 	"contented/models"
@@ -14,11 +16,15 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+    "github.com/gobuffalo/envy"
 	"github.com/gobuffalo/nulls"
 	"github.com/gofrs/uuid"
 )
 
 const sniffLen = 512
+const DefaultLimit int = 10000 // The max limit set by environment variable
+const DefaultPreviewCount int = 8
+const DefaultUseDatabase bool = false
 
 // Matchers that determine if you want to include specific filenames/content types
 type MediaMatcher func(string, string) bool
@@ -50,10 +56,28 @@ type DirConfigEntry struct {
     CoreCount       int
     StaticResourcePath string
 
-    // Matchers that will determine which media elements tend to be included
+    // Matchers that will determine which media elements to be included
     IncFiles MediaMatcher
     ExcFiles MediaMatcher
 }
+
+ // https://medium.com/@TobiasSchmidt89/the-singleton-object-oriented-design-pattern-in-golang-9f6ce75c21f7
+ var appCfg DirConfigEntry = DirConfigEntry{
+     Initialized:  false,
+     UseDatabase: true,
+     Dir:          "",
+     PreviewCount: DefaultPreviewCount,
+     Limit:        DefaultLimit,
+     IncFiles: IncludeAllFiles,
+     ExcFiles: ExcludeNoFiles,
+ }
+
+ func GetCfg() *DirConfigEntry {
+     return &appCfg
+ }
+ func SetCfg(cfg DirConfigEntry) {
+     appCfg = cfg
+ }
 
 /*
  * Build out a valid configuration given the directory etc.
@@ -64,10 +88,78 @@ type DirConfigEntry struct {
 func InitConfig(dir_root string, cfg *DirConfigEntry) *DirConfigEntry {
 	cfg.Dir = dir_root  // Always Common
 	cfg.Initialized = true
+
+    // TODO: Add in logic around pulling in envy data or not
     cfg.CoreCount = 4
-    cfg.IncFiles = IncludeAllFiles
-    cfg.ExcFiles = ExcludeNoFiles
 	return cfg
+}
+
+// Should I move this into the config itself?
+func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
+    var err error
+    dir := envy.Get("DIR", "")
+    if dir == "" {
+        dir, err = envy.MustGet("CONTENT_DIR")  // From the .env file
+    }
+    if !strings.HasSuffix(dir, "/") {
+        dir = dir + "/"
+    }
+    log.Printf("Setting up the content directory with %s", dir)
+
+    staticDir := envy.Get("STATIC_RESOURCE_PATH", "./public/build")
+    limitCount, limErr := strconv.Atoi(envy.Get("LIMIT", strconv.Itoa(DefaultLimit)))
+
+    // We need to get that actually get a default load somehow
+    previewCount, previewErr := strconv.Atoi(envy.Get("PREVIEW", strconv.Itoa(DefaultPreviewCount)))
+    useDatabase, connErr := strconv.ParseBool(envy.Get("USE_DATABASE", strconv.FormatBool(DefaultUseDatabase)))
+
+    if err != nil {
+        panic(err)
+    } else if limErr != nil {
+        panic(limErr)
+    } else if previewErr != nil {
+        panic(previewErr)
+    } else if _, noDirErr := os.Stat(dir); os.IsNotExist(noDirErr) {
+        panic(noDirErr)
+    } else if connErr != nil {
+        panic(connErr)
+    }
+
+	cfg.Dir = dir
+	cfg.Initialized = true
+    cfg.UseDatabase = useDatabase
+    cfg.StaticResourcePath = staticDir
+    cfg.Limit = limitCount
+	cfg.PreviewCount = previewCount
+
+    SetupConfigMatchers(
+        cfg,
+        envy.Get("INCLUDE_FILES_MATCH", ""),
+        envy.Get("INCLUDE_TYPES_MATCH", ""),
+        envy.Get("EXCLUDE_FILES_MATCH", ""),
+        envy.Get("EXCLUDE_TYPES_MATCH", ""),
+    )
+	return cfg
+}
+
+
+// Setup the matchers on the configuration, these are used to determine which media elments should match
+// yes filename matches, yes mime matches, no if the filename matches, no if the mime matches.
+func SetupConfigMatchers(cfg *DirConfigEntry, y_fn string, y_mime string, n_fn string, n_mime string) {
+
+    //To include media only if it matches the filename or mime type
+    if y_fn != "" || y_mime != "" {
+        cfg.IncFiles = CreateMatcher(y_fn, y_mime)
+    } else {
+        cfg.IncFiles = IncludeAllFiles
+    }
+
+    // If you do not specify exclusion regexes it will just include everything
+    if n_fn != "" || n_mime != "" {
+        cfg.ExcFiles = CreateMatcher(y_fn, y_mime)
+    } else {
+        cfg.ExcFiles = ExcludeNoFiles
+    }
 }
 
 /**

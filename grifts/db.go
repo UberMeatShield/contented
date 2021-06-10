@@ -5,7 +5,7 @@ import (
     "fmt"
     "contented/models"
     "contented/actions"
-    //"contented/utils"
+    "contented/utils"
 	"github.com/markbates/grift/grift"
     "github.com/pkg/errors"
     "github.com/gobuffalo/envy"
@@ -44,7 +44,7 @@ var _ = grift.Namespace("db", func() {
         if d_err != nil {
             return errors.WithStack(d_err)
         }
-        cfg := actions.GetCfg()
+        cfg := utils.GetCfg()
         cfg.Dir = dir_name
         coreCount, cErr := strconv.Atoi(envy.Get("CORE_COUNT", strconv.Itoa(4)))
         if cErr == nil {

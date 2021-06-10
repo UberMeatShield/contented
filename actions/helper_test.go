@@ -19,8 +19,10 @@ import (
 
 func GetScreens() (*models.Container, models.MediaContainers) {
 	dir, _ := envy.MustGet("DIR")
-    appCfg.Dir = dir
-    appCfg.CoreCount = 3
+
+    cfg := utils.GetCfg()
+    cfg.Dir = dir
+    cfg.CoreCount = 3
     cnts := utils.FindContainers(dir)
 
     var screenCnt *models.Container = nil
@@ -71,7 +73,9 @@ func (as *ActionSuite) Test_InitialCreation() {
 
 func (as *ActionSuite) Test_ImgPreview() {
 	dir, _ := envy.MustGet("DIR")
-    appCfg.Dir = dir
+
+    cfg := utils.GetCfg()
+    cfg.Dir = dir
 
     id, _ := uuid.NewV4()
     cnt := models.Container{
@@ -172,7 +176,8 @@ func (as *ActionSuite) Test_PreviewAllData() {
 	dir, _ := envy.MustGet("DIR")
     as.NotEmpty(dir, "The test must specify a directory to run on")
 
-    appCfg.Dir = dir
+    cfg := utils.GetCfg()
+    cfg.Dir = dir
     c_err := CreateInitialStructure(dir)
     as.NoError(c_err, "Failed to build out the initial database")
 

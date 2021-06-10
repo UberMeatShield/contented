@@ -18,29 +18,9 @@ import (
     //"github.com/gobuffalo/pop/v5/defaults"
 )
 
-// HomeHandler is a default handler to serve up
-var DefaultLimit int = 10000 // The max limit set by environment variable
-var DefaultPreviewCount int = 8
-var DefaultUseDatabase bool = false
-
-// https://medium.com/@TobiasSchmidt89/the-singleton-object-oriented-design-pattern-in-golang-9f6ce75c21f7
-var appCfg utils.DirConfigEntry = utils.DirConfigEntry{
-    Initialized:  false,
-    UseDatabase: true,
-    Dir:          "",
-    PreviewCount: DefaultPreviewCount,
-    Limit:        DefaultLimit,
-}
-
-func GetCfg() *utils.DirConfigEntry {
-    return &appCfg
-}
-func SetCfg(cfg utils.DirConfigEntry) {
-    appCfg = cfg
-}
-
 func GetManager(c *buffalo.Context) ContentManager {
-    return CreateManager(&appCfg, c)
+    cfg := utils.GetCfg()
+    return CreateManager(cfg, c)
 }
 
 
@@ -172,7 +152,7 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap) 
     files := models.MediaMap{}
 
     log.Printf("Searching in %s", dir_root)
-    cfg := GetCfg()
+    cfg := utils.GetCfg()
 
     cnts := utils.FindContainers(dir_root)
     for idx, c := range cnts {
@@ -492,7 +472,8 @@ func (cm ContentManagerDB) FindActualFile(mc *models.MediaContainer) (string, er
 
 // Given a container ID and the src of a file in there, get a path and check if it exists
 func GetFilePathInContainer(src string, dir_name string) (string, error) {
-    path := filepath.Join(appCfg.Dir, dir_name)
+    cfg := utils.GetCfg()
+    path := filepath.Join(cfg.Dir, dir_name)
     fq_path := filepath.Join(path, src)
     if _, os_err := os.Stat(fq_path); os_err != nil {
         return fq_path, os_err

@@ -76,7 +76,8 @@ func ClearContainerPreviews(c *models.Container) error {
 
 // TODO: Move to utils or make it wrapped for some reason?
 func GetContainerPreviewDst(c *models.Container) string {
-    return filepath.Join(appCfg.Dir, c.Name, "container_previews")
+    cfg := utils.GetCfg()
+    return filepath.Join(cfg.Dir, c.Name, "container_previews")
 }
 
 func CreateAllPreviews(preview_above_size int64) error {
@@ -133,7 +134,7 @@ func CreateMediaPreviews(c *models.Container, media models.MediaContainers, fsiz
     if len(media) == 0 {
         return models.MediaContainers{}, nil 
     }
-    cfg := GetCfg()
+    cfg := utils.GetCfg()
     processors := cfg.CoreCount
     if processors <= 0 {
         processors = 1 // Without at least one processor this will hang forever
@@ -222,7 +223,8 @@ func StartWorker(w utils.PreviewWorker) {
 
 // This might not need to be a fatal on an error, but is nice for debugging now
 func CreateMediaPreview(c *models.Container, mc *models.MediaContainer, fsize int64) (string, error) {
-    cntPath := filepath.Join(appCfg.Dir, c.Name)
+    cfg := utils.GetCfg()
+    cntPath := filepath.Join(cfg.Dir, c.Name)
     dstPath := GetContainerPreviewDst(c)
 
     _, exist_err :=  utils.PreviewExists(mc.Src, dstPath)

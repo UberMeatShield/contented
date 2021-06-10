@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strings"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gofrs/uuid"
 )
@@ -18,17 +17,11 @@ type HttpError struct {
 
 // Builds out information given the application and the content directory
 func SetupContented(app *buffalo.App, contentDir string, numToPreview int, limit int) {
-	if !strings.HasSuffix(contentDir, "/") {
-		contentDir = contentDir + "/"
-	}
-	log.Printf("Setting up the content directory with %s", contentDir)
+    cfg := utils.GetCfg()
 
-	utils.InitConfig(contentDir, &appCfg)
-	appCfg.PreviewCount = numToPreview
-	appCfg.Limit = limit
-
+    // TODO: Check DIR exists
 	// TODO: Somehow need to move the dir into App, but first we want to validate the dir...
-	app.ServeFiles("/static", http.Dir(appCfg.Dir))
+	app.ServeFiles("/static", http.Dir(cfg.Dir))
 }
 
 func FullHandler(c buffalo.Context) error {

@@ -74,7 +74,7 @@ func (as *ActionSuite) Test_ManagerMediaContainer() {
 
 func (as *ActionSuite) Test_AssignManager() {
     dir, _ := envy.MustGet("DIR")
-    cfg := GetCfg()
+    cfg := utils.GetCfg()
     cfg.UseDatabase = false
     utils.InitConfig(dir, cfg)
 
@@ -89,7 +89,7 @@ func (as *ActionSuite) Test_AssignManager() {
     as.NoError(err)
     as.Greater(len(*mcs), 0, "It should have valid files in the manager")
 
-    appCfg.UseDatabase = false
+    cfg.UseDatabase = false
     ctx := getContext(app)
     man := GetManager(&ctx)  // New Reference but should have the same count of media
     mcs_2, _ := man.ListAllMedia(1, 9000)
