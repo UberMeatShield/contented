@@ -33,13 +33,15 @@ func CreateInitialStructure(dir_name string) error {
     if err != nil {
         return errors.WithStack(err)
     }
+    // This should be initialized
+    cfg := utils.GetCfg()
 
     // TODO: Need to do this in a single transaction vs partial
-    // TODO: Print vs log... might need to setup logging in the Grift I guess
     for _, dir := range dirs {
         log.Printf("Adding directory %s with id %s\n", dir.Name, dir.ID)
 
-        media := utils.FindMedia(dir, 90001, 0) // A more sensible limit?
+        // A more sensible limit on the absolute max lookup?
+        media := utils.FindMediaMatcher(dir, 90001, 0, cfg.IncFiles, cfg.ExcFiles) 
         log.Printf("Adding Media to %s with total media %d \n", dir.Name, len(media))
 
         // Use the database version of uuid generation (minimize the miniscule conflict)

@@ -21,7 +21,7 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-const sniffLen = 512
+const sniffLen = 512  // How many bytes to read in a file when trying to determine mime type
 const DefaultLimit int = 10000 // The max limit set by environment variable
 const DefaultPreviewCount int = 8
 const DefaultUseDatabase bool = false
@@ -49,14 +49,15 @@ func CreateMatcher(filenameStrRE string, typesStrRE string) MediaMatcher {
 // TODO: this might be useful to add into the utils
 type DirConfigEntry struct {
 	Dir             string // The root of our loading (path to top level container directory)
-	PreviewCount    int    // How many files should be listed for a preview
 	Limit           int    // The absolute max you can load in a single operation
-	Initialized     bool
-    UseDatabase     bool
-    CoreCount       int
-    StaticResourcePath string
+    UseDatabase     bool   // Should it use the database or an in memory version
+    CoreCount       int    // How many cores are likely available (used in creating multithread workers / previews)
+    StaticResourcePath string  // The location where compiled js and css is hosted (container vs dev server)
+	Initialized     bool   // Has the configuration actually be initialized properly
+    PreviewCount    int    // How many files should be listed for a preview (todo: USE)
+    PreviewOverSize int64  // Over how many bytes should previews be created for the file
 
-    // Matchers that will determine which media elements to be included
+    // Matchers that will determine which media elements to be included or excluded
     IncFiles MediaMatcher
     ExcFiles MediaMatcher
 }
@@ -66,6 +67,7 @@ type DirConfigEntry struct {
      Initialized:  false,
      UseDatabase: true,
      Dir:          "",
+     CoreCount: 4,
      PreviewCount: DefaultPreviewCount,
      Limit:        DefaultLimit,
      IncFiles: IncludeAllFiles,
@@ -88,9 +90,7 @@ type DirConfigEntry struct {
 func InitConfig(dir_root string, cfg *DirConfigEntry) *DirConfigEntry {
 	cfg.Dir = dir_root  // Always Common
 	cfg.Initialized = true
-
-    // TODO: Add in logic around pulling in envy data or not
-    cfg.CoreCount = 4
+    SetupConfigMatchers(cfg, "", "", "", "")
 	return cfg
 }
 
@@ -108,10 +108,11 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
 
     staticDir := envy.Get("STATIC_RESOURCE_PATH", "./public/build")
     limitCount, limErr := strconv.Atoi(envy.Get("LIMIT", strconv.Itoa(DefaultLimit)))
-
-    // We need to get that actually get a default load somehow
     previewCount, previewErr := strconv.Atoi(envy.Get("PREVIEW", strconv.Itoa(DefaultPreviewCount)))
     useDatabase, connErr := strconv.ParseBool(envy.Get("USE_DATABASE", strconv.FormatBool(DefaultUseDatabase)))
+    coreCount, coreErr := strconv.Atoi(envy.Get("CORE_COUNT", "4"))
+
+    psize, perr := strconv.ParseInt(envy.Get("CREATE_PREVIEW_SIZE", "1024000"), 10, 64)
 
     if err != nil {
         panic(err)
@@ -123,14 +124,19 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
         panic(noDirErr)
     } else if connErr != nil {
         panic(connErr)
+    } else if coreErr != nil {
+        panic(coreErr)
+    } else if perr != nil {
+        panic(perr)
     }
 
 	cfg.Dir = dir
-	cfg.Initialized = true
     cfg.UseDatabase = useDatabase
     cfg.StaticResourcePath = staticDir
     cfg.Limit = limitCount
+    cfg.CoreCount = coreCount
 	cfg.PreviewCount = previewCount
+    cfg.PreviewOverSize = psize
 
     SetupConfigMatchers(
         cfg,
@@ -139,6 +145,7 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
         envy.Get("EXCLUDE_FILES_MATCH", ""),
         envy.Get("EXCLUDE_TYPES_MATCH", ""),
     )
+	cfg.Initialized = true
 	return cfg
 }
 
