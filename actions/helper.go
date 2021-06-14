@@ -22,19 +22,20 @@ import (
 
 
 // Process all the directories and get a valid setup into the DB
-func CreateInitialStructure(dir_name string) error {
-    dirs := utils.FindContainers(dir_name)
+// Probably should return a count of everything
+func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
+    dirs := utils.FindContainers(cfg.Dir)
     log.Printf("Found %d sub-directories.\n", len(dirs))
     if len(dirs) == 0 {
-        return errors.New("No subdirectories found under path: " + dir_name)
+        return errors.New("No subdirectories found under path: " + cfg.Dir)
     }
 
+    // Optional?  Some sort of crazy merge for later?
     err := models.DB.TruncateAll()
     if err != nil {
         return errors.WithStack(err)
     }
     // This should be initialized
-    cfg := utils.GetCfg()
 
     // TODO: Need to do this in a single transaction vs partial
     for _, dir := range dirs {

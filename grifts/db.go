@@ -23,15 +23,15 @@ var _ = grift.Namespace("db", func() {
             return errors.WithStack(d_err)
         }
         // Clean out the current DB setup then builds a new one
-        fmt.Printf("Configuration is loaded %s Starting import", cfg)
-        return actions.CreateInitialStructure(cfg.Dir)
+        fmt.Printf("Configuration is loaded %s Starting import", cfg.Dir)
+        return actions.CreateInitialStructure(cfg)
 	})
     // Then add the content for the entire directory structure
 
 	grift.Add("preview", func(c *grift.Context) error {
         cfg := utils.GetCfg()
         utils.InitConfigEnvy(cfg)
-        fmt.Printf("Configuration is loaded %s doing preview creation", cfg)
+        fmt.Printf("Configuration is loaded %s doing preview creation", cfg.Dir)
 
         // TODO: This should use the managers probably (allow for memory manager previews)
         return actions.CreateAllPreviews(cfg.PreviewOverSize)

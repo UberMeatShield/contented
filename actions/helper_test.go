@@ -60,7 +60,10 @@ func (as *ActionSuite) Test_InitialCreation() {
 	dir, _ := envy.MustGet("DIR")
     as.NotEmpty(dir, "The test must specify a directory to run on")
 
-    err := CreateInitialStructure(dir)
+    cfg := utils.GetCfg()
+    cfg.Dir = dir
+
+    err := CreateInitialStructure(cfg)
     as.NoError(err, "It should successfully create the full DB setup")
 
     cnts := models.Containers{}
@@ -68,7 +71,32 @@ func (as *ActionSuite) Test_InitialCreation() {
 
     media := models.MediaContainers{}
     as.DB.All(&media)
-    as.Equal(len(media), 24, "The mocks have a specific expected number of items")
+    as.Equal(24, len(media), "The mocks have a specific expected number of items")
+}
+
+func (as *ActionSuite) Test_CfgIncExcFiles() {
+	dir, _ := envy.MustGet("DIR")
+    cfg := utils.GetCfg()
+    cfg.Dir = dir
+
+    // Exclude all images
+    cfg.ExcFiles = utils.CreateMatcher("", "image")
+
+    err := CreateInitialStructure(cfg)
+    as.NoError(err)
+
+    media := models.MediaContainers{}
+    as.DB.All(&media)
+    as.Equal(0, len(media), "There should be no matches")
+
+    cfg.ExcFiles = utils.ExcludeNoFiles
+    cfg.IncFiles = utils.CreateMatcher("", "jpeg")
+
+    err_png := CreateInitialStructure(cfg)
+    as.NoError(err_png)
+
+    as.DB.All(&media)
+    as.Equal(1, len(media), "There is one jpeg")
 }
 
 func (as *ActionSuite) Test_ImgPreview() {
@@ -178,7 +206,7 @@ func (as *ActionSuite) Test_PreviewAllData() {
 
     cfg := utils.GetCfg()
     cfg.Dir = dir
-    c_err := CreateInitialStructure(dir)
+    c_err := CreateInitialStructure(cfg)
     as.NoError(c_err, "Failed to build out the initial database")
 
     all_created_err := CreateAllPreviews(500 * 1024)
