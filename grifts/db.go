@@ -1,11 +1,10 @@
 package grifts
 
 import (
-    "strconv"
     "fmt"
-    "contented/models"
+//    "contented/models"
     "contented/actions"
-    //"contented/utils"
+    "contented/utils"
 	"github.com/markbates/grift/grift"
     "github.com/pkg/errors"
     "github.com/gobuffalo/envy"
@@ -15,45 +14,26 @@ var _ = grift.Namespace("db", func() {
 
 	grift.Desc("seed", "Populate the DB with a set of directory content.")
 	grift.Add("seed", func(c *grift.Context) error {
-        err := models.DB.TruncateAll()
-        if err != nil {
-            return errors.WithStack(err)
-        }
+        cfg := utils.GetCfg()
+        utils.InitConfigEnvy(cfg)
 
-        // Grab the directory which we want to process
-        dir_name, d_err := envy.MustGet("DIR")
+        // Require the directory which we want to process (maybe just trust it is set)
+        _, d_err := envy.MustGet("DIR")
         if d_err != nil {
             return errors.WithStack(d_err)
         }
         // Clean out the current DB setup then builds a new one
-        return actions.CreateInitialStructure(dir_name)
+        fmt.Printf("Configuration is loaded %s Starting import", cfg.Dir)
+        return actions.CreateInitialStructure(cfg)
 	})
     // Then add the content for the entire directory structure
 
 	grift.Add("preview", func(c *grift.Context) error {
-        // TODO: Strip this out into a different function
-        var size int64 = 1024 * 1000 * 2
-        psize := envy.Get("PREVIEW_IF_GREATER", "")
-        if psize != "" {
-            setSize, i_err := strconv.ParseInt(psize, 10, 64)
-            if i_err == nil {
-                size = setSize
-            }
-        }
-        dir_name, d_err := envy.MustGet("DIR")
-        if d_err != nil {
-            return errors.WithStack(d_err)
-        }
-        cfg := actions.GetCfg()
-        cfg.Dir = dir_name
-        coreCount, cErr := strconv.Atoi(envy.Get("CORE_COUNT", strconv.Itoa(4)))
-        if cErr == nil {
-            cfg.CoreCount = coreCount
-        } else {
-            cfg.CoreCount = 4
-        }
-        fmt.Printf("Using size %d for preview creation and starting with n cores %d", size, cfg.CoreCount)
-        return actions.CreateAllPreviews(size)
+        cfg := utils.GetCfg()
+        utils.InitConfigEnvy(cfg)
+        fmt.Printf("Configuration is loaded %s doing preview creation", cfg.Dir)
+
+        // TODO: This should use the managers probably (allow for memory manager previews)
+        return actions.CreateAllPreviews(cfg.PreviewOverSize)
 	})
-    // Then add in linkage to the related models.
 })

@@ -47,7 +47,7 @@ func init_fake_app(use_db bool) *utils.DirConfigEntry {
 	dir, _ := envy.MustGet("DIR")
 	fmt.Printf("Using directory %s\n", dir)
 
-	cfg := GetCfg()
+	cfg := utils.GetCfg()
 	utils.InitConfig(dir, cfg)
     cfg.UseDatabase = use_db  // Set via .env or USE_DATABASE as an environment var
     cfg.StaticResourcePath = "./public/build"

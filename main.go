@@ -2,10 +2,8 @@ package main
 
 import (
 	"contented/actions"
+	"contented/utils"
 	"log"
-	"os"
-	"strconv"
-	"github.com/gobuffalo/envy"
 )
 
 // main is the starting point for your Buffalo application.
@@ -15,41 +13,13 @@ import (
 // call `app.Serve()`, unless you don't want to start your
 // application that is. :)
 func main() {
-
-    // Should I move this into the config itself?
-    var err error
-	dir := envy.Get("DIR", "")
-    if dir == "" {
-        dir, err = envy.MustGet("CONTENT_DIR")  // From the .env file
-    }
-    staticDir := envy.Get("STATIC_RESOURCE_PATH", "./public/build")
-	limitCount, limErr := strconv.Atoi(envy.Get("LIMIT", strconv.Itoa(actions.DefaultLimit)))
-
-    // We need to get that actually get a default load somehow
-	previewCount, previewErr := strconv.Atoi(envy.Get("PREVIEW", strconv.Itoa(actions.DefaultPreviewCount)))
-    useDatabase, connErr := strconv.ParseBool(envy.Get("USE_DATABASE", strconv.FormatBool(actions.DefaultUseDatabase)))
-
-	if err != nil {
-		panic(err)
-	} else if limErr != nil {
-		panic(limErr)
-	} else if previewErr != nil {
-		panic(previewErr)
-	} else if _, noDirErr := os.Stat(dir); os.IsNotExist(noDirErr) {
-		panic(noDirErr)
-    } else if connErr != nil {
-        panic(connErr)
-    }
-
-    appCfg := actions.GetCfg()
-    appCfg.UseDatabase = useDatabase
-    appCfg.StaticResourcePath = staticDir
-
-	log.Printf("Parsed Env. Dir %s Limit %d with preview count %d\n", dir, limitCount, previewCount)
-    log.Printf("Use connection type of database %t\n", appCfg.UseDatabase)
-
+    appCfg := utils.GetCfg()
+    utils.InitConfigEnvy(appCfg)
 	app := actions.App(appCfg.UseDatabase)
-	actions.SetupContented(app, dir, previewCount, limitCount)
+
+    // TODO: Update or delete this method as it is not really doing anything
+    // Potentially just do the static hosting in the actions.App bit.
+	actions.SetupContented(app, "", 0, 0)
 	if err := app.Serve(); err != nil {
 		log.Fatal(err)
 	}

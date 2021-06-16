@@ -5,7 +5,7 @@ import (
     "path/filepath"
 	"io/ioutil"
 	"net/http"
-
+    "contented/utils"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/render"
 )
@@ -18,7 +18,7 @@ func HomeHandler(c buffalo.Context) error {
 
 // Replace this with nginx or something else better at serving static content (probably)
 func AngularIndex(c buffalo.Context) error {
-    cfg := GetCfg()
+    cfg := utils.GetCfg()
 	index := filepath.Join(cfg.StaticResourcePath, "index.html")
 
 	// TODO:  I guess this is dumb if I have to read the thing anyway...

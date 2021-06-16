@@ -22,24 +22,27 @@ import (
 
 
 // Process all the directories and get a valid setup into the DB
-func CreateInitialStructure(dir_name string) error {
-    dirs := utils.FindContainers(dir_name)
+// Probably should return a count of everything
+func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
+    dirs := utils.FindContainers(cfg.Dir)
     log.Printf("Found %d sub-directories.\n", len(dirs))
     if len(dirs) == 0 {
-        return errors.New("No subdirectories found under path: " + dir_name)
+        return errors.New("No subdirectories found under path: " + cfg.Dir)
     }
 
+    // Optional?  Some sort of crazy merge for later?
     err := models.DB.TruncateAll()
     if err != nil {
         return errors.WithStack(err)
     }
+    // This should be initialized
 
     // TODO: Need to do this in a single transaction vs partial
-    // TODO: Print vs log... might need to setup logging in the Grift I guess
     for _, dir := range dirs {
         log.Printf("Adding directory %s with id %s\n", dir.Name, dir.ID)
 
-        media := utils.FindMedia(dir, 90001, 0) // A more sensible limit?
+        // A more sensible limit on the absolute max lookup?
+        media := utils.FindMediaMatcher(dir, 90001, 0, cfg.IncFiles, cfg.ExcFiles) 
         log.Printf("Adding Media to %s with total media %d \n", dir.Name, len(media))
 
         // Use the database version of uuid generation (minimize the miniscule conflict)
@@ -76,7 +79,8 @@ func ClearContainerPreviews(c *models.Container) error {
 
 // TODO: Move to utils or make it wrapped for some reason?
 func GetContainerPreviewDst(c *models.Container) string {
-    return filepath.Join(appCfg.Dir, c.Name, "container_previews")
+    cfg := utils.GetCfg()
+    return filepath.Join(cfg.Dir, c.Name, "container_previews")
 }
 
 func CreateAllPreviews(preview_above_size int64) error {
@@ -133,7 +137,7 @@ func CreateMediaPreviews(c *models.Container, media models.MediaContainers, fsiz
     if len(media) == 0 {
         return models.MediaContainers{}, nil 
     }
-    cfg := GetCfg()
+    cfg := utils.GetCfg()
     processors := cfg.CoreCount
     if processors <= 0 {
         processors = 1 // Without at least one processor this will hang forever
@@ -222,7 +226,8 @@ func StartWorker(w utils.PreviewWorker) {
 
 // This might not need to be a fatal on an error, but is nice for debugging now
 func CreateMediaPreview(c *models.Container, mc *models.MediaContainer, fsize int64) (string, error) {
-    cntPath := filepath.Join(appCfg.Dir, c.Name)
+    cfg := utils.GetCfg()
+    cntPath := filepath.Join(cfg.Dir, c.Name)
     dstPath := GetContainerPreviewDst(c)
 
     _, exist_err :=  utils.PreviewExists(mc.Src, dstPath)

@@ -19,8 +19,10 @@ import (
 
 func GetScreens() (*models.Container, models.MediaContainers) {
 	dir, _ := envy.MustGet("DIR")
-    appCfg.Dir = dir
-    appCfg.CoreCount = 3
+
+    cfg := utils.GetCfg()
+    cfg.Dir = dir
+    cfg.CoreCount = 3
     cnts := utils.FindContainers(dir)
 
     var screenCnt *models.Container = nil
@@ -58,7 +60,10 @@ func (as *ActionSuite) Test_InitialCreation() {
 	dir, _ := envy.MustGet("DIR")
     as.NotEmpty(dir, "The test must specify a directory to run on")
 
-    err := CreateInitialStructure(dir)
+    cfg := utils.GetCfg()
+    cfg.Dir = dir
+
+    err := CreateInitialStructure(cfg)
     as.NoError(err, "It should successfully create the full DB setup")
 
     cnts := models.Containers{}
@@ -66,12 +71,39 @@ func (as *ActionSuite) Test_InitialCreation() {
 
     media := models.MediaContainers{}
     as.DB.All(&media)
-    as.Equal(len(media), 24, "The mocks have a specific expected number of items")
+    as.Equal(24, len(media), "The mocks have a specific expected number of items")
+}
+
+func (as *ActionSuite) Test_CfgIncExcFiles() {
+	dir, _ := envy.MustGet("DIR")
+    cfg := utils.GetCfg()
+    cfg.Dir = dir
+
+    // Exclude all images
+    cfg.ExcFiles = utils.CreateMatcher("", "image")
+
+    err := CreateInitialStructure(cfg)
+    as.NoError(err)
+
+    media := models.MediaContainers{}
+    as.DB.All(&media)
+    as.Equal(0, len(media), "There should be no matches")
+
+    cfg.ExcFiles = utils.ExcludeNoFiles
+    cfg.IncFiles = utils.CreateMatcher("", "jpeg")
+
+    err_png := CreateInitialStructure(cfg)
+    as.NoError(err_png)
+
+    as.DB.All(&media)
+    as.Equal(1, len(media), "There is one jpeg")
 }
 
 func (as *ActionSuite) Test_ImgPreview() {
 	dir, _ := envy.MustGet("DIR")
-    appCfg.Dir = dir
+
+    cfg := utils.GetCfg()
+    cfg.Dir = dir
 
     id, _ := uuid.NewV4()
     cnt := models.Container{
@@ -160,7 +192,7 @@ func (as *ActionSuite) TestAsyncContainerPreviews() {
     for _, p_mc := range previews {
         as.NotEqual(p_mc.Preview, "", "All results should have a preview")
     }
-    // TODO: Validate the previews are created
+    // TODO: Validate the previews are created on disk
     // Map the results back to the media containers
     // Maybe just return them vs update the DB
 }
@@ -172,8 +204,9 @@ func (as *ActionSuite) Test_PreviewAllData() {
 	dir, _ := envy.MustGet("DIR")
     as.NotEmpty(dir, "The test must specify a directory to run on")
 
-    appCfg.Dir = dir
-    c_err := CreateInitialStructure(dir)
+    cfg := utils.GetCfg()
+    cfg.Dir = dir
+    c_err := CreateInitialStructure(cfg)
     as.NoError(c_err, "Failed to build out the initial database")
 
     all_created_err := CreateAllPreviews(500 * 1024)
