@@ -19,7 +19,6 @@ type ActionSuite struct {
 	*suite.Action
 }
 
-
 func getContext(app *buffalo.App) buffalo.Context {
     return getContextParams(app, "/containers", "1", "10")
 }

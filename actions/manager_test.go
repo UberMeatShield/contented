@@ -9,18 +9,17 @@ import (
 	"net/http"
 	"os"
 	"testing"
-
 	"github.com/gobuffalo/packr/v2"
 	"github.com/gobuffalo/suite"
 	"github.com/gofrs/uuid"
 	"github.com/gobuffalo/envy"
     "github.com/gobuffalo/buffalo"
     */
-    "context"
+    //"context"
     //"sync"
     //"github.com/gobuffalo/logger"
     "github.com/gobuffalo/envy"
-    "github.com/gobuffalo/buffalo"
+    //"github.com/gobuffalo/buffalo"
 )
 
 var expect_len = map[string]int{
@@ -28,15 +27,6 @@ var expect_len = map[string]int{
     "dir2": 2,
     "dir3": 6,
     "screens": 4,
-}
-
-func basicContext() buffalo.DefaultContext {
-	return buffalo.DefaultContext{
-		Context: context.Background(),
-		//logger:  buffalo.logger.New(logger.DebugLevel),
-		//data:    &sync.Map{},
-		//flash:   &Flash{data: make(map[string][]string)},
-	}
 }
 
 func (as *ActionSuite) Test_ManagerContainers() {
@@ -146,7 +136,6 @@ func (as *ActionSuite) Test_MemoryManagerPaginate() {
     as.Equal(1, len(*l_cnts), "It should still return only as we are on the last page")
     l_cnt := (*l_cnts)[0]
     as.Equal(l_cnt.Total, expect_len[l_cnt.Name], "There are 3 entries in the ordered test data last container")
-
 }
 
 func (as *ActionSuite) Test_ManagerInitialize() {
