@@ -35,7 +35,6 @@ func getContextParams(app *buffalo.App, url string, page string, per_page string
     return &buffalo.DefaultContext{
         Context: ctx,
     }
-
 }
 
 
