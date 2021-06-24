@@ -18,70 +18,70 @@ import (
     //"github.com/gobuffalo/pop/v5/defaults"
 )
 
-func GetManager(c *buffalo.Context) ContentManager {
-    cfg := utils.GetCfg()
-    return CreateManager(cfg, c)
-}
-
 
 type GetConnType func() *pop.Connection
 type GetParamsType func() *url.Values
 
-
-func CreateManager(cfg *utils.DirConfigEntry, c *buffalo.Context) ContentManager {
-    // Not really important for a DB manager, just need to look at it
+// Dealing with buffalo.Context vs grift.Context is kinda annoying, this handles the
+// buffalo context which handles tests or runtime but doesn't work in grifts.
+func GetManager(c *buffalo.Context) ContentManager {
+    cfg := utils.GetCfg()
     ctx := *c
+
+    // The get connection might need an async channel or it potentially locks
+    // the dev server :(.   Need to only do this if use database is set
+    var get_connection GetConnType
     if cfg.UseDatabase {
-        log.Printf("Setting up the DB Manager")
-        db_man := ContentManagerDB{cfg: cfg, c: c}
-        db_man.GetConnection = func() *pop.Connection {
-            if db_man.conn == nil {
+        var conn *pop.Connection
+        get_connection = func() *pop.Connection {
+            if conn == nil {
                 tx, ok := ctx.Value("tx").(*pop.Connection)
                 if !ok {
                     log.Fatalf("Failed to get a connection")
                     return nil
                 }
-                db_man.conn = tx
+                conn = tx
             }
-            return db_man.conn
+            return conn
         }
-        db_man.Params = func() *url.Values {
-            if db_man.params == nil {
-                vals := ctx.Params().(url.Values)
-                db_man.params = &vals 
-            }
-            return db_man.params
+    } else {
+        get_connection = func() *pop.Connection {
+            return nil
         }
+    }
+    get_params := func() *url.Values {
+        params := ctx.Params().(url.Values) 
+        return &params
+    }
+    return CreateManager(cfg, get_connection, get_params)
+}
+
+func CreateManager(cfg *utils.DirConfigEntry, get_conn GetConnType, get_params GetParamsType) ContentManager {
+    // Not really important for a DB manager, just need to look at it
+    if cfg.UseDatabase {
+        log.Printf("Setting up the DB Manager")
+        db_man := ContentManagerDB{cfg: cfg}
+        db_man.GetConnection = get_conn
+        db_man.Params = get_params
         return db_man
     } else {
         // This should now be used to build the filesystem into memory one time.
         log.Printf("Setting up the memory Manager")
-        mem_man := ContentManagerMemory{cfg: cfg, c: c}
+        mem_man := ContentManagerMemory{cfg: cfg}
+        mem_man.Params = get_params
         mem_man.Initialize()  // Break this into a sensible initialization
-
-        // TODO: Clean this initialization up
-        mem_man.Params = func() *url.Values {
-            if mem_man.params == nil {
-                vals := ctx.Params().(url.Values)
-                mem_man.params = &vals 
-            }
-            return mem_man.params
-        }
         return mem_man
     }
 }
 
-
-
 type ContentManager interface {
     // SetCfg(c *utils.DirConfigEntry)
     GetCfg() *utils.DirConfigEntry
-    GetContext() *buffalo.Context
     CanEdit() bool  // Do we support CRUD or just R
 
     // TODO
     //GetConnection() *pop.Connection
-    //GetParams() url.Values
+    GetParams() *url.Values
 
     FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error)
     FindDirRef(dir_id uuid.UUID) (*models.Container, error)
@@ -110,7 +110,6 @@ var memStorage MemoryStorage = MemoryStorage{Initialized: false}
 
 type ContentManagerMemory struct {
     cfg *utils.DirConfigEntry
-    c *buffalo.Context
 
     ValidMedia      models.MediaMap
     ValidContainers models.ContainerMap
@@ -136,9 +135,6 @@ func (cm ContentManagerMemory) GetCfg() *utils.DirConfigEntry {
     return cm.cfg
 }
 
-func (cm ContentManagerMemory) GetContext() *buffalo.Context {
-    return cm.c
-}
 
 
 // TODO:  Now THIS one can actually build out a singleton that is shared I guess.
@@ -166,6 +162,11 @@ func InitializeMemory(dir_root string) MemoryStorage {
     return memStorage
 }
 
+// Kinda strange but it seems hard to assign the type into an interface
+// type GetParamsType func() *url.Values
+func (cm ContentManagerMemory) GetParams() *url.Values {
+    return cm.Params()
+}
 
 /**
  *  TODO:  Require the number to preview and will be Memory only supported.
@@ -235,8 +236,7 @@ func GetPagination(params pop.PaginationParams, DefaultLimit int) (int, int, int
 }
 
 func (cm ContentManagerMemory) ListMediaContext(c_id uuid.UUID) (*models.MediaContainers, error) {
-    c := *cm.GetContext()
-    _, limit, page := GetPagination(c.Params(), cm.cfg.Limit)
+    _, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
     return cm.ListMedia(c_id, page, limit)
 }
 
@@ -282,8 +282,7 @@ func (cm ContentManagerMemory) GetMedia(mc_id uuid.UUID) (*models.MediaContainer
 }
 
 func (cm ContentManagerMemory) ListContainersContext() (*models.Containers, error) {
-    c := *cm.GetContext()
-    _, per_page, page := GetPagination(c.Params(), cm.cfg.Limit)
+    _, per_page, page := GetPagination(cm.Params(), cm.cfg.Limit)
     return cm.ListContainers(page, per_page)
 }
 
@@ -371,12 +370,12 @@ func (cm ContentManagerDB) GetCfg() *utils.DirConfigEntry {
     return cm.cfg
 }
 
-func (cm ContentManagerDB) CanEdit() bool {
-    return true;
+func (cm ContentManagerDB) GetParams() *url.Values {
+    return cm.Params()
 }
 
-func (cm ContentManagerDB) GetContext() *buffalo.Context {
-    return cm.c
+func (cm ContentManagerDB) CanEdit() bool {
+    return true;
 }
 
 

@@ -83,6 +83,7 @@ func GetContainerPreviewDst(c *models.Container) string {
     return filepath.Join(cfg.Dir, c.Name, "container_previews")
 }
 
+// Init a manager and pass it in?
 func CreateAllPreviews(preview_above_size int64) error {
     cnts := models.Containers{}
     models.DB.All(&cnts)
