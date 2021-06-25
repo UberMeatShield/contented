@@ -31,6 +31,7 @@ func getContextParams(app *buffalo.App, url string, page string, per_page string
     ctx := req.Context()
     ctx = context.WithValue(ctx, "page", page)
     ctx = context.WithValue(ctx, "per_page", per_page)
+    ctx = context.WithValue(ctx, "tx", models.DB)
 
     return &buffalo.DefaultContext{
         Context: ctx,

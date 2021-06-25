@@ -3,7 +3,9 @@ package actions
 import (
 	//"fmt"
 	"contented/utils"
+	"contented/models"
     "net/http"
+    "net/url"
     /*
 	"encoding/json"
 	"net/http"
@@ -19,6 +21,7 @@ import (
     //"sync"
     //"github.com/gobuffalo/logger"
     "github.com/gobuffalo/envy"
+    "github.com/gobuffalo/pop/v5"
     //"github.com/gobuffalo/buffalo"
 )
 
@@ -29,9 +32,24 @@ var expect_len = map[string]int{
     "screens": 4,
 }
 
+
+func Get_Manager_ActionSuite(cfg *utils.DirConfigEntry, as *ActionSuite) ContentManager{
+    ctx := getContext(as.App)
+    get_params := func() *url.Values {
+        vals := ctx.Params().(url.Values)
+        return &vals
+    }
+    get_conn := func() *pop.Connection {
+        // as.DB should work, but it is of a type pop.v5.Connection instead of pop.Connection
+        return models.DB
+    }
+    return CreateManager(cfg, get_conn, get_params)
+}
+
+
 func (as *ActionSuite) Test_ManagerContainers() {
     init_fake_app(false)
-    ctx := getContext(app)
+    ctx := getContext(as.App)
     man := GetManager(&ctx)
     containers, err := man.ListContainersContext()
     as.NoError(err)
@@ -48,7 +66,7 @@ func (as *ActionSuite) Test_ManagerContainers() {
 
 func (as *ActionSuite) Test_ManagerMediaContainer() {
     init_fake_app(false)
-    ctx := getContext(app)
+    ctx := getContext(as.App)
     man := GetManager(&ctx)
     mcs, err := man.ListAllMedia(1, 9001)
     as.NoError(err)
@@ -80,7 +98,7 @@ func (as *ActionSuite) Test_AssignManager() {
     as.Greater(len(*mcs), 0, "It should have valid files in the manager")
 
     cfg.UseDatabase = false
-    ctx := getContext(app)
+    ctx := getContext(as.App)
     man := GetManager(&ctx)  // New Reference but should have the same count of media
     mcs_2, _ := man.ListAllMedia(1, 9000)
 
@@ -91,7 +109,7 @@ func (as *ActionSuite) Test_AssignManager() {
 func (as *ActionSuite) Test_MemoryDenyEdit() {
     cfg := init_fake_app(false)
     cfg.UseDatabase = false
-    ctx := getContext(app)
+    ctx := getContext(as.App)
     man := GetManager(&ctx)
 
     containers, err := man.ListContainersContext()
@@ -110,7 +128,7 @@ func (as *ActionSuite) Test_MemoryManagerPaginate() {
     cfg := init_fake_app(false)
     cfg.UseDatabase = false
 
-    ctx := getContextParams(app, "/containers", "1", "2")
+    ctx := getContextParams(as.App, "/containers", "1", "2")
     man := GetManager(&ctx)
     as.Equal(man.CanEdit(), false, "Memory manager should not be editing")
 
@@ -142,7 +160,7 @@ func (as *ActionSuite) Test_ManagerInitialize() {
     cfg := init_fake_app(false)
     cfg.UseDatabase = false
 
-    ctx := getContext(app)
+    ctx := getContext(as.App)
     man := GetManager(&ctx)
     as.NotNil(man, "It should have a manager defined after init")
 

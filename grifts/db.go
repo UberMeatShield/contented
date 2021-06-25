@@ -42,35 +42,22 @@ var _ = grift.Namespace("db", func() {
         if cfg.UseDatabase {
             // The scope of transactions is a bit odd.  Seems like this is handled in
             // buffalo via the magical buffalo middleware.
+            fmt.Printf("DB Manager setup")
             return models.DB.Transaction(func(tx *pop.Connection) error {
                 get_connection := func() *pop.Connection {
                     return tx
                 } 
                 man := actions.CreateManager(cfg, get_connection, get_params)
-                cnts, c_err := man.ListContainers(1, 90001)
-                if c_err != nil {
-                    fmt.Printf("Error loading containers %s", c_err)
-                }
-                fmt.Printf("Manager containers (%d)\n", len(*cnts))
-                return c_err
+                fmt.Printf("Creating previews %t", man.CanEdit())
+                return actions.CreateAllPreviews(man)
             })
         } else {
             get_connection := func() *pop.Connection {
                 return nil // Do not do anything with the DB
             }
             man := actions.CreateManager(cfg, get_connection, get_params)
-            fmt.Printf("Use memory manager %s", man.CanEdit())
+            fmt.Printf("Use memory manager %t", man.CanEdit())
+            return actions.CreateAllPreviews(man)
         }
-        return nil
-        //return actions.CreateAllPreviews(cfg.PreviewOverSize)
-        /*
-        man := actions.GetManager(c)
-        cnts, err := man.ListContainers(0, 90000)
-        if err != nil {
-            fmt.Printf("Error listing containers %s", err)
-        } else {
-            fmt.Printf("Listed all containers, wooo %d", len(*cnts))
-        }
-        */
 	})
 })

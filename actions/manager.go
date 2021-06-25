@@ -15,7 +15,6 @@ import (
     "github.com/gobuffalo/buffalo"
     "github.com/gobuffalo/pop/v5"
     //"github.com/gobuffalo/pop/v5/paginator"
-    //"github.com/gobuffalo/pop/v5/defaults"
 )
 
 
@@ -29,7 +28,7 @@ func GetManager(c *buffalo.Context) ContentManager {
     ctx := *c
 
     // The get connection might need an async channel or it potentially locks
-    // the dev server :(.   Need to only do this if use database is set
+    // the dev server :(.   Need to only do this if use database is setup and connects
     var get_connection GetConnType
     if cfg.UseDatabase {
         var conn *pop.Connection
@@ -45,6 +44,7 @@ func GetManager(c *buffalo.Context) ContentManager {
             return conn
         }
     } else {
+        // Just required for the memory version create statement
         get_connection = func() *pop.Connection {
             return nil
         }
@@ -95,6 +95,7 @@ type ContentManager interface {
     ListMediaContext(ContainerID uuid.UUID) (*models.MediaContainers, error)
     ListAllMedia(page int, per_page int) (*models.MediaContainers, error)
 
+    UpdateMedia(media *models.MediaContainer) error
     FindActualFile(mc *models.MediaContainer) (string, error)
     GetPreviewForMC(mc *models.MediaContainer) (string, error)
 }
@@ -281,6 +282,11 @@ func (cm ContentManagerMemory) GetMedia(mc_id uuid.UUID) (*models.MediaContainer
     return nil, errors.New("Media was not found in memory")
 }
 
+func (cm ContentManagerMemory) UpdateMedia(media *models.MediaContainer) error {
+    // FIND IT hate 
+    return nil
+}
+
 func (cm ContentManagerMemory) ListContainersContext() (*models.Containers, error) {
     _, per_page, page := GetPagination(cm.Params(), cm.cfg.Limit)
     return cm.ListContainers(page, per_page)
@@ -411,6 +417,11 @@ func (cm ContentManagerDB) GetMedia(mc_id uuid.UUID) (*models.MediaContainer, er
         return nil, err
     }
     return container, nil
+}
+
+func (cm ContentManagerDB) UpdateMedia(media *models.MediaContainer) error {
+    tx := cm.GetConnection()
+    return tx.Update(media)
 }
 
 func (cm ContentManagerDB) ListAllMedia(page int, per_page int) (*models.MediaContainers, error) {

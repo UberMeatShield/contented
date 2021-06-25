@@ -14,7 +14,6 @@ import (
     "github.com/gobuffalo/nulls"
     "github.com/gofrs/uuid"
     "github.com/gobuffalo/envy"
-	// "github.com/gobuffalo/suite"
 )
 
 func GetScreens() (*models.Container, models.MediaContainers) {
@@ -139,8 +138,10 @@ func (as *ActionSuite) Test_CreatePreview() {
     as.NoError(dir_err, "Did we createa preview path")
 
     // Create one that does create a preview
+    cfg := utils.GetCfg()
+    cfg.PreviewOverSize = 0
     for _, mc := range media {
-        preview_path, err := CreateMediaPreview(c_pt, &mc, 0)
+        preview_path, err := CreateMediaPreview(c_pt, &mc)
         as.NoError(err, "It should be ble to create previews")
         as.NotEqual(preview_path, "", "The path should be defined")
     }
@@ -152,9 +153,13 @@ func (as *ActionSuite) Test_CreatePreview() {
 
 func (as *ActionSuite) Test_CreateContainerPreviews() {
     // Get a local not in DB setup for the container and media
-    c_pt, media := SetupScreensPreview(as)
+    // Create a bunch of previews
+    cfg := utils.GetCfg()
+    cfg.UseDatabase = true
+    cfg.PreviewOverSize = 0
 
     // Now add the data into the database
+    c_pt, media := SetupScreensPreview(as)
     c_err := models.DB.Create(c_pt)
     as.NoError(c_err)
     for _, mc := range media {
@@ -163,29 +168,34 @@ func (as *ActionSuite) Test_CreateContainerPreviews() {
         as.NoError(mc_err)
         as.Equal(mc.Preview, "", "There should be no preview at this point")
     }
-    // Create a bunch of previews
-    p_err := CreateContainerPreviews(c_pt, 0)
-    as.NoError(p_err, "An error happened creating the previews")
+    man := Get_Manager_ActionSuite(cfg, as)
+    cnts, c_err := man.ListContainers(0, 2)
+    as.Equal(len(*cnts), 1, "It should have containers")
+    as.NoError(c_err)
 
+    p_err := CreateContainerPreviews(c_pt, man)
+    as.NoError(p_err, "An error happened creating the previews")
     dstPath := GetContainerPreviewDst(c_pt)
     previews, read_err := ioutil.ReadDir(dstPath)
     as.Equal(len(previews), 4, "It should create 4 previews")
     as.NoError(read_err, "It should be able to read the directory")
 
+    // Validate that the media was updated in the DB
     media_check := models.MediaContainers{}
     models.DB.Where("container_id = ?", c_pt.ID).All(&media_check)
     as.Equal(len(media_check), 4, "We should just have 4 things to check")
-
     for _, mc_check := range media_check {
         as.NotEqual(mc_check.Preview, "", "It should now have a preview")
     }
 }
 
-func (as *ActionSuite) TestAsyncContainerPreviews() {
+func (as *ActionSuite) Test_AsyncContainerPreviews() {
     c_pt, media := SetupScreensPreview(as)
 
     // On the DB side these would then need to be updated in the DB for linkage
-    previews, err := CreateMediaPreviews(c_pt, media, 0)
+    cfg := utils.GetCfg()
+    cfg.PreviewOverSize = 0
+    previews, err := CreateMediaPreviews(c_pt, media)
     as.NoError(err)
 
     as.Equal(len(previews), len(media), "With size zero we should have 4 previews")
@@ -205,10 +215,20 @@ func (as *ActionSuite) Test_PreviewAllData() {
     as.NotEmpty(dir, "The test must specify a directory to run on")
 
     cfg := utils.GetCfg()
+    cfg.UseDatabase = true
     cfg.Dir = dir
-    c_err := CreateInitialStructure(cfg)
-    as.NoError(c_err, "Failed to build out the initial database")
 
-    all_created_err := CreateAllPreviews(500 * 1024)
+    c_err := CreateInitialStructure(cfg)
+    man := Get_Manager_ActionSuite(cfg, as)
+
+    cnts, c_err := man.ListContainers(0, 3)
+    as.Equal(len(*cnts), 3, "It should have containers")
+    as.NoError(c_err)
+
+    as.NoError(c_err, "Failed to build out the initial database")
+    as.Equal(true, man.CanEdit(), "It should be able to edit")
+
+    cfg.PreviewOverSize = 0
+    all_created_err := CreateAllPreviews(man)
     as.NoError(all_created_err, "Failed to create all previews")
 }

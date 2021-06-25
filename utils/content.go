@@ -66,10 +66,12 @@ type DirConfigEntry struct {
  var appCfg DirConfigEntry = DirConfigEntry{
      Initialized:  false,
      UseDatabase: true,
-     Dir:          "",
+     Dir: "",
      CoreCount: 4,
+     Limit: DefaultLimit,
      PreviewCount: DefaultPreviewCount,
-     Limit:        DefaultLimit,
+     PreviewOverSize: 1024000,
+
      IncFiles: IncludeAllFiles,
      ExcFiles: ExcludeNoFiles,
  }
