@@ -83,15 +83,17 @@ func GetContainerPreviewDst(c *models.Container) string {
     return filepath.Join(cfg.Dir, c.Name, "container_previews")
 }
 
-func CreateAllPreviews(preview_above_size int64) error {
-    cnts := models.Containers{}
-    models.DB.All(&cnts)
-
-    if len(cnts) == 0 {
+// Init a manager and pass it in or just do this via config value instead of a pass in
+func CreateAllPreviews(cm ContentManager) error {
+    cnts, c_err := cm.ListContainers(0, 9001)
+    if c_err != nil {
+        return c_err
+    }
+    if len(*cnts) == 0 {
         return errors.New("No Containers were found in the database")
     }
-    for _, cnt := range cnts {
-        err := CreateContainerPreviews(&cnt, preview_above_size)    
+    for _, cnt := range *cnts {
+        err := CreateContainerPreviews(&cnt, cm)    
         if err != nil {
             return err
         }
@@ -100,8 +102,7 @@ func CreateAllPreviews(preview_above_size int64) error {
 }
 
 // TODO: Should this return a total of previews created or something?
-func CreateContainerPreviews(c *models.Container, preview_above_size int64) error {
-
+func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
     log.Printf("About to try and create previews for %s:%s\n", c.Name, c.ID.String())
     // Reset the preview directory, then create it fresh (update tests if this changes)
     c_err := ClearContainerPreviews(c)
@@ -111,15 +112,16 @@ func CreateContainerPreviews(c *models.Container, preview_above_size int64) erro
             log.Fatal(err)
         }
     }
-    media := models.MediaContainers{}
-    q_err := models.DB.Where("container_id = ?", c.ID).All(&media)
+
+    // TODO: It should fix up the total count there (-1 for unlimited?)
+    media, q_err := cm.ListMedia(c.ID, 0, 90000)
     if q_err != nil {
         log.Fatal(q_err)
         return q_err
     }
-    log.Printf("Found a set of media to make previews for %d", len(media))
+    log.Printf("Found a set of media to make previews for %d", len(*media))
 
-    update_list, err := CreateMediaPreviews(c, media, preview_above_size)
+    update_list, err := CreateMediaPreviews(c, *media)
     if err != nil {
         return err 
     }
@@ -127,13 +129,13 @@ func CreateContainerPreviews(c *models.Container, preview_above_size int64) erro
     for _, mc := range update_list {
         if mc.Preview != "" {
             log.Printf("Created a preview %s for mc %s", mc.Preview, mc.ID.String())
-            models.DB.Update(&mc)
+            cm.UpdateMedia(&mc)
         }
     }
     return nil
 }
 
-func CreateMediaPreviews(c *models.Container, media models.MediaContainers, fsize int64) (models.MediaContainers, error) {
+func CreateMediaPreviews(c *models.Container, media models.MediaContainers) (models.MediaContainers, error) {
     if len(media) == 0 {
         return models.MediaContainers{}, nil 
     }
@@ -165,7 +167,6 @@ func CreateMediaPreviews(c *models.Container, media models.MediaContainers, fsiz
             C: c,
             Mc: &ref_mc,
             Out: reply,
-            Size: fsize,
         }
     }
 
@@ -213,7 +214,7 @@ func StartWorker(w utils.PreviewWorker) {
         c := pr.C
         mc := pr.Mc
         log.Printf("Worker %d Doing a preview for %s\n", w.Id, mc.ID.String())
-        preview, err :=  CreateMediaPreview(c, mc, pr.Size)
+        preview, err :=  CreateMediaPreview(c, mc)
         pr.Out <- utils.PreviewResult{
             C_ID: c.ID,
             MC_ID: mc.ID,
@@ -225,7 +226,7 @@ func StartWorker(w utils.PreviewWorker) {
 
 
 // This might not need to be a fatal on an error, but is nice for debugging now
-func CreateMediaPreview(c *models.Container, mc *models.MediaContainer, fsize int64) (string, error) {
+func CreateMediaPreview(c *models.Container, mc *models.MediaContainer) (string, error) {
     cfg := utils.GetCfg()
     cntPath := filepath.Join(cfg.Dir, c.Name)
     dstPath := GetContainerPreviewDst(c)
@@ -236,7 +237,7 @@ func CreateMediaPreview(c *models.Container, mc *models.MediaContainer, fsize in
     }
 
     // TODO: ensure that other content does not explode...
-    dstFqPath, err := utils.GetImagePreview(cntPath, mc.Src, dstPath, fsize)
+    dstFqPath, err := utils.GetImagePreview(cntPath, mc.Src, dstPath, cfg.PreviewOverSize)
     if err != nil {
         log.Fatal(err)
     }

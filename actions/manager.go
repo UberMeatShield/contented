@@ -3,9 +3,9 @@ package actions
 import (
     "log"
     "os"
-    "fmt"
     "errors"
     "sort"
+    "net/url"
     "path/filepath"
     "contented/models"
     "contented/utils"
@@ -15,36 +15,73 @@ import (
     "github.com/gobuffalo/buffalo"
     "github.com/gobuffalo/pop/v5"
     //"github.com/gobuffalo/pop/v5/paginator"
-    //"github.com/gobuffalo/pop/v5/defaults"
 )
 
+
+type GetConnType func() *pop.Connection
+type GetParamsType func() *url.Values
+
+// Dealing with buffalo.Context vs grift.Context is kinda annoying, this handles the
+// buffalo context which handles tests or runtime but doesn't work in grifts.
 func GetManager(c *buffalo.Context) ContentManager {
     cfg := utils.GetCfg()
-    return CreateManager(cfg, c)
+    ctx := *c
+
+    // The get connection might need an async channel or it potentially locks
+    // the dev server :(.   Need to only do this if use database is setup and connects
+    var get_connection GetConnType
+    if cfg.UseDatabase {
+        var conn *pop.Connection
+        get_connection = func() *pop.Connection {
+            if conn == nil {
+                tx, ok := ctx.Value("tx").(*pop.Connection)
+                if !ok {
+                    log.Fatalf("Failed to get a connection")
+                    return nil
+                }
+                conn = tx
+            }
+            return conn
+        }
+    } else {
+        // Just required for the memory version create statement
+        get_connection = func() *pop.Connection {
+            return nil
+        }
+    }
+    get_params := func() *url.Values {
+        params := ctx.Params().(url.Values) 
+        return &params
+    }
+    return CreateManager(cfg, get_connection, get_params)
 }
 
-
-func CreateManager(cfg *utils.DirConfigEntry, c *buffalo.Context) ContentManager {
+func CreateManager(cfg *utils.DirConfigEntry, get_conn GetConnType, get_params GetParamsType) ContentManager {
     // Not really important for a DB manager, just need to look at it
     if cfg.UseDatabase {
         log.Printf("Setting up the DB Manager")
-        db_man := ContentManagerDB{cfg: cfg, c: c}
+        db_man := ContentManagerDB{cfg: cfg}
+        db_man.GetConnection = get_conn
+        db_man.Params = get_params
         return db_man
     } else {
         // This should now be used to build the filesystem into memory one time.
         log.Printf("Setting up the memory Manager")
-        mem_man := ContentManagerMemory{cfg: cfg, c: c}
+        mem_man := ContentManagerMemory{cfg: cfg}
+        mem_man.Params = get_params
         mem_man.Initialize()  // Break this into a sensible initialization
         return mem_man
     }
 }
 
-
 type ContentManager interface {
     // SetCfg(c *utils.DirConfigEntry)
     GetCfg() *utils.DirConfigEntry
-    GetContext() *buffalo.Context
     CanEdit() bool  // Do we support CRUD or just R
+
+    // TODO
+    //GetConnection() *pop.Connection
+    GetParams() *url.Values
 
     FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error)
     FindDirRef(dir_id uuid.UUID) (*models.Container, error)
@@ -58,6 +95,7 @@ type ContentManager interface {
     ListMediaContext(ContainerID uuid.UUID) (*models.MediaContainers, error)
     ListAllMedia(page int, per_page int) (*models.MediaContainers, error)
 
+    UpdateMedia(media *models.MediaContainer) error
     FindActualFile(mc *models.MediaContainer) (string, error)
     GetPreviewForMC(mc *models.MediaContainer) (string, error)
 }
@@ -73,11 +111,13 @@ var memStorage MemoryStorage = MemoryStorage{Initialized: false}
 
 type ContentManagerMemory struct {
     cfg *utils.DirConfigEntry
-    c *buffalo.Context
 
     ValidMedia      models.MediaMap
     ValidContainers models.ContainerMap
     validate string 
+
+    params *url.Values
+    Params GetParamsType    // returns .params or context.Params()
 }
 
 func (cm ContentManagerMemory) CanEdit() bool {
@@ -96,9 +136,6 @@ func (cm ContentManagerMemory) GetCfg() *utils.DirConfigEntry {
     return cm.cfg
 }
 
-func (cm ContentManagerMemory) GetContext() *buffalo.Context {
-    return cm.c
-}
 
 
 // TODO:  Now THIS one can actually build out a singleton that is shared I guess.
@@ -126,22 +163,10 @@ func InitializeMemory(dir_root string) MemoryStorage {
     return memStorage
 }
 
-// Used when doing pagination on the arrays of memory manager
-func GetOffsetEnd(page int, per_page int, max int) (int, int) {
-    offset := (page - 1) * per_page
-    if offset < 0 {
-        offset = 0
-    }
-
-    end := offset + per_page
-    if end > max {
-        end = max
-    }
-    // Maybe just toss a value error when asking for out of bounds
-    if offset >= max {
-        offset = end - 1
-    }
-    return offset, end
+// Kinda strange but it seems hard to assign the type into an interface
+// type GetParamsType func() *url.Values
+func (cm ContentManagerMemory) GetParams() *url.Values {
+    return cm.Params()
 }
 
 /**
@@ -176,7 +201,25 @@ func StringDefault(s1, s2 string) string {
 	return s1
 }
 
-// Returns the offest and the limit from pagination params
+// Used when doing pagination on the arrays of memory manager
+func GetOffsetEnd(page int, per_page int, max int) (int, int) {
+    offset := (page - 1) * per_page
+    if offset < 0 {
+        offset = 0
+    }
+
+    end := offset + per_page
+    if end > max {
+        end = max
+    }
+    // Maybe just toss a value error when asking for out of bounds
+    if offset >= max {
+        offset = end - 1
+    }
+    return offset, end
+}
+
+// Returns the offest, limit, page from pagination params (page indexing starts at 1)
 func GetPagination(params pop.PaginationParams, DefaultLimit int) (int, int, int) {
 	p := StringDefault(params.Get("page"), "1")
 	page, err := strconv.Atoi(p)
@@ -194,9 +237,8 @@ func GetPagination(params pop.PaginationParams, DefaultLimit int) (int, int, int
 }
 
 func (cm ContentManagerMemory) ListMediaContext(c_id uuid.UUID) (*models.MediaContainers, error) {
-    c := *cm.GetContext()
-    offset, limit, _ := GetPagination(c.Params(), cm.cfg.Limit)
-    return cm.ListMedia(c_id, offset, limit)
+    _, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
+    return cm.ListMedia(c_id, page, limit)
 }
 
 func (cm ContentManagerMemory) ListAllMedia(page int, per_page int) (*models.MediaContainers, error) {
@@ -240,9 +282,13 @@ func (cm ContentManagerMemory) GetMedia(mc_id uuid.UUID) (*models.MediaContainer
     return nil, errors.New("Media was not found in memory")
 }
 
+func (cm ContentManagerMemory) UpdateMedia(media *models.MediaContainer) error {
+    // FIND IT hate 
+    return nil
+}
+
 func (cm ContentManagerMemory) ListContainersContext() (*models.Containers, error) {
-    c := *cm.GetContext()
-    _, per_page, page := GetPagination(c.Params(), cm.cfg.Limit)
+    _, per_page, page := GetPagination(cm.Params(), cm.cfg.Limit)
     return cm.ListContainers(page, per_page)
 }
 
@@ -313,6 +359,14 @@ func (cm ContentManagerMemory) FindActualFile(mc *models.MediaContainer) (string
 type ContentManagerDB struct {
     cfg *utils.DirConfigEntry
     c *buffalo.Context
+
+    /* Is this even useful ? */
+    conn *pop.Connection
+    params *url.Values
+
+    // hate
+    GetConnection GetConnType  // Returns .conn or context.Value(tx)
+    Params GetParamsType    // returns .params or context.Params()
 }
 
 func (cm *ContentManagerDB) SetCfg(cfg *utils.DirConfigEntry) {
@@ -322,33 +376,31 @@ func (cm ContentManagerDB) GetCfg() *utils.DirConfigEntry {
     return cm.cfg
 }
 
+func (cm ContentManagerDB) GetParams() *url.Values {
+    return cm.Params()
+}
+
 func (cm ContentManagerDB) CanEdit() bool {
     return true;
 }
 
-func (cm ContentManagerDB) GetContext() *buffalo.Context {
-    return cm.c
-}
-
 
 func (cm ContentManagerDB) ListMediaContext(c_id uuid.UUID) (*models.MediaContainers, error) {
-    return cm.ListMedia(c_id, 1, cm.cfg.Limit)
+    // Could add the context here correctly
+    _, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
+    return cm.ListMedia(c_id, page, limit)
 }
 
 // Awkard GoLang interface support is awkward
 func (cm ContentManagerDB) ListMedia(c_id uuid.UUID, page int, per_page int) (*models.MediaContainers, error) {
     log.Printf("Get a list of media from DB, we should have some %s", c_id.String())
-    c := *cm.GetContext()
-    tx, ok := c.Value("tx").(*pop.Connection)
-    if !ok {
-        return nil, fmt.Errorf("no transaction found")
-    }
+    tx := cm.GetConnection()
     mediaContainers := &models.MediaContainers{}
 
     // Paginate results. Params "page" and "per_page" control pagination.
     // Default values are "page=1" and "per_page=20".
     // TODO: Make it paginate using the params not the context
-    q := tx.PaginateFromParams(c.Params())
+    q := tx.Paginate(page, per_page)
     q_conn := q.Where("container_id = ?", c_id)
     if q_err := q_conn.All(mediaContainers); q_err != nil {
         return nil, q_err
@@ -359,11 +411,7 @@ func (cm ContentManagerDB) ListMedia(c_id uuid.UUID, page int, per_page int) (*m
 
 func (cm ContentManagerDB) GetMedia(mc_id uuid.UUID) (*models.MediaContainer, error) {
     log.Printf("Get a single media %s", mc_id)
-    c := *cm.GetContext()
-    tx, ok := c.Value("tx").(*pop.Connection)
-    if !ok {
-        return nil, fmt.Errorf("no transaction found")
-    }
+    tx := cm.GetConnection()
     container := &models.MediaContainer{}
     if err := tx.Find(container, mc_id); err != nil {
         return nil, err
@@ -371,14 +419,15 @@ func (cm ContentManagerDB) GetMedia(mc_id uuid.UUID) (*models.MediaContainer, er
     return container, nil
 }
 
+func (cm ContentManagerDB) UpdateMedia(media *models.MediaContainer) error {
+    tx := cm.GetConnection()
+    return tx.Update(media)
+}
+
 func (cm ContentManagerDB) ListAllMedia(page int, per_page int) (*models.MediaContainers, error) {
     log.Printf("List all media DB manager")
-    c := *cm.GetContext()
-    tx, ok := c.Value("tx").(*pop.Connection)
-    if !ok {
-        return nil, fmt.Errorf("no transaction found")
-    }
-    q := tx.PaginateFromParams(c.Params())
+    tx := cm.GetConnection()
+    q := tx.Paginate(page, per_page)
     mediaContainers := &models.MediaContainers{}
     if err := q.All(mediaContainers); err != nil {
         return nil, err
@@ -394,15 +443,11 @@ func (cm ContentManagerDB) ListContainersContext() (*models.Containers, error) {
 // TODO: Add in support for actually doing the query using the current buffalo.Context
 func (cm ContentManagerDB) ListContainers(page int, per_page int) (*models.Containers, error) {
     log.Printf("DB List all containers")
-    c := *cm.GetContext()
-    tx, ok := c.Value("tx").(*pop.Connection)
-    if !ok {
-        return nil, fmt.Errorf("No transaction found")
-    }
-    containers := &models.Containers{}
-    q := tx.PaginateFromParams(c.Params())
+    tx := cm.GetConnection()
+    q := tx.Paginate(page, per_page)
 
     // Retrieve all Containers from the DB
+    containers := &models.Containers{}
     if err := q.All(containers); err != nil {
         return nil, err
     }
@@ -411,15 +456,12 @@ func (cm ContentManagerDB) ListContainers(page int, per_page int) (*models.Conta
 
 func (cm ContentManagerDB) GetContainer(mc_id uuid.UUID) (*models.Container, error) {
     log.Printf("Get a single container %s", mc_id)
-    c := *cm.GetContext()
-    tx, ok := c.Value("tx").(*pop.Connection)
-    if !ok {
-        return nil, fmt.Errorf("No transaction found")
-    }
+    tx := cm.GetConnection()
+    p := cm.Params()
 
     // Allocate an empty Container
     container := &models.Container{}
-    if err := tx.Find(container, c.Param("container_id")); err != nil {
+    if err := tx.Find(container, p.Get("container_id")); err != nil {
         return nil, err
     }
     return container, nil
