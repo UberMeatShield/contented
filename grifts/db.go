@@ -28,7 +28,16 @@ var _ = grift.Namespace("db", func() {
         fmt.Printf("Configuration is loaded %s Starting import", cfg.Dir)
         return actions.CreateInitialStructure(cfg)
 	})
-    // Then add the content for the entire directory structure
+
+    // It really feels like a grift should do a better command line handler
+    // TODO: It must right?  Find it at some point
+	grift.Add("nuke", func(c *grift.Context) error {
+        _, d_err := envy.MustGet("NUKE_IT")
+        if d_err != nil {
+            return errors.New("NUKE_IT env must be defined in order to delete")
+        }
+        return models.DB.TruncateAll()
+    })
 
 	grift.Add("preview", func(c *grift.Context) error {
         cfg := utils.GetCfg()
