@@ -2,6 +2,7 @@ package actions
 
 import (
 	//"fmt"
+    "log"
 	"contented/utils"
 	"contented/models"
     "net/http"
@@ -44,6 +45,28 @@ func Get_Manager_ActionSuite(cfg *utils.DirConfigEntry, as *ActionSuite) Content
         return models.DB
     }
     return CreateManager(cfg, get_conn, get_params)
+}
+
+
+func GetMediaByDirName(test_dir_name string) (*models.Container, models.MediaContainers) {
+    dir, _ := envy.MustGet("DIR")
+    cfg := utils.GetCfg()
+    cfg.Dir = dir
+    cnts := utils.FindContainers(dir)
+
+    var cnt *models.Container = nil
+    for _, c := range cnts {
+        if c.Name == test_dir_name {
+            cnt = &c
+            break
+        }
+    }
+    if cnt == nil {
+        log.Panic("Could not find the directory: " +  test_dir_name)
+    }
+    media := utils.FindMedia(*cnt, 42, 0)
+    cnt.Total = len(media)
+    return cnt, media
 }
 
 
@@ -157,8 +180,7 @@ func (as *ActionSuite) Test_MemoryManagerPaginate() {
 }
 
 func (as *ActionSuite) Test_ManagerInitialize() {
-    cfg := init_fake_app(false)
-    cfg.UseDatabase = false
+    init_fake_app(false)
 
     ctx := getContext(as.App)
     man := GetManager(&ctx)
@@ -182,4 +204,31 @@ func (as *ActionSuite) Test_ManagerInitialize() {
         as.Equal(expect_len[c.Name], media_len, "It should have this many instances: " + c.Name )
         as.Greater(c.Total, 0, "All of them should have a total assigned")
     }
+}
+
+func (as *ActionSuite) Test_ManagerDB() {
+    models.DB.TruncateAll()
+
+    cfg := utils.GetCfg()
+    cfg.UseDatabase = true
+    init_fake_app(true)
+
+    cnt, media := GetMediaByDirName("dir1")
+    as.Equal("dir1", cnt.Name, "It should be the right dir")
+    as.Equal(12, cnt.Total, "The container total should be this for dir1")
+    as.Equal(12, len(media))
+
+    c_err := models.DB.Create(cnt)
+    as.NoError(c_err)
+    for _, mc := range media {
+        models.DB.Create(&mc)
+    }
+
+    man := Get_Manager_ActionSuite(cfg, as)
+    q_media, err := man.ListAllMedia(0, 14)
+    as.NoError(err, "We should be able to list")
+    as.Equal(len(*q_media), 12, "there should be 12 results")
+
+    lim_media, _ := man.ListAllMedia(0, 3)
+    as.Equal(3, len(*lim_media),"The DB should be setup with 10 items")
 }
