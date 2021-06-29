@@ -4,7 +4,6 @@ import (
     //"path/filepath"
     "os"
     "io/ioutil"
-    "log"
 	"contented/models"
 	"contented/utils"
     //"time"
@@ -17,25 +16,7 @@ import (
 )
 
 func GetScreens() (*models.Container, models.MediaContainers) {
-	dir, _ := envy.MustGet("DIR")
-
-    cfg := utils.GetCfg()
-    cfg.Dir = dir
-    cfg.CoreCount = 3
-    cnts := utils.FindContainers(dir)
-
-    var screenCnt *models.Container = nil
-    for _, c := range cnts {
-        if c.Name == "screens" {
-            screenCnt = &c
-        }
-    }
-    if screenCnt == nil {
-        log.Panic("Could not find the screens directory")
-    }
-    media := utils.FindMedia(*screenCnt, 4, 0)
-    screenCnt.Total = len(media)
-    return screenCnt, media
+    return GetMediaByDirName("screens")
 }
 
 func SetupScreensPreview(as *ActionSuite) (*models.Container, models.MediaContainers) {
