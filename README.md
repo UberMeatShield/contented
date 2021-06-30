@@ -78,11 +78,11 @@ This is pretty much just a holder for getting GoLang, GoBuffalo and Angular tryi
 
 Browse over a set of images (eventually it should expand to video).
 
-wasd => Navigate up and down
-f => Fully load all the directory contents
-x => Download. 
-e => Fullscreen
-q => Close Fullscreen
+    wasd => Navigate up and down
+    f => Fully load all the directory contents
+    x => Download. 
+    e => Fullscreen
+    q => Close Fullscreen
 
 [Example](mocks/content/ExampleLoaded.png)
 
