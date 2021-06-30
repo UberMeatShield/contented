@@ -32,9 +32,9 @@ var _ = grift.Namespace("db", func() {
     // It really feels like a grift should do a better command line handler
     // TODO: It must right?  Find it at some point
 	grift.Add("nuke", func(c *grift.Context) error {
-        _, d_err := envy.MustGet("NUKE_IT")
-        if d_err != nil {
-            return errors.New("NUKE_IT env must be defined in order to delete")
+        nuke, d_err := envy.MustGet("NUKE_IT")
+        if d_err != nil or nuke != "y"{
+            return errors.New("NUKE_IT env must be defined and set to 'y' to delete")
         }
         return models.DB.TruncateAll()
     })
