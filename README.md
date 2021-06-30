@@ -84,4 +84,6 @@ x => Download.
 e => Fullscreen
 q => Close Fullscreen
 
+[Example](mocks/content/ExampleLoaded.png)
+
 [Powered by Buffalo](http://gobuffalo.io)
