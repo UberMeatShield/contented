@@ -8,18 +8,19 @@ with the usual http downloads, headers and ajax support in GoLang.
 
 ## Database Setup
 
-This is done via docker right now, if you just do docker-compose up it will get you postgres, but that is not required.
+This is done via docker right now, if you just run docker compose up -d db it will get you postgres, but that is not required.
 To enable database support you then edit the .env file and set USE_DATABASE="true".  By default it will just use memory
 to load up the contents in your DIR environment file (fully qualified).
 
-The first thing you need to do is open up the "database.yml" file and edit it to use the correct usernames, passwords, hosts, etc... that are appropriate for your environment.  These are correct for the default dev instance.
+The first thing you need to do is open up the "database.yml" file and edit it to use the correct 
+usernames, passwords, hosts, etc... that are appropriate for your environment.  These are correct 
+for the default dev instance.
 
 ### Create Your Databases (Not required)
 
 There is a docker compose file that you can use to bring up a postgres db for development.  You can also then reset the database using buff
 
-    $ docker-compose up -d
-
+    $ docker-compose up -d db
     $ buffalo pop create -a
     $ buffalo pop reset
 
@@ -31,6 +32,10 @@ run the db grift to populate the db.
 Creating previews for larger images can be done only with the database version at this time (not memory).
 
     $ buffalo task db:preview
+
+Nuking out the current set of loaded data that is in the db..
+
+    $ export NUKE_IT=y && buffalo task db:nuke
 
 
 ###  Development
@@ -45,7 +50,7 @@ Start by running yarn install in order to get all the required javascript and ty
 
 TODO: Make it so the base gulp run is a little smarter, buffalo dev is SUPPOSED to do solid reloads on file
 change but it is actually kinda sketchy.
-TODO: maybe stop using buffalo dev and instead rebuild and kick it manually...
+TODO: Maybe stop using buffalo dev and instead rebuild and kick it manually...?
 
 ## Starting the Application
 
@@ -71,12 +76,14 @@ and kick off the tests again.  I keep hoping buffalo will add something like ng 
 
 This is pretty much just a holder for getting GoLang, GoBuffalo and Angular trying to play together.
 
-Browsee over a set of images (expand to video?)
+Browse over a set of images (eventually it should expand to video).
 
-wasd => Navigate up and down
-f => Fully load all the directory contents
-x => Download. 
-e => Fullscreen
-q => Close Fullscreen
+    wasd => Navigate up and down
+    f => Fully load all the directory contents
+    x => Download. 
+    e => Fullscreen
+    q => Close Fullscreen
+
+[Example](mocks/content/ExampleLoaded.png)
 
 [Powered by Buffalo](http://gobuffalo.io)
