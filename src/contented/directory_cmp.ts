@@ -1,7 +1,7 @@
 import {OnInit, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
 import {ContentedService} from './contented_service';
 
-import {Directory, ImgContainer} from './directory';
+import {Directory, MediaContainer} from './directory';
 import * as _ from 'lodash';
 
 @Component({
@@ -14,14 +14,14 @@ export class DirectoryCmp implements OnInit {
     @Input() previewWidth: number;
     @Input() previewHeight: number;
 
-    @Input() currentViewItem: ImgContainer;
+    @Input() currentViewItem: MediaContainer;
     @Input() maxRendered: number = 8; // Default setting for how many should be visible at any given time
     @Input() maxPrevItems: number = 2; // When scrolling through a dir, how many previous items should be visible
 
     @Output() clickedItem: EventEmitter<any> = new EventEmitter<any>();
 
     // @Output clickEvt: EventEmitter<any>;
-    public visibleSet: Array<ImgContainer>; // The currently visible set of items from in the directory
+    public visibleSet: Array<MediaContainer>; // The currently visible set of items from in the directory
 
     constructor() {
 
@@ -44,7 +44,7 @@ export class DirectoryCmp implements OnInit {
         console.log("Img Loaded", img.naturalHeight, img.naturalWidth, img);
     }
 
-    public imgClicked(imgContainer: ImgContainer) {
+    public imgClicked(imgContainer: MediaContainer) {
         console.log("Img clicked", imgContainer);
         this.clickedItem.emit({dir: this.directory, item: imgContainer});
     }

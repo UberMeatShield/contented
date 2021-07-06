@@ -1,6 +1,6 @@
 import {OnInit, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
 import {ContentedService} from './contented_service';
-import {Directory, ImgContainer} from './directory';
+import {Directory, MediaContainer} from './directory';
 import {finalize, switchMap} from 'rxjs/operators';
 
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
@@ -21,7 +21,7 @@ export class ContentedCmp implements OnInit {
     public previewWidth: number = 200; // Based on current client page sizes, scale the preview images natually
     public previewHeight: number = 200; // height for the previews ^
 
-    public currentViewItem: ImgContainer; // The current indexed item that is considered selected
+    public currentViewItem: MediaContainer; // The current indexed item that is considered selected
     public currentDir: Directory;
     public fullScreen: boolean = false; // Should we view fullscreen the current item
     public directories: Array<Directory>; // Current set of visible directories

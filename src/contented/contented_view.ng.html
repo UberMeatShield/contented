@@ -1,4 +1,5 @@
 <div class="contented-view-cmp">
+
   <span *ngIf="container" class="max-full-url-path">
     <a href="{{container?.fullUrl}}">
       {{container.src}}({{container.content_type}})
@@ -7,8 +8,25 @@
   <span *ngIf="!container">
     No Url selected
   </span>
-  <div *ngIf="container" class="container-full-view" 
-    style="width:{{maxWidth}}px; height: {{maxHeight}}px;"> 
-    <img class="full-view-img" [src]="container?.fullUrl">
+
+  <div *ngIf="container"
+    class="container-full-view" 
+    style="width:{{maxWidth}}px; height: {{maxHeight}}px;"
+  >
+    <img *ngIf="container?.isImage()" 
+      class="full-view-img" 
+      [src]="container.fullUrl"
+    >
+
+    <!-- TODO: should the fullscreen for a video should be totally different -->
+    <span *ngIf="container.isVideo()"
+      class="full-view-video"
+    >
+      {{container.fullUrl}}
+    VIDEO
+    </span>
+
+
   </div>
+
 </div>

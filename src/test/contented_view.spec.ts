@@ -64,13 +64,14 @@ describe('TestingContentedViewCmp', () => {
     });
 
     it('Can render an image and render', () => {
+        comp.container = null;
         fixture.detectChanges();
         expect($('.container-full-view').length).toBe(0, "It should not be visible");
 
         let img = MockData.getImg();
         comp.container = img;
         fixture.detectChanges();
-        expect($('.container-full-view').length).toBe(1, "It should not be visible");
+        expect($('.container-full-view').length).toBe(1, "It should be visible");
     });
 });
 

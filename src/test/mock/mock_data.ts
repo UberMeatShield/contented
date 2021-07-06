@@ -1,6 +1,6 @@
 // TODO: This was from before the httpMock was actually good, just use httpMockController now
 import {Observable, from as observableFrom} from 'rxjs';
-import {Directory, ImgContainer} from './../../contented/directory';
+import {Directory, MediaContainer} from './../../contented/directory';
 import {ApiDef} from './../../contented/api_def';
 import * as _ from 'lodash';
 
@@ -73,7 +73,7 @@ class MockLoader {
     }
 
     public getImg() {
-        let img = new ImgContainer();
+        let img = new MediaContainer();
         img.fromJson(this.getMedia("10", 1)[0]);
         return img;
     }
