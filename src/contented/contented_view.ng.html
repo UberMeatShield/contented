@@ -13,20 +13,15 @@
     class="container-full-view" 
     style="width:{{maxWidth}}px; height: {{maxHeight}}px;"
   >
+    {{container?.content_type}}
     <img *ngIf="container?.isImage()" 
       class="full-view-img" 
       [src]="container.fullUrl"
     >
 
     <!-- TODO: should the fullscreen for a video should be totally different -->
-    <span *ngIf="container.isVideo()"
-      class="full-view-video"
-    >
-      {{container.fullUrl}}
-    VIDEO
-    </span>
-
-
+    <video *ngIf="container.isVideo()" [width]="maxWidth" height="maxHeight" controls>
+        <source [src]="container.fullUrl" [type]="container.content_type">
+    </video>
   </div>
-
 </div>

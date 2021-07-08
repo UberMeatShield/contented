@@ -33,7 +33,7 @@ var _ = grift.Namespace("db", func() {
     // TODO: It must right?  Find it at some point
 	grift.Add("nuke", func(c *grift.Context) error {
         nuke, d_err := envy.MustGet("NUKE_IT")
-        if d_err != nil or nuke != "y"{
+        if d_err != nil || nuke != "y" {
             return errors.New("NUKE_IT env must be defined and set to 'y' to delete")
         }
         return models.DB.TruncateAll()
