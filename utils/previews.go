@@ -3,14 +3,19 @@ package utils
 import (
 	"errors"
 	"image"
-	"image/jpeg"
-	"image/png"
 	"log"
 	"os"
+	"bytes"
+	"fmt"
+	"io"
+	"image/jpeg"
+	"image/png"
 	"path/filepath"
     "contented/models"
 	"github.com/nfnt/resize"
     "github.com/gofrs/uuid"
+    "github.com/disintegration/imaging"
+	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
 // Used in the case of async processing when creating Preview results
@@ -128,4 +133,38 @@ func GetImagePreview(path string, filename string, dstPath string, pIfSize int64
 	}
     // No Preview is required
 	return "", nil
+}
+
+
+// TODO: Validate if this works
+func ExampleReadFrameAsJpeg(inFileName string, frameNum int) io.Reader {
+	buf := bytes.NewBuffer(nil)
+	err := ffmpeg.Input(inFileName).
+		Filter("select", ffmpeg.Args{fmt.Sprintf("gte(n,%d)", frameNum)}).
+		Output("pipe:", ffmpeg.KwArgs{"vframes": 1, "format": "image2", "vcodec": "mjpeg"}).
+		WithOutput(buf, os.Stdout).
+		Run()
+	if err != nil {
+		panic(err)
+	}
+	return buf
+}
+
+func jpeg_from_movie(movie_path string) {
+    reader := ExampleReadFrameAsJpeg("./sample_data/in1.mp4", 5)
+    img, err := imaging.Decode(reader)
+    if err != nil {
+        log.Fatal(err)
+    }
+    err = imaging.Save(img, "./sample_data/out1.jpeg")
+    if err != nil {
+        log.Fatal(err)
+    }
+}
+
+func create_gif_from_video(input_file_fq_path string, output_file_fq_path string) error{
+    err := ffmpeg.Input("./sample_data/in1.mp4", ffmpeg.KwArgs{"ss": "1"}).
+        Output("./sample_data/out1.gif", ffmpeg.KwArgs{"s": "320x240", "pix_fmt": "rgb24", "t": "3", "r": "3"}).
+        OverWriteOutput().Run()
+    return err
 }

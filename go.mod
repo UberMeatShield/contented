@@ -3,6 +3,7 @@ module contented
 go 1.16
 
 require (
+	github.com/disintegration/imaging v1.6.2
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
@@ -41,6 +42,7 @@ require (
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/cobra v1.1.3 // indirect
+	github.com/u2takey/ffmpeg-go v0.3.0
 	github.com/unrolled/secure v1.0.9
 	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e // indirect
 	golang.org/x/net v0.0.0-20210614182718-04defd469f4e // indirect
