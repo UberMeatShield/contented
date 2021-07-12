@@ -1,5 +1,5 @@
 import {OnInit, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
-import {ImgContainer} from './directory';
+import {MediaContainer} from './directory';
 
 @Component({
     selector: 'contented-view',
@@ -7,7 +7,7 @@ import {ImgContainer} from './directory';
 })
 export class ContentedViewCmp {
 
-    @Input() container: ImgContainer;
+    @Input() container: MediaContainer;
     public maxWidth: number;
     public maxHeight: number;
 
