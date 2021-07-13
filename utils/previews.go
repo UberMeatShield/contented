@@ -3,6 +3,7 @@ package utils
 import (
 	"errors"
 	"image"
+    "strings"
 	"log"
 	"os"
 	"bytes"
@@ -80,7 +81,7 @@ func CreateImagePreview(srcImg *os.File, dstFile string, contentType string) (st
 		img, dErr = png.Decode(srcImg)
 	} else if contentType == "image/jpeg" {
 		img, dErr = jpeg.Decode(srcImg)
-	} else {
+    } else {
 		log.Printf("No provided method for this file type %s", contentType)
 		fname, _ := srcImg.Stat()
 		return "", errors.New("Cannot handle type for file: " + fname.Name())
@@ -128,7 +129,10 @@ func GetImagePreview(path string, filename string, dstPath string, pIfSize int64
 	defer srcImg.Close()
 
 	// Check to see if the image is ACTUALLY over a certain size to be worth previewing
-	if ShouldCreatePreview(srcImg, pIfSize) == true {
+    if strings.Contains(contentType, "video") {
+        return CreateVideoPreview(fqFile, dstFile, contentType)
+    }
+	if strings.Contains(contentType, "image") && ShouldCreatePreview(srcImg, pIfSize) == true {
 		return CreateImagePreview(srcImg, dstFile, contentType)
 	}
     // No Preview is required
@@ -137,6 +141,8 @@ func GetImagePreview(path string, filename string, dstPath string, pIfSize int64
 
 
 // TODO: Validate if this works
+// TODO: Determine how to create a composit
+// TODO: Determine if the gif preview just works.
 func ExampleReadFrameAsJpeg(inFileName string, frameNum int) io.Reader {
 	buf := bytes.NewBuffer(nil)
 	err := ffmpeg.Input(inFileName).
@@ -150,18 +156,25 @@ func ExampleReadFrameAsJpeg(inFileName string, frameNum int) io.Reader {
 	return buf
 }
 
-func jpeg_from_movie(movie_path string) {
-    reader := ExampleReadFrameAsJpeg("./sample_data/in1.mp4", 5)
+func CreateVideoPreview(srcFile string, dstFile string, contentType string) (string, error) {
+    reader := ExampleReadFrameAsJpeg(srcFile, 2)
     img, err := imaging.Decode(reader)
     if err != nil {
-        log.Fatal(err)
+        log.Fatalf("Failed to decode the image from the processing %s\n", err)
+        return "", err
     }
-    err = imaging.Save(img, "./sample_data/out1.jpeg")
+
+    // Is this something that should have a close?
+    dst_w_ext := dstFile + ".png"
+    err = imaging.Save(img, dst_w_ext)
     if err != nil {
-        log.Fatal(err)
+        log.Fatalf("Could not save the image %s\n", err)
+        return "", err
     }
+    return dst_w_ext, err
 }
 
+// Oh gods this is a lot https://engineering.giphy.com/how-to-make-gifs-with-ffmpeg/
 func create_gif_from_video(input_file_fq_path string, output_file_fq_path string) error{
     err := ffmpeg.Input("./sample_data/in1.mp4", ffmpeg.KwArgs{"ss": "1"}).
         Output("./sample_data/out1.gif", ffmpeg.KwArgs{"s": "320x240", "pix_fmt": "rgb24", "t": "3", "r": "3"}).
