@@ -76,11 +76,15 @@ func Test_VideoPreview(t *testing.T) {
 
 	// Add a before each to nuke the dstDir and create it
 	CleanupPreviewDir(dstDir)
+    expectDst, dErr := PreviewExists(testFile, dstDir, "video/hack")
+    if dErr != nil {
+        t.Errorf("The dest file already exists %s\n", expectDst)
+    }
+
 	pLoc, err := GetImagePreview(srcDir, testFile, dstDir, 10)
 	if err != nil {
 		t.Errorf("Failed to get Video preview %v", err)
 	}
-	expectDst := filepath.Join(dstDir, testFile)
 	if expectDst != pLoc {
 		t.Errorf("Failed to find the expected location %s was %s", expectDst, pLoc)
 	}

@@ -60,10 +60,15 @@ func ShouldCreatePreview(f *os.File, fsize int64) bool {
 	return false
 }
 
-//  No need to check
-func PreviewExists(filename string, dstPath string) (string, error) {
+//  No need to check (hate)
+func PreviewExists(filename string, dstPath string, contentType string) (string, error) {
 	// Does the preview already exist, return that
-	dstFile := filepath.Join(dstPath, filename)
+    dstFilename := filename
+    if strings.Contains(contentType, "video") { // hate
+        // The image library for video previews sets the output by ext (not a video)
+        dstFilename +=  ".png"  
+    }
+	dstFile := filepath.Join(dstPath, dstFilename)
 	if _, e_err := os.Stat(dstFile); os.IsNotExist(e_err) {
 		return dstFile, nil
 	}
@@ -106,17 +111,18 @@ func CreateImagePreview(srcImg *os.File, dstFile string, contentType string) (st
 // Make sure dstPath already exists before you call this (MakePreviewPath)
 func GetImagePreview(path string, filename string, dstPath string, pIfSize int64) (string, error) {
 
-	// HMMM (if exists do not do anything)
-	dstFile, dErr := PreviewExists(filename, dstPath)
-	if dErr != nil {
-		return dstFile, dErr
-	}
-
 	// Try and determine the content type (required for doing encoding and decoding)
 	contentType, tErr := GetMimeType(path, filename)
 	if tErr != nil {
 		log.Fatal(tErr)
 		return "Could not determine img type", tErr
+	}
+
+    // Determine the preview based on content type 
+	dstFile, dErr := PreviewExists(filename, dstPath, contentType)
+	if dErr != nil {
+        // TODO: Maybe this is fine to just return the preview exists
+		return dstFile, dErr
 	}
 
 	// The file we are going to check about making a preview of
@@ -139,11 +145,9 @@ func GetImagePreview(path string, filename string, dstPath string, pIfSize int64
 	return "", nil
 }
 
-
-// TODO: Validate if this works
-// TODO: Determine how to create a composit
 // TODO: Determine if the gif preview just works.
-func ExampleReadFrameAsJpeg(inFileName string, frameNum int) io.Reader {
+// TODO: Determine how the heck to check length and output a composite or a few screens.
+func ReadFrameAsJpeg(inFileName string, frameNum int) io.Reader {
 	buf := bytes.NewBuffer(nil)
 	err := ffmpeg.Input(inFileName).
 		Filter("select", ffmpeg.Args{fmt.Sprintf("gte(n,%d)", frameNum)}).
@@ -156,8 +160,9 @@ func ExampleReadFrameAsJpeg(inFileName string, frameNum int) io.Reader {
 	return buf
 }
 
+// TODO: The preview it creates is pretty large, enable lossy compression
 func CreateVideoPreview(srcFile string, dstFile string, contentType string) (string, error) {
-    reader := ExampleReadFrameAsJpeg(srcFile, 2)
+    reader := ReadFrameAsJpeg(srcFile, 2)
     img, err := imaging.Decode(reader)
     if err != nil {
         log.Fatalf("Failed to decode the image from the processing %s\n", err)
@@ -165,7 +170,7 @@ func CreateVideoPreview(srcFile string, dstFile string, contentType string) (str
     }
 
     // Is this something that should have a close?
-    dst_w_ext := dstFile + ".png"
+    dst_w_ext := dstFile
     err = imaging.Save(img, dst_w_ext)
     if err != nil {
         log.Fatalf("Could not save the image %s\n", err)
