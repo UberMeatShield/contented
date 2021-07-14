@@ -28,7 +28,7 @@ import (
 
 var expect_len = map[string]int{
     "dir1": 12,
-    "dir2": 2,
+    "dir2": 3,
     "dir3": 6,
     "screens": 4,
 }

@@ -67,7 +67,7 @@ func Test_PngPreview(t *testing.T) {
 	}
 }
 
-// Does it work when there is a png
+// Makes it so that the preview is generated
 func Test_VideoPreview(t *testing.T) {
 	var testDir, _ = envy.MustGet("DIR")
 	srcDir := filepath.Join(testDir, "dir2")
@@ -88,6 +88,11 @@ func Test_VideoPreview(t *testing.T) {
 	if expectDst != pLoc {
 		t.Errorf("Failed to find the expected location %s was %s", expectDst, pLoc)
 	}
+    // TODO: Figure out sime sizing constraints
+    _, no_file_err := os.Stat(pLoc); 
+    if no_file_err != nil {
+        t.Errorf("We had no error but the file is not on disk %s", pLoc)
+    }
 }
 
 func Test_ShouldCreate(t *testing.T) {
