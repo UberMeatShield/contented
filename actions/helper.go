@@ -231,15 +231,11 @@ func CreateMediaPreview(c *models.Container, mc *models.MediaContainer) (string,
     cntPath := filepath.Join(cfg.Dir, c.Name)
     dstPath := GetContainerPreviewDst(c)
 
-    _, exist_err :=  utils.PreviewExists(mc.Src, dstPath)
-    if exist_err != nil {
-        return "", exist_err
-    }
-
     // TODO: ensure that other content does not explode...
     dstFqPath, err := utils.GetImagePreview(cntPath, mc.Src, dstPath, cfg.PreviewOverSize)
     if err != nil {
         log.Fatal(err)
+        return "", err
     }
     return strings.ReplaceAll(dstFqPath, cntPath, ""), err
 }

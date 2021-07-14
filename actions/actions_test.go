@@ -38,6 +38,16 @@ func getContextParams(app *buffalo.App, url string, page string, per_page string
     }
 }
 
+// TODO validate octet/stream
+func is_valid_content_type(as *ActionSuite, content_type string) {
+    valid := map[string]bool{
+        "image/png": true,
+        "image/jpeg": true,
+        "application/octet-stream": true,
+        "video/mp4": true,
+    }
+	as.Contains(valid, content_type)
+}
 
 // This function is now how the init method should function till caching is implemented
 // As the internals / guts are functional using the new models the creation of models
@@ -126,12 +136,11 @@ func (as *ActionSuite) Test_ViewRef() {
 
 	// TODO: Make it better about the type checking
 	// TODO: Make it always pass in the file ID
-    valid := map[string]bool{"image/png": true, "image/jpeg": true, "application/octet-stream": true}
 	for _, mc := range *mcs {
 		res := as.HTML("/view/" + mc.ID.String()).Get()
 		as.Equal(http.StatusOK, res.Code)
 		header := res.Header()
-		as.Contains(valid, header.Get("Content-Type"))
+        is_valid_content_type(as, header.Get("Content-Type"))
 	}
 }
 
@@ -139,7 +148,6 @@ func (as *ActionSuite) Test_ViewRef() {
 func (as *ActionSuite) Test_ContentDirDownload() {
 	init_fake_app(false)
 
-    valid := map[string]bool{"image/png": true, "image/jpeg": true, "application/octet-stream": true}
     ctx := getContext(as.App)
     man := GetManager(&ctx)
     mcs, err := man.ListAllMedia(2, 2)
@@ -151,7 +159,7 @@ func (as *ActionSuite) Test_ContentDirDownload() {
 		res := as.HTML("/download/" + mc.ID.String()).Get()
 		as.Equal(http.StatusOK, res.Code)
 		header := res.Header()
-		as.Contains(valid, header.Get("Content-Type"))
+        is_valid_content_type(as, header.Get("Content-Type"))
     }
 }
 
@@ -186,13 +194,12 @@ func (as *ActionSuite) Test_PreviewFile() {
     mcs, err := man.ListAllMedia(1, 200)
     as.NoError(err)
 
-	valid := map[string]bool{"image/png": true, "image/jpeg": true}
 	for _, mc := range *mcs {
 		res := as.HTML("/preview/" + mc.ID.String()).Get()
 		as.Equal(http.StatusOK, res.Code)
 
 		header := res.Header()
-		as.Contains(valid, header.Get("Content-Type"))
+        is_valid_content_type(as, header.Get("Content-Type"))
 	}
 }
 
@@ -203,13 +210,12 @@ func (as *ActionSuite) Test_FullFile() {
     mcs, err := man.ListAllMedia(1, 200)
     as.NoError(err)
 
-	valid := map[string]bool{"image/png": true, "image/jpeg": true}
 	for _, mc := range *mcs {
 		res := as.HTML("/view/" + mc.ID.String()).Get()
 		as.Equal(http.StatusOK, res.Code)
 
 		header := res.Header()
-		as.Contains(valid, header.Get("Content-Type"))
+        is_valid_content_type(as, header.Get("Content-Type"))
 	}
 }
 

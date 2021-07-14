@@ -51,7 +51,7 @@ func (as *ActionSuite) Test_InitialCreation() {
 
     media := models.MediaContainers{}
     as.DB.All(&media)
-    as.Equal(24, len(media), "The mocks have a specific expected number of items")
+    as.Equal(25, len(media), "The mocks have a specific expected number of items")
 }
 
 func (as *ActionSuite) Test_CfgIncExcFiles() {
@@ -67,15 +67,19 @@ func (as *ActionSuite) Test_CfgIncExcFiles() {
 
     media := models.MediaContainers{}
     as.DB.All(&media)
-    as.Equal(0, len(media), "There should be no matches")
+    as.Equal(1, len(media), "There should be one match")
+    as.Equal(media[0].ContentType, "video/mp4", "It should be the video")
 
+    clear_err := models.DB.TruncateAll()
+    as.NoError(clear_err)
     cfg.ExcFiles = utils.ExcludeNoFiles
     cfg.IncFiles = utils.CreateMatcher("", "jpeg")
 
     err_png := CreateInitialStructure(cfg)
     as.NoError(err_png)
 
-    as.DB.All(&media)
+    jpeg_media := models.MediaContainers{}
+    as.DB.All(&jpeg_media)
     as.Equal(1, len(media), "There is one jpeg")
 }
 

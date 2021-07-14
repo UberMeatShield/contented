@@ -4,7 +4,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-
 	"github.com/gobuffalo/envy"
 )
 
@@ -59,7 +58,6 @@ func Test_PngPreview(t *testing.T) {
 	// Add a before each to nuke the dstDir and create it
 	CleanupPreviewDir(dstDir)
 	pLoc, err := GetImagePreview(srcDir, testFile, dstDir, 10)
-
 	if err != nil {
 		t.Errorf("Failed to get a preview %v", err)
 	}
@@ -67,6 +65,34 @@ func Test_PngPreview(t *testing.T) {
 	if expectDst != pLoc {
 		t.Errorf("Failed to find the expected location %s was %s", expectDst, pLoc)
 	}
+}
+
+// Makes it so that the preview is generated
+func Test_VideoPreview(t *testing.T) {
+	var testDir, _ = envy.MustGet("DIR")
+	srcDir := filepath.Join(testDir, "dir2")
+	dstDir := filepath.Join(srcDir, "previews_dir")
+	testFile := "donut.mp4"
+
+	// Add a before each to nuke the dstDir and create it
+	CleanupPreviewDir(dstDir)
+    expectDst, dErr := PreviewExists(testFile, dstDir, "video/hack")
+    if dErr != nil {
+        t.Errorf("The dest file already exists %s\n", expectDst)
+    }
+
+	pLoc, err := GetImagePreview(srcDir, testFile, dstDir, 10)
+	if err != nil {
+		t.Errorf("Failed to get Video preview %v", err)
+	}
+	if expectDst != pLoc {
+		t.Errorf("Failed to find the expected location %s was %s", expectDst, pLoc)
+	}
+    // TODO: Figure out sime sizing constraints
+    _, no_file_err := os.Stat(pLoc); 
+    if no_file_err != nil {
+        t.Errorf("We had no error but the file is not on disk %s", pLoc)
+    }
 }
 
 func Test_ShouldCreate(t *testing.T) {
