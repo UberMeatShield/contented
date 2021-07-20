@@ -100,6 +100,20 @@ describe('TestingContentedCmp', () => {
         expect($('.current-content-dir').length).toBe(1, "We should only have 1 selected dir");
     }));
 
+    it("Should be able to tell you that nothing was loaded up", fakeAsync(() => {
+        expect(comp.emptyMessage).toBe(null);
+        expect($('.no-content').length).toBe(0, "Nothing is loaded.");
+        fixture.detectChanges();
+
+        let containersReq = httpMock.expectOne(req => req.url === ApiDef.contented.containers);
+        containersReq.flush([]);
+        tick(1000);
+        fixture.detectChanges();
+
+        expect(comp.emptyMessage).not.toBe(null, "Now we should have an error message");
+        expect($('.no-content').length).toBe(1, "We should now have a visible UI msg");
+    }));
+
 
     it('Should handle a click event to show a particular image.', fakeAsync(() => {
         fixture.detectChanges();

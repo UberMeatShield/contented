@@ -1,4 +1,8 @@
 <div class="contented-cmp">
+  <!-- TODO: A more generic error handling setup -->
+  <div class="error no-content" *ngIf="emptyMessage">
+    {{emptyMessage}}
+  </div>
 
   <div *ngIf="fullScreen">
     <contented-view [container]="getCurrentLocation()"></contented-view>
