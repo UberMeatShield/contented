@@ -18,6 +18,7 @@ export class ContentedCmp implements OnInit {
     @Input() idx: number = 0; // Which item within the directory are we viewing
 
     public loading: boolean = false;
+    public emptyMessage = null;
     public previewWidth: number = 200; // Based on current client page sizes, scale the preview images natually
     public previewHeight: number = 200; // height for the previews ^
 
@@ -135,13 +136,13 @@ export class ContentedCmp implements OnInit {
 
     public dirResults(dir: Directory, response) {
         console.log("Results loading, what is in the results?", response);
-        // TODO: merge the crap
         dir.addContents(dir.buildImgs(response));
     }
 
     public reset() {
         this.idx = 0;
         this.allD = [];
+        this.emptyMessage = null;
     }
 
     public getVisibleDirectories() {
@@ -245,10 +246,13 @@ export class ContentedCmp implements OnInit {
 
     public previewResults(directories: Array<Directory>) {
         console.log("Results returned from the preview results.", directories);
-        this.allD = directories;
-        this.loadView(this.idx, this.rowIdx);
+        this.allD = directories || [];
+        if (_.isEmpty(directories)) {
+            this.emptyMessage = "No Directories found, did you load the DB?";
+        } else {
+            this.loadView(this.idx, this.rowIdx);
+        }
         return this.allD;
-
     }
 
     public fullLoadDir(dir: Directory) {

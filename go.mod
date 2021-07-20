@@ -9,7 +9,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/gobuffalo/buffalo v0.16.23
-	github.com/gobuffalo/buffalo-pop/v2 v2.3.0 // indirect
+	github.com/gobuffalo/buffalo-pop/v2 v2.3.0
 	github.com/gobuffalo/envy v1.9.0
 	github.com/gobuffalo/fizz v1.13.0 // indirect
 	github.com/gobuffalo/flect v0.2.3 // indirect
@@ -31,7 +31,7 @@ require (
 	github.com/jackc/pgproto3/v2 v2.1.0 // indirect
 	github.com/jmoiron/sqlx v1.3.4 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
-	github.com/markbates/grift v1.5.0 // indirect
+	github.com/markbates/grift v1.5.0
 	github.com/mattn/go-isatty v0.0.13 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.14 // indirect
 	github.com/monoculum/formam v0.0.0-20210523135142-1af3317b7b9b // indirect
