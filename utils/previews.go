@@ -169,20 +169,25 @@ func CreateVideoPreview(srcFile string, dstFile string, contentType string) (str
         return "", err
     }
 
-    // Is this something that should have a close?
-    dst_w_ext := dstFile
-    err = imaging.Save(img, dst_w_ext)
+    // TODO: Make it so the 640 is a config setting
+    resizedImg := imaging.Resize(img, 640, 0, imaging.Lanczos)
+    err = imaging.Save(resizedImg, dstFile)
+
     if err != nil {
-        log.Fatalf("Could not save the image %s\n", err)
+        log.Fatalf("Could not save the image %s with error %s\n", dstFile, err)
         return "", err
     }
-    return dst_w_ext, err
+    return dstFile, err
 }
 
 // Oh gods this is a lot https://engineering.giphy.com/how-to-make-gifs-with-ffmpeg/
-func create_gif_from_video(input_file_fq_path string, output_file_fq_path string) error{
-    err := ffmpeg.Input("./sample_data/in1.mp4", ffmpeg.KwArgs{"ss": "1"}).
-        Output("./sample_data/out1.gif", ffmpeg.KwArgs{"s": "320x240", "pix_fmt": "rgb24", "t": "3", "r": "3"}).
+// There is a way to setup a palette file (maybe not via the lib)
+func CreateGifVideo(srcFile string, dstFile string) (string, error) {
+    err := ffmpeg.Input(srcFile, ffmpeg.KwArgs{"ss": "5"}).
+        Output(dstFile, ffmpeg.KwArgs{"s": "320x240", "pix_fmt": "rgb24", "t": "3", "r": "3"}).
         OverWriteOutput().Run()
-    return err
+    if err != nil {
+        log.Fatalf("Failed to create the gif output %s\n with err: %s\n", dstFile, err)
+    }
+    return dstFile, err
 }

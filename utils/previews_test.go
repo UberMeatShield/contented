@@ -17,7 +17,7 @@ func CleanupPreviewDir(dstDir string) {
 func Test_JpegPreview(t *testing.T) {
 	var testDir, _ = envy.MustGet("DIR")
 	srcDir := filepath.Join(testDir, "dir1")
-	dstDir := filepath.Join(srcDir, "previews_dir")
+	dstDir := filepath.Join(srcDir, "container_previews")
 	testFile := "this_is_jp_eg"
 
 	CleanupPreviewDir(dstDir)
@@ -52,7 +52,7 @@ func Test_JpegPreview(t *testing.T) {
 func Test_PngPreview(t *testing.T) {
 	var testDir, _ = envy.MustGet("DIR")
 	srcDir := filepath.Join(testDir, "dir1")
-	dstDir := filepath.Join(srcDir, "previews_dir")
+	dstDir := filepath.Join(srcDir, "container_previews")
 	testFile := "this_is_p_ng"
 
 	// Add a before each to nuke the dstDir and create it
@@ -68,10 +68,10 @@ func Test_PngPreview(t *testing.T) {
 }
 
 // Makes it so that the preview is generated
-func Test_VideoPreview(t *testing.T) {
+func Test_VideoPreviewPNG(t *testing.T) {
 	var testDir, _ = envy.MustGet("DIR")
 	srcDir := filepath.Join(testDir, "dir2")
-	dstDir := filepath.Join(srcDir, "previews_dir")
+	dstDir := filepath.Join(srcDir, "container_previews")
 	testFile := "donut.mp4"
 
 	// Add a before each to nuke the dstDir and create it
@@ -93,6 +93,33 @@ func Test_VideoPreview(t *testing.T) {
     if no_file_err != nil {
         t.Errorf("We had no error but the file is not on disk %s", pLoc)
     }
+    // TODO: Should probably check the size as well
+}
+
+func Test_VideoPreviewGif(t *testing.T) {
+	var testDir, _ = envy.MustGet("DIR")
+	srcDir := filepath.Join(testDir, "dir2")
+	dstDir := filepath.Join(srcDir, "container_previews")
+	testFile := "donut.mp4"
+
+	CleanupPreviewDir(dstDir)
+    expectDst, dErr := PreviewExists(testFile, dstDir, "video/hack")
+    if dErr != nil {
+        t.Errorf("The dest file already exists %s\n", expectDst)
+    }
+    
+    vidFile := filepath.Join(srcDir, testFile)
+    destFile := filepath.Join(dstDir, testFile + ".gif")
+
+    _, err := CreateGifVideo(vidFile, destFile)
+    if err != nil {
+        t.Errorf("Failed to create a gif preview %s", err)
+    }
+    _, no_file_err := os.Stat(destFile); 
+    if no_file_err != nil {
+        t.Errorf("We had no error but the file is not on disk %s", destFile)
+    }
+    // TODO: Should probably check the size as well
 }
 
 func Test_ShouldCreate(t *testing.T) {
