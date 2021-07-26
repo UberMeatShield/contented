@@ -169,8 +169,10 @@ func CreateVideoPreview(srcFile string, dstFile string, contentType string) (str
         return "", err
     }
 
-    // Is this something that should have a close?
-    err = imaging.Save(img, dstFile)
+    // TODO: Make it so the 640 is a config setting
+    resizedImg := imaging.Resize(img, 640, 0, imaging.Lanczos)
+    err = imaging.Save(resizedImg, dstFile)
+
     if err != nil {
         log.Fatalf("Could not save the image %s with error %s\n", dstFile, err)
         return "", err

@@ -68,7 +68,7 @@ func Test_PngPreview(t *testing.T) {
 }
 
 // Makes it so that the preview is generated
-func Test_VideoPreview(t *testing.T) {
+func Test_VideoPreviewPNG(t *testing.T) {
 	var testDir, _ = envy.MustGet("DIR")
 	srcDir := filepath.Join(testDir, "dir2")
 	dstDir := filepath.Join(srcDir, "container_previews")
@@ -93,6 +93,7 @@ func Test_VideoPreview(t *testing.T) {
     if no_file_err != nil {
         t.Errorf("We had no error but the file is not on disk %s", pLoc)
     }
+    // TODO: Should probably check the size as well
 }
 
 func Test_VideoPreviewGif(t *testing.T) {
@@ -114,6 +115,11 @@ func Test_VideoPreviewGif(t *testing.T) {
     if err != nil {
         t.Errorf("Failed to create a gif preview %s", err)
     }
+    _, no_file_err := os.Stat(destFile); 
+    if no_file_err != nil {
+        t.Errorf("We had no error but the file is not on disk %s", destFile)
+    }
+    // TODO: Should probably check the size as well
 }
 
 func Test_ShouldCreate(t *testing.T) {
