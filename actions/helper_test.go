@@ -6,6 +6,7 @@ import (
     "io/ioutil"
 	"contented/models"
 	"contented/utils"
+    "encoding/json"
     //"time"
 	//"os"
 	//"testing"
@@ -55,19 +56,20 @@ func (as *ActionSuite) Test_InitialCreation() {
 }
 
 func (as *ActionSuite) Test_CfgIncExcFiles() {
+    models.DB.TruncateAll()
+
+    // Exclude all images
 	dir, _ := envy.MustGet("DIR")
     cfg := utils.GetCfg()
     cfg.Dir = dir
-
-    // Exclude all images
     cfg.ExcFiles = utils.CreateMatcher("", "image")
-
     err := CreateInitialStructure(cfg)
     as.NoError(err)
 
     media := models.MediaContainers{}
     as.DB.All(&media)
-    as.Equal(1, len(media), "There should be one match")
+    dbg, _ := json.Marshal(media)
+    as.Equal(1, len(media), "There should be one match: " + string(dbg))
     as.Equal(media[0].ContentType, "video/mp4", "It should be the video")
 
     clear_err := models.DB.TruncateAll()

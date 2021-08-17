@@ -19,7 +19,6 @@ let dir = {
     node:  base + 'node_modules/',
     go:    base,
     deploy: 'public/build/',
-    css: 'public/css/',
     build: base + 'public/build/',
     thirdparty: base + 'public/thirdparty',
 };
@@ -97,16 +96,8 @@ const clean = () => {
 // Initial tasks dealing with copying source.
 // Delete all the gunk out of build directories.
 // =================================================
-const watchDoc = () => {
-    watch(dir.base + 'swagger.yaml', series([copyDocs]));
-};
-
 const copyFonts = async () => {
     return src([]).pipe(dest(dir.thirdparty + '/fonts/'));
-};
-
-const copyLibCSS = async () => {
-    return src([]).pipe(dest(dir.thirdparty + '/css/'));
 };
 
 const copyDocs = async () => {
@@ -128,14 +119,22 @@ const goBuild = (done) => {
     return execCmd("go", ["build"], done);
 };
 
+// Run the tests and use the standard test directory
 const goTest = (done) => {
-      execCmd('buffalo', ['test'], done);
+    process.env.DIR = `${__dirname}/mocks/content`;
+    execCmd('buffalo', ['test'], done);
+};
+
+// Run the buffalo dev server
+const goRun = (done) => {
+    process.env.DIR = `${__dirname}/mocks/content`;
+    execCmd('buffalo', ['dev'], done);
 };
 
 // Common group tasks that make up the real watchers and deployment
 // ===============================================
-const copy = series(copyLibCSS, copyFonts);  // , copyDocs);
-copy.description = "Copy all the various library fonts, css etc.";
+const copy = series(copyFonts);  // , copyDocs);
+copy.description = "Copy all the various library fonts";
 
 const qa = series(tslint, typescriptTests, goTest);
 qa.description = "Run our tests and lint for go and typescript";
@@ -185,11 +184,10 @@ export {
     typescriptWatch,
     typescriptChanged,
     copy,
-    copyLibCSS,
     copyFonts,
     copyDocs,
-    watchDoc,
     goTest,
+    goRun,
     goBuild,
     goKillServer,
     qa,
