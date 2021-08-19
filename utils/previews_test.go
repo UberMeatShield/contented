@@ -7,12 +7,6 @@ import (
 	"github.com/gobuffalo/envy"
 )
 
-// func Test Create preview path...
-func CleanupPreviewDir(dstDir string) {
-	os.RemoveAll(dstDir + "/")
-	MakePreviewPath(dstDir)
-}
-
 // Possibly make this some sort of global test helper function (harder to do in GoLang?)
 func Test_JpegPreview(t *testing.T) {
 	var testDir, _ = envy.MustGet("DIR")
@@ -20,7 +14,7 @@ func Test_JpegPreview(t *testing.T) {
 	dstDir := GetPreviewDst(srcDir)
 	testFile := "this_is_jp_eg"
 
-	CleanupPreviewDir(dstDir)
+	ResetPreviewDir(dstDir)
 
 	var size int64 = 20000
 
@@ -56,7 +50,7 @@ func Test_PngPreview(t *testing.T) {
 	testFile := "this_is_p_ng"
 
 	// Add a before each to nuke the dstDir and create it
-	CleanupPreviewDir(dstDir)
+	ResetPreviewDir(dstDir)
 	pLoc, err := GetImagePreview(srcDir, testFile, dstDir, 10)
 	if err != nil {
 		t.Errorf("Failed to get a preview %v", err)
@@ -71,11 +65,11 @@ func Test_PngPreview(t *testing.T) {
 func Test_VideoPreviewPNG(t *testing.T) {
 	var testDir, _ = envy.MustGet("DIR")
 	srcDir := filepath.Join(testDir, "dir2")
-	dstDir := filepath.Join(srcDir, "container_previews")
+	dstDir := GetPreviewDst(srcDir)
 	testFile := "donut.mp4"
 
 	// Add a before each to nuke the dstDir and create it
-	CleanupPreviewDir(dstDir)
+	ResetPreviewDir(dstDir)
     expectDst, dErr := ErrorOnPreviewExists(testFile, dstDir, "video/hack")
     if dErr != nil {
         t.Errorf("The dest file already exists %s\n", expectDst)
@@ -103,8 +97,7 @@ func Test_FileExistsError(t *testing.T) {
 	dstDir := GetPreviewDst(srcDir)
     knownFile := "0_LargeScreen.png"
 
-	CleanupPreviewDir(dstDir)
-
+	ResetPreviewDir(dstDir)
     fqPath := GetPreviewPathDestination(knownFile, dstDir, "image/png")
     f, err := os.Create(fqPath)
     if err != nil {
@@ -132,7 +125,7 @@ func Test_VideoPreviewGif(t *testing.T) {
 	dstDir := GetPreviewDst(srcDir)
 	testFile := "donut.mp4"
 
-	CleanupPreviewDir(dstDir)
+	ResetPreviewDir(dstDir)
     expectDst, dErr := ErrorOnPreviewExists(testFile, dstDir, "video/hack")
     if dErr != nil {
         t.Errorf("The dest file already exists %s\n", expectDst)
@@ -153,6 +146,7 @@ func Test_VideoPreviewGif(t *testing.T) {
 }
 
 func Test_ShouldCreate(t *testing.T) {
+    var testDir, _ = envy.MustGet("DIR")
 	srcDir := filepath.Join(testDir, "dir1")
 	testFile := "this_is_p_ng"
 

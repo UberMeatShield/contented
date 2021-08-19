@@ -46,6 +46,11 @@ func MakePreviewPath(dstPath string) error {
 	return nil
 }
 
+func ResetPreviewDir(dstDir string) error {
+    os.RemoveAll(dstDir + "/")
+    return MakePreviewPath(dstDir)
+}
+
 func ShouldCreatePreview(f *os.File, fsize int64) bool {
 	finfo, err := f.Stat()
 	if err != nil {
@@ -58,6 +63,17 @@ func ShouldCreatePreview(f *os.File, fsize int64) bool {
 		return true
 	}
 	return false
+}
+
+// TODO: make the preview directory name configurable
+// Make it use the container Path instead of the name?
+func GetPreviewDst(fqDir string) string {
+    return filepath.Join(fqDir, "container_previews")
+}
+
+// Get the relative path for a preview
+func GetRelativePreviewPath(fqPath string, cntPath string) string {
+    return strings.ReplaceAll(fqPath, cntPath, "")
 }
 
 // In most cases it is currently considered an error if you are trying to create a preview and

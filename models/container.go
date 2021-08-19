@@ -1,8 +1,9 @@
 package models
 
 import (
-	"encoding/json"
 	"time"
+	"encoding/json"
+    "path/filepath"
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gobuffalo/validate/v3"
@@ -36,6 +37,11 @@ type ContainerMap map[uuid.UUID]Container
 func (c Containers) String() string {
 	jc, _ := json.Marshal(c)
 	return string(jc)
+}
+
+// Hmmmm (Unit tests were creating bad files in the mock dir)
+func (c Container) GetFqPath() string {
+    return filepath.Join(c.Path, c.Name)
 }
 
 // Validate gets run every time you call a "pop.Validate*" (pop.ValidateAndSave, pop.ValidateAndCreate, pop.ValidateAndUpdate) method.

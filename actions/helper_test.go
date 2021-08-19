@@ -141,7 +141,7 @@ func (as *ActionSuite) Test_CreatePreview() {
 func (as *ActionSuite) Test_CreateContainerPreviews() {
     // Get a local not in DB setup for the container and media
     // Create a bunch of previews
-    cfg := utils.GetCfg()
+    cfg := ResetConfig()
     cfg.UseDatabase = true
     cfg.PreviewOverSize = 0
 

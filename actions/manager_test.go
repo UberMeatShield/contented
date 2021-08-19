@@ -3,6 +3,8 @@ package actions
 import (
 	//"fmt"
     "log"
+    "os"
+    "path/filepath"
 	"contented/utils"
 	"contented/models"
     "net/http"
@@ -33,7 +35,6 @@ var expect_len = map[string]int{
     "screens": 4,
 }
 
-
 func Get_Manager_ActionSuite(cfg *utils.DirConfigEntry, as *ActionSuite) ContentManager{
     ctx := getContext(as.App)
     get_params := func() *url.Values {
@@ -52,7 +53,7 @@ func GetMediaByDirName(test_dir_name string) (*models.Container, models.MediaCon
     dir, _ := envy.MustGet("DIR")
     cfg := utils.GetCfg()
     cfg.Dir = dir
-    cnts := utils.FindContainers(dir)
+    cnts := utils.FindContainers(cfg.Dir)
 
     var cnt *models.Container = nil
     for _, c := range cnts {
@@ -104,10 +105,9 @@ func (as *ActionSuite) Test_ManagerMediaContainer() {
 }
 
 func (as *ActionSuite) Test_AssignManager() {
-    dir, _ := envy.MustGet("DIR")
-    cfg := utils.GetCfg()
+    cfg := ResetConfig()
     cfg.UseDatabase = false
-    utils.InitConfig(dir, cfg)
+    utils.InitConfig(cfg.Dir, cfg)
 
     mem := ContentManagerMemory{}
     mem.validate = "Memory"
@@ -155,7 +155,6 @@ func (as *ActionSuite) Test_MemoryManagerPaginate() {
     man := GetManager(&ctx)
     as.Equal(man.CanEdit(), false, "Memory manager should not be editing")
 
-    // Hate
     containers, err := man.ListContainers(1, 1)
     as.NoError(err, "It should list with pagination")
     as.Equal(1, len(*containers), "It should respect paging")
@@ -206,10 +205,46 @@ func (as *ActionSuite) Test_ManagerInitialize() {
     }
 }
 
+func (as *ActionSuite) Test_MemoryPreviewInitialization() {
+    cfg := ResetConfig()
+    utils.SetupConfigMatchers(cfg, "", "video", "", "")
+
+    // Create a fake file that would sub in by name for a preview
+    var testDir, _ = envy.MustGet("DIR")
+    srcDir := filepath.Join(testDir, "dir2")
+    dstDir := utils.GetPreviewDst(srcDir)
+    testFile := "donut.mp4"
+
+    // Create a fake preview
+    utils.ResetPreviewDir(dstDir)
+
+    fqPath := utils.GetPreviewPathDestination(testFile, dstDir, "video/mp4")
+    f, err := os.Create(fqPath)
+    if err != nil {
+        as.T().Errorf("Could not create the file at %s", fqPath)
+    }
+    _, wErr := f.WriteString("Now something exists in the file")
+    if wErr != nil {
+        as.T().Errorf("Could not write to the file at %s", fqPath)
+    }
+    as.Contains(fqPath, "donut.mp4.png")
+    f.Sync()
+
+    // Checks that if a preview exists
+    cnts, media := PopulateMemoryView(cfg.Dir)
+    as.Equal(len(cnts), 4, "We should pull in 4 directories")
+    as.Equal(len(media), 1, "But there is only one video by mime type")
+
+    for _, mc := range media {
+        as.Equal("/container_previews/donut.mp4.png", mc.Preview)
+    }
+}
+
+
 func (as *ActionSuite) Test_ManagerDB() {
     models.DB.TruncateAll()
 
-    cfg := utils.GetCfg()
+    cfg := ResetConfig()
     cfg.UseDatabase = true
     init_fake_app(true)
 

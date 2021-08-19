@@ -137,10 +137,7 @@ func (cm ContentManagerMemory) GetCfg() *utils.DirConfigEntry {
 }
 
 
-
-// TODO:  Now THIS one can actually build out a singleton that is shared I guess.
 func (cm *ContentManagerMemory) Initialize() {
-
     // We only want the memory storage initialized one time ?  But allow for re-init?
     // Could toss the object into the manager but then that means even more code change.
     if memStorage.Initialized == false {
@@ -149,7 +146,7 @@ func (cm *ContentManagerMemory) Initialize() {
     // Move some of these into an actual singleton.
     cm.ValidContainers = memStorage.ValidContainers
     cm.ValidMedia = memStorage.ValidMedia
-    log.Printf("Found %d directories\n", len(cm.ValidContainers))
+    log.Printf("Found %d directories with %d media elements \n", len(cm.ValidContainers), len(cm.ValidMedia))
 }
 
 func InitializeMemory(dir_root string) MemoryStorage {
@@ -187,9 +184,10 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap) 
         c.Idx = idx
         containers[c.ID] = c
 
-        // Hate
-
+        // This check is normally to determine if we didn't clear out old previews.
+        // For memory only managers it will just consider that a bonus and use the preview.
         for _, mc := range media {
+            AssignPreviewIfExists(&c, &mc)
             files[mc.ID] = mc
         }
     }
@@ -336,13 +334,13 @@ func (cm ContentManagerMemory) FindFileRef(file_id uuid.UUID) (*models.MediaCont
 func (cm ContentManagerMemory) GetPreviewForMC(mc *models.MediaContainer) (string, error) {
     dir, err := cm.FindDirRef(mc.ContainerID.UUID)
     if err != nil {
-        return "DB Manager Preview no Parent Found", err
+        return "Memory Manager Preview no Parent Found", err
     }
     src := mc.Src
     if mc.Preview != "" {
         src = mc.Preview
     }
-    log.Printf("DB Manager loading %s preview %s\n", mc.ID.String(), src)
+    log.Printf("Memory Manager loading %s preview %s\n", mc.ID.String(), src)
     return GetFilePathInContainer(src, dir.Name)
 }
 
@@ -357,19 +355,26 @@ func (cm ContentManagerMemory) FindActualFile(mc *models.MediaContainer) (string
 
 // If you want to do in memory testing and already manually created previews this will
 // then try and use the previews for the in memory manager.
-func (cm ContentManagerMemory) SetPreviewIfExists(mc *models.MediaContainer) error {
+func (cm ContentManagerMemory) SetPreviewIfExists(mc *models.MediaContainer) (string, error) {
     c, err := cm.FindDirRef(mc.ContainerID.UUID)
     if err != nil {
         log.Fatal(err)
-        return err
+        return "", err
     }
+    pFile := AssignPreviewIfExists(c, mc)
+    return pFile, nil
+}
+
+func AssignPreviewIfExists(c* models.Container, mc *models.MediaContainer) string {
     // This check is normally to determine if we didn't clear out old previews.
     // For memory only managers it will just consider that a bonus and use the preview.
-    previewFile, exists := utils.ErrorOnPreviewExists(mc.Src, utils.GetPreviewDst(c.Name), mc.ContentType)
+    previewPath := utils.GetPreviewDst(c.GetFqPath())
+    previewFile, exists := utils.ErrorOnPreviewExists(mc.Src, previewPath, mc.ContentType)
     if exists != nil {
-        mc.Preview = previewFile
+        mc.Preview = utils.GetRelativePreviewPath(previewFile, c.GetFqPath())
+        log.Printf("Added a preview to media %s", mc.Preview)
     }
-    return nil
+    return previewFile
 }
 
 // DB version of content management
