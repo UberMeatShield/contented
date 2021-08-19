@@ -131,8 +131,8 @@ func (cm *ContentManagerMemory) SetCfg(cfg *utils.DirConfigEntry) {
 }
 
 func (cm ContentManagerMemory) GetCfg() *utils.DirConfigEntry {
-    log.Printf("Get the Config Validate val %s\n", cm.validate)
-    log.Printf("Config is what %s", cm.cfg.Dir)
+    log.Printf("Get the Config validate val %s\n", cm.validate)
+    log.Printf("Config is using path %s", cm.cfg.Dir)
     return cm.cfg
 }
 
@@ -186,6 +186,8 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap) 
         c.Total = len(media)
         c.Idx = idx
         containers[c.ID] = c
+
+        // Hate
 
         for _, mc := range media {
             files[mc.ID] = mc
@@ -283,7 +285,6 @@ func (cm ContentManagerMemory) GetMedia(mc_id uuid.UUID) (*models.MediaContainer
 }
 
 func (cm ContentManagerMemory) UpdateMedia(media *models.MediaContainer) error {
-    // FIND IT hate 
     return nil
 }
 
@@ -354,6 +355,22 @@ func (cm ContentManagerMemory) FindActualFile(mc *models.MediaContainer) (string
     return GetFilePathInContainer(mc.Src, dir.Name)
 }
 
+// If you want to do in memory testing and already manually created previews this will
+// then try and use the previews for the in memory manager.
+func (cm ContentManagerMemory) SetPreviewIfExists(mc *models.MediaContainer) error {
+    c, err := cm.FindDirRef(mc.ContainerID.UUID)
+    if err != nil {
+        log.Fatal(err)
+        return err
+    }
+    // This check is normally to determine if we didn't clear out old previews.
+    // For memory only managers it will just consider that a bonus and use the preview.
+    previewFile, exists := utils.ErrorOnPreviewExists(mc.Src, utils.GetPreviewDst(c.Name), mc.ContentType)
+    if exists != nil {
+        mc.Preview = previewFile
+    }
+    return nil
+}
 
 // DB version of content management
 type ContentManagerDB struct {
@@ -364,11 +381,12 @@ type ContentManagerDB struct {
     conn *pop.Connection
     params *url.Values
 
-    // hate
     GetConnection GetConnType  // Returns .conn or context.Value(tx)
     Params GetParamsType    // returns .params or context.Params()
 }
 
+
+// This is a little sketchy that the two are not directly linked
 func (cm *ContentManagerDB) SetCfg(cfg *utils.DirConfigEntry) {
     cm.cfg = cfg
 }

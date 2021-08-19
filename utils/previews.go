@@ -60,19 +60,25 @@ func ShouldCreatePreview(f *os.File, fsize int64) bool {
 	return false
 }
 
-//  No need to check (hate)
-func PreviewExists(filename string, dstPath string, contentType string) (string, error) {
-	// Does the preview already exist, return that
-    dstFilename := filename
-    if strings.Contains(contentType, "video") { // hate
-        // The image library for video previews sets the output by ext (not a video)
-        dstFilename +=  ".png"  
-    }
-	dstFile := filepath.Join(dstPath, dstFilename)
+// In most cases it is currently considered an error if you are trying to create a preview and
+// one already exists (mostly this is still debugging)
+func ErrorOnPreviewExists(filename string, dstPath string, contentType string) (string, error) {
+    dstFile := GetPreviewPathDestination(filename, dstPath, contentType)
 	if _, e_err := os.Stat(dstFile); os.IsNotExist(e_err) {
 		return dstFile, nil
 	}
-	return "", errors.New("Preview Already Exists: " + dstFile)
+	return dstFile, errors.New("Preview Already Exists: " + dstFile)
+}
+
+// Get the location of what we expect a preview to be called for a filename modified by the original
+// content type.
+func GetPreviewPathDestination(filename string, dstPath string, contentType string) string {
+    dstFilename := filename
+    if strings.Contains(contentType, "video") {
+        // The image library for video previews sets the output by ext (not a video)
+        dstFilename +=  ".png"  
+    }
+	return filepath.Join(dstPath, dstFilename)
 }
 
 // Break this down better using just a file object?
@@ -119,9 +125,9 @@ func GetImagePreview(path string, filename string, dstPath string, pIfSize int64
 	}
 
     // Determine the preview based on content type 
-	dstFile, dErr := PreviewExists(filename, dstPath, contentType)
+	dstFile, dErr := ErrorOnPreviewExists(filename, dstPath, contentType)
 	if dErr != nil {
-        // TODO: Maybe this is fine to just return the preview exists
+        log.Printf("The preview image already exists %s", dstFile)
 		return dstFile, dErr
 	}
 

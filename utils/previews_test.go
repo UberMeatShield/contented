@@ -17,7 +17,7 @@ func CleanupPreviewDir(dstDir string) {
 func Test_JpegPreview(t *testing.T) {
 	var testDir, _ = envy.MustGet("DIR")
 	srcDir := filepath.Join(testDir, "dir1")
-	dstDir := filepath.Join(srcDir, "container_previews")
+	dstDir := GetPreviewDst(srcDir)
 	testFile := "this_is_jp_eg"
 
 	CleanupPreviewDir(dstDir)
@@ -52,7 +52,7 @@ func Test_JpegPreview(t *testing.T) {
 func Test_PngPreview(t *testing.T) {
 	var testDir, _ = envy.MustGet("DIR")
 	srcDir := filepath.Join(testDir, "dir1")
-	dstDir := filepath.Join(srcDir, "container_previews")
+	dstDir := GetPreviewDst(srcDir)
 	testFile := "this_is_p_ng"
 
 	// Add a before each to nuke the dstDir and create it
@@ -76,7 +76,7 @@ func Test_VideoPreviewPNG(t *testing.T) {
 
 	// Add a before each to nuke the dstDir and create it
 	CleanupPreviewDir(dstDir)
-    expectDst, dErr := PreviewExists(testFile, dstDir, "video/hack")
+    expectDst, dErr := ErrorOnPreviewExists(testFile, dstDir, "video/hack")
     if dErr != nil {
         t.Errorf("The dest file already exists %s\n", expectDst)
     }
@@ -96,14 +96,44 @@ func Test_VideoPreviewPNG(t *testing.T) {
     // TODO: Should probably check the size as well
 }
 
+
+func Test_FileExistsError(t *testing.T) {
+	var testDir, _ = envy.MustGet("DIR")
+	srcDir := filepath.Join(testDir, "dir1")
+	dstDir := GetPreviewDst(srcDir)
+    knownFile := "0_LargeScreen.png"
+
+	CleanupPreviewDir(dstDir)
+
+    fqPath := GetPreviewPathDestination(knownFile, dstDir, "image/png")
+    f, err := os.Create(fqPath)
+    if err != nil {
+        t.Errorf("Could not create the file at %s", fqPath)
+    }
+    _, wErr := f.WriteString("Now something exists in the file")
+    if wErr != nil {
+        t.Errorf("Could not write to the file at %s", fqPath)
+    }
+    f.Sync()
+
+    dstCheck, exists := ErrorOnPreviewExists(knownFile, dstDir, "image/png")
+    if exists == nil {
+        t.Errorf("This file should exist now, so we should have a preview conflict")
+    }
+    if dstCheck != fqPath {
+        t.Errorf("The destination check %s was not == to what we wrote in the test %s", dstCheck, fqPath)
+    }
+    //Write minimal content to file
+}
+
 func Test_VideoPreviewGif(t *testing.T) {
 	var testDir, _ = envy.MustGet("DIR")
 	srcDir := filepath.Join(testDir, "dir2")
-	dstDir := filepath.Join(srcDir, "container_previews")
+	dstDir := GetPreviewDst(srcDir)
 	testFile := "donut.mp4"
 
 	CleanupPreviewDir(dstDir)
-    expectDst, dErr := PreviewExists(testFile, dstDir, "video/hack")
+    expectDst, dErr := ErrorOnPreviewExists(testFile, dstDir, "video/hack")
     if dErr != nil {
         t.Errorf("The dest file already exists %s\n", expectDst)
     }

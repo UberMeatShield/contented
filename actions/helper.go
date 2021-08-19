@@ -79,8 +79,7 @@ func ClearContainerPreviews(c *models.Container) error {
 
 // TODO: Move to utils or make it wrapped for some reason?
 func GetContainerPreviewDst(c *models.Container) string {
-    cfg := utils.GetCfg()
-    return filepath.Join(cfg.Dir, c.Name, "container_previews")
+    return utils.GetPreviewDst(c.Name)
 }
 
 // Init a manager and pass it in or just do this via config value instead of a pass in

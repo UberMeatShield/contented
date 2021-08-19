@@ -76,6 +76,7 @@ type DirConfigEntry struct {
      ExcFiles: ExcludeNoFiles,
  }
 
+ // TODO: Manager has a config as does utils, this seems sketchy
  func GetCfg() *DirConfigEntry {
      return &appCfg
  }
@@ -273,6 +274,13 @@ func GetMimeType(path string, filename string) (string, error) {
 		return SniffFileType(content)
 	}
 	return ctype, nil
+}
+
+
+// TODO: make the preview directory name configurable
+func GetPreviewDst(targetDir string) string {
+    cfg := GetCfg()
+    return filepath.Join(cfg.Dir, targetDir, "container_previews")
 }
 
 func SniffFileType(content *os.File) (string, error) {
