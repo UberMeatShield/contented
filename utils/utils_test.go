@@ -9,9 +9,8 @@ import (
 )
 
 // Possibly make this some sort of global test helper function (harder to do in GoLang?)
-var testDir, _ = envy.MustGet("DIR")
-
 func TestFindContainers(t *testing.T) {
+    var testDir, _ = envy.MustGet("DIR")
     containers := FindContainers(testDir)
     if len(containers) != 4 {
         t.Fatal("There should be 4 containers in the mock")
@@ -31,7 +30,10 @@ func TestFindContainers(t *testing.T) {
 	}
 }
 
-func TestFindMedia(t *testing.T) {
+func Test_FindMedia(t *testing.T) {
+    var testDir, _ = envy.MustGet("DIR")
+    cfg := GetCfg()
+    cfg.Dir = testDir
     containers := FindContainers(testDir)
     for _, c := range containers {
         media := FindMedia(c, 42, 0)
@@ -41,7 +43,33 @@ func TestFindMedia(t *testing.T) {
     }
 }
 
+
+// Exclude the movie by name
+func Test_SetupConfigMatchers(t *testing.T) {
+    var testDir, _ = envy.MustGet("DIR")
+    cfg := DirConfigEntry{}
+    cfg.Dir = testDir
+    SetupConfigMatchers(&cfg, "", "", "donut", "")
+
+    containers := FindContainers(testDir)
+    found := false
+    for _, c := range containers {
+        media := FindMediaMatcher(c, 42, 0, cfg.IncFiles, cfg.ExcFiles)
+        if c.Name == "dir2" {
+            found = true
+            if len(media) != 2 {
+                t.Errorf("It did not exclude the movie by partial name match")
+            }
+        }
+    }
+    if found != true {
+        t.Errorf("The test did not find the container that would include the movie")
+    }
+}
+
+
 func Test_MediaMatcher(t *testing.T) {
+    var testDir, _ = envy.MustGet("DIR")
     containers := FindContainers(testDir)
 
     FailAll := func(filename string, content_type string) bool {
@@ -63,6 +91,7 @@ func Test_MediaMatcher(t *testing.T) {
 }
 
 func Test_ContentType(t *testing.T) {
+    var testDir, _ = envy.MustGet("DIR")
 	imgName := "this_is_jp_eg"
 	dirPath := filepath.Join(testDir, "dir1")
 
@@ -94,7 +123,8 @@ func Test_DirId(t *testing.T) {
 	}
 }
 
-func TestFindMediaOffset(t *testing.T) {
+func Test_FindMediaOffset(t *testing.T) {
+    var testDir, _ = envy.MustGet("DIR")
     containers := FindContainers(testDir)
 
     expect_dir := false

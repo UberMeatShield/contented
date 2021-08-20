@@ -63,25 +63,31 @@ type DirConfigEntry struct {
 }
 
  // https://medium.com/@TobiasSchmidt89/the-singleton-object-oriented-design-pattern-in-golang-9f6ce75c21f7
- var appCfg DirConfigEntry = DirConfigEntry{
-     Initialized:  false,
-     UseDatabase: true,
-     Dir: "",
-     CoreCount: 4,
-     Limit: DefaultLimit,
-     PreviewCount: DefaultPreviewCount,
-     PreviewOverSize: 1024000,
+ var appCfg DirConfigEntry = GetCfgDefaults()
 
-     IncFiles: IncludeAllFiles,
-     ExcFiles: ExcludeNoFiles,
- }
 
+ // TODO: Manager has a config as does utils, this seems sketchy
  func GetCfg() *DirConfigEntry {
      return &appCfg
  }
  func SetCfg(cfg DirConfigEntry) {
      appCfg = cfg
  }
+
+func GetCfgDefaults() DirConfigEntry {
+   return DirConfigEntry{
+       Initialized:  false,
+       UseDatabase: true,
+       Dir: "",
+       CoreCount: 4,
+       Limit: DefaultLimit,
+       PreviewCount: DefaultPreviewCount,
+       PreviewOverSize: 1024000,
+
+       IncFiles: IncludeAllFiles,
+       ExcFiles: ExcludeNoFiles,
+   }
+}
 
 /*
  * Build out a valid configuration given the directory etc.
@@ -165,7 +171,7 @@ func SetupConfigMatchers(cfg *DirConfigEntry, y_fn string, y_mime string, n_fn s
 
     // If you do not specify exclusion regexes it will just include everything
     if n_fn != "" || n_mime != "" {
-        cfg.ExcFiles = CreateMatcher(y_fn, y_mime)
+        cfg.ExcFiles = CreateMatcher(n_fn, n_mime)
     } else {
         cfg.ExcFiles = ExcludeNoFiles
     }
@@ -179,7 +185,11 @@ func FindContainers(dir_root string) models.Containers {
 	log.Printf("FindContainers Reading from: %s", dir_root)
 
 	var listings = models.Containers{}
-	files, _ := ioutil.ReadDir(dir_root)
+	files, err := ioutil.ReadDir(dir_root)
+    if err != nil {
+        log.Printf("Could not read from the directory %s", dir_root)
+    }
+
 	for _, f := range files {
 		if f.IsDir() {
 			dir_name := f.Name()
@@ -207,7 +217,9 @@ func FindMedia(cnt models.Container, limit int, start_offset int) models.MediaCo
 // func nope(string, string) bool is a negative check (ie no zip files) default (everything is fine)
 func FindMediaMatcher(cnt models.Container, limit int, start_offset int, yup MediaMatcher, nope MediaMatcher) models.MediaContainers {
 	var arr = models.MediaContainers{}
-    fqDirPath := filepath.Join(cnt.Path, cnt.Name)
+
+    cfg := GetCfg()
+    fqDirPath := filepath.Join(cfg.Dir, cnt.Name)
 	maybe_media, _ := ioutil.ReadDir(fqDirPath)
 
 	total := 0

@@ -131,16 +131,13 @@ func (cm *ContentManagerMemory) SetCfg(cfg *utils.DirConfigEntry) {
 }
 
 func (cm ContentManagerMemory) GetCfg() *utils.DirConfigEntry {
-    log.Printf("Get the Config Validate val %s\n", cm.validate)
-    log.Printf("Config is what %s", cm.cfg.Dir)
+    log.Printf("Get the Config validate val %s\n", cm.validate)
+    log.Printf("Config is using path %s", cm.cfg.Dir)
     return cm.cfg
 }
 
 
-
-// TODO:  Now THIS one can actually build out a singleton that is shared I guess.
 func (cm *ContentManagerMemory) Initialize() {
-
     // We only want the memory storage initialized one time ?  But allow for re-init?
     // Could toss the object into the manager but then that means even more code change.
     if memStorage.Initialized == false {
@@ -149,7 +146,7 @@ func (cm *ContentManagerMemory) Initialize() {
     // Move some of these into an actual singleton.
     cm.ValidContainers = memStorage.ValidContainers
     cm.ValidMedia = memStorage.ValidMedia
-    log.Printf("Found %d directories\n", len(cm.ValidContainers))
+    log.Printf("Found %d directories with %d media elements \n", len(cm.ValidContainers), len(cm.ValidMedia))
 }
 
 func InitializeMemory(dir_root string) MemoryStorage {
@@ -187,7 +184,10 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap) 
         c.Idx = idx
         containers[c.ID] = c
 
+        // This check is normally to determine if we didn't clear out old previews.
+        // For memory only managers it will just consider that a bonus and use the preview.
         for _, mc := range media {
+            AssignPreviewIfExists(&c, &mc)
             files[mc.ID] = mc
         }
     }
@@ -283,7 +283,6 @@ func (cm ContentManagerMemory) GetMedia(mc_id uuid.UUID) (*models.MediaContainer
 }
 
 func (cm ContentManagerMemory) UpdateMedia(media *models.MediaContainer) error {
-    // FIND IT hate 
     return nil
 }
 
@@ -335,13 +334,13 @@ func (cm ContentManagerMemory) FindFileRef(file_id uuid.UUID) (*models.MediaCont
 func (cm ContentManagerMemory) GetPreviewForMC(mc *models.MediaContainer) (string, error) {
     dir, err := cm.FindDirRef(mc.ContainerID.UUID)
     if err != nil {
-        return "DB Manager Preview no Parent Found", err
+        return "Memory Manager Preview no Parent Found", err
     }
     src := mc.Src
     if mc.Preview != "" {
         src = mc.Preview
     }
-    log.Printf("DB Manager loading %s preview %s\n", mc.ID.String(), src)
+    log.Printf("Memory Manager loading %s preview %s\n", mc.ID.String(), src)
     return GetFilePathInContainer(src, dir.Name)
 }
 
@@ -354,6 +353,29 @@ func (cm ContentManagerMemory) FindActualFile(mc *models.MediaContainer) (string
     return GetFilePathInContainer(mc.Src, dir.Name)
 }
 
+// If you want to do in memory testing and already manually created previews this will
+// then try and use the previews for the in memory manager.
+func (cm ContentManagerMemory) SetPreviewIfExists(mc *models.MediaContainer) (string, error) {
+    c, err := cm.FindDirRef(mc.ContainerID.UUID)
+    if err != nil {
+        log.Fatal(err)
+        return "", err
+    }
+    pFile := AssignPreviewIfExists(c, mc)
+    return pFile, nil
+}
+
+func AssignPreviewIfExists(c* models.Container, mc *models.MediaContainer) string {
+    // This check is normally to determine if we didn't clear out old previews.
+    // For memory only managers it will just consider that a bonus and use the preview.
+    previewPath := utils.GetPreviewDst(c.GetFqPath())
+    previewFile, exists := utils.ErrorOnPreviewExists(mc.Src, previewPath, mc.ContentType)
+    if exists != nil {
+        mc.Preview = utils.GetRelativePreviewPath(previewFile, c.GetFqPath())
+        log.Printf("Added a preview to media %s", mc.Preview)
+    }
+    return previewFile
+}
 
 // DB version of content management
 type ContentManagerDB struct {
@@ -364,11 +386,12 @@ type ContentManagerDB struct {
     conn *pop.Connection
     params *url.Values
 
-    // hate
     GetConnection GetConnType  // Returns .conn or context.Value(tx)
     Params GetParamsType    // returns .params or context.Params()
 }
 
+
+// This is a little sketchy that the two are not directly linked
 func (cm *ContentManagerDB) SetCfg(cfg *utils.DirConfigEntry) {
     cm.cfg = cfg
 }

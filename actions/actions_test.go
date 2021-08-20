@@ -49,6 +49,16 @@ func is_valid_content_type(as *ActionSuite, content_type string) {
 	as.Contains(valid, content_type)
 }
 
+
+func ResetConfig() *utils.DirConfigEntry {
+    cfg := utils.GetCfgDefaults()
+    dir, _ := envy.MustGet("DIR")
+    cfg.Dir = dir
+    utils.InitConfig(dir, &cfg)
+    utils.SetCfg(cfg)
+    return utils.GetCfg()
+}
+
 // This function is now how the init method should function till caching is implemented
 // As the internals / guts are functional using the new models the creation of models
 // can be removed.
@@ -56,7 +66,7 @@ func init_fake_app(use_db bool) *utils.DirConfigEntry {
 	dir, _ := envy.MustGet("DIR")
 	fmt.Printf("Using directory %s\n", dir)
 
-	cfg := utils.GetCfg()
+	cfg := ResetConfig()
 	utils.InitConfig(dir, cfg)
     cfg.UseDatabase = use_db  // Set via .env or USE_DATABASE as an environment var
     cfg.StaticResourcePath = "./public/build"
