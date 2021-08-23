@@ -9,7 +9,7 @@
 
       <!-- Assume that every preview is actually going to be an image -->
       <img class="preview-img"
-        [class.current-img]="currentViewItem == mc"
+        [class.current-img]="currentViewItem === mc"
         [src]="mc?.previewUrl" 
         (load)="imgLoaded($event)"
       > 
