@@ -4,7 +4,7 @@ import (
     "fmt"
     "net/url"
     "contented/models"
-    "contented/actions"
+    "contented/managers"
     "contented/utils"
     "github.com/gobuffalo/pop/v5"
 	"github.com/markbates/grift/grift"
@@ -13,7 +13,6 @@ import (
 )
 
 var _ = grift.Namespace("db", func() {
-
 	grift.Desc("seed", "Populate the DB with a set of directory content.")
 	grift.Add("seed", func(c *grift.Context) error {
         cfg := utils.GetCfg()
@@ -26,7 +25,7 @@ var _ = grift.Namespace("db", func() {
         }
         // Clean out the current DB setup then builds a new one
         fmt.Printf("Configuration is loaded %s Starting import", cfg.Dir)
-        return actions.CreateInitialStructure(cfg)
+        return managers.CreateInitialStructure(cfg)
 	})
 
     // It really feels like a grift should do a better command line handler
@@ -56,17 +55,17 @@ var _ = grift.Namespace("db", func() {
                 get_connection := func() *pop.Connection {
                     return tx
                 } 
-                man := actions.CreateManager(cfg, get_connection, get_params)
+                man := managers.CreateManager(cfg, get_connection, get_params)
                 fmt.Printf("Creating previews %t", man.CanEdit())
-                return actions.CreateAllPreviews(man)
+                return managers.CreateAllPreviews(man)
             })
         } else {
             get_connection := func() *pop.Connection {
                 return nil // Do not do anything with the DB
             }
-            man := actions.CreateManager(cfg, get_connection, get_params)
+            man := managers.CreateManager(cfg, get_connection, get_params)
             fmt.Printf("Use memory manager %t", man.CanEdit())
-            return actions.CreateAllPreviews(man)
+            return managers.CreateAllPreviews(man)
         }
 	})
 })

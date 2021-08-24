@@ -1,4 +1,4 @@
-package actions
+package managers
 
 import (
 	//"fmt"
@@ -7,6 +7,7 @@ import (
     "path/filepath"
 	"contented/utils"
 	"contented/models"
+	"contented/internals"
     "net/http"
     "net/url"
     /*
@@ -35,8 +36,8 @@ var expect_len = map[string]int{
     "screens": 4,
 }
 
-func Get_Manager_ActionSuite(cfg *utils.DirConfigEntry, as *ActionSuite) ContentManager{
-    ctx := getContext(as.App)
+func GetManagerActionSuite(cfg *utils.DirConfigEntry, as *ActionSuite) ContentManager{
+    ctx := internals.GetContext(as.App)
     get_params := func() *url.Values {
         vals := ctx.Params().(url.Values)
         return &vals
@@ -72,8 +73,8 @@ func GetMediaByDirName(test_dir_name string) (*models.Container, models.MediaCon
 
 
 func (as *ActionSuite) Test_ManagerContainers() {
-    init_fake_app(false)
-    ctx := getContext(as.App)
+    internals.InitFakeApp(false)
+    ctx := internals.GetContext(as.App)
     man := GetManager(&ctx)
     containers, err := man.ListContainersContext()
     as.NoError(err)
@@ -89,8 +90,8 @@ func (as *ActionSuite) Test_ManagerContainers() {
 
 
 func (as *ActionSuite) Test_ManagerMediaContainer() {
-    init_fake_app(false)
-    ctx := getContext(as.App)
+    internals.InitFakeApp(false)
+    ctx := internals.GetContext(as.App)
     man := GetManager(&ctx)
     mcs, err := man.ListAllMedia(1, 9001)
     as.NoError(err)
@@ -105,7 +106,7 @@ func (as *ActionSuite) Test_ManagerMediaContainer() {
 }
 
 func (as *ActionSuite) Test_AssignManager() {
-    cfg := ResetConfig()
+    cfg := internals.ResetConfig()
     cfg.UseDatabase = false
     utils.InitConfig(cfg.Dir, cfg)
 
@@ -121,7 +122,7 @@ func (as *ActionSuite) Test_AssignManager() {
     as.Greater(len(*mcs), 0, "It should have valid files in the manager")
 
     cfg.UseDatabase = false
-    ctx := getContext(as.App)
+    ctx := internals.GetContext(as.App)
     man := GetManager(&ctx)  // New Reference but should have the same count of media
     mcs_2, _ := man.ListAllMedia(1, 9000)
 
@@ -130,9 +131,9 @@ func (as *ActionSuite) Test_AssignManager() {
 
 
 func (as *ActionSuite) Test_MemoryDenyEdit() {
-    cfg := init_fake_app(false)
+    cfg := internals.InitFakeApp(false)
     cfg.UseDatabase = false
-    ctx := getContext(as.App)
+    ctx := internals.GetContext(as.App)
     man := GetManager(&ctx)
 
     containers, err := man.ListContainersContext()
@@ -148,10 +149,10 @@ func (as *ActionSuite) Test_MemoryDenyEdit() {
 }
 
 func (as *ActionSuite) Test_MemoryManagerPaginate() {
-    cfg := init_fake_app(false)
+    cfg := internals.InitFakeApp(false)
     cfg.UseDatabase = false
 
-    ctx := getContextParams(as.App, "/containers", "1", "2")
+    ctx := internals.GetContextParams(as.App, "/containers", "1", "2")
     man := GetManager(&ctx)
     as.Equal(man.CanEdit(), false, "Memory manager should not be editing")
 
@@ -179,9 +180,9 @@ func (as *ActionSuite) Test_MemoryManagerPaginate() {
 }
 
 func (as *ActionSuite) Test_ManagerInitialize() {
-    init_fake_app(false)
+    internals.InitFakeApp(false)
 
-    ctx := getContext(as.App)
+    ctx := internals.GetContext(as.App)
     man := GetManager(&ctx)
     as.NotNil(man, "It should have a manager defined after init")
 
@@ -206,7 +207,7 @@ func (as *ActionSuite) Test_ManagerInitialize() {
 }
 
 func (as *ActionSuite) Test_MemoryPreviewInitialization() {
-    cfg := ResetConfig()
+    cfg := internals.ResetConfig()
     utils.SetupConfigMatchers(cfg, "", "video", "", "")
 
     // Create a fake file that would sub in by name for a preview
@@ -231,7 +232,7 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
     f.Sync()
 
     // Checks that if a preview exists
-    cnts, media := PopulateMemoryView(cfg.Dir)
+    cnts, media := utils.PopulateMemoryView(cfg.Dir)
     as.Equal(len(cnts), 4, "We should pull in 4 directories")
     as.Equal(len(media), 1, "But there is only one video by mime type")
 
@@ -244,9 +245,9 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
 func (as *ActionSuite) Test_ManagerDB() {
     models.DB.TruncateAll()
 
-    cfg := ResetConfig()
+    cfg := internals.ResetConfig()
     cfg.UseDatabase = true
-    init_fake_app(true)
+    internals.InitFakeApp(true)
 
     cnt, media := GetMediaByDirName("dir1")
     as.Equal("dir1", cnt.Name, "It should be the right dir")
@@ -259,7 +260,7 @@ func (as *ActionSuite) Test_ManagerDB() {
         models.DB.Create(&mc)
     }
 
-    man := Get_Manager_ActionSuite(cfg, as)
+    man := GetManagerActionSuite(cfg, as)
     q_media, err := man.ListAllMedia(0, 14)
     as.NoError(err, "We should be able to list")
     as.Equal(len(*q_media), 12, "there should be 12 results")

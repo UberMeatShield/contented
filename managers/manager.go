@@ -1,25 +1,47 @@
-package actions
+package managers
 
 import (
     "log"
-    "os"
     "errors"
     "sort"
     "net/url"
-    "path/filepath"
     "contented/models"
     "contented/utils"
     "strconv"
-    //"github.com/gobuffalo/nulls"
     "github.com/gofrs/uuid"
     "github.com/gobuffalo/buffalo"
     "github.com/gobuffalo/pop/v5"
-    //"github.com/gobuffalo/pop/v5/paginator"
 )
 
 
 type GetConnType func() *pop.Connection
 type GetParamsType func() *url.Values
+
+type ContentManager interface {
+    // SetCfg(c *utils.DirConfigEntry)
+    GetCfg() *utils.DirConfigEntry
+    CanEdit() bool  // Do we support CRUD or just R
+
+    // TODO
+    //GetConnection() *pop.Connection
+    GetParams() *url.Values
+
+    FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error)
+    FindDirRef(dir_id uuid.UUID) (*models.Container, error)
+
+    GetContainer(c_id uuid.UUID) (*models.Container, error)
+    ListContainers(page int, per_page int) (*models.Containers, error)
+    ListContainersContext() (*models.Containers, error)
+
+    GetMedia(media_id uuid.UUID) (*models.MediaContainer, error)
+    ListMedia(ContainerID uuid.UUID, page int, per_page int) (*models.MediaContainers, error)
+    ListMediaContext(ContainerID uuid.UUID) (*models.MediaContainers, error)
+    ListAllMedia(page int, per_page int) (*models.MediaContainers, error)
+
+    UpdateMedia(media *models.MediaContainer) error
+    FindActualFile(mc *models.MediaContainer) (string, error)
+    GetPreviewForMC(mc *models.MediaContainer) (string, error)
+}
 
 // Dealing with buffalo.Context vs grift.Context is kinda annoying, this handles the
 // buffalo context which handles tests or runtime but doesn't work in grifts.
@@ -74,41 +96,6 @@ func CreateManager(cfg *utils.DirConfigEntry, get_conn GetConnType, get_params G
     }
 }
 
-type ContentManager interface {
-    // SetCfg(c *utils.DirConfigEntry)
-    GetCfg() *utils.DirConfigEntry
-    CanEdit() bool  // Do we support CRUD or just R
-
-    // TODO
-    //GetConnection() *pop.Connection
-    GetParams() *url.Values
-
-    FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error)
-    FindDirRef(dir_id uuid.UUID) (*models.Container, error)
-
-    GetContainer(c_id uuid.UUID) (*models.Container, error)
-    ListContainers(page int, per_page int) (*models.Containers, error)
-    ListContainersContext() (*models.Containers, error)
-
-    GetMedia(media_id uuid.UUID) (*models.MediaContainer, error)
-    ListMedia(ContainerID uuid.UUID, page int, per_page int) (*models.MediaContainers, error)
-    ListMediaContext(ContainerID uuid.UUID) (*models.MediaContainers, error)
-    ListAllMedia(page int, per_page int) (*models.MediaContainers, error)
-
-    UpdateMedia(media *models.MediaContainer) error
-    FindActualFile(mc *models.MediaContainer) (string, error)
-    GetPreviewForMC(mc *models.MediaContainer) (string, error)
-}
-
-
-// GoLang is just making this awkward
-type MemoryStorage struct {
-    Initialized bool
-    ValidMedia      models.MediaMap
-    ValidContainers models.ContainerMap
-}
-var memStorage MemoryStorage = MemoryStorage{Initialized: false}
-
 type ContentManagerMemory struct {
     cfg *utils.DirConfigEntry
 
@@ -140,8 +127,9 @@ func (cm ContentManagerMemory) GetCfg() *utils.DirConfigEntry {
 func (cm *ContentManagerMemory) Initialize() {
     // We only want the memory storage initialized one time ?  But allow for re-init?
     // Could toss the object into the manager but then that means even more code change.
+    memStorage := utils.GetMemStorage()
     if memStorage.Initialized == false {
-        memStorage = InitializeMemory(cm.cfg.Dir)
+        memStorage = utils.InitializeMemory(cm.cfg.Dir)
     }
     // Move some of these into an actual singleton.
     cm.ValidContainers = memStorage.ValidContainers
@@ -149,49 +137,10 @@ func (cm *ContentManagerMemory) Initialize() {
     log.Printf("Found %d directories with %d media elements \n", len(cm.ValidContainers), len(cm.ValidMedia))
 }
 
-func InitializeMemory(dir_root string) MemoryStorage {
-    log.Printf("Initializing Memory Storage %s\n", dir_root)
-    containers, files := PopulateMemoryView(dir_root)
-
-    memStorage.Initialized = true
-    memStorage.ValidContainers = containers
-    memStorage.ValidMedia = files
-
-    return memStorage
-}
-
 // Kinda strange but it seems hard to assign the type into an interface
 // type GetParamsType func() *url.Values
 func (cm ContentManagerMemory) GetParams() *url.Values {
     return cm.Params()
-}
-
-/**
- *  TODO:  Require the number to preview and will be Memory only supported.
- */
-func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap) {
-    containers := models.ContainerMap{}
-    files := models.MediaMap{}
-
-    log.Printf("Searching in %s", dir_root)
-    cfg := utils.GetCfg()
-
-    cnts := utils.FindContainers(dir_root)
-    for idx, c := range cnts {
-        media := utils.FindMediaMatcher(c, 90001, 0, cfg.IncFiles, cfg.ExcFiles)  // TODO: Config this
-        // c.Contents = media
-        c.Total = len(media)
-        c.Idx = idx
-        containers[c.ID] = c
-
-        // This check is normally to determine if we didn't clear out old previews.
-        // For memory only managers it will just consider that a bonus and use the preview.
-        for _, mc := range media {
-            AssignPreviewIfExists(&c, &mc)
-            files[mc.ID] = mc
-        }
-    }
-    return containers, files
 }
 
 func StringDefault(s1, s2 string) string {
@@ -341,7 +290,7 @@ func (cm ContentManagerMemory) GetPreviewForMC(mc *models.MediaContainer) (strin
         src = mc.Preview
     }
     log.Printf("Memory Manager loading %s preview %s\n", mc.ID.String(), src)
-    return GetFilePathInContainer(src, dir.Name)
+    return utils.GetFilePathInContainer(src, dir.Name)
 }
 
 func (cm ContentManagerMemory) FindActualFile(mc *models.MediaContainer) (string, error) {
@@ -350,7 +299,7 @@ func (cm ContentManagerMemory) FindActualFile(mc *models.MediaContainer) (string
         return "Memory Manager View no Parent Found", err
     }
     log.Printf("Memory Manager View %s loading up %s\n", mc.ID.String(), mc.Src)
-    return GetFilePathInContainer(mc.Src, dir.Name)
+    return utils.GetFilePathInContainer(mc.Src, dir.Name)
 }
 
 // If you want to do in memory testing and already manually created previews this will
@@ -361,20 +310,8 @@ func (cm ContentManagerMemory) SetPreviewIfExists(mc *models.MediaContainer) (st
         log.Fatal(err)
         return "", err
     }
-    pFile := AssignPreviewIfExists(c, mc)
+    pFile := utils.AssignPreviewIfExists(c, mc)
     return pFile, nil
-}
-
-func AssignPreviewIfExists(c* models.Container, mc *models.MediaContainer) string {
-    // This check is normally to determine if we didn't clear out old previews.
-    // For memory only managers it will just consider that a bonus and use the preview.
-    previewPath := utils.GetPreviewDst(c.GetFqPath())
-    previewFile, exists := utils.ErrorOnPreviewExists(mc.Src, previewPath, mc.ContentType)
-    if exists != nil {
-        mc.Preview = utils.GetRelativePreviewPath(previewFile, c.GetFqPath())
-        log.Printf("Added a preview to media %s", mc.Preview)
-    }
-    return previewFile
 }
 
 // DB version of content management
@@ -523,7 +460,7 @@ func (cm ContentManagerDB) GetPreviewForMC(mc *models.MediaContainer) (string, e
         src = mc.Preview
     }
     log.Printf("DB Manager loading %s preview %s\n", mc.ID.String(), src)
-    return GetFilePathInContainer(src, dir.Name)
+    return utils.GetFilePathInContainer(src, dir.Name)
 }
 
 func (cm ContentManagerDB) FindActualFile(mc *models.MediaContainer) (string, error) {
@@ -532,16 +469,5 @@ func (cm ContentManagerDB) FindActualFile(mc *models.MediaContainer) (string, er
         return "DB Manager View no Parent Found", err
     }
     log.Printf("DB Manager View %s loading up %s\n", mc.ID.String(), mc.Src)
-    return GetFilePathInContainer(mc.Src, dir.Name)
-}
-
-// Given a container ID and the src of a file in there, get a path and check if it exists
-func GetFilePathInContainer(src string, dir_name string) (string, error) {
-    cfg := utils.GetCfg()
-    path := filepath.Join(cfg.Dir, dir_name)
-    fq_path := filepath.Join(path, src)
-    if _, os_err := os.Stat(fq_path); os_err != nil {
-        return fq_path, os_err
-    }
-    return fq_path, nil
+    return utils.GetFilePathInContainer(mc.Src, dir.Name)
 }

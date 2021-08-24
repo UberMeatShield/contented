@@ -1,4 +1,4 @@
-package actions
+package managers
 
 import (
     //"path/filepath"
@@ -6,18 +6,24 @@ import (
     "io/ioutil"
 	"contented/models"
 	"contented/utils"
+	"contented/internals"
     "encoding/json"
     //"time"
 	//"os"
 	//"testing"
 	//"github.com/gobuffalo/buffalo"
-    "github.com/gobuffalo/nulls"
     "github.com/gofrs/uuid"
+    "github.com/gobuffalo/nulls"
     "github.com/gobuffalo/envy"
+    "github.com/gobuffalo/suite"
 )
 
+type ActionSuite struct {
+    *suite.Action
+}
+
 func GetScreens() (*models.Container, models.MediaContainers) {
-    return GetMediaByDirName("screens")
+    return internals.GetMediaByDirName("screens")
 }
 
 func SetupScreensPreview(as *ActionSuite) (*models.Container, models.MediaContainers) {
@@ -103,7 +109,7 @@ func (as *ActionSuite) Test_ImgPreview() {
 
     // Basic sanity check that things exist and can preview
     for _, m := range media {
-        fq_path, err := GetFilePathInContainer(m.Src, cnt.Name)
+        fq_path, err := utils.GetFilePathInContainer(m.Src, cnt.Name)
         as.NoError(err, "It should not fail getting a full file path" + m.Src)
 
         f, open_err := os.Open(fq_path)
@@ -141,7 +147,7 @@ func (as *ActionSuite) Test_CreatePreview() {
 func (as *ActionSuite) Test_CreateContainerPreviews() {
     // Get a local not in DB setup for the container and media
     // Create a bunch of previews
-    cfg := ResetConfig()
+    cfg := internals.ResetConfig()
     cfg.UseDatabase = true
     cfg.PreviewOverSize = 0
 
@@ -155,7 +161,7 @@ func (as *ActionSuite) Test_CreateContainerPreviews() {
         as.NoError(mc_err)
         as.Equal(mc.Preview, "", "There should be no preview at this point")
     }
-    man := Get_Manager_ActionSuite(cfg, as)
+    man := GetManagerActionSuite(cfg, as)
     cnts, c_err := man.ListContainers(0, 2)
     as.Equal(len(*cnts), 1, "It should have containers")
     as.NoError(c_err)
@@ -206,7 +212,7 @@ func (as *ActionSuite) Test_PreviewAllData() {
     cfg.Dir = dir
 
     c_err := CreateInitialStructure(cfg)
-    man := Get_Manager_ActionSuite(cfg, as)
+    man := GetManagerActionSuite(cfg, as)
 
     cnts, c_err := man.ListContainers(0, 3)
     as.Equal(len(*cnts), 3, "It should have containers")

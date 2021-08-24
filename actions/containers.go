@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"contented/models"
-//    "errors"
-
+	"contented/managers"
     "github.com/gofrs/uuid"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/pop/v5"
@@ -35,35 +34,15 @@ type ContainersResource struct {
 func (v ContainersResource) List(c buffalo.Context) error {
 	// Get the DB connection from the context
 
-    man := GetManager(&c)
+    man := managers.GetManager(&c)
     containers, err := man.ListContainersContext()
     if err != nil {
         return c.Error(http.StatusBadRequest, err)
     } 
-    // TODO figure out how to set the current context
-	// Paginate results. Params "page" and "per_page" control pagination.
-	// Default values are "page=1" and "per_page=20".
-    /*
-	tx, ok := c.Value("tx").(*pop.Connection)
-	if !ok {
-		return fmt.Errorf("no transaction found")
-	}
-	containers := &models.Containers{}
-	q := tx.PaginateFromParams(c.Params())
 
-	// Retrieve all Containers from the DB
-	if err := q.All(containers); err != nil {
-		return err
-	}
-    */
-
+    // Maybe there is a cleaner way of doing all this but the browser just asks
+    // for html defaults and I like to see the json.
 	return responder.Wants("html", func(c buffalo.Context) error {
-		// Add the paginator to the context so it can be used in the template.
-		/*
-		   c.Set("pagination", q.Paginator)
-		   c.Set("containers", containers)
-		   return c.Render(http.StatusOK, r.HTML("/containers/index.plush.html"))
-		*/
 		return c.Render(200, r.JSON(containers))
 	}).Wants("json", func(c buffalo.Context) error {
 		return c.Render(200, r.JSON(containers))
@@ -75,39 +54,20 @@ func (v ContainersResource) List(c buffalo.Context) error {
 // Show gets the data for one Container. This function is mapped to
 // the path GET /containers/{container_id}
 func (v ContainersResource) Show(c buffalo.Context) error {
-	// Get the DB connection from the context
 
     c_id, err := uuid.FromString(c.Param("container_id"))
     if err != nil {
-        // return c.Error(http.StatusBadRequest, errors.New("Invalid Container ID"))
         return c.Error(http.StatusBadRequest, err)
-    } // Hate
+    }
 
-    man := GetManager(&c)
+	// Get the DB connection from the context
+    man := managers.GetManager(&c)
     container, err := man.GetContainer(c_id)
     if err != nil {
 		return c.Error(http.StatusNotFound, err)
     }
-    /*
-	tx, ok := c.Value("tx").(*pop.Connection)
-	if !ok {
-		return fmt.Errorf("no transaction found")
-	}
-
-	// Allocate an empty Container
-	container := &models.Container{}
-
-	// To find the Container the parameter container_id is used.
-	if err := tx.Find(container, c.Param("container_id")); err != nil {
-	}
-    */
 
 	return responder.Wants("html", func(c buffalo.Context) error {
-		/*
-		   c.Set("container", container)
-		   return c.Render(http.StatusOK, r.HTML("/containers/show.plush.html"))
-		*/
-
 		return c.Render(200, r.JSON(container))
 	}).Wants("json", func(c buffalo.Context) error {
 		return c.Render(200, r.JSON(container))
@@ -122,7 +82,7 @@ func (v ContainersResource) Create(c buffalo.Context) error {
 	// Allocate an empty Container
 
     // TODO: Reject if it is memory manager
-    man := GetManager(&c)
+    man := managers.GetManager(&c)
     if man.CanEdit() == false {
         return c.Error(
             http.StatusNotImplemented,
@@ -137,29 +97,19 @@ func (v ContainersResource) Create(c buffalo.Context) error {
 	}
 
 	// Get the DB connection from the context
+	// Validate the data from the html form
 	tx, ok := c.Value("tx").(*pop.Connection)
 	if !ok {
 		return fmt.Errorf("no transaction found")
 	}
-
-	// Validate the data from the html form
 	verrs, err := tx.ValidateAndCreate(container)
 	if err != nil {
 		return err
 	}
 
+    // Is there a cleaner buffalo way of doing this as always respond?
 	if verrs.HasAny() {
 		return responder.Wants("html", func(c buffalo.Context) error {
-			// Make the errors available inside the html template
-			/*
-			   c.Set("errors", verrs)
-
-			   // Render again the new.html template that the user can
-			   // correct the input.
-			   c.Set("container", container)
-
-			   return c.Render(http.StatusUnprocessableEntity, r.HTML("/containers/new.plush.html"))
-			*/
 			return c.Render(http.StatusUnprocessableEntity, r.JSON(verrs))
 		}).Wants("json", func(c buffalo.Context) error {
 			return c.Render(http.StatusUnprocessableEntity, r.JSON(verrs))
@@ -169,11 +119,6 @@ func (v ContainersResource) Create(c buffalo.Context) error {
 	}
 
 	return responder.Wants("html", func(c buffalo.Context) error {
-		// If there are no errors set a success message
-		//c.Flash().Add("success", T.Translate(c, "container.created.success"))
-		//return c.Redirect(http.StatusSeeOther, "/containers/%v", container.ID)
-
-		// and redirect to the show page
 		return c.Render(http.StatusCreated, r.JSON(container))
 	}).Wants("json", func(c buffalo.Context) error {
 		return c.Render(http.StatusCreated, r.JSON(container))
@@ -186,7 +131,7 @@ func (v ContainersResource) Create(c buffalo.Context) error {
 // the path PUT /containers/{container_id}
 func (v ContainersResource) Update(c buffalo.Context) error {
 	// Get the DB connection from the context
-    man := GetManager(&c)
+    man := managers.GetManager(&c)
     if man.CanEdit() == false {
         return c.Error(
             http.StatusNotImplemented,
@@ -194,7 +139,7 @@ func (v ContainersResource) Update(c buffalo.Context) error {
         )
     }
 
-
+    // TODO: Probably should make this update via the manager
 	tx, ok := c.Value("tx").(*pop.Connection)
 	if !ok {
 		return fmt.Errorf("no transaction found")
@@ -202,7 +147,6 @@ func (v ContainersResource) Update(c buffalo.Context) error {
 
 	// Allocate an empty Container
 	container := &models.Container{}
-
 	if err := tx.Find(container, c.Param("container_id")); err != nil {
 		return c.Error(http.StatusNotFound, err)
 	}
@@ -211,24 +155,14 @@ func (v ContainersResource) Update(c buffalo.Context) error {
 	if err := c.Bind(container); err != nil {
 		return err
 	}
-
 	verrs, err := tx.ValidateAndUpdate(container)
 	if err != nil {
 		return err
 	}
 
 	if verrs.HasAny() {
+		// Make the errors available inside the html template
 		return responder.Wants("html", func(c buffalo.Context) error {
-			// Make the errors available inside the html template
-			/*
-			   c.Set("errors", verrs)
-
-			   // Render again the edit.html template that the user can
-			   // correct the input.
-			   c.Set("container", container)
-
-			   return c.Render(http.StatusUnprocessableEntity, r.HTML("/containers/edit.plush.html"))
-			*/
 			return c.Render(http.StatusUnprocessableEntity, r.JSON(verrs))
 		}).Wants("json", func(c buffalo.Context) error {
 			return c.Render(http.StatusUnprocessableEntity, r.JSON(verrs))
@@ -238,10 +172,6 @@ func (v ContainersResource) Update(c buffalo.Context) error {
 	}
 
 	return responder.Wants("html", func(c buffalo.Context) error {
-		// If there are no errors set a success message
-		//c.Flash().Add("success", T.Translate(c, "container.updated.success"))
-
-		// and redirect to the show page
 		return c.Redirect(http.StatusSeeOther, "/containers/%v", container.ID)
 	}).Wants("json", func(c buffalo.Context) error {
 		return c.Render(http.StatusOK, r.JSON(container))
@@ -254,7 +184,7 @@ func (v ContainersResource) Update(c buffalo.Context) error {
 // to the path DELETE /containers/{container_id}
 func (v ContainersResource) Destroy(c buffalo.Context) error {
 	// Get the DB connection from the context
-    man := GetManager(&c)
+    man := managers.GetManager(&c)
     if man.CanEdit() == false {
         return c.Error(
             http.StatusNotImplemented,
@@ -268,23 +198,16 @@ func (v ContainersResource) Destroy(c buffalo.Context) error {
 	}
 
 	// Allocate an empty Container
-	container := &models.Container{}
-
 	// To find the Container the parameter container_id is used.
+	container := &models.Container{}
 	if err := tx.Find(container, c.Param("container_id")); err != nil {
 		return c.Error(http.StatusNotFound, err)
 	}
-
 	if err := tx.Destroy(container); err != nil {
 		return err
 	}
 
 	return responder.Wants("html", func(c buffalo.Context) error {
-		// If there are no errors set a flash message
-		// c.Flash().Add("success", T.Translate(c, "container.destroyed.success"))
-
-		// Redirect to the index page
-		//return c.Redirect(http.StatusSeeOther, "/containers")
 		return c.Render(http.StatusOK, r.JSON(container))
 	}).Wants("json", func(c buffalo.Context) error {
 		return c.Render(http.StatusOK, r.JSON(container))

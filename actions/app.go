@@ -54,7 +54,6 @@ func App(UseDatabase bool) *buffalo.App {
         app.Use(paramlogger.ParameterLogger)
 
         // Wraps each request in a transaction. Remove to disable this.
-        //  c.Value("tx").(*pop.Connection)
         if UseDatabase == true {
             log.Printf("Connecting to the database\n")
             app.Use(popmw.Transaction(models.DB))
