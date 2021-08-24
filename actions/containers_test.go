@@ -1,8 +1,9 @@
 package actions
-// These tests are DB based tests, vs in memory manager init_fake_app(true)
+// These tests are DB based tests, vs in memory manager internals.InitFakeApp(true)
 
 import (
 	"contented/models"
+	"contented/internals"
 	"encoding/json"
 	"net/http"
 )
@@ -26,7 +27,7 @@ func CreateContainer(name string, as *ActionSuite) models.Container {
 }
 
 func (as *ActionSuite) Test_ContainersResource_Show() {
-    init_fake_app(true)
+    internals.InitFakeApp(true)
 	name := "Show Test"
 	s := CreateContainer(name, as)
 	as.NotZero(s.ID)
@@ -40,7 +41,7 @@ func (as *ActionSuite) Test_ContainersResource_Show() {
 }
 
 func (as *ActionSuite) Test_ContainersResource_Create() {
-    init_fake_app(true)
+    internals.InitFakeApp(true)
 	c := &models.Container{
 		Total: 1,
 		Name:  "Derp",
@@ -58,7 +59,7 @@ func (as *ActionSuite) Test_ContainersResource_Create() {
 }
 
 func (as *ActionSuite) Test_ContainersResource_Update() {
-    init_fake_app(true)
+    internals.InitFakeApp(true)
 	s := CreateContainer("Initial Title", as)
 	as.NotZero(s.ID)
 
@@ -69,7 +70,7 @@ func (as *ActionSuite) Test_ContainersResource_Update() {
 }
 
 func (as *ActionSuite) Test_ContainersResource_Destroy() {
-    init_fake_app(true)
+    internals.InitFakeApp(true)
 	s := CreateContainer("Initial Title", as)
 	as.NotZero(s.ID)
 
@@ -81,7 +82,7 @@ func (as *ActionSuite) Test_ContainersResource_Destroy() {
 }
 
 func (as *ActionSuite) Test_ContainerFixture() {
-    init_fake_app(true)
+    internals.InitFakeApp(true)
     as.LoadFixture("base")
 
     res := as.JSON("/containers").Get()

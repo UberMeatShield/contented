@@ -1,9 +1,8 @@
 package internals
 
 /**
- * These are some common helper files dealing mostly with unit test setup.
+ * These are some common test helper files dealing mostly with unit test setup.
  */
-
 import (
     "log"
 	"fmt"

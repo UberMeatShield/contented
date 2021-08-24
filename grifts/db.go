@@ -5,7 +5,6 @@ import (
     "net/url"
     "contented/models"
     "contented/managers"
-    "contented/actions"
     "contented/utils"
     "github.com/gobuffalo/pop/v5"
 	"github.com/markbates/grift/grift"
@@ -56,7 +55,7 @@ var _ = grift.Namespace("db", func() {
                 get_connection := func() *pop.Connection {
                     return tx
                 } 
-                man := actions.CreateManager(cfg, get_connection, get_params)
+                man := managers.CreateManager(cfg, get_connection, get_params)
                 fmt.Printf("Creating previews %t", man.CanEdit())
                 return managers.CreateAllPreviews(man)
             })
@@ -64,7 +63,7 @@ var _ = grift.Namespace("db", func() {
             get_connection := func() *pop.Connection {
                 return nil // Do not do anything with the DB
             }
-            man := actions.CreateManager(cfg, get_connection, get_params)
+            man := managers.CreateManager(cfg, get_connection, get_params)
             fmt.Printf("Use memory manager %t", man.CanEdit())
             return managers.CreateAllPreviews(man)
         }

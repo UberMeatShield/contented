@@ -161,7 +161,7 @@ func (as *ActionSuite) Test_CreateContainerPreviews() {
         as.NoError(mc_err)
         as.Equal(mc.Preview, "", "There should be no preview at this point")
     }
-    man := Get_Manager_ActionSuite(cfg, as)
+    man := GetManagerActionSuite(cfg, as)
     cnts, c_err := man.ListContainers(0, 2)
     as.Equal(len(*cnts), 1, "It should have containers")
     as.NoError(c_err)
@@ -212,7 +212,7 @@ func (as *ActionSuite) Test_PreviewAllData() {
     cfg.Dir = dir
 
     c_err := CreateInitialStructure(cfg)
-    man := Get_Manager_ActionSuite(cfg, as)
+    man := GetManagerActionSuite(cfg, as)
 
     cnts, c_err := man.ListContainers(0, 3)
     as.Equal(len(*cnts), 3, "It should have containers")

@@ -1,14 +1,15 @@
 package actions
 
 import (
-    "github.com/gobuffalo/nulls"
-	"contented/models"
 	"encoding/json"
 	"net/http"
+	"contented/models"
+	"contented/internals"
+    "github.com/gobuffalo/nulls"
 )
 
 func CreateResource(src string, container_id nulls.UUID, as *ActionSuite) models.MediaContainer {
-    init_fake_app(true)
+    internals.InitFakeApp(true)
 	mc := &models.MediaContainer{
 		Src:     src,
 		ContentType:    "test",
@@ -26,7 +27,7 @@ func CreateResource(src string, container_id nulls.UUID, as *ActionSuite) models
 
 func (as *ActionSuite) Test_MediaSubQuery() {
     // Create 2 containers
-    init_fake_app(true)
+    internals.InitFakeApp(true)
     c1 := &models.Container{
          Total: 2,
          Path:  "container/1/media",
@@ -65,13 +66,13 @@ func (as *ActionSuite) Test_MediaSubQuery() {
 }
 
 func (as *ActionSuite) Test_MediaContainersResource_List() {
-    init_fake_app(true)
+    internals.InitFakeApp(true)
 	res := as.JSON("/media").Get()
 	as.Equal(http.StatusOK, res.Code)
 }
 
 func (as *ActionSuite) Test_MediaContainersResource_Show() {
-    init_fake_app(true)
+    internals.InitFakeApp(true)
 	src := "test_query"
 	mc := CreateResource(src, nulls.UUID{}, as)
 	check := as.JSON("/media/" + mc.ID.String()).Get()
@@ -95,7 +96,7 @@ func (as *ActionSuite) Test_MediaContainersResource_Update() {
 }
 
 func (as *ActionSuite) Test_MediaContainersResource_Destroy() {
-    init_fake_app(true)
+    internals.InitFakeApp(true)
 	mc := CreateResource("Nuke Test", nulls.UUID{}, as)
 	del_res := as.JSON("/media/" + mc.ID.String()).Delete()
 	as.Equal(http.StatusOK, del_res.Code)

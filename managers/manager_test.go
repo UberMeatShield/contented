@@ -36,7 +36,7 @@ var expect_len = map[string]int{
     "screens": 4,
 }
 
-func _ActionSuite(cfg *utils.DirConfigEntry, as *ActionSuite) ContentManager{
+func GetManagerActionSuite(cfg *utils.DirConfigEntry, as *ActionSuite) ContentManager{
     ctx := internals.GetContext(as.App)
     get_params := func() *url.Values {
         vals := ctx.Params().(url.Values)
@@ -260,7 +260,7 @@ func (as *ActionSuite) Test_ManagerDB() {
         models.DB.Create(&mc)
     }
 
-    man := _ActionSuite(cfg, as)
+    man := GetManagerActionSuite(cfg, as)
     q_media, err := man.ListAllMedia(0, 14)
     as.NoError(err, "We should be able to list")
     as.Equal(len(*q_media), 12, "there should be 12 results")
