@@ -99,14 +99,6 @@ type ContentManager interface {
 }
 
 
-// GoLang is just making this awkward
-type MemoryStorage struct {
-    Initialized bool
-    ValidMedia      models.MediaMap
-    ValidContainers models.ContainerMap
-}
-var memStorage MemoryStorage = MemoryStorage{Initialized: false}
-
 type ContentManagerMemory struct {
     cfg *utils.DirConfigEntry
 
@@ -138,8 +130,9 @@ func (cm ContentManagerMemory) GetCfg() *utils.DirConfigEntry {
 func (cm *ContentManagerMemory) Initialize() {
     // We only want the memory storage initialized one time ?  But allow for re-init?
     // Could toss the object into the manager but then that means even more code change.
+    memStorage := utils.GetMemStorage()
     if memStorage.Initialized == false {
-        memStorage = InitializeMemory(cm.cfg.Dir)
+        memStorage = utils.InitializeMemory(cm.cfg.Dir)
     }
     // Move some of these into an actual singleton.
     cm.ValidContainers = memStorage.ValidContainers
@@ -147,49 +140,10 @@ func (cm *ContentManagerMemory) Initialize() {
     log.Printf("Found %d directories with %d media elements \n", len(cm.ValidContainers), len(cm.ValidMedia))
 }
 
-func InitializeMemory(dir_root string) MemoryStorage {
-    log.Printf("Initializing Memory Storage %s\n", dir_root)
-    containers, files := PopulateMemoryView(dir_root)
-
-    memStorage.Initialized = true
-    memStorage.ValidContainers = containers
-    memStorage.ValidMedia = files
-
-    return memStorage
-}
-
 // Kinda strange but it seems hard to assign the type into an interface
 // type GetParamsType func() *url.Values
 func (cm ContentManagerMemory) GetParams() *url.Values {
     return cm.Params()
-}
-
-/**
- *  TODO:  Require the number to preview and will be Memory only supported.
- */
-func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap) {
-    containers := models.ContainerMap{}
-    files := models.MediaMap{}
-
-    log.Printf("Searching in %s", dir_root)
-    cfg := utils.GetCfg()
-
-    cnts := utils.FindContainers(dir_root)
-    for idx, c := range cnts {
-        media := utils.FindMediaMatcher(c, 90001, 0, cfg.IncFiles, cfg.ExcFiles)  // TODO: Config this
-        // c.Contents = media
-        c.Total = len(media)
-        c.Idx = idx
-        containers[c.ID] = c
-
-        // This check is normally to determine if we didn't clear out old previews.
-        // For memory only managers it will just consider that a bonus and use the preview.
-        for _, mc := range media {
-            AssignPreviewIfExists(&c, &mc)
-            files[mc.ID] = mc
-        }
-    }
-    return containers, files
 }
 
 func StringDefault(s1, s2 string) string {
@@ -359,20 +313,8 @@ func (cm ContentManagerMemory) SetPreviewIfExists(mc *models.MediaContainer) (st
         log.Fatal(err)
         return "", err
     }
-    pFile := AssignPreviewIfExists(c, mc)
+    pFile := utils.AssignPreviewIfExists(c, mc)
     return pFile, nil
-}
-
-func AssignPreviewIfExists(c* models.Container, mc *models.MediaContainer) string {
-    // This check is normally to determine if we didn't clear out old previews.
-    // For memory only managers it will just consider that a bonus and use the preview.
-    previewPath := utils.GetPreviewDst(c.GetFqPath())
-    previewFile, exists := utils.ErrorOnPreviewExists(mc.Src, previewPath, mc.ContentType)
-    if exists != nil {
-        mc.Preview = utils.GetRelativePreviewPath(previewFile, c.GetFqPath())
-        log.Printf("Added a preview to media %s", mc.Preview)
-    }
-    return previewFile
 }
 
 // DB version of content management

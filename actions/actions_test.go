@@ -1,14 +1,15 @@
 package actions
 
 import (
-	"contented/models"
-	"contented/utils"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
     "context"
 	"testing"
+	"contented/models"
+	"contented/utils"
+    "contented/internals"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/envy"
 	"github.com/gobuffalo/packr/v2"
@@ -38,17 +39,6 @@ func getContextParams(app *buffalo.App, url string, page string, per_page string
     }
 }
 
-// TODO validate octet/stream
-func is_valid_content_type(as *ActionSuite, content_type string) {
-    valid := map[string]bool{
-        "image/png": true,
-        "image/jpeg": true,
-        "application/octet-stream": true,
-        "video/mp4": true,
-    }
-	as.Contains(valid, content_type)
-}
-
 
 func ResetConfig() *utils.DirConfigEntry {
     cfg := utils.GetCfgDefaults()
@@ -73,7 +63,7 @@ func init_fake_app(use_db bool) *utils.DirConfigEntry {
 
     // TODO: Assign the context into the manager (force it?)
     if cfg.UseDatabase == false {
-        memStorage := InitializeMemory(dir)
+        memStorage := utils.InitializeMemory(dir)
 
         // cnts := memStorage.ValidContainers
         // for _, c := range cnts {
@@ -150,7 +140,8 @@ func (as *ActionSuite) Test_ViewRef() {
 		res := as.HTML("/view/" + mc.ID.String()).Get()
 		as.Equal(http.StatusOK, res.Code)
 		header := res.Header()
-        is_valid_content_type(as, header.Get("Content-Type"))
+        as.NoError(internals.IsValidContentType(header.Get("Content-Type")))
+        
 	}
 }
 
@@ -169,7 +160,7 @@ func (as *ActionSuite) Test_ContentDirDownload() {
 		res := as.HTML("/download/" + mc.ID.String()).Get()
 		as.Equal(http.StatusOK, res.Code)
 		header := res.Header()
-        is_valid_content_type(as, header.Get("Content-Type"))
+        as.NoError(internals.IsValidContentType(header.Get("Content-Type")))
     }
 }
 
@@ -209,7 +200,7 @@ func (as *ActionSuite) Test_PreviewFile() {
 		as.Equal(http.StatusOK, res.Code)
 
 		header := res.Header()
-        is_valid_content_type(as, header.Get("Content-Type"))
+        as.NoError(internals.IsValidContentType(header.Get("Content-Type")))
 	}
 }
 
@@ -225,7 +216,7 @@ func (as *ActionSuite) Test_FullFile() {
 		as.Equal(http.StatusOK, res.Code)
 
 		header := res.Header()
-        is_valid_content_type(as, header.Get("Content-Type"))
+        as.NoError(internals.IsValidContentType(header.Get("Content-Type")))
 	}
 }
 

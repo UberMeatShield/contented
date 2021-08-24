@@ -7,19 +7,14 @@ package internals
 import (
     "log"
 	"fmt"
+    "errors"
 	"net/http"
     "context"
 	"contented/models"
 	"contented/utils"
-	"contented/actions"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/envy"
-	"github.com/gobuffalo/suite"
 )
-
-type ActionSuite struct {
-	*suite.Action
-}
 
 func getContext(app *buffalo.App) buffalo.Context {
     return getContextParams(app, "/containers", "1", "10")
@@ -41,14 +36,17 @@ func getContextParams(app *buffalo.App, url string, page string, per_page string
 }
 
 // TODO validate octet/stream
-func is_valid_content_type(as *ActionSuite, content_type string) {
+func IsValidContentType(content_type string) error {
     valid := map[string]bool{
         "image/png": true,
         "image/jpeg": true,
         "application/octet-stream": true,
         "video/mp4": true,
     }
-	as.Contains(valid, content_type)
+    if valid[content_type] {
+        return nil 
+    }
+    return errors.New("Invalid content type: " + content_type)
 }
 
 
@@ -75,7 +73,9 @@ func init_fake_app(use_db bool) *utils.DirConfigEntry {
 
     // TODO: Assign the context into the manager (force it?)
     if cfg.UseDatabase == false {
-        memStorage := actions.InitializeMemory(dir)
+
+        // TODO: This moves into managers.. is there a sane way of handling this?
+        memStorage := utils.InitializeMemory(dir)
 
         // cnts := memStorage.ValidContainers
         // for _, c := range cnts {
@@ -85,7 +85,6 @@ func init_fake_app(use_db bool) *utils.DirConfigEntry {
                mc.Preview = "preview_this_is_p_ng"
            }
         }
-       // }
     }
 	return cfg
 }

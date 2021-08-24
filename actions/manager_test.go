@@ -231,7 +231,7 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
     f.Sync()
 
     // Checks that if a preview exists
-    cnts, media := PopulateMemoryView(cfg.Dir)
+    cnts, media := utils.PopulateMemoryView(cfg.Dir)
     as.Equal(len(cnts), 4, "We should pull in 4 directories")
     as.Equal(len(media), 1, "But there is only one video by mime type")
 
