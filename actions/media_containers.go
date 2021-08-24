@@ -60,14 +60,7 @@ func (v MediaContainersResource) List(c buffalo.Context) error {
         mediaContainers = mcs
     }
 
-    // AKA nope on html
 	return responder.Wants("html", func(c buffalo.Context) error {
-		// Add the paginator to the context so it can be used in the template.
-		/*
-		   c.Set("pagination", q.Paginator)
-		   c.Set("mediaContainers", mediaContainers)
-		   return c.Render(http.StatusOK, r.HTML("/media_containers/index.plush.html"))
-		*/
 		return c.Render(200, r.JSON(mediaContainers))
 	}).Wants("json", func(c buffalo.Context) error {
 		return c.Render(200, r.JSON(mediaContainers))
@@ -92,26 +85,7 @@ func (v MediaContainersResource) Show(c buffalo.Context) error {
 		return c.Error(http.StatusNotFound, missing_err)
     }
 
-    /*
-	// Allocate an empty MediaContainer
-	mediaContainer := &models.MediaContainer{}
-
-	// To find the MediaContainer the parameter media_container_id is used.
-	// Get the DB connection from the context
-	tx, ok := c.Value("tx").(*pop.Connection)
-	if !ok {
-		return fmt.Errorf("no transaction found")
-	}
-	if err := tx.Find(mediaContainer, c.Param("media_container_id")); err != nil {
-		return c.Error(http.StatusNotFound, err)
-	}
-    */
-
 	return responder.Wants("html", func(c buffalo.Context) error {
-		/*
-		   c.Set("mediaContainer", mediaContainer)
-		   return c.Render(http.StatusOK, r.HTML("/media_containers/show.plush.html"))
-		*/
 		return c.Render(200, r.JSON(mediaContainer))
 	}).Wants("json", func(c buffalo.Context) error {
 		return c.Render(200, r.JSON(mediaContainer))
@@ -130,13 +104,9 @@ func (v MediaContainersResource) Create(c buffalo.Context) error {
             errors.New("Edit not supported by this manager"),
         )
     }
-
-    // TODO: Check if we actually allow for this
-
 	// Allocate an empty MediaContainer
+	// Bind mediaContainer to the html form elements (probably not required?)
 	mediaContainer := &models.MediaContainer{}
-
-	// Bind mediaContainer to the html form elements
 	if err := c.Bind(mediaContainer); err != nil {
 		return err
 	}
@@ -155,16 +125,6 @@ func (v MediaContainersResource) Create(c buffalo.Context) error {
 
 	if verrs.HasAny() {
 		return responder.Wants("html", func(c buffalo.Context) error {
-			// Make the errors available inside the html template
-			/*
-			   c.Set("errors", verrs)
-
-			   // Render again the new.html template that the user can
-			   // correct the input.
-			   c.Set("mediaContainer", mediaContainer)
-
-			   return c.Render(http.StatusUnprocessableEntity, r.HTML("/media_containers/new.plush.html"))
-			*/
 			return c.Render(http.StatusUnprocessableEntity, r.JSON(verrs))
 		}).Wants("json", func(c buffalo.Context) error {
 			return c.Render(http.StatusUnprocessableEntity, r.JSON(verrs))
@@ -174,13 +134,6 @@ func (v MediaContainersResource) Create(c buffalo.Context) error {
 	}
 
 	return responder.Wants("html", func(c buffalo.Context) error {
-		// If there are no errors set a success message
-		/*
-		   c.Flash().Add("success", T.Translate(c, "mediaContainer.created.success"))
-
-		   // and redirect to the show page
-		   return c.Redirect(http.StatusSeeOther, "/media_containers/%v", mediaContainer.ID)
-		*/
 		return c.Render(http.StatusCreated, r.JSON(mediaContainer))
 	}).Wants("json", func(c buffalo.Context) error {
 		return c.Render(http.StatusCreated, r.JSON(mediaContainer))
@@ -207,7 +160,6 @@ func (v MediaContainersResource) Update(c buffalo.Context) error {
 
 	// Allocate an empty MediaContainer
 	mediaContainer := &models.MediaContainer{}
-
 	if err := tx.Find(mediaContainer, c.Param("media_container_id")); err != nil {
 		return c.Error(http.StatusNotFound, err)
 	}
@@ -216,7 +168,6 @@ func (v MediaContainersResource) Update(c buffalo.Context) error {
 	if err := c.Bind(mediaContainer); err != nil {
 		return err
 	}
-
 	verrs, err := tx.ValidateAndUpdate(mediaContainer)
 	if err != nil {
 		return err
@@ -224,16 +175,6 @@ func (v MediaContainersResource) Update(c buffalo.Context) error {
 
 	if verrs.HasAny() {
 		return responder.Wants("html", func(c buffalo.Context) error {
-			// Make the errors available inside the html template
-			/*
-			   c.Set("errors", verrs)
-
-			   // Render again the edit.html template that the user can
-			   // correct the input.
-			   c.Set("mediaContainer", mediaContainer)
-
-			   return c.Render(http.StatusUnprocessableEntity, r.HTML("/media_containers/edit.plush.html"))
-			*/
 			return c.Render(http.StatusUnprocessableEntity, r.JSON(verrs))
 		}).Wants("json", func(c buffalo.Context) error {
 			return c.Render(http.StatusUnprocessableEntity, r.JSON(verrs))
@@ -243,13 +184,6 @@ func (v MediaContainersResource) Update(c buffalo.Context) error {
 	}
 
 	return responder.Wants("html", func(c buffalo.Context) error {
-		// If there are no errors set a success message
-		/*
-		   c.Flash().Add("success", T.Translate(c, "mediaContainer.updated.success"))
-
-		   // and redirect to the show page
-		   return c.Redirect(http.StatusSeeOther, "/media_containers/%v", mediaContainer.ID)
-		*/
 		return c.Render(http.StatusOK, r.JSON(mediaContainer))
 	}).Wants("json", func(c buffalo.Context) error {
 		return c.Render(http.StatusOK, r.JSON(mediaContainer))
@@ -285,13 +219,6 @@ func (v MediaContainersResource) Destroy(c buffalo.Context) error {
 	}
 
 	return responder.Wants("html", func(c buffalo.Context) error {
-		// If there are no errors set a flash message
-		/*
-		   c.Flash().Add("success", T.Translate(c, "mediaContainer.destroyed.success"))
-
-		   // Redirect to the index page
-		   return c.Redirect(http.StatusSeeOther, "/media_containers")
-		*/
 		return c.Render(http.StatusOK, r.JSON(mediaContainer))
 	}).Wants("json", func(c buffalo.Context) error {
 		return c.Render(http.StatusOK, r.JSON(mediaContainer))
