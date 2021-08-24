@@ -17,6 +17,32 @@ import (
 type GetConnType func() *pop.Connection
 type GetParamsType func() *url.Values
 
+type ContentManager interface {
+    // SetCfg(c *utils.DirConfigEntry)
+    GetCfg() *utils.DirConfigEntry
+    CanEdit() bool  // Do we support CRUD or just R
+
+    // TODO
+    //GetConnection() *pop.Connection
+    GetParams() *url.Values
+
+    FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error)
+    FindDirRef(dir_id uuid.UUID) (*models.Container, error)
+
+    GetContainer(c_id uuid.UUID) (*models.Container, error)
+    ListContainers(page int, per_page int) (*models.Containers, error)
+    ListContainersContext() (*models.Containers, error)
+
+    GetMedia(media_id uuid.UUID) (*models.MediaContainer, error)
+    ListMedia(ContainerID uuid.UUID, page int, per_page int) (*models.MediaContainers, error)
+    ListMediaContext(ContainerID uuid.UUID) (*models.MediaContainers, error)
+    ListAllMedia(page int, per_page int) (*models.MediaContainers, error)
+
+    UpdateMedia(media *models.MediaContainer) error
+    FindActualFile(mc *models.MediaContainer) (string, error)
+    GetPreviewForMC(mc *models.MediaContainer) (string, error)
+}
+
 // Dealing with buffalo.Context vs grift.Context is kinda annoying, this handles the
 // buffalo context which handles tests or runtime but doesn't work in grifts.
 func GetManager(c *buffalo.Context) ContentManager {
@@ -69,33 +95,6 @@ func CreateManager(cfg *utils.DirConfigEntry, get_conn GetConnType, get_params G
         return mem_man
     }
 }
-
-type ContentManager interface {
-    // SetCfg(c *utils.DirConfigEntry)
-    GetCfg() *utils.DirConfigEntry
-    CanEdit() bool  // Do we support CRUD or just R
-
-    // TODO
-    //GetConnection() *pop.Connection
-    GetParams() *url.Values
-
-    FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error)
-    FindDirRef(dir_id uuid.UUID) (*models.Container, error)
-
-    GetContainer(c_id uuid.UUID) (*models.Container, error)
-    ListContainers(page int, per_page int) (*models.Containers, error)
-    ListContainersContext() (*models.Containers, error)
-
-    GetMedia(media_id uuid.UUID) (*models.MediaContainer, error)
-    ListMedia(ContainerID uuid.UUID, page int, per_page int) (*models.MediaContainers, error)
-    ListMediaContext(ContainerID uuid.UUID) (*models.MediaContainers, error)
-    ListAllMedia(page int, per_page int) (*models.MediaContainers, error)
-
-    UpdateMedia(media *models.MediaContainer) error
-    FindActualFile(mc *models.MediaContainer) (string, error)
-    GetPreviewForMC(mc *models.MediaContainer) (string, error)
-}
-
 
 type ContentManagerMemory struct {
     cfg *utils.DirConfigEntry
