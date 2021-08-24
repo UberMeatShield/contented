@@ -2,11 +2,9 @@ package actions
 
 import (
     "log"
-    "os"
     "errors"
     "sort"
     "net/url"
-    "path/filepath"
     "contented/models"
     "contented/utils"
     "strconv"
@@ -341,7 +339,7 @@ func (cm ContentManagerMemory) GetPreviewForMC(mc *models.MediaContainer) (strin
         src = mc.Preview
     }
     log.Printf("Memory Manager loading %s preview %s\n", mc.ID.String(), src)
-    return GetFilePathInContainer(src, dir.Name)
+    return utils.GetFilePathInContainer(src, dir.Name)
 }
 
 func (cm ContentManagerMemory) FindActualFile(mc *models.MediaContainer) (string, error) {
@@ -350,7 +348,7 @@ func (cm ContentManagerMemory) FindActualFile(mc *models.MediaContainer) (string
         return "Memory Manager View no Parent Found", err
     }
     log.Printf("Memory Manager View %s loading up %s\n", mc.ID.String(), mc.Src)
-    return GetFilePathInContainer(mc.Src, dir.Name)
+    return utils.GetFilePathInContainer(mc.Src, dir.Name)
 }
 
 // If you want to do in memory testing and already manually created previews this will
@@ -523,7 +521,7 @@ func (cm ContentManagerDB) GetPreviewForMC(mc *models.MediaContainer) (string, e
         src = mc.Preview
     }
     log.Printf("DB Manager loading %s preview %s\n", mc.ID.String(), src)
-    return GetFilePathInContainer(src, dir.Name)
+    return utils.GetFilePathInContainer(src, dir.Name)
 }
 
 func (cm ContentManagerDB) FindActualFile(mc *models.MediaContainer) (string, error) {
@@ -532,16 +530,5 @@ func (cm ContentManagerDB) FindActualFile(mc *models.MediaContainer) (string, er
         return "DB Manager View no Parent Found", err
     }
     log.Printf("DB Manager View %s loading up %s\n", mc.ID.String(), mc.Src)
-    return GetFilePathInContainer(mc.Src, dir.Name)
-}
-
-// Given a container ID and the src of a file in there, get a path and check if it exists
-func GetFilePathInContainer(src string, dir_name string) (string, error) {
-    cfg := utils.GetCfg()
-    path := filepath.Join(cfg.Dir, dir_name)
-    fq_path := filepath.Join(path, src)
-    if _, os_err := os.Stat(fq_path); os_err != nil {
-        return fq_path, os_err
-    }
-    return fq_path, nil
+    return utils.GetFilePathInContainer(mc.Src, dir.Name)
 }

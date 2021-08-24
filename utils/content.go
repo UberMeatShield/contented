@@ -256,6 +256,17 @@ func GetFileContents(dir string, filename string) *bufio.Reader {
 	return GetFileContentsByFqName(filepath.Join(dir, filename))
 }
 
+// Given a container ID and the src of a file in there, get a path and check if it exists
+func GetFilePathInContainer(src string, dir_name string) (string, error) {
+    cfg := GetCfg() // TODO: Potentially this should be passed in
+    path := filepath.Join(cfg.Dir, dir_name)
+    fq_path := filepath.Join(path, src)
+    if _, os_err := os.Stat(fq_path); os_err != nil {
+        return fq_path, os_err
+    }
+    return fq_path, nil
+}
+
 func GetFileContentsByFqName(fq_name string) *bufio.Reader {
 	f, err := os.Open(fq_name)
 	if err != nil {

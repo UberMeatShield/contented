@@ -15,6 +15,7 @@ import (
     "path/filepath"
     "contented/models"
     "contented/utils"
+    "contented/actions"
     "github.com/pkg/errors"
     "github.com/gofrs/uuid"
     "github.com/gobuffalo/nulls"
@@ -85,7 +86,7 @@ func GetContainerPreviewDst(c *models.Container) string {
 }
 
 // Init a manager and pass it in or just do this via config value instead of a pass in
-func CreateAllPreviews(cm ContentManager) error {
+func CreateAllPreviews(cm actions.ContentManager) error {
     cnts, c_err := cm.ListContainers(0, 9001)
     if c_err != nil {
         return c_err
@@ -103,7 +104,7 @@ func CreateAllPreviews(cm ContentManager) error {
 }
 
 // TODO: Should this return a total of previews created or something?
-func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
+func CreateContainerPreviews(c *models.Container, cm actions.ContentManager) error {
     log.Printf("About to try and create previews for %s:%s\n", c.Name, c.ID.String())
     // Reset the preview directory, then create it fresh (update tests if this changes)
     c_err := ClearContainerPreviews(c)

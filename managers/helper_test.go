@@ -6,18 +6,24 @@ import (
     "io/ioutil"
 	"contented/models"
 	"contented/utils"
+	"contented/internals"
     "encoding/json"
     //"time"
 	//"os"
 	//"testing"
 	//"github.com/gobuffalo/buffalo"
-    "github.com/gobuffalo/nulls"
     "github.com/gofrs/uuid"
+    "github.com/gobuffalo/nulls"
     "github.com/gobuffalo/envy"
+    "github.com/gobuffalo/suite"
 )
 
+type ActionSuite struct {
+    *suite.Action
+}
+
 func GetScreens() (*models.Container, models.MediaContainers) {
-    return GetMediaByDirName("screens")
+    return internals.GetMediaByDirName("screens")
 }
 
 func SetupScreensPreview(as *ActionSuite) (*models.Container, models.MediaContainers) {
@@ -103,7 +109,7 @@ func (as *ActionSuite) Test_ImgPreview() {
 
     // Basic sanity check that things exist and can preview
     for _, m := range media {
-        fq_path, err := GetFilePathInContainer(m.Src, cnt.Name)
+        fq_path, err := utils.GetFilePathInContainer(m.Src, cnt.Name)
         as.NoError(err, "It should not fail getting a full file path" + m.Src)
 
         f, open_err := os.Open(fq_path)
@@ -141,7 +147,7 @@ func (as *ActionSuite) Test_CreatePreview() {
 func (as *ActionSuite) Test_CreateContainerPreviews() {
     // Get a local not in DB setup for the container and media
     // Create a bunch of previews
-    cfg := ResetConfig()
+    cfg := internals.ResetConfig()
     cfg.UseDatabase = true
     cfg.PreviewOverSize = 0
 
