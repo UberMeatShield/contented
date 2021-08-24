@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"contented/models"
+	"contented/managers"
     "github.com/gofrs/uuid"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/pop/v5"
@@ -33,7 +34,7 @@ type ContainersResource struct {
 func (v ContainersResource) List(c buffalo.Context) error {
 	// Get the DB connection from the context
 
-    man := GetManager(&c)
+    man := managers.GetManager(&c)
     containers, err := man.ListContainersContext()
     if err != nil {
         return c.Error(http.StatusBadRequest, err)
@@ -60,7 +61,7 @@ func (v ContainersResource) Show(c buffalo.Context) error {
     }
 
 	// Get the DB connection from the context
-    man := GetManager(&c)
+    man := managers.GetManager(&c)
     container, err := man.GetContainer(c_id)
     if err != nil {
 		return c.Error(http.StatusNotFound, err)
@@ -81,7 +82,7 @@ func (v ContainersResource) Create(c buffalo.Context) error {
 	// Allocate an empty Container
 
     // TODO: Reject if it is memory manager
-    man := GetManager(&c)
+    man := managers.GetManager(&c)
     if man.CanEdit() == false {
         return c.Error(
             http.StatusNotImplemented,
@@ -130,7 +131,7 @@ func (v ContainersResource) Create(c buffalo.Context) error {
 // the path PUT /containers/{container_id}
 func (v ContainersResource) Update(c buffalo.Context) error {
 	// Get the DB connection from the context
-    man := GetManager(&c)
+    man := managers.GetManager(&c)
     if man.CanEdit() == false {
         return c.Error(
             http.StatusNotImplemented,
@@ -183,7 +184,7 @@ func (v ContainersResource) Update(c buffalo.Context) error {
 // to the path DELETE /containers/{container_id}
 func (v ContainersResource) Destroy(c buffalo.Context) error {
 	// Get the DB connection from the context
-    man := GetManager(&c)
+    man := managers.GetManager(&c)
     if man.CanEdit() == false {
         return c.Error(
             http.StatusNotImplemented,

@@ -16,11 +16,11 @@ import (
 	"github.com/gobuffalo/envy"
 )
 
-func getContext(app *buffalo.App) buffalo.Context {
-    return getContextParams(app, "/containers", "1", "10")
+func GetContext(app *buffalo.App) buffalo.Context {
+    return GetContextParams(app, "/containers", "1", "10")
 }
 
-func getContextParams(app *buffalo.App, url string, page string, per_page string) buffalo.Context {
+func GetContextParams(app *buffalo.App, url string, page string, per_page string) buffalo.Context {
     req, _ := http.NewRequest("GET", url, nil)
 
     // Setting a value here like this doesn't seem to work correctly.  The context will NOT
@@ -62,7 +62,7 @@ func ResetConfig() *utils.DirConfigEntry {
 // This function is now how the init method should function till caching is implemented
 // As the internals / guts are functional using the new models the creation of models
 // can be removed.
-func init_fake_app(use_db bool) *utils.DirConfigEntry {
+func InitFakeApp(use_db bool) *utils.DirConfigEntry {
 	dir, _ := envy.MustGet("DIR")
 	fmt.Printf("Using directory %s\n", dir)
 

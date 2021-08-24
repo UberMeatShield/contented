@@ -14,7 +14,6 @@ import (
 )
 
 var _ = grift.Namespace("db", func() {
-
 	grift.Desc("seed", "Populate the DB with a set of directory content.")
 	grift.Add("seed", func(c *grift.Context) error {
         cfg := utils.GetCfg()

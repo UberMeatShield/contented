@@ -3,10 +3,10 @@ package actions
 import (
     "log"
     "errors"
-	"contented/models"
 	"fmt"
 	"net/http"
-
+	"contented/models"
+	"contented/managers"
     "github.com/gofrs/uuid"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/pop/v5"
@@ -35,7 +35,7 @@ type MediaContainersResource struct {
 func (v MediaContainersResource) List(c buffalo.Context) error {
 	// Get the DB connection from the context
 
-    man := GetManager(&c)
+    man := managers.GetManager(&c)
     var mediaContainers *models.MediaContainers
 
     // Optional params suuuuck in GoLang
@@ -72,7 +72,7 @@ func (v MediaContainersResource) List(c buffalo.Context) error {
 // Show gets the data for one MediaContainer. This function is mapped to
 // the path GET /media_containers/{media_container_id}
 func (v MediaContainersResource) Show(c buffalo.Context) error {
-    man := GetManager(&c)
+    man := managers.GetManager(&c)
 
     // TODO: Make it actually just handle /media (page, number)
     uuid, err := uuid.FromString(c.Param("media_container_id"))
@@ -97,7 +97,7 @@ func (v MediaContainersResource) Show(c buffalo.Context) error {
 // Create adds a MediaContainer to the DB. This function is mapped to the
 // path POST /media_containers
 func (v MediaContainersResource) Create(c buffalo.Context) error {
-    man := GetManager(&c)
+    man := managers.GetManager(&c)
     if man.CanEdit() == false {
         return c.Error(
             http.StatusNotImplemented,
@@ -145,7 +145,7 @@ func (v MediaContainersResource) Create(c buffalo.Context) error {
 // Update changes a MediaContainer in the DB. This function is mapped to
 // the path PUT /media_containers/{media_container_id}
 func (v MediaContainersResource) Update(c buffalo.Context) error {
-    man := GetManager(&c)
+    man := managers.GetManager(&c)
     if man.CanEdit() == false {
         return c.Error(
             http.StatusNotImplemented,
@@ -195,7 +195,7 @@ func (v MediaContainersResource) Update(c buffalo.Context) error {
 // Destroy deletes a MediaContainer from the DB. This function is mapped
 // to the path DELETE /media_containers/{media_container_id}
 func (v MediaContainersResource) Destroy(c buffalo.Context) error {
-    man := GetManager(&c)
+    man := managers.GetManager(&c)
     if man.CanEdit() == false {
         return c.Error(
             http.StatusNotImplemented,

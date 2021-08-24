@@ -1,4 +1,4 @@
-package actions
+package managers
 
 import (
     "log"
@@ -8,11 +8,9 @@ import (
     "contented/models"
     "contented/utils"
     "strconv"
-    //"github.com/gobuffalo/nulls"
     "github.com/gofrs/uuid"
     "github.com/gobuffalo/buffalo"
     "github.com/gobuffalo/pop/v5"
-    //"github.com/gobuffalo/pop/v5/paginator"
 )
 
 

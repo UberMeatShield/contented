@@ -9,6 +9,7 @@ import (
 	"testing"
 	"contented/models"
 	"contented/utils"
+	"contented/managers"
     "contented/internals"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/envy"
@@ -129,7 +130,7 @@ func (as *ActionSuite) Test_ViewRef() {
 
     app := as.App
     ctx := getContext(app)
-    man := GetManager(&ctx)
+    man := managers.GetManager(&ctx)
     mcs, err := man.ListAllMedia(2, 2)
     as.NoError(err)
     as.Equal(2, len(*mcs), "It should have only two results")
@@ -150,7 +151,7 @@ func (as *ActionSuite) Test_ContentDirDownload() {
 	init_fake_app(false)
 
     ctx := getContext(as.App)
-    man := GetManager(&ctx)
+    man := managers.GetManager(&ctx)
     mcs, err := man.ListAllMedia(2, 2)
     as.NoError(err)
     as.Equal(2, len(*mcs), "It should have only two results")
@@ -171,7 +172,7 @@ func (as *ActionSuite) Test_FindAndLoadFile() {
 	as.Equal(true, cfg.Initialized)
 
     ctx := getContext(as.App)
-    man := GetManager(&ctx)
+    man := managers.GetManager(&ctx)
     mcs, err := man.ListAllMedia(1, 200)
     as.NoError(err)
 
@@ -191,7 +192,7 @@ func (as *ActionSuite) Test_FindAndLoadFile() {
 func (as *ActionSuite) Test_PreviewFile() {
 	init_fake_app(false)
     ctx := getContext(as.App)
-    man := GetManager(&ctx)
+    man := managers.GetManager(&ctx)
     mcs, err := man.ListAllMedia(1, 200)
     as.NoError(err)
 
@@ -207,7 +208,7 @@ func (as *ActionSuite) Test_PreviewFile() {
 func (as *ActionSuite) Test_FullFile() {
 	init_fake_app(false)
     ctx := getContext(as.App)
-    man := GetManager(&ctx)
+    man := managers.GetManager(&ctx)
     mcs, err := man.ListAllMedia(1, 200)
     as.NoError(err)
 
@@ -224,7 +225,7 @@ func (as *ActionSuite) Test_FullFile() {
 func (as *ActionSuite) Test_PreviewWorking() {
 	init_fake_app(false)
     ctx := getContext(as.App)
-    man := GetManager(&ctx)
+    man := managers.GetManager(&ctx)
     mcs, err := man.ListAllMedia(1, 200)
     as.NoError(err)
 
