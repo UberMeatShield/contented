@@ -4,6 +4,7 @@ package actions
 import (
 	"contented/models"
 	"contented/internals"
+	"contented/managers"
 	"encoding/json"
 	"net/http"
 )
@@ -103,4 +104,22 @@ func (as *ActionSuite) Test_ContainerFixture() {
 
     mediaRes := as.JSON("/containers/" + found.ID.String() + "/media").Get()
     as.Equal(http.StatusOK, mediaRes.Code)
+}
+
+func (as *ActionSuite) Test_MemoryDenyEdit() {
+    cfg := internals.InitFakeApp(false)
+    cfg.UseDatabase = false
+    ctx := internals.GetContext(as.App)
+    man := managers.GetManager(&ctx)
+
+    containers, err := man.ListContainersContext()
+    as.NoError(err, "It should list containers")
+
+    as.Greater(len(*containers), 0, "There should be containers")
+
+    for _, c := range *containers {
+        c.Name = "Update Should fail"
+        res := as.JSON("/containers/" + c.ID.String()).Put(&c)
+        as.Equal(http.StatusNotImplemented, res.Code)
+    }
 }

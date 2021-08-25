@@ -177,8 +177,8 @@ func (as *ActionSuite) Test_PreviewWorking() {
 	}
 }
 
-func Test_ActionSuite(t *testing.T) {
-	action, err := suite.NewActionWithFixtures(App(true), packr.New("Test_ActionSuite", "../fixtures"))
+func Test_ManagerSuite(t *testing.T) {
+	action, err := suite.NewActionWithFixtures(App(true), packr.New("Test_ManagerSuite", "../fixtures"))
 	if err != nil {
 		t.Fatal(err)
 	}
