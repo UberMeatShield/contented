@@ -1,18 +1,12 @@
 package actions
 
 import (
-    "log"
-    "contented/models"
     "contented/utils"
+    "contented/internals"
     "net/http"
     "github.com/gobuffalo/buffalo"
-    "github.com/gobuffalo/buffalo-pop/v2/pop/popmw"
     "github.com/gobuffalo/envy"
-    contenttype "github.com/gobuffalo/mw-contenttype"
     forcessl "github.com/gobuffalo/mw-forcessl"
-    paramlogger "github.com/gobuffalo/mw-paramlogger"
-    "github.com/gobuffalo/x/sessions"
-    "github.com/rs/cors"
     "github.com/unrolled/secure"
 )
 
@@ -38,31 +32,8 @@ var app *buffalo.App
 // declared after it to never be called.
 func App(UseDatabase bool) *buffalo.App {
     if app == nil {
-        app = buffalo.New(buffalo.Options{
-            Env:          ENV,
-            SessionStore: sessions.Null{},
-            PreWares: []buffalo.PreWare{
-                cors.Default().Handler,
-            },
-            SessionName: "_content_session",
-        })
-
-        // Automatically redirect to SSL
+        app = internals.CreateBuffaloApp(UseDatabase, ENV)
         app.Use(forceSSL())
-
-        // Log request parameters (filters apply) this should maybe be only in dev
-        app.Use(paramlogger.ParameterLogger)
-
-        // Wraps each request in a transaction. Remove to disable this.
-        if UseDatabase == true {
-            log.Printf("Connecting to the database\n")
-            app.Use(popmw.Transaction(models.DB))
-        } else {
-            log.Printf("This code will attempt to use memory management \n")
-        }
-
-        // Set the request content type to JSON
-        app.Use(contenttype.Set("application/json"))
 
         // Run grift?  Do dev from an actual DB instance?
         app.GET("/preview/{file_id}", PreviewHandler)

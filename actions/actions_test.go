@@ -18,7 +18,7 @@ type ActionSuite struct {
 	*suite.Action
 }
 
-func Test_Main(m *testing.M) {
+func TestMain(m *testing.M) {
 	dir, err := envy.MustGet("DIR")
 	fmt.Printf("Using this test directory %s", dir)
 	if err != nil {

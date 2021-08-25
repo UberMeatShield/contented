@@ -13,7 +13,40 @@ import (
 	"contented/utils"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/envy"
+    contenttype "github.com/gobuffalo/mw-contenttype"
+    paramlogger "github.com/gobuffalo/mw-paramlogger"
+    "github.com/gobuffalo/x/sessions"
+    "github.com/rs/cors"
+    "github.com/gobuffalo/buffalo-pop/v2/pop/popmw"
 )
+
+// Create the basic app but without routes, useful for testing the managers but not routes
+func CreateBuffaloApp(UseDatabase bool, env string) *buffalo.App {
+    app := buffalo.New(buffalo.Options{
+        Env:          env,
+        SessionStore: sessions.Null{},
+        PreWares: []buffalo.PreWare{
+            cors.Default().Handler,
+        },
+        SessionName: "_content_session",
+    })
+
+    // Log request parameters (filters apply) this should maybe be only in dev
+    app.Use(paramlogger.ParameterLogger)
+
+    // Wraps each request in a transaction. Remove to disable this.
+    if UseDatabase == true {
+        log.Printf("Connecting to the database\n")
+        app.Use(popmw.Transaction(models.DB))
+    } else {
+        log.Printf("This code will attempt to use memory management \n")
+    }
+
+    // Set the request content type to JSON
+    app.Use(contenttype.Set("application/json"))
+    return app
+}
+
 
 func GetContext(app *buffalo.App) buffalo.Context {
     return GetContextParams(app, "/containers", "1", "10")

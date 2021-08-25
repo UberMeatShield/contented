@@ -8,7 +8,6 @@ import (
 	"contented/utils"
 	"contented/models"
 	"contented/internals"
-    "net/http"
     "net/url"
     /*
 	"encoding/json"
@@ -26,6 +25,8 @@ import (
     //"github.com/gobuffalo/logger"
     "github.com/gobuffalo/envy"
     "github.com/gobuffalo/pop/v5"
+    "github.com/gobuffalo/packr/v2"
+    "github.com/gobuffalo/suite"
     //"github.com/gobuffalo/buffalo"
 )
 
@@ -80,6 +81,18 @@ func TestMain(m *testing.M) {
     }
     code := m.Run()
     os.Exit(code)
+}
+
+func Test_ManagerSuite(t *testing.T) {
+    app := internals.CreateBuffaloApp(true, "test")
+    action, err := suite.NewActionWithFixtures(app, packr.New("Test_ManagerSuite", "../fixtures"))
+    if err != nil {
+        t.Fatal(err)
+    }
+    as := &ActionSuite{
+        Action: action,
+    }
+    suite.Run(t, as)
 }
 
 
@@ -138,25 +151,6 @@ func (as *ActionSuite) Test_AssignManager() {
     mcs_2, _ := man.ListAllMedia(1, 9000)
 
     as.Equal(len(*mcs), len(*mcs_2), "A new instance should use the same storage")
-}
-
-
-func (as *ActionSuite) Test_MemoryDenyEdit() {
-    cfg := internals.InitFakeApp(false)
-    cfg.UseDatabase = false
-    ctx := internals.GetContext(as.App)
-    man := GetManager(&ctx)
-
-    containers, err := man.ListContainersContext()
-    as.NoError(err, "It should list containers")
-
-    as.Greater(len(*containers), 0, "There should be containers")
-
-    for _, c := range *containers {
-        c.Name = "Update Should fail"
-        res := as.JSON("/containers/" + c.ID.String()).Put(&c)
-        as.Equal(http.StatusNotImplemented, res.Code)
-    }
 }
 
 func (as *ActionSuite) Test_MemoryManagerPaginate() {
