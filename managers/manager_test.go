@@ -1,9 +1,9 @@
 package managers
 
 import (
-	//"fmt"
     "log"
     "os"
+    "testing"
     "path/filepath"
 	"contented/utils"
 	"contented/models"
@@ -71,6 +71,17 @@ func GetMediaByDirName(test_dir_name string) (*models.Container, models.MediaCon
     return cnt, media
 }
 
+// Why are no tests working?
+func TestMain(m *testing.M) {
+    _, err := envy.MustGet("DIR")
+    if err != nil {
+        log.Println("DIR ENV REQUIRED$ export=DIR=`pwd`/mocks/content/ && buffalo test")
+        panic(err)
+    }
+    code := m.Run()
+    os.Exit(code)
+}
+
 
 func (as *ActionSuite) Test_ManagerContainers() {
     internals.InitFakeApp(false)
@@ -80,7 +91,7 @@ func (as *ActionSuite) Test_ManagerContainers() {
     as.NoError(err)
 
     for _, c := range *containers {
-        c_mem, err := man.FindDirRef(c.ID)
+        c_mem, err := man.GetContainer(c.ID)
         if err != nil {
             as.Fail("It should not have an issue finding valid containers")
         }
@@ -240,7 +251,6 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
         as.Equal("/container_previews/donut.mp4.png", mc.Preview)
     }
 }
-
 
 func (as *ActionSuite) Test_ManagerDB() {
     models.DB.TruncateAll()

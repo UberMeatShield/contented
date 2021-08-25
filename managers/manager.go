@@ -1,3 +1,12 @@
+/** 
+ * The manager setup supports connecting to a database or just using an in memory representation that can be
+ * hosted.  The Managers load either from the utility/MemStorage or provides wrappers around Pop connections
+ * to data loaded into a DB by using the db:seed grift.
+ * 
+ * This is also an example of dealing with some of the annoying gunk GoLang hits you with if you want to 
+ * use an interface that is also semi configurable.  You know... prevent code duplication and that kind of 
+ * thing.
+ */
 package managers
 
 import (
@@ -17,17 +26,14 @@ import (
 type GetConnType func() *pop.Connection
 type GetParamsType func() *url.Values
 
+// This is the primary interface used by the Buffalo actions.
 type ContentManager interface {
-    // SetCfg(c *utils.DirConfigEntry)
     GetCfg() *utils.DirConfigEntry
     CanEdit() bool  // Do we support CRUD or just R
 
-    // TODO
-    //GetConnection() *pop.Connection
     GetParams() *url.Values
 
     FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error)
-    FindDirRef(dir_id uuid.UUID) (*models.Container, error)
 
     GetContainer(c_id uuid.UUID) (*models.Container, error)
     ListContainers(page int, per_page int) (*models.Containers, error)
@@ -78,9 +84,11 @@ func GetManager(c *buffalo.Context) ContentManager {
     return CreateManager(cfg, get_connection, get_params)
 }
 
+// Provides the ability to pass a connection function and get params function to the manager so we can handle
+// a request.  We set this up so that the interface can still use the buffalo connection and param management.
 func CreateManager(cfg *utils.DirConfigEntry, get_conn GetConnType, get_params GetParamsType) ContentManager {
-    // Not really important for a DB manager, just need to look at it
     if cfg.UseDatabase {
+        // Not really important for a DB manager, just need to look at it
         log.Printf("Setting up the DB Manager")
         db_man := ContentManagerDB{cfg: cfg}
         db_man.GetConnection = get_conn
@@ -96,6 +104,7 @@ func CreateManager(cfg *utils.DirConfigEntry, get_conn GetConnType, get_params G
     }
 }
 
+// Provides the support for looking up media by ID while only using memory
 type ContentManagerMemory struct {
     cfg *utils.DirConfigEntry
 
@@ -104,34 +113,37 @@ type ContentManagerMemory struct {
     validate string 
 
     params *url.Values
-    Params GetParamsType    // returns .params or context.Params()
+    Params GetParamsType
 }
 
+// We do not allow editing in a memory manager
 func (cm ContentManagerMemory) CanEdit() bool {
     return false;
 }
 
+// Provide the ability to set the configuration for a memory manager.
 func (cm *ContentManagerMemory) SetCfg(cfg *utils.DirConfigEntry) {
     cm.cfg = cfg
     log.Printf("It should have a preview %s\n", cm.cfg.Dir)
     log.Printf("Using memory manager %s\n", cm.validate)
 }
 
+// Get the currently configuration for this manager.
 func (cm ContentManagerMemory) GetCfg() *utils.DirConfigEntry {
     log.Printf("Get the Config validate val %s\n", cm.validate)
     log.Printf("Config is using path %s", cm.cfg.Dir)
     return cm.cfg
 }
 
-
+// On a first time load / use we will pull back content information from dist and from
+// then on continue to use already loaded information.
 func (cm *ContentManagerMemory) Initialize() {
-    // We only want the memory storage initialized one time ?  But allow for re-init?
-    // Could toss the object into the manager but then that means even more code change.
+    
+    // TODO: Should we allow for a timeout or rescan option?
     memStorage := utils.GetMemStorage()
     if memStorage.Initialized == false {
         memStorage = utils.InitializeMemory(cm.cfg.Dir)
     }
-    // Move some of these into an actual singleton.
     cm.ValidContainers = memStorage.ValidContainers
     cm.ValidMedia = memStorage.ValidMedia
     log.Printf("Found %d directories with %d media elements \n", len(cm.ValidContainers), len(cm.ValidMedia))
@@ -143,7 +155,8 @@ func (cm ContentManagerMemory) GetParams() *url.Values {
     return cm.Params()
 }
 
-func StringDefault(s1, s2 string) string {
+// How is it that GoLang doesn't have a more sensible default fallback?
+func StringDefault(s1 string, s2 string) string {
 	if s1 == "" {
 		return s2
 	}
@@ -206,8 +219,6 @@ func (cm ContentManagerMemory) ListAllMedia(page int, per_page int) (*models.Med
 
 // Awkard GoLang interface support is awkward
 func (cm ContentManagerMemory) ListMedia(ContainerID uuid.UUID, page int, per_page int) (*models.MediaContainers, error) {
-
-    // TODO: Port to using the containers
     m_arr := models.MediaContainers{}
     for _, m := range cm.ValidMedia {
         if m.ContainerID.Valid && m.ContainerID.UUID == ContainerID {
@@ -223,6 +234,7 @@ func (cm ContentManagerMemory) ListMedia(ContainerID uuid.UUID, page int, per_pa
     return &m_arr, nil
 }
 
+// Get a media element by the ID
 func (cm ContentManagerMemory) GetMedia(mc_id uuid.UUID) (*models.MediaContainer, error) {
     log.Printf("Memory Get a single media %s", mc_id)
     if mc, ok := cm.ValidMedia[mc_id]; ok {
@@ -231,19 +243,21 @@ func (cm ContentManagerMemory) GetMedia(mc_id uuid.UUID) (*models.MediaContainer
     return nil, errors.New("Media was not found in memory")
 }
 
+// No updates should be allowed for memory management.
 func (cm ContentManagerMemory) UpdateMedia(media *models.MediaContainer) error {
-    return nil
+    return errors.New("Updates are not allowed for in memory management")
 }
 
+// Given the current parameters in the buffalo context return a list of matching containers.
 func (cm ContentManagerMemory) ListContainersContext() (*models.Containers, error) {
     _, per_page, page := GetPagination(cm.Params(), cm.cfg.Limit)
     return cm.ListContainers(page, per_page)
 }
 
+// Actually list containers using a page and per_page which is consistent with buffalo standard pagination
 func (cm ContentManagerMemory) ListContainers(page int, per_page int) (*models.Containers, error) {
     log.Printf("List Containers with page(%d) and per_page(%d)", page, per_page)
 
-    // TODO: Maybe just actually store the array on this
     c_arr := models.Containers{}
     for _, c := range cm.ValidContainers {
         c_arr = append(c_arr, c)
@@ -257,20 +271,13 @@ func (cm ContentManagerMemory) ListContainers(page int, per_page int) (*models.C
     return &c_arr, nil
 }
 
+// Get a single container given the primary key
 func (cm ContentManagerMemory) GetContainer(c_id uuid.UUID) (*models.Container, error) {
     log.Printf("Get a single container %s", c_id)
     if c, ok := cm.ValidContainers[c_id]; ok {
         return &c, nil
     }
-    return nil, errors.New("Memory manager did not find this id" + c_id.String())
-}
-
-func (cm ContentManagerMemory) FindDirRef(dir_id uuid.UUID) (*models.Container, error) {
-    // TODO: Get a FileInfo reference (get parent dir too)
-    if d, ok := cm.ValidContainers[dir_id]; ok {
-        return &d, nil
-    }
-    return nil, errors.New("Directory was not found in the current app")
+    return nil, errors.New("Memory manager did not find this container id: " + c_id.String())
 }
 
 func (cm ContentManagerMemory) FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error) {
@@ -281,7 +288,7 @@ func (cm ContentManagerMemory) FindFileRef(file_id uuid.UUID) (*models.MediaCont
 }
 
 func (cm ContentManagerMemory) GetPreviewForMC(mc *models.MediaContainer) (string, error) {
-    dir, err := cm.FindDirRef(mc.ContainerID.UUID)
+    dir, err := cm.GetContainer(mc.ContainerID.UUID)
     if err != nil {
         return "Memory Manager Preview no Parent Found", err
     }
@@ -294,7 +301,7 @@ func (cm ContentManagerMemory) GetPreviewForMC(mc *models.MediaContainer) (strin
 }
 
 func (cm ContentManagerMemory) FindActualFile(mc *models.MediaContainer) (string, error) {
-    dir, err := cm.FindDirRef(mc.ContainerID.UUID)
+    dir, err := cm.GetContainer(mc.ContainerID.UUID)
     if err != nil {
         return "Memory Manager View no Parent Found", err
     }
@@ -305,7 +312,7 @@ func (cm ContentManagerMemory) FindActualFile(mc *models.MediaContainer) (string
 // If you want to do in memory testing and already manually created previews this will
 // then try and use the previews for the in memory manager.
 func (cm ContentManagerMemory) SetPreviewIfExists(mc *models.MediaContainer) (string, error) {
-    c, err := cm.FindDirRef(mc.ContainerID.UUID)
+    c, err := cm.GetContainer(mc.ContainerID.UUID)
     if err != nil {
         log.Fatal(err)
         return "", err
@@ -441,17 +448,8 @@ func (cm ContentManagerDB) FindFileRef(file_id uuid.UUID) (*models.MediaContaine
     return nil, err
 }
 
-func (cm ContentManagerDB) FindDirRef(dir_id uuid.UUID) (*models.Container, error) {
-    c_db := models.Container{}
-    err := models.DB.Find(&c_db, dir_id)
-    if err == nil {
-        return &c_db, nil
-    }
-    return nil, err
-}
-
 func (cm ContentManagerDB) GetPreviewForMC(mc *models.MediaContainer) (string, error) {
-    dir, err := cm.FindDirRef(mc.ContainerID.UUID)
+    dir, err := cm.GetContainer(mc.ContainerID.UUID)
     if err != nil {
         return "DB Manager Preview no Parent Found", err
     }
@@ -464,7 +462,7 @@ func (cm ContentManagerDB) GetPreviewForMC(mc *models.MediaContainer) (string, e
 }
 
 func (cm ContentManagerDB) FindActualFile(mc *models.MediaContainer) (string, error) {
-    dir, err := cm.FindDirRef(mc.ContainerID.UUID)
+    dir, err := cm.GetContainer(mc.ContainerID.UUID)
     if err != nil {
         return "DB Manager View no Parent Found", err
     }

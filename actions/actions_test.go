@@ -18,7 +18,7 @@ type ActionSuite struct {
 	*suite.Action
 }
 
-func TestMain(m *testing.M) {
+func Test_Main(m *testing.M) {
 	dir, err := envy.MustGet("DIR")
 	fmt.Printf("Using this test directory %s", dir)
 	if err != nil {
@@ -177,8 +177,8 @@ func (as *ActionSuite) Test_PreviewWorking() {
 	}
 }
 
-func Test_ActionSuite(t *testing.T) {
-	action, err := suite.NewActionWithFixtures(App(true), packr.New("Test_ActionSuite", "../fixtures"))
+func Test_ManagerSuite(t *testing.T) {
+	action, err := suite.NewActionWithFixtures(App(true), packr.New("Test_ManagerSuite", "../fixtures"))
 	if err != nil {
 		t.Fatal(err)
 	}
