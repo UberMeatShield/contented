@@ -11,9 +11,9 @@ import {ContentedService} from '../contented/contented_service';
 import {ContentedModule} from '../contented/contented_module';
 
 import * as _ from 'lodash';
+import * as $ from 'jquery';
 import {MockData} from './mock/mock_data';
 
-declare var $;
 describe('TestingDirectoryCmp', () => {
     let fixture: ComponentFixture<DirectoryCmp>;
     let service: ContentedService;
@@ -50,7 +50,9 @@ describe('TestingDirectoryCmp', () => {
         comp.maxPrevItems = 0;
         comp.directory = dir;
         fixture.detectChanges();
-        expect($('.preview-img', el).length).toBe(comp.maxRendered, "We should at max have items visible = " + comp.maxRendered);
+        expect($('.preview-img', el).length).toBe(
+            comp.maxRendered, "We should at max have items visible = " + comp.maxRendered
+        );
     }));
 
     it('Should be able to page through to more items', () => {
@@ -79,7 +81,5 @@ describe('TestingDirectoryCmp', () => {
             "Should render the last selected item, plus 1 previous"
         );
     });
-
-
 });
 
