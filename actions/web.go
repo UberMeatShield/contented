@@ -26,12 +26,12 @@ func SetupContented(app *buffalo.App, contentDir string, numToPreview int, limit
 }
 
 func FullHandler(c buffalo.Context) error {
-	file_id, bad_uuid := uuid.FromString(c.Param("file_id"))
+	mc_id, bad_uuid := uuid.FromString(c.Param("mc_id"))
 	if bad_uuid != nil {
 		return c.Error(400, bad_uuid)
 	}
     man := managers.GetManager(&c)
-	mc, err := man.FindFileRef(file_id)
+	mc, err := man.FindFileRef(mc_id)
 	if err != nil {
 		return c.Error(404, err)
 	}
@@ -47,12 +47,12 @@ func FullHandler(c buffalo.Context) error {
 
 // Find the preview of a file (if applicable currently it is just returning the full path)
 func PreviewHandler(c buffalo.Context) error {
-	file_id, bad_uuid := uuid.FromString(c.Param("file_id"))
+	mc_id, bad_uuid := uuid.FromString(c.Param("mc_id"))
 	if bad_uuid != nil {
 		return c.Error(400, bad_uuid)
 	}
     man := managers.GetManager(&c)
-	mc, err := man.FindFileRef(file_id)
+	mc, err := man.FindFileRef(mc_id)
 	if err != nil {
 		return c.Error(404, err)
 	}
@@ -69,12 +69,12 @@ func PreviewHandler(c buffalo.Context) error {
 
 // Provides a download handler by directory id and file id
 func DownloadHandler(c buffalo.Context) error {
-    file_id, bad_uuid := uuid.FromString(c.Param("file_id"))
+    mc_id, bad_uuid := uuid.FromString(c.Param("mc_id"))
     if bad_uuid != nil {
         return c.Error(400, bad_uuid)
     }
     man := managers.GetManager(&c)
-    mc, err := man.FindFileRef(file_id)
+    mc, err := man.FindFileRef(mc_id)
     if err != nil {
         return c.Error(404, err)
     }

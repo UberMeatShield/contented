@@ -33,7 +33,7 @@ type ContentManager interface {
 
     GetParams() *url.Values
 
-    FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error)
+    FindFileRef(mc_id uuid.UUID) (*models.MediaContainer, error)
 
     GetContainer(c_id uuid.UUID) (*models.Container, error)
     ListContainers(page int, per_page int) (*models.Containers, error)
@@ -280,8 +280,8 @@ func (cm ContentManagerMemory) GetContainer(c_id uuid.UUID) (*models.Container, 
     return nil, errors.New("Memory manager did not find this container id: " + c_id.String())
 }
 
-func (cm ContentManagerMemory) FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error) {
-    if mc, ok := cm.ValidMedia[file_id]; ok {
+func (cm ContentManagerMemory) FindFileRef(mc_id uuid.UUID) (*models.MediaContainer, error) {
+    if mc, ok := cm.ValidMedia[mc_id]; ok {
         return &mc, nil
     }
     return nil, errors.New("File was not found in the current list of files")
@@ -439,9 +439,9 @@ func (cm *ContentManagerDB) Initialize() {
     log.Printf("Make a DB connection here")
 }
 
-func (cm ContentManagerDB) FindFileRef(file_id uuid.UUID) (*models.MediaContainer, error) {
+func (cm ContentManagerDB) FindFileRef(mc_id uuid.UUID) (*models.MediaContainer, error) {
     mc_db := models.MediaContainer{}
-    err := models.DB.Find(&mc_db, file_id)
+    err := models.DB.Find(&mc_db, mc_id)
     if err == nil {
         return &mc_db, nil
     }
