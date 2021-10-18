@@ -49,7 +49,7 @@ func Test_SetupConfigMatchers(t *testing.T) {
     var testDir, _ = envy.MustGet("DIR")
     cfg := DirConfigEntry{}
     cfg.Dir = testDir
-    SetupConfigMatchers(&cfg, "", "", "donut", "")
+    SetupConfigMatchers(&cfg, "", "", "donut|DS_Store", "")
 
     containers := FindContainers(testDir)
     found := false
@@ -58,7 +58,7 @@ func Test_SetupConfigMatchers(t *testing.T) {
         if c.Name == "dir2" {
             found = true
             if len(media) != 2 {
-                t.Errorf("It did not exclude the movie by partial name match")
+                t.Errorf("It did not exclude the movie by partial name match %s", media)
             }
         }
     }

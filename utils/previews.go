@@ -1,11 +1,11 @@
 package utils
 
 import (
+	"os"
 	"errors"
 	"image"
     "strings"
 	"log"
-	"os"
 	"bytes"
 	"fmt"
 	"io"
@@ -16,6 +16,7 @@ import (
 	"github.com/nfnt/resize"
     "github.com/gofrs/uuid"
     "github.com/disintegration/imaging"
+    "github.com/tidwall/gjson"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
@@ -202,12 +203,45 @@ func CreateVideoPreview(srcFile string, dstFile string, contentType string) (str
     return dstFile, err
 }
 
+// What is up with gjson?
+func GetTotalVideoLength(srcFile string) float64 {
+	a, err := ffmpeg.Probe(srcFile)
+	if err != nil {
+		panic(err)
+	}
+	return gjson.Get(a, "format.duration").Float()
+}
+
 // Oh gods this is a lot https://engineering.giphy.com/how-to-make-gifs-with-ffmpeg/
 // There is a way to setup a palette file (maybe not via the lib)
 func CreateGifVideo(srcFile string, dstFile string) (string, error) {
-    err := ffmpeg.Input(srcFile, ffmpeg.KwArgs{"ss": "5"}).
-        Output(dstFile, ffmpeg.KwArgs{"s": "320x240", "pix_fmt": "rgb24", "t": "3", "r": "3"}).
-        OverWriteOutput().Run()
+    // Check the total time of the file
+    // Calculate a framerate that will work
+    // Calculate a max -t based on frame + total time
+    // Base it on config ?
+    // Produce a gif if size > X
+    total := GetTotalVideoLength(srcFile)
+    framerate := "0.5"
+    vframes := 10
+    if int(2 * total) < vframes {
+        vframes = 5 
+    }
+    if total > (60 * 5) {
+        vframes = 100
+        framerate = fmt.Sprintf("%f", (total / float64(vframes)))
+    }
+    time_to_encode := fmt.Sprintf("%f", total - 3)
+
+    framerate = "0.5"
+    err := ffmpeg.Input(srcFile, ffmpeg.KwArgs{"ss": "2"}).
+        Output(dstFile, ffmpeg.KwArgs{
+            "s": "320x240",
+            "pix_fmt": "yuvj422p",
+            "t": time_to_encode,
+            "vframes": vframes,
+            "r": framerate,
+        }).OverWriteOutput().Run()
+        
     if err != nil {
         log.Fatalf("Failed to create the gif output %s\n with err: %s\n", dstFile, err)
     }

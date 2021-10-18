@@ -213,7 +213,10 @@ func (cm ContentManagerMemory) ListAllMedia(page int, per_page int) (*models.Med
         return m_arr[i].Idx < m_arr[j].Idx
     })
     offset, end := GetOffsetEnd(page, per_page, len(m_arr))
-    m_arr = m_arr[offset : end]
+    if end > 0 {  // If it is empty a slice ending in 0 = boom
+        m_arr = m_arr[offset : end]
+        return &m_arr, nil
+    }
     return &m_arr, nil
 }
 
@@ -229,7 +232,10 @@ func (cm ContentManagerMemory) ListMedia(ContainerID uuid.UUID, page int, per_pa
         return m_arr[i].Idx < m_arr[j].Idx
     })
     offset, end := GetOffsetEnd(page, per_page, len(m_arr))
-    m_arr = m_arr[offset : end]
+    if end > 0 {  // If it is empty a slice ending in 0 = boom
+        m_arr = m_arr[offset : end]
+        return &m_arr, nil
+    }
     log.Printf("Get a list of media offset(%d), end(%d) we should have some %d", offset, end, len(m_arr))
     return &m_arr, nil
 }
