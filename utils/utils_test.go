@@ -156,7 +156,7 @@ func Test_FindMediaOffset(t *testing.T) {
 }
 
 func Test_CreateMatcher(t *testing.T) {
-    matcher := CreateMatcher(".jpg|.png|.gif", "image")
+    matcher := CreateMatcher(".jpg|.png|.gif", "image", "AND")
 
     valid_fn := "derp.jpg" 
     valid_mime := "image/jpeg"
@@ -171,7 +171,7 @@ func Test_CreateMatcher(t *testing.T) {
         t.Errorf("Does not match fn %s and mime %s", invalid_fn, valid_mime)
     }
 
-    wild_matcher := CreateMatcher("", ".*")
+    wild_matcher := CreateMatcher("", ".*", "AND")
     // empty_or_wild := matcher(empty_fn, wild_mime)
     empty_or_wild := wild_matcher(invalid_fn, "application/x-bzip")
     if !empty_or_wild {

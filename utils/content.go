@@ -38,10 +38,17 @@ func IncludeAllFiles(filename string, content_type string) bool {
     return true
 }
 
-func CreateMatcher(filenameStrRE string, typesStrRE string) MediaMatcher {
+// Create a matcher that will check filename and content type and return true if it matches
+// both in the case of AND matching (default) and true if either matches if matchType is OR
+func CreateMatcher(filenameStrRE string, typesStrRE string, matchType string) MediaMatcher {
     filenameRE := regexp.MustCompile(filenameStrRE) 
     typeRE := regexp.MustCompile(typesStrRE)
 
+    if matchType == "OR" {
+        return func(filename string, content_type string) bool {
+            return filenameRE.MatchString(filename) || typeRE.MatchString(content_type)
+        }
+    }
     return func(filename string, content_type string) bool {
         return filenameRE.MatchString(filename) && typeRE.MatchString(content_type)
     }
@@ -61,7 +68,10 @@ type DirConfigEntry struct {
 
     // Matchers that will determine which media elements to be included or excluded
     IncFiles MediaMatcher
+    IncludeOperator string
+
     ExcFiles MediaMatcher
+    ExcludeOperator string
 }
 
  // https://medium.com/@TobiasSchmidt89/the-singleton-object-oriented-design-pattern-in-golang-9f6ce75c21f7
@@ -89,7 +99,9 @@ func GetCfgDefaults() DirConfigEntry {
 
        // Just grab all files by default
        IncFiles: IncludeAllFiles,
+       IncludeOperator: "AND",
        ExcFiles: ExcludeNoFiles,
+       ExcludeOperator: "AND",
    }
 }
 
@@ -154,6 +166,8 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
 	cfg.PreviewCount = previewCount
     cfg.PreviewVideoType = previewType
     cfg.PreviewOverSize = psize
+    cfg.IncludeOperator = envy.Get("INCLUDE_OPERATOR", "AND")
+    cfg.ExcludeOperator = envy.Get("EXCLUDE_OPERATOR", "AND")
 
     SetupConfigMatchers(
         cfg,
@@ -173,14 +187,14 @@ func SetupConfigMatchers(cfg *DirConfigEntry, y_fn string, y_mime string, n_fn s
 
     //To include media only if it matches the filename or mime type
     if y_fn != "" || y_mime != "" {
-        cfg.IncFiles = CreateMatcher(y_fn, y_mime)
+        cfg.IncFiles = CreateMatcher(y_fn, y_mime, cfg.IncludeOperator)
     } else {
         cfg.IncFiles = IncludeAllFiles
     }
 
     // If you do not specify exclusion regexes it will just include everything
     if n_fn != "" || n_mime != "" {
-        cfg.ExcFiles = CreateMatcher(n_fn, n_mime)
+        cfg.ExcFiles = CreateMatcher(n_fn, n_mime, cfg.ExcludeOperator)
     } else {
         cfg.ExcFiles = ExcludeNoFiles
     }
