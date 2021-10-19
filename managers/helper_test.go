@@ -68,7 +68,7 @@ func (as *ActionSuite) Test_CfgIncExcFiles() {
 	dir, _ := envy.MustGet("DIR")
     cfg := utils.GetCfg()
     cfg.Dir = dir
-    cfg.ExcFiles = utils.CreateMatcher("", "image")
+    cfg.ExcFiles = utils.CreateMatcher("DS_Store", "image")
     err := CreateInitialStructure(cfg)
     as.NoError(err)
 
