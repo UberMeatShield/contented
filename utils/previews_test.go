@@ -147,7 +147,7 @@ func Test_VideoPreviewGif(t *testing.T) {
     vidFile := filepath.Join(srcDir, testFile)
     destFile := filepath.Join(dstDir, testFile + ".gif")
 
-    _, err := CreateGifVideo(vidFile, destFile)
+    _, err := CreateGifFromVideo(vidFile, destFile)
     if err != nil {
         t.Errorf("Failed to create a gif preview %s", err)
     }

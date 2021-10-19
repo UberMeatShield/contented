@@ -2,6 +2,7 @@
 package utils
 
 import (
+    "errors"
 	"strconv"
     "strings"
     "regexp"
@@ -56,6 +57,7 @@ type DirConfigEntry struct {
 	Initialized     bool   // Has the configuration actually be initialized properly
     PreviewCount    int    // How many files should be listed for a preview (todo: USE)
     PreviewOverSize int64  // Over how many bytes should previews be created for the file
+    PreviewVideoType string // This will be either gif or png based on config
 
     // Matchers that will determine which media elements to be included or excluded
     IncFiles MediaMatcher
@@ -83,7 +85,9 @@ func GetCfgDefaults() DirConfigEntry {
        Limit: DefaultLimit,
        PreviewCount: DefaultPreviewCount,
        PreviewOverSize: 1024000,
+       PreviewVideoType: "png",
 
+       // Just grab all files by default
        IncFiles: IncludeAllFiles,
        ExcFiles: ExcludeNoFiles,
    }
@@ -121,6 +125,7 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
     coreCount, coreErr := strconv.Atoi(envy.Get("CORE_COUNT", "4"))
 
     psize, perr := strconv.ParseInt(envy.Get("CREATE_PREVIEW_SIZE", "1024000"), 10, 64)
+    previewType := envy.Get("PREVIEW_VIDEO_TYPE", "png")
 
     if err != nil {
         panic(err)
@@ -137,6 +142,9 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
     } else if perr != nil {
         panic(perr)
     }
+    if !(previewType == "png" || previewType == "gif") {
+        panic(errors.New("The video preview type is not png or gif"))
+    }
 
 	cfg.Dir = dir
     cfg.UseDatabase = useDatabase
@@ -144,6 +152,7 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
     cfg.Limit = limitCount
     cfg.CoreCount = coreCount
 	cfg.PreviewCount = previewCount
+    cfg.PreviewVideoType = previewType
     cfg.PreviewOverSize = psize
 
     SetupConfigMatchers(

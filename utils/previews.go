@@ -93,7 +93,7 @@ func GetPreviewPathDestination(filename string, dstPath string, contentType stri
     dstFilename := filename
     if strings.Contains(contentType, "video") {
         // The image library for video previews sets the output by ext (not a video)
-        dstFilename +=  ".png"  
+        dstFilename += ("." + GetCfg().PreviewVideoType)
     }
 	return filepath.Join(dstPath, dstFilename)
 }
@@ -183,9 +183,20 @@ func ReadFrameAsJpeg(inFileName string, frameNum int) io.Reader {
 	return buf
 }
 
-// TODO: The preview it creates is pretty large, enable lossy compression
+// Hmmm, how do I make it load the right type?
 func CreateVideoPreview(srcFile string, dstFile string, contentType string) (string, error) {
-    reader := ReadFrameAsJpeg(srcFile, 2)
+    // Split based on the environment variable () - Need to set the location
+    // And probably the name of the thing better based on the type.
+    cfg := GetCfg()
+    if cfg.PreviewVideoType  == "gif" {
+        return CreateGifFromVideo(srcFile, dstFile)
+    } else {
+        return CreatePngFromVideo(srcFile, dstFile)
+    }
+}
+
+func CreatePngFromVideo(srcFile string, dstFile string) (string, error) {
+    reader := ReadFrameAsJpeg(srcFile, 2)  // Determine how to get a better frame
     img, err := imaging.Decode(reader)
     if err != nil {
         log.Fatalf("Failed to decode the image from the processing %s\n", err)
@@ -195,15 +206,14 @@ func CreateVideoPreview(srcFile string, dstFile string, contentType string) (str
     // TODO: Make it so the 640 is a config setting
     resizedImg := imaging.Resize(img, 640, 0, imaging.Lanczos)
     err = imaging.Save(resizedImg, dstFile)
-
     if err != nil {
         log.Fatalf("Could not save the image %s with error %s\n", dstFile, err)
         return "", err
     }
-    return dstFile, err
+    return dstFile, nil
 }
 
-// What is up with gjson?
+// What is up with gjson vs normal processing (this does seem easier to use)?
 func GetTotalVideoLength(srcFile string) float64 {
 	a, err := ffmpeg.Probe(srcFile)
 	if err != nil {
@@ -214,7 +224,7 @@ func GetTotalVideoLength(srcFile string) float64 {
 
 // Oh gods this is a lot https://engineering.giphy.com/how-to-make-gifs-with-ffmpeg/
 // There is a way to setup a palette file (maybe not via the lib)
-func CreateGifVideo(srcFile string, dstFile string) (string, error) {
+func CreateGifFromVideo(srcFile string, dstFile string) (string, error) {
     // Check the total time of the file
     // Calculate a framerate that will work
     // Calculate a max -t based on frame + total time
@@ -227,7 +237,7 @@ func CreateGifVideo(srcFile string, dstFile string) (string, error) {
         vframes = 5 
     }
     if total > (60 * 5) {
-        vframes = 100
+        vframes = 30
         framerate = fmt.Sprintf("%f", (total / float64(vframes)))
     }
     time_to_encode := fmt.Sprintf("%f", total - 3)
