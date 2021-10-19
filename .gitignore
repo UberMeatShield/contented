@@ -1,0 +1,5 @@
+node_modules/*
+
+tmp/*
+public/build/*
+/mocks/content/*/container_previews/*

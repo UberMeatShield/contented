@@ -61,6 +61,19 @@ func Test_PngPreview(t *testing.T) {
 	}
 }
 
+// We know this file is 10.08 seconds long
+func Test_VideoLength(t *testing.T) {
+	var testDir, _ = envy.MustGet("DIR")
+	srcDir := filepath.Join(testDir, "dir2")
+	testFile := "donut.mp4"
+
+    srcFile := filepath.Join(srcDir, testFile)
+    checkLen := GetTotalVideoLength(srcFile)
+    if (checkLen != 10.08) {
+        t.Errorf("Could not get the length correctly %f", checkLen)
+    }
+}
+
 // Makes it so that the preview is generated
 func Test_VideoPreviewPNG(t *testing.T) {
 	var testDir, _ = envy.MustGet("DIR")
@@ -134,7 +147,7 @@ func Test_VideoPreviewGif(t *testing.T) {
     vidFile := filepath.Join(srcDir, testFile)
     destFile := filepath.Join(dstDir, testFile + ".gif")
 
-    _, err := CreateGifVideo(vidFile, destFile)
+    _, err := CreateGifFromVideo(vidFile, destFile)
     if err != nil {
         t.Errorf("Failed to create a gif preview %s", err)
     }

@@ -2,6 +2,7 @@
 package utils
 
 import (
+    "errors"
 	"strconv"
     "strings"
     "regexp"
@@ -37,10 +38,17 @@ func IncludeAllFiles(filename string, content_type string) bool {
     return true
 }
 
-func CreateMatcher(filenameStrRE string, typesStrRE string) MediaMatcher {
+// Create a matcher that will check filename and content type and return true if it matches
+// both in the case of AND matching (default) and true if either matches if matchType is OR
+func CreateMatcher(filenameStrRE string, typesStrRE string, matchType string) MediaMatcher {
     filenameRE := regexp.MustCompile(filenameStrRE) 
     typeRE := regexp.MustCompile(typesStrRE)
 
+    if matchType == "OR" {
+        return func(filename string, content_type string) bool {
+            return filenameRE.MatchString(filename) || typeRE.MatchString(content_type)
+        }
+    }
     return func(filename string, content_type string) bool {
         return filenameRE.MatchString(filename) && typeRE.MatchString(content_type)
     }
@@ -56,10 +64,14 @@ type DirConfigEntry struct {
 	Initialized     bool   // Has the configuration actually be initialized properly
     PreviewCount    int    // How many files should be listed for a preview (todo: USE)
     PreviewOverSize int64  // Over how many bytes should previews be created for the file
+    PreviewVideoType string // This will be either gif or png based on config
 
     // Matchers that will determine which media elements to be included or excluded
     IncFiles MediaMatcher
+    IncludeOperator string
+
     ExcFiles MediaMatcher
+    ExcludeOperator string
 }
 
  // https://medium.com/@TobiasSchmidt89/the-singleton-object-oriented-design-pattern-in-golang-9f6ce75c21f7
@@ -83,9 +95,13 @@ func GetCfgDefaults() DirConfigEntry {
        Limit: DefaultLimit,
        PreviewCount: DefaultPreviewCount,
        PreviewOverSize: 1024000,
+       PreviewVideoType: "png",
 
+       // Just grab all files by default
        IncFiles: IncludeAllFiles,
+       IncludeOperator: "AND",
        ExcFiles: ExcludeNoFiles,
+       ExcludeOperator: "AND",
    }
 }
 
@@ -121,6 +137,7 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
     coreCount, coreErr := strconv.Atoi(envy.Get("CORE_COUNT", "4"))
 
     psize, perr := strconv.ParseInt(envy.Get("CREATE_PREVIEW_SIZE", "1024000"), 10, 64)
+    previewType := envy.Get("PREVIEW_VIDEO_TYPE", "png")
 
     if err != nil {
         panic(err)
@@ -137,6 +154,9 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
     } else if perr != nil {
         panic(perr)
     }
+    if !(previewType == "png" || previewType == "gif") {
+        panic(errors.New("The video preview type is not png or gif"))
+    }
 
 	cfg.Dir = dir
     cfg.UseDatabase = useDatabase
@@ -144,7 +164,10 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
     cfg.Limit = limitCount
     cfg.CoreCount = coreCount
 	cfg.PreviewCount = previewCount
+    cfg.PreviewVideoType = previewType
     cfg.PreviewOverSize = psize
+    cfg.IncludeOperator = envy.Get("INCLUDE_OPERATOR", "AND")
+    cfg.ExcludeOperator = envy.Get("EXCLUDE_OPERATOR", "AND")
 
     SetupConfigMatchers(
         cfg,
@@ -164,14 +187,14 @@ func SetupConfigMatchers(cfg *DirConfigEntry, y_fn string, y_mime string, n_fn s
 
     //To include media only if it matches the filename or mime type
     if y_fn != "" || y_mime != "" {
-        cfg.IncFiles = CreateMatcher(y_fn, y_mime)
+        cfg.IncFiles = CreateMatcher(y_fn, y_mime, cfg.IncludeOperator)
     } else {
         cfg.IncFiles = IncludeAllFiles
     }
 
     // If you do not specify exclusion regexes it will just include everything
     if n_fn != "" || n_mime != "" {
-        cfg.ExcFiles = CreateMatcher(n_fn, n_mime)
+        cfg.ExcFiles = CreateMatcher(n_fn, n_mime, cfg.ExcludeOperator)
     } else {
         cfg.ExcFiles = ExcludeNoFiles
     }

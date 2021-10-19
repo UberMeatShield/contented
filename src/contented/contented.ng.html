@@ -23,12 +23,15 @@
           <a target="window" class="dir-name" href="/containers/{{dir?.id}}">{{dir?.name}}</a>
           <span *ngIf="currentViewItem">/</span> 
           <a target="window" class="current-item" *ngIf="currentViewItem" href="{{currentViewItem.fullUrl}}">
-            {{currentViewItem?.src}}
+            {{currentViewItem?.src}} 
           </a>
-          showing {{idx + 1}} of {{allD?.length}} directories.
+          {{currentViewItem?.content_type}}
+          <span class="pull-left">
+            Showing {{idx + 1}} of {{allD?.length}} directories.
+          </span>
           <form class="directory-meta-text">
-            Select: <input name="rowIdx" type="number" [(ngModel)]="rowIdx">
-            Loaded: <span class="dir-max-count"> {{dir?.contents?.length}}</span> of {{dir?.total}}
+            Selected: <input name="rowIdx" type="number" [(ngModel)]="rowIdx">
+            Loaded: <span class="dir-max-count"> {{dir?.contents?.length}}</span> of {{dir?.total}}.
             <span *ngIf="dir?.contents?.length < dir.total">
               press (F) or: 
               <button class="btn btn-primary" (click)="fullLoadDir(dir)">

@@ -62,7 +62,7 @@ func PreviewHandler(c buffalo.Context) error {
 		log.Printf("File to preview not found on disk %s with err %s", fq_path, fq_err)
 		return c.Error(http.StatusUnprocessableEntity, fq_err)
 	}
-	log.Printf("Found this pReview filename to view: %s for %s", fq_path, mc.ID.String())
+	log.Printf("Found this preview filename to view: %s for %s", fq_path, mc.ID.String())
 	http.ServeFile(c.Response(), c.Request(), fq_path)
 	return nil
 }
