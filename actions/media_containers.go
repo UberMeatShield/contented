@@ -69,6 +69,12 @@ func (v MediaContainersResource) List(c buffalo.Context) error {
 	}).Respond(c)
 }
 
+/*
+func (v MediaContainersResource) Search(c buffalo.Context) error {
+    Add a manager search function that also does pagination... annoying?
+}
+*/
+
 // Show gets the data for one MediaContainer. This function is mapped to
 // the path GET /media_containers/{media_container_id}
 func (v MediaContainersResource) Show(c buffalo.Context) error {
