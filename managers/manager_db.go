@@ -5,6 +5,7 @@ package managers
 
 import (
     "log"
+    "errors"
     "net/url"
     "contented/models"
     "contented/utils"
@@ -94,6 +95,18 @@ func (cm ContentManagerDB) ListAllMedia(page int, per_page int) (*models.MediaCo
     return mediaContainers, nil
 }
 
+// It should probably be able to search the container too?
+func (cm ContentManagerDB) SearchMediaContext() (*models.MediaContainers, error) {
+    params := cm.Params()
+    _, per_page, page := GetPagination(params, cm.cfg.Limit)
+    searchStr := StringDefault(params.Get("search"), "*")
+    return cm.SearchMedia(searchStr, page, per_page)
+}
+
+func (cm ContentManagerDB) SearchMedia(search string, page int, per_page int) (*models.MediaContainers, error) {
+    return nil, errors.New("DB Manager not implemented")
+}
+
 // The default list using the current manager configuration
 func (cm ContentManagerDB) ListContainersContext() (*models.Containers, error) {
     return cm.ListContainers(1, cm.cfg.Limit)
@@ -161,3 +174,5 @@ func (cm ContentManagerDB) FindActualFile(mc *models.MediaContainer) (string, er
     log.Printf("DB Manager View %s loading up %s\n", mc.ID.String(), mc.Src)
     return utils.GetFilePathInContainer(mc.Src, dir.Name)
 }
+
+

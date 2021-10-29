@@ -41,10 +41,13 @@ type ContentManager interface {
     ListMedia(ContainerID uuid.UUID, page int, per_page int) (*models.MediaContainers, error)
     ListMediaContext(ContainerID uuid.UUID) (*models.MediaContainers, error)
     ListAllMedia(page int, per_page int) (*models.MediaContainers, error)
+    SearchMediaContext() (*models.MediaContainers, error)
+    SearchMedia(search string, page int, per_page int) (*models.MediaContainers, error)
 
     UpdateMedia(media *models.MediaContainer) error
     FindActualFile(mc *models.MediaContainer) (string, error)
     GetPreviewForMC(mc *models.MediaContainer) (string, error)
+
 }
 
 // Dealing with buffalo.Context vs grift.Context is kinda annoying, this handles the

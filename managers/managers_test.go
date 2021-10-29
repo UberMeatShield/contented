@@ -159,7 +159,7 @@ func (as *ActionSuite) Test_MemoryManagerPaginate() {
 
     ctx := internals.GetContextParams(as.App, "/containers", "1", "2")
     man := GetManager(&ctx)
-    as.Equal(man.CanEdit(), false, "Memory manager should not be editing")
+    as.Equal(man.CanEdit(), false, "Memory manager should not allow editing")
 
     containers, err := man.ListContainers(1, 1)
     as.NoError(err, "It should list with pagination")
@@ -209,6 +209,23 @@ func (as *ActionSuite) Test_ManagerInitialize() {
         as.Equal(expect_len[c.Name], media_len, "It should have this many instances: " + c.Name )
         as.Greater(c.Total, 0, "All of them should have a total assigned")
     }
+}
+
+func (as *ActionSuite) Test_MemoryManagerSearch() {
+    internals.InitFakeApp(false)
+
+    ctx := internals.GetContext(as.App)
+    man := GetManager(&ctx)
+    as.NotNil(man, "It should have a manager defined after init")
+
+    containers, err := man.ListContainersContext()
+    as.NoError(err, "It should list all containers")
+    as.NotNil(containers, "It should have containers")
+    as.Equal(len(*containers), 4, "It should have 4 of them")
+
+    mcs, err := man.SearchMedia("donut", 1, 20)
+    as.NoError(err, "Can we search in the memory manager")
+    as.Equal(len(*mcs), 1, "One donut should be found")
 }
 
 func (as *ActionSuite) Test_MemoryPreviewInitialization() {

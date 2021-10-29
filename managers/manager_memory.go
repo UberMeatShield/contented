@@ -9,6 +9,7 @@ import (
     "log"
     "errors"
     "sort"
+    "regexp"
     "net/url"
     "contented/models"
     "contented/utils"
@@ -73,7 +74,8 @@ func (cm ContentManagerMemory) ListMediaContext(c_id uuid.UUID) (*models.MediaCo
 
 func (cm ContentManagerMemory) ListAllMedia(page int, per_page int) (*models.MediaContainers, error) {
     m_arr := models.MediaContainers{}
-    offset := (page - 1) * per_page
+
+    // Did I create this just to sort by Idx across all media?  Kinda strange
     for _, m := range cm.ValidMedia {
         m_arr = append(m_arr, m)
     }
@@ -87,6 +89,32 @@ func (cm ContentManagerMemory) ListAllMedia(page int, per_page int) (*models.Med
     }
     return &m_arr, nil
 }
+
+// It should probably be able to search the container too?
+func (cm ContentManagerMemory) SearchMediaContext() (*models.MediaContainers, error) {
+    params := cm.Params()
+    _, per_page, page := GetPagination(params, cm.cfg.Limit)
+    searchStr := StringDefault(params.Get("search"), "*")
+    return cm.SearchMedia(searchStr, page, per_page)
+}
+
+func (cm ContentManagerMemory) SearchMedia(search string, page int, per_page int) (*models.MediaContainers, error) {
+
+    searcher := regexp.MustCompile(search)
+    m_arr := models.MediaContainers{}
+    for _, mc := range cm.ValidMedia {
+        if searcher.MatchString(mc.Src) {
+            m_arr = append(m_arr, mc)
+        }
+    }
+    offset, end := GetOffsetEnd(page, per_page, len(m_arr))
+    if end > 0 {  // If it is empty a slice ending in 0 = boom
+        m_arr = m_arr[offset : end]
+        return &m_arr, nil
+    }
+    return &m_arr, nil
+}
+
 
 // Awkard GoLang interface support is awkward
 func (cm ContentManagerMemory) ListMedia(ContainerID uuid.UUID, page int, per_page int) (*models.MediaContainers, error) {
