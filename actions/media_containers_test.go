@@ -1,8 +1,9 @@
 package actions
 
 import (
-	"encoding/json"
 	"net/http"
+    "net/url"
+	"encoding/json"
 	"contented/models"
 	"contented/internals"
     "github.com/gobuffalo/nulls"
@@ -46,7 +47,7 @@ func (as *ActionSuite) Test_MediaSubQuery() {
     CreateResource("a", nulls.NewUUID(c1.ID), as)
     CreateResource("b", nulls.NewUUID(c1.ID), as)
     CreateResource("c", nulls.NewUUID(c2.ID), as)
-    CreateResource("d", nulls.NewUUID(c2.ID), as)
+    CreateResource("donut", nulls.NewUUID(c2.ID), as)
     CreateResource("e", nulls.NewUUID(c2.ID), as)
 
     res1 := as.JSON("/containers/" +  c1.ID.String() +  "/media").Get()
@@ -63,12 +64,45 @@ func (as *ActionSuite) Test_MediaSubQuery() {
 
     as.Equal(len(validate1), 2, "There should be 2 media containers found")
     as.Equal(len(validate2), 3, "There should be 3 in this one")
+
+    // Add in a test that uses the search interface via the actions via DB
+    params := url.Values{}
+    params.Add("search", "donut")
+
+    res3 := as.JSON("/search?%s", params.Encode()).Get()
+    as.Equal(http.StatusOK, res3.Code)
+	validate3 := models.MediaContainers{}
+	json.NewDecoder(res3.Body).Decode(&validate3)
+    as.Equal(1, len(validate3), "We have one donut")
+}
+
+
+func (as *ActionSuite) Test_MemoryAPIBasics() {
+    internals.InitFakeApp(false)
+	res := as.JSON("/media").Get()
+	as.Equal(http.StatusOK, res.Code)
+
+	validate := models.MediaContainers{}
+	json.NewDecoder(res.Body).Decode(&validate)
+    as.Equal(25, len(validate), "It should have a known set of mock data")
+
+	validate_search := models.MediaContainers{}
+	res_search := as.JSON("/search?search=Large").Get()
+	json.NewDecoder(res_search.Body).Decode(&validate_search)
+    as.Equal(25, len(validate), "In memory should have these")
 }
 
 func (as *ActionSuite) Test_MediaContainersResource_List() {
     internals.InitFakeApp(true)
+	src := "test_list"
+	CreateResource(src, nulls.UUID{}, as)
 	res := as.JSON("/media").Get()
 	as.Equal(http.StatusOK, res.Code)
+
+	validate := models.MediaContainers{}
+	json.NewDecoder(res.Body).Decode(&validate)
+	as.Equal(src, validate[0].Src)
+    as.Equal(1, len(validate), "One item should be in the DB")
 }
 
 func (as *ActionSuite) Test_MediaContainersResource_Show() {

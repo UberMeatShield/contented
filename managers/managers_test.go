@@ -159,7 +159,7 @@ func (as *ActionSuite) Test_MemoryManagerPaginate() {
 
     ctx := internals.GetContextParams(as.App, "/containers", "1", "2")
     man := GetManager(&ctx)
-    as.Equal(man.CanEdit(), false, "Memory manager should not be editing")
+    as.Equal(man.CanEdit(), false, "Memory manager should not allow editing")
 
     containers, err := man.ListContainers(1, 1)
     as.NoError(err, "It should list with pagination")
@@ -211,6 +211,55 @@ func (as *ActionSuite) Test_ManagerInitialize() {
     }
 }
 
+func (as *ActionSuite) Test_MemoryManagerSearch() {
+    internals.InitFakeApp(false)
+
+    ctx := internals.GetContext(as.App)
+    man := GetManager(&ctx)
+    as.NotNil(man, "It should have a manager defined after init")
+
+    containers, err := man.ListContainersContext()
+    as.NoError(err, "It should list all containers")
+    as.NotNil(containers, "It should have containers")
+    as.Equal(len(*containers), 4, "It should have 4 of them")
+
+    mcs, err := man.SearchMedia("donut", 1, 20)
+    as.NoError(err, "Can we search in the memory manager")
+    as.Equal(len(*mcs), 1, "One donut should be found")
+
+    mcs_1, err_1 := man.SearchMedia("Large", 1, 6)
+    as.NoError(err_1, "Can we search in the memory manager")
+    as.Equal(3, len(*mcs_1), "One donut should be found")
+
+    all_mc, err_all := man.SearchMedia("", 0, 9000)
+    as.NoError(err_all, "Can in search everything")
+    as.Equal(25, len(*all_mc), "The Kitchen sink")
+}
+
+// A basic DB search (ilike matching)
+func (as *ActionSuite) Test_DbManagerSearch() {
+    models.DB.TruncateAll()
+    cfg := internals.InitFakeApp(true)
+
+    man := GetManagerActionSuite(cfg, as)
+    as.Equal(man.CanEdit(), true, "It should be a DB manager")
+
+    cnt, media := GetMediaByDirName("dir1")
+    c_err := models.DB.Create(cnt)
+    as.NoError(c_err)
+    for _, mc := range media {
+        models.DB.Create(&mc)
+    }
+    mcs, err := man.SearchMedia("Large", 1, 20)
+    as.NoError(err, "It should be able to search")
+    as.NotNil(mcs, "It should be")
+    as.Equal(3, len(*mcs), "We should have 3 large images with an ilike compare")
+
+    all_mcs, err := man.SearchMedia("", 1, 20)
+    as.NoError(err, "It should be able to empty search")
+    as.Equal(12, len(*all_mcs), "We should have 3 large images with an ilike compare")
+}
+
 func (as *ActionSuite) Test_MemoryPreviewInitialization() {
     cfg := internals.ResetConfig()
     utils.SetupConfigMatchers(cfg, "", "video", "", "")
@@ -248,10 +297,7 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
 
 func (as *ActionSuite) Test_ManagerDB() {
     models.DB.TruncateAll()
-
-    cfg := internals.ResetConfig()
-    cfg.UseDatabase = true
-    internals.InitFakeApp(true)
+    cfg := internals.InitFakeApp(true)
 
     cnt, media := GetMediaByDirName("dir1")
     as.Equal("dir1", cnt.Name, "It should be the right dir")

@@ -53,19 +53,36 @@ func (v MediaContainersResource) List(c buffalo.Context) error {
         mediaContainers = mcs
     } else {
         log.Printf("List all Media No Restriction on the container ID")
-        mcs, err := man.ListAllMedia(1, man.GetCfg().Limit)
+        // TODO: Fix the lack of page support and TEST IT
+        _, per_page, page := managers.GetPagination(c.Params(), man.GetCfg().Limit)
+        mcs, err := man.ListAllMedia(page, per_page)
         if err != nil {
             return c.Error(http.StatusBadRequest, err)
         }
         mediaContainers = mcs
     }
-
 	return responder.Wants("html", func(c buffalo.Context) error {
 		return c.Render(200, r.JSON(mediaContainers))
 	}).Wants("json", func(c buffalo.Context) error {
 		return c.Render(200, r.JSON(mediaContainers))
 	}).Wants("xml", func(c buffalo.Context) error {
 		return c.Render(200, r.XML(mediaContainers))
+	}).Respond(c)
+}
+
+// Add a manager search function that also does pagination... annoying?
+func (v MediaContainersResource) Search(c buffalo.Context) error {
+    man := managers.GetManager(&c)
+    var mediaContainers *models.MediaContainers
+
+    // Standard pagination params and query param ?search=regexStr
+    mcs, err := man.SearchMediaContext()
+    if err != nil {
+        return c.Error(http.StatusBadRequest, err)
+    }
+    mediaContainers = mcs
+	return responder.Wants("json", func(c buffalo.Context) error {
+		return c.Render(200, r.JSON(mediaContainers))
 	}).Respond(c)
 }
 

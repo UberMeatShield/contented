@@ -39,6 +39,7 @@ func App(UseDatabase bool) *buffalo.App {
         app.GET("/preview/{mc_id}", PreviewHandler)
         app.GET("/view/{mc_id}", FullHandler)
         app.GET("/download/{mc_id}", DownloadHandler)
+        app.GET("/search", SearchHandler)
 
         // Host the index.html, also assume that all angular UI routes are going to be under contented
         app.GET("/", AngularIndex)
