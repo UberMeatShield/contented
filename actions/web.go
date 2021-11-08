@@ -45,7 +45,6 @@ func FullHandler(c buffalo.Context) error {
 	return nil
 }
 
-// hate
 func SearchHandler(c buffalo.Context) error {
     man := managers.GetManager(&c)
     mcs, err := man.SearchMediaContext()
