@@ -226,6 +226,35 @@ func (as *ActionSuite) Test_MemoryManagerSearch() {
     mcs, err := man.SearchMedia("donut", 1, 20)
     as.NoError(err, "Can we search in the memory manager")
     as.Equal(len(*mcs), 1, "One donut should be found")
+
+    // TODO: Add in more search based tests
+    // TODO: Add in a test at the actions layer and test pagination there
+}
+
+// A basic DB search (ilike matching)
+func (as *ActionSuite) Test_DbManagerSearch() {
+    models.DB.TruncateAll()
+    cfg := internals.ResetConfig()
+    cfg.UseDatabase = true
+    internals.InitFakeApp(true)
+
+    man := GetManagerActionSuite(cfg, as)
+    as.Equal(man.CanEdit(), true, "It should be a DB manager")
+
+    cnt, media := GetMediaByDirName("dir1")
+    c_err := models.DB.Create(cnt)
+    as.NoError(c_err)
+    for _, mc := range media {
+        models.DB.Create(&mc)
+    }
+    mcs, err := man.SearchMedia("Large", 1, 20)
+    as.NoError(err, "It should be able to search")
+    as.NotNil(mcs, "It should be")
+    as.Equal(3, len(*mcs), "We should have 3 large images with an ilike compare")
+
+    all_mcs, err := man.SearchMedia("", 1, 20)
+    as.NoError(err, "It should be able to empty search")
+    as.Equal(12, len(*all_mcs), "We should have 3 large images with an ilike compare")
 }
 
 func (as *ActionSuite) Test_MemoryPreviewInitialization() {
@@ -265,7 +294,6 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
 
 func (as *ActionSuite) Test_ManagerDB() {
     models.DB.TruncateAll()
-
     cfg := internals.ResetConfig()
     cfg.UseDatabase = true
     internals.InitFakeApp(true)

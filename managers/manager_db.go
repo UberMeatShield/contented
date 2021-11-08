@@ -5,7 +5,6 @@ package managers
 
 import (
     "log"
-    "errors"
     "net/url"
     "contented/models"
     "contented/utils"
@@ -99,12 +98,22 @@ func (cm ContentManagerDB) ListAllMedia(page int, per_page int) (*models.MediaCo
 func (cm ContentManagerDB) SearchMediaContext() (*models.MediaContainers, error) {
     params := cm.Params()
     _, per_page, page := GetPagination(params, cm.cfg.Limit)
-    searchStr := StringDefault(params.Get("search"), "*")
+    searchStr := StringDefault(params.Get("search"), "")
     return cm.SearchMedia(searchStr, page, per_page)
 }
 
 func (cm ContentManagerDB) SearchMedia(search string, page int, per_page int) (*models.MediaContainers, error) {
-    return nil, errors.New("DB Manager not implemented")
+    mediaContainers := &models.MediaContainers{}
+    tx := cm.GetConnection()
+    q := tx.Paginate(page, per_page)
+    if search != "*" && search != "" {
+        search = ("%" + search + "%")
+        q = q.Where(`src like ?`, search)
+    }
+    if q_err := q.All(mediaContainers); q_err != nil {
+        return mediaContainers, q_err
+    }
+    return mediaContainers, nil
 }
 
 // The default list using the current manager configuration

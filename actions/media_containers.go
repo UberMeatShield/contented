@@ -53,9 +53,9 @@ func (v MediaContainersResource) List(c buffalo.Context) error {
         mediaContainers = mcs
     } else {
         log.Printf("List all Media No Restriction on the container ID")
-
-        // TODO: Fix the lack of page support?
-        mcs, err := man.ListAllMedia(1, man.GetCfg().Limit)
+        // TODO: Fix the lack of page support and TEST IT
+        _, per_page, page := managers.GetPagination(c.Params(), man.GetCfg().Limit)
+        mcs, err := man.ListAllMedia(page, per_page)
         if err != nil {
             return c.Error(http.StatusBadRequest, err)
         }
