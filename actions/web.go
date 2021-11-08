@@ -45,6 +45,16 @@ func FullHandler(c buffalo.Context) error {
 	return nil
 }
 
+// hate
+func SearchHandler(c buffalo.Context) error {
+    man := managers.GetManager(&c)
+    mcs, err := man.SearchMediaContext()
+    if err != nil {
+		return c.Error(400, err)
+    }
+    return c.Render(200, r.JSON(mcs))
+}
+
 // Find the preview of a file (if applicable currently it is just returning the full path)
 func PreviewHandler(c buffalo.Context) error {
 	mc_id, bad_uuid := uuid.FromString(c.Param("mc_id"))

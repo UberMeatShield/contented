@@ -94,17 +94,25 @@ func (cm ContentManagerMemory) ListAllMedia(page int, per_page int) (*models.Med
 func (cm ContentManagerMemory) SearchMediaContext() (*models.MediaContainers, error) {
     params := cm.Params()
     _, per_page, page := GetPagination(params, cm.cfg.Limit)
-    searchStr := StringDefault(params.Get("search"), "*")
+    searchStr := StringDefault(params.Get("search"), "")
     return cm.SearchMedia(searchStr, page, per_page)
 }
 
 func (cm ContentManagerMemory) SearchMedia(search string, page int, per_page int) (*models.MediaContainers, error) {
-
-    searcher := regexp.MustCompile(search)
     m_arr := models.MediaContainers{}
-    for _, mc := range cm.ValidMedia {
-        if searcher.MatchString(mc.Src) {
+
+    // Could optimize by offset end but "eh, good enough for in memory"
+    if search == "" || search == ".*" {
+        m_arr = make([]models.MediaContainer, 0, len(cm.ValidMedia))
+        for _, mc := range cm.ValidMedia {
             m_arr = append(m_arr, mc)
+        }
+    } else {
+        searcher := regexp.MustCompile(search)
+        for _, mc := range cm.ValidMedia {
+            if searcher.MatchString(mc.Src) {
+                m_arr = append(m_arr, mc)
+            }
         }
     }
     offset, end := GetOffsetEnd(page, per_page, len(m_arr))

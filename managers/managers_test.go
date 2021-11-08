@@ -227,16 +227,19 @@ func (as *ActionSuite) Test_MemoryManagerSearch() {
     as.NoError(err, "Can we search in the memory manager")
     as.Equal(len(*mcs), 1, "One donut should be found")
 
-    // TODO: Add in more search based tests
-    // TODO: Add in a test at the actions layer and test pagination there
+    mcs_1, err_1 := man.SearchMedia("Large", 1, 6)
+    as.NoError(err_1, "Can we search in the memory manager")
+    as.Equal(3, len(*mcs_1), "One donut should be found")
+
+    all_mc, err_all := man.SearchMedia("", 0, 9000)
+    as.NoError(err_all, "Can in search everything")
+    as.Equal(25, len(*all_mc), "The Kitchen sink")
 }
 
 // A basic DB search (ilike matching)
 func (as *ActionSuite) Test_DbManagerSearch() {
     models.DB.TruncateAll()
-    cfg := internals.ResetConfig()
-    cfg.UseDatabase = true
-    internals.InitFakeApp(true)
+    cfg := internals.InitFakeApp(true)
 
     man := GetManagerActionSuite(cfg, as)
     as.Equal(man.CanEdit(), true, "It should be a DB manager")
@@ -294,9 +297,7 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
 
 func (as *ActionSuite) Test_ManagerDB() {
     models.DB.TruncateAll()
-    cfg := internals.ResetConfig()
-    cfg.UseDatabase = true
-    internals.InitFakeApp(true)
+    cfg := internals.InitFakeApp(true)
 
     cnt, media := GetMediaByDirName("dir1")
     as.Equal("dir1", cnt.Name, "It should be the right dir")
