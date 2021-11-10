@@ -172,7 +172,7 @@ export class ContentedCmp implements OnInit {
     }
 
     public updateRoute() {
-        this.router.navigate([`/ui/${this.idx}/${this.rowIdx}`]);
+        this.router.navigate([`/ui/browse/${this.idx}/${this.rowIdx}`]);
     }
 
     public rowNext() {

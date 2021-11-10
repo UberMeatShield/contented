@@ -1,0 +1,13 @@
+<div class="search-cmp">
+  <form #searchForm [formGroup]="options">
+    <mat-form-field apperance="fill" floatLabel="true">
+      <mat-label>
+        Search Media
+      </mat-label>
+      <input type="text" name="searchText"
+        [formControl]="searchText"
+        matInput placeholder=""
+      >
+    </mat-form-field>
+  </form>
+</div>
