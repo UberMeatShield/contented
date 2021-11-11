@@ -26,6 +26,12 @@ export class SearchCmp implements OnInit{
 
     public media: Array<MediaContainer>;
 
+    // TODO: Make this a saner calculation
+    public currentViewItem: MediaContainer;
+    public previewWidth = 480;
+    public previewHeight = 480;
+    public maxVisible = 8;
+
     constructor(
         public _contentedService: ContentedService,
         public route: ActivatedRoute,
@@ -37,11 +43,15 @@ export class SearchCmp implements OnInit{
 
     public ngOnInit() {
         this.resetForm();
-        this.route.paramMap.pipe().subscribe(
+        this.route.queryParams.pipe().subscribe(
             (res: ParamMap) => {
-                let text = res.get("text");
-                console.log("Search text from url", text);
+                let st = res['searchText'];
+                let text = st !== undefined ? st : '';
+                console.log("Search text from url", text, res);
                 this.searchText.setValue(text);
+                if (text !== '') {
+                    this.search(text); 
+                }
                 this.setupFilterEvts();
             }
         );
@@ -50,7 +60,6 @@ export class SearchCmp implements OnInit{
 
     public resetForm(setupFilterEvents: boolean = false) {
         this.searchText = new FormControl('');
-
         this.options = this.fb.group({
             searchText: this.searchText,
         });
@@ -79,7 +88,43 @@ export class SearchCmp implements OnInit{
           );
     }
 
-    public search(text) {
-       console.log("Get the information from the input and search on it", text); 
+    public getValues() {
+        return this.options.value;
+    }
+
+    public search(text: string) {
+        console.log("Get the information from the input and search on it", text); 
+        this.media = [];
+        this._contentedService.searchMedia(text).subscribe(
+            (mData: Array<MediaContainer>) => {
+                console.log("Search results", mData);
+                this.media = mData || [];
+                this.currentViewItem = this.media.length > 0 ? this.media[0] : null;
+            }, err => {
+                console.error("Failed to search", err);
+            }
+        );
+    }
+
+    public getVisibleSet() {
+        return this.media;
+    }
+
+    // TODO: Being called abusively in the directive rather than on page resize events
+    @HostListener('window:resize', ['$event'])
+    public calculateDimensions() {
+        let width = !window['jasmine'] ? window.innerWidth : 800;
+        let height = !window['jasmine'] ? window.innerHeight : 800;
+
+        this.previewWidth = (width / 4) - 41;
+        this.previewHeight = (height / this.maxVisible) - 41;
+    }
+
+    public imgLoaded(evt) {
+
+    }
+
+    imgClicked(imgContainer: MediaContainer) {
+        console.log("Click the image", imgContainer);
     }
 }

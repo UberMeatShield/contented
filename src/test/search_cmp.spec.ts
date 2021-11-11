@@ -3,6 +3,8 @@ import {By} from '@angular/platform-browser';
 import {HttpParams} from '@angular/common/http';
 import {HttpClientTestingModule, HttpTestingController} from '@angular/common/http/testing';
 import {NoopAnimationsModule} from '@angular/platform-browser/animations';
+
+import {Location} from '@angular/common';
 import {DebugElement} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 
@@ -28,12 +30,13 @@ describe('TestingSearchCmp', () => {
     let router: Router;
 
     let httpMock: HttpTestingController;
+    let loc: Location;
 
     beforeEach(waitForAsync( () => {
         TestBed.configureTestingModule({
             imports: [
                 RouterTestingModule.withRoutes(
-                    [{path: 'ui/:idx/:rowIdx', component: SearchCmp}]
+                    [{path: 'ui/search', component: SearchCmp}]
                 ),
                 FormsModule,
                 ContentedModule,
@@ -45,9 +48,10 @@ describe('TestingSearchCmp', () => {
             ]
         }).compileComponents();
 
-        service = TestBed.get(ContentedService);
+        service = TestBed.inject(ContentedService);
         fixture = TestBed.createComponent(SearchCmp);
-        httpMock = TestBed.get(HttpTestingController);
+        httpMock = TestBed.inject(HttpTestingController);
+        loc = TestBed.inject(Location);
         comp = fixture.componentInstance;
 
         de = fixture.debugElement.query(By.css('.search-cmp'));
@@ -65,8 +69,20 @@ describe('TestingSearchCmp', () => {
         expect(el).toBeDefined("We should have a top level element");
     });
 
-    it('It can setup all eventing without exploding', () => {
+    it('It can setup all eventing without exploding', fakeAsync(() => {
+        let st = "Cthulhu";
+        router.navigate(["/ui/search/"], {queryParams: {searchText: st}}); 
+        tick(100);
+        console.log("navigate is done");
         fixture.detectChanges();
-    });
+        let vals = comp.getValues();
+        console.log(vals);
+        tick(100);
+        expect(vals['searchText']).toBe(st, "It should default via route params");
+
+        let req = httpMock.expectOne(req => req.url === ApiDef.contented.search);
+        req.flush(MockData.getSearch());
+        fixture.detectChanges();
+    }));
 });
 

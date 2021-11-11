@@ -94,7 +94,7 @@ func (cm ContentManagerMemory) ListAllMedia(page int, per_page int) (*models.Med
 func (cm ContentManagerMemory) SearchMediaContext() (*models.MediaContainers, error) {
     params := cm.Params()
     _, per_page, page := GetPagination(params, cm.cfg.Limit)
-    searchStr := StringDefault(params.Get("search"), "")
+    searchStr := StringDefault(params.Get("text"), "")
     return cm.SearchMedia(searchStr, page, per_page)
 }
 

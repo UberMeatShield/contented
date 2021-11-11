@@ -9,6 +9,7 @@ export let ApiDef = {
         preview: base + 'preview/',
         containers: base + 'containers/',
         media: base + 'containers/{cId}/media',
-        mediaAll: base + 'media'
+        mediaAll: base + 'media',
+        search: base + "search",
     }
 };

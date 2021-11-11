@@ -10,4 +10,21 @@
       >
     </mat-form-field>
   </form>
+
+  <div class="search-results" *ngIf="!!media">
+     <div class="preview-content"
+       [class.video-overlay]="mc?.content_type?.match('video')"
+       style="width:{{previewWidth}}px; height: {{previewHeight}}px;"
+       *ngFor="let mc of getVisibleSet()"
+       (click)="imgClicked(mc)"
+       >
+
+       <!-- Assume that every preview is actually going to be an image -->
+       <img class="preview-img"
+         [class.current-img]="currentViewItem === mc"
+         [src]="mc?.previewUrl"
+         (load)="imgLoaded($event)"
+       >
+    </div>
+  </div>
 </div>

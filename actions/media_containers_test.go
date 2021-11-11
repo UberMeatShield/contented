@@ -67,7 +67,7 @@ func (as *ActionSuite) Test_MediaSubQuery() {
 
     // Add in a test that uses the search interface via the actions via DB
     params := url.Values{}
-    params.Add("search", "donut")
+    params.Add("text", "donut")
 
     res3 := as.JSON("/search?%s", params.Encode()).Get()
     as.Equal(http.StatusOK, res3.Code)
@@ -87,7 +87,7 @@ func (as *ActionSuite) Test_MemoryAPIBasics() {
     as.Equal(25, len(validate), "It should have a known set of mock data")
 
 	validate_search := models.MediaContainers{}
-	res_search := as.JSON("/search?search=Large").Get()
+	res_search := as.JSON("/search?text=Large").Get()
 	json.NewDecoder(res_search.Body).Decode(&validate_search)
     as.Equal(25, len(validate), "In memory should have these")
 }

@@ -16,6 +16,10 @@ class MockLoader {
         return _.clone(require('./containers.json'));
     }
 
+    public getSearch() {
+        return _.clone(require('./search.json'));
+    }
+
     public getMedia(container_id = null, count = null) {
         let media = _.clone(require('./media.json'));
         if (container_id) {

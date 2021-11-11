@@ -136,6 +136,19 @@ export class ContentedService {
         }
     }
 
+    public searchMedia(text: string, offset: number = 0, limit: number = 0) {
+        let params = this.getPaginationParams(offset, limit);
+        params = params.set("text", text);
+
+        return this.http.get(ApiDef.contented.search, {
+            params: params
+        }).pipe(
+            map(res => {
+                return _.map(res, mc => new MediaContainer(mc));
+            })
+        );
+    }
+
     public handleError(err: HttpErrorResponse) {
         console.error("Failed to handle API call error", err);
         let parsed = {};

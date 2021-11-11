@@ -9,7 +9,7 @@ import {RouterModule, Routes} from '@angular/router';
 const appRoutes = [
     {path: '', redirectTo: '/ui/browse/0/0', pathMatch: 'full'},
     {path: 'ui/browse/:idx/:rowIdx', component: ContentedCmp},
-    {path: 'ui/search/:text', component: SearchCmp}
+    {path: 'ui/search', component: SearchCmp}
 ];
 @NgModule({
     imports: [RouterModule.forRoot(appRoutes, { relativeLinkResolution: 'legacy' })],
