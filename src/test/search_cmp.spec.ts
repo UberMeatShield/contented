@@ -81,8 +81,11 @@ describe('TestingSearchCmp', () => {
         expect(vals['searchText']).toBe(st, "It should default via route params");
 
         let req = httpMock.expectOne(req => req.url === ApiDef.contented.search);
-        req.flush(MockData.getSearch());
+        let sr = MockData.getSearch()
+        expect(sr.length).toBeGreaterThan(0, "We need some search results.");
+        req.flush(sr);
         fixture.detectChanges();
+        expect($('.search-result').length).toEqual(sr.length);
     }));
 });
 

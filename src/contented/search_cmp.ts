@@ -27,10 +27,9 @@ export class SearchCmp implements OnInit{
     public media: Array<MediaContainer>;
 
     // TODO: Make this a saner calculation
-    public currentViewItem: MediaContainer;
     public previewWidth = 480;
     public previewHeight = 480;
-    public maxVisible = 8;
+    public maxVisible = 3; // How many results show horizontally
 
     constructor(
         public _contentedService: ContentedService,
@@ -55,7 +54,7 @@ export class SearchCmp implements OnInit{
                 this.setupFilterEvts();
             }
         );
-
+        this.calculateDimensions();
     }
 
     public resetForm(setupFilterEvents: boolean = false) {
@@ -94,12 +93,13 @@ export class SearchCmp implements OnInit{
 
     public search(text: string) {
         console.log("Get the information from the input and search on it", text); 
+
+        // TODO: Wrap the media into a fake directory
         this.media = [];
         this._contentedService.searchMedia(text).subscribe(
             (mData: Array<MediaContainer>) => {
                 console.log("Search results", mData);
                 this.media = mData || [];
-                this.currentViewItem = this.media.length > 0 ? this.media[0] : null;
             }, err => {
                 console.error("Failed to search", err);
             }

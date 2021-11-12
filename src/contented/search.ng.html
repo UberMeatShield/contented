@@ -9,10 +9,13 @@
         matInput placeholder=""
       >
     </mat-form-field>
+    <span *ngIf="media?.length > 0">
+      Total Results: {{media.length}}
+    </span>
   </form>
 
   <div class="search-results" *ngIf="!!media">
-     <div class="preview-content"
+     <div class="preview-content search-result"
        [class.video-overlay]="mc?.content_type?.match('video')"
        style="width:{{previewWidth}}px; height: {{previewHeight}}px;"
        *ngFor="let mc of getVisibleSet()"
@@ -21,7 +24,6 @@
 
        <!-- Assume that every preview is actually going to be an image -->
        <img class="preview-img"
-         [class.current-img]="currentViewItem === mc"
          [src]="mc?.previewUrl"
          (load)="imgLoaded($event)"
        >

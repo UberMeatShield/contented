@@ -1,8 +1,20 @@
 .contented-cmp {
-
     height: 100%;
-
     .dir-contents {
+       display: flex;
+       flex-wrap: wrap;
+    }
+
+    .preview-content {
+      flex-shrink: 0;
+      margin: 1rem;
+    }
+}
+
+// Might want to make this different than the top level browse component
+.search-cmp {
+    height: 100%;
+    .search-results {
        display: flex;
        flex-wrap: wrap;
     }
