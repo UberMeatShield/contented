@@ -7,6 +7,7 @@ import {MediaContainer} from './directory';
 
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 import {FormBuilder, NgForm, FormControl, FormGroup} from '@angular/forms';
+import * as _ from 'lodash';
 
 
 @Component({
@@ -97,9 +98,12 @@ export class SearchCmp implements OnInit{
         // TODO: Wrap the media into a fake directory
         this.media = [];
         this._contentedService.searchMedia(text).subscribe(
-            (mData: Array<MediaContainer>) => {
-                console.log("Search results", mData);
-                this.media = mData || [];
+            (res) => {
+                let media = _.map((res['media'] || []), m => new MediaContainer(m));
+                let total = res['total'] || 0;
+                
+                console.log("Search results", media, total);
+                this.media = media;
             }, err => {
                 console.error("Failed to search", err);
             }

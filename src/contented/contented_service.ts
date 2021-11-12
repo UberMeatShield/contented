@@ -142,11 +142,7 @@ export class ContentedService {
 
         return this.http.get(ApiDef.contented.search, {
             params: params
-        }).pipe(
-            map(res => {
-                return _.map(res, mc => new MediaContainer(mc));
-            })
-        );
+        });
     }
 
     public handleError(err: HttpErrorResponse) {

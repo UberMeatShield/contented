@@ -82,10 +82,10 @@ describe('TestingSearchCmp', () => {
 
         let req = httpMock.expectOne(req => req.url === ApiDef.contented.search);
         let sr = MockData.getSearch()
-        expect(sr.length).toBeGreaterThan(0, "We need some search results.");
+        expect(sr['media'].length).toBeGreaterThan(0, "We need some search results.");
         req.flush(sr);
         fixture.detectChanges();
-        expect($('.search-result').length).toEqual(sr.length);
+        expect($('.search-result').length).toEqual(sr['media'].length);
     }));
 });
 

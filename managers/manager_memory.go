@@ -91,14 +91,14 @@ func (cm ContentManagerMemory) ListAllMedia(page int, per_page int) (*models.Med
 }
 
 // It should probably be able to search the container too?
-func (cm ContentManagerMemory) SearchMediaContext() (*models.MediaContainers, error) {
+func (cm ContentManagerMemory) SearchMediaContext() (*models.MediaContainers, int, error) {
     params := cm.Params()
     _, per_page, page := GetPagination(params, cm.cfg.Limit)
     searchStr := StringDefault(params.Get("text"), "")
     return cm.SearchMedia(searchStr, page, per_page)
 }
 
-func (cm ContentManagerMemory) SearchMedia(search string, page int, per_page int) (*models.MediaContainers, error) {
+func (cm ContentManagerMemory) SearchMedia(search string, page int, per_page int) (*models.MediaContainers, int, error) {
     m_arr := models.MediaContainers{}
 
     // Could optimize by offset end but "eh, good enough for in memory"
@@ -115,12 +115,13 @@ func (cm ContentManagerMemory) SearchMedia(search string, page int, per_page int
             }
         }
     }
+    count := len(m_arr)
     offset, end := GetOffsetEnd(page, per_page, len(m_arr))
     if end > 0 {  // If it is empty a slice ending in 0 = boom
         m_arr = m_arr[offset : end]
-        return &m_arr, nil
+        return &m_arr, count, nil
     }
-    return &m_arr, nil
+    return &m_arr, count, nil
 }
 
 
