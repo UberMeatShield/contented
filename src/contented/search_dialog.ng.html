@@ -1,0 +1,14 @@
+<mat-dialog-content #SearchContent class="search-dialog">
+  <div *ngIf="sizeCalculated">
+    <contented-view [container]="mediaContainer"
+        [forceWidth]="forceWidth"
+        [forceHeight]="forceHeight"
+    ></contented-view>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-raised-button class="btn btn-sm btn-dialog-cancel"
+     mat-dialog-close
+  >Close</button>
+</mat-dialog-actions>

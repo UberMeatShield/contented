@@ -25,6 +25,11 @@
     }
 }
 
+.search-dialog {
+    min-height: calc(100vh - 100px);
+    width: 100%;
+}
+
 .current-item {
   margin: 0 0 2rem 0;
 }

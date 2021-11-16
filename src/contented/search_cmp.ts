@@ -1,12 +1,13 @@
 import {forkJoin, Subscription} from 'rxjs';
 import {finalize, debounceTime, map, distinctUntilChanged, catchError} from 'rxjs/operators';
 
-import {OnInit, Component, EventEmitter, Input, Output, HostListener, ViewChild} from '@angular/core';
+import {OnInit, AfterViewInit, Component, EventEmitter, Input, Output, HostListener, ViewChild, Inject} from '@angular/core';
 import {ContentedService} from './contented_service';
 import {MediaContainer} from './directory';
-
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 import {FormBuilder, NgForm, FormControl, FormGroup} from '@angular/forms';
+
+import {MatDialog, MatDialogConfig, MAT_DIALOG_DATA} from '@angular/material/dialog';
 import * as _ from 'lodash';
 
 
@@ -36,6 +37,7 @@ export class SearchCmp implements OnInit{
         public _contentedService: ContentedService,
         public route: ActivatedRoute,
         public router: Router,
+        public dialog: MatDialog,
         fb: FormBuilder,
     ) {
         this.fb = fb;
@@ -124,11 +126,63 @@ export class SearchCmp implements OnInit{
         this.previewHeight = (height / this.maxVisible) - 41;
     }
 
-    public imgLoaded(evt) {
-
+    public fullView(mc: MediaContainer) {
+        const dialogRef = this.dialog.open(
+            SearchDialog,
+            {
+                data: mc,
+                width: '90%',
+                height: '100%',
+                maxWidth: '100vw',
+                maxHeight: '100vh',
+            }
+        );
+        dialogRef.afterClosed().subscribe(result => {
+            console.log("Closing the view", result);
+        });
     }
 
-    imgClicked(imgContainer: MediaContainer) {
-        console.log("Click the image", imgContainer);
+    public imgLoaded(evt) {
+        // Debugging / hooks but could also be a hook into a total loaded.
+    }
+
+    imgClicked(mc: MediaContainer) {
+        console.log("Click the image", mc);
+        this.fullView(mc);
+    }
+}
+
+// This just doesn't seem like a great approach :(
+@Component({
+    selector: 'search-dialog',
+    templateUrl: 'search_dialog.ng.html'
+})
+export class SearchDialog implements AfterViewInit {
+
+    public mediaContainer: MediaContainer;
+
+    public forceHeight: number;
+    public forceWidth: number;
+    public sizeCalculated: boolean = false;
+
+    @ViewChild('SearchContent', { static: true }) searchContent;
+
+    constructor(@Inject(MAT_DIALOG_DATA) public mc: MediaContainer, public _service: ContentedService) {
+        // console.log("Mass taker opened with items:", items);
+        this.mediaContainer = mc;
+    }
+
+    ngAfterViewInit() {
+        console.log("Search content is:", this.searchContent);
+
+        setTimeout(() => {
+            let el = this.searchContent.nativeElement;
+            if (el) {
+                console.log("Element", el, el.offsetWidth, el.offsetHeight);
+                this.forceHeight = el.offsetHeight;
+                this.forceWidth = el.offsetWidth;
+            }
+            this.sizeCalculated = true;
+        }, 100);
     }
 }
