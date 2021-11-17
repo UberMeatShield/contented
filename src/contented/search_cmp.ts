@@ -1,12 +1,23 @@
 import {forkJoin, Subscription} from 'rxjs';
 import {finalize, debounceTime, map, distinctUntilChanged, catchError} from 'rxjs/operators';
 
-import {OnInit, AfterViewInit, Component, EventEmitter, Input, Output, HostListener, ViewChild, Inject} from '@angular/core';
+import {
+    OnInit,
+    AfterViewInit,
+    Component,
+    EventEmitter,
+    Input,
+    Output,
+    HostListener,
+    ViewChild,
+    Inject
+} from '@angular/core';
 import {ContentedService} from './contented_service';
 import {MediaContainer} from './directory';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 import {FormBuilder, NgForm, FormControl, FormGroup} from '@angular/forms';
 
+import {PageEvent} from '@angular/material/paginator';
 import {MatDialog, MatDialogConfig, MAT_DIALOG_DATA} from '@angular/material/dialog';
 import * as _ from 'lodash';
 
@@ -32,6 +43,7 @@ export class SearchCmp implements OnInit{
     public previewWidth = 480;
     public previewHeight = 480;
     public maxVisible = 3; // How many results show horizontally
+    public total = 0;
 
     constructor(
         public _contentedService: ContentedService,
@@ -94,18 +106,26 @@ export class SearchCmp implements OnInit{
         return this.options.value;
     }
 
-    public search(text: string) {
-        console.log("Get the information from the input and search on it", text); 
+    pageEvt(evt: PageEvent) {
+        console.log("Event", evt, this.searchText.value);
+        let offset = evt.pageIndex * evt.pageSize;
+        let limit = evt.pageSize;
+        this.search(this.searchText.value, offset, limit);
+        // pageIndex, pageSize
+    }
 
+    public search(text: string, offset: number = 0, limit: number = 50) {
+        console.log("Get the information from the input and search on it", text); 
         // TODO: Wrap the media into a fake directory
         this.media = [];
-        this._contentedService.searchMedia(text).subscribe(
+        this._contentedService.searchMedia(text, offset, limit).subscribe(
             (res) => {
                 let media = _.map((res['media'] || []), m => new MediaContainer(m));
                 let total = res['total'] || 0;
                 
                 console.log("Search results", media, total);
                 this.media = media;
+                this.total = total;
             }, err => {
                 console.error("Failed to search", err);
             }
@@ -142,7 +162,7 @@ export class SearchCmp implements OnInit{
         });
     }
 
-    public imgLoaded(evt) {
+    imgLoaded(evt) {
         // Debugging / hooks but could also be a hook into a total loaded.
     }
 

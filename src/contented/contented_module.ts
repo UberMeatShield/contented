@@ -7,6 +7,7 @@ import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatDialogModule} from '@angular/material/dialog';
 import {MatButtonModule} from '@angular/material/button';
+import {MatPaginatorModule} from '@angular/material/paginator';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 
 import {ContentedCmp} from './contented_cmp';
@@ -28,6 +29,7 @@ import {Directory} from './directory';
       MatDialogModule,
       MatFormFieldModule,
       MatInputModule,
+      MatPaginatorModule,
   ],
   declarations: [ContentedCmp, ContentedViewCmp, DirectoryCmp, SearchCmp, SearchDialog],
   exports: [ContentedCmp, ContentedViewCmp, SearchCmp, SearchDialog],

@@ -9,9 +9,12 @@
         matInput placeholder=""
       >
     </mat-form-field>
-    <span *ngIf="media?.length > 0">
-      Total Results: {{media.length}}
-    </span>
+
+    <mat-paginator
+      [length]="total"
+      [pageSize]="1"
+      (page)="pageEvt($event)"
+    ></mat-paginator>
   </form>
 
   <div class="search-results" *ngIf="!!media">
