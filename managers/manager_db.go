@@ -95,25 +95,30 @@ func (cm ContentManagerDB) ListAllMedia(page int, per_page int) (*models.MediaCo
 }
 
 // It should probably be able to search the container too?
-func (cm ContentManagerDB) SearchMediaContext() (*models.MediaContainers, error) {
+func (cm ContentManagerDB) SearchMediaContext() (*models.MediaContainers, int, error) {
     params := cm.Params()
     _, per_page, page := GetPagination(params, cm.cfg.Limit)
-    searchStr := StringDefault(params.Get("search"), "")
+    searchStr := StringDefault(params.Get("text"), "")
     return cm.SearchMedia(searchStr, page, per_page)
 }
 
-func (cm ContentManagerDB) SearchMedia(search string, page int, per_page int) (*models.MediaContainers, error) {
+func (cm ContentManagerDB) SearchMedia(search string, page int, per_page int) (*models.MediaContainers, int, error) {
     mediaContainers := &models.MediaContainers{}
     tx := cm.GetConnection()
+
+    // TODO: We need to do a count first and preserve that :(  hate
     q := tx.Paginate(page, per_page)
     if search != "*" && search != "" {
         search = ("%" + search + "%")
         q = q.Where(`src like ?`, search)
-    }
+    } 
+    count, _ := q.Count(&models.MediaContainers{})
+    log.Printf("Total count of search media %d", count)
+
     if q_err := q.All(mediaContainers); q_err != nil {
-        return mediaContainers, q_err
+        return mediaContainers, count, q_err
     }
-    return mediaContainers, nil
+    return mediaContainers, count, nil
 }
 
 // The default list using the current manager configuration
@@ -135,14 +140,14 @@ func (cm ContentManagerDB) ListContainers(page int, per_page int) (*models.Conta
     return containers, nil
 }
 
-func (cm ContentManagerDB) GetContainer(mc_id uuid.UUID) (*models.Container, error) {
-    log.Printf("Get a single container %s", mc_id)
+// TODO: Need a preview test using the database where we do NOT have a preview created
+func (cm ContentManagerDB) GetContainer(c_id uuid.UUID) (*models.Container, error) {
+    log.Printf("Get a single container %s", c_id)
     tx := cm.GetConnection()
-    p := cm.Params()
 
-    // Allocate an empty Container
+    // Allocate an empty Container p := cm.Params()
     container := &models.Container{}
-    if err := tx.Find(container, p.Get("container_id")); err != nil {
+    if err := tx.Find(container, c_id); err != nil {
         return nil, err
     }
     return container, nil

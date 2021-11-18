@@ -42,9 +42,11 @@ func App(UseDatabase bool) *buffalo.App {
         app.GET("/search", SearchHandler)
 
         // Host the index.html, also assume that all angular UI routes are going to be under contented
+        // Cannot figure out how to just let AngularIndex handle EVERYTHING under ui/*/*
         app.GET("/", AngularIndex)
-        app.GET("/ui/{path}", AngularIndex)
-        app.GET("/ui/{path}/{idx}", AngularIndex)
+        app.GET("/ui/browse/{path}", AngularIndex)
+        app.GET("/ui/browse/{path}/{idx}", AngularIndex)
+        app.GET("/ui/search", AngularIndex)
 
         // Need to make the file serving location smarter (serve the dir + serve static?)
         cfg := utils.GetCfg()

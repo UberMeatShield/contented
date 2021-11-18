@@ -1,0 +1,35 @@
+<div class="search-cmp">
+  <form #searchForm [formGroup]="options">
+    <mat-form-field apperance="fill" floatLabel="true">
+      <mat-label>
+        Search Media
+      </mat-label>
+      <input type="text" name="searchText"
+        [formControl]="searchText"
+        matInput placeholder=""
+      >
+    </mat-form-field>
+
+    <mat-paginator
+      [length]="total"
+      [pageSize]="pageSize"
+      (page)="pageEvt($event)"
+    ></mat-paginator>
+  </form>
+
+  <div class="search-results" *ngIf="!!media">
+     <div class="preview-content search-result"
+       [class.video-overlay]="mc?.content_type?.match('video')"
+       style="width:{{previewWidth}}px; height: {{previewHeight}}px;"
+       *ngFor="let mc of getVisibleSet()"
+       (click)="imgClicked(mc)"
+       >
+
+       <!-- Assume that every preview is actually going to be an image -->
+       <img class="preview-img"
+         [src]="mc?.previewUrl"
+         (load)="imgLoaded($event)"
+       >
+    </div>
+  </div>
+</div>

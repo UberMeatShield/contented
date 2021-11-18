@@ -67,15 +67,34 @@ func (as *ActionSuite) Test_MediaSubQuery() {
 
     // Add in a test that uses the search interface via the actions via DB
     params := url.Values{}
-    params.Add("search", "donut")
+    params.Add("text", "donut")
 
     res3 := as.JSON("/search?%s", params.Encode()).Get()
     as.Equal(http.StatusOK, res3.Code)
-	validate3 := models.MediaContainers{}
+	validate3 := SearchResult{}
 	json.NewDecoder(res3.Body).Decode(&validate3)
-    as.Equal(1, len(validate3), "We have one donut")
+    as.Equal(1, len(*validate3.Media), "We have one donut")
 }
 
+
+func (as *ActionSuite) Test_ManagerDB_Preview() {
+    models.DB.TruncateAll()
+    internals.InitFakeApp(true)
+
+    cnt, media := internals.GetMediaByDirName("dir2")
+    as.Equal(3, len(media), "Dir2 should have 3 items")
+    as.Equal("dir2", cnt.Name, "It should have loaded the right item")
+
+    as.DB.Create(cnt)
+    as.NotZero(cnt.ID, "We should have an ID now for the container")
+    for _, mc := range media {
+        mc.ContainerID = nulls.NewUUID(cnt.ID)
+        as.DB.Create(&mc)
+        as.NotZero(mc.ID, "It should have a media container ID and id")
+        previewRes := as.JSON("/preview/%s", mc.ID).Get()
+        as.Equal(http.StatusOK, previewRes.Code)
+    }
+}
 
 func (as *ActionSuite) Test_MemoryAPIBasics() {
     internals.InitFakeApp(false)
@@ -87,7 +106,7 @@ func (as *ActionSuite) Test_MemoryAPIBasics() {
     as.Equal(25, len(validate), "It should have a known set of mock data")
 
 	validate_search := models.MediaContainers{}
-	res_search := as.JSON("/search?search=Large").Get()
+	res_search := as.JSON("/search?text=Large").Get()
 	json.NewDecoder(res_search.Body).Decode(&validate_search)
     as.Equal(25, len(validate), "In memory should have these")
 }

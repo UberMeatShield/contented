@@ -7,6 +7,7 @@ import (
 	"os"
 	"contented/utils"
 	"contented/managers"
+	"contented/models"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gofrs/uuid"
 )
@@ -14,6 +15,11 @@ import (
 type HttpError struct {
 	Error string `json:"error"`
 	Debug string `json:"debug"`
+}
+
+type SearchResult struct {
+    Total int `json:"total"`
+    Media *models.MediaContainers `json:"media"`
 }
 
 // Builds out information given the application and the content directory
@@ -47,11 +53,15 @@ func FullHandler(c buffalo.Context) error {
 
 func SearchHandler(c buffalo.Context) error {
     man := managers.GetManager(&c)
-    mcs, err := man.SearchMediaContext()
+    mcs, count, err := man.SearchMediaContext()
     if err != nil {
 		return c.Error(400, err)
     }
-    return c.Render(200, r.JSON(mcs))
+    sr := SearchResult{
+        Media: mcs,
+        Total: count,
+    }
+    return c.Render(200, r.JSON(sr))
 }
 
 // Find the preview of a file (if applicable currently it is just returning the full path)

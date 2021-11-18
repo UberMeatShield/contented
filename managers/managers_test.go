@@ -51,27 +51,6 @@ func GetManagerActionSuite(cfg *utils.DirConfigEntry, as *ActionSuite) ContentMa
 }
 
 
-func GetMediaByDirName(test_dir_name string) (*models.Container, models.MediaContainers) {
-    dir, _ := envy.MustGet("DIR")
-    cfg := utils.GetCfg()
-    cfg.Dir = dir
-    cnts := utils.FindContainers(cfg.Dir)
-
-    var cnt *models.Container = nil
-    for _, c := range cnts {
-        if c.Name == test_dir_name {
-            cnt = &c
-            break
-        }
-    }
-    if cnt == nil {
-        log.Panic("Could not find the directory: " +  test_dir_name)
-    }
-    media := utils.FindMedia(*cnt, 42, 0)
-    cnt.Total = len(media)
-    return cnt, media
-}
-
 // Why are no tests working?
 func TestMain(m *testing.M) {
     _, err := envy.MustGet("DIR")
@@ -223,15 +202,16 @@ func (as *ActionSuite) Test_MemoryManagerSearch() {
     as.NotNil(containers, "It should have containers")
     as.Equal(len(*containers), 4, "It should have 4 of them")
 
-    mcs, err := man.SearchMedia("donut", 1, 20)
+    mcs, total, err := man.SearchMedia("donut", 1, 20)
     as.NoError(err, "Can we search in the memory manager")
     as.Equal(len(*mcs), 1, "One donut should be found")
+    as.Equal(total, len(*mcs), "It should get the total right")
 
-    mcs_1, err_1 := man.SearchMedia("Large", 1, 6)
+    mcs_1, _, err_1 := man.SearchMedia("Large", 1, 6)
     as.NoError(err_1, "Can we search in the memory manager")
     as.Equal(3, len(*mcs_1), "One donut should be found")
 
-    all_mc, err_all := man.SearchMedia("", 0, 9000)
+    all_mc, _, err_all := man.SearchMedia("", 0, 9000)
     as.NoError(err_all, "Can in search everything")
     as.Equal(25, len(*all_mc), "The Kitchen sink")
 }
@@ -244,20 +224,21 @@ func (as *ActionSuite) Test_DbManagerSearch() {
     man := GetManagerActionSuite(cfg, as)
     as.Equal(man.CanEdit(), true, "It should be a DB manager")
 
-    cnt, media := GetMediaByDirName("dir1")
+    cnt, media := internals.GetMediaByDirName("dir1")
     c_err := models.DB.Create(cnt)
     as.NoError(c_err)
     for _, mc := range media {
         models.DB.Create(&mc)
     }
-    mcs, err := man.SearchMedia("Large", 1, 20)
+    mcs, _, err := man.SearchMedia("Large", 1, 20)
     as.NoError(err, "It should be able to search")
     as.NotNil(mcs, "It should be")
     as.Equal(3, len(*mcs), "We should have 3 large images with an ilike compare")
 
-    all_mcs, err := man.SearchMedia("", 1, 20)
+    all_mcs, total, err := man.SearchMedia("", 1, 10)
     as.NoError(err, "It should be able to empty search")
-    as.Equal(12, len(*all_mcs), "We should have 3 large images with an ilike compare")
+    as.Equal(12, total, "The total count for this dir is 12")
+    as.Equal(10, len(*all_mcs), "But we limited the pagination")
 }
 
 func (as *ActionSuite) Test_MemoryPreviewInitialization() {
@@ -299,7 +280,7 @@ func (as *ActionSuite) Test_ManagerDB() {
     models.DB.TruncateAll()
     cfg := internals.InitFakeApp(true)
 
-    cnt, media := GetMediaByDirName("dir1")
+    cnt, media := internals.GetMediaByDirName("dir1")
     as.Equal("dir1", cnt.Name, "It should be the right dir")
     as.Equal(12, cnt.Total, "The container total should be this for dir1")
     as.Equal(12, len(media))

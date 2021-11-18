@@ -70,22 +70,6 @@ func (v MediaContainersResource) List(c buffalo.Context) error {
 	}).Respond(c)
 }
 
-// Add a manager search function that also does pagination... annoying?
-func (v MediaContainersResource) Search(c buffalo.Context) error {
-    man := managers.GetManager(&c)
-    var mediaContainers *models.MediaContainers
-
-    // Standard pagination params and query param ?search=regexStr
-    mcs, err := man.SearchMediaContext()
-    if err != nil {
-        return c.Error(http.StatusBadRequest, err)
-    }
-    mediaContainers = mcs
-	return responder.Wants("json", func(c buffalo.Context) error {
-		return c.Render(200, r.JSON(mediaContainers))
-	}).Respond(c)
-}
-
 // Show gets the data for one MediaContainer. This function is mapped to
 // the path GET /media_containers/{media_container_id}
 func (v MediaContainersResource) Show(c buffalo.Context) error {
@@ -181,7 +165,7 @@ func (v MediaContainersResource) Update(c buffalo.Context) error {
 		return c.Error(http.StatusNotFound, err)
 	}
 
-	// Bind MediaContainer to the html form elements
+	// Bind MediaContainer to the html form elements (Nuke this)
 	if err := c.Bind(mediaContainer); err != nil {
 		return err
 	}
