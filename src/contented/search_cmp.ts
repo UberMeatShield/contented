@@ -44,6 +44,7 @@ export class SearchCmp implements OnInit{
     public previewHeight = 480;
     public maxVisible = 3; // How many results show horizontally
     public total = 0;
+    public pageSize = 50;
 
     constructor(
         public _contentedService: ContentedService,

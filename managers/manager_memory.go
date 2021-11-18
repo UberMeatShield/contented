@@ -115,6 +115,12 @@ func (cm ContentManagerMemory) SearchMedia(search string, page int, per_page int
             }
         }
     }
+
+    // Probably should grab a sorted chunk, then search it and bail once we hit the right offset
+    // And limit
+    sort.SliceStable(m_arr, func(i, j int) bool {
+        return m_arr[i].Idx < m_arr[j].Idx
+    })
     count := len(m_arr)
     offset, end := GetOffsetEnd(page, per_page, len(m_arr))
     if end > 0 {  // If it is empty a slice ending in 0 = boom
