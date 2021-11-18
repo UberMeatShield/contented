@@ -44,6 +44,7 @@ type ContentManager interface {
     SearchMediaContext() (*models.MediaContainers, int, error)
     SearchMedia(search string, page int, per_page int) (*models.MediaContainers, int, error)
 
+    UpdateContainer(c *models.Container) error
     UpdateMedia(media *models.MediaContainer) error
     FindActualFile(mc *models.MediaContainer) (string, error)
     GetPreviewForMC(mc *models.MediaContainer) (string, error)

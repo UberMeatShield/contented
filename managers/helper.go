@@ -122,6 +122,14 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
     }
     log.Printf("Found a set of media to make previews for %d", len(*media))
 
+    if c.PreviewSrc != "" && media != nil && len(*media) > 0 {
+        mcs := *media
+        c.PreviewSrc = "/preview/" + mcs[0].ID.String()
+        log.Printf("What was the container preview src %s", c.PreviewSrc)
+        cm.UpdateContainer(c)
+    }
+
+    // TODO: Make it so that we are fault tolerant but have a better option for later
     update_list, err := CreateMediaPreviews(c, *media)
     if err != nil {
         return err 

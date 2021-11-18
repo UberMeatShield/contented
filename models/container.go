@@ -4,7 +4,6 @@ import (
 	"time"
 	"encoding/json"
     "path/filepath"
-
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gobuffalo/validate/v3"
 	"github.com/gofrs/uuid"
@@ -18,9 +17,14 @@ type Container struct {
 	Name      string          `json:"name" db:"name"`
 	CreatedAt time.Time       `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time       `json:"updated_at" db:"updated_at"`
-	Contents  MediaContainers `json:"contents" has_many:"media_containers" db:"-"`
     Active    bool            `json:"active" db:"active"`
     Idx       int             `json:"idx" db:"idx"`
+	Contents  MediaContainers `json:"contents" has_many:"media_containers" db:"-"`
+
+    // This could be made to be a media container reference but currently I am not sure
+    // if that is better vs storing something that is a valid string and could be used
+    // with more data sources?   As I type this I am thinking string....
+    PreviewSrc string  `json:"preview_src" db:"preview_src"`
 }
 
 // String is not required by pop and may be deleted
