@@ -91,7 +91,7 @@ func (as *ActionSuite) Test_CfgIncExcFiles() {
     as.Equal(1, len(media), "There is one jpeg")
 }
 
-func (as *ActionSuite) Test_ImgPreview() {
+func (as *ActionSuite) Test_ImgShouldCreatePreview() {
 	dir, _ := envy.MustGet("DIR")
 
     cfg := utils.GetCfg()
@@ -155,11 +155,17 @@ func (as *ActionSuite) Test_CreateContainerPreviews() {
     c_pt, media := SetupScreensPreview(as)
     c_err := models.DB.Create(c_pt)
     as.NoError(c_err)
+
+    expect_c_preview := ""
     for _, mc := range media {
         mc.ContainerID = nulls.NewUUID(c_pt.ID)
         mc_err := models.DB.Create(&mc)
         as.NoError(mc_err)
         as.Equal(mc.Preview, "", "There should be no preview at this point")
+
+        if expect_c_preview == "" {
+            expect_c_preview = "/preview/" + mc.ID.String()
+        }
     }
     man := GetManagerActionSuite(cfg, as)
     cnts, c_err := man.ListContainers(0, 2)
@@ -167,6 +173,7 @@ func (as *ActionSuite) Test_CreateContainerPreviews() {
     as.NoError(c_err)
 
     p_err := CreateContainerPreviews(c_pt, man)
+    as.Equal(expect_c_preview, c_pt.PreviewSrc, "It should assign a mc preview to the container")
     as.NoError(p_err, "An error happened creating the previews")
     dstPath := GetContainerPreviewDst(c_pt)
     previews, read_err := ioutil.ReadDir(dstPath)

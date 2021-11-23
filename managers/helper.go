@@ -122,7 +122,8 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
     }
     log.Printf("Found a set of media to make previews for %d", len(*media))
 
-    if c.PreviewSrc != "" && media != nil && len(*media) > 0 {
+    // It would be nice to maybe abstract this into a better place?
+    if media != nil && len(*media) > 0 {
         mcs := *media
         c.PreviewSrc = "/preview/" + mcs[0].ID.String()
         log.Printf("What was the container preview src %s", c.PreviewSrc)
