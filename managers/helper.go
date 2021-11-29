@@ -126,7 +126,7 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
     if media != nil && len(*media) > 0 {
         mcs := *media
         c.PreviewSrc = "/preview/" + mcs[0].ID.String()
-        log.Printf("What was the container preview src %s", c.PreviewSrc)
+        // log.Printf("What was the container preview src %s", c.PreviewSrc)
         cm.UpdateContainer(c)
     }
 
