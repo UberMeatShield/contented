@@ -73,5 +73,20 @@ describe('TestingContentedViewCmp', () => {
         fixture.detectChanges();
         expect($('.container-full-view').length).toBe(1, "It should be visible");
     });
-});
 
+    it('Forcing a width and height will be respected', () => {
+        comp.container = MockData.getImg();
+        comp.forceWidth = 666;
+        comp.forceHeight = 42;
+        fixture.detectChanges();
+        expect($('.container-full-view').length).toBe(1, "It should be visible");
+
+        window.dispatchEvent(new Event('resize'));
+        fixture.detectChanges();
+        // It should be forcing a detection of the resize (otherwise it is calculated already)
+        // comp.calculateDimensions();
+
+        expect(comp.maxWidth).toEqual(comp.forceWidth, "Ensure width assignment works");
+        expect(comp.maxHeight).toEqual(comp.forceHeight, "Ensure height assignment works");
+    });
+});
