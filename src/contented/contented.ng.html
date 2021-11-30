@@ -10,6 +10,8 @@
 
   <!-- Fix this to be better about how to get the currDir -->
   <div class="contented-dir" name="contents" *ngFor="let dir of getVisibleDirectories()">
+
+    <!-- Probably break this out into a directory Info Component -->
     <div class="directory-contents" [class.current-content-dir]="dir === getCurrentDir()">
       <mat-progress-bar
         [value]="dir.count ? ((rowIdx + 1) * 100 / dir.count) : 1"
@@ -20,25 +22,44 @@
 
       <mat-card class="directory-meta" *ngIf="!!dir">
         <mat-card-subtitle>
-          <a target="window" class="dir-name" href="/containers/{{dir?.id}}">{{dir?.name}}</a>
-          <span *ngIf="currentViewItem">/</span> 
-          <a target="window" class="current-item" *ngIf="currentViewItem" href="{{currentViewItem.fullUrl}}">
-            {{currentViewItem?.src}} 
-          </a>
-          {{currentViewItem?.content_type}}
-          <span class="pull-left">
-            Showing {{idx + 1}} of {{allD?.length}} directories.
-          </span>
-          <form class="directory-meta-text">
-            Selected: <input name="rowIdx" type="number" [(ngModel)]="rowIdx">
-            Loaded: <span class="dir-max-count"> {{dir?.contents?.length}}</span> of {{dir?.total}}.
-            <span *ngIf="dir?.contents?.length < dir.total">
-              press (F) or: 
-              <button class="btn btn-primary" (click)="fullLoadDir(dir)">
-                Load ({{ dir.total - dir.count }}) Items
-              </button>
+          <div class="container-bar">
+            <div class="container-preview-loc">
+              <img class="container-preview-img" [src]="dir?.previewUrl">
+            </div>
+
+          <div class="container-bar-info">
+            <span class="bar-spacer">
+              {{idx + 1}} of {{allD?.length}} Containers.
             </span>
-          </form>
+
+            <form class="directory-meta-text bar-spacer">
+              Current Index: <input name="rowIdx" type="number" [(ngModel)]="rowIdx">
+              Loaded: <span class="dir-max-count"> {{dir?.contents?.length}}</span>
+              of <span class="dir-total">{{dir?.total}}</span> media
+              <span *ngIf="dir?.contents?.length < dir.total">
+                press (F) or: 
+                <button class="btn btn-primary" (click)="fullLoadDir(dir)">
+                  Load ({{ dir.total - dir.count }}) Items
+                </button>
+              </span>
+            </form>
+
+            <div class="bar-spacer">Add a WASD</div>
+              <span class="bar-spacer">
+                Selected: 
+              <a target="window" class="dir-name"
+                href="/containers/{{dir?.id}}"
+              >{{dir?.name}}</a>
+              <span *ngIf="currentViewItem">/</span> 
+              <a target="window" class="current-item" 
+                *ngIf="currentViewItem" 
+                href="{{currentViewItem.fullUrl}}">
+                {{currentViewItem?.src}}
+              </a>
+              &nbsp; {{currentViewItem?.content_type}}
+              </span>
+            </div>
+          </div>
         </mat-card-subtitle>
       </mat-card>
 

@@ -160,8 +160,17 @@ func (cm ContentManagerMemory) GetMedia(mc_id uuid.UUID) (*models.MediaContainer
     return nil, errors.New("Media was not found in memory")
 }
 
+
+// If you already updated the container in memory you are done
+func (cm ContentManagerMemory) UpdateContainer(c *models.Container) error {
+    // TODO: Validate that this updates the actual reference in mem storage
+    return nil
+}
+
 // No updates should be allowed for memory management.
 func (cm ContentManagerMemory) UpdateMedia(media *models.MediaContainer) error {
+    // TODO: Validate that this updates the actual reference in mem storage
+    // TODO: Should this just be considered complete if you modified the media?
     return errors.New("Updates are not allowed for in memory management")
 }
 

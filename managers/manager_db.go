@@ -78,6 +78,11 @@ func (cm ContentManagerDB) GetMedia(mc_id uuid.UUID) (*models.MediaContainer, er
     return container, nil
 }
 
+func (cm ContentManagerDB) UpdateContainer(c *models.Container) error {
+    tx := cm.GetConnection()
+    return tx.Update(c)
+}
+
 func (cm ContentManagerDB) UpdateMedia(media *models.MediaContainer) error {
     tx := cm.GetConnection()
     return tx.Update(media)

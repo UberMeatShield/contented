@@ -4,7 +4,6 @@ import (
 	"time"
 	"encoding/json"
     "path/filepath"
-
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gobuffalo/validate/v3"
 	"github.com/gofrs/uuid"
@@ -18,9 +17,15 @@ type Container struct {
 	Name      string          `json:"name" db:"name"`
 	CreatedAt time.Time       `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time       `json:"updated_at" db:"updated_at"`
-	Contents  MediaContainers `json:"contents" has_many:"media_containers" db:"-"`
     Active    bool            `json:"active" db:"active"`
     Idx       int             `json:"idx" db:"idx"`
+	Contents  MediaContainers `json:"contents" has_many:"media_containers" db:"-"`
+
+    // This is expected to be a URL where often a configured /preview/{mc_id} is going
+    // to be assigned by default.  However you should be able to use any link but it is
+    // going to assume it is an image and won't do anything smart with it.
+    PreviewSrc string  `json:"preview_src" db:"preview_src"`
+    // TODO:  Should I add a preview type in the future?
 }
 
 // String is not required by pop and may be deleted
