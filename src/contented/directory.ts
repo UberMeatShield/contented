@@ -58,6 +58,7 @@ export class Directory {
     public path: string;
     public name: string;
     public id: string;
+    public previewUrl: string;
 
     // Set on the initial content loads
     public loadState: LoadStates = LoadStates.NotLoaded;
@@ -70,6 +71,7 @@ export class Directory {
         this.total = _.get(dir, 'total') || 0;
         this.id = _.get(dir, 'id') || '';
         this.name = _.get(dir, 'name') || '';
+        this.previewUrl = _.get(dir, 'preview_src') || '';
         this.setContents(this.buildImgs(_.get(dir, 'contents') || []));
     }
 

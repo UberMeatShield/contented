@@ -6,7 +6,6 @@
       *ngFor="let mc of getVisibleSet()"
       (click)="imgClicked(mc)"
       >
-
       <!-- Assume that every preview is actually going to be an image -->
       <img class="preview-img"
         [class.current-img]="currentViewItem === mc"

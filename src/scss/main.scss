@@ -25,6 +25,32 @@
     }
 }
 
+// Navigation and 
+.container-bar {
+    display: flex;
+    flex-wrap: wrap;
+
+    .container-preview-loc {
+        width: 64px;
+        height: 64px;
+    }
+    .container-preview-img {
+        object-fit: contain;
+        width: 100%;
+        height: 100%;
+    }
+}
+
+.container-bar-info {
+    margin-top: 24px;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.bar-spacer {
+  margin-left: 1.5rem;
+}
+
 .search-dialog {
     min-height: calc(100vh - 100px);
     width: 100%;
@@ -40,7 +66,8 @@
     border-radius: 2px;
 }
 
-.preview-img {
+
+.container-preview {
     object-fit: contain;
     width: 100%;
     height: 100%;
@@ -80,6 +107,12 @@
 
 
 .full-view-img {
+    object-fit: contain;
+    width: 100%;
+    height: 100%;
+}
+
+.preview-img {
     object-fit: contain;
     width: 100%;
     height: 100%;
