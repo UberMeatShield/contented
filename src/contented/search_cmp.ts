@@ -13,7 +13,7 @@ import {
     Inject
 } from '@angular/core';
 import {ContentedService} from './contented_service';
-import {MediaContainer} from './directory';
+import {Media} from './media';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 import {FormBuilder, NgForm, FormControl, FormGroup} from '@angular/forms';
 
@@ -37,7 +37,7 @@ export class SearchCmp implements OnInit{
     options: FormGroup;
     fb: FormBuilder;
 
-    public media: Array<MediaContainer>;
+    public media: Array<Media>;
 
     // TODO: Make this a saner calculation
     public previewWidth = 480;
@@ -121,7 +121,7 @@ export class SearchCmp implements OnInit{
         this.media = [];
         this._contentedService.searchMedia(text, offset, limit).subscribe(
             (res) => {
-                let media = _.map((res['media'] || []), m => new MediaContainer(m));
+                let media = _.map((res['media'] || []), m => new Media(m));
                 let total = res['total'] || 0;
                 
                 console.log("Search results", media, total);
@@ -147,7 +147,7 @@ export class SearchCmp implements OnInit{
         this.previewHeight = (height / this.maxVisible) - 41;
     }
 
-    public fullView(mc: MediaContainer) {
+    public fullView(mc: Media) {
         const dialogRef = this.dialog.open(
             SearchDialog,
             {
@@ -167,7 +167,7 @@ export class SearchCmp implements OnInit{
         // Debugging / hooks but could also be a hook into a total loaded.
     }
 
-    imgClicked(mc: MediaContainer) {
+    imgClicked(mc: Media) {
         console.log("Click the image", mc);
         this.fullView(mc);
     }
@@ -180,7 +180,7 @@ export class SearchCmp implements OnInit{
 })
 export class SearchDialog implements AfterViewInit {
 
-    public mediaContainer: MediaContainer;
+    public mediaContainer: Media;
 
     public forceHeight: number;
     public forceWidth: number;
@@ -188,7 +188,7 @@ export class SearchDialog implements AfterViewInit {
 
     @ViewChild('SearchContent', { static: true }) searchContent;
 
-    constructor(@Inject(MAT_DIALOG_DATA) public mc: MediaContainer, public _service: ContentedService) {
+    constructor(@Inject(MAT_DIALOG_DATA) public mc: Media, public _service: ContentedService) {
         // console.log("Mass taker opened with items:", items);
         this.mediaContainer = mc;
     }

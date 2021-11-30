@@ -16,6 +16,7 @@ import {DirectoryCmp} from './directory_cmp';
 import {ContentedViewCmp} from './contented_view_cmp';
 import {ContentedService} from './contented_service';
 import {Directory} from './directory';
+import {Media} from './media';
 
 @NgModule({
   imports: [

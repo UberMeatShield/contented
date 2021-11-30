@@ -1,6 +1,7 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders, HttpParams, HttpErrorResponse} from '@angular/common/http';
-import {Directory, MediaContainer, LoadStates} from './directory';
+import {Directory, LoadStates} from './directory';
+import {Media} from './media';
 import {ApiDef} from './api_def';
 
 // The manner in which RxJS does this is really stupid, saving 50K for hours of dev time is fail
@@ -39,7 +40,7 @@ export class ContentedService {
     public download(dir: Directory, rowIdx: number) {
         console.log("Attempting to download", dir, rowIdx);
 
-        let img: MediaContainer = dir.contents[rowIdx];
+        let img: Media = dir.contents[rowIdx];
         let filename = dir && rowIdx >= 0 && rowIdx < dir.contents.length ? dir.contents[rowIdx].src : '';
         if (!filename) {
             console.log("No file specified, wtf", rowIdx);
