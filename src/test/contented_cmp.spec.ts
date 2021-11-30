@@ -11,7 +11,7 @@ import { Router } from '@angular/router';
 import {ContentedCmp} from '../contented/contented_cmp';
 import {ContentedService} from '../contented/contented_service';
 import {ContentedModule} from '../contented/contented_module';
-import {Directory} from '../contented/directory';
+import {Container} from '../contented/container';
 import {ApiDef} from '../contented/api_def';
 
 import * as _ from 'lodash';
@@ -70,7 +70,7 @@ describe('TestingContentedCmp', () => {
         // expect(comp.idx).toBe(2, "It should pull the dir index from ");
     }));
 
-    function handleContainerMediaLoad(dirs: Array<Directory>) {
+    function handleContainerMediaLoad(dirs: Array<Container>) {
         _.each(dirs, dir => {
             let url = ApiDef.contented.media.replace('{cId}', dir.id);
             let req = httpMock.expectOne(r => r.url === url);
@@ -94,7 +94,7 @@ describe('TestingContentedCmp', () => {
         expect(dirs.length <= comp.allD.length).toBe(true, "It should never have more data than we asked for.");
 
         fixture.detectChanges();
-        let dirEls = $('.directory-contents', el);
+        let dirEls = $('.container-contents', el);
         expect(dirEls.length).toBe(comp.maxVisible, "We should have the elements rendered.");
 
         expect($('.current-content-dir').length).toBe(1, "We should only have 1 selected dir");
@@ -128,7 +128,7 @@ describe('TestingContentedCmp', () => {
         tick(1000);
 
         let d = comp.getCurrentDir();
-        expect(d).toBeDefined("There should be a current directory");
+        expect(d).toBeDefined("There should be a current container");
         let cl = d.getContentList();
         expect(cl).toBeDefined("We should have a content list");
         expect(cl.length).toBeGreaterThan(0, "And we should have content");
@@ -180,7 +180,7 @@ describe('TestingContentedCmp', () => {
         fixture.detectChanges();
         tick(1000);
 
-        let dir: Directory = comp.getCurrentDir();
+        let dir: Container = comp.getCurrentDir();
         expect(dir).not.toBe(null);
         expect(dir.count).toBeLessThan(dir.total, "There should be more to load");
         expect(dir.count).toEqual(2, "The default count should be 2 by default");

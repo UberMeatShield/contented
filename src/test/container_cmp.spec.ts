@@ -4,8 +4,8 @@ import {HttpClientTestingModule} from '@angular/common/http/testing';
 import {DebugElement} from '@angular/core';
 
 import { RouterTestingModule } from '@angular/router/testing';
-import {DirectoryCmp} from '../contented/directory_cmp';
-import {Directory} from '../contented/directory';
+import {ContainerCmp} from '../contented/container_cmp';
+import {Container} from '../contented/container';
 
 import {ContentedService} from '../contented/contented_service';
 import {ContentedModule} from '../contented/contented_module';
@@ -14,10 +14,10 @@ import * as _ from 'lodash';
 import * as $ from 'jquery';
 import {MockData} from './mock/mock_data';
 
-describe('TestingDirectoryCmp', () => {
-    let fixture: ComponentFixture<DirectoryCmp>;
+describe('TestingContainerCmp', () => {
+    let fixture: ComponentFixture<ContainerCmp>;
     let service: ContentedService;
-    let comp: DirectoryCmp;
+    let comp: ContainerCmp;
     let el: HTMLElement;
     let de: DebugElement;
 
@@ -30,10 +30,10 @@ describe('TestingDirectoryCmp', () => {
         }).compileComponents();
 
         service = TestBed.get(ContentedService);
-        fixture = TestBed.createComponent(DirectoryCmp);
+        fixture = TestBed.createComponent(ContainerCmp);
         comp = fixture.componentInstance;
 
-        de = fixture.debugElement.query(By.css('.directory-cmp'));
+        de = fixture.debugElement.query(By.css('.container-cmp'));
         el = de.nativeElement;
     }));
 
@@ -43,12 +43,12 @@ describe('TestingDirectoryCmp', () => {
     });
 
     it('Should be able to load up the basic data and render an image for each', fakeAsync(() => {
-        let fullResponse = MockData.getFullDirectory();
-        let dir = new Directory(fullResponse);
+        let fullResponse = MockData.getFullContainer();
+        let dir = new Container(fullResponse);
 
         comp.maxRendered = 3;
         comp.maxPrevItems = 0;
-        comp.directory = dir;
+        comp.container = dir;
         fixture.detectChanges();
         expect($('.preview-img', el).length).toBe(
             comp.maxRendered, "We should at max have items visible = " + comp.maxRendered
@@ -56,8 +56,8 @@ describe('TestingDirectoryCmp', () => {
     }));
 
     it('Should be able to page through to more items', () => {
-        let fullResponse = MockData.getFullDirectory();
-        let dir = new Directory(fullResponse);
+        let fullResponse = MockData.getFullContainer();
+        let dir = new Container(fullResponse);
 
         let items = dir.getContentList();
         comp.currentViewItem = items[1];
@@ -65,7 +65,7 @@ describe('TestingDirectoryCmp', () => {
         comp.maxPrevItems = 1;
 
         // Check to ensure everything is rendering
-        comp.directory = dir;
+        comp.container = dir;
         fixture.detectChanges();
         expect($('.preview-img', el).length).toBe(comp.maxRendered, "Should select second image");
 

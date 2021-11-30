@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders, HttpParams, HttpErrorResponse} from '@angular/common/http';
-import {Directory, LoadStates} from './directory';
+import {Container, LoadStates} from './container';
 import {Media} from './media';
 import {ApiDef} from './api_def';
 
@@ -28,7 +28,7 @@ export class ContentedService {
         return this.http.get(ApiDef.contented.containers, this.options)
             .pipe(
                 map(res => {
-                    return _.map(res, dir => new Directory(dir));
+                    return _.map(res, dir => new Container(dir));
                 }),
                 catchError(err => this.handleError(err))
             );
@@ -37,7 +37,7 @@ export class ContentedService {
     // Do a preview load (should it be API?)
 
     // TODO: Make all the test mock data new and or recent
-    public download(dir: Directory, rowIdx: number) {
+    public download(dir: Container, rowIdx: number) {
         console.log("Attempting to download", dir, rowIdx);
 
         let img: Media = dir.contents[rowIdx];
@@ -63,7 +63,7 @@ export class ContentedService {
             for (let offset = dir.count; offset < dir.total; offset += limit) {
                 ++idx;
                 let delayP = new Promise((yupResolve, nopeReject) => {
-                    this.getFullDirectory(dir.id, offset, limit).subscribe(res => {
+                    this.getFullContainer(dir.id, offset, limit).subscribe(res => {
                         _.delay(() => {
                             dir.addContents(dir.buildImgs(res));
                             yupResolve(dir);
@@ -94,11 +94,11 @@ export class ContentedService {
         return observableFrom(p);
     }
 
-    public loadMoreInDir(dir: Directory, limit = null) {
-        return this.getFullDirectory(dir.id, dir.count, limit);
+    public loadMoreInDir(dir: Container, limit = null) {
+        return this.getFullContainer(dir.id, dir.count, limit);
     }
 
-    public getFullDirectory(dir: string, offset: number = 0, limit: number = null) {
+    public getFullContainer(dir: string, offset: number = 0, limit: number = null) {
         let url = ApiDef.contented.media.replace('{cId}', dir);
         return this.http.get(url, {
             params: this.getPaginationParams(offset, limit),
@@ -118,7 +118,7 @@ export class ContentedService {
 
 
     // TODO: Create a pagination page for offset limit calculations
-    public initialLoad(dir: Directory) {
+    public initialLoad(dir: Container) {
         if (dir.loadState === LoadStates.NotLoaded) {
             dir.loadState = LoadStates.Loading;
 
@@ -131,7 +131,7 @@ export class ContentedService {
                     dir.addContents(dir.buildImgs(imgData));
                 },
                 err => {
-                    console.error("Failed to load directory dir", dir.id, err);
+                    console.error("Failed to load container dir", dir.id, err);
                 }
             );
         }

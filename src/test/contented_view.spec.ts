@@ -11,7 +11,7 @@ import { Router } from '@angular/router';
 import {ContentedViewCmp} from '../contented/contented_view_cmp';
 import {ContentedService} from '../contented/contented_service';
 import {ContentedModule} from '../contented/contented_module';
-import {Directory} from '../contented/directory';
+import {Container} from '../contented/container';
 import {ApiDef} from '../contented/api_def';
 
 import * as _ from 'lodash';

@@ -1,17 +1,17 @@
 import {OnInit, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
 import {ContentedService} from './contented_service';
 
-import {Directory} from './directory';
+import {Container} from './container';
 import {Media} from './media';
 import * as _ from 'lodash';
 
 @Component({
-    selector: 'directory-cmp',
-    templateUrl: 'directory.ng.html'
+    selector: 'container-cmp',
+    templateUrl: 'container.ng.html'
 })
-export class DirectoryCmp implements OnInit {
+export class ContainerCmp implements OnInit {
 
-    @Input() directory: Directory;
+    @Input() container: Container;
     @Input() previewWidth: number;
     @Input() previewHeight: number;
 
@@ -22,24 +22,24 @@ export class DirectoryCmp implements OnInit {
     @Output() clickedItem: EventEmitter<any> = new EventEmitter<any>();
 
     // @Output clickEvt: EventEmitter<any>;
-    public visibleSet: Array<Media>; // The currently visible set of items from in the directory
+    public visibleSet: Array<Media>; // The currently visible set of items from in the container
 
     constructor() {
 
     }
 
     public ngOnInit() {
-        console.log("Directory Component loading up");
+        console.log("Container Component loading up");
     }
 
 
     public getVisibleSet(currentItem = this.currentViewItem, max: number = this.maxRendered) {
         this.visibleSet = null;
-        this.visibleSet = this.directory.getIntervalAround(currentItem, max, this.maxPrevItems);
+        this.visibleSet = this.container.getIntervalAround(currentItem, max, this.maxPrevItems);
         return this.visibleSet;
     }
 
-    // Could also add in full directory load information here
+    // Could also add in full container load information here
     public imgLoaded(evt) {
         let img = evt.target;
         console.log("Img Loaded", img.naturalHeight, img.naturalWidth, img);
@@ -47,7 +47,7 @@ export class DirectoryCmp implements OnInit {
 
     public imgClicked(imgContainer: Media) {
         console.log("Img clicked", imgContainer);
-        this.clickedItem.emit({dir: this.directory, item: imgContainer});
+        this.clickedItem.emit({dir: this.container, item: imgContainer});
     }
 }
 

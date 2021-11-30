@@ -117,7 +117,7 @@ export class SearchCmp implements OnInit{
 
     public search(text: string, offset: number = 0, limit: number = 50) {
         console.log("Get the information from the input and search on it", text); 
-        // TODO: Wrap the media into a fake directory
+        // TODO: Wrap the media into a fake container
         this.media = [];
         this._contentedService.searchMedia(text, offset, limit).subscribe(
             (res) => {

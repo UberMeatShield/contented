@@ -10,7 +10,7 @@ import { Router } from '@angular/router';
 import {ContentedCmp} from '../contented/contented_cmp';
 import {ContentedService} from '../contented/contented_service';
 import {ContentedModule} from '../contented/contented_module';
-import {Directory} from '../contented/directory';
+import {Container} from '../contented/container';
 import {ApiDef} from '../contented/api_def';
 
 import * as _ from 'lodash';
@@ -50,7 +50,7 @@ describe('TestingContentedService', () => {
 
         let preview = MockData.getPreview();
         service.getPreview().subscribe(
-            (dirs: Array<Directory>) => {
+            (dirs: Array<Container>) => {
                 expect(dirs.length).toEqual(preview.length, "It should kick back data");
 
                 _.each(dirs, dir => {
@@ -80,7 +80,7 @@ describe('TestingContentedService', () => {
     it('Can load up a lot of data and get the offset right', fakeAsync(() => {
         const total = 50001;
         let response = MockData.getMockDir(10000, 'i-', 0, total);
-        let dir = new Directory(response);
+        let dir = new Container(response);
 
         expect(dir.contents.length).toEqual(10000, 'Ensure the tests generates correclty');
         expect(dir.id).toBeTruthy();
@@ -119,10 +119,10 @@ describe('TestingContentedService', () => {
         httpMock.verify();
     }));
 
-    it('Can load the entire directory', fakeAsync(() => {
-        let dirs: Array<Directory> = null;
+    it('Can load the entire container', fakeAsync(() => {
+        let dirs: Array<Container> = null;
         service.getPreview().subscribe(
-            (previewDirs: Array<Directory>) => {
+            (previewDirs: Array<Container>) => {
                 dirs = previewDirs;
             },
             err => {
@@ -143,10 +143,10 @@ describe('TestingContentedService', () => {
         let media = dirs[0];
         expect(media.count).toBeLessThan(media.total, "We should not be loaded");
 
-        let loaded: Directory;
+        let loaded: Container;
         let expectedNumberCalls = media.total - media.count;
         service.fullLoadDir(media, 1).subscribe(
-            (dir: Directory) => {
+            (dir: Container) => {
                 loaded = dir;
             }, err => { fail(err); }
         );
