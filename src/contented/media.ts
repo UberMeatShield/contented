@@ -5,6 +5,10 @@ export class Media {
     public id: string;
     public src: string;
     public idx: number;
+
+    // Awkward that buffalo makes the API use container_id like the DB
+    // side of things and in url params by default.  So I guess mixed
+    // cases it is.
     public content_type: string;
     public container_id: string;
 
