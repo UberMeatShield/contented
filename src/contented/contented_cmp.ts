@@ -1,6 +1,7 @@
 import {OnInit, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
 import {ContentedService} from './contented_service';
-import {Directory, MediaContainer} from './directory';
+import {Container} from './container';
+import {Media} from './media';
 import {finalize, switchMap} from 'rxjs/operators';
 
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
@@ -13,20 +14,20 @@ import * as _ from 'lodash';
 })
 export class ContentedCmp implements OnInit {
 
-    @Input() maxVisible: number = 2; // How many of the loaded directories should we be viewing
-    @Input() rowIdx: number = 0; // Which row (directory) are we in
-    @Input() idx: number = 0; // Which item within the directory are we viewing
+    @Input() maxVisible: number = 2; // How many of the loaded containers should we be viewing
+    @Input() rowIdx: number = 0; // Which row (container) are we in
+    @Input() idx: number = 0; // Which item within the container are we viewing
 
     public loading: boolean = false;
     public emptyMessage = null;
     public previewWidth: number = 200; // Based on current client page sizes, scale the preview images natually
     public previewHeight: number = 200; // height for the previews ^
 
-    public currentViewItem: MediaContainer; // The current indexed item that is considered selected
-    public currentDir: Directory;
+    public currentViewItem: Media; // The current indexed item that is considered selected
+    public currentDir: Container;
     public fullScreen: boolean = false; // Should we view fullscreen the current item
-    public directories: Array<Directory>; // Current set of visible directories
-    public allD: Array<Directory>; // All the directories we have loaded
+    public containers: Array<Container>; // Current set of visible containers
+    public allD: Array<Container>; // All the containers we have loaded
 
     constructor(public _contentedService: ContentedService, public route: ActivatedRoute, public router: Router) {
     }
@@ -73,7 +74,7 @@ export class ContentedCmp implements OnInit {
     }
 
     public loadMore() {
-        let visible = this.getVisibleDirectories();
+        let visible = this.getVisibleContainers();
         this.loadMoreInDir(visible[0]);
     }
 
@@ -121,22 +122,22 @@ export class ContentedCmp implements OnInit {
             );
     }
 
-    public loadMoreInDir(dir: Directory) {
+    public loadMoreInDir(cnt: Container) {
         // This is being changed to just load more content up
-        if (dir.count < dir.total && !this.loading) {
+        if (cnt.count < cnt.total && !this.loading) {
             this.loading = true;
-            this._contentedService.loadMoreInDir(dir)
+            this._contentedService.loadMoreInDir(cnt)
                 .pipe(finalize(() => {this.loading = false; }))
                 .subscribe(
-                    res => { this.dirResults(dir, res); },
+                    res => { this.cntResults(cnt, res); },
                     err => { console.error(err); }
                 );
         }
     }
 
-    public dirResults(dir: Directory, response) {
+    public cntResults(cnt: Container, response) {
         console.log("Results loading, what is in the results?", response);
-        dir.addContents(dir.buildImgs(response));
+        cnt.addContents(cnt.buildImgs(response));
     }
 
     public reset() {
@@ -145,16 +146,16 @@ export class ContentedCmp implements OnInit {
         this.emptyMessage = null;
     }
 
-    public getVisibleDirectories() {
+    public getVisibleContainers() {
         if (this.allD) {
             let start = this.idx < this.allD.length ? this.idx : this.allD.length - 1;
             let end = start + this.maxVisible <= this.allD.length ? start + this.maxVisible : this.allD.length;
 
-            let dirs = this.allD.slice(start, end);
-            _.each(dirs, dir => {
-                this._contentedService.initialLoad(dir);  // Only loads if dir.loadState = LoadStates.NotLoaded
+            let cnts = this.allD.slice(start, end);
+            _.each(cnts, cnt => {
+                this._contentedService.initialLoad(cnt);  // Only loads if cnt.loadState = LoadStates.NotLoaded
             });
-            return dirs;
+            return cnts;
         }
         return [];
     }
@@ -176,8 +177,8 @@ export class ContentedCmp implements OnInit {
     }
 
     public rowNext() {
-        let dir = this.getCurrentDir();
-        let items = dir ? dir.getContentList() : [];
+        let cnt = this.getCurrentDir();
+        let items = cnt ? cnt.getContentList() : [];
         if (this.rowIdx < items.length) {
             this.rowIdx++;
             if (this.rowIdx === items.length && this.idx !== this.allD.length - 1) {
@@ -212,8 +213,8 @@ export class ContentedCmp implements OnInit {
             this.idx--;
         }
         if (selectLast) {
-            let dir = this.getCurrentDir();
-            let items = dir ? dir.getContentList() : [];
+            let cnt = this.getCurrentDir();
+            let items = cnt ? cnt.getContentList() : [];
             this.rowIdx = items.length - 1;
         }
         this.updateRoute();
@@ -225,16 +226,16 @@ export class ContentedCmp implements OnInit {
     }
 
     public getCurrentLocation() {
-        let dir = this.getCurrentDir();
-        if (dir && !_.isEmpty(dir.getContentList())) {
-            let contentList = dir.getContentList();
+        let cnt = this.getCurrentDir();
+        if (cnt && !_.isEmpty(cnt.getContentList())) {
+            let contentList = cnt.getContentList();
             if (this.rowIdx >= 0 && this.rowIdx < contentList.length) {
                 return contentList[this.rowIdx];
             }
         }
     }
 
-    // TODO: Being called abusively in the directive rather than on page resize events
+    // TODO: Being called abusively in the cntective rather than on page resize events
     @HostListener('window:resize', ['$event'])
     public calculateDimensions() {
         let width = !window['jasmine'] ? window.innerWidth : 800;
@@ -244,10 +245,10 @@ export class ContentedCmp implements OnInit {
         this.previewHeight = (height / this.maxVisible) - 41;
     }
 
-    public previewResults(directories: Array<Directory>) {
-        console.log("Results returned from the preview results.", directories);
-        this.allD = directories || [];
-        if (_.isEmpty(directories)) {
+    public previewResults(containers: Array<Container>) {
+        console.log("Results returned from the preview results.", containers);
+        this.allD = containers || [];
+        if (_.isEmpty(containers)) {
             this.emptyMessage = "No Directories found, did you load the DB?";
         } else {
             this.loadView(this.idx, this.rowIdx);
@@ -255,10 +256,10 @@ export class ContentedCmp implements OnInit {
         return this.allD;
     }
 
-    public fullLoadDir(dir: Directory) {
-        this._contentedService.fullLoadDir(dir).subscribe(
-            (loadedDir: Directory) => {
-                console.log("Fully loaded up the directory", loadedDir);
+    public fullLoadDir(cnt: Container) {
+        this._contentedService.fullLoadDir(cnt).subscribe(
+            (loadedDir: Container) => {
+                console.log("Fully loaded up the container", loadedDir);
                 this.setCurrentItem();
             },
             err => {console.error("Failed to load", err); }
@@ -280,12 +281,12 @@ export class ContentedCmp implements OnInit {
         }
     }
 
-    public dirItemClicked(evt) {
-        console.log("Click event, change currently selected indexes, directory etc", evt);
-        let dir = _.get(evt, 'dir');
+    public cntItemClicked(evt) {
+        console.log("Click event, change currently selected indexes, container etc", evt);
+        let cnt = _.get(evt, 'cnt');
         let item = _.get(evt, 'item');
-        let idx = _.findIndex(this.allD, {id: dir ? dir.id : -1});
-        let rowIdx = dir ? _.findIndex(dir.contents, {id: item.id}) : -1;
+        let idx = _.findIndex(this.allD, {id: cnt ? cnt.id : -1});
+        let rowIdx = cnt ? _.findIndex(cnt.contents, {id: item.id}) : -1;
 
         console.log("Found idx and row index: ", idx, rowIdx);
         if (idx >= 0 && rowIdx >= 0) {
@@ -293,7 +294,7 @@ export class ContentedCmp implements OnInit {
             this.rowIdx = rowIdx;
             this.viewFullscreen();
         } else {
-            console.error("Should not be able to click an item we cannot find.", dir, item);
+            console.error("Should not be able to click an item we cannot find.", cnt, item);
         }
     }
 }

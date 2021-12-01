@@ -173,7 +173,7 @@ func (as *ActionSuite) Test_CreateContainerPreviews() {
     as.NoError(c_err)
 
     p_err := CreateContainerPreviews(c_pt, man)
-    as.Equal(expect_c_preview, c_pt.PreviewSrc, "It should assign a mc preview to the container")
+    as.Equal(expect_c_preview, c_pt.PreviewUrl, "It should assign a mc preview to the container")
     as.NoError(p_err, "An error happened creating the previews")
     dstPath := GetContainerPreviewDst(c_pt)
     previews, read_err := ioutil.ReadDir(dstPath)

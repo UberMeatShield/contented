@@ -2,19 +2,20 @@ import { fakeAsync, getTestBed, tick, ComponentFixture, TestBed, waitForAsync } 
 import {By} from '@angular/platform-browser';
 
 import * as _ from 'lodash';
-import {Directory, MediaContainer} from './../contented/directory';
+import {Container} from './../contented/container';
+import {Media} from './../contented/media';
 import {MockData} from './mock/mock_data';
 
-describe('TestingDirectory', () => {
+describe('TestingContainer', () => {
 
-    it('Should be able to create a directory.', () => {
-        let d = new Directory({});
+    it('Should be able to create a container.', () => {
+        let d = new Container({});
     });
 
-    it('Should be able to create a set of directory objects', () => {
+    it('Should be able to create a set of container objects', () => {
         let dirResponse = MockData.getPreview();
         let dirs = _.map(dirResponse, data => {
-            return new Directory(data);
+            return new Container(data);
         });
         expect(dirs.length > 0).toBe(true, "It should actually have some responses.");
         _.each(dirs, dir => {
@@ -25,7 +26,7 @@ describe('TestingDirectory', () => {
 
     it('Should be able to setup intervals successfully', () => {
         let total = 20;
-        let dir = new Directory(MockData.getMockDir(total));
+        let dir = new Container(MockData.getMockDir(total));
         let contents = dir.getContentList();
         expect(contents.length).toBe(total, "We should have an entry for each item");
 
@@ -43,7 +44,7 @@ describe('TestingDirectory', () => {
     });
 
     it('Should manage to render the requested number each time, and best effort otherwise', () => {
-        let dir = new Directory(MockData.getMockDir(6));
+        let dir = new Container(MockData.getMockDir(6));
         let items = dir.getContentList();
         let item = items[1];
         let results = dir.getIntervalAround(item, 3, 1);
@@ -55,7 +56,7 @@ describe('TestingDirectory', () => {
     });
 
     it('Should add more content with more data', () => {
-        let dir = new Directory(MockData.getMockDir(0));
+        let dir = new Container(MockData.getMockDir(0));
         dir.setContents(dir.buildImgs([
             {id: 0, src: 'a'},
             {id: 1, src: 'b'}

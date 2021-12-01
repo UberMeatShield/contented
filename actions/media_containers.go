@@ -39,14 +39,14 @@ func (v MediaContainersResource) List(c buffalo.Context) error {
     var mediaContainers *models.MediaContainers
 
     // Optional params suuuuck in GoLang
-    c_id_str := c.Param("container_id")
-    if c_id_str != "" {
-        log.Printf("Attempting to get media using %s", c_id_str)
-        c_id, err := uuid.FromString(c_id_str)
+    cID_str := c.Param("container_id")
+    if cID_str != "" {
+        log.Printf("Attempting to get media using %s", cID_str)
+        cID, err := uuid.FromString(cID_str)
         if err != nil {
             return c.Error(http.StatusBadRequest, err)
         }
-        mcs, q_err := man.ListMediaContext(c_id)
+        mcs, q_err := man.ListMediaContext(cID)
         if q_err != nil {
             return c.Error(http.StatusBadRequest, err)
         }

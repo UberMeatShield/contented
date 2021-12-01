@@ -1,5 +1,5 @@
-<div class="directory-cmp">
-  <div class="dir-contents" style="min-height: {{(previewHeight + 20) * 2}}px;">
+<div class="container-cmp">
+  <div class="cnt-contents" style="min-height: {{(previewHeight + 20) * 2}}px;">
     <div class="preview-content"
       [class.video-overlay]="mc?.content_type?.match('video')"
       style="width:{{previewWidth}}px; height: {{previewHeight}}px;"
@@ -14,7 +14,7 @@
       > 
     </div>
   </div>
-  <div class="dir-empty" *ngIf="!directory || !directory.contents">
+  <div class="cnt-empty" *ngIf="!container || !container.contents">
     Empty Directory
   </div>
 </div>

@@ -44,15 +44,15 @@ func (cm ContentManagerDB) CanEdit() bool {
 }
 
 
-func (cm ContentManagerDB) ListMediaContext(c_id uuid.UUID) (*models.MediaContainers, error) {
+func (cm ContentManagerDB) ListMediaContext(cID uuid.UUID) (*models.MediaContainers, error) {
     // Could add the context here correctly
     _, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
-    return cm.ListMedia(c_id, page, limit)
+    return cm.ListMedia(cID, page, limit)
 }
 
 // Awkard GoLang interface support is awkward
-func (cm ContentManagerDB) ListMedia(c_id uuid.UUID, page int, per_page int) (*models.MediaContainers, error) {
-    log.Printf("Get a list of media from DB, we should have some %s", c_id.String())
+func (cm ContentManagerDB) ListMedia(cID uuid.UUID, page int, per_page int) (*models.MediaContainers, error) {
+    log.Printf("Get a list of media from DB, we should have some %s", cID.String())
     tx := cm.GetConnection()
     mediaContainers := &models.MediaContainers{}
 
@@ -60,7 +60,7 @@ func (cm ContentManagerDB) ListMedia(c_id uuid.UUID, page int, per_page int) (*m
     // Default values are "page=1" and "per_page=20".
     // TODO: Make it paginate using the params not the context
     q := tx.Paginate(page, per_page)
-    q_conn := q.Where("container_id = ?", c_id)
+    q_conn := q.Where("container_id = ?", cID)
     if q_err := q_conn.All(mediaContainers); q_err != nil {
         return nil, q_err
     }
@@ -68,11 +68,11 @@ func (cm ContentManagerDB) ListMedia(c_id uuid.UUID, page int, per_page int) (*m
     return mediaContainers, nil
 }
 
-func (cm ContentManagerDB) GetMedia(mc_id uuid.UUID) (*models.MediaContainer, error) {
-    log.Printf("Get a single media %s", mc_id)
+func (cm ContentManagerDB) GetMedia(mcID uuid.UUID) (*models.MediaContainer, error) {
+    log.Printf("Get a single media %s", mcID)
     tx := cm.GetConnection()
     container := &models.MediaContainer{}
-    if err := tx.Find(container, mc_id); err != nil {
+    if err := tx.Find(container, mcID); err != nil {
         return nil, err
     }
     return container, nil
@@ -146,13 +146,13 @@ func (cm ContentManagerDB) ListContainers(page int, per_page int) (*models.Conta
 }
 
 // TODO: Need a preview test using the database where we do NOT have a preview created
-func (cm ContentManagerDB) GetContainer(c_id uuid.UUID) (*models.Container, error) {
-    log.Printf("Get a single container %s", c_id)
+func (cm ContentManagerDB) GetContainer(cID uuid.UUID) (*models.Container, error) {
+    log.Printf("Get a single container %s", cID)
     tx := cm.GetConnection()
 
     // Allocate an empty Container p := cm.Params()
     container := &models.Container{}
-    if err := tx.Find(container, c_id); err != nil {
+    if err := tx.Find(container, cID); err != nil {
         return nil, err
     }
     return container, nil
@@ -163,9 +163,9 @@ func (cm *ContentManagerDB) Initialize() {
     log.Printf("Make a DB connection here")
 }
 
-func (cm ContentManagerDB) FindFileRef(mc_id uuid.UUID) (*models.MediaContainer, error) {
+func (cm ContentManagerDB) FindFileRef(mcID uuid.UUID) (*models.MediaContainer, error) {
     mc_db := models.MediaContainer{}
-    err := models.DB.Find(&mc_db, mc_id)
+    err := models.DB.Find(&mc_db, mcID)
     if err == nil {
         return &mc_db, nil
     }

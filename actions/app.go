@@ -36,9 +36,9 @@ func App(UseDatabase bool) *buffalo.App {
         app.Use(forceSSL())
 
         // Run grift?  Do dev from an actual DB instance?
-        app.GET("/preview/{mc_id}", PreviewHandler)
-        app.GET("/view/{mc_id}", FullHandler)
-        app.GET("/download/{mc_id}", DownloadHandler)
+        app.GET("/preview/{mcID}", PreviewHandler)
+        app.GET("/view/{mcID}", FullHandler)
+        app.GET("/download/{mcID}", DownloadHandler)
         app.GET("/search", SearchHandler)
 
         // Host the index.html, also assume that all angular UI routes are going to be under contented

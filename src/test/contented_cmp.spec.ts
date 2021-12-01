@@ -11,7 +11,7 @@ import { Router } from '@angular/router';
 import {ContentedCmp} from '../contented/contented_cmp';
 import {ContentedService} from '../contented/contented_service';
 import {ContentedModule} from '../contented/contented_module';
-import {Directory} from '../contented/directory';
+import {Container} from '../contented/container';
 import {ApiDef} from '../contented/api_def';
 
 import * as _ from 'lodash';
@@ -70,7 +70,7 @@ describe('TestingContentedCmp', () => {
         // expect(comp.idx).toBe(2, "It should pull the dir index from ");
     }));
 
-    function handleContainerMediaLoad(dirs: Array<Directory>) {
+    function handleContainerMediaLoad(dirs: Array<Container>) {
         _.each(dirs, dir => {
             let url = ApiDef.contented.media.replace('{cId}', dir.id);
             let req = httpMock.expectOne(r => r.url === url);
@@ -87,17 +87,17 @@ describe('TestingContentedCmp', () => {
         fixture.detectChanges();
         MockData.handleCmpDefaultLoad(httpMock, fixture);
         tick(2000);
-        expect(comp.allD.length).toBe(4, "We should have 4 directories set");
+        expect(comp.allD.length).toBe(4, "We should have 4 containers set");
 
-        let dirs = comp.getVisibleDirectories();
-        expect(dirs.length).toBe(comp.maxVisible, "Should only have the max visible directories present.");
+        let dirs = comp.getVisibleContainers();
+        expect(dirs.length).toBe(comp.maxVisible, "Should only have the max visible containers present.");
         expect(dirs.length <= comp.allD.length).toBe(true, "It should never have more data than we asked for.");
 
         fixture.detectChanges();
-        let dirEls = $('.directory-contents', el);
+        let dirEls = $('.container-contents', el);
         expect(dirEls.length).toBe(comp.maxVisible, "We should have the elements rendered.");
 
-        expect($('.current-content-dir').length).toBe(1, "We should only have 1 selected dir");
+        expect($('.current-content-cnt').length).toBe(1, "We should only have 1 selected dir");
     }));
 
     it("Should be able to tell you that nothing was loaded up", fakeAsync(() => {
@@ -128,7 +128,7 @@ describe('TestingContentedCmp', () => {
         tick(1000);
 
         let d = comp.getCurrentDir();
-        expect(d).toBeDefined("There should be a current directory");
+        expect(d).toBeDefined("There should be a current container");
         let cl = d.getContentList();
         expect(cl).toBeDefined("We should have a content list");
         expect(cl.length).toBeGreaterThan(0, "And we should have content");
@@ -158,12 +158,12 @@ describe('TestingContentedCmp', () => {
         MockData.handleCmpDefaultLoad(httpMock, fixture);
 
         expect(comp.loading).toBe(false, "It should be fine with loading the containers");
-        expect(comp.allD.length).toBeGreaterThan(0, "There should be a number of directories");
+        expect(comp.allD.length).toBeGreaterThan(0, "There should be a number of containers");
         fixture.detectChanges();
 
         expect(comp.idx).toBe(0, "It should be on the default page");
-        let dirs = $('.dir-name');
-        expect(dirs.length).toBe(2, "There should be two directories present");
+        let dirs = $('.cnt-name');
+        expect(dirs.length).toBe(2, "There should be two containers present");
         expect(_.get(containers, '[0].name')).toBe($(dirs[0]).text(), 'It should have the dir id');
         expect(_.get(containers, '[1].name')).toBe($(dirs[1]).text(), 'It should have the dir name');
 
@@ -180,7 +180,7 @@ describe('TestingContentedCmp', () => {
         fixture.detectChanges();
         tick(1000);
 
-        let dir: Directory = comp.getCurrentDir();
+        let dir: Container = comp.getCurrentDir();
         expect(dir).not.toBe(null);
         expect(dir.count).toBeLessThan(dir.total, "There should be more to load");
         expect(dir.count).toEqual(2, "The default count should be 2 by default");

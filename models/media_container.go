@@ -14,8 +14,8 @@ import (
 // MediaContainer is used by pop to map your media_containers database table to your go code.
 type MediaContainer struct {
 	ID          uuid.UUID  `json:"id" db:"id"`
-	CreatedAt   time.Time  `json:"created_at" db:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at" db:"updated_at"`
+	CreatedAt   time.Time  `json:"created" db:"created_at"`
+	UpdatedAt   time.Time  `json:"updated" db:"updated_at"`
 	Src         string     `json:"src" db:"src"`
 	ContentType string     `json:"content_type" db:"content_type"`
 	Preview     string     `json:"preview" db:"preview"`

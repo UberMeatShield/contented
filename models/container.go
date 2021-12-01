@@ -15,16 +15,16 @@ type Container struct {
 	Total     int             `json:"total" db:"total"`
 	Path      string          `json:"path" db:"path"`
 	Name      string          `json:"name" db:"name"`
-	CreatedAt time.Time       `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time       `json:"updated_at" db:"updated_at"`
+	CreatedAt time.Time       `json:"created" db:"created_at"`
+	UpdatedAt time.Time       `json:"updated" db:"updated_at"`
     Active    bool            `json:"active" db:"active"`
     Idx       int             `json:"idx" db:"idx"`
 	Contents  MediaContainers `json:"contents" has_many:"media_containers" db:"-"`
 
-    // This is expected to be a URL where often a configured /preview/{mc_id} is going
+    // This is expected to be a URL where often a configured /preview/{mcID} is going
     // to be assigned by default.  However you should be able to use any link but it is
     // going to assume it is an image and won't do anything smart with it.
-    PreviewSrc string  `json:"preview_src" db:"preview_src"`
+    PreviewUrl string  `json:"previewUrl" db:"preview_url"`
     // TODO:  Should I add a preview type in the future?
 }
 

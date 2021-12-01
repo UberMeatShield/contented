@@ -1,6 +1,7 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders, HttpParams, HttpErrorResponse} from '@angular/common/http';
-import {Directory, MediaContainer, LoadStates} from './directory';
+import {Container, LoadStates} from './container';
+import {Media} from './media';
 import {ApiDef} from './api_def';
 
 // The manner in which RxJS does this is really stupid, saving 50K for hours of dev time is fail
@@ -27,7 +28,7 @@ export class ContentedService {
         return this.http.get(ApiDef.contented.containers, this.options)
             .pipe(
                 map(res => {
-                    return _.map(res, dir => new Directory(dir));
+                    return _.map(res, cnt => new Container(cnt));
                 }),
                 catchError(err => this.handleError(err))
             );
@@ -36,22 +37,22 @@ export class ContentedService {
     // Do a preview load (should it be API?)
 
     // TODO: Make all the test mock data new and or recent
-    public download(dir: Directory, rowIdx: number) {
-        console.log("Attempting to download", dir, rowIdx);
+    public download(cnt: Container, rowIdx: number) {
+        console.log("Attempting to download", cnt, rowIdx);
 
-        let img: MediaContainer = dir.contents[rowIdx];
-        let filename = dir && rowIdx >= 0 && rowIdx < dir.contents.length ? dir.contents[rowIdx].src : '';
+        let img: Media = cnt.contents[rowIdx];
+        let filename = cnt && rowIdx >= 0 && rowIdx < cnt.contents.length ? cnt.contents[rowIdx].src : '';
         if (!filename) {
             console.log("No file specified, wtf", rowIdx);
         }
-        let downloadUrl = ApiDef.contented.download.replace('{mc_id}', img.id);
+        let downloadUrl = ApiDef.contented.download.replace('{mcID}', img.id);
         console.log("DownloadURL", downloadUrl);
         window.open(downloadUrl);
     }
 
-    public fullLoadDir(dir, limit = null) {
-        if (dir.count === dir.total) {
-            return observableFrom(Promise.resolve(dir));
+    public fullLoadDir(cnt, limit = null) {
+        if (cnt.count === cnt.total) {
+            return observableFrom(Promise.resolve(cnt));
         }
 
         limit = limit || this.LIMIT || 2000;
@@ -59,13 +60,13 @@ export class ContentedService {
         let p = new Promise((resolve, reject) => {
             let calls = [];
             let idx = 0;
-            for (let offset = dir.count; offset < dir.total; offset += limit) {
+            for (let offset = cnt.count; offset < cnt.total; offset += limit) {
                 ++idx;
                 let delayP = new Promise((yupResolve, nopeReject) => {
-                    this.getFullDirectory(dir.id, offset, limit).subscribe(res => {
+                    this.getFullContainer(cnt.id, offset, limit).subscribe(res => {
                         _.delay(() => {
-                            dir.addContents(dir.buildImgs(res));
-                            yupResolve(dir);
+                            cnt.addContents(cnt.buildImgs(res));
+                            yupResolve(cnt);
                         }, idx * 500);
                     }, err => {
                         console.error('Failed to load', err);
@@ -79,10 +80,10 @@ export class ContentedService {
                 calls.push(observableFrom(delayP));
             }
 
-            // Join all the results and let the call function resolve once the dir is updated.
+            // Join all the results and let the call function resolve once the cnt is updated.
             return forkJoin(calls).pipe().subscribe(
                 results => {
-                    resolve(dir);
+                    resolve(cnt);
                 },
                 err => {
                     console.error('Could not load all results', err);
@@ -93,12 +94,12 @@ export class ContentedService {
         return observableFrom(p);
     }
 
-    public loadMoreInDir(dir: Directory, limit = null) {
-        return this.getFullDirectory(dir.id, dir.count, limit);
+    public loadMoreInDir(cnt: Container, limit = null) {
+        return this.getFullContainer(cnt.id, cnt.count, limit);
     }
 
-    public getFullDirectory(dir: string, offset: number = 0, limit: number = null) {
-        let url = ApiDef.contented.media.replace('{cId}', dir);
+    public getFullContainer(cnt: string, offset: number = 0, limit: number = null) {
+        let url = ApiDef.contented.media.replace('{cId}', cnt);
         return this.http.get(url, {
             params: this.getPaginationParams(offset, limit),
             headers: this.options.headers
@@ -117,20 +118,20 @@ export class ContentedService {
 
 
     // TODO: Create a pagination page for offset limit calculations
-    public initialLoad(dir: Directory) {
-        if (dir.loadState === LoadStates.NotLoaded) {
-            dir.loadState = LoadStates.Loading;
+    public initialLoad(cnt: Container) {
+        if (cnt.loadState === LoadStates.NotLoaded) {
+            cnt.loadState = LoadStates.Loading;
 
-            let url = ApiDef.contented.media.replace('{cId}', dir.id);
+            let url = ApiDef.contented.media.replace('{cId}', cnt.id);
             this.http.get(url, {
                 params: this.getPaginationParams(0, this.LIMIT),
                 headers: this.options.headers
             }).subscribe(
                 (imgData: Array<any>)  => {
-                    dir.addContents(dir.buildImgs(imgData));
+                    cnt.addContents(cnt.buildImgs(imgData));
                 },
                 err => {
-                    console.error("Failed to load directory dir", dir.id, err);
+                    console.error("Failed to load container cnt", cnt.id, err);
                 }
             );
         }

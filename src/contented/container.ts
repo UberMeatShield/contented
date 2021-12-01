@@ -1,47 +1,12 @@
 import * as _ from 'lodash';
+import {Media} from './media';
 import {ApiDef} from './api_def';
-
 
 function trail(path: string, whatWith: string) {
     if (path[path.length - 1] !== whatWith) {
         return path + whatWith;
     }
     return path;
-}
-
-export class MediaContainer {
-    public id: string;
-    public src: string;
-    public idx: number;
-    public content_type: string;
-    public container_id: string;
-
-    public previewUrl: string;
-    public fullUrl: string;
-
-    constructor(obj: any = {}) {
-        this.fromJson(obj);
-    }
-
-    public fromJson(raw: any) {
-        if (raw) {
-            Object.assign(this, raw);
-            this.links();
-        }
-    }
-
-    public isImage() {
-        return this.content_type ? !!(this.content_type.match("image")) : false;
-    }
-
-    public isVideo() {
-        return this.content_type ? !!(this.content_type.match("video")) : false;
-    }
-
-    public links() {
-        this.previewUrl = `${ApiDef.contented.preview}${this.id}`;
-        this.fullUrl = `${ApiDef.contented.view}${this.id}`;
-    }
 }
 
 export enum LoadStates {
@@ -51,8 +16,8 @@ export enum LoadStates {
     Complete
 }
 
-export class Directory {
-    public contents: Array<MediaContainer>;
+export class Container {
+    public contents: Array<Media>;
     public total: number;
     public count: number;
     public path: string;
@@ -64,8 +29,8 @@ export class Directory {
     public loadState: LoadStates = LoadStates.NotLoaded;
 
     // All potential items that can be rendered from the contents
-    public renderable: Array<MediaContainer>;
-    public visibleSet: Array<MediaContainer> = [];
+    public renderable: Array<Media>;
+    public visibleSet: Array<Media> = [];
 
     constructor(cnt: any) {
         this.total = _.get(cnt, 'total') || 0;
@@ -76,7 +41,7 @@ export class Directory {
     }
 
     // For use in determining what should actually be visible at any time
-    public getIntervalAround(currentItem: MediaContainer, requestedVisible: number = 4, before: number = 0) {
+    public getIntervalAround(currentItem: Media, requestedVisible: number = 4, before: number = 0) {
         this.visibleSet = null;
 
         let items = this.getContentList() || [];
@@ -101,7 +66,7 @@ export class Directory {
         return this.visibleSet;
     }
 
-    public indexOf(item: MediaContainer, contents: Array<MediaContainer> = null) {
+    public indexOf(item: Media, contents: Array<Media> = null) {
         contents = contents || this.getContentList() || [];
         if ( item && contents ) {
             return _.findIndex(contents, {id: item.id});
@@ -110,10 +75,10 @@ export class Directory {
     }
 
     public buildImgs(imgData: Array<any>) {
-        return _.map(imgData, data => new MediaContainer(data));
+        return _.map(imgData, data => new Media(data));
     }
 
-    public setContents(contents: Array<MediaContainer>) {
+    public setContents(contents: Array<Media>) {
         this.contents = _.sortBy(_.uniqBy(contents || [], 'id'), 'idx');
         this.count = this.contents.length;
         this.renderable = null;
@@ -125,7 +90,7 @@ export class Directory {
         }
     }
 
-    public addContents(contents: Array<MediaContainer>) {
+    public addContents(contents: Array<Media>) {
         let sorted = _.sortBy((this.contents || []).concat(contents), 'idx');
         console.log("What is going on", sorted);
         this.setContents(sorted);
@@ -134,7 +99,7 @@ export class Directory {
     // This is the actual URL you can get a pointer to for the scroll / load
     public getContentList() {
         if (!this.renderable) {
-            this.renderable = _.map(this.contents, (c: MediaContainer) => {
+            this.renderable = _.map(this.contents, (c: Media) => {
                 return c;
             });
         }

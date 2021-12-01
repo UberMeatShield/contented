@@ -12,10 +12,11 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 
 import {ContentedCmp} from './contented_cmp';
 import {SearchCmp, SearchDialog} from './search_cmp';
-import {DirectoryCmp} from './directory_cmp';
+import {ContainerCmp} from './container_cmp';
 import {ContentedViewCmp} from './contented_view_cmp';
 import {ContentedService} from './contented_service';
-import {Directory} from './directory';
+import {Container} from './container';
+import {Media} from './media';
 
 @NgModule({
   imports: [
@@ -31,7 +32,7 @@ import {Directory} from './directory';
       MatInputModule,
       MatPaginatorModule,
   ],
-  declarations: [ContentedCmp, ContentedViewCmp, DirectoryCmp, SearchCmp, SearchDialog],
+  declarations: [ContentedCmp, ContentedViewCmp, ContainerCmp, SearchCmp, SearchDialog],
   exports: [ContentedCmp, ContentedViewCmp, SearchCmp, SearchDialog],
   providers: [ContentedService]
 })

@@ -1,6 +1,6 @@
-// TODO: This was from before the httpMock was actually good, just use httpMockController now
 import {Observable, from as observableFrom} from 'rxjs';
-import {Directory, MediaContainer} from './../../contented/directory';
+import {Container} from './../../contented/container';
+import {Media} from './../../contented/media';
 import {ApiDef} from './../../contented/api_def';
 import * as _ from 'lodash';
 
@@ -32,7 +32,7 @@ class MockLoader {
         return media.slice(0, count);
     }
 
-    public getFullDirectory() {
+    public getFullContainer() {
         return require('./full.json');
     }
 
@@ -66,7 +66,7 @@ class MockLoader {
         }
     }
 
-    public handleContainerMediaLoad(httpMock, dirs: Array<Directory>) {
+    public handleContainerMediaLoad(httpMock, dirs: Array<Container>) {
         _.each(dirs, dir => {
             let url = ApiDef.contented.media.replace('{cId}', dir.id);
             let reqs = httpMock.match(r => r.url === url);
@@ -77,25 +77,9 @@ class MockLoader {
     }
 
     public getImg() {
-        let img = new MediaContainer();
+        let img = new Media();
         img.fromJson(this.getMedia("10", 1)[0]);
         return img;
-    }
-
-
-    // This will actually fake an async call to prove things require async ticks, better tests on cmps
-    public obs(response, shouldReject: boolean = false) {
-        let val = response;
-        let timeout = this.timeoutSpan;
-        return function() {
-            console.log("Calling the damn method at least, promise not resolving?", timeout);
-            let p = new Promise((resolve, reject) => {
-                setTimeout(() => {
-                    return shouldReject ? reject(val) : resolve(val);
-                }, timeout);
-            });
-            return observableFrom(p);
-        };
     }
 }
 export let MockData = new MockLoader();
