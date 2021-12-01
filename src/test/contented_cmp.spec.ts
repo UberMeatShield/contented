@@ -127,7 +127,7 @@ describe('TestingContentedCmp', () => {
         fixture.detectChanges();
         tick(1000);
 
-        let d = comp.getCurrentDir();
+        let d = comp.getCurrentContainer();
         expect(d).toBeDefined("There should be a current container");
         let cl = d.getContentList();
         expect(cl).toBeDefined("We should have a content list");
@@ -180,7 +180,7 @@ describe('TestingContentedCmp', () => {
         fixture.detectChanges();
         tick(1000);
 
-        let dir: Container = comp.getCurrentDir();
+        let dir: Container = comp.getCurrentContainer();
         expect(dir).not.toBe(null);
         expect(dir.count).toBeLessThan(dir.total, "There should be more to load");
         expect(dir.count).toEqual(2, "The default count should be 2 by default");
