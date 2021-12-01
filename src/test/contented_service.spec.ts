@@ -137,7 +137,7 @@ describe('TestingContentedService', () => {
         let params: HttpParams = previewReq.request.params;
         previewReq.flush(preview);
 
-        expect(dirs.length).toBeGreaterThan(1, "Should have directories");
+        expect(dirs.length).toBeGreaterThan(1, "Should have containers");
         expect(dirs[0].total).toEqual(total);
 
         let media = dirs[0];

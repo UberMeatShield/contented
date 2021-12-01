@@ -14,7 +14,7 @@ import * as _ from 'lodash';
 })
 export class ContentedCmp implements OnInit {
 
-    @Input() maxVisible: number = 2; // How many of the loaded directories should we be viewing
+    @Input() maxVisible: number = 2; // How many of the loaded containers should we be viewing
     @Input() rowIdx: number = 0; // Which row (container) are we in
     @Input() idx: number = 0; // Which item within the container are we viewing
 
@@ -26,8 +26,8 @@ export class ContentedCmp implements OnInit {
     public currentViewItem: Media; // The current indexed item that is considered selected
     public currentDir: Container;
     public fullScreen: boolean = false; // Should we view fullscreen the current item
-    public directories: Array<Container>; // Current set of visible directories
-    public allD: Array<Container>; // All the directories we have loaded
+    public containers: Array<Container>; // Current set of visible containers
+    public allD: Array<Container>; // All the containers we have loaded
 
     constructor(public _contentedService: ContentedService, public route: ActivatedRoute, public router: Router) {
     }
@@ -245,10 +245,10 @@ export class ContentedCmp implements OnInit {
         this.previewHeight = (height / this.maxVisible) - 41;
     }
 
-    public previewResults(directories: Array<Container>) {
-        console.log("Results returned from the preview results.", directories);
-        this.allD = directories || [];
-        if (_.isEmpty(directories)) {
+    public previewResults(containers: Array<Container>) {
+        console.log("Results returned from the preview results.", containers);
+        this.allD = containers || [];
+        if (_.isEmpty(containers)) {
             this.emptyMessage = "No Directories found, did you load the DB?";
         } else {
             this.loadView(this.idx, this.rowIdx);
