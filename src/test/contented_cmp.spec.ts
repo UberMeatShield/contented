@@ -89,7 +89,7 @@ describe('TestingContentedCmp', () => {
         tick(2000);
         expect(comp.allD.length).toBe(4, "We should have 4 containers set");
 
-        let dirs = comp.getVisibleDirectories();
+        let dirs = comp.getVisibleContainers();
         expect(dirs.length).toBe(comp.maxVisible, "Should only have the max visible containers present.");
         expect(dirs.length <= comp.allD.length).toBe(true, "It should never have more data than we asked for.");
 
@@ -97,7 +97,7 @@ describe('TestingContentedCmp', () => {
         let dirEls = $('.container-contents', el);
         expect(dirEls.length).toBe(comp.maxVisible, "We should have the elements rendered.");
 
-        expect($('.current-content-dir').length).toBe(1, "We should only have 1 selected dir");
+        expect($('.current-content-cnt').length).toBe(1, "We should only have 1 selected dir");
     }));
 
     it("Should be able to tell you that nothing was loaded up", fakeAsync(() => {
@@ -162,7 +162,7 @@ describe('TestingContentedCmp', () => {
         fixture.detectChanges();
 
         expect(comp.idx).toBe(0, "It should be on the default page");
-        let dirs = $('.dir-name');
+        let dirs = $('.cnt-name');
         expect(dirs.length).toBe(2, "There should be two containers present");
         expect(_.get(containers, '[0].name')).toBe($(dirs[0]).text(), 'It should have the dir id');
         expect(_.get(containers, '[1].name')).toBe($(dirs[1]).text(), 'It should have the dir name');

@@ -137,7 +137,7 @@ export class SearchCmp implements OnInit{
         return this.media;
     }
 
-    // TODO: Being called abusively in the directive rather than on page resize events
+    // TODO: Being called abusively in the cntective rather than on page resize events
     @HostListener('window:resize', ['$event'])
     public calculateDimensions() {
         let width = !window['jasmine'] ? window.innerWidth : 800;

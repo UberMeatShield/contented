@@ -32,12 +32,12 @@ export class Container {
     public renderable: Array<Media>;
     public visibleSet: Array<Media> = [];
 
-    constructor(dir: any) {
-        this.total = _.get(dir, 'total') || 0;
-        this.id = _.get(dir, 'id') || '';
-        this.name = _.get(dir, 'name') || '';
-        this.previewUrl = _.get(dir, 'previewUrl') || '';
-        this.setContents(this.buildImgs(_.get(dir, 'contents') || []));
+    constructor(cnt: any) {
+        this.total = _.get(cnt, 'total') || 0;
+        this.id = _.get(cnt, 'id') || '';
+        this.name = _.get(cnt, 'name') || '';
+        this.previewUrl = _.get(cnt, 'previewUrl') || '';
+        this.setContents(this.buildImgs(_.get(cnt, 'contents') || []));
     }
 
     // For use in determining what should actually be visible at any time

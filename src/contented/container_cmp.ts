@@ -17,7 +17,7 @@ export class ContainerCmp implements OnInit {
 
     @Input() currentViewItem: Media;
     @Input() maxRendered: number = 8; // Default setting for how many should be visible at any given time
-    @Input() maxPrevItems: number = 2; // When scrolling through a dir, how many previous items should be visible
+    @Input() maxPrevItems: number = 2; // When scrolling through a cnt, how many previous items should be visible
 
     @Output() clickedItem: EventEmitter<any> = new EventEmitter<any>();
 
@@ -47,7 +47,7 @@ export class ContainerCmp implements OnInit {
 
     public imgClicked(imgContainer: Media) {
         console.log("Img clicked", imgContainer);
-        this.clickedItem.emit({dir: this.container, item: imgContainer});
+        this.clickedItem.emit({cnt: this.container, item: imgContainer});
     }
 }
 

@@ -9,22 +9,22 @@
   </div>
 
   <!-- Fix this to be better about how to get the currDir -->
-  <div class="contented-dir" name="contents" *ngFor="let dir of getVisibleDirectories()">
+  <div class="contented-cnt" name="contents" *ngFor="let cnt of getVisibleContainers()">
 
     <!-- Probably break this out into a container Info Component -->
-    <div class="container-contents" [class.current-content-dir]="dir === getCurrentDir()">
+    <div class="container-contents" [class.current-content-cnt]="cnt === getCurrentDir()">
       <mat-progress-bar
-        [value]="dir.count ? ((rowIdx + 1) * 100 / dir.count) : 1"
+        [value]="cnt.count ? ((rowIdx + 1) * 100 / cnt.count) : 1"
         [color]="'primary'"
-        [bufferValue]="dir?.total"
-        [mode]="dir.count === dir.total ? 'determinate' : 'buffer'"
+        [bufferValue]="cnt?.total"
+        [mode]="cnt.count === cnt.total ? 'determinate' : 'buffer'"
       ></mat-progress-bar>
 
-      <mat-card class="container-meta" *ngIf="!!dir">
+      <mat-card class="container-meta" *ngIf="!!cnt">
         <mat-card-subtitle>
           <div class="container-bar">
             <div class="container-preview-loc">
-              <img class="container-preview-img" [src]="dir?.previewUrl">
+              <img class="container-preview-img" [src]="cnt?.previewUrl">
             </div>
 
           <div class="container-bar-info">
@@ -34,12 +34,12 @@
 
             <form class="container-meta-text bar-spacer">
               Current Index: <input name="rowIdx" type="number" [(ngModel)]="rowIdx">
-              Loaded: <span class="dir-max-count"> {{dir?.contents?.length}}</span>
-              of <span class="dir-total">{{dir?.total}}</span> media
-              <span *ngIf="dir?.contents?.length < dir.total">
+              Loaded: <span class="cnt-max-count"> {{cnt?.contents?.length}}</span>
+              of <span class="cnt-total">{{cnt?.total}}</span> media
+              <span *ngIf="cnt?.contents?.length < cnt.total">
                 press (F) or: 
-                <button class="btn btn-primary" (click)="fullLoadDir(dir)">
-                  Load ({{ dir.total - dir.count }}) Items
+                <button class="btn btn-primary" (click)="fullLoadDir(cnt)">
+                  Load ({{ cnt.total - cnt.count }}) Items
                 </button>
               </span>
             </form>
@@ -47,9 +47,9 @@
             <div class="bar-spacer">Add a WASD</div>
               <span class="bar-spacer">
                 Selected: 
-              <a target="window" class="dir-name"
-                href="/containers/{{dir?.id}}"
-              >{{dir?.name}}</a>
+              <a target="window" class="cnt-name"
+                href="/containers/{{cnt?.id}}"
+              >{{cnt?.name}}</a>
               <span *ngIf="currentViewItem">/</span> 
               <a target="window" class="current-item" 
                 *ngIf="currentViewItem" 
@@ -65,9 +65,9 @@
 
       <mat-card-content>
         <container-cmp 
-          [container]="dir" 
+          [container]="cnt" 
           [currentViewItem]="getCurrentLocation()"
-          (clickedItem)="dirItemClicked($event)"
+          (clickedItem)="cntItemClicked($event)"
           [previewWidth]="previewWidth" 
           [previewHeight]="previewHeight"
         ></container-cmp>
