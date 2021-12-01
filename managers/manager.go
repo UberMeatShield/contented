@@ -33,7 +33,7 @@ type ContentManager interface {
 
     FindFileRef(mcID uuid.UUID) (*models.MediaContainer, error)
 
-    GetContainer(c_id uuid.UUID) (*models.Container, error)
+    GetContainer(cID uuid.UUID) (*models.Container, error)
     ListContainers(page int, per_page int) (*models.Containers, error)
     ListContainersContext() (*models.Containers, error)
 

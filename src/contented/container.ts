@@ -2,7 +2,6 @@ import * as _ from 'lodash';
 import {Media} from './media';
 import {ApiDef} from './api_def';
 
-
 function trail(path: string, whatWith: string) {
     if (path[path.length - 1] !== whatWith) {
         return path + whatWith;
@@ -37,7 +36,7 @@ export class Container {
         this.total = _.get(dir, 'total') || 0;
         this.id = _.get(dir, 'id') || '';
         this.name = _.get(dir, 'name') || '';
-        this.previewUrl = _.get(dir, 'preview_src') || '';
+        this.previewUrl = _.get(dir, 'previewUrl') || '';
         this.setContents(this.buildImgs(_.get(dir, 'contents') || []));
     }
 

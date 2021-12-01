@@ -55,14 +55,14 @@ func (v ContainersResource) List(c buffalo.Context) error {
 // the path GET /containers/{container_id}
 func (v ContainersResource) Show(c buffalo.Context) error {
 
-    c_id, err := uuid.FromString(c.Param("container_id"))
+    cID, err := uuid.FromString(c.Param("container_id"))
     if err != nil {
         return c.Error(http.StatusBadRequest, err)
     }
 
 	// Get the DB connection from the context
     man := managers.GetManager(&c)
-    container, err := man.GetContainer(c_id)
+    container, err := man.GetContainer(cID)
     if err != nil {
 		return c.Error(http.StatusNotFound, err)
     }

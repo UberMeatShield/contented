@@ -2,7 +2,8 @@ import { fakeAsync, getTestBed, tick, ComponentFixture, TestBed, waitForAsync } 
 import {By} from '@angular/platform-browser';
 
 import * as _ from 'lodash';
-import {Container, Media} from './../contented/container';
+import {Container} from './../contented/container';
+import {Media} from './../contented/media';
 import {MockData} from './mock/mock_data';
 
 describe('TestingContainer', () => {

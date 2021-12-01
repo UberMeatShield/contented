@@ -67,9 +67,9 @@ func (cm ContentManagerMemory) GetParams() *url.Values {
     return cm.Params()
 }
 
-func (cm ContentManagerMemory) ListMediaContext(c_id uuid.UUID) (*models.MediaContainers, error) {
+func (cm ContentManagerMemory) ListMediaContext(cID uuid.UUID) (*models.MediaContainers, error) {
     _, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
-    return cm.ListMedia(c_id, page, limit)
+    return cm.ListMedia(cID, page, limit)
 }
 
 func (cm ContentManagerMemory) ListAllMedia(page int, per_page int) (*models.MediaContainers, error) {
@@ -198,12 +198,12 @@ func (cm ContentManagerMemory) ListContainers(page int, per_page int) (*models.C
 }
 
 // Get a single container given the primary key
-func (cm ContentManagerMemory) GetContainer(c_id uuid.UUID) (*models.Container, error) {
-    log.Printf("Get a single container %s", c_id)
-    if c, ok := cm.ValidContainers[c_id]; ok {
+func (cm ContentManagerMemory) GetContainer(cID uuid.UUID) (*models.Container, error) {
+    log.Printf("Get a single container %s", cID)
+    if c, ok := cm.ValidContainers[cID]; ok {
         return &c, nil
     }
-    return nil, errors.New("Memory manager did not find this container id: " + c_id.String())
+    return nil, errors.New("Memory manager did not find this container id: " + cID.String())
 }
 
 func (cm ContentManagerMemory) FindFileRef(mcID uuid.UUID) (*models.MediaContainer, error) {

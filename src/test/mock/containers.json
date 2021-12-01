@@ -1,38 +1,50 @@
 [
   {
-    "id": "33a5e671-bf1a-42e9-a374-2a8e48081792",
-    "total": 4,
+    "id": "57f12127-8a47-4129-8168-098832990a58",
+    "total": 12,
     "path": "/Users/justincarlson/go/src/contented/mocks/content/",
     "name": "dir1",
-    "created_at": "2021-02-07T12:53:50.780283Z",
-    "updated_at": "2021-02-07T12:53:50.780289Z",
-    "contents": null
+    "created": "2021-12-01T09:24:50.297252Z",
+    "updated": "2021-12-01T09:36:04.297794Z",
+    "active": true,
+    "idx": 0,
+    "contents": null,
+    "previewUrl": "/preview/812c2799-a2fd-479c-bd92-6f4e71f09c22"
   },
   {
-    "id": "c18df6f9-470f-4b1d-a1e1-f786fdf16dc7",
-    "total": 2,
-    "path": "/Users/justincarlson/go/src/contented/mocks/content/",
-    "name": "dir2",
-    "created_at": "2021-02-07T12:53:50.809086Z",
-    "updated_at": "2021-02-07T12:53:50.80909Z",
-    "contents": null
-  },
-  {
-    "id": "0f3e24ee-e210-4f48-8e9e-d1cc21251829",
-    "total": 4,
-    "path": "/Users/justincarlson/go/src/contented/mocks/content/",
-    "name": "dir3",
-    "created_at": "2021-02-07T12:53:50.825421Z",
-    "updated_at": "2021-02-07T12:53:50.825427Z",
-    "contents": null
-  },
-  {
-    "id": "a9449c39-af0e-4047-9ea7-125c288015c4",
+    "id": "d2b6961f-76e8-4256-9284-0d3d8c5b7972",
     "total": 3,
     "path": "/Users/justincarlson/go/src/contented/mocks/content/",
+    "name": "dir2",
+    "created": "2021-12-01T09:24:50.390632Z",
+    "updated": "2021-12-01T09:36:04.310534Z",
+    "active": true,
+    "idx": 0,
+    "contents": null,
+    "previewUrl": "/preview/a59da4b8-2575-4517-8448-87e2048ef569"
+  },
+  {
+    "id": "4502273f-802d-4407-874b-b0bb6c21360b",
+    "total": 6,
+    "path": "/Users/justincarlson/go/src/contented/mocks/content/",
+    "name": "dir3",
+    "created": "2021-12-01T09:24:50.415002Z",
+    "updated": "2021-12-01T09:36:06.885475Z",
+    "active": true,
+    "idx": 0,
+    "contents": null,
+    "previewUrl": "/preview/f02ade17-33b8-496f-a0ae-f07b669ec2f9"
+  },
+  {
+    "id": "ad607138-e75f-4936-ac2a-72cddc8cde7f",
+    "total": 4,
+    "path": "/Users/justincarlson/go/src/contented/mocks/content/",
     "name": "screens",
-    "created_at": "2021-02-07T12:53:50.848555Z",
-    "updated_at": "2021-02-07T12:53:50.848558Z",
-    "contents": null
+    "created": "2021-12-01T09:24:50.451225Z",
+    "updated": "2021-12-01T09:36:06.894428Z",
+    "active": true,
+    "idx": 0,
+    "contents": null,
+    "previewUrl": "/preview/2ac6a591-b885-48a2-9f8a-a45d0e3a9f17"
   }
 ]
