@@ -7,7 +7,7 @@
 
     .preview-content {
       flex-shrink: 0;
-      margin: 1rem;
+      margin: 0.5em;
     }
 }
 
@@ -21,7 +21,7 @@
 
     .preview-content {
       flex-shrink: 0;
-      margin: 1rem;
+      margin: 0.5em;
     }
 }
 
@@ -45,6 +45,10 @@
     margin-top: 24px;
     display: flex;
     flex-wrap: wrap;
+}
+
+.container-meta {
+  padding: 0 !important;
 }
 
 .bar-spacer {
