@@ -12,7 +12,7 @@
   <div class="contented-cnt" name="contents" *ngFor="let cnt of getVisibleContainers()">
 
     <!-- Probably break this out into a container Info Component -->
-    <div class="container-contents" [class.current-content-cnt]="cnt === getCurrentDir()">
+    <div class="container-contents" [class.current-content-cnt]="cnt === getCurrentContainer()">
       <mat-progress-bar
         [value]="cnt.count ? ((rowIdx + 1) * 100 / cnt.count) : 1"
         [color]="'primary'"
