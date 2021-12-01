@@ -31,7 +31,7 @@ type ContentManager interface {
 
     GetParams() *url.Values
 
-    FindFileRef(mc_id uuid.UUID) (*models.MediaContainer, error)
+    FindFileRef(mcID uuid.UUID) (*models.MediaContainer, error)
 
     GetContainer(c_id uuid.UUID) (*models.Container, error)
     ListContainers(page int, per_page int) (*models.Containers, error)

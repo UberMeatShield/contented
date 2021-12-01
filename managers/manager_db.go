@@ -68,11 +68,11 @@ func (cm ContentManagerDB) ListMedia(c_id uuid.UUID, page int, per_page int) (*m
     return mediaContainers, nil
 }
 
-func (cm ContentManagerDB) GetMedia(mc_id uuid.UUID) (*models.MediaContainer, error) {
-    log.Printf("Get a single media %s", mc_id)
+func (cm ContentManagerDB) GetMedia(mcID uuid.UUID) (*models.MediaContainer, error) {
+    log.Printf("Get a single media %s", mcID)
     tx := cm.GetConnection()
     container := &models.MediaContainer{}
-    if err := tx.Find(container, mc_id); err != nil {
+    if err := tx.Find(container, mcID); err != nil {
         return nil, err
     }
     return container, nil
@@ -163,9 +163,9 @@ func (cm *ContentManagerDB) Initialize() {
     log.Printf("Make a DB connection here")
 }
 
-func (cm ContentManagerDB) FindFileRef(mc_id uuid.UUID) (*models.MediaContainer, error) {
+func (cm ContentManagerDB) FindFileRef(mcID uuid.UUID) (*models.MediaContainer, error) {
     mc_db := models.MediaContainer{}
-    err := models.DB.Find(&mc_db, mc_id)
+    err := models.DB.Find(&mc_db, mcID)
     if err == nil {
         return &mc_db, nil
     }

@@ -152,9 +152,9 @@ func (cm ContentManagerMemory) ListMedia(ContainerID uuid.UUID, page int, per_pa
 }
 
 // Get a media element by the ID
-func (cm ContentManagerMemory) GetMedia(mc_id uuid.UUID) (*models.MediaContainer, error) {
-    log.Printf("Memory Get a single media %s", mc_id)
-    if mc, ok := cm.ValidMedia[mc_id]; ok {
+func (cm ContentManagerMemory) GetMedia(mcID uuid.UUID) (*models.MediaContainer, error) {
+    log.Printf("Memory Get a single media %s", mcID)
+    if mc, ok := cm.ValidMedia[mcID]; ok {
         return &mc, nil
     }
     return nil, errors.New("Media was not found in memory")
@@ -206,8 +206,8 @@ func (cm ContentManagerMemory) GetContainer(c_id uuid.UUID) (*models.Container, 
     return nil, errors.New("Memory manager did not find this container id: " + c_id.String())
 }
 
-func (cm ContentManagerMemory) FindFileRef(mc_id uuid.UUID) (*models.MediaContainer, error) {
-    if mc, ok := cm.ValidMedia[mc_id]; ok {
+func (cm ContentManagerMemory) FindFileRef(mcID uuid.UUID) (*models.MediaContainer, error) {
+    if mc, ok := cm.ValidMedia[mcID]; ok {
         return &mc, nil
     }
     return nil, errors.New("File was not found in the current list of files")

@@ -45,7 +45,7 @@ export class ContentedService {
         if (!filename) {
             console.log("No file specified, wtf", rowIdx);
         }
-        let downloadUrl = ApiDef.contented.download.replace('{mc_id}', img.id);
+        let downloadUrl = ApiDef.contented.download.replace('{mcID}', img.id);
         console.log("DownloadURL", downloadUrl);
         window.open(downloadUrl);
     }
