@@ -69,8 +69,8 @@ export class ContentedCmp implements OnInit {
     }
 
     public saveItem() {
-        console.log("We should save an item", this.getCurrentDir());
-        this._contentedService.download(this.getCurrentDir(), this.rowIdx);
+        console.log("We should save an item", this.getCurrentContainer());
+        this._contentedService.download(this.getCurrentContainer(), this.rowIdx);
     }
 
     public loadMore() {
@@ -164,7 +164,7 @@ export class ContentedCmp implements OnInit {
         this.currentViewItem = this.getCurrentLocation();
     }
 
-    public getCurrentDir() {
+    public getCurrentContainer() {
         if (this.idx < this.allD.length && this.idx >= 0) {
             this.currentDir = this.allD[this.idx];
             return this.currentDir;
@@ -177,7 +177,7 @@ export class ContentedCmp implements OnInit {
     }
 
     public rowNext() {
-        let cnt = this.getCurrentDir();
+        let cnt = this.getCurrentContainer();
         let items = cnt ? cnt.getContentList() : [];
         if (this.rowIdx < items.length) {
             this.rowIdx++;
@@ -213,7 +213,7 @@ export class ContentedCmp implements OnInit {
             this.idx--;
         }
         if (selectLast) {
-            let cnt = this.getCurrentDir();
+            let cnt = this.getCurrentContainer();
             let items = cnt ? cnt.getContentList() : [];
             this.rowIdx = items.length - 1;
         }
@@ -226,7 +226,7 @@ export class ContentedCmp implements OnInit {
     }
 
     public getCurrentLocation() {
-        let cnt = this.getCurrentDir();
+        let cnt = this.getCurrentContainer();
         if (cnt && !_.isEmpty(cnt.getContentList())) {
             let contentList = cnt.getContentList();
             if (this.rowIdx >= 0 && this.rowIdx < contentList.length) {
@@ -267,7 +267,7 @@ export class ContentedCmp implements OnInit {
     }
 
     public loadView(idx, rowIdx) {
-        let currDir = this.getCurrentDir();
+        let currDir = this.getCurrentContainer();
         if (rowIdx >= currDir.total) {
             rowIdx = 0;
         }
