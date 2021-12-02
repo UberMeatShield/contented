@@ -13,6 +13,7 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {ContentedCmp} from './contented_cmp';
 import {SearchCmp, SearchDialog} from './search_cmp';
 import {ContainerCmp} from './container_cmp';
+import {ContainerNavCmp} from './container_nav_cmp';
 import {ContentedViewCmp} from './contented_view_cmp';
 import {ContentedService} from './contented_service';
 import {Container} from './container';
@@ -32,8 +33,8 @@ import {Media} from './media';
       MatInputModule,
       MatPaginatorModule,
   ],
-  declarations: [ContentedCmp, ContentedViewCmp, ContainerCmp, SearchCmp, SearchDialog],
-  exports: [ContentedCmp, ContentedViewCmp, SearchCmp, SearchDialog],
+  declarations: [ContentedCmp, ContentedViewCmp, ContainerCmp, ContainerNavCmp, SearchCmp, SearchDialog],
+  exports: [ContentedCmp, ContentedViewCmp, ContainerCmp, ContainerNavCmp, SearchCmp, SearchDialog],
   providers: [ContentedService]
 })
 export class ContentedModule {}

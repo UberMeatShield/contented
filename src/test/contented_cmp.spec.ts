@@ -96,8 +96,7 @@ describe('TestingContentedCmp', () => {
         fixture.detectChanges();
         let dirEls = $('.container-contents', el);
         expect(dirEls.length).toBe(comp.maxVisible, "We should have the elements rendered.");
-
-        expect($('.current-content-cnt').length).toBe(1, "We should only have 1 selected dir");
+        expect($('.current-content-cnt').length).toBe(1, "We should only have 1 selected cnt");
     }));
 
     it("Should be able to tell you that nothing was loaded up", fakeAsync(() => {
