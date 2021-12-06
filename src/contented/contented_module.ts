@@ -11,6 +11,7 @@ import {MatPaginatorModule} from '@angular/material/paginator';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 
 import {ContentedCmp} from './contented_cmp';
+import {ContentedNavCmp} from './contented_nav_cmp';
 import {SearchCmp, SearchDialog} from './search_cmp';
 import {ContainerCmp} from './container_cmp';
 import {ContainerNavCmp} from './container_nav_cmp';
@@ -33,8 +34,8 @@ import {Media} from './media';
       MatInputModule,
       MatPaginatorModule,
   ],
-  declarations: [ContentedCmp, ContentedViewCmp, ContainerCmp, ContainerNavCmp, SearchCmp, SearchDialog],
-  exports: [ContentedCmp, ContentedViewCmp, ContainerCmp, ContainerNavCmp, SearchCmp, SearchDialog],
+  declarations: [ContentedCmp, ContentedNavCmp, ContentedViewCmp, ContainerCmp, ContainerNavCmp, SearchCmp, SearchDialog],
+  exports: [ContentedCmp, ContentedNavCmp, ContentedViewCmp, ContainerCmp, ContainerNavCmp, SearchCmp, SearchDialog],
   providers: [ContentedService]
 })
 export class ContentedModule {}

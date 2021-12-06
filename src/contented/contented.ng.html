@@ -1,4 +1,7 @@
 <div class="contented-cmp">
+
+  <contented-nav>Hmmm</contented-nav>
+
   <!-- TODO: A more generic error handling setup -->
   <div class="error no-content" *ngIf="emptyMessage">
     {{emptyMessage}}
@@ -14,27 +17,26 @@
     <!-- Probably break this out into a container Info Component -->
     <div class="container-contents">
       <mat-card>
-      <!-- TODO: Definitely a nav bar -->
-      <mat-card-subtitle>
-      <container-nav
-        [cnt]="cnt"
-        [active]="cnt === getCurrentContainer()"
-        [rowIdx]="rowIdx"
-        [idx]="666"
-        [currentViewItem]="getCurrentLocation()"
-      ></container-nav>
-      </mat-card-subtitle>
+        <!-- TODO: Definitely a nav bar -->
+        <mat-card-subtitle>
+          <container-nav
+            [cnt]="cnt"
+            [active]="cnt === getCurrentContainer()"
+            [rowIdx]="rowIdx"
+            [idx]="666"
+            [currentViewItem]="getCurrentLocation()"
+          ></container-nav>
+        </mat-card-subtitle>
 
-      <mat-card-content>
-        <container-cmp 
-          [container]="cnt" 
-          [currentViewItem]="getCurrentLocation()"
-          (clickedItem)="cntItemClicked($event)"
-          [previewWidth]="previewWidth" 
-          [previewHeight]="previewHeight"
-        ></container-cmp>
-      </mat-card-content>
-
+        <mat-card-content>
+          <container-cmp 
+            [container]="cnt" 
+            [active]="cnt === getCurrentContainer()"
+            [currentViewItem]="getCurrentLocation()"
+            [previewWidth]="previewWidth" 
+            [previewHeight]="previewHeight"
+          ></container-cmp>
+        </mat-card-content>
       </mat-card>
     </div>
   </div>

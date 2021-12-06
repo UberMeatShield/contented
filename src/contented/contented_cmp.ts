@@ -5,6 +5,7 @@ import {Media} from './media';
 import {finalize, switchMap} from 'rxjs/operators';
 
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
+import {GlobalNavEvents, NavTypes} from './nav_events';
 
 import * as _ from 'lodash';
 
@@ -15,7 +16,7 @@ import * as _ from 'lodash';
 export class ContentedCmp implements OnInit {
 
     @Input() maxVisible: number = 2; // How many of the loaded containers should we be viewing
-    @Input() rowIdx: number = 0; // Which row (container) are we in
+    @Input() rowIdx: number = 0; // Which row (media item) are we on
     @Input() idx: number = 0; // Which item within the container are we viewing
 
     public loading: boolean = false;
@@ -32,40 +33,58 @@ export class ContentedCmp implements OnInit {
     constructor(public _contentedService: ContentedService, public route: ActivatedRoute, public router: Router) {
     }
 
+    public ngOnInit() {
+        // Need to load content if the idx is greater than content loaded (n times potentially)
+        this.route.paramMap.pipe().subscribe(
+            (res: ParamMap) => {
+                this.setPosition(
+                    res.get('idx') ? parseInt(res.get('idx'), 10) : 0,
+                    res.get('rowIdx') ? parseInt(res.get('rowIdx'), 10) : 0
+                );
+            },
+            err => { console.error(err); }
+        );
+        this.setupEvtListener();
+        this.calculateDimensions();
+        this.loadDirs(); // Do this after the param map load potentially
+    }
 
-    // On the document keypress events, listen for them (probably need to set them only to component somehow)
-    @HostListener('document:keypress', ['$event'])
-    public keyPress(evt: KeyboardEvent) {
-        console.log("Keypress", evt);
-        switch (evt.key) {
-            case 'w':
-                this.prev();
-                break;
-            case 's':
-                this.next();
-                break;
-            case 'a':
-                this.rowPrev();
-                break;
-            case 'd':
-                this.rowNext();
-                break;
-            case 'e':
-                this.viewFullscreen();
-                break;
-            case 'q':
-                this.hideFullscreen();
-                break;
-            case 'f':
-                this.loadMore();
-                break;
-            case 'x':
-                this.saveItem();
-                break;
-            default:
-                break;
-        }
-        this.setCurrentItem();
+    // This will listen to nav events.
+    public setupEvtListener() {
+        GlobalNavEvents.navEvts.subscribe(evt => {
+            switch(evt.action) {
+                case NavTypes.NEXT_CONTAINER:
+                    this.next();
+                    break;
+                case NavTypes.PREV_CONTAINER:
+                    this.prev();
+                    break;
+                case NavTypes.NEXT_MEDIA:
+                    this.nextMedia();
+                    break;
+                case NavTypes.PREV_MEDIA:
+                    this.prevMedia();
+                    break;
+                case NavTypes.LOAD_MORE:
+                    this.loadMore();
+                    break;
+                case NavTypes.SELECT_MEDIA:
+                    this.selectedMedia(evt.media, evt.cnt);
+                    break;
+                case NavTypes.VIEW_FULLSCREEN:
+                    this.viewFullscreen();
+                    break;
+                case NavTypes.HIDE_FULLSCREEN:
+                    this.hideFullscreen();
+                    break;
+                case NavTypes.SAVE_MEDIA:
+                    this.saveItem();
+                    break;
+                default:
+                    break;
+            }
+            this.setCurrentItem();
+        });
     }
 
     public saveItem() {
@@ -85,23 +104,6 @@ export class ContentedCmp implements OnInit {
 
     public hideFullscreen() {
         this.fullScreen = false;
-    }
-
-    public ngOnInit() {
-        // Need to add tests
-        // Need to load content if the idx is greater than content loaded (n times potentially)
-        this.route.paramMap.pipe().subscribe(
-            (res: ParamMap) => {
-                this.setPosition(
-                    res.get('idx') ? parseInt(res.get('idx'), 10) : 0,
-                    res.get('rowIdx') ? parseInt(res.get('rowIdx'), 10) : 0
-                );
-            },
-            err => { console.error(err); }
-        );
-
-        this.calculateDimensions();
-        this.loadDirs(); // Do this after the param map load potentially
     }
 
     // Mostly for tests since testing full routing params is a god damn pain.
@@ -176,7 +178,7 @@ export class ContentedCmp implements OnInit {
         this.router.navigate([`/ui/browse/${this.idx}/${this.rowIdx}`]);
     }
 
-    public rowNext() {
+    public nextMedia() {
         let cnt = this.getCurrentContainer();
         let items = cnt ? cnt.getContentList() : [];
         if (this.rowIdx < items.length) {
@@ -189,7 +191,7 @@ export class ContentedCmp implements OnInit {
         this.updateRoute();
     }
 
-    public rowPrev() {
+    public prevMedia() {
         if (this.rowIdx > 0) {
             this.rowIdx--;
         } else if (this.idx !== 0) {
@@ -281,21 +283,17 @@ export class ContentedCmp implements OnInit {
         }
     }
 
-    public cntItemClicked(evt) {
-        console.log("Click event, change currently selected indexes, container etc", evt);
-        let cnt = _.get(evt, 'cnt');
-        let item = _.get(evt, 'item');
+    public selectedMedia(media: Media, cnt: Container) {
+        console.log("Click event, change currently selected indexes, container etc", media, cnt);
         let idx = _.findIndex(this.allD, {id: cnt ? cnt.id : -1});
-        let rowIdx = cnt ? _.findIndex(cnt.contents, {id: item.id}) : -1;
-
+        let rowIdx = cnt ? _.findIndex(cnt.contents, {id: media.id}) : -1;
         console.log("Found idx and row index: ", idx, rowIdx);
         if (idx >= 0 && rowIdx >= 0) {
             this.idx = idx;
             this.rowIdx = rowIdx;
             this.viewFullscreen();
         } else {
-            console.error("Should not be able to click an item we cannot find.", cnt, item);
+            console.error("Should not be able to click an item we cannot find.", cnt, media);
         }
     }
 }
-

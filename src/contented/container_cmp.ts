@@ -3,6 +3,7 @@ import {ContentedService} from './contented_service';
 
 import {Container} from './container';
 import {Media} from './media';
+import {GlobalNavEvents} from './nav_events';
 import * as _ from 'lodash';
 
 @Component({
@@ -12,14 +13,17 @@ import * as _ from 'lodash';
 export class ContainerCmp implements OnInit {
 
     @Input() container: Container;
+    @Input() active: boolean = false;
     @Input() previewWidth: number;
     @Input() previewHeight: number;
 
-    @Input() currentViewItem: Media;
     @Input() maxRendered: number = 8; // Default setting for how many should be visible at any given time
     @Input() maxPrevItems: number = 2; // When scrolling through a cnt, how many previous items should be visible
 
     @Output() clickedItem: EventEmitter<any> = new EventEmitter<any>();
+
+    // TODO: We should figure out how to set this in a saner fashion.
+    @Input() currentViewItem: Media;
 
     // @Output clickEvt: EventEmitter<any>;
     public visibleSet: Array<Media>; // The currently visible set of items from in the container
@@ -31,7 +35,6 @@ export class ContainerCmp implements OnInit {
     public ngOnInit() {
         console.log("Container Component loading up");
     }
-
 
     public getVisibleSet(currentItem = this.currentViewItem, max: number = this.maxRendered) {
         this.visibleSet = null;
@@ -45,9 +48,11 @@ export class ContainerCmp implements OnInit {
         console.log("Img Loaded", img.naturalHeight, img.naturalWidth, img);
     }
 
-    public imgClicked(imgContainer: Media) {
-        console.log("Img clicked", imgContainer);
-        this.clickedItem.emit({cnt: this.container, item: imgContainer});
+    public imgClicked(media: Media) {
+        GlobalNavEvents.selectMedia(media, this.container);
+
+        // Just here in case we want to override what happens on a click
+        this.clickedItem.emit({cnt: this.container, media: media});
     }
 }
 
