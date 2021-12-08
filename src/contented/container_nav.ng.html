@@ -1,51 +1,50 @@
 <div class="container-nav" [class.current-content-cnt]="active">
   <div *ngIf="cnt">
     <mat-progress-bar
-      [value]="cnt.count ? ((rowIdx + 1) * 100 / cnt.count) : 1"
+      [value]="cnt.count ? ((cnt.rowIdx + 1) * 100 / cnt.count) : 1"
       [color]="'primary'"
       [bufferValue]="cnt?.total"
       [mode]="cnt.count === cnt.total ? 'determinate' : 'buffer'"
     ></mat-progress-bar>
+    <div class="container-bar">
+      <div class="container-preview-loc">
+        <img class="container-preview-img" [src]="cnt?.previewUrl">
+      </div>
 
-        <div class="container-bar">
-          <div class="container-preview-loc">
-            <img class="container-preview-img" [src]="cnt?.previewUrl">
-          </div>
+    <div class="container-bar-info">
+      <span class="bar-spacer">
+        {{idx + 1}} of {{totalContainers}} Containers.
+      </span>
 
-        <div class="container-bar-info">
-          <span class="bar-spacer">
-            {{idx + 1}} of {{totalContainers}} Containers.
-          </span>
+      <form class="container-meta-text bar-spacer">
 
-          <form class="container-meta-text bar-spacer">
+        <!-- Event emit for the rowIdx for this component -->
+        Current Index: <input name="rowIdx" type="number" [(ngModel)]="cnt.rowIdx">
+        Loaded: <span class="cnt-max-count"> {{cnt?.contents?.length}}</span>
+        of <span class="cnt-total">{{cnt?.total}}</span> media
+        <span *ngIf="cnt?.contents?.length < cnt.total">
+          press (F) or: 
+          <button class="btn btn-primary" (click)="fullLoadDir(cnt)">
+            Load ({{ cnt.total - cnt.count }}) Items
+          </button>
+        </span>
+      </form>
 
-            <!-- Event emit for the rowIdx for this component -->
-            Current Index: <input name="rowIdx" type="number" [(ngModel)]="rowIdx">
-            Loaded: <span class="cnt-max-count"> {{cnt?.contents?.length}}</span>
-            of <span class="cnt-total">{{cnt?.total}}</span> media
-            <span *ngIf="cnt?.contents?.length < cnt.total">
-              press (F) or: 
-              <button class="btn btn-primary" (click)="fullLoadDir(cnt)">
-                Load ({{ cnt.total - cnt.count }}) Items
-              </button>
-            </span>
-          </form>
-
-          <div class="bar-spacer">Add a WASD</div>
-            <span class="bar-spacer">
-              Selected: 
-            <a target="window" class="cnt-name"
-              href="/containers/{{cnt?.id}}"
-            >{{cnt?.name}}</a>
-            <span *ngIf="currentViewItem">/</span> 
-            <a target="window" class="current-item" 
-              *ngIf="currentViewItem" 
-              href="{{currentViewItem.fullUrl}}">
-              {{currentViewItem?.src}}
-            </a>
-            &nbsp; {{currentViewItem?.content_type}}
-            </span>
-          </div>
-        </div>
+      <div class="bar-spacer">Add a WASD</div>
+        <span class="bar-spacer">
+          Selected: 
+        <a target="window" class="cnt-name"
+          href="/containers/{{cnt?.id}}"
+        >{{cnt?.name}}</a>
+        <span *ngIf="currentMedia">/</span> 
+        <a target="window" class="current-item" 
+          *ngIf="currentMedia" 
+          href="{{currentMedia.fullUrl}}">
+          {{currentMedia?.src}}
+        </a>
+        &nbsp; {{currentMedia?.content_type}}
+        </span>
+      </div>
+    </div>
   </div>
 </div>

@@ -132,7 +132,7 @@ describe('TestingContentedCmp', () => {
         expect(cl).toBeDefined("We should have a content list");
         expect(cl.length).toBeGreaterThan(0, "And we should have content");
 
-        let currLoc = comp.getCurrentLocation();
+        let currLoc = comp.getCurrentMedia();
         expect(currLoc).toBeDefined("It should have a current location set");
 
         fixture.detectChanges();
@@ -141,7 +141,7 @@ describe('TestingContentedCmp', () => {
         expect(comp.fullScreen).toBe(false, "We should not be in fullsceen mode even after everything is loaded");
 
         let toClick = $(imgs[3]).trigger('click');
-        currLoc = comp.getCurrentLocation();
+        currLoc = comp.getCurrentMedia();
         expect(comp.fullScreen).toBe(true, "It should now have a selected item");
         expect(currLoc.fullUrl).toBe(
             imgs[3].src.replace("preview", "view"),

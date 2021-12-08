@@ -1,14 +1,14 @@
 <div class="container-cmp">
-  <div class="cnt-contents" style="min-height: {{(previewHeight + 20) * 2}}px;">
+  <div *ngIf="container" class="cnt-contents" style="min-height: {{(previewHeight + 20) * 2}}px;">
     <div class="preview-content"
       [class.video-overlay]="mc?.content_type?.match('video')"
       style="width:{{previewWidth}}px; height: {{previewHeight}}px;"
       *ngFor="let mc of getVisibleSet()"
-      (click)="imgClicked(mc)"
+      (click)="clickMedia(mc)"
       >
       <!-- Assume that every preview is actually going to be an image -->
       <img class="preview-img"
-        [class.current-img]="currentViewItem === mc"
+        [class.current-img]="active && (mc === container.getCurrentMedia())"
         [src]="mc?.previewUrl" 
         (load)="imgLoaded($event)"
       > 

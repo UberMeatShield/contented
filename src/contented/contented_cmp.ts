@@ -59,18 +59,14 @@ export class ContentedCmp implements OnInit {
                 case NavTypes.PREV_CONTAINER:
                     this.prev();
                     break;
-                case NavTypes.NEXT_MEDIA:
-                    this.nextMedia();
-                    break;
-                case NavTypes.PREV_MEDIA:
-                    this.prevMedia();
-                    break;
                 case NavTypes.LOAD_MORE:
                     this.loadMore();
                     break;
                 case NavTypes.SELECT_MEDIA:
                     this.selectedMedia(evt.media, evt.cnt);
                     break;
+
+                // Little awkward how this works
                 case NavTypes.VIEW_FULLSCREEN:
                     this.viewFullscreen();
                     break;
@@ -98,7 +94,7 @@ export class ContentedCmp implements OnInit {
     }
 
     public viewFullscreen() {
-        this.currentViewItem = this.getCurrentLocation();
+        this.currentViewItem = this.getCurrentMedia();
         this.fullScreen = true;
     }
 
@@ -163,7 +159,8 @@ export class ContentedCmp implements OnInit {
     }
 
     public setCurrentItem() {
-        this.currentViewItem = this.getCurrentLocation();
+        this.currentViewItem = this.getCurrentMedia();
+        return this.currentViewItem;
     }
 
     public getCurrentContainer() {
@@ -179,6 +176,7 @@ export class ContentedCmp implements OnInit {
     }
 
     public nextMedia() {
+        /*
         let cnt = this.getCurrentContainer();
         let items = cnt ? cnt.getContentList() : [];
         if (this.rowIdx < items.length) {
@@ -188,16 +186,18 @@ export class ContentedCmp implements OnInit {
             }
         }
         this.setCurrentItem();
-        this.updateRoute();
+        */
     }
 
     public prevMedia() {
+        /*
         if (this.rowIdx > 0) {
             this.rowIdx--;
         } else if (this.idx !== 0) {
             this.prev(true);
         }
         this.updateRoute();
+        */
     }
 
     public next(selectFirst: boolean = true) {
@@ -227,7 +227,7 @@ export class ContentedCmp implements OnInit {
         console.log("Img Loaded", img.naturalHeight, img.naturalWidth, img);
     }
 
-    public getCurrentLocation() {
+    public getCurrentMedia() {
         let cnt = this.getCurrentContainer();
         if (cnt && !_.isEmpty(cnt.getContentList())) {
             let contentList = cnt.getContentList();
@@ -291,7 +291,7 @@ export class ContentedCmp implements OnInit {
         if (idx >= 0 && rowIdx >= 0) {
             this.idx = idx;
             this.rowIdx = rowIdx;
-            this.viewFullscreen();
+            this.updateRoute();
         } else {
             console.error("Should not be able to click an item we cannot find.", cnt, media);
         }

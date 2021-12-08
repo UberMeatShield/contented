@@ -32,12 +32,23 @@ export class Container {
     public renderable: Array<Media>;
     public visibleSet: Array<Media> = [];
 
+    // The currently selected Index
+    public rowIdx: number = 0;
+
     constructor(cnt: any) {
         this.total = _.get(cnt, 'total') || 0;
         this.id = _.get(cnt, 'id') || '';
         this.name = _.get(cnt, 'name') || '';
         this.previewUrl = _.get(cnt, 'previewUrl') || '';
         this.setContents(this.buildImgs(_.get(cnt, 'contents') || []));
+    }
+
+    public getCurrentMedia() {
+        let cntList = this.getContentList() || [];
+        if (this.rowIdx >= 0 && this.rowIdx < cntList.length) {
+            return cntList[this.rowIdx];
+        }
+        return cntList[0];
     }
 
     // For use in determining what should actually be visible at any time

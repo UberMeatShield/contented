@@ -8,7 +8,7 @@
   </div>
 
   <div *ngIf="fullScreen">
-    <contented-view [container]="getCurrentLocation()"></contented-view>
+    <contented-view [container]="getCurrentMedia()"></contented-view>
   </div>
 
   <!-- Fix this to be better about how to get the currDir -->
@@ -24,7 +24,6 @@
             [active]="cnt === getCurrentContainer()"
             [rowIdx]="rowIdx"
             [idx]="666"
-            [currentViewItem]="getCurrentLocation()"
           ></container-nav>
         </mat-card-subtitle>
 
@@ -32,7 +31,6 @@
           <container-cmp 
             [container]="cnt" 
             [active]="cnt === getCurrentContainer()"
-            [currentViewItem]="getCurrentLocation()"
             [previewWidth]="previewWidth" 
             [previewHeight]="previewHeight"
           ></container-cmp>
