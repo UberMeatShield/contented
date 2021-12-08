@@ -22,8 +22,9 @@
           <container-nav
             [cnt]="cnt"
             [active]="cnt === getCurrentContainer()"
-            [rowIdx]="rowIdx"
-            [idx]="666"
+            [totalContainers]="allD?.length"
+            [rowIdx]="cnt.rowIdx"
+            [idx]="idx"
           ></container-nav>
         </mat-card-subtitle>
 

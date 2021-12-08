@@ -175,31 +175,6 @@ export class ContentedCmp implements OnInit {
         this.router.navigate([`/ui/browse/${this.idx}/${this.rowIdx}`]);
     }
 
-    public nextMedia() {
-        /*
-        let cnt = this.getCurrentContainer();
-        let items = cnt ? cnt.getContentList() : [];
-        if (this.rowIdx < items.length) {
-            this.rowIdx++;
-            if (this.rowIdx === items.length && this.idx !== this.allD.length - 1) {
-                this.next(true);
-            }
-        }
-        this.setCurrentItem();
-        */
-    }
-
-    public prevMedia() {
-        /*
-        if (this.rowIdx > 0) {
-            this.rowIdx--;
-        } else if (this.idx !== 0) {
-            this.prev(true);
-        }
-        this.updateRoute();
-        */
-    }
-
     public next(selectFirst: boolean = true) {
         if (this.allD && this.idx + 1 < this.allD.length) {
             this.idx++;

@@ -32,7 +32,7 @@ describe('TestingContentedCmp', () => {
         TestBed.configureTestingModule({
             imports: [
                 RouterTestingModule.withRoutes(
-                    [{path: 'ui/:idx/:rowIdx', component: ContentedCmp}]
+                    [{path: 'ui/browse/:idx/:rowIdx', component: ContentedCmp}]
                 ),
                 FormsModule,
                 ContentedModule,
@@ -60,9 +60,9 @@ describe('TestingContentedCmp', () => {
 
     it('TODO: Fully handles routing arguments', fakeAsync(() => {
         // Should just setup other ajax calls
-        router.navigate(['/ui/2/3']);
+        router.navigate(['/ui/browse/2/3']);
         tick(100);
-        expect(router.url).toBe('/ui/2/3');
+        expect(router.url).toBe('/ui/browse/2/3');
         fixture.detectChanges();
         MockData.handleCmpDefaultLoad(httpMock, fixture);
         tick(1000);
@@ -205,6 +205,7 @@ describe('TestingContentedCmp', () => {
         fixture.detectChanges();
 
         expect(dir.count).toEqual(3, "Now we should have loaded more based on the limit");
+        fixture.detectChanges();
     }));
 });
 

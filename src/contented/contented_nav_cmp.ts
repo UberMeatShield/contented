@@ -20,9 +20,6 @@ export class ContentedNavCmp implements OnInit {
 
     ngOnInit() {
         this.navEvts = this.navEvts || GlobalNavEvents.navEvts;
-        this.navEvts.subscribe(evt => {
-            console.log("Found a nav event", evt);
-        });
     }
 
     // On the document keypress events, listen for them (probably need to set them only to component somehow)

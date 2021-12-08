@@ -1,5 +1,5 @@
 import {Subscription} from 'rxjs';
-import {OnInit, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
+import {OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
 import {ContentedService} from './contented_service';
 
 import {Container} from './container';
@@ -11,7 +11,7 @@ import * as _ from 'lodash';
     selector: 'container-cmp',
     templateUrl: 'container.ng.html'
 })
-export class ContainerCmp implements OnInit {
+export class ContainerCmp implements OnInit, OnDestroy {
 
     @Input() container: Container;
     @Input() active: boolean = false;
