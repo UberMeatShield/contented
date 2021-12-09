@@ -1,4 +1,5 @@
-import {OnInit, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
+import {Subscription} from 'rxjs';
+import {OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
 import {ContentedService} from './contented_service';
 import {Container} from './container';
 import {Media} from './media';
@@ -13,7 +14,7 @@ import * as _ from 'lodash';
     selector: 'contented-main',
     templateUrl: 'contented.ng.html'
 })
-export class ContentedCmp implements OnInit {
+export class ContentedCmp implements OnInit, OnDestroy {
 
     @Input() maxVisible: number = 2; // How many of the loaded containers should we be viewing
     @Input() rowIdx: number = 0; // Which row (media item) are we on
@@ -24,11 +25,11 @@ export class ContentedCmp implements OnInit {
     public previewWidth: number = 200; // Based on current client page sizes, scale the preview images natually
     public previewHeight: number = 200; // height for the previews ^
 
-    public currentViewItem: Media; // The current indexed item that is considered selected
     public currentDir: Container;
     public fullScreen: boolean = false; // Should we view fullscreen the current item
     public containers: Array<Container>; // Current set of visible containers
     public allD: Array<Container>; // All the containers we have loaded
+    public sub: Subscription;
 
     constructor(public _contentedService: ContentedService, public route: ActivatedRoute, public router: Router) {
     }
@@ -49,9 +50,15 @@ export class ContentedCmp implements OnInit {
         this.loadDirs(); // Do this after the param map load potentially
     }
 
+    ngOnDestroy() {
+        if (this.sub) {
+            this.sub.unsubscribe();
+        }
+    }
+
     // This will listen to nav events.
     public setupEvtListener() {
-        GlobalNavEvents.navEvts.subscribe(evt => {
+        this.sub = GlobalNavEvents.navEvts.subscribe(evt => {
             switch(evt.action) {
                 case NavTypes.NEXT_CONTAINER:
                     this.next();
@@ -79,7 +86,6 @@ export class ContentedCmp implements OnInit {
                 default:
                     break;
             }
-            this.setCurrentItem();
         });
     }
 
@@ -94,7 +100,6 @@ export class ContentedCmp implements OnInit {
     }
 
     public viewFullscreen() {
-        this.currentViewItem = this.getCurrentMedia();
         this.fullScreen = true;
     }
 
@@ -156,11 +161,6 @@ export class ContentedCmp implements OnInit {
             return cnts;
         }
         return [];
-    }
-
-    public setCurrentItem() {
-        this.currentViewItem = this.getCurrentMedia();
-        return this.currentViewItem;
     }
 
     public getCurrentContainer() {
@@ -237,7 +237,6 @@ export class ContentedCmp implements OnInit {
         this._contentedService.fullLoadDir(cnt).subscribe(
             (loadedDir: Container) => {
                 console.log("Fully loaded up the container", loadedDir);
-                this.setCurrentItem();
             },
             err => {console.error("Failed to load", err); }
         );
@@ -249,13 +248,13 @@ export class ContentedCmp implements OnInit {
             rowIdx = 0;
         }
         this.idx = idx;
+        currDir.rowIdx = rowIdx;
         this.rowIdx = rowIdx;
 
-        if (rowIdx < currDir.count) {
-            this.setCurrentItem();
-        } else if (this.rowIdx < currDir.total) {
+        // This handles the case where we need to fully load a container to reach the row
+        if (rowIdx > currDir.count) {
             this.fullLoadDir(currDir);
-        }
+        } 
     }
 
     public selectedMedia(media: Media, cnt: Container) {

@@ -147,6 +147,7 @@ describe('TestingContentedCmp', () => {
             imgs[3].src.replace("preview", "view"),
             "It should have the current item as the image but view"
         );
+        tick(1000);
     }));
 
     it("Should have a progress bar once the data is loaded", () => {
