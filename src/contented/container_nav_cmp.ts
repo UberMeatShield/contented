@@ -35,7 +35,7 @@ export class ContainerNavCmp implements OnInit, OnDestroy {
 
     private sub: Subscription;
 
-    constructor() {
+    constructor(public _contentedService: ContentedService) {
 
     }
 
@@ -52,8 +52,14 @@ export class ContainerNavCmp implements OnInit, OnDestroy {
         this.sub.unsubscribe();
     }
 
-    fullLoadDir(cnt: Container) {
-        console.log('This button should work in the nav');
+    fullLoadContainer(cnt: Container) {
+        console.log("Fully load container from btn click from nav");
+        this._contentedService.fullLoadDir(cnt).subscribe(
+            (loadedDir: Container) => {
+                console.log("Fully loaded up the container", loadedDir);
+            },
+            err => {console.error("Failed to load", err); }
+        );
     }
 }
 

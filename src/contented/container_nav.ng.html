@@ -1,4 +1,4 @@
-<div class="container-nav" [class.current-content-cnt]="active">
+<div class="container-nav-cmp" [class.current-content-cnt]="active">
   <div *ngIf="cnt">
     <mat-progress-bar
       [value]="cnt.count ? ((cnt.rowIdx + 1) * 100 / cnt.count) : 1"
@@ -24,7 +24,7 @@
         of <span class="cnt-total">{{cnt?.total}}</span> media
         <span *ngIf="cnt?.contents?.length < cnt.total">
           press (F) or: 
-          <button class="btn btn-primary" (click)="fullLoadDir(cnt)">
+          <button class="btn btn-primary btn-full-load-ctn" (click)="fullLoadContainer(cnt)">
             Load ({{ cnt.total - cnt.count }}) Items
           </button>
         </span>
