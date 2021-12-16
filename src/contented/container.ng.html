@@ -8,6 +8,7 @@
       >
       <!-- Assume that every preview is actually going to be an image -->
       <img class="preview-img"
+        [id]="'preview_' + mc.id"
         [class.current-img]="active && (mc === container.getCurrentMedia())"
         [src]="mc?.previewUrl" 
         (load)="imgLoaded($event)"

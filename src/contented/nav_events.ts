@@ -60,7 +60,7 @@ export class NavEvents {
     viewFullScreen(media: Media = null) {
         this.navEvts.emit({
             action: NavTypes.VIEW_FULLSCREEN,
-            cnt: media,
+            media: media,
         });
     }
 

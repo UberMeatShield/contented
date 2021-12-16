@@ -105,6 +105,15 @@ export class Container {
         let sorted = _.sortBy((this.contents || []).concat(contents), 'idx');
         console.log("What is going on", sorted);
         this.setContents(sorted);
+        return sorted;
+    }
+
+    public getMedia(rowIdx: number = null) {
+        rowIdx = rowIdx === null ? this.rowIdx : rowIdx;
+        if (rowIdx >= 0 && rowIdx < this.contents.length) {
+            return this.contents[rowIdx];
+        }
+        return null;
     }
 
     // This is the actual URL you can get a pointer to for the scroll / load

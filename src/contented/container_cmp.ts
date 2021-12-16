@@ -27,7 +27,7 @@ export class ContainerCmp implements OnInit, OnDestroy {
     public visibleSet: Array<Media>; // The currently visible set of items from in the container
     public sub: Subscription;
 
-    constructor() {
+    constructor(public _contentedService: ContentedService) {
 
     }
 
@@ -44,6 +44,9 @@ export class ContainerCmp implements OnInit, OnDestroy {
                         console.log("Prev in container");
                         this.prevMedia();
                         break;
+                    case NavTypes.SAVE_MEDIA:
+                        this.saveMedia();
+                        break;
                     default:
                         break;
                 }
@@ -53,6 +56,10 @@ export class ContainerCmp implements OnInit, OnDestroy {
 
     public ngOnDestroy() {
         this.sub.unsubscribe();
+    }
+
+    public saveMedia() {
+        this._contentedService.download(this.container, this.container.rowIdx);
     }
 
     public nextMedia() {

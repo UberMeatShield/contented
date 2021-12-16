@@ -120,33 +120,39 @@ describe('TestingContentedCmp', () => {
 
         let containers = MockData.getPreview();
         MockData.handleCmpDefaultLoad(httpMock, fixture);
-
-        expect(comp.fullScreen).toBe(false, "We should not be in fullsceen mode");
-        expect($('.contented-view-cmp').length).toBe(0, "It should now have a view component.");
+        expect($('.media-full-view').length).toBe(0, "It should not have a view");
         fixture.detectChanges();
         tick(1000);
+        fixture.detectChanges();
 
-        let d = comp.getCurrentContainer();
-        expect(d).toBeDefined("There should be a current container");
-        let cl = d.getContentList();
+        let cnt = comp.getCurrentContainer();
+        expect(cnt).toBeDefined("There should be a current container");
+        let cl = cnt.getContentList();
         expect(cl).toBeDefined("We should have a content list");
-        expect(cl.length).toBeGreaterThan(0, "And we should have content");
-
-        let currLoc = comp.getCurrentMedia();
-        expect(currLoc).toBeDefined("It should have a current location set");
+        expect(cl.length).toEqual(2, "And we should have content");
 
         fixture.detectChanges();
         let imgs = $('.preview-img');
-        expect(imgs.length > 1).toBe(true, "A bunch of images should be visible");
-        expect(comp.fullScreen).toBe(false, "We should not be in fullsceen mode even after everything is loaded");
+        expect(imgs.length).toBeGreaterThan(2, "A bunch of images should be visible");
+        expect($('.media-full-view').length).toBe(0, "It should not have a view");
 
         let toClick = $(imgs[3]).trigger('click');
-        currLoc = comp.getCurrentMedia();
-        expect(comp.fullScreen).toBe(true, "It should now have a selected item");
-        expect(currLoc.fullUrl).toBe(
-            imgs[3].src.replace("preview", "view"),
-            "It should have the current item as the image but view"
+        fixture.detectChanges();
+
+        let currLoc = $('.current-img');
+        let fullView = $('.full-view-img');
+        expect(currLoc.length).toBe(1, "It should be selected still");
+        expect(fullView.length).toBe(1, "It should now have a view");
+        expect(currLoc.prop('src').replace("preview", "view")).toBe(
+            fullView.prop("src"), "The full view should be /view/selectedId"
         );
+
+        // Because we select the 3rd image in the NEXT container set it should
+        // now attempt to load data from the newly visible container
+        let cnts = comp.getVisibleContainers()
+        let nextContainer = cnts[1];
+        let url = ApiDef.contented.media.replace("{cId}", nextContainer.id);
+        httpMock.expectOne(r => r.url == url);
         tick(1000);
     }));
 

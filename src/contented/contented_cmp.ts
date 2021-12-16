@@ -25,7 +25,7 @@ export class ContentedCmp implements OnInit, OnDestroy {
     public previewWidth: number = 200; // Based on current client page sizes, scale the preview images natually
     public previewHeight: number = 200; // height for the previews ^
 
-    public currentDir: Container;
+    // TODO: Remove this listener
     public fullScreen: boolean = false; // Should we view fullscreen the current item
     public containers: Array<Container>; // Current set of visible containers
     public allD: Array<Container>; // All the containers we have loaded
@@ -39,8 +39,8 @@ export class ContentedCmp implements OnInit, OnDestroy {
         this.route.paramMap.pipe().subscribe(
             (res: ParamMap) => {
                 this.setPosition(
-                    res.get('idx') ? parseInt(res.get('idx'), 10) : 0,
-                    res.get('rowIdx') ? parseInt(res.get('rowIdx'), 10) : 0
+                    res.get('idx') ? parseInt(res.get('idx'), 10) : this.idx,
+                    res.get('rowIdx') ? parseInt(res.get('rowIdx'), 10) : 0,
                 );
             },
             err => { console.error(err); }
@@ -72,39 +72,15 @@ export class ContentedCmp implements OnInit, OnDestroy {
                 case NavTypes.SELECT_MEDIA:
                     this.selectedMedia(evt.media, evt.cnt);
                     break;
-
-                // Little awkward how this works
-                case NavTypes.VIEW_FULLSCREEN:
-                    this.viewFullscreen();
-                    break;
-                case NavTypes.HIDE_FULLSCREEN:
-                    this.hideFullscreen();
-                    break;
-                case NavTypes.SAVE_MEDIA:
-                    this.saveItem();
-                    break;
                 default:
                     break;
             }
         });
     }
 
-    public saveItem() {
-        console.log("We should save an item", this.getCurrentContainer());
-        this._contentedService.download(this.getCurrentContainer(), this.rowIdx);
-    }
-
     public loadMore() {
         let visible = this.getVisibleContainers();
         this.loadMoreInDir(visible[0]);
-    }
-
-    public viewFullscreen() {
-        this.fullScreen = true;
-    }
-
-    public hideFullscreen() {
-        this.fullScreen = false;
     }
 
     // Mostly for tests since testing full routing params is a god damn pain.
@@ -154,9 +130,19 @@ export class ContentedCmp implements OnInit, OnDestroy {
             let start = this.idx < this.allD.length ? this.idx : this.allD.length - 1;
             let end = start + this.maxVisible <= this.allD.length ? start + this.maxVisible : this.allD.length;
 
+            // Only loads if cnt.loadState = LoadStates.NotLoaded
             let cnts = this.allD.slice(start, end);
-            _.each(cnts, cnt => {
-                this._contentedService.initialLoad(cnt);  // Only loads if cnt.loadState = LoadStates.NotLoaded
+            _.each(cnts, (cnt, idx) => {
+                let obs = this._contentedService.initialLoad(cnt); 
+                if (obs) { 
+                    obs.subscribe(
+                        media => {
+                            if (idx == this.idx) {
+                                GlobalNavEvents.selectMedia(cnt.getMedia(), cnt);
+                            }
+                        }, err => console.error
+                    );
+                }
             });
             return cnts;
         }
@@ -165,23 +151,25 @@ export class ContentedCmp implements OnInit, OnDestroy {
 
     public getCurrentContainer() {
         if (this.idx < this.allD.length && this.idx >= 0) {
-            this.currentDir = this.allD[this.idx];
-            return this.currentDir;
+            return this.allD[this.idx];
         }
         return null;
     }
 
     public updateRoute() {
-        this.router.navigate([`/ui/browse/${this.idx}/${this.rowIdx}`]);
+        let cnt = this.allD[this.idx];
+        this.router.navigate([`/ui/browse/${this.idx}/${cnt.rowIdx}`]);
     }
 
     public next(selectFirst: boolean = true) {
         if (this.allD && this.idx + 1 < this.allD.length) {
             this.idx++;
         }
+        let cnt = this.getCurrentContainer();
         if (selectFirst) {
-            this.rowIdx = 0;
+            cnt.rowIdx = 0;
         }
+        GlobalNavEvents.selectMedia(cnt.getMedia(), cnt);
         this.updateRoute();
     }
 
@@ -189,27 +177,13 @@ export class ContentedCmp implements OnInit, OnDestroy {
         if (this.idx > 0) {
             this.idx--;
         }
-        if (selectLast) {
-            let cnt = this.getCurrentContainer();
-            let items = cnt ? cnt.getContentList() : [];
-            this.rowIdx = items.length - 1;
-        }
-        this.updateRoute();
-    }
-
-    public imgLoaded(evt) {
-        let img = evt.target;
-        console.log("Img Loaded", img.naturalHeight, img.naturalWidth, img);
-    }
-
-    public getCurrentMedia() {
         let cnt = this.getCurrentContainer();
-        if (cnt && !_.isEmpty(cnt.getContentList())) {
-            let contentList = cnt.getContentList();
-            if (this.rowIdx >= 0 && this.rowIdx < contentList.length) {
-                return contentList[this.rowIdx];
-            }
+        if (selectLast) {
+            let items = cnt ? cnt.getContentList() : [];
+            cnt.rowIdx = items.length - 1;
         }
+        GlobalNavEvents.selectMedia(cnt.getMedia(), cnt);
+        this.updateRoute();
     }
 
     // TODO: Being called abusively in the cntective rather than on page resize events
@@ -228,7 +202,8 @@ export class ContentedCmp implements OnInit, OnDestroy {
         if (_.isEmpty(containers)) {
             this.emptyMessage = "No Directories found, did you load the DB?";
         } else {
-            this.loadView(this.idx, this.rowIdx);
+            // Maybe just read the current param from the route 
+            this.loadView(this.idx, this.rowIdx, true);
         }
         return this.allD;
     }
@@ -237,34 +212,36 @@ export class ContentedCmp implements OnInit, OnDestroy {
         this._contentedService.fullLoadDir(cnt).subscribe(
             (loadedDir: Container) => {
                 console.log("Fully loaded up the container", loadedDir);
+                GlobalNavEvents.selectMedia(cnt.getMedia(), cnt);
             },
             err => {console.error("Failed to load", err); }
         );
     }
 
-    public loadView(idx, rowIdx) {
+    public loadView(idx: number, rowIdx: number, triggerSelect: boolean = false) {
         let currDir = this.getCurrentContainer();
         if (rowIdx >= currDir.total) {
             rowIdx = 0;
         }
         this.idx = idx;
         currDir.rowIdx = rowIdx;
-        this.rowIdx = rowIdx;
 
         // This handles the case where we need to fully load a container to reach the row
         if (rowIdx > currDir.count) {
             this.fullLoadDir(currDir);
-        } 
+        } else if (triggerSelect) {
+            let cnt = this.getCurrentContainer();
+            GlobalNavEvents.selectMedia(cnt.getMedia(), cnt);
+        }
     }
 
+    // Could probably move this into a saner location
     public selectedMedia(media: Media, cnt: Container) {
         console.log("Click event, change currently selected indexes, container etc", media, cnt);
         let idx = _.findIndex(this.allD, {id: cnt ? cnt.id : -1});
-        let rowIdx = cnt ? _.findIndex(cnt.contents, {id: media.id}) : -1;
-        console.log("Found idx and row index: ", idx, rowIdx);
-        if (idx >= 0 && rowIdx >= 0) {
+        if (idx >= 0) {
             this.idx = idx;
-            this.rowIdx = rowIdx;
+            this.rowIdx = cnt.rowIdx;
             this.updateRoute();
         } else {
             console.error("Should not be able to click an item we cannot find.", cnt, media);
