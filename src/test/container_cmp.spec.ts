@@ -58,9 +58,9 @@ describe('TestingContainerCmp', () => {
     it('Should be able to page through to more items', () => {
         let fullResponse = MockData.getFullContainer();
         let dir = new Container(fullResponse);
+        dir.rowIdx = 1;
 
         let items = dir.getContentList();
-        comp.currentViewItem = items[1];
         comp.maxRendered = 4;
         comp.maxPrevItems = 1;
 
@@ -70,7 +70,7 @@ describe('TestingContainerCmp', () => {
         expect($('.preview-img', el).length).toBe(comp.maxRendered, "Should select second image");
 
         // Now test that when we are on the last image it properly selects that
-        comp.currentViewItem = items[items.length - 1]; // Choose the last item in the list.
+        dir.rowIdx = items.length - 1 // Choose the last item in the list.
         fixture.detectChanges();
         expect(comp.maxRendered < dir.contents.length).toBe(
             true,

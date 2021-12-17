@@ -32,12 +32,23 @@ export class Container {
     public renderable: Array<Media>;
     public visibleSet: Array<Media> = [];
 
+    // The currently selected Index
+    public rowIdx: number = 0;
+
     constructor(cnt: any) {
         this.total = _.get(cnt, 'total') || 0;
         this.id = _.get(cnt, 'id') || '';
         this.name = _.get(cnt, 'name') || '';
         this.previewUrl = _.get(cnt, 'previewUrl') || '';
         this.setContents(this.buildImgs(_.get(cnt, 'contents') || []));
+    }
+
+    public getCurrentMedia() {
+        let cntList = this.getContentList() || [];
+        if (this.rowIdx >= 0 && this.rowIdx < cntList.length) {
+            return cntList[this.rowIdx];
+        }
+        return cntList[0];
     }
 
     // For use in determining what should actually be visible at any time
@@ -94,6 +105,15 @@ export class Container {
         let sorted = _.sortBy((this.contents || []).concat(contents), 'idx');
         console.log("What is going on", sorted);
         this.setContents(sorted);
+        return sorted;
+    }
+
+    public getMedia(rowIdx: number = null) {
+        rowIdx = rowIdx === null ? this.rowIdx : rowIdx;
+        if (rowIdx >= 0 && rowIdx < this.contents.length) {
+            return this.contents[rowIdx];
+        }
+        return null;
     }
 
     // This is the actual URL you can get a pointer to for the scroll / load

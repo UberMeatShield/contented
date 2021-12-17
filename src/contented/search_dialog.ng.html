@@ -1,6 +1,7 @@
 <mat-dialog-content #SearchContent class="search-dialog">
   <div *ngIf="sizeCalculated">
-    <contented-view [container]="mediaContainer"
+    <contented-view [media]="mediaContainer"
+        [visible]="true"
         [forceWidth]="forceWidth"
         [forceHeight]="forceHeight"
     ></contented-view>

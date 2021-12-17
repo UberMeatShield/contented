@@ -123,17 +123,12 @@ export class ContentedService {
             cnt.loadState = LoadStates.Loading;
 
             let url = ApiDef.contented.media.replace('{cId}', cnt.id);
-            this.http.get(url, {
+            return this.http.get(url, {
                 params: this.getPaginationParams(0, this.LIMIT),
                 headers: this.options.headers
-            }).subscribe(
-                (imgData: Array<any>)  => {
-                    cnt.addContents(cnt.buildImgs(imgData));
-                },
-                err => {
-                    console.error("Failed to load container cnt", cnt.id, err);
-                }
-            );
+            }).pipe(map((imgData: Array<any>) => {
+                return cnt.addContents(cnt.buildImgs(imgData));
+            }));
         }
     }
 

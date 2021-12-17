@@ -1,78 +1,42 @@
 <div class="contented-cmp">
+
+  <contented-nav>Hmmm</contented-nav>
+
   <!-- TODO: A more generic error handling setup -->
   <div class="error no-content" *ngIf="emptyMessage">
     {{emptyMessage}}
   </div>
 
-  <div *ngIf="fullScreen">
-    <contented-view [container]="getCurrentLocation()"></contented-view>
+  <div>
+    <contented-view></contented-view>
   </div>
 
   <!-- Fix this to be better about how to get the currDir -->
   <div class="contented-cnt" name="contents" *ngFor="let cnt of getVisibleContainers()">
 
     <!-- Probably break this out into a container Info Component -->
-    <div class="container-contents" [class.current-content-cnt]="cnt === getCurrentContainer()">
-      <mat-progress-bar
-        [value]="cnt.count ? ((rowIdx + 1) * 100 / cnt.count) : 1"
-        [color]="'primary'"
-        [bufferValue]="cnt?.total"
-        [mode]="cnt.count === cnt.total ? 'determinate' : 'buffer'"
-      ></mat-progress-bar>
-
-      <mat-card class="container-meta" *ngIf="!!cnt">
+    <div class="container-contents">
+      <mat-card>
+        <!-- TODO: Definitely a nav bar -->
         <mat-card-subtitle>
-          <div class="container-bar">
-            <div class="container-preview-loc">
-              <img class="container-preview-img" [src]="cnt?.previewUrl">
-            </div>
-
-          <div class="container-bar-info">
-            <span class="bar-spacer">
-              {{idx + 1}} of {{allD?.length}} Containers.
-            </span>
-
-            <form class="container-meta-text bar-spacer">
-              Current Index: <input name="rowIdx" type="number" [(ngModel)]="rowIdx">
-              Loaded: <span class="cnt-max-count"> {{cnt?.contents?.length}}</span>
-              of <span class="cnt-total">{{cnt?.total}}</span> media
-              <span *ngIf="cnt?.contents?.length < cnt.total">
-                press (F) or: 
-                <button class="btn btn-primary" (click)="fullLoadDir(cnt)">
-                  Load ({{ cnt.total - cnt.count }}) Items
-                </button>
-              </span>
-            </form>
-
-            <div class="bar-spacer">Add a WASD</div>
-              <span class="bar-spacer">
-                Selected: 
-              <a target="window" class="cnt-name"
-                href="/containers/{{cnt?.id}}"
-              >{{cnt?.name}}</a>
-              <span *ngIf="currentViewItem">/</span> 
-              <a target="window" class="current-item" 
-                *ngIf="currentViewItem" 
-                href="{{currentViewItem.fullUrl}}">
-                {{currentViewItem?.src}}
-              </a>
-              &nbsp; {{currentViewItem?.content_type}}
-              </span>
-            </div>
-          </div>
+          <container-nav
+            [cnt]="cnt"
+            [active]="cnt === getCurrentContainer()"
+            [totalContainers]="allD?.length"
+            [rowIdx]="cnt.rowIdx"
+            [idx]="idx"
+          ></container-nav>
         </mat-card-subtitle>
+
+        <mat-card-content>
+          <container-cmp 
+            [container]="cnt" 
+            [active]="cnt === getCurrentContainer()"
+            [previewWidth]="previewWidth" 
+            [previewHeight]="previewHeight"
+          ></container-cmp>
+        </mat-card-content>
       </mat-card>
-
-      <mat-card-content>
-        <container-cmp 
-          [container]="cnt" 
-          [currentViewItem]="getCurrentLocation()"
-          (clickedItem)="cntItemClicked($event)"
-          [previewWidth]="previewWidth" 
-          [previewHeight]="previewHeight"
-        ></container-cmp>
-      </mat-card-content>
-
     </div>
   </div>
 </div>

@@ -1,28 +1,30 @@
 <div class="contented-view-cmp">
 
-  <!-- swap the terms here and make container into 'media' -->
-  <span *ngIf="container" class="max-full-url-path">
-    <a href="{{container?.fullUrl}}">
-      {{container.src}}({{container.content_type}})
-    </a>
-  </span>
-  <span *ngIf="!container">
-    No Url selected
-  </span>
+  <div *ngIf="visible">
+    <!-- swap the terms here and make media into 'media' -->
+    <span *ngIf="media" class="max-full-url-path">
+      <a href="{{media?.fullUrl}}">
+        {{media.src}}({{media.content_type}})
+      </a>
+    </span>
+    <span *ngIf="!media">
+      No Url selected
+    </span>
 
-  <div *ngIf="container"
-    class="container-full-view" 
-    style="width:{{maxWidth}}px; height: {{maxHeight}}px;"
-  >
-    {{container?.content_type}}
-    <img *ngIf="container?.isImage()" 
-      class="full-view-img" 
-      [src]="container.fullUrl"
+    <div *ngIf="media"
+      class="media-full-view" 
+      style="width:{{maxWidth}}px; height: {{maxHeight}}px;"
     >
+      {{media?.content_type}}
+      <img *ngIf="media?.isImage()" 
+        class="full-view-img" 
+        [src]="media.fullUrl"
+      >
 
-    <!-- TODO: should the fullscreen for a video should be totally different -->
-    <video *ngIf="container.isVideo()" [width]="maxWidth" height="maxHeight" controls>
-        <source [src]="container.fullUrl" [type]="container.content_type">
-    </video>
+      <!-- TODO: should the fullscreen for a video should be totally different -->
+      <video *ngIf="media.isVideo()" [width]="maxWidth" height="maxHeight" controls>
+          <source [src]="media.fullUrl" [type]="media.content_type">
+      </video>
+    </div>
   </div>
 </div>
