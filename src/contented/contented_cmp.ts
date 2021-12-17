@@ -61,10 +61,10 @@ export class ContentedCmp implements OnInit, OnDestroy {
         this.sub = GlobalNavEvents.navEvts.subscribe(evt => {
             switch(evt.action) {
                 case NavTypes.NEXT_CONTAINER:
-                    this.next();
+                    this.next(true);
                     break;
                 case NavTypes.PREV_CONTAINER:
-                    this.prev();
+                    this.prev(true);
                     break;
                 case NavTypes.LOAD_MORE:
                     this.loadMore();
@@ -164,6 +164,8 @@ export class ContentedCmp implements OnInit, OnDestroy {
     public next(selectFirst: boolean = true) {
         if (this.allD && this.idx + 1 < this.allD.length) {
             this.idx++;
+        } else {
+            return;
         }
         let cnt = this.getCurrentContainer();
         if (selectFirst) {
@@ -176,6 +178,8 @@ export class ContentedCmp implements OnInit, OnDestroy {
     public prev(selectLast: boolean = false) {
         if (this.idx > 0) {
             this.idx--;
+        } else {
+            return;
         }
         let cnt = this.getCurrentContainer();
         if (selectLast) {
