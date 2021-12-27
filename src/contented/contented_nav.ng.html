@@ -1,3 +1,40 @@
 <div class="contented-nav-cmp">
-  Nav Events
+  <div matRipple [matRippleTrigger]="trigger" class="nav-options">
+    <button id="BTN_w" title="Move up a container"
+      type="button" mat-button
+      (click)="handleKey('w')"
+    >w</button>
+    <button id="BTN_a" title="Select the previous media in current container"
+      type="button" mat-button
+      (click)="handleKey('a')"
+    >a</button>
+    <button id="BTN_s" title="Move down a container"
+      type="button" mat-button
+      (click)="handleKey('s')"
+    >s</button>
+    <button id="BTN_d" title="Select the next media in the current container"
+      type="button" mat-button
+      (click)="handleKey('d')"
+    >d</button>
+    <button id="BTN_e" title="View the currently selected media in fullscreen"
+      type="button" mat-button
+      (click)="handleKey('e')"
+    >e</button>
+    <button id="BTN_q" title="Hide any fullscreen media"
+      type="button" mat-button
+      (click)="handleKey('q')"
+    >q</button>
+    <button id="BTN_f" title="Load more entries in the current container (if not fully loaded)"
+      type="button" mat-button
+      (click)="handleKey('f')"
+    >f</button>
+    <button id="BTN_x" title="Download a currently selected piece of media"
+      type="button" mat-button
+      (click)="handleKey('x')"
+    >x</button>
+    Nav Events
+  </div>
+  <div #trigger id="nav-contented-evts">
+    <!-- Could use this to scroll in or other evts, but mainly lets us manually trigger on keypress-->
+  </div>
 </div>

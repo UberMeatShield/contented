@@ -8,6 +8,7 @@ import {MatInputModule} from '@angular/material/input';
 import {MatDialogModule} from '@angular/material/dialog';
 import {MatButtonModule} from '@angular/material/button';
 import {MatPaginatorModule} from '@angular/material/paginator';
+import {MatRippleModule} from '@angular/material/core';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 
 import {ContentedCmp} from './contented_cmp';
@@ -33,6 +34,7 @@ import {Media} from './media';
       MatFormFieldModule,
       MatInputModule,
       MatPaginatorModule,
+      MatRippleModule,
   ],
   declarations: [ContentedCmp, ContentedNavCmp, ContentedViewCmp, ContainerCmp, ContainerNavCmp, SearchCmp, SearchDialog],
   exports: [ContentedCmp, ContentedNavCmp, ContentedViewCmp, ContainerCmp, ContainerNavCmp, SearchCmp, SearchDialog],
