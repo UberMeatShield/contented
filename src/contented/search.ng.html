@@ -1,6 +1,6 @@
 <div class="search-cmp">
   <form #searchForm [formGroup]="options">
-    <mat-form-field apperance="fill" floatLabel="true">
+    <mat-form-field apperance="fill" floatLabel="true" class="search-field">
       <mat-label>
         Search Media
       </mat-label>
@@ -9,13 +9,16 @@
         matInput placeholder=""
       >
     </mat-form-field>
+    <a href="/ui/browse/0/0">Browse</a>
+  </form>
 
+  <div>
     <mat-paginator
       [length]="total"
       [pageSize]="pageSize"
       (page)="pageEvt($event)"
     ></mat-paginator>
-  </form>
+  </div>
 
   <div class="search-results" *ngIf="!!media">
      <div class="preview-content search-result"
