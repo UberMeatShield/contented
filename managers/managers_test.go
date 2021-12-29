@@ -202,16 +202,16 @@ func (as *ActionSuite) Test_MemoryManagerSearch() {
     as.NotNil(containers, "It should have containers")
     as.Equal(len(*containers), 4, "It should have 4 of them")
 
-    mcs, total, err := man.SearchMedia("donut", 1, 20)
+    mcs, total, err := man.SearchMedia("donut", 1, 20, "")
     as.NoError(err, "Can we search in the memory manager")
     as.Equal(len(*mcs), 1, "One donut should be found")
     as.Equal(total, len(*mcs), "It should get the total right")
 
-    mcs_1, _, err_1 := man.SearchMedia("Large", 1, 6)
+    mcs_1, _, err_1 := man.SearchMedia("Large", 1, 6, "")
     as.NoError(err_1, "Can we search in the memory manager")
     as.Equal(3, len(*mcs_1), "One donut should be found")
 
-    all_mc, _, err_all := man.SearchMedia("", 0, 9000)
+    all_mc, _, err_all := man.SearchMedia("", 0, 9000, "")
     as.NoError(err_all, "Can in search everything")
     as.Equal(25, len(*all_mc), "The Kitchen sink")
 }
@@ -230,12 +230,12 @@ func (as *ActionSuite) Test_DbManagerSearch() {
     for _, mc := range media {
         models.DB.Create(&mc)
     }
-    mcs, _, err := man.SearchMedia("Large", 1, 20)
+    mcs, _, err := man.SearchMedia("Large", 1, 20, "")
     as.NoError(err, "It should be able to search")
     as.NotNil(mcs, "It should be")
     as.Equal(3, len(*mcs), "We should have 3 large images with an ilike compare")
 
-    all_mcs, total, err := man.SearchMedia("", 1, 10)
+    all_mcs, total, err := man.SearchMedia("", 1, 10, "")
     as.NoError(err, "It should be able to empty search")
     as.Equal(12, total, "The total count for this dir is 12")
     as.Equal(10, len(*all_mcs), "But we limited the pagination")
