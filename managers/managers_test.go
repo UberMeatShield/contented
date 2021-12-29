@@ -216,6 +216,12 @@ func (as *ActionSuite) Test_MemoryManagerSearch() {
     as.Equal(25, len(*all_mc), "The Kitchen sink")
 }
 
+func (as* ActionSuite) Test_MemoryManagerSearchMulti() {
+    // Test that a search restricting containerID works
+    // Test that search restricting container and text works
+    as.Equal("TODO", "NOT IMPLEMENTED")
+}
+
 // A basic DB search (ilike matching)
 func (as *ActionSuite) Test_DbManagerSearch() {
     models.DB.TruncateAll()
@@ -239,6 +245,12 @@ func (as *ActionSuite) Test_DbManagerSearch() {
     as.NoError(err, "It should be able to empty search")
     as.Equal(12, total, "The total count for this dir is 12")
     as.Equal(10, len(*all_mcs), "But we limited the pagination")
+}
+
+func (as* ActionSuite) Test_DbManagerSearchMulti() {
+    // Test that a search restricting containerID works
+    // Test that search restricting container and text works
+    as.Equal("TODO", "NOT IMPLEMENTED")
 }
 
 func (as *ActionSuite) Test_MemoryPreviewInitialization() {
