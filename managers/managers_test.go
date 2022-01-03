@@ -219,7 +219,52 @@ func (as *ActionSuite) Test_MemoryManagerSearch() {
 func (as* ActionSuite) Test_MemoryManagerSearchMulti() {
     // Test that a search restricting containerID works
     // Test that search restricting container and text works
-    as.Equal("TODO", "NOT IMPLEMENTED")
+    internals.InitFakeApp(false)
+    //man := GetManagerActionSuite(cfg, as)
+    ctx := internals.GetContext(as.App)
+    man := GetManager(&ctx)
+
+    // Ensure we initialized with a known search
+    as.Equal(man.CanEdit(), false)
+    mcs, total, err := man.SearchMedia("donut", 1, 20, "")
+    as.NoError(err, "Can we search in the memory manager")
+    as.Equal(len(*mcs), 1, "One donut should be found")
+    as.Equal(total, len(*mcs), "It should get the total right")
+
+    cnts, eep := man.ListContainers(0, 10)
+    as.NoError(eep, "It should have 4 containers")
+    as.Greater(len(*cnts), 1, "We should have containers")
+
+
+    allMedia, errAll := man.ListAllMedia(0, 50)
+    as.Greater(len(*allMedia), 0, "We should have media")
+    as.NoError(errAll)
+
+    all_media, wild_total, _ := man.SearchMedia("", 0, 40, "")
+    as.Greater(wild_total, 0)
+    as.Equal(len(*all_media), wild_total)
+
+
+    for _, cnt := range *cnts {
+        if cnt.Name == "dir1" {
+            _, no_total, n_err := man.SearchMedia("donut", 1, 20, cnt.ID.String())
+            as.NoError(n_err)
+            as.Equal(no_total, 0, "It should not be in this directory")
+        }
+        if cnt.Name == "dir2" {
+            yes_match, y_total, r_err := man.SearchMedia("donut", 1, 20, cnt.ID.String())
+            as.NoError(r_err)
+            as.Equal(y_total, 1, "We did not find the expected media")
+
+            movie := (*yes_match)[0]
+            as.Equal(movie.Src, "donut.mp4")
+        } 
+        if cnt.Name == "dir3" {
+            has_media, _, err := man.SearchMedia("", 0, 1, cnt.ID.String())
+            as.NoError(err, "We should have media")
+            as.Greater(len(*has_media), 0)
+        }
+    }
 }
 
 // A basic DB search (ilike matching)
@@ -250,8 +295,34 @@ func (as *ActionSuite) Test_DbManagerSearch() {
 func (as* ActionSuite) Test_DbManagerSearchMulti() {
     // Test that a search restricting containerID works
     // Test that search restricting container and text works
-    as.Equal("TODO", "NOT IMPLEMENTED")
+    models.DB.TruncateAll()
+    cfg := internals.InitFakeApp(true)
+
+    man := GetManagerActionSuite(cfg, as)
+    as.Equal(man.CanEdit(), true)
+
+    cnt1, media1, err1 := internals.CreateMediaByDirName("dir1")
+    as.NoError(err1)
+    as.Greater(len(media1), 1)
+
+    cnt2, media2, err2 := internals.CreateMediaByDirName("dir2")
+    as.NoError(err2)
+    as.Greater(len(media2), 1)
+
+    found, count, err := man.SearchMedia(media1[1].Src, 0, 10, cnt1.ID.String())
+    as.Equal(len(*found), 1, "We should have found our item")
+    as.Equal(count, 1)
+    as.NoError(err)
+
+    _, n_count, n_err := man.SearchMedia("blah", 0, 10, cnt1.ID.String())
+    as.Equal(n_count, 0, "It should not find this the media name is invalid")
+    as.NoError(n_err)
+    
+    _, not_in_cnt_count, not_err := man.SearchMedia(media1[1].Src, 0, 10, cnt2.ID.String())
+    as.Equal(not_in_cnt_count, 0, "It should not find this valid media as it is not in the container")
+    as.NoError(not_err)
 }
+
 
 func (as *ActionSuite) Test_MemoryPreviewInitialization() {
     cfg := internals.ResetConfig()

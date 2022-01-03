@@ -102,13 +102,16 @@ func (cm ContentManagerMemory) SearchMediaContext() (*models.MediaContainers, in
 
 
 func (cm ContentManagerMemory) SearchMedia(search string, page int, per_page int, containerID string) (*models.MediaContainers, int, error) {
-
-
     filteredMedia, cErr := cm.getMediaFiltered(containerID, search)
     if cErr != nil {
         return nil, 0, cErr
     }
+    if filteredMedia == nil {
+        empty := models.MediaContainers{}
+        return &empty, 0, nil
+    }
 
+    // HMMMM
     mc_arr := *filteredMedia
     count := len(mc_arr)
     offset, end := GetOffsetEnd(page, per_page, count)
@@ -134,8 +137,9 @@ func (cm ContentManagerMemory) getMediaFiltered(containerID string, search strin
                     fp_arr = append(fp_arr, mc)
                 }
             }
+        } else {
+            return nil, cErr
         }
-        return nil, cErr
     } else {
         // Empty string for containerID is considered match all media
         for _, mc := range cm.ValidMedia {
