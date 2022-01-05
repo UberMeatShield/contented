@@ -1,22 +1,19 @@
 package managers
 
 import (
-    //"path/filepath"
     "os"
     "io/ioutil"
 	"contented/models"
 	"contented/utils"
 	"contented/internals"
     "encoding/json"
-    //"time"
-	//"os"
-	//"testing"
-	//"github.com/gobuffalo/buffalo"
     "github.com/gofrs/uuid"
     "github.com/gobuffalo/nulls"
     "github.com/gobuffalo/envy"
     "github.com/gobuffalo/suite"
 )
+
+var TOTAL_IN_SCREENS = 6
 
 type ActionSuite struct {
     *suite.Action
@@ -58,7 +55,7 @@ func (as *ActionSuite) Test_InitialCreation() {
 
     media := models.MediaContainers{}
     as.DB.All(&media)
-    as.Equal(25, len(media), "The mocks have a specific expected number of items")
+    as.Equal(27, len(media), "The mocks have a specific expected number of items")
 }
 
 func (as *ActionSuite) Test_CfgIncExcFiles() {
@@ -124,7 +121,7 @@ func (as *ActionSuite) Test_CreatePreview() {
     c_pt, media := GetScreens()
     err := ClearContainerPreviews(c_pt)
     as.NoError(err, "It should nuke out the preview directory")
-    as.Equal(len(media), 4, "There should be 4 of these in the screens dir")
+    as.Equal(TOTAL_IN_SCREENS, len(media), "There should be 4 of these in the screens dir")
 
     dstPath := GetContainerPreviewDst(c_pt)
     dir_err := utils.MakePreviewPath(dstPath)
@@ -140,7 +137,7 @@ func (as *ActionSuite) Test_CreatePreview() {
     }
 
     previews, read_err := ioutil.ReadDir(dstPath)
-    as.Equal(len(previews), 4, "It should create 4 previews")
+    as.Equal(TOTAL_IN_SCREENS, len(previews), "It should create 4 previews")
     as.NoError(read_err, "It should be able to read the directory")
 }
 
@@ -177,13 +174,13 @@ func (as *ActionSuite) Test_CreateContainerPreviews() {
     as.NoError(p_err, "An error happened creating the previews")
     dstPath := GetContainerPreviewDst(c_pt)
     previews, read_err := ioutil.ReadDir(dstPath)
-    as.Equal(len(previews), 4, "It should create 4 previews")
+    as.Equal(TOTAL_IN_SCREENS, len(previews), "It should create 4 previews")
     as.NoError(read_err, "It should be able to read the directory")
 
     // Validate that the media was updated in the DB
     media_check := models.MediaContainers{}
     models.DB.Where("container_id = ?", c_pt.ID).All(&media_check)
-    as.Equal(len(media_check), 4, "We should just have 4 things to check")
+    as.Equal(TOTAL_IN_SCREENS, len(media_check), "We should just have 4 things to check")
     for _, mc_check := range media_check {
         as.NotEqual(mc_check.Preview, "", "It should now have a preview")
     }
