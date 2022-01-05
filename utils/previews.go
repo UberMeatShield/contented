@@ -196,7 +196,7 @@ func CreateVideoPreview(srcFile string, dstFile string, contentType string) (str
 }
 
 func CreatePngFromVideo(srcFile string, dstFile string) (string, error) {
-    reader := ReadFrameAsJpeg(srcFile, 2)  // Determine how to get a better frame
+    reader := ReadFrameAsJpeg(srcFile, 20)  // Determine how to get a better frame
     img, err := imaging.Decode(reader)
     if err != nil {
         log.Fatalf("Failed to decode the image from the processing %s\n", err)
