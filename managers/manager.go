@@ -42,7 +42,7 @@ type ContentManager interface {
     ListMediaContext(ContainerID uuid.UUID) (*models.MediaContainers, error)
     ListAllMedia(page int, per_page int) (*models.MediaContainers, error)
     SearchMediaContext() (*models.MediaContainers, int, error)
-    SearchMedia(search string, page int, per_page int) (*models.MediaContainers, int, error)
+    SearchMedia(search string, page int, per_page int, cId string) (*models.MediaContainers, int, error)
 
     UpdateContainer(c *models.Container) error
     UpdateMedia(media *models.MediaContainer) error

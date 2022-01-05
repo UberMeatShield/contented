@@ -18,6 +18,7 @@ import (
     "github.com/gobuffalo/x/sessions"
     "github.com/rs/cors"
     "github.com/gobuffalo/buffalo-pop/v2/pop/popmw"
+    "github.com/gobuffalo/nulls"
 )
 
 // Create the basic app but without routes, useful for testing the managers but not routes
@@ -120,6 +121,25 @@ func InitFakeApp(use_db bool) *utils.DirConfigEntry {
     }
 	return cfg
 }
+
+func CreateMediaByDirName(test_dir_name string) (*models.Container, models.MediaContainers, error) {
+    cnt, media := GetMediaByDirName(test_dir_name)
+
+    c_err := models.DB.Create(cnt)
+    if c_err != nil {
+        return nil, nil, c_err
+    }
+    for _, mc := range media {
+        mc.ContainerID = nulls.NewUUID(cnt.ID)
+        m_err := models.DB.Create(&mc)
+        if m_err != nil {
+            return nil, nil, m_err
+        }
+    }
+    return cnt, media, nil
+}
+
+
 
 func GetMediaByDirName(test_dir_name string) (*models.Container, models.MediaContainers) {
     dir, _ := envy.MustGet("DIR")

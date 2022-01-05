@@ -104,10 +104,11 @@ func (cm ContentManagerDB) SearchMediaContext() (*models.MediaContainers, int, e
     params := cm.Params()
     _, per_page, page := GetPagination(params, cm.cfg.Limit)
     searchStr := StringDefault(params.Get("text"), "")
-    return cm.SearchMedia(searchStr, page, per_page)
+    cId := StringDefault(params.Get("cId"), "")
+    return cm.SearchMedia(searchStr, page, per_page, cId)
 }
 
-func (cm ContentManagerDB) SearchMedia(search string, page int, per_page int) (*models.MediaContainers, int, error) {
+func (cm ContentManagerDB) SearchMedia(search string, page int, per_page int, cId string) (*models.MediaContainers, int, error) {
     mediaContainers := &models.MediaContainers{}
     tx := cm.GetConnection()
 
@@ -117,6 +118,9 @@ func (cm ContentManagerDB) SearchMedia(search string, page int, per_page int) (*
         search = ("%" + search + "%")
         q = q.Where(`src like ?`, search)
     } 
+    if cId != "" {
+        q = q.Where(`container_id = ?`, cId)
+    }
     count, _ := q.Count(&models.MediaContainers{})
     log.Printf("Total count of search media %d", count)
 
