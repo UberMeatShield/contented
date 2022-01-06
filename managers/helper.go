@@ -10,6 +10,7 @@ package managers
 import (
     "os"
     "log"
+    "fmt"
     // "time"
     // "strings"
     "path/filepath"
@@ -55,6 +56,8 @@ func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
         for _, mc := range media {
             mc.ContainerID = nulls.NewUUID(dir.ID) 
             c_err := models.DB.Create(&mc)
+
+            // This is pretty damn fatal so we want it to die if the DB bails.
             if c_err != nil {
                 log.Fatal(c_err)
             }
@@ -93,11 +96,16 @@ func CreateAllPreviews(cm ContentManager) error {
     if len(*cnts) == 0 {
         return errors.New("No Containers were found in the database")
     }
+
+    err_msg := ""
     for _, cnt := range *cnts {
         err := CreateContainerPreviews(&cnt, cm)    
         if err != nil {
-            return err
+            err_msg += fmt.Sprintf("Error creating previews %s\n", err)
         }
+    }
+    if err_msg != "" {
+        return errors.New(err_msg)
     }
     return nil
 }
@@ -109,7 +117,7 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
     c_err := ClearContainerPreviews(c)
     if c_err == nil {
         err := utils.MakePreviewPath(GetContainerPreviewDst(c))
-        if err != nil {
+        if err != nil {  // This is pretty fatal if we don't have dist permission
             log.Fatal(err)
         }
     }
@@ -117,12 +125,11 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
     // TODO: It should fix up the total count there (-1 for unlimited?)
     media, q_err := cm.ListMedia(c.ID, 0, 90000)
     if q_err != nil {
-        log.Fatal(q_err)
-        return q_err
+        log.Fatal(q_err)  // Also fatal if we can no longer list media
     }
-    log.Printf("Found a set of media to make previews for %d", len(*media))
 
     // It would be nice to maybe abstract this into a better place?
+    log.Printf("Found a set of media to make previews for %d", len(*media))
     if media != nil && len(*media) > 0 {
         mcs := *media
         c.PreviewUrl = "/preview/" + mcs[0].ID.String()
@@ -130,17 +137,16 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
         cm.UpdateContainer(c)
     }
 
-    // TODO: Make it so that we are fault tolerant but have a better option for later
     update_list, err := CreateMediaPreviews(c, *media)
-    if err != nil {
-        return err 
-    }
-    log.Printf("Finished creating previews, updating the database %d", len(update_list))
+    log.Printf("Finished creating previews, now updating the database %d", len(update_list))
     for _, mc := range update_list {
         if mc.Preview != "" {
             log.Printf("Created a preview %s for mc %s", mc.Preview, mc.ID.String())
             cm.UpdateMedia(&mc)
         }
+    }
+    if err != nil {
+        return err 
     }
     return nil
 }
@@ -171,7 +177,6 @@ func CreateMediaPreviews(c *models.Container, media models.MediaContainers) (mod
     mediaMap := models.MediaMap{}
     for _, mc := range media {
         mediaMap[mc.ID] = mc
-
         ref_mc := mc
         input <- utils.PreviewRequest{
             C: c,
@@ -241,11 +246,12 @@ func CreateMediaPreview(c *models.Container, mc *models.MediaContainer) (string,
     cntPath := filepath.Join(cfg.Dir, c.Name)
     dstPath := GetContainerPreviewDst(c)
 
-    // TODO: ensure that other content does not explode...
     dstFqPath, err := utils.GetImagePreview(cntPath, mc.Src, dstPath, cfg.PreviewOverSize)
     if err != nil {
-        log.Fatal(err)
-        return "", err
+        log.Printf("Failed to create a preview in %s for mc %s err: %s", dstPath, mc.ID.String(), err)
+        if cfg.PreviewCreateFailIsFatal {
+            log.Fatal(err)
+        }
     }
     return utils.GetRelativePreviewPath(dstFqPath, cntPath), err
 }

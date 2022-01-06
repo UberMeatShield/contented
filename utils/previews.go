@@ -115,29 +115,28 @@ func CreateImagePreview(srcImg *os.File, dstFile string, contentType string) (st
 		return "", errors.New("Cannot handle type for file: " + fname.Name())
 	}
 	if dErr != nil {
-		log.Fatal(dErr)
+        log.Printf("Failed to determine image type %s for %s", dstFile, dErr)
+        return "", dErr
 	}
 
 	// Now creat the preview image
 	dstImg := resize.Resize(640, 0, img, resize.Lanczos3)
 	previewImg, errCreate := os.Create(dstFile)
 	if errCreate != nil {
-		log.Fatal(errCreate)
-		return "Error" + dstFile, errCreate
+        log.Printf("Failed to create a preview %s for %s img", errCreate, dstFile)
+        return "", errCreate
 	}
 
-	// All previews should then be jpeg (change file extensioni?)
+	// All previews should then be jpeg (change file extension)?
 	jpeg.Encode(previewImg, dstImg, nil)
 	return dstFile, previewImg.Close()
 }
 
 // Make sure dstPath already exists before you call this (MakePreviewPath)
 func GetImagePreview(path string, filename string, dstPath string, pIfSize int64) (string, error) {
-
 	// Try and determine the content type (required for doing encoding and decoding)
 	contentType, tErr := GetMimeType(path, filename)
 	if tErr != nil {
-		log.Fatal(tErr)
 		return "Could not determine img type", tErr
 	}
 
@@ -152,8 +151,8 @@ func GetImagePreview(path string, filename string, dstPath string, pIfSize int64
 	fqFile := filepath.Join(path, filename)
 	srcImg, fErr := os.Open(fqFile)
 	if fErr != nil {
-		log.Fatal(fErr)
-		return "Error Generating Preview", fErr
+        log.Printf("Could not open %s err %s", fqFile, fErr)
+		return "Error opening file to to create preview", fErr
 	}
 	defer srcImg.Close()
 
@@ -199,7 +198,7 @@ func CreatePngFromVideo(srcFile string, dstFile string) (string, error) {
     reader := ReadFrameAsJpeg(srcFile, 20)  // Determine how to get a better frame
     img, err := imaging.Decode(reader)
     if err != nil {
-        log.Fatalf("Failed to decode the image from the processing %s\n", err)
+        log.Printf("Failed to decode the image from the processing %s\n", err)
         return "", err
     }
 
@@ -207,7 +206,7 @@ func CreatePngFromVideo(srcFile string, dstFile string) (string, error) {
     resizedImg := imaging.Resize(img, 640, 0, imaging.Lanczos)
     err = imaging.Save(resizedImg, dstFile)
     if err != nil {
-        log.Fatalf("Could not save the image %s with error %s\n", dstFile, err)
+        log.Printf("Could not save the image %s with error %s\n", dstFile, err)
         return "", err
     }
     return dstFile, nil
@@ -253,7 +252,7 @@ func CreateGifFromVideo(srcFile string, dstFile string) (string, error) {
         }).OverWriteOutput().Run()
         
     if err != nil {
-        log.Fatalf("Failed to create the gif output %s\n with err: %s\n", dstFile, err)
+        log.Printf("Failed to create the gif output %s\n with err: %s\n", dstFile, err)
     }
     return dstFile, err
 }

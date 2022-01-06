@@ -22,6 +22,7 @@ type MediaContainer struct {
 	ContainerID nulls.UUID `json:"container_id" db:"container_id"`
 	Idx         int        `json:"idx" db:"idx"`
 	Active      bool       `json:"active" db:"active"`
+	Corrupt     bool       `json:"corrupt" db:"corrupt"`
 }
 
 // String is not required by pop and may be deleted

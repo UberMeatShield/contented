@@ -152,14 +152,17 @@ func (as *ActionSuite) Test_CreateContainerPreviews() {
     c_pt, media := SetupScreensPreview(as)
     c_err := models.DB.Create(c_pt)
     as.NoError(c_err)
+    
+    nulls.NewUUID(c_pt.ID)
+    as.Greater(len(media), 0, "We should have media")
 
+    // Check that we have a container preview at this point
     expect_c_preview := ""
     for _, mc := range media {
         mc.ContainerID = nulls.NewUUID(c_pt.ID)
         mc_err := models.DB.Create(&mc)
         as.NoError(mc_err)
         as.Equal(mc.Preview, "", "There should be no preview at this point")
-
         if expect_c_preview == "" {
             expect_c_preview = "/preview/" + mc.ID.String()
         }
@@ -174,13 +177,13 @@ func (as *ActionSuite) Test_CreateContainerPreviews() {
     as.NoError(p_err, "An error happened creating the previews")
     dstPath := GetContainerPreviewDst(c_pt)
     previews, read_err := ioutil.ReadDir(dstPath)
-    as.Equal(TOTAL_IN_SCREENS, len(previews), "It should create 4 previews")
+    as.Equal(TOTAL_IN_SCREENS, len(previews), "It should create 6 previews")
     as.NoError(read_err, "It should be able to read the directory")
 
     // Validate that the media was updated in the DB
     media_check := models.MediaContainers{}
     models.DB.Where("container_id = ?", c_pt.ID).All(&media_check)
-    as.Equal(TOTAL_IN_SCREENS, len(media_check), "We should just have 4 things to check")
+    as.Equal(TOTAL_IN_SCREENS, len(media_check), "We should just have 6 things to check")
     for _, mc_check := range media_check {
         as.NotEqual(mc_check.Preview, "", "It should now have a preview")
     }
@@ -193,7 +196,7 @@ func (as *ActionSuite) Test_AsyncContainerPreviews() {
     cfg := utils.GetCfg()
     cfg.PreviewOverSize = 0
     previews, err := CreateMediaPreviews(c_pt, media)
-    as.NoError(err)
+    as.NoError(err, "It should be able to create all previews successfully")
 
     as.Equal(len(previews), len(media), "With size zero we should have 4 previews")
     for _, p_mc := range previews {
