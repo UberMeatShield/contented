@@ -101,7 +101,7 @@ func CreateAllPreviews(cm ContentManager) error {
     for _, cnt := range *cnts {
         err := CreateContainerPreviews(&cnt, cm)    
         if err != nil {
-            err_msg += fmt.Sprintf("Error creating previews %s\n", err)
+            err_msg += fmt.Sprintf("Error creating previews in cnt %s err: %s\n", cnt.ID.String(), err)
         }
     }
     if err_msg != "" {
@@ -145,10 +145,7 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
             cm.UpdateMedia(&mc)
         }
     }
-    if err != nil {
-        return err 
-    }
-    return nil
+    return err
 }
 
 func CreateMediaPreviews(c *models.Container, media models.MediaContainers) (models.MediaContainers, error) {
@@ -209,11 +206,11 @@ func CreateMediaPreviews(c *models.Container, media models.MediaContainers) (mod
         } else {
             log.Printf("Missing Response ID, something went wrong %s\n", result.MC_ID)
         }
+        log.Printf("Found a result for %s\n", result.MC_ID.String())
         if result.Err != nil {
             log.Printf("ERROR: Failed to create a preview %s\n", result.Err)
             error_list += "" + result.Err.Error()
         }
-        log.Printf("Found a result for %s\n", result.MC_ID.String())
     }
     if error_list != "" {
         return previews, errors.New(error_list)

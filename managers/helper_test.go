@@ -217,6 +217,7 @@ func (as *ActionSuite) Test_PreviewAllData() {
     cfg := utils.GetCfg()
     cfg.UseDatabase = true
     cfg.Dir = dir
+    cfg.ExcFiles = utils.CreateMatcher("corrupted", "", cfg.ExcludeOperator)
 
     c_err := CreateInitialStructure(cfg)
     man := GetManagerActionSuite(cfg, as)
@@ -228,6 +229,7 @@ func (as *ActionSuite) Test_PreviewAllData() {
     as.NoError(c_err, "Failed to build out the initial database")
     as.Equal(true, man.CanEdit(), "It should be able to edit")
 
+    // Exclude the corrupted files
     cfg.PreviewOverSize = 0
     all_created_err := CreateAllPreviews(man)
     as.NoError(all_created_err, "Failed to create all previews")
