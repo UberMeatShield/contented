@@ -250,7 +250,8 @@ func (as *ActionSuite) Test_PreviewsWithCorrupted() {
     cfg.Dir = dir
 
     // Match only our corrupted files
-    cfg.IncFiles = utils.CreateMatcher("corrupted", "", cfg.IncludeOperator)
+    cfg.IncFiles = utils.CreateMatcher(".*corrupted.*", "", cfg.IncludeOperator)
+    cfg.ExcFiles = utils.ExcludeNoFiles
 
     c_err := CreateInitialStructure(cfg)
     man := GetManagerActionSuite(cfg, as)
@@ -259,7 +260,7 @@ func (as *ActionSuite) Test_PreviewsWithCorrupted() {
 
     media, m_err := man.ListAllMedia(0, 42)
     as.NoError(m_err)
-    as.Equal(len(*media), 2, "It should all be loaded in the db")
+    as.Equal(2, len(*media), "It should all be loaded in the db")
     for _, mc := range *media {
         as.Equal(mc.Corrupt, false, "And at this point nothing is corrupt")
     }

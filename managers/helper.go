@@ -138,10 +138,12 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
     }
 
     update_list, err := CreateMediaPreviews(c, *media)
-    log.Printf("Finished creating previews, now updating the database %d", len(update_list))
+    log.Printf("Finished creating previews, now updating the database count(%d)", len(update_list))
     for _, mc := range update_list {
         if mc.Preview != "" {
             log.Printf("Created a preview %s for mc %s", mc.Preview, mc.ID.String())
+            cm.UpdateMedia(&mc)
+        } else if (mc.Corrupt) {
             cm.UpdateMedia(&mc)
         }
     }
@@ -195,21 +197,24 @@ func CreateMediaPreviews(c *models.Container, media models.MediaContainers) (mod
         } 
 
         // Get a list of just the preview items?  Or just update by reference?
+        log.Printf("Found a result for %s\n", result.MC_ID.String())
         if mc_update, ok := mediaMap[result.MC_ID]; ok {
             if (result.Preview != "") {
                 log.Printf("We found a reply around this %s id was %s \n", result.Preview, result.MC_ID)
                 mc_update.Preview = result.Preview
                 previews = append(previews, mc_update)
+            } else if result.Err != nil {
+                log.Printf("ERROR: Failed to create a preview %s\n", result.Err)
+                error_list += "" + result.Err.Error()
+
+                mc_update.Preview = ""
+                mc_update.Corrupt = true
+                previews = append(previews, mc_update)
             } else {
                 log.Printf("No preview was needed for media %s", result.MC_ID)
             }
         } else {
-            log.Printf("Missing Response ID, something went wrong %s\n", result.MC_ID)
-        }
-        log.Printf("Found a result for %s\n", result.MC_ID.String())
-        if result.Err != nil {
-            log.Printf("ERROR: Failed to create a preview %s\n", result.Err)
-            error_list += "" + result.Err.Error()
+            log.Printf("Missing Response ID, something went really wrong %s\n", result.MC_ID)
         }
     }
     if error_list != "" {
