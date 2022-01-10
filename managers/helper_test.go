@@ -234,3 +234,46 @@ func (as *ActionSuite) Test_PreviewAllData() {
     all_created_err := CreateAllPreviews(man)
     as.NoError(all_created_err, "Failed to create all previews")
 }
+
+func (as *ActionSuite) Test_PreviewsWithCorrupted() {
+    // Create all previews including the corrupted, and then do a search
+    // for the two corrupted files in the DB
+    err := models.DB.TruncateAll()
+    as.NoError(err, "Couldn't clean the DB")
+
+	dir, _ := envy.MustGet("DIR")
+    as.NotEmpty(dir, "The test must specify a directory to run on")
+
+    // Note for this test we DO allow corrupted files
+    cfg := utils.GetCfg()
+    cfg.UseDatabase = true
+    cfg.Dir = dir
+
+    // Match only our corrupted files
+    cfg.IncFiles = utils.CreateMatcher("corrupted", "", cfg.IncludeOperator)
+
+    c_err := CreateInitialStructure(cfg)
+    man := GetManagerActionSuite(cfg, as)
+    as.NoError(c_err, "Failed to build out the initial database")
+    as.Equal(true, man.CanEdit(), "It should be able to edit")
+
+    media, m_err := man.ListAllMedia(0, 42)
+    as.NoError(m_err)
+    as.Equal(len(*media), 2, "It should all be loaded in the db")
+    for _, mc := range *media {
+        as.Equal(mc.Corrupt, false, "And at this point nothing is corrupt")
+    }
+
+    // Exclude the corrupted files
+    cfg.PreviewOverSize = 0
+    all_created_err := CreateAllPreviews(man)
+    as.Error(all_created_err, "It should ACTUALLY have an error now.")
+
+    media_check, m_err := man.ListAllMedia(0, 42)
+    as.NoError(m_err)
+    as.Equal(2, len(*media_check), "It should have two corrupt media items")
+
+    for _, mc_check := range *media_check {
+        as.Equal(mc_check.Corrupt, true, "These images should actually be corrupt")
+    }
+}
