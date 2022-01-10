@@ -13,7 +13,7 @@ import (
     "github.com/gobuffalo/suite"
 )
 
-var TOTAL_IN_SCREENS = 6
+var TOTAL_IN_SCREENS = 4
 
 type ActionSuite struct {
     *suite.Action

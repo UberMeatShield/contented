@@ -18,8 +18,8 @@ import (
 var expect_len = map[string]int{
     "dir1": 12,
     "dir2": 3,
-    "dir3": 6,
-    "screens": 6,
+    "dir3": 8,
+    "screens": 4,
 }
 
 func GetManagerActionSuite(cfg *utils.DirConfigEntry, as *ActionSuite) ContentManager{

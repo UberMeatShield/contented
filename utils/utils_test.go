@@ -128,7 +128,7 @@ func Test_FindMediaOffset(t *testing.T) {
     containers := FindContainers(testDir)
 
     expect_dir := false
-    expect_total := 6
+    expect_total := 8
     for _, c := range containers {
         if c.Name == "dir3" {
             expect_dir = true
@@ -138,12 +138,11 @@ func Test_FindMediaOffset(t *testing.T) {
             }
             allm := FindMedia(c, 42, 0)
             total := len(allm)
-
             if total != expect_total {
 		        t.Errorf("There should be exactly n(%d) found but returned %d", expect_total, total)
             }
 
-            offset := FindMedia(c, 6, 2)
+            offset := FindMedia(c, 6, 4)
             if len(offset) != 4 {
                 t.Errorf("The offset should lower the total returned but we found %d in %s", len(offset), c.Name)
             }

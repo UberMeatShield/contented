@@ -77,7 +77,7 @@ func Test_VideoLength(t *testing.T) {
 
 func Test_BrokenImagePreview(t *testing.T) {
 	var testDir, _ = envy.MustGet("DIR")
-	srcDir := filepath.Join(testDir, "screens")
+	srcDir := filepath.Join(testDir, "dir3")
 	dstDir := GetPreviewDst(srcDir)
 	testFile := "nature-corrupted-free-use.jpg"
 
