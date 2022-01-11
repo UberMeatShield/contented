@@ -9,6 +9,7 @@ import {MatDialogModule} from '@angular/material/dialog';
 import {MatButtonModule} from '@angular/material/button';
 import {MatPaginatorModule} from '@angular/material/paginator';
 import {MatRippleModule} from '@angular/material/core';
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 
 import {ContentedCmp} from './contented_cmp';
@@ -35,6 +36,7 @@ import {Media} from './media';
       MatInputModule,
       MatPaginatorModule,
       MatRippleModule,
+      MatProgressSpinnerModule,
   ],
   declarations: [ContentedCmp, ContentedNavCmp, ContentedViewCmp, ContainerCmp, ContainerNavCmp, SearchCmp, SearchDialog],
   exports: [ContentedCmp, ContentedNavCmp, ContentedViewCmp, ContainerCmp, ContainerNavCmp, SearchCmp, SearchDialog],

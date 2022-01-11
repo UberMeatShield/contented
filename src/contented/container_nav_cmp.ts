@@ -1,7 +1,7 @@
 import {Subscription} from 'rxjs';
 import {OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
 import {ContentedService} from './contented_service';
-import {Container} from './container';
+import {Container, LoadStates} from './container';
 import {Media} from './media';
 import {finalize, switchMap} from 'rxjs/operators';
 
@@ -24,6 +24,7 @@ export class ContainerNavCmp implements OnInit, OnDestroy {
 
     // current view Item should be something you trigger per directory (move view ?)
     public currentMedia: Media;
+    public ContainerLoadStates = LoadStates;
 
     // idx and current view item might be better as a top level nav / hover should be allowed?
     @Input() active: boolean = false; // Is our container active

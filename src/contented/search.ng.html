@@ -9,6 +9,13 @@
         matInput placeholder=""
       >
     </mat-form-field>
+
+    <!-- Search is too fast, might need to actually slow it down unless massive content searches
+        actually make it worth something -->
+    <mat-progress-spinner *ngIf="loading"
+      [diameter]="32"
+      [mode]="'indeterminate'">
+    </mat-progress-spinner>
     <a href="/ui/browse/0/0">Browse</a>
   </form>
 

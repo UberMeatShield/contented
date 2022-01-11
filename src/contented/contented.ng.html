@@ -1,6 +1,6 @@
 <div class="contented-cmp">
 
-  <contented-nav>Hmmm</contented-nav>
+  <contented-nav [loading]="loading"></contented-nav>
 
   <!-- TODO: A more generic error handling setup -->
   <div class="error no-content" *ngIf="emptyMessage">
@@ -13,7 +13,6 @@
 
   <!-- Fix this to be better about how to get the currDir -->
   <div class="contented-cnt" name="contents" *ngFor="let cnt of getVisibleContainers()">
-
     <!-- Probably break this out into a container Info Component -->
     <div class="container-contents">
       <mat-card>

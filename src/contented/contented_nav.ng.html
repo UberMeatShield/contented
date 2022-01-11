@@ -39,4 +39,10 @@
   <div #trigger id="nav-contented-evts">
     <!-- Could use this to scroll in or other evts, but mainly lets us manually trigger on keypress-->
   </div>
+  <div *ngIf="loading">
+     <mat-progress-spinner
+       [diameter]="32"
+       [mode]="'indeterminate'">
+     </mat-progress-spinner>
+  </div>
 </div>

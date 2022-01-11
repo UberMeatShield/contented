@@ -15,8 +15,8 @@ import * as $ from 'jquery';
 export class ContentedNavCmp implements OnInit {
 
     @ViewChild(MatRipple) ripple: MatRipple;
-
     @Input() navEvts;
+    @Input() loading: boolean;
 
     constructor(public _contentedService: ContentedService) {
 
