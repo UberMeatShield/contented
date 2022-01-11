@@ -9,31 +9,16 @@ import (
 	"contented/models"
 	"contented/internals"
     "net/url"
-    /*
-	"encoding/json"
-	"net/http"
-	"os"
-	"testing"
-	"github.com/gobuffalo/packr/v2"
-	"github.com/gobuffalo/suite"
-	"github.com/gofrs/uuid"
-	"github.com/gobuffalo/envy"
-    "github.com/gobuffalo/buffalo"
-    */
-    //"context"
-    //"sync"
-    //"github.com/gobuffalo/logger"
     "github.com/gobuffalo/envy"
     "github.com/gobuffalo/pop/v5"
     "github.com/gobuffalo/packr/v2"
     "github.com/gobuffalo/suite"
-    //"github.com/gobuffalo/buffalo"
 )
 
 var expect_len = map[string]int{
     "dir1": 12,
     "dir2": 3,
-    "dir3": 6,
+    "dir3": 8,
     "screens": 4,
 }
 
@@ -160,7 +145,7 @@ func (as *ActionSuite) Test_MemoryManagerPaginate() {
     l_cnts, _ := man.ListContainers(4, 1)
     as.Equal(1, len(*l_cnts), "It should still return only as we are on the last page")
     l_cnt := (*l_cnts)[0]
-    as.Equal(l_cnt.Total, expect_len[l_cnt.Name], "There are 3 entries in the ordered test data last container")
+    as.Equal(expect_len[l_cnt.Name], l_cnt.Total, "There are 3 entries in the ordered test data last container")
 }
 
 func (as *ActionSuite) Test_ManagerInitialize() {
@@ -213,7 +198,7 @@ func (as *ActionSuite) Test_MemoryManagerSearch() {
 
     all_mc, _, err_all := man.SearchMedia("", 0, 9000, "")
     as.NoError(err_all, "Can in search everything")
-    as.Equal(25, len(*all_mc), "The Kitchen sink")
+    as.Equal(len(*all_mc), 27, "The Kitchen sink")
 }
 
 func (as* ActionSuite) Test_MemoryManagerSearchMulti() {

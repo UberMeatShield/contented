@@ -9,6 +9,8 @@ import (
     "github.com/gobuffalo/nulls"
 )
 
+var TOTAL_MEDIA = 27
+
 func CreateResource(src string, container_id nulls.UUID, as *ActionSuite) models.MediaContainer {
     internals.InitFakeApp(true)
 	mc := &models.MediaContainer{
@@ -103,12 +105,12 @@ func (as *ActionSuite) Test_MemoryAPIBasics() {
 
 	validate := models.MediaContainers{}
 	json.NewDecoder(res.Body).Decode(&validate)
-    as.Equal(25, len(validate), "It should have a known set of mock data")
+    as.Equal(TOTAL_MEDIA, len(validate), "It should have a known set of mock data")
 
 	validate_search := models.MediaContainers{}
 	res_search := as.JSON("/search?text=Large").Get()
 	json.NewDecoder(res_search.Body).Decode(&validate_search)
-    as.Equal(25, len(validate), "In memory should have these")
+    as.Equal(TOTAL_MEDIA, len(validate), "In memory should have these")
 }
 
 func (as *ActionSuite) Test_MediaContainersResource_List() {

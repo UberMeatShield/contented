@@ -74,6 +74,23 @@ func Test_VideoLength(t *testing.T) {
     }
 }
 
+
+func Test_BrokenImagePreview(t *testing.T) {
+	var testDir, _ = envy.MustGet("DIR")
+	srcDir := filepath.Join(testDir, "dir3")
+	dstDir := GetPreviewDst(srcDir)
+	testFile := "nature-corrupted-free-use.jpg"
+
+    // TODO: This needs to be made into a better place around previews
+	pLoc, err := GetImagePreview(srcDir, testFile, dstDir, 0)
+    if err == nil {
+        t.Errorf("This file should definitely cause an error")
+    }
+    if pLoc != "" {
+        t.Errorf("And it absolutely does not have a preview")
+    }
+}
+
 // Makes it so that the preview is generated
 func Test_VideoPreviewPNG(t *testing.T) {
 	var testDir, _ = envy.MustGet("DIR")

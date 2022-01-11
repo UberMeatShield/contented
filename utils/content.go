@@ -62,9 +62,12 @@ type DirConfigEntry struct {
     CoreCount       int    // How many cores are likely available (used in creating multithread workers / previews)
     StaticResourcePath string  // The location where compiled js and css is hosted (container vs dev server)
 	Initialized     bool   // Has the configuration actually be initialized properly
+
+    // Config around creating preview images (used only by the task db:preview)
     PreviewCount    int    // How many files should be listed for a preview (todo: USE)
     PreviewOverSize int64  // Over how many bytes should previews be created for the file
     PreviewVideoType string // This will be either gif or png based on config
+    PreviewCreateFailIsFatal bool  // If set creating an image or movie preview will hard fail
 
     // Matchers that will determine which media elements to be included or excluded
     IncFiles MediaMatcher
@@ -138,6 +141,7 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
 
     psize, perr := strconv.ParseInt(envy.Get("CREATE_PREVIEW_SIZE", "1024000"), 10, 64)
     previewType := envy.Get("PREVIEW_VIDEO_TYPE", "png")
+    previewFailIsFatal, prevErr := strconv.ParseBool(envy.Get("PREVIEW_CREATE_FAIL_IS_FATAL", "false"))
 
     if err != nil {
         panic(err)
@@ -145,6 +149,8 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
         panic(limErr)
     } else if previewErr != nil {
         panic(previewErr)
+    } else if prevErr != nil {
+        panic(prevErr)
     } else if _, noDirErr := os.Stat(dir); os.IsNotExist(noDirErr) {
         panic(noDirErr)
     } else if connErr != nil {
@@ -153,7 +159,7 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
         panic(coreErr)
     } else if perr != nil {
         panic(perr)
-    }
+    } 
     if !(previewType == "png" || previewType == "gif") {
         panic(errors.New("The video preview type is not png or gif"))
     }
@@ -166,6 +172,7 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
 	cfg.PreviewCount = previewCount
     cfg.PreviewVideoType = previewType
     cfg.PreviewOverSize = psize
+    cfg.PreviewCreateFailIsFatal = previewFailIsFatal
     cfg.IncludeOperator = envy.Get("INCLUDE_OPERATOR", "AND")
     cfg.ExcludeOperator = envy.Get("EXCLUDE_OPERATOR", "AND")
 
@@ -337,10 +344,11 @@ func getMediaContainer(id uuid.UUID, fileInfo os.FileInfo, path string) models.M
 	contentType, err := GetMimeType(path, fileInfo.Name())
 	if err != nil {
 		log.Printf("Failed to determine contentType: %s", err)
-		contentType = "image/jpeg"
+		contentType = "application/unknown"
 	}
 
 	// TODO: Need to add the unique ID for each dir (are they uniq?)
+    // TODO: Should I get a Hash onto the media as well?
 	media := models.MediaContainer{
 		ID:   id,
 		Src:  fileInfo.Name(),
