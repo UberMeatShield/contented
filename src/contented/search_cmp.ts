@@ -45,6 +45,7 @@ export class SearchCmp implements OnInit{
     public maxVisible = 3; // How many results show horizontally
     public total = 0;
     public pageSize = 50;
+    public loading: boolean = false;
 
     constructor(
         public _contentedService: ContentedService,
@@ -119,7 +120,10 @@ export class SearchCmp implements OnInit{
         console.log("Get the information from the input and search on it", text); 
         // TODO: Wrap the media into a fake container
         this.media = [];
-        this._contentedService.searchMedia(text, offset, limit).subscribe(
+        this.loading = true;
+        this._contentedService.searchMedia(text, offset, limit).pipe(
+            finalize(() => this.loading = false)
+        ).subscribe(
             (res) => {
                 let media = _.map((res['media'] || []), m => new Media(m));
                 let total = res['total'] || 0;
