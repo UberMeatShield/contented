@@ -57,14 +57,11 @@ func (cm ContentManagerDB) ListMedia(cID uuid.UUID, page int, per_page int) (*mo
     mediaContainers := &models.MediaContainers{}
 
     // Paginate results. Params "page" and "per_page" control pagination.
-    // Default values are "page=1" and "per_page=20".
-    // TODO: Make it paginate using the params not the context
     q := tx.Paginate(page, per_page)
     q_conn := q.Where("container_id = ?", cID)
     if q_err := q_conn.All(mediaContainers); q_err != nil {
         return nil, q_err
     }
-
     return mediaContainers, nil
 }
 
