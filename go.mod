@@ -30,7 +30,6 @@ require (
 	github.com/gorilla/sessions v1.2.1 // indirect
 	github.com/jackc/pgproto3/v2 v2.1.0 // indirect
 	github.com/jmoiron/sqlx v1.3.4 // indirect
-	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
 	github.com/markbates/grift v1.5.0
 	github.com/mattn/go-isatty v0.0.13 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.14 // indirect
@@ -42,7 +41,7 @@ require (
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/cobra v1.1.3 // indirect
-	github.com/tidwall/gjson v1.6.3
+	github.com/tidwall/gjson v1.9.3
 	github.com/u2takey/ffmpeg-go v0.3.0
 	github.com/unrolled/secure v1.0.9
 	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e // indirect
