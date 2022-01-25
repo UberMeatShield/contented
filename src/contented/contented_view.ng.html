@@ -1,6 +1,6 @@
 <div class="contented-view-cmp">
 
-  <div *ngIf="visible">
+  <div *ngIf="visible" class="contented-view">
     <!-- swap the terms here and make media into 'media' -->
     <span *ngIf="media" class="max-full-url-path">
       <a href="{{media?.fullUrl}}">
@@ -22,8 +22,8 @@
       >
 
       <!-- TODO: should the fullscreen for a video should be totally different -->
-      <video *ngIf="media.isVideo()" [width]="maxWidth" height="maxHeight" controls>
-          <source [src]="media.fullUrl" [type]="media.content_type">
+      <video *ngIf="media.isVideo()" [width]="maxWidth" [height]="maxHeight" controls>
+         <source [src]="media.fullUrl" [type]="media.content_type">
       </video>
     </div>
   </div>
