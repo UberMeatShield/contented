@@ -213,12 +213,12 @@ func CreatePngFromVideo(srcFile string, dstFile string) (string, error) {
 }
 
 // What is up with gjson vs normal processing (this does seem easier to use)?
-func GetTotalVideoLength(srcFile string) float64 {
-	a, err := ffmpeg.Probe(srcFile)
+func GetTotalVideoLength(srcFile string) (float64, error) {
+	vidInfo, err := ffmpeg.Probe(srcFile)
 	if err != nil {
-		panic(err)
+	    return 0, err
 	}
-	return gjson.Get(a, "format.duration").Float()
+	return gjson.Get(vidInfo, "format.duration").Float(), nil
 }
 
 // Oh gods this is a lot https://engineering.giphy.com/how-to-make-gifs-with-ffmpeg/
@@ -229,7 +229,11 @@ func CreateGifFromVideo(srcFile string, dstFile string) (string, error) {
     // Calculate a max -t based on frame + total time
     // Base it on config ?
     // Produce a gif if size > X
-    total := GetTotalVideoLength(srcFile)
+    total, err := GetTotalVideoLength(srcFile)
+    if err != nil {
+        return "", err
+    }
+
     framerate := "0.5"
     vframes := 10
     if int(2 * total) < vframes {
@@ -237,12 +241,15 @@ func CreateGifFromVideo(srcFile string, dstFile string) (string, error) {
     }
     if total > (60 * 5) {
         vframes = 30
-        framerate = fmt.Sprintf("%f", (total / float64(vframes)))
+        framerate = fmt.Sprintf("%f", (float64(vframes) / (total - 3)))
     }
     time_to_encode := fmt.Sprintf("%f", total - 3)
+    log.Printf("Gif total time %s framerate %s", time_to_encode, framerate)
+
+    // Framerate vframes
 
     framerate = "0.5"
-    err := ffmpeg.Input(srcFile, ffmpeg.KwArgs{"ss": "2"}).
+    gif_err := ffmpeg.Input(srcFile, ffmpeg.KwArgs{"ss": "2"}).
         Output(dstFile, ffmpeg.KwArgs{
             "s": "320x240",
             "pix_fmt": "yuvj422p",
@@ -251,8 +258,8 @@ func CreateGifFromVideo(srcFile string, dstFile string) (string, error) {
             "r": framerate,
         }).OverWriteOutput().Run()
         
-    if err != nil {
-        log.Printf("Failed to create the gif output %s\n with err: %s\n", dstFile, err)
+    if gif_err != nil {
+        log.Printf("Failed to create the gif output %s\n with err: %s\n", dstFile, gif_err)
     }
-    return dstFile, err
+    return dstFile, gif_err
 }
