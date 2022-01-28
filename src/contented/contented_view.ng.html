@@ -1,30 +1,26 @@
 <div class="contented-view-cmp">
-
-  <div *ngIf="visible">
+  <div *ngIf="visible" class="contented-view">
     <!-- swap the terms here and make media into 'media' -->
-    <span *ngIf="media" class="max-full-url-path">
-      <a href="{{media?.fullUrl}}">
-        {{media.src}}({{media.content_type}})
-      </a>
-    </span>
-    <span *ngIf="!media">
-      No Url selected
-    </span>
-
     <div *ngIf="media"
       class="media-full-view" 
       style="width:{{maxWidth}}px; height: {{maxHeight}}px;"
     >
-      {{media?.content_type}}
       <img *ngIf="media?.isImage()" 
         class="full-view-img" 
         [src]="media.fullUrl"
       >
 
       <!-- TODO: should the fullscreen for a video should be totally different -->
-      <video *ngIf="media.isVideo()" [width]="maxWidth" height="maxHeight" controls>
-          <source [src]="media.fullUrl" [type]="media.content_type">
+      <video *ngIf="media.isVideo()" [width]="maxWidth" [height]="maxHeight" controls>
+         <source [src]="media.fullUrl" [type]="media.content_type">
       </video>
     </div>
+
+    <a *ngIf="media" class="max-full-url-path" href="{{media?.fullUrl}}">
+      {{media.src}}({{media.content_type}})
+    </a>
+    <span *ngIf="!media">
+      No Url selected
+    </span>
   </div>
 </div>

@@ -24,7 +24,6 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
     }
 
     public ngOnInit() {
-        this.calculateDimensions();
         this.sub = GlobalNavEvents.navEvts.subscribe(evt => {
             switch(evt.action) {
                 case NavTypes.VIEW_FULLSCREEN:
@@ -42,6 +41,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
             }
             console.log("Listen for the fullscreen");
         }) ;
+        this.calculateDimensions();
     }
 
     public ngOnDestroy() {
@@ -55,7 +55,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
         if (this.forceWidth > 0) {
             this.maxWidth = this.forceWidth;
         } else {
-            let width = window.innerWidth; // document.body.clientWidth;
+            let width = window.innerWidth; // 
             this.maxWidth = width - 20 > 0 ? width - 20 : 640;
         }
 
@@ -65,7 +65,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
             this.maxHeight = this.forceHeight;
         } else {
             let height = window.innerHeight; // document.body.clientHeight;
-            this.maxHeight = height - 20 > 0 ? height - 20 : 480;
+            this.maxHeight = height - 20 > 0 ? height - 64 : 480;
         }
     }
 
