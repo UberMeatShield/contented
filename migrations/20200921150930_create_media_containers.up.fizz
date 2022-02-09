@@ -8,5 +8,8 @@ create_table("media_containers") {
 	t.Column("active", "bool", {"default": true})
 	t.Column("corrupt", "bool", {"default": false})
 	t.Column("idx", "integer", {"default": 0})
+	t.Column("size_bytes", "integer", {"default": 0})
+	t.Column("encoding", "string", {"default": ""})
+	t.Column("description", "string", {"default": ""})
 	t.Timestamps()
 }

@@ -242,10 +242,10 @@ func CreateGifFromVideo(srcFile string, dstFile string) (string, error) {
     }
     if total > (60 * 5) {
         vframes = 60
-	speedup := int(total / float64(vframes))
-	filter_v = fmt.Sprintf("setpts=PTS/%d", speedup)
+        speedup := int(total / float64(vframes))
+        filter_v = fmt.Sprintf("setpts=PTS/%d", speedup)
         framerate = fmt.Sprintf("%f", (float64(vframes) / (total - 3)))
-	// framerate = "1.0"
+        // framerate = "1.0"
     }
     time_to_encode := fmt.Sprintf("%f", total - 3)
     log.Printf("Gif total time %s framerate %s speedup %s", time_to_encode, framerate, filter_v)
@@ -260,7 +260,7 @@ func CreateGifFromVideo(srcFile string, dstFile string) (string, error) {
             "t": time_to_encode,
             "vframes": vframes,
             "r": framerate,
-	    "filter:v": filter_v,
+            "filter:v": filter_v,
         }).OverWriteOutput().Run()
     if gif_err != nil {
         log.Printf("Failed to create the gif output %s\n with err: %s\n", dstFile, gif_err)
