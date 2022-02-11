@@ -213,6 +213,7 @@ func CreatePngFromVideo(srcFile string, dstFile string) (string, error) {
 }
 
 // What is up with gjson vs normal processing (this does seem easier to use)?
+// TODO: Consider moving more logic into a MediaHelper (size, rez, probe etc)
 func GetTotalVideoLength(srcFile string) (float64, error) {
     vidInfo, err := ffmpeg.Probe(srcFile)
     if err != nil {
@@ -240,12 +241,14 @@ func CreateGifFromVideo(srcFile string, dstFile string) (string, error) {
     if int(2 * total) < vframes {
         vframes = 5 
     }
+
+    // This whole mess makes a relatively decent preview gif for a full movie
+    // But I could still probably cut it down for size (or config tweak it)
     if total > (60 * 5) {
         vframes = 60
         speedup := int(total / float64(vframes))
         filter_v = fmt.Sprintf("setpts=PTS/%d", speedup)
         framerate = fmt.Sprintf("%f", (float64(vframes) / (total - 3)))
-        // framerate = "1.0"
     }
     time_to_encode := fmt.Sprintf("%f", total - 3)
     log.Printf("Gif total time %s framerate %s speedup %s", time_to_encode, framerate, filter_v)

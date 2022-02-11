@@ -347,7 +347,11 @@ func getMediaContainer(id uuid.UUID, fileInfo os.FileInfo, path string) models.M
         contentType = "application/unknown"
     }
 
-    // TODO: Need to add the unique ID for each dir (are they uniq?)
+
+    // I could do an ffmpeg.Probe(srcFile) to determine encoding and resolution
+    // For images I could try and probe the encoding & resolution
+
+    // TODO: Need to add the unique ID for each media (are they uniq?)
     // TODO: Should I get a Hash onto the media as well?
     media := models.MediaContainer{
         ID:   id,
