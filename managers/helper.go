@@ -26,10 +26,10 @@ import (
 // Probably should return a count of everything
 func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
     dirs := utils.FindContainers(cfg.Dir)
-    log.Printf("Found %d sub-directories.\n", len(dirs))
     if len(dirs) == 0 {
         return errors.New("No subdirectories found under path: " + cfg.Dir)
     }
+    log.Printf("Found %d sub-directories.\n", len(dirs))
 
     // Optional?  Some sort of crazy merge for later?
     err := models.DB.TruncateAll()
@@ -53,6 +53,7 @@ func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
         models.DB.Create(&dir)
         log.Printf("Created %s with id %s\n", dir.Name, dir.ID)
 
+        // There MUST be a way to do this as a single commit
         for _, mc := range media {
             mc.ContainerID = nulls.NewUUID(dir.ID) 
             c_err := models.DB.Create(&mc)

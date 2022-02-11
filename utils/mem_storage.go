@@ -39,8 +39,7 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap) 
 
     cnts := FindContainers(dir_root)
     for idx, c := range cnts {
-        media := FindMediaMatcher(c, 90001, 0, cfg.IncFiles, cfg.ExcFiles)  // TODO: Config this
-        // c.Contents = media
+        media := FindMediaMatcher(c, 90001, 0, cfg.IncFiles, cfg.ExcFiles)
         c.Total = len(media)
         c.Idx = idx
         containers[c.ID] = c

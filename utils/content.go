@@ -26,6 +26,9 @@ const sniffLen = 512  // How many bytes to read in a file when trying to determi
 const DefaultLimit int = 10000 // The max limit set by environment variable
 const DefaultPreviewCount int = 8
 const DefaultUseDatabase bool = false
+const Default bool = false
+const DefaultMaxSearchDepth int = 1
+const DefaultMaxMediaPerContainer int = 90001    
 
 // Matchers that determine if you want to include specific filenames/content types
 type MediaMatcher func(string, string) bool
@@ -62,6 +65,8 @@ type DirConfigEntry struct {
     CoreCount       int    // How many cores are likely available (used in creating multithread workers / previews)
     StaticResourcePath string  // The location where compiled js and css is hosted (container vs dev server)
     Initialized     bool   // Has the configuration actually be initialized properly
+    MaxSearchDepth  int    // When we search for data how far down the filesystem to search
+    MaxMediaPerContainer  int    // When we search for data how far down the filesystem to search
 
     // Config around creating preview images (used only by the task db:preview)
     PreviewCount    int    // How many files should be listed for a preview (todo: USE)
@@ -96,6 +101,8 @@ func GetCfgDefaults() DirConfigEntry {
        Dir: "",
        CoreCount: 4,
        Limit: DefaultLimit,
+       MaxSearchDepth: DefaultMaxSearchDepth,
+       MaxMediaPerContainer: DefaultMaxMediaPerContainer,
        PreviewCount: DefaultPreviewCount,
        PreviewOverSize: 1024000,
        PreviewVideoType: "png",
@@ -248,8 +255,8 @@ func FindMedia(cnt models.Container, limit int, start_offset int) models.MediaCo
 func FindMediaMatcher(cnt models.Container, limit int, start_offset int, yup MediaMatcher, nope MediaMatcher) models.MediaContainers {
     var arr = models.MediaContainers{}
 
-    cfg := GetCfg()
-    fqDirPath := filepath.Join(cfg.Dir, cnt.Name)
+    // cfg := GetCfg()
+    fqDirPath := filepath.Join(cnt.Path, cnt.Name)
     maybe_media, _ := ioutil.ReadDir(fqDirPath)
 
     total := 0
@@ -275,6 +282,7 @@ func FindMediaMatcher(cnt models.Container, limit int, start_offset int, yup Med
             total++ // Only add a total for non-directory files (exclude other types?)
         }
     }
+    log.Printf("Finished reading from %s and found %d media", fqDirPath, len(arr))
     return arr
 }
 
@@ -360,4 +368,47 @@ func getMediaContainer(id uuid.UUID, fileInfo os.FileInfo, path string) models.M
         ContentType: contentType,
     }
     return media
+}
+
+
+type ContentInformation struct {
+    Cnt *models.Container
+    Media *models.MediaContainers
+}
+
+type ContentTree []ContentInformation
+// Placeholder hash with fq_path + name as the key
+
+// Write a recurse method for getting all the data up to depth N
+
+func CreateStructure(dir string, cfg *DirConfigEntry, results *ContentTree, depth int) (*ContentTree, error) {
+    //log.Printf("Looking in directory %s set have results %d depth %d", dir, len(*results), depth)
+    if depth > cfg.MaxSearchDepth {
+        return results, nil
+    }
+
+    // This will probably have path issues currently
+    cnts := FindContainers(dir)
+    for _, cnt := range cnts {
+        if cnt.Name == "container_previews" {
+            continue
+        }
+        media := FindMediaMatcher(cnt, cfg.MaxMediaPerContainer, 0, cfg.IncFiles, cfg.ExcFiles)
+        cnt.Total = len(media)
+        cTree := ContentInformation{
+            Cnt: &cnt,
+            Media: &media,
+        } 
+        tree := append(*results, cTree) 
+        subDir := filepath.Join(dir, cnt.Name)
+        // log.Printf("SubDir %s and depth is currently %d count of containers %d", subDir, depth, len(tree))
+
+        mergeTree, err := CreateStructure(subDir, cfg, &tree, depth+1)
+        if err != nil {
+            log.Printf("Error searching down the subTree %s with error %s", subDir, err)
+            return results, err
+        }
+        results = mergeTree
+    }
+    return results, nil
 }
