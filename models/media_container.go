@@ -23,6 +23,12 @@ type MediaContainer struct {
 	Idx         int        `json:"idx" db:"idx"`
 	Active      bool       `json:"active" db:"active"`
 	Corrupt     bool       `json:"corrupt" db:"corrupt"`
+    SizeBytes   int64      `json:"size" db:"size_bytes"`
+    Description string     `json:"description" db:"description"`
+
+    // TODO: Maybe, MAYBE drop this?  None of the code currently really looks at the encoding
+    // till actually creating a preview.
+    Encoding    string     `json:"encoding" db:"encoding"`
 }
 
 // String is not required by pop and may be deleted

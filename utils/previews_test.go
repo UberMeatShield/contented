@@ -68,7 +68,10 @@ func Test_VideoLength(t *testing.T) {
 	testFile := "donut.mp4"
 
     srcFile := filepath.Join(srcDir, testFile)
-    checkLen := GetTotalVideoLength(srcFile)
+    checkLen, err := GetTotalVideoLength(srcFile)
+    if err != nil {
+        t.Errorf("Failed to load length %s", err)
+    }
     if (checkLen != 10.08) {
         t.Errorf("Could not get the length correctly %f", checkLen)
     }
