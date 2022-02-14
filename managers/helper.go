@@ -56,6 +56,11 @@ func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
         // Use the database version of uuid generation (minimize the miniscule conflict)
         unset_uuid, _ := uuid.FromString("00000000-0000-0000-0000-000000000000")
         c.ID = unset_uuid
+
+        // Assign a default preview (maybe move this into create Structure?)
+        if len(ct.Media) > 0 {
+            c.PreviewUrl = "/preview/" + ct.Media[0].ID.String()
+        }
         models.DB.Create(&c)
         log.Printf("Created %s with id %s\n", c.Name, c.ID)
 

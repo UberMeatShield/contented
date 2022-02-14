@@ -64,7 +64,6 @@ export class Container {
             start = this.indexOf(currentItem);
             start = start >= 0 ? start : 0;
             start = (before && (start - before > 0)) ? (start - before) : 0;
-            // console.log("What is the start for the loading interval", currentItem.id, start, max);
         }
 
         let end = start + (max >= 1 ? max : 4);
@@ -103,7 +102,6 @@ export class Container {
 
     public addContents(contents: Array<Media>) {
         let sorted = _.sortBy((this.contents || []).concat(contents), 'idx');
-        console.log("What is going on", sorted);
         this.setContents(sorted);
         return sorted;
     }

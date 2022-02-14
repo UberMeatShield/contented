@@ -61,10 +61,10 @@ export class ContentedCmp implements OnInit, OnDestroy {
         this.sub = GlobalNavEvents.navEvts.subscribe(evt => {
             switch(evt.action) {
                 case NavTypes.NEXT_CONTAINER:
-                    this.next(true);
+                    this.next();
                     break;
                 case NavTypes.PREV_CONTAINER:
-                    this.prev(true);
+                    this.prev();
                     break;
                 case NavTypes.LOAD_MORE:
                     this.loadMore();
@@ -129,15 +129,15 @@ export class ContentedCmp implements OnInit, OnDestroy {
         if (this.allD) {
             let start = this.idx < this.allD.length ? this.idx : this.allD.length - 1;
             let end = start + this.maxVisible <= this.allD.length ? start + this.maxVisible : this.allD.length;
-
             // Only loads if cnt.loadState = LoadStates.NotLoaded
+            let currCnt = this.getCurrentContainer();
             let cnts = this.allD.slice(start, end);
             _.each(cnts, (cnt, idx) => {
                 let obs = this._contentedService.initialLoad(cnt); 
                 if (obs) { 
                     obs.subscribe(
                         media => {
-                            if (idx == this.idx) {
+                            if (cnt == currCnt) {
                                 GlobalNavEvents.selectMedia(cnt.getMedia(), cnt);
                             }
                         }, err => console.error
@@ -164,30 +164,21 @@ export class ContentedCmp implements OnInit, OnDestroy {
     public next(selectFirst: boolean = true) {
         if (this.allD && this.idx + 1 < this.allD.length) {
             this.idx++;
-        } else {
-            return;
+            let cnt = this.getCurrentContainer();
+            GlobalNavEvents.selectMedia(cnt.getMedia(), cnt);
+            this.updateRoute();
         }
-        let cnt = this.getCurrentContainer();
-        if (selectFirst) {
-            cnt.rowIdx = 0;
-        }
-        GlobalNavEvents.selectMedia(cnt.getMedia(), cnt);
-        this.updateRoute();
     }
 
     public prev(selectLast: boolean = false) {
         if (this.idx > 0) {
             this.idx--;
-        } else {
-            return;
+            let cnt = this.getCurrentContainer();
+
+            console.log("PREVIOUS", cnt, cnt.getMedia());
+            GlobalNavEvents.selectMedia(cnt.getMedia(), cnt);
+            this.updateRoute();
         }
-        let cnt = this.getCurrentContainer();
-        if (selectLast) {
-            let items = cnt ? cnt.getContentList() : [];
-            cnt.rowIdx = items.length > 0 ? items.length - 1 : 0;
-        }
-        GlobalNavEvents.selectMedia(cnt.getMedia(), cnt);
-        this.updateRoute();
     }
 
     // TODO: Being called abusively in the cntective rather than on page resize events
@@ -213,10 +204,11 @@ export class ContentedCmp implements OnInit, OnDestroy {
     }
 
     public fullLoadDir(cnt: Container) {
+        console.log("Full load directory");
         this._contentedService.fullLoadDir(cnt).subscribe(
-            (loadedDir: Container) => {
-                console.log("Fully loaded up the container", loadedDir);
-                GlobalNavEvents.selectMedia(cnt.getMedia(), cnt);
+            (loadedCnt: Container) => {
+                console.log("Fully loaded up the container", loadedCnt);
+                GlobalNavEvents.selectMedia(loadedCnt.getMedia(), loadedCnt);
             },
             err => {console.error("Failed to load", err); }
         );
@@ -232,6 +224,7 @@ export class ContentedCmp implements OnInit, OnDestroy {
 
         // This handles the case where we need to fully load a container to reach the row
         if (rowIdx > currDir.count) {
+            console.log("This shoudl load around currDir", currDir);
             this.fullLoadDir(currDir);
         } else if (triggerSelect) {
             let cnt = this.getCurrentContainer();
@@ -241,7 +234,7 @@ export class ContentedCmp implements OnInit, OnDestroy {
 
     // Could probably move this into a saner location
     public selectedMedia(media: Media, cnt: Container) {
-        console.log("Click event, change currently selected indexes, container etc", media, cnt);
+        //console.log("Click event, change currently selected indexes, container etc", media, cnt);
         let idx = _.findIndex(this.allD, {id: cnt ? cnt.id : -1});
         if (idx >= 0) {
             this.idx = idx;
