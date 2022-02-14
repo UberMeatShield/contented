@@ -224,7 +224,6 @@ export class ContentedCmp implements OnInit, OnDestroy {
 
         // This handles the case where we need to fully load a container to reach the row
         if (rowIdx > currDir.count) {
-            console.log("This shoudl load around currDir", currDir);
             this.fullLoadDir(currDir);
         } else if (triggerSelect) {
             let cnt = this.getCurrentContainer();

@@ -43,7 +43,7 @@ export class ContainerNavCmp implements OnInit, OnDestroy {
     public ngOnInit() {
         this.sub = GlobalNavEvents.navEvts.subscribe(evt => {
             if (evt.action == NavTypes.SELECT_MEDIA && evt.cnt == this.cnt && evt.media) {
-                console.log("Container Nav found select media", evt, evt.cnt.name);
+                //console.log("Container Nav found select media", evt, evt.cnt.name);
                 this.currentMedia = evt.media;
             }
         });
