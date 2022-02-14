@@ -20,6 +20,7 @@ var expect_len = map[string]int{
     "dir2": 3,
     "dir3": 8,
     "screens": 4,
+    "screens_sub_dir": 2,
 }
 
 func GetManagerActionSuite(cfg *utils.DirConfigEntry, as *ActionSuite) ContentManager{
@@ -158,7 +159,7 @@ func (as *ActionSuite) Test_ManagerInitialize() {
     containers, err := man.ListContainersContext()
     as.NoError(err, "It should list all containers")
     as.NotNil(containers, "It should have containers")
-    as.Equal(len(*containers), 4, "It should have 4 of them")
+    as.Equal(len(*containers), internals.TOTAL_CONTAINERS, "Unexpected container count")
 
     // Memory test working
     for _, c := range *containers {
@@ -185,7 +186,7 @@ func (as *ActionSuite) Test_MemoryManagerSearch() {
     containers, err := man.ListContainersContext()
     as.NoError(err, "It should list all containers")
     as.NotNil(containers, "It should have containers")
-    as.Equal(len(*containers), 4, "It should have 4 of them")
+    as.Equal(len(*containers), internals.TOTAL_CONTAINERS, "Wrong number of containers found")
 
     mcs, total, err := man.SearchMedia("donut", 1, 20, "")
     as.NoError(err, "Can we search in the memory manager")
@@ -198,7 +199,7 @@ func (as *ActionSuite) Test_MemoryManagerSearch() {
 
     all_mc, _, err_all := man.SearchMedia("", 0, 9000, "")
     as.NoError(err_all, "Can in search everything")
-    as.Equal(len(*all_mc), 27, "The Kitchen sink")
+    as.Equal(len(*all_mc), internals.TOTAL_MEDIA, "The Kitchen sink")
 }
 
 func (as* ActionSuite) Test_MemoryManagerSearchMulti() {
@@ -336,12 +337,17 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
 
     // Checks that if a preview exists
     cnts, media := utils.PopulateMemoryView(cfg.Dir)
-    as.Equal(len(cnts), 4, "We should pull in 4 directories")
+    as.Equal(1, len(cnts), "We should only pull in containers that have media")
     as.Equal(len(media), 1, "But there is only one video by mime type")
-
     for _, mc := range media {
         as.Equal("/container_previews/donut.mp4.png", mc.Preview)
     }
+
+    // Hate
+    cfg.ExcludeEmptyContainers = false
+    all_cnts, one_media := utils.PopulateMemoryView(cfg.Dir)
+    as.Equal(internals.TOTAL_CONTAINERS, len(all_cnts), "Allow it to pull in all containers")
+    as.Equal(1, len(one_media), "But there is only one video by mime type")
 }
 
 func (as *ActionSuite) Test_ManagerDB() {

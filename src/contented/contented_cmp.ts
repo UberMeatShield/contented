@@ -184,7 +184,7 @@ export class ContentedCmp implements OnInit, OnDestroy {
         let cnt = this.getCurrentContainer();
         if (selectLast) {
             let items = cnt ? cnt.getContentList() : [];
-            cnt.rowIdx = items.length - 1;
+            cnt.rowIdx = items.length > 0 ? items.length - 1 : 0;
         }
         GlobalNavEvents.selectMedia(cnt.getMedia(), cnt);
         this.updateRoute();

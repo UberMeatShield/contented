@@ -52,10 +52,11 @@ func (as *ActionSuite) Test_InitialCreation() {
 
     cnts := models.Containers{}
     as.DB.All(&cnts)
+    as.Equal(internals.TOTAL_CONTAINERS, len(cnts), "The mocks have a specific expected number of items")
 
     media := models.MediaContainers{}
     as.DB.All(&media)
-    as.Equal(27, len(media), "The mocks have a specific expected number of items")
+    as.Equal(internals.TOTAL_MEDIA, len(media), "The mocks have a specific expected number of items")
 }
 
 func (as *ActionSuite) Test_CfgIncExcFiles() {
@@ -106,7 +107,7 @@ func (as *ActionSuite) Test_ImgShouldCreatePreview() {
 
     // Basic sanity check that things exist and can preview
     for _, m := range media {
-        fq_path, err := utils.GetFilePathInContainer(m.Src, cnt.Name)
+        fq_path, err := utils.GetFilePathInContainer(m.Src, cnt.GetFqPath())
         as.NoError(err, "It should not fail getting a full file path" + m.Src)
 
         f, open_err := os.Open(fq_path)

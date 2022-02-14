@@ -25,37 +25,43 @@ import (
 // Process all the directories and get a valid setup into the DB
 // Probably should return a count of everything
 func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
-    dirs := utils.FindContainers(cfg.Dir)
-    if len(dirs) == 0 {
+
+    contentTree, err := utils.CreateStructure(cfg.Dir, cfg, &utils.ContentTree{}, 0)
+    content := *contentTree
+    if len(content) == 0 {
         return errors.New("No subdirectories found under path: " + cfg.Dir)
     }
-    log.Printf("Found %d sub-directories.\n", len(dirs))
+    log.Printf("Found %d sub-directories.\n", len(content))
 
-    // Optional?  Some sort of crazy merge for later?
-    err := models.DB.TruncateAll()
-    if err != nil {
+    // TODO: Optional?  Some sort of crazy merge for later?
+    db_err := models.DB.TruncateAll()
+    if db_err != nil {
         return errors.WithStack(err)
     }
     // This should be initialized
 
     // TODO: Need to do this in a single transaction vs partial
-    for _, dir := range dirs {
-        log.Printf("Adding directory %s with id %s\n", dir.Name, dir.ID)
+    for idx, ct := range content {
+        if cfg.ExcludeEmptyContainers && len(ct.Media) == 0 {
+            log.Printf("Excluding %s/%s as it had no content found\n", ct.Cnt.Path, ct.Cnt.Name)
+            continue  // SKIP empty container directories
+        }
 
-        // A more sensible limit on the absolute max lookup?
-        media := utils.FindMediaMatcher(dir, 90001, 0, cfg.IncFiles, cfg.ExcFiles) 
-        log.Printf("Adding Media to %s with total media %d \n", dir.Name, len(media))
+        // Prepare to at the container to the DB
+        c := ct.Cnt
+        c.Idx = idx
+        media := ct.Media
+        log.Printf("Adding Media to %s with total media %d \n", c.Name, len(media))
 
         // Use the database version of uuid generation (minimize the miniscule conflict)
         unset_uuid, _ := uuid.FromString("00000000-0000-0000-0000-000000000000")
-        dir.ID = unset_uuid
-        dir.Total = len(media)
-        models.DB.Create(&dir)
-        log.Printf("Created %s with id %s\n", dir.Name, dir.ID)
+        c.ID = unset_uuid
+        models.DB.Create(&c)
+        log.Printf("Created %s with id %s\n", c.Name, c.ID)
 
         // There MUST be a way to do this as a single commit
         for _, mc := range media {
-            mc.ContainerID = nulls.NewUUID(dir.ID) 
+            mc.ContainerID = nulls.NewUUID(c.ID) 
             c_err := models.DB.Create(&mc)
 
             // This is pretty damn fatal so we want it to die if the DB bails.
@@ -246,7 +252,7 @@ func StartWorker(w utils.PreviewWorker) {
 // This might not need to be a fatal on an error, but is nice for debugging now
 func CreateMediaPreview(c *models.Container, mc *models.MediaContainer) (string, error) {
     cfg := utils.GetCfg()
-    cntPath := filepath.Join(cfg.Dir, c.Name)
+    cntPath := filepath.Join(c.Path, c.Name)
     dstPath := GetContainerPreviewDst(c)
 
     dstFqPath, err := utils.GetImagePreview(cntPath, mc.Src, dstPath, cfg.PreviewOverSize)

@@ -116,7 +116,6 @@ func Test_ContentType(t *testing.T) {
 }
 
 
-// hate
 func TestCreateStructure(t *testing.T) {
     var testDir, _ = envy.MustGet("DIR")
     cfg := GetCfg()
@@ -135,6 +134,14 @@ func TestCreateStructure(t *testing.T) {
     lenTree := len(*tree)
     if lenTree != 5 {
 		t.Errorf("The Tree should have 5 containers %d", lenTree)
+    }
+
+    cfg.MaxSearchDepth = 0
+    restricted := ContentTree{}
+    restrictTree, err := CreateStructure(testDir, cfg, &restricted, 0)
+    lenRestricted := len(*restrictTree)
+    if lenRestricted != 4 {
+        t.Errorf("We should have restricted it to top level 4 vs %d", lenRestricted)
     }
 }
 

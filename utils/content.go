@@ -29,6 +29,7 @@ const DefaultUseDatabase bool = false
 const Default bool = false
 const DefaultMaxSearchDepth int = 1
 const DefaultMaxMediaPerContainer int = 90001    
+const DefaultExcludeEmptyContainers bool = true
 
 // Matchers that determine if you want to include specific filenames/content types
 type MediaMatcher func(string, string) bool
@@ -65,11 +66,9 @@ type DirConfigEntry struct {
     CoreCount       int    // How many cores are likely available (used in creating multithread workers / previews)
     StaticResourcePath string  // The location where compiled js and css is hosted (container vs dev server)
     Initialized     bool   // Has the configuration actually be initialized properly
-    MaxSearchDepth  int    // When we search for data how far down the filesystem to search
-    MaxMediaPerContainer  int    // When we search for data how far down the filesystem to search
 
     // Config around creating preview images (used only by the task db:preview)
-    PreviewCount    int    // How many files should be listed for a preview (todo: USE)
+    PreviewCount    int    // How many files should be listed for a preview
     PreviewOverSize int64  // Over how many bytes should previews be created for the file
     PreviewVideoType string // This will be either gif or png based on config
     PreviewCreateFailIsFatal bool  // If set creating an image or movie preview will hard fail
@@ -77,9 +76,12 @@ type DirConfigEntry struct {
     // Matchers that will determine which media elements to be included or excluded
     IncFiles MediaMatcher
     IncludeOperator string
-
     ExcFiles MediaMatcher
     ExcludeOperator string
+
+    MaxSearchDepth  int    // When we search for data how far down the filesystem to search
+    MaxMediaPerContainer  int    // When we search for data how far down the filesystem to search
+    ExcludeEmptyContainers bool // If there is no content, should we list the container default true
 }
 
  // https://medium.com/@TobiasSchmidt89/the-singleton-object-oriented-design-pattern-in-golang-9f6ce75c21f7
@@ -112,6 +114,7 @@ func GetCfgDefaults() DirConfigEntry {
        IncludeOperator: "AND",
        ExcFiles: ExcludeNoFiles,
        ExcludeOperator: "AND",
+       ExcludeEmptyContainers: DefaultExcludeEmptyContainers,
    }
 }
 
@@ -255,10 +258,10 @@ func FindMedia(cnt models.Container, limit int, start_offset int) models.MediaCo
 func FindMediaMatcher(cnt models.Container, limit int, start_offset int, yup MediaMatcher, nope MediaMatcher) models.MediaContainers {
     var arr = models.MediaContainers{}
 
-    // cfg := GetCfg()
     fqDirPath := filepath.Join(cnt.Path, cnt.Name)
     maybe_media, _ := ioutil.ReadDir(fqDirPath)
 
+    // TODO: Move away from "img" into something else
     total := 0
     imgs := []os.FileInfo{}  // To get indexing 'right' you have to exlcude directories
     for _, img := range maybe_media {
@@ -295,9 +298,9 @@ func GetFileContents(dir string, filename string) *bufio.Reader {
 }
 
 // Given a container ID and the src of a file in there, get a path and check if it exists
-func GetFilePathInContainer(src string, dir_name string) (string, error) {
-    cfg := GetCfg() // TODO: Potentially this should be passed in
-    path := filepath.Join(cfg.Dir, dir_name)
+func GetFilePathInContainer(src string, path string) (string, error) {
+    //TODO: Potentially I should look at cfg.Dir, cnt.Path and src
+    //cfg := GetCfg() 
     fq_path := filepath.Join(path, src)
     if _, os_err := os.Stat(fq_path); os_err != nil {
         return fq_path, os_err
@@ -372,8 +375,8 @@ func getMediaContainer(id uuid.UUID, fileInfo os.FileInfo, path string) models.M
 
 
 type ContentInformation struct {
-    Cnt *models.Container
-    Media *models.MediaContainers
+    Cnt models.Container
+    Media models.MediaContainers
 }
 
 type ContentTree []ContentInformation
@@ -396,12 +399,12 @@ func CreateStructure(dir string, cfg *DirConfigEntry, results *ContentTree, dept
         media := FindMediaMatcher(cnt, cfg.MaxMediaPerContainer, 0, cfg.IncFiles, cfg.ExcFiles)
         cnt.Total = len(media)
         cTree := ContentInformation{
-            Cnt: &cnt,
-            Media: &media,
+            Cnt: cnt,
+            Media: media,
         } 
         tree := append(*results, cTree) 
         subDir := filepath.Join(dir, cnt.Name)
-        // log.Printf("SubDir %s and depth is currently %d count of containers %d", subDir, depth, len(tree))
+        //log.Printf("SubDir %s and depth is currently %d count of containers %d", subDir, depth, len(tree))
 
         mergeTree, err := CreateStructure(subDir, cfg, &tree, depth+1)
         if err != nil {

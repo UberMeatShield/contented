@@ -28,27 +28,37 @@ func InitializeMemory(dir_root string) *MemoryStorage {
 }
 
 /**
- * Populates the memory view
+ * Populates the memory view (this code is very similar to the DB version in helper.go)
  */
 func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap) {
     containers := models.ContainerMap{}
     files := models.MediaMap{}
 
-    log.Printf("Searching in %s", dir_root)
     cfg := GetCfg()
+    log.Printf("PopulateMemoryView searching in %s with depth %d", dir_root, cfg.MaxSearchDepth)
+    contentTree, err := CreateStructure(cfg.Dir, cfg, &ContentTree{}, 0)
+    if err != nil {
+        log.Fatalf("Failed to create the intial in memory structure %s", err)
+    }
 
-    cnts := FindContainers(dir_root)
-    for idx, c := range cnts {
-        media := FindMediaMatcher(c, 90001, 0, cfg.IncFiles, cfg.ExcFiles)
-        c.Total = len(media)
+    tree := *contentTree
+    for idx, ct := range tree {
+        if cfg.ExcludeEmptyContainers && len(ct.Media) == 0 {
+            continue  // SKIP empty container directories
+        }
+
+        // Ensure that we do grab all the containers
+        c := ct.Cnt
         c.Idx = idx
         containers[c.ID] = c
 
-        // This check is normally to determine if we didn't clear out old previews.
-        // For memory only managers it will just consider that a bonus and use the preview.
-        for _, mc := range media {
-            AssignPreviewIfExists(&c, &mc)
-            files[mc.ID] = mc
+        // Careful as sometimes we do want containers even if there is no media
+        if len(ct.Media) > 0 {
+            c.PreviewUrl = "/preview/" + ct.Media[0].ID.String()
+            for _, mc := range ct.Media {
+                AssignPreviewIfExists(&c, &mc)
+                files[mc.ID] = mc
+            }
         }
     }
     return containers, files
