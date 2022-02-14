@@ -22,6 +22,7 @@ import (
     "github.com/gofrs/uuid"
 )
 
+// TODO: hard code vs Envy vs test stuff.  A pain in the butt
 const sniffLen = 512  // How many bytes to read in a file when trying to determine mime type
 const DefaultLimit int = 10000 // The max limit set by environment variable
 const DefaultPreviewCount int = 8
@@ -149,6 +150,11 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
     useDatabase, connErr := strconv.ParseBool(envy.Get("USE_DATABASE", strconv.FormatBool(DefaultUseDatabase)))
     coreCount, coreErr := strconv.Atoi(envy.Get("CORE_COUNT", "4"))
 
+    // There must be a cleaner way to do some of this default loading...
+    excludeEmpty, emptyErr := strconv.ParseBool(envy.Get("EXCLUDE_EMPTY_CONTAINER", strconv.FormatBool(DefaultExcludeEmptyContainers)))
+    maxSearchDepth, depthErr := strconv.Atoi(envy.Get("MAX_SEARCH_DEPTH", strconv.Itoa(DefaultMaxSearchDepth)))
+    maxMediaPerContainer, medErr := strconv.Atoi(envy.Get("MAX_MEDIA_PER_CONTAINER", strconv.Itoa(DefaultMaxMediaPerContainer)))
+
     psize, perr := strconv.ParseInt(envy.Get("CREATE_PREVIEW_SIZE", "1024000"), 10, 64)
     previewType := envy.Get("PREVIEW_VIDEO_TYPE", "png")
     previewFailIsFatal, prevErr := strconv.ParseBool(envy.Get("PREVIEW_CREATE_FAIL_IS_FATAL", "false"))
@@ -169,7 +175,13 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
         panic(coreErr)
     } else if perr != nil {
         panic(perr)
-    } 
+    } else if medErr != nil {
+        panic(medErr)
+    } else if depthErr != nil {
+        panic(depthErr)
+    } else if emptyErr != nil {
+        panic(emptyErr)
+    }
     if !(previewType == "png" || previewType == "gif") {
         panic(errors.New("The video preview type is not png or gif"))
     }
@@ -186,6 +198,9 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
     cfg.IncludeOperator = envy.Get("INCLUDE_OPERATOR", "AND")
     cfg.ExcludeOperator = envy.Get("EXCLUDE_OPERATOR", "AND")
 
+    cfg.ExcludeEmptyContainers = excludeEmpty
+    cfg.MaxSearchDepth = maxSearchDepth
+    cfg.MaxMediaPerContainer = maxMediaPerContainer
     SetupConfigMatchers(
         cfg,
         envy.Get("INCLUDE_FILES_MATCH", ""),
