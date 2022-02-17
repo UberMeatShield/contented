@@ -34,7 +34,7 @@ export class ContainerCmp implements OnInit, OnDestroy {
     public ngOnInit() {
         this.sub = GlobalNavEvents.navEvts.subscribe(evt => {
             if (this.active) {
-                console.log("Container Event found", this.container.name, evt);
+                // console.log("Container Event found", this.container.name, evt);
                 switch (evt.action) {
                     case NavTypes.NEXT_MEDIA:
                         console.log("Next in container");
@@ -45,6 +45,7 @@ export class ContainerCmp implements OnInit, OnDestroy {
                         this.prevMedia();
                         break;
                     case NavTypes.SAVE_MEDIA:
+                        console.log("Save the currently selected media");
                         this.saveMedia();
                         break;
                     default:
@@ -92,7 +93,7 @@ export class ContainerCmp implements OnInit, OnDestroy {
     // Could also add in full container load information here
     public imgLoaded(evt) {
         let img = evt.target;
-        console.log("Img Loaded", img.naturalHeight, img.naturalWidth, img);
+        //console.log("Img Loaded", img.naturalHeight, img.naturalWidth, img);
     }
 
     public clickMedia(media: Media) {

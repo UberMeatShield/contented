@@ -253,7 +253,7 @@ func (cm ContentManagerMemory) FindFileRef(mcID uuid.UUID) (*models.MediaContain
 }
 
 func (cm ContentManagerMemory) GetPreviewForMC(mc *models.MediaContainer) (string, error) {
-    dir, err := cm.GetContainer(mc.ContainerID.UUID)
+    cnt, err := cm.GetContainer(mc.ContainerID.UUID)
     if err != nil {
         return "Memory Manager Preview no Parent Found", err
     }
@@ -262,16 +262,16 @@ func (cm ContentManagerMemory) GetPreviewForMC(mc *models.MediaContainer) (strin
         src = mc.Preview
     }
     log.Printf("Memory Manager loading %s preview %s\n", mc.ID.String(), src)
-    return utils.GetFilePathInContainer(src, dir.Name)
+    return utils.GetFilePathInContainer(src, cnt.GetFqPath())
 }
 
 func (cm ContentManagerMemory) FindActualFile(mc *models.MediaContainer) (string, error) {
-    dir, err := cm.GetContainer(mc.ContainerID.UUID)
+    cnt, err := cm.GetContainer(mc.ContainerID.UUID)
     if err != nil {
         return "Memory Manager View no Parent Found", err
     }
     log.Printf("Memory Manager View %s loading up %s\n", mc.ID.String(), mc.Src)
-    return utils.GetFilePathInContainer(mc.Src, dir.Name)
+    return utils.GetFilePathInContainer(mc.Src, cnt.GetFqPath())
 }
 
 // If you want to do in memory testing and already manually created previews this will

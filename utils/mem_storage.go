@@ -28,29 +28,40 @@ func InitializeMemory(dir_root string) *MemoryStorage {
 }
 
 /**
- * Populates the memory view
+ * Populates the memory view (this code is very similar to the DB version in helper.go)
  */
 func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap) {
     containers := models.ContainerMap{}
     files := models.MediaMap{}
 
-    log.Printf("Searching in %s", dir_root)
     cfg := GetCfg()
+    log.Printf("PopulateMemoryView searching in %s with depth %d", dir_root, cfg.MaxSearchDepth)
+    contentTree, err := CreateStructure(cfg.Dir, cfg, &ContentTree{}, 0)
+    if err != nil {
+        log.Fatalf("Failed to create the intial in memory structure %s", err)
+    }
 
-    cnts := FindContainers(dir_root)
-    for idx, c := range cnts {
-        media := FindMediaMatcher(c, 90001, 0, cfg.IncFiles, cfg.ExcFiles)  // TODO: Config this
-        // c.Contents = media
-        c.Total = len(media)
+    tree := *contentTree
+    for idx, ct := range tree {
+        if cfg.ExcludeEmptyContainers && len(ct.Media) == 0 {
+            continue  // SKIP empty container directories
+        }
+
+        // Careful as sometimes we do want containers even if there is no media
+        c := ct.Cnt
+        if len(ct.Media) > 0 {
+            c.PreviewUrl = "/preview/" + ct.Media[0].ID.String()
+            log.Printf("Assigning a preview to %s as %s", c.Name, c.PreviewUrl)
+            for _, mc := range ct.Media {
+                // I should name this as PreviewUrl
+                AssignPreviewIfExists(&c, &mc)
+                files[mc.ID] = mc
+            }
+        }
+        // Remember that assigning into a map is also a copy so any changes must be 
+        // done BEFORE you assign into the map
         c.Idx = idx
         containers[c.ID] = c
-
-        // This check is normally to determine if we didn't clear out old previews.
-        // For memory only managers it will just consider that a bonus and use the preview.
-        for _, mc := range media {
-            AssignPreviewIfExists(&c, &mc)
-            files[mc.ID] = mc
-        }
     }
     return containers, files
 }

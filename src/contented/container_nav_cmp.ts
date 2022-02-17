@@ -42,11 +42,16 @@ export class ContainerNavCmp implements OnInit, OnDestroy {
 
     public ngOnInit() {
         this.sub = GlobalNavEvents.navEvts.subscribe(evt => {
-            console.log("Did we get this select event", evt);
-            if (evt.action == NavTypes.SELECT_MEDIA) {
+            if (evt.action == NavTypes.SELECT_MEDIA && evt.cnt == this.cnt && evt.media) {
+                //console.log("Container Nav found select media", evt, evt.cnt.name);
                 this.currentMedia = evt.media;
             }
         });
+        // The select event can trigger BEFORE a render loop so on a new render
+        // ensure we at least get our current media (should be correct given the rowIdx)
+        if (this.cnt) {
+            this.currentMedia = this.cnt.getMedia();
+        }
     }
 
     public ngOnDestroy() {

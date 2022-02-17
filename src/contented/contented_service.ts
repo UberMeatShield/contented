@@ -43,7 +43,7 @@ export class ContentedService {
         let img: Media = cnt.contents[rowIdx];
         let filename = cnt && rowIdx >= 0 && rowIdx < cnt.contents.length ? cnt.contents[rowIdx].src : '';
         if (!filename) {
-            console.log("No file specified, wtf", rowIdx);
+            console.log("No file specified at rowIdx", rowIdx);
         }
         let downloadUrl = ApiDef.contented.download.replace('{mcID}', img.id);
         console.log("DownloadURL", downloadUrl);

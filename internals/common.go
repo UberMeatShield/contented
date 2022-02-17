@@ -21,6 +21,9 @@ import (
     "github.com/gobuffalo/nulls"
 )
 
+const TOTAL_CONTAINERS = 5
+const TOTAL_MEDIA = 29
+
 // Create the basic app but without routes, useful for testing the managers but not routes
 func CreateBuffaloApp(UseDatabase bool, env string) *buffalo.App {
     app := buffalo.New(buffalo.Options{

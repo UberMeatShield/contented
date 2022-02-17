@@ -14,6 +14,8 @@ import (
 	"github.com/gobuffalo/suite"
 )
 
+const ExpectCntCount = 5
+
 type ActionSuite struct {
 	*suite.Action
 }
@@ -36,7 +38,7 @@ func (as *ActionSuite) Test_ContentList() {
 	as.Equal(http.StatusOK, res.Code)
 	resObj := models.Containers{}
 	json.NewDecoder(res.Body).Decode(&resObj)
-	as.Equal(4, len(resObj), "We should have this many dirs present")
+	as.Equal(ExpectCntCount, len(resObj), "We should have this many dirs present")
 }
 
 func (as *ActionSuite) Test_ContentDirLoad() {
@@ -46,7 +48,7 @@ func (as *ActionSuite) Test_ContentDirLoad() {
 	as.Equal(http.StatusOK, res.Code)
 	cnts := models.Containers{}
 	json.NewDecoder(res.Body).Decode(&cnts)
-	as.Equal(4, len(cnts), "We should have this many dirs present")
+	as.Equal(ExpectCntCount, len(cnts), "We should have this many dirs present")
 
 	for _, c := range cnts {
 		res := as.JSON("/containers/" + c.ID.String()  + "/media").Get()

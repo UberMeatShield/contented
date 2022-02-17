@@ -22,10 +22,15 @@ import (
     "github.com/gofrs/uuid"
 )
 
+// TODO: hard code vs Envy vs test stuff.  A pain in the butt
 const sniffLen = 512  // How many bytes to read in a file when trying to determine mime type
 const DefaultLimit int = 10000 // The max limit set by environment variable
 const DefaultPreviewCount int = 8
 const DefaultUseDatabase bool = false
+const Default bool = false
+const DefaultMaxSearchDepth int = 1
+const DefaultMaxMediaPerContainer int = 90001    
+const DefaultExcludeEmptyContainers bool = true
 
 // Matchers that determine if you want to include specific filenames/content types
 type MediaMatcher func(string, string) bool
@@ -64,7 +69,7 @@ type DirConfigEntry struct {
     Initialized     bool   // Has the configuration actually be initialized properly
 
     // Config around creating preview images (used only by the task db:preview)
-    PreviewCount    int    // How many files should be listed for a preview (todo: USE)
+    PreviewCount    int    // How many files should be listed for a preview
     PreviewOverSize int64  // Over how many bytes should previews be created for the file
     PreviewVideoType string // This will be either gif or png based on config
     PreviewCreateFailIsFatal bool  // If set creating an image or movie preview will hard fail
@@ -72,9 +77,12 @@ type DirConfigEntry struct {
     // Matchers that will determine which media elements to be included or excluded
     IncFiles MediaMatcher
     IncludeOperator string
-
     ExcFiles MediaMatcher
     ExcludeOperator string
+
+    MaxSearchDepth  int    // When we search for data how far down the filesystem to search
+    MaxMediaPerContainer  int    // When we search for data how far down the filesystem to search
+    ExcludeEmptyContainers bool // If there is no content, should we list the container default true
 }
 
  // https://medium.com/@TobiasSchmidt89/the-singleton-object-oriented-design-pattern-in-golang-9f6ce75c21f7
@@ -96,6 +104,8 @@ func GetCfgDefaults() DirConfigEntry {
        Dir: "",
        CoreCount: 4,
        Limit: DefaultLimit,
+       MaxSearchDepth: DefaultMaxSearchDepth,
+       MaxMediaPerContainer: DefaultMaxMediaPerContainer,
        PreviewCount: DefaultPreviewCount,
        PreviewOverSize: 1024000,
        PreviewVideoType: "png",
@@ -105,6 +115,7 @@ func GetCfgDefaults() DirConfigEntry {
        IncludeOperator: "AND",
        ExcFiles: ExcludeNoFiles,
        ExcludeOperator: "AND",
+       ExcludeEmptyContainers: DefaultExcludeEmptyContainers,
    }
 }
 
@@ -139,6 +150,11 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
     useDatabase, connErr := strconv.ParseBool(envy.Get("USE_DATABASE", strconv.FormatBool(DefaultUseDatabase)))
     coreCount, coreErr := strconv.Atoi(envy.Get("CORE_COUNT", "4"))
 
+    // There must be a cleaner way to do some of this default loading...
+    excludeEmpty, emptyErr := strconv.ParseBool(envy.Get("EXCLUDE_EMPTY_CONTAINER", strconv.FormatBool(DefaultExcludeEmptyContainers)))
+    maxSearchDepth, depthErr := strconv.Atoi(envy.Get("MAX_SEARCH_DEPTH", strconv.Itoa(DefaultMaxSearchDepth)))
+    maxMediaPerContainer, medErr := strconv.Atoi(envy.Get("MAX_MEDIA_PER_CONTAINER", strconv.Itoa(DefaultMaxMediaPerContainer)))
+
     psize, perr := strconv.ParseInt(envy.Get("CREATE_PREVIEW_SIZE", "1024000"), 10, 64)
     previewType := envy.Get("PREVIEW_VIDEO_TYPE", "png")
     previewFailIsFatal, prevErr := strconv.ParseBool(envy.Get("PREVIEW_CREATE_FAIL_IS_FATAL", "false"))
@@ -159,7 +175,13 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
         panic(coreErr)
     } else if perr != nil {
         panic(perr)
-    } 
+    } else if medErr != nil {
+        panic(medErr)
+    } else if depthErr != nil {
+        panic(depthErr)
+    } else if emptyErr != nil {
+        panic(emptyErr)
+    }
     if !(previewType == "png" || previewType == "gif") {
         panic(errors.New("The video preview type is not png or gif"))
     }
@@ -176,6 +198,9 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
     cfg.IncludeOperator = envy.Get("INCLUDE_OPERATOR", "AND")
     cfg.ExcludeOperator = envy.Get("EXCLUDE_OPERATOR", "AND")
 
+    cfg.ExcludeEmptyContainers = excludeEmpty
+    cfg.MaxSearchDepth = maxSearchDepth
+    cfg.MaxMediaPerContainer = maxMediaPerContainer
     SetupConfigMatchers(
         cfg,
         envy.Get("INCLUDE_FILES_MATCH", ""),
@@ -248,10 +273,10 @@ func FindMedia(cnt models.Container, limit int, start_offset int) models.MediaCo
 func FindMediaMatcher(cnt models.Container, limit int, start_offset int, yup MediaMatcher, nope MediaMatcher) models.MediaContainers {
     var arr = models.MediaContainers{}
 
-    cfg := GetCfg()
-    fqDirPath := filepath.Join(cfg.Dir, cnt.Name)
+    fqDirPath := filepath.Join(cnt.Path, cnt.Name)
     maybe_media, _ := ioutil.ReadDir(fqDirPath)
 
+    // TODO: Move away from "img" into something else
     total := 0
     imgs := []os.FileInfo{}  // To get indexing 'right' you have to exlcude directories
     for _, img := range maybe_media {
@@ -275,6 +300,7 @@ func FindMediaMatcher(cnt models.Container, limit int, start_offset int, yup Med
             total++ // Only add a total for non-directory files (exclude other types?)
         }
     }
+    log.Printf("Finished reading from %s and found %d media", fqDirPath, len(arr))
     return arr
 }
 
@@ -287,9 +313,9 @@ func GetFileContents(dir string, filename string) *bufio.Reader {
 }
 
 // Given a container ID and the src of a file in there, get a path and check if it exists
-func GetFilePathInContainer(src string, dir_name string) (string, error) {
-    cfg := GetCfg() // TODO: Potentially this should be passed in
-    path := filepath.Join(cfg.Dir, dir_name)
+func GetFilePathInContainer(src string, path string) (string, error) {
+    //TODO: Potentially I should look at cfg.Dir, cnt.Path and src
+    //cfg := GetCfg() 
     fq_path := filepath.Join(path, src)
     if _, os_err := os.Stat(fq_path); os_err != nil {
         return fq_path, os_err
@@ -360,4 +386,47 @@ func getMediaContainer(id uuid.UUID, fileInfo os.FileInfo, path string) models.M
         ContentType: contentType,
     }
     return media
+}
+
+
+type ContentInformation struct {
+    Cnt models.Container
+    Media models.MediaContainers
+}
+
+type ContentTree []ContentInformation
+// Placeholder hash with fq_path + name as the key
+
+// Write a recurse method for getting all the data up to depth N
+
+func CreateStructure(dir string, cfg *DirConfigEntry, results *ContentTree, depth int) (*ContentTree, error) {
+    //log.Printf("Looking in directory %s set have results %d depth %d", dir, len(*results), depth)
+    if depth > cfg.MaxSearchDepth {
+        return results, nil
+    }
+
+    // This will probably have path issues currently
+    cnts := FindContainers(dir)
+    for _, cnt := range cnts {
+        if cnt.Name == "container_previews" {
+            continue
+        }
+        media := FindMediaMatcher(cnt, cfg.MaxMediaPerContainer, 0, cfg.IncFiles, cfg.ExcFiles)
+        cnt.Total = len(media)
+        cTree := ContentInformation{
+            Cnt: cnt,
+            Media: media,
+        } 
+        tree := append(*results, cTree) 
+        subDir := filepath.Join(dir, cnt.Name)
+        //log.Printf("SubDir %s and depth is currently %d count of containers %d", subDir, depth, len(tree))
+
+        mergeTree, err := CreateStructure(subDir, cfg, &tree, depth+1)
+        if err != nil {
+            log.Printf("Error searching down the subTree %s with error %s", subDir, err)
+            return results, err
+        }
+        results = mergeTree
+    }
+    return results, nil
 }

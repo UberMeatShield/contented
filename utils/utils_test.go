@@ -115,6 +115,37 @@ func Test_ContentType(t *testing.T) {
 	}
 }
 
+
+func TestCreateStructure(t *testing.T) {
+    var testDir, _ = envy.MustGet("DIR")
+    cfg := GetCfg()
+    cfg.MaxSearchDepth = 1
+    cfg.Dir = testDir
+    SetupConfigMatchers(cfg, "", "", "DS_Store", "")
+
+    cTree := ContentTree{}
+    tree, err := CreateStructure(testDir, cfg, &cTree, 0)
+    if err != nil {
+		t.Errorf("Could not create a proper tree %s", err)
+    }
+    if tree == nil {
+		t.Errorf("Container tree was set to nil")
+    }
+    lenTree := len(*tree)
+    if lenTree != 5 {
+		t.Errorf("The Tree should have 5 containers %d", lenTree)
+    }
+
+    cfg.MaxSearchDepth = 0
+    restricted := ContentTree{}
+    restrictTree, err := CreateStructure(testDir, cfg, &restricted, 0)
+    lenRestricted := len(*restrictTree)
+    if lenRestricted != 4 {
+        t.Errorf("We should have restricted it to top level 4 vs %d", lenRestricted)
+    }
+}
+
+
 // Eh, kinda like some form of hashing
 func Test_DirId(t *testing.T) {
 	id1 := GetDirId("dir1")
@@ -199,3 +230,5 @@ func Test_Channels(t *testing.T) {
 		t.Errorf("What the actual fuck %s", b)
 	}
 }
+
+

@@ -10,47 +10,46 @@
       <div class="container-preview-loc">
         <img class="container-preview-img" [src]="cnt?.previewUrl">
       </div>
-
-    <div class="container-bar-info">
-      <span class="bar-spacer">
-        {{idx + 1}} of {{totalContainers}} Containers.
-      </span>
-      <div class="bar-spacer">
-        <mat-progress-spinner
-          *ngIf="cnt.loadState === ContainerLoadStates.Loading"
-          [diameter]="32"
-          [mode]="'indeterminate'">
-        </mat-progress-spinner>
-      </div>
-
-      <!-- Event emit for the rowIdx for this component -->
-      <form class="container-meta-text bar-spacer">
-        Current Index: <input name="rowIdx" type="number" [(ngModel)]="cnt.rowIdx">
-        Loaded: <span class="cnt-max-count"> {{cnt?.contents?.length}}</span>
-        of <span class="cnt-total">{{cnt?.total}}</span> media
-        <span *ngIf="cnt?.contents?.length < cnt.total">
-          press (F) or: 
-          <button class="btn btn-primary btn-full-load-ctn" (click)="fullLoadContainer(cnt)">
-            Load ({{ cnt.total - cnt.count }}) Items
-          </button>
-        </span>
-      </form>
-
-      <div class="bar-spacer"></div>
+      <div class="container-bar-info">
         <span class="bar-spacer">
-          Selected: 
-        <a target="window" class="cnt-name"
-          href="/containers/{{cnt?.id}}"
-        >{{cnt?.name}}</a>
-        <span *ngIf="currentMedia">/</span> 
-        <a target="window" class="current-item" 
-          *ngIf="currentMedia" 
-          href="{{currentMedia.fullUrl}}">
-          {{currentMedia?.src}}
-        </a>
-        &nbsp; {{currentMedia?.content_type}}
+          {{idx + 1}} of {{totalContainers}} Containers.
         </span>
-      </div>
-    </div>
-  </div>
-</div>
+
+        <div class="bar-spacer">
+          <mat-progress-spinner
+            *ngIf="cnt.loadState === ContainerLoadStates.Loading"
+            [diameter]="32"
+            [mode]="'indeterminate'">
+          </mat-progress-spinner>
+        </div>
+
+        <!-- Event emit for the rowIdx for this component -->
+        <form class="container-meta-text bar-spacer">
+          Current Index: <input name="rowIdx" type="number" [(ngModel)]="cnt.rowIdx">
+          Loaded: <span class="cnt-max-count"> {{cnt?.contents?.length}}</span>
+          of <span class="cnt-total">{{cnt?.total}}</span> media
+          <span *ngIf="cnt?.contents?.length < cnt.total">
+            press (F) or: 
+            <button class="btn btn-primary btn-full-load-ctn" (click)="fullLoadContainer(cnt)">
+              Load ({{ cnt.total - cnt.count }}) Items
+            </button>
+          </span>
+        </form>
+
+          <span class="bar-spacer">
+            Selected: 
+          <a target="window" class="cnt-name"
+            href="/containers/{{cnt?.id}}"
+          >{{cnt?.name}}</a>
+          <span *ngIf="currentMedia">/</span> 
+          <a target="window" class="current-item" 
+            *ngIf="currentMedia" 
+            href="{{currentMedia.fullUrl}}">
+            {{currentMedia?.src}}
+          </a>
+          &nbsp; {{currentMedia?.content_type}}
+          </span>
+        </div>
+    </div> <!-- End Container bar info -->
+  </div> <!-- End cnt -->
+</div> <!-- End Component -->

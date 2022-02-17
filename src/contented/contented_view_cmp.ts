@@ -39,7 +39,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
                     this.media = evt.media;
                     break;
             }
-            console.log("Listen for the fullscreen");
+            // console.log("Listen for the fullscreen");
         }) ;
         this.calculateDimensions();
     }

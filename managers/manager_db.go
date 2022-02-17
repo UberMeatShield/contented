@@ -174,7 +174,7 @@ func (cm ContentManagerDB) FindFileRef(mcID uuid.UUID) (*models.MediaContainer, 
 }
 
 func (cm ContentManagerDB) GetPreviewForMC(mc *models.MediaContainer) (string, error) {
-    dir, err := cm.GetContainer(mc.ContainerID.UUID)
+    cnt, err := cm.GetContainer(mc.ContainerID.UUID)
     if err != nil {
         return "DB Manager Preview no Parent Found", err
     }
@@ -183,16 +183,16 @@ func (cm ContentManagerDB) GetPreviewForMC(mc *models.MediaContainer) (string, e
         src = mc.Preview
     }
     log.Printf("DB Manager loading %s preview %s\n", mc.ID.String(), src)
-    return utils.GetFilePathInContainer(src, dir.Name)
+    return utils.GetFilePathInContainer(src, cnt.GetFqPath())
 }
 
 func (cm ContentManagerDB) FindActualFile(mc *models.MediaContainer) (string, error) {
-    dir, err := cm.GetContainer(mc.ContainerID.UUID)
+    cnt, err := cm.GetContainer(mc.ContainerID.UUID)
     if err != nil {
         return "DB Manager View no Parent Found", err
     }
     log.Printf("DB Manager View %s loading up %s\n", mc.ID.String(), mc.Src)
-    return utils.GetFilePathInContainer(mc.Src, dir.Name)
+    return utils.GetFilePathInContainer(mc.Src, cnt.GetFqPath())
 }
 
 
