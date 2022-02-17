@@ -47,19 +47,21 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap) 
             continue  // SKIP empty container directories
         }
 
-        // Ensure that we do grab all the containers
-        c := ct.Cnt
-        c.Idx = idx
-        containers[c.ID] = c
-
         // Careful as sometimes we do want containers even if there is no media
+        c := ct.Cnt
         if len(ct.Media) > 0 {
             c.PreviewUrl = "/preview/" + ct.Media[0].ID.String()
+            log.Printf("Assigning a preview to %s as %s", c.Name, c.PreviewUrl)
             for _, mc := range ct.Media {
+                // I should name this as PreviewUrl
                 AssignPreviewIfExists(&c, &mc)
                 files[mc.ID] = mc
             }
         }
+        // Remember that assigning into a map is also a copy so any changes must be 
+        // done BEFORE you assign into the map
+        c.Idx = idx
+        containers[c.ID] = c
     }
     return containers, files
 }

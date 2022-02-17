@@ -134,12 +134,12 @@ func (as *ActionSuite) Test_MemoryManagerPaginate() {
     as.NotNil(cnt, "There should be a container with 12 entries")
     as.Equal(cnt.Total, 12, "There should be 12 test images in the first ORDERED containers")
     as.NoError(err)
+    as.NotEqual("", cnt.PreviewUrl, "The previewUrl should be set")
     media_page_1, _ := man.ListMedia(cnt.ID, 1, 4)
     as.Equal(len(*media_page_1), 4, "It should respect page size")
 
     media_page_3, _ := man.ListMedia(cnt.ID, 3, 4)
     as.Equal(len(*media_page_3), 4, "It should respect page size and get the last page")
-
     as.NotEqual((*media_page_3)[3].ID, (*media_page_1)[3].ID, "Ensure it actually paged")
 
     // Last container pagination check
