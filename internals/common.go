@@ -142,7 +142,6 @@ func CreateMediaByDirName(test_dir_name string) (*models.Container, models.Media
     return cnt, media, nil
 }
 
-
 func GetMediaByDirName(test_dir_name string) (*models.Container, models.MediaContainers) {
     dir, _ := envy.MustGet("DIR")
     cfg := utils.GetCfg()

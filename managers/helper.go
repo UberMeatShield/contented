@@ -38,7 +38,6 @@ func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
     if db_err != nil {
         return errors.WithStack(err)
     }
-    // This should be initialized
 
     // TODO: Need to do this in a single transaction vs partial
     for idx, ct := range content {
@@ -141,6 +140,8 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
     return err
 }
 
+// TODO: This maybe could be ported to just a ContentTree Element or something
+// This is complicated but a way to do many previews at once
 func CreateMediaPreviews(c *models.Container, media models.MediaContainers) (models.MediaContainers, error) {
     if len(media) == 0 {
         return models.MediaContainers{}, nil 

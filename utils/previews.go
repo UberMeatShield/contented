@@ -223,7 +223,7 @@ func CreatePngFromVideo(srcFile string, dstFile string) (string, error) {
         return "", err
     }
 
-    // TODO: Make it so the 640 is a config setting
+    // TODO: Make it so the 640 is a config setting?
     resizedImg := imaging.Resize(img, 640, 0, imaging.Lanczos)
     err = imaging.Save(resizedImg, dstFile)
     if err != nil {
@@ -275,7 +275,6 @@ func CreateGifFromVideo(srcFile string, dstFile string) (string, error) {
     log.Printf("Gif total time %s framerate %s speedup %s", time_to_encode, framerate, filter_v)
 
     // Framerate vframes
-
     framerate = "0.5"
     gif_err := ffmpeg.Input(srcFile, ffmpeg.KwArgs{"ss": "2"}).
         Output(dstFile, ffmpeg.KwArgs{
@@ -294,6 +293,7 @@ func CreateGifFromVideo(srcFile string, dstFile string) (string, error) {
 
 
 // This might not need to be a fatal on an error, but is nice for debugging now
+// Unit test is in helper_test...
 func CreateMediaPreview(c *models.Container, mc *models.MediaContainer) (string, error) {
     cfg := GetCfg()
     cntPath := filepath.Join(c.Path, c.Name)
