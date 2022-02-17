@@ -132,6 +132,27 @@ func CreateImagePreview(srcImg *os.File, dstFile string, contentType string) (st
     return dstFile, previewImg.Close()
 }
 
+func ClearContainerPreviews(c *models.Container) error {
+    dst := GetContainerPreviewDst(c)
+    if _, err := os.Stat(dst); os.IsNotExist(err) {
+        return nil
+    }
+    r_err := os.RemoveAll(dst)
+    if r_err != nil {
+        log.Fatal(r_err)
+        return r_err
+    }
+    return nil
+}
+
+// TODO: Move to utils or make it wrapped for some reason?
+func GetContainerPreviewDst(c *models.Container) string {
+
+    // Might need to make this use cfg directory location as a CENTRAL
+    // Preview location somehow.
+    return GetPreviewDst(c.GetFqPath())
+}
+
 // Make sure dstPath already exists before you call this (MakePreviewPath)
 func GetImagePreview(path string, filename string, dstPath string, pIfSize int64) (string, error) {
     // Try and determine the content type (required for doing encoding and decoding)
@@ -269,4 +290,21 @@ func CreateGifFromVideo(srcFile string, dstFile string) (string, error) {
         log.Printf("Failed to create the gif output %s\n with err: %s\n", dstFile, gif_err)
     }
     return dstFile, gif_err
+}
+
+
+// This might not need to be a fatal on an error, but is nice for debugging now
+func CreateMediaPreview(c *models.Container, mc *models.MediaContainer) (string, error) {
+    cfg := GetCfg()
+    cntPath := filepath.Join(c.Path, c.Name)
+    dstPath := GetContainerPreviewDst(c)
+
+    dstFqPath, err := GetImagePreview(cntPath, mc.Src, dstPath, cfg.PreviewOverSize)
+    if err != nil {
+        log.Printf("Failed to create a preview in %s for mc %s err: %s", dstPath, mc.ID.String(), err)
+        if cfg.PreviewCreateFailIsFatal {
+            log.Fatal(err)
+        }
+    }
+    return GetRelativePreviewPath(dstFqPath, cntPath), err
 }

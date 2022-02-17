@@ -8,12 +8,12 @@ package managers
 */
 
 import (
-    "os"
+//    "os"
     "log"
     "fmt"
     // "time"
     // "strings"
-    "path/filepath"
+    //"path/filepath"
     "contented/models"
     "contented/utils"
     "github.com/pkg/errors"
@@ -78,27 +78,6 @@ func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
     return nil
 }
 
-// TODO: Move this code into manager (likely?)
-func ClearContainerPreviews(c *models.Container) error {
-    dst := GetContainerPreviewDst(c) 
-    if _, err := os.Stat(dst); os.IsNotExist(err) {
-        return nil
-    }
-    r_err := os.RemoveAll(dst)
-    if r_err != nil {
-        log.Fatal(r_err)
-        return r_err
-    }
-    return nil
-}
-
-// TODO: Move to utils or make it wrapped for some reason?
-func GetContainerPreviewDst(c *models.Container) string {
-    // Might need to make this use cfg directory location
-    fqDir := filepath.Join(c.Path, c.Name)
-    return utils.GetPreviewDst(fqDir)
-}
-
 // Init a manager and pass it in or just do this via config value instead of a pass in
 func CreateAllPreviews(cm ContentManager) error {
     cnts, c_err := cm.ListContainers(0, 9001)
@@ -126,9 +105,9 @@ func CreateAllPreviews(cm ContentManager) error {
 func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
     log.Printf("About to try and create previews for %s:%s\n", c.Name, c.ID.String())
     // Reset the preview directory, then create it fresh (update tests if this changes)
-    c_err := ClearContainerPreviews(c)
+    c_err := utils.ClearContainerPreviews(c)
     if c_err == nil {
-        err := utils.MakePreviewPath(GetContainerPreviewDst(c))
+        err := utils.MakePreviewPath(utils.GetContainerPreviewDst(c))
         if err != nil {  // This is pretty fatal if we don't have dist permission
             log.Fatal(err)
         }
@@ -243,7 +222,7 @@ func StartWorker(w utils.PreviewWorker) {
         c := pr.C
         mc := pr.Mc
         log.Printf("Worker %d Doing a preview for %s\n", w.Id, mc.ID.String())
-        preview, err :=  CreateMediaPreview(c, mc)
+        preview, err :=  utils.CreateMediaPreview(c, mc)
         pr.Out <- utils.PreviewResult{
             C_ID: c.ID,
             MC_ID: mc.ID,
@@ -254,18 +233,3 @@ func StartWorker(w utils.PreviewWorker) {
 }
 
 
-// This might not need to be a fatal on an error, but is nice for debugging now
-func CreateMediaPreview(c *models.Container, mc *models.MediaContainer) (string, error) {
-    cfg := utils.GetCfg()
-    cntPath := filepath.Join(c.Path, c.Name)
-    dstPath := GetContainerPreviewDst(c)
-
-    dstFqPath, err := utils.GetImagePreview(cntPath, mc.Src, dstPath, cfg.PreviewOverSize)
-    if err != nil {
-        log.Printf("Failed to create a preview in %s for mc %s err: %s", dstPath, mc.ID.String(), err)
-        if cfg.PreviewCreateFailIsFatal {
-            log.Fatal(err)
-        }
-    }
-    return utils.GetRelativePreviewPath(dstFqPath, cntPath), err
-}

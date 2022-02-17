@@ -398,7 +398,6 @@ type ContentTree []ContentInformation
 // Placeholder hash with fq_path + name as the key
 
 // Write a recurse method for getting all the data up to depth N
-
 func CreateStructure(dir string, cfg *DirConfigEntry, results *ContentTree, depth int) (*ContentTree, error) {
     //log.Printf("Looking in directory %s set have results %d depth %d", dir, len(*results), depth)
     if depth > cfg.MaxSearchDepth {
