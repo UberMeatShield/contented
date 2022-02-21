@@ -13,7 +13,7 @@ import (
 type Container struct {
 	ID        uuid.UUID       `json:"id" db:"id"`
 	Total     int             `json:"total" db:"total"`
-	Path      string          `json:"path" db:"path"`
+	Path      string          `json:"-" db:"path"`
 	Name      string          `json:"name" db:"name"`
 	CreatedAt time.Time       `json:"created" db:"created_at"`
 	UpdatedAt time.Time       `json:"updated" db:"updated_at"`
