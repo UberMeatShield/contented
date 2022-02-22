@@ -1,6 +1,9 @@
 // List of directories under the main element
 package utils
-
+/**
+* These utilities are how initial content is looked up and provides other simple
+* helpers around checking filetypes and building out the base data model.
+*/
 import (
     "os"
     //"errors"

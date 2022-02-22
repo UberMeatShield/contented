@@ -1,6 +1,9 @@
-// List of directories under the main element
 package utils
-
+/**
+* These are utilities for handling configuration settings for the app overall.  It sets up
+* how content is discovered.  It will also centralize all the config lookup and managers loading
+* in environment variables when running the full instance vs unit tests.
+*/
 import (
     "os"
     "errors"

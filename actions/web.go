@@ -107,6 +107,7 @@ func DownloadHandler(c buffalo.Context) error {
     return c.Render(200, r.Download(c, finfo.Name(), file_contents))
 }
 
+// This was the code provided to look up params... this seems cumbersome but "eh?"
 func GetKeyVal(c buffalo.Context, key string, defaultVal string) string {
 	if m, ok := c.Params().(url.Values); ok {
 		for k, v := range m {

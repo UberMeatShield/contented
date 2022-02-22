@@ -1,5 +1,8 @@
 package utils
-
+/**
+*  These are helper functions around creating Media preview information for large images
+* and video content.   It can be configured to generate a single image or a gif for a video.
+*/
 import (
     "os"
     "errors"
@@ -188,7 +191,7 @@ func GetImagePreview(path string, filename string, dstPath string, pIfSize int64
     return "", nil
 }
 
-// TODO: Determine if the gif preview just works.
+// TODO: Determine if the gif preview just works.  ffmpeg is bloody complicated.
 // TODO: Determine how the heck to check length and output a composite or a few screens.
 func ReadFrameAsJpeg(inFileName string, frameNum int) io.Reader {
     buf := bytes.NewBuffer(nil)
