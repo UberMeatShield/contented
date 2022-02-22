@@ -1,5 +1,9 @@
 package utils
-
+/**
+* This provides a single instance of the content tree that should be hosted when you
+* choose just to use an in memory version of a directory.  It keeps a hash lookup for
+* containers and media and is then used by the MemoryManager.
+*/
 import (
     "log"
     "contented/models"

@@ -1,7 +1,8 @@
 package internals
 
 /**
- * These are some common test helper files dealing mostly with unit test setup.
+ * These are some common test helper files dealing mostly with unit test setup and
+ * mock data counts and information.
  */
 import (
     "log"
@@ -141,8 +142,6 @@ func CreateMediaByDirName(test_dir_name string) (*models.Container, models.Media
     }
     return cnt, media, nil
 }
-
-
 
 func GetMediaByDirName(test_dir_name string) (*models.Container, models.MediaContainers) {
     dir, _ := envy.MustGet("DIR")
