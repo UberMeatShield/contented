@@ -5,9 +5,11 @@ package utils
 */
 import (
     "os"
+    "strconv"
     "errors"
     "image"
     "strings"
+    "regexp"
     "log"
     "bytes"
     "fmt"
@@ -218,6 +220,22 @@ func CreateVideoPreview(srcFile string, dstFile string, contentType string) (str
     }
 }
 
+/* https://ottverse.com/how-to-create-gif-from-images-using-ffmpeg/
+* https://ottverse.com/thumbnails-screenshots-using-ffmpeg/#ScreenshotThumbnail_every_10_seconds
+* ffmpeg -i donut.mp4 -vf "select='not(mod(n,10))',setpts='N/(30*TB)'" -f image2 thumbnail%03d.jpg
+*/
+func CreateScreensFromVideo(srcFile, dstFile string) (string, error) {
+    // Hate
+    total_time, fps, err := GetTotalVideoLength(srcFile)
+    if err != nil {
+        log.Printf("Error creating screens for %s err: %s", srcFile, err)
+    }
+    log.Printf("Total time was %f with %d as the fps", total_time, fps)
+
+    // Rename the dstFile with Indexing information (replace.png with info)
+    return "Nope", err
+}
+
 func CreatePngFromVideo(srcFile string, dstFile string) (string, error) {
     reader := ReadFrameAsJpeg(srcFile, 20)  // Determine how to get a better frame
     img, err := imaging.Decode(reader)
@@ -226,7 +244,7 @@ func CreatePngFromVideo(srcFile string, dstFile string) (string, error) {
         return "", err
     }
 
-    // TODO: Make it so the 640 is a config setting?
+    // TODO: Get a full resolution image based on the stream resolution?
     resizedImg := imaging.Resize(img, 640, 0, imaging.Lanczos)
     err = imaging.Save(resizedImg, dstFile)
     if err != nil {
@@ -238,12 +256,35 @@ func CreatePngFromVideo(srcFile string, dstFile string) (string, error) {
 
 // What is up with gjson vs normal processing (this does seem easier to use)?
 // TODO: Consider moving more logic into a MediaHelper (size, rez, probe etc)
-func GetTotalVideoLength(srcFile string) (float64, error) {
+// TODO: Rename this as a helper around the Probe
+func GetTotalVideoLength(srcFile string) (float64, int, error) {
     vidInfo, err := ffmpeg.Probe(srcFile)
     if err != nil {
-        return 0, err
+        return 0, 0, err
     }
-    return gjson.Get(vidInfo, "format.duration").Float(), nil
+
+    //log.Printf("What the heck %s", vidInfo) could also get out the resolution
+    duration := gjson.Get(vidInfo, "format.duration").Float()
+    real_frame_re := regexp.MustCompile("/.*")
+    r_frame_rate := gjson.Get(vidInfo, "streams.0.r_frame_rate").String()
+    if r_frame_rate == "" {
+        log.Printf("Video Information for %s", srcFile, vidInfo)
+    }
+    log.Printf("Video Information for %s", srcFile, vidInfo)
+
+    // Note that even the r_frame rate is kinda approximate
+    fps_str := real_frame_re.ReplaceAllString(r_frame_rate, "")  // hate
+    fps := 30  // GUESS
+    if fps_str != "" {
+       fps_parsed, fps_err := strconv.ParseInt(fps_str, 10, 64)
+       if fps_err != nil {
+            log.Printf("Error determining frame rate %s with vidInfo %s", fps_err, vidInfo)
+        } else {
+            fps = int(fps_parsed)
+        }
+    }
+    //return duration, fps, resolution, nil
+    return duration, fps, nil
 }
 
 // Oh gods this is a lot https://engineering.giphy.com/how-to-make-gifs-with-ffmpeg/
@@ -254,7 +295,8 @@ func CreateGifFromVideo(srcFile string, dstFile string) (string, error) {
     // Calculate a max -t based on frame + total time
     // Base it on config ?
     // Produce a gif if size > X
-    total, err := GetTotalVideoLength(srcFile)
+    total, _, err := GetTotalVideoLength(srcFile)
+    //log.Printf("Video Format %s", vidInfo)
     if err != nil {
         return "", err
     }
