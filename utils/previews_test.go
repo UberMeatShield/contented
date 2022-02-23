@@ -70,13 +70,37 @@ func Test_VideoLength(t *testing.T) {
 	testFile := "donut.mp4"
 
     srcFile := filepath.Join(srcDir, testFile)
-    checkLen, err := GetTotalVideoLength(srcFile)
+    checkLen, fps, err := GetTotalVideoLength(srcFile)
     if err != nil {
         t.Errorf("Failed to load length %s", err)
     }
     if (checkLen != 10.08) {
         t.Errorf("Could not get the length correctly %f", checkLen)
     }
+    if fps != 30 {
+        t.Errorf("Couldn't get the right FPS from the video %d", fps)
+    }
+}
+
+// Test MultiScreen
+func Test_MultiScreen(t *testing.T) {
+	var testDir, _ = envy.MustGet("DIR")
+	srcDir := filepath.Join(testDir, "dir2")
+	testFile := "donut.mp4"
+    dstDir := GetPreviewDst(srcDir)
+	ResetPreviewDir(dstDir)
+
+    destFile := filepath.Join(dstDir, "donut.png")
+    srcFile := filepath.Join(srcDir, testFile)
+    dstFile, err := CreateScreensFromVideo(srcFile, destFile)
+    if err != nil {
+        t.Errorf("Failed to create a set of screens %s", err)
+    }
+    if dstFile == "" {
+        t.Errorf("Did not get a valid destination file.")
+    }
+
+    // TODO: Check that the files we expect are ACTUALLY created
 }
 
 
@@ -85,6 +109,7 @@ func Test_BrokenImagePreview(t *testing.T) {
 	srcDir := filepath.Join(testDir, "dir3")
 	dstDir := GetPreviewDst(srcDir)
 	testFile := "nature-corrupted-free-use.jpg"
+	ResetPreviewDir(dstDir)
 
     // TODO: This needs to be made into a better place around previews
 	pLoc, err := GetImagePreview(srcDir, testFile, dstDir, 0)

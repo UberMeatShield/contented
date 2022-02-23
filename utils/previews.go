@@ -223,17 +223,36 @@ func CreateVideoPreview(srcFile string, dstFile string, contentType string) (str
 /* https://ottverse.com/how-to-create-gif-from-images-using-ffmpeg/
 * https://ottverse.com/thumbnails-screenshots-using-ffmpeg/#ScreenshotThumbnail_every_10_seconds
 * ffmpeg -i donut.mp4 -vf "select='not(mod(n,10))',setpts='N/(30*TB)'" -f image2 thumbnail%03d.jpg
+* 
+* Creates a set of preview files in the preview directory from the source image.
 */
-func CreateScreensFromVideo(srcFile, dstFile string) (string, error) {
-    // Hate
-    total_time, fps, err := GetTotalVideoLength(srcFile)
+func CreateScreensFromVideo(srcFile string, dstFile string) (string, error) {
+    totalTime, fps, err := GetTotalVideoLength(srcFile)
     if err != nil {
         log.Printf("Error creating screens for %s err: %s", srcFile, err)
     }
-    log.Printf("Total time was %f with %d as the fps", total_time, fps)
+    log.Printf("Total time was %f with %d as the fps", totalTime, fps)
 
+    // Strip off the PNG, we are just going to dump out some jpegs
+    stripExtension := regexp.MustCompile(".png$")
+    dstFile = stripExtension.ReplaceAllString(dstFile, "") // Hate
+
+    // TODO: Get a list of the files created and return them.
+    // TODO: Config based screen count and sanity if the video is too short
+    // TODO: Scope how the heck to update previews so they are more clever about more than one
+    // TODO: Prevent file conflict donut.png (create preview) donut.mp4 => preview name stomp
+    // cfg := GetCfg()
+    frameNum := (int(totalTime) * fps) / 10
+    dstFile = fmt.Sprintf("%s%s", dstFile, "%03d.jpg")
+    filter := fmt.Sprintf("select='not(mod(n,%d))',setpts='N/(30*TB)'", frameNum)
+    screenErr := ffmpeg.Input(srcFile, ffmpeg.KwArgs{}).
+        Output(dstFile, ffmpeg.KwArgs{"format": "image2", "vf": filter}).
+        OverWriteOutput().Run()
+    if screenErr != nil {
+        log.Printf("Failed to write multiple screens out %s", screenErr)
+    }
     // Rename the dstFile with Indexing information (replace.png with info)
-    return "Nope", err
+    return dstFile, err
 }
 
 func CreatePngFromVideo(srcFile string, dstFile string) (string, error) {
@@ -268,12 +287,12 @@ func GetTotalVideoLength(srcFile string) (float64, int, error) {
     real_frame_re := regexp.MustCompile("/.*")
     r_frame_rate := gjson.Get(vidInfo, "streams.0.r_frame_rate").String()
     if r_frame_rate == "" {
-        log.Printf("Video Information for %s", srcFile, vidInfo)
+        log.Printf("Video Information for %s info %s", srcFile, vidInfo)
     }
-    log.Printf("Video Information for %s", srcFile, vidInfo)
+    log.Printf("Video Information for %s info %s", srcFile, vidInfo)
 
     // Note that even the r_frame rate is kinda approximate
-    fps_str := real_frame_re.ReplaceAllString(r_frame_rate, "")  // hate
+    fps_str := real_frame_re.ReplaceAllString(r_frame_rate, "")
     fps := 30  // GUESS
     if fps_str != "" {
        fps_parsed, fps_err := strconv.ParseInt(fps_str, 10, 64)
