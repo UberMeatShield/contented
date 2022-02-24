@@ -32,7 +32,7 @@ type ContentTree []ContentInformation
  * Grab a small preview list of all items in the directory.
  */
 func FindContainers(dir_root string) models.Containers {
-    return FindContainersMatcher(dir_root, IncludeAllContainers, ExcludeNoContainers)
+    return FindContainersMatcher(dir_root, IncludeAllContainers, ExcludeContainerDefault)
 }
 
 func FindContainersMatcher(dir_root string , incCnt ContainerMatcher, excCnt ContainerMatcher) models.Containers {

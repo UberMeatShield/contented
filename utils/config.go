@@ -36,6 +36,11 @@ func ExcludeNoContainers(name string) bool {
     return false
 }
 
+func ExcludeContainerDefault(name string) bool {
+    defaultCntExclude := regexp.MustCompile("DS_Store|container_previews")
+    return defaultCntExclude.MatchString(name)
+}
+
 func IncludeAllFiles(filename string, content_type string) bool {
     return true
 }
@@ -127,7 +132,7 @@ func GetCfgDefaults() DirConfigEntry {
        ExcMedia: ExcludeNoFiles,
        ExcludeOperator: "AND",
        IncContainer: IncludeAllContainers,
-       ExcContainer: ExcludeNoContainers,
+       ExcContainer: ExcludeContainerDefault,
        ExcludeEmptyContainers: DefaultExcludeEmptyContainers,
    }
 }
@@ -262,6 +267,7 @@ func SetupContainerMatchers(cfg *DirConfigEntry, y_cnt string, n_cnt string) {
     if n_cnt != "" {
         cfg.ExcContainer = CreateContainerMatcher(n_cnt)
     } else {
-        cfg.ExcContainer = ExcludeNoContainers
+        // ExcludeNoContainers is not used because we really don't want .DS_Store and previews
+        cfg.ExcContainer = ExcludeContainerDefault 
     }
 }

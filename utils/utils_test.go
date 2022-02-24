@@ -57,8 +57,8 @@ func Test_SetupContainerMatchers(t *testing.T) {
     if len(all_containers) != 4 {
         t.Errorf("We should have excluded the .DS_Store")
     }
-    exclude_none := FindContainers(testDir)
-    if len(exclude_none) != 5 {
+    exclude_none := FindContainersMatcher(testDir, IncludeAllContainers, ExcludeNoContainers)
+    if len(exclude_none) != 5 {  // Prove we excluded some containers
         t.Errorf("The DS_Store exists, if nothing is excluded then it should count")
     }
 }
