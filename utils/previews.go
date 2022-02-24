@@ -284,14 +284,13 @@ func GetTotalVideoLength(srcFile string) (float64, int, error) {
 
     //log.Printf("What the heck %s", vidInfo) could also get out the resolution
     duration := gjson.Get(vidInfo, "format.duration").Float()
-    real_frame_re := regexp.MustCompile("/.*")
     r_frame_rate := gjson.Get(vidInfo, "streams.0.r_frame_rate").String()
     if r_frame_rate == "" {
         log.Printf("Video Information for %s info %s", srcFile, vidInfo)
     }
-    log.Printf("Video Information for %s info %s", srcFile, vidInfo)
-
+    // log.Printf("Video Information for %s info %s", srcFile, vidInfo)
     // Note that even the r_frame rate is kinda approximate
+    real_frame_re := regexp.MustCompile("/.*")
     fps_str := real_frame_re.ReplaceAllString(r_frame_rate, "")
     fps := 30  // GUESS
     if fps_str != "" {

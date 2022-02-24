@@ -77,7 +77,7 @@ func Test_VideoLength(t *testing.T) {
     if (checkLen != 10.08) {
         t.Errorf("Could not get the length correctly %f", checkLen)
     }
-    if fps != 30 {
+    if fps != 25 {
         t.Errorf("Couldn't get the right FPS from the video %d", fps)
     }
 }
@@ -99,6 +99,7 @@ func Test_MultiScreen(t *testing.T) {
     if dstFile == "" {
         t.Errorf("Did not get a valid destination file.")
     }
+    ResetPreviewDir(dstDir)
 
     // TODO: Check that the files we expect are ACTUALLY created
 }

@@ -32,9 +32,11 @@ type ContentTree []ContentInformation
  * Grab a small preview list of all items in the directory.
  */
 func FindContainers(dir_root string) models.Containers {
-    // Get the current listings, check they passed in a legal key
-    log.Printf("FindContainers Reading from: %s", dir_root)
+    return FindContainersMatcher(dir_root, IncludeAllContainers, ExcludeNoContainers)
+}
 
+func FindContainersMatcher(dir_root string , incCnt ContainerMatcher, excCnt ContainerMatcher) models.Containers {
+    //log.Printf("FindContainers Reading from: %s", dir_root)
     var listings = models.Containers{}
     files, err := ioutil.ReadDir(dir_root)
     if err != nil {
@@ -44,6 +46,10 @@ func FindContainers(dir_root string) models.Containers {
     for _, f := range files {
         if f.IsDir() {
             dir_name := f.Name()
+
+            if !incCnt(dir_name) || excCnt(dir_name) {
+                continue
+            }
             id, _  := uuid.NewV4()
             c := models.Container{
                 ID:   id,
@@ -55,6 +61,7 @@ func FindContainers(dir_root string) models.Containers {
         }
     }
     return listings
+
 }
 
 /**
@@ -96,7 +103,7 @@ func FindMediaMatcher(cnt models.Container, limit int, start_offset int, yup Med
             total++ // Only add a total for non-directory files (exclude other types?)
         }
     }
-    log.Printf("Finished reading from %s and found %d media", fqDirPath, len(arr))
+    //log.Printf("Finished reading from %s and found %d media", fqDirPath, len(arr))
     return arr
 }
 
@@ -193,12 +200,10 @@ func CreateStructure(dir string, cfg *DirConfigEntry, results *ContentTree, dept
     }
 
     // Find all the containers under the specified directory (is directory)
-    cnts := FindContainers(dir)
+    // Could specify the cfg to use with the matching?
+    cnts := FindContainersMatcher(dir, cfg.IncContainer, cfg.ExcContainer)
     for _, cnt := range cnts {
-        if cnt.Name == "container_previews" {
-            continue
-        }
-        media := FindMediaMatcher(cnt, cfg.MaxMediaPerContainer, 0, cfg.IncFiles, cfg.ExcFiles)
+        media := FindMediaMatcher(cnt, cfg.MaxMediaPerContainer, 0, cfg.IncMedia, cfg.ExcMedia)
         cnt.Total = len(media)
         cTree := ContentInformation{
             Cnt: cnt,

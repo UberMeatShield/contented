@@ -1,0 +1,1 @@
+MacOS X Creates these hidden directories and they mess things up
