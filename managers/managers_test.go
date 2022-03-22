@@ -312,7 +312,9 @@ func (as* ActionSuite) Test_DbManagerSearchMulti() {
 
 func (as *ActionSuite) Test_MemoryPreviewInitialization() {
     cfg := internals.ResetConfig()
-    utils.SetupMediaMatchers(cfg, "", "video", "", "")
+    cfg.MaxSearchDepth = 1
+    utils.SetupMediaMatchers(cfg, "", "video", "DS_Store", "")
+    utils.SetCfg(*cfg)
 
     // Create a fake file that would sub in by name for a preview
     var testDir, _ = envy.MustGet("DIR")
@@ -343,11 +345,11 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
         as.Equal("/container_previews/donut.mp4.png", mc.Preview)
     }
 
-    // Hate
     cfg.ExcludeEmptyContainers = false
     all_cnts, one_media := utils.PopulateMemoryView(cfg.Dir)
-    as.Equal(internals.TOTAL_CONTAINERS, len(all_cnts), "Allow it to pull in all containers")
     as.Equal(1, len(one_media), "But there is only one video by mime type")
+
+    as.Equal(internals.TOTAL_CONTAINERS, len(all_cnts), "Allow it to pull in all containers")
 }
 
 func (as *ActionSuite) Test_ManagerDB() {
