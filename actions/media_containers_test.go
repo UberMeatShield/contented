@@ -79,6 +79,7 @@ func (as *ActionSuite) Test_MediaSubQuery() {
 
 func (as *ActionSuite) Test_ManagerDB_Preview() {
     models.DB.TruncateAll()
+    internals.ResetConfig()
     internals.InitFakeApp(true)
 
     cnt, media := internals.GetMediaByDirName("dir2")

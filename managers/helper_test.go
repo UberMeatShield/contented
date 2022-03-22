@@ -44,8 +44,8 @@ func (as *ActionSuite) Test_InitialCreation() {
 	dir, _ := envy.MustGet("DIR")
     as.NotEmpty(dir, "The test must specify a directory to run on")
 
-    cfg := utils.GetCfg()
-    cfg.Dir = dir
+    cfg := internals.ResetConfig()
+    as.True(cfg.ExcMedia(".DS_Store", "application/octet-stream"), "This should not be allowed")
 
     err := CreateInitialStructure(cfg)
     as.NoError(err, "It should successfully create the full DB setup")
@@ -64,9 +64,13 @@ func (as *ActionSuite) Test_CfgIncExcMedia() {
 
     // Exclude all images
 	dir, _ := envy.MustGet("DIR")
-    cfg := utils.GetCfg()
+    cfg := internals.ResetConfig()
     cfg.Dir = dir
-    cfg.ExcMedia = utils.CreateMediaMatcher("DS_STORE", "image", "OR")
+    nope := utils.CreateMediaMatcher("DS_Store", "image", "OR")
+
+    as.True(nope(".DS_Store", "image/png"))
+    cfg.ExcMedia = nope
+    utils.SetCfg(*cfg)
     err := CreateInitialStructure(cfg)
     as.NoError(err)
 

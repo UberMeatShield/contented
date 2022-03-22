@@ -91,8 +91,9 @@ func ResetConfig() *utils.DirConfigEntry {
     cfg := utils.GetCfgDefaults()
     dir, _ := envy.MustGet("DIR")
     cfg.Dir = dir
-    utils.SetupContainerMatchers(&cfg, "", "DS_Store|container_previews")
     utils.InitConfig(dir, &cfg)
+    utils.SetupContainerMatchers(&cfg, "", "DS_Store|container_previews")
+    utils.SetupMediaMatchers(&cfg, "",  "image|video", "DS_Store", "")
     utils.SetCfg(cfg)
     return utils.GetCfg()
 }
@@ -105,7 +106,6 @@ func InitFakeApp(use_db bool) *utils.DirConfigEntry {
 	fmt.Printf("Using directory %s\n", dir)
 
 	cfg := ResetConfig()
-	utils.InitConfig(dir, cfg)
     cfg.UseDatabase = use_db  // Set via .env or USE_DATABASE as an environment var
     cfg.StaticResourcePath = "./public/build"
 
@@ -160,7 +160,7 @@ func GetMediaByDirName(test_dir_name string) (*models.Container, models.MediaCon
     if cnt == nil {
         log.Panic("Could not find the directory: " +  test_dir_name)
     }
-    media := utils.FindMedia(*cnt, 42, 0)
+    media := utils.FindMediaMatcher(*cnt, 42, 0, cfg.IncMedia, cfg.ExcMedia)
     cnt.Total = len(media)
     return cnt, media
 }
