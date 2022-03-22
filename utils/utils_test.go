@@ -43,18 +43,37 @@ func Test_FindMedia(t *testing.T) {
     }
 }
 
-
-// Exclude the movie by name
-func Test_SetupConfigMatchers(t *testing.T) {
+func Test_SetupContainerMatchers(t *testing.T) {
     var testDir, _ = envy.MustGet("DIR")
     cfg := DirConfigEntry{}
     cfg.Dir = testDir
-    SetupConfigMatchers(&cfg, "", "", "donut|DS_Store", "")
+    SetupContainerMatchers(&cfg, "dir1|screens", "DS_Store")
+
+    containers := FindContainersMatcher(testDir, cfg.IncContainer, cfg.ExcContainer)
+    if len(containers) != 2 {
+        t.Errorf("We should only have matched two directories")
+    }
+    all_containers := FindContainersMatcher(testDir, IncludeAllContainers, cfg.ExcContainer)
+    if len(all_containers) != 4 {
+        t.Errorf("We should have excluded the .DS_Store")
+    }
+    exclude_none := FindContainersMatcher(testDir, IncludeAllContainers, ExcludeNoContainers)
+    if len(exclude_none) != 5 {  // Prove we excluded some containers
+        t.Errorf("The DS_Store exists, if nothing is excluded then it should count")
+    }
+}
+
+// Exclude the movie by name
+func Test_SetupMediaMatchers(t *testing.T) {
+    var testDir, _ = envy.MustGet("DIR")
+    cfg := DirConfigEntry{}
+    cfg.Dir = testDir
+    SetupMediaMatchers(&cfg, "", "", "donut|.DS_Store", "")
 
     containers := FindContainers(testDir)
     found := false
     for _, c := range containers {
-        media := FindMediaMatcher(c, 42, 0, cfg.IncFiles, cfg.ExcFiles)
+        media := FindMediaMatcher(c, 42, 0, cfg.IncMedia, cfg.ExcMedia)
         if c.Name == "dir2" {
             found = true
             if len(media) != 2 {
@@ -121,7 +140,7 @@ func TestCreateStructure(t *testing.T) {
     cfg := GetCfg()
     cfg.MaxSearchDepth = 1
     cfg.Dir = testDir
-    SetupConfigMatchers(cfg, "", "", "DS_Store", "")
+    SetupMediaMatchers(cfg, "", "", "DS_Store", "")
 
     cTree := ContentTree{}
     tree, err := CreateStructure(testDir, cfg, &cTree, 0)
@@ -185,8 +204,8 @@ func Test_FindMediaOffset(t *testing.T) {
     }
 }
 
-func Test_CreateMatcher(t *testing.T) {
-    matcher := CreateMatcher(".jpg|.png|.gif", "image", "AND")
+func Test_CreateMediaMatcher(t *testing.T) {
+    matcher := CreateMediaMatcher(".jpg|.png|.gif", "image", "AND")
 
     valid_fn := "derp.jpg" 
     valid_mime := "image/jpeg"
@@ -201,7 +220,7 @@ func Test_CreateMatcher(t *testing.T) {
         t.Errorf("Does not match fn %s and mime %s", invalid_fn, valid_mime)
     }
 
-    wild_matcher := CreateMatcher("", ".*", "AND")
+    wild_matcher := CreateMediaMatcher("", ".*", "AND")
     // empty_or_wild := matcher(empty_fn, wild_mime)
     empty_or_wild := wild_matcher(invalid_fn, "application/x-bzip")
     if !empty_or_wild {

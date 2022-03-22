@@ -59,14 +59,14 @@ func (as *ActionSuite) Test_InitialCreation() {
     as.Equal(internals.TOTAL_MEDIA, len(media), "The mocks have a specific expected number of items")
 }
 
-func (as *ActionSuite) Test_CfgIncExcFiles() {
+func (as *ActionSuite) Test_CfgIncExcMedia() {
     models.DB.TruncateAll()
 
     // Exclude all images
 	dir, _ := envy.MustGet("DIR")
     cfg := utils.GetCfg()
     cfg.Dir = dir
-    cfg.ExcFiles = utils.CreateMatcher("DS_STORE", "image", "OR")
+    cfg.ExcMedia = utils.CreateMediaMatcher("DS_STORE", "image", "OR")
     err := CreateInitialStructure(cfg)
     as.NoError(err)
 
@@ -78,8 +78,8 @@ func (as *ActionSuite) Test_CfgIncExcFiles() {
 
     clear_err := models.DB.TruncateAll()
     as.NoError(clear_err)
-    cfg.ExcFiles = utils.ExcludeNoFiles
-    cfg.IncFiles = utils.CreateMatcher("", "jpeg", "AND")
+    cfg.ExcMedia = utils.ExcludeNoFiles
+    cfg.IncMedia = utils.CreateMediaMatcher("", "jpeg", "AND")
 
     err_png := CreateInitialStructure(cfg)
     as.NoError(err_png)
@@ -217,7 +217,7 @@ func (as *ActionSuite) Test_PreviewAllData() {
     cfg := utils.GetCfg()
     cfg.UseDatabase = true
     cfg.Dir = dir
-    cfg.ExcFiles = utils.CreateMatcher("corrupted", "", cfg.ExcludeOperator)
+    cfg.ExcMedia = utils.CreateMediaMatcher("corrupted", "", cfg.ExcludeOperator)
 
     c_err := CreateInitialStructure(cfg)
     man := GetManagerActionSuite(cfg, as)
@@ -250,8 +250,8 @@ func (as *ActionSuite) Test_PreviewsWithCorrupted() {
     cfg.Dir = dir
 
     // Match only our corrupted files
-    cfg.IncFiles = utils.CreateMatcher(".*corrupted.*", "", cfg.IncludeOperator)
-    cfg.ExcFiles = utils.ExcludeNoFiles
+    cfg.IncMedia = utils.CreateMediaMatcher(".*corrupted.*", "", cfg.IncludeOperator)
+    cfg.ExcMedia = utils.ExcludeNoFiles
 
     c_err := CreateInitialStructure(cfg)
     man := GetManagerActionSuite(cfg, as)

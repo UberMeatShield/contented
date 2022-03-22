@@ -312,7 +312,7 @@ func (as* ActionSuite) Test_DbManagerSearchMulti() {
 
 func (as *ActionSuite) Test_MemoryPreviewInitialization() {
     cfg := internals.ResetConfig()
-    utils.SetupConfigMatchers(cfg, "", "video", "", "")
+    utils.SetupMediaMatchers(cfg, "", "video", "", "")
 
     // Create a fake file that would sub in by name for a preview
     var testDir, _ = envy.MustGet("DIR")

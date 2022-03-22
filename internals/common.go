@@ -91,6 +91,7 @@ func ResetConfig() *utils.DirConfigEntry {
     cfg := utils.GetCfgDefaults()
     dir, _ := envy.MustGet("DIR")
     cfg.Dir = dir
+    utils.SetupContainerMatchers(&cfg, "", "DS_Store|container_previews")
     utils.InitConfig(dir, &cfg)
     utils.SetCfg(cfg)
     return utils.GetCfg()
