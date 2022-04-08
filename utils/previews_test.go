@@ -2,6 +2,7 @@ package utils
 
 import (
     "os"
+    "io/ioutil"
 //    "errors"
     "path/filepath"
     "testing"
@@ -90,18 +91,42 @@ func Test_MultiScreen(t *testing.T) {
     dstDir := GetPreviewDst(srcDir)
     ResetPreviewDir(dstDir)
 
+    empty_check, _ := ioutil.ReadDir(dstDir)
+    if len(empty_check) > 0 {
+        t.Errorf("The destination directory was not empty %s", empty_check)
+    }
+
     destFile := filepath.Join(dstDir, "donut.png")
     srcFile := filepath.Join(srcDir, testFile)
-    dstFile, err := CreateScreensFromVideo(srcFile, destFile)
+    screensSrc, err := CreateScreensFromVideo(srcFile, destFile)
     if err != nil {
         t.Errorf("Failed to create a set of screens %s", err)
     }
-    if dstFile == "" {
+    if screensSrc == "" {
         t.Errorf("Did not get a valid destination file.")
     }
-    ResetPreviewDir(dstDir)
 
-    // TODO: Check that the files we expect are ACTUALLY created
+    screens_check, _ := ioutil.ReadDir(dstDir)
+    expected := 11
+    if len(screens_check) != expected {
+        t.Errorf("Not enough screens created %d vs expected %d", len(screens_check), expected)
+    }
+
+    // TODO: Really need to fix the dest file info
+    gifFile, err := CreateGifFromScreens(screensSrc, destFile)
+    if err != nil {
+        t.Errorf("Failed to create a gif from screens %s", err)
+    }
+
+    gifStat, noGif := os.Stat(gifFile)
+    if noGif != nil {
+        t.Errorf("Did not create a gif from screens %s", gifFile)
+    }
+
+    if gifStat.Size() > 302114 {
+        t.Errorf("Gif has too much chonk %d", gifStat.Size())
+    }
+    ResetPreviewDir(dstDir)
 }
 
 
@@ -144,8 +169,8 @@ func Test_VideoPreviewPNG(t *testing.T) {
         t.Errorf("Failed to find the expected location %s was %s", expectDst, pLoc)
     }
     // TODO: Figure out sime sizing constraints
-    _, no_file_err := os.Stat(pLoc); 
-    if no_file_err != nil {
+    _, noFileErr := os.Stat(pLoc); 
+    if noFileErr != nil {
         t.Errorf("We had no error but the file is not on disk %s", pLoc)
     }
     // TODO: Should probably check the size as well
@@ -193,16 +218,21 @@ func Test_VideoPreviewGif(t *testing.T) {
     }
     
     vidFile := filepath.Join(srcDir, testFile)
+    vFile, _ := os.Stat(vidFile)
     destFile := filepath.Join(dstDir, testFile + ".gif")
 
     _, err := CreateGifFromVideo(vidFile, destFile)
     if err != nil {
         t.Errorf("Failed to create a gif preview %s", err)
     }
-    _, no_file_err := os.Stat(destFile); 
-    if no_file_err != nil {
+    fCheck, noFileErr := os.Stat(destFile); 
+    if noFileErr != nil {
         t.Errorf("We had no error but the file is not on disk %s", destFile)
     }
+    if fCheck.Size() > vFile.Size()  {
+        t.Errorf("Preview was bigger than video %d > %d", fCheck.Size(), vFile.Size())
+    }
+    ResetPreviewDir(dstDir)
     // TODO: Should probably check the size as well
 }
 

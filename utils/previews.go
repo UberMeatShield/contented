@@ -215,6 +215,8 @@ func CreateVideoPreview(srcFile string, dstFile string, contentType string) (str
     cfg := GetCfg()
     if cfg.PreviewVideoType  == "gif" {
         return CreateGifFromVideo(srcFile, dstFile)
+    } else if cfg.PreviewVideoType == "screens" {
+        return CreateScreensFromVideo(srcFile, dstFile)
     } else {
         return CreatePngFromVideo(srcFile, dstFile)
     }
@@ -233,26 +235,56 @@ func CreateScreensFromVideo(srcFile string, dstFile string) (string, error) {
     }
     log.Printf("Total time was %f with %d as the fps", totalTime, fps)
 
-    // Strip off the PNG, we are just going to dump out some jpegs
-    stripExtension := regexp.MustCompile(".png$")
-    dstFile = stripExtension.ReplaceAllString(dstFile, "") // Hate
-
     // TODO: Get a list of the files created and return them.
     // TODO: Config based screen count and sanity if the video is too short
     // TODO: Scope how the heck to update previews so they are more clever about more than one
     // TODO: Prevent file conflict donut.png (create preview) donut.mp4 => preview name stomp
     // cfg := GetCfg()
     frameNum := (int(totalTime) * fps) / 10
-    dstFile = fmt.Sprintf("%s%s", dstFile, "%03d.jpg")
+    screensDst := GetScreensOutputPattern(dstFile)
     filter := fmt.Sprintf("select='not(mod(n,%d))',setpts='N/(30*TB)'", frameNum)
     screenErr := ffmpeg.Input(srcFile, ffmpeg.KwArgs{}).
-        Output(dstFile, ffmpeg.KwArgs{"format": "image2", "vf": filter}).
+        Output(screensDst, ffmpeg.KwArgs{"format": "image2", "vf": filter}).
         OverWriteOutput().Run()
     if screenErr != nil {
         log.Printf("Failed to write multiple screens out %s", screenErr)
     }
     // Rename the dstFile with Indexing information (replace.png with info)
-    return dstFile, err
+    return screensDst, err
+}
+
+// This does not seem to be much faster, but the gif/Webp might be a better toggle.
+func CreateGifFromScreens(screensSrc string, dstFile string) (string, error) {
+    stripExtension := regexp.MustCompile(".png$")
+    dstFile = stripExtension.ReplaceAllString(dstFile, "") 
+    gifFile := fmt.Sprintf("%s.Webp", dstFile)
+    log.Printf("What is the screens %s vs dstFile %s", screensSrc, dstFile)
+
+    paletteFile := fmt.Sprintf("%s.palette.png", dstFile)
+    paletteErr := ffmpeg.Input(screensSrc, ffmpeg.KwArgs{}).
+        Output(paletteFile, ffmpeg.KwArgs{
+            "vf": "palettegen",
+        }).OverWriteOutput().Run()
+        if paletteErr != nil {
+            log.Printf("Failed to create a palette %s", paletteErr)
+            return "", paletteErr
+        }
+
+    filter := "paletteuse,setpts=6*PTS,scale=iw*.2:ih*.2"
+    screenErr := ffmpeg.Input(paletteFile, ffmpeg.KwArgs{"i": screensSrc}).
+        Output(gifFile, ffmpeg.KwArgs{
+            // "s": "640x480",
+            // "pix_fmt": "yuvj422p",
+            "filter_complex": filter,
+        }).OverWriteOutput().Run()
+    return gifFile, screenErr
+}
+
+// Strip off the PNG, we are just going to dump out some jpegs
+func GetScreensOutputPattern(dstFile string) string {
+    stripExtension := regexp.MustCompile(".png$")
+    dstFile = stripExtension.ReplaceAllString(dstFile, "") // Hate
+    return fmt.Sprintf("%s%s", dstFile, "%03d.jpg")
 }
 
 func CreatePngFromVideo(srcFile string, dstFile string) (string, error) {
