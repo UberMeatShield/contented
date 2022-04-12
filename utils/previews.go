@@ -25,6 +25,8 @@ import (
     ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
+const PREVIEW_DIRECTORY = "container_previews"
+
 // Used in the case of async processing when creating Preview results
 type PreviewResult struct {
     C_ID uuid.UUID
@@ -53,19 +55,21 @@ func MakePreviewPath(dstPath string) error {
 }
 
 func ResetPreviewDir(dstDir string) error {
-    os.RemoveAll(dstDir + "/")
+    if strings.Contains(dstDir, PREVIEW_DIRECTORY) {
+        dstDir = filepath.Join(dstDir, "/")
+        os.RemoveAll(dstDir)
+    }
     return MakePreviewPath(dstDir)
 }
 
+// Check the file status and if over a size create a preview.
 func ShouldCreatePreview(f *os.File, fsize int64) bool {
     finfo, err := f.Stat()
     if err != nil {
         log.Printf("Error determining file stat for %s", err)
         return false
     }
-
     if finfo.Size() > fsize {
-        // log.Printf("How big was the size %d", finfo.Size())
         return true
     }
     return false
@@ -74,7 +78,7 @@ func ShouldCreatePreview(f *os.File, fsize int64) bool {
 // TODO: make the preview directory name configurable
 // Make it use the container Path instead of the name?
 func GetPreviewDst(fqDir string) string {
-    return filepath.Join(fqDir, "container_previews")
+    return filepath.Join(fqDir, PREVIEW_DIRECTORY)
 }
 
 // Get the relative path for a preview
@@ -150,6 +154,20 @@ func ClearContainerPreviews(c *models.Container) error {
     return nil
 }
 
+// Create unit test
+func CleanPaletteFile(paletteFile string) (error) {
+    if _, err := os.Stat(paletteFile); os.IsNotExist(err) {
+        return nil
+    }
+    // Not perfect but "good enough"
+    if strings.Contains(paletteFile, "palette") && strings.Contains(paletteFile, PREVIEW_DIRECTORY) {
+        os.Remove(paletteFile)
+    } else {
+        return errors.New("Unwilling to remove non-paletteFile: " + paletteFile)
+    }
+    return nil
+}
+
 // TODO: Move to utils or make it wrapped for some reason?
 func GetContainerPreviewDst(c *models.Container) string {
 
@@ -214,7 +232,10 @@ func CreateVideoPreview(srcFile string, dstFile string, contentType string) (str
     // And probably the name of the thing better based on the type.
     cfg := GetCfg()
     if cfg.PreviewVideoType  == "gif" {
+        // Hmmm, this should maybe also do a palettegen or just always use screens
         return CreateGifFromVideo(srcFile, dstFile)
+    } else if cfg.PreviewVideoType == "screens" {
+        return CreateScreensFromVideo(srcFile, dstFile)
     } else {
         return CreatePngFromVideo(srcFile, dstFile)
     }
@@ -233,26 +254,74 @@ func CreateScreensFromVideo(srcFile string, dstFile string) (string, error) {
     }
     log.Printf("Total time was %f with %d as the fps", totalTime, fps)
 
-    // Strip off the PNG, we are just going to dump out some jpegs
-    stripExtension := regexp.MustCompile(".png$")
-    dstFile = stripExtension.ReplaceAllString(dstFile, "") // Hate
-
     // TODO: Get a list of the files created and return them.
     // TODO: Config based screen count and sanity if the video is too short
     // TODO: Scope how the heck to update previews so they are more clever about more than one
     // TODO: Prevent file conflict donut.png (create preview) donut.mp4 => preview name stomp
     // cfg := GetCfg()
     frameNum := (int(totalTime) * fps) / 10
-    dstFile = fmt.Sprintf("%s%s", dstFile, "%03d.jpg")
+    screensDst := GetScreensOutputPattern(dstFile)
     filter := fmt.Sprintf("select='not(mod(n,%d))',setpts='N/(30*TB)'", frameNum)
     screenErr := ffmpeg.Input(srcFile, ffmpeg.KwArgs{}).
-        Output(dstFile, ffmpeg.KwArgs{"format": "image2", "vf": filter}).
+        Output(screensDst, ffmpeg.KwArgs{"format": "image2", "vf": filter}).
         OverWriteOutput().Run()
     if screenErr != nil {
         log.Printf("Failed to write multiple screens out %s", screenErr)
     }
     // Rename the dstFile with Indexing information (replace.png with info)
-    return dstFile, err
+    return screensDst, err
+}
+
+
+// Note a src can b either a set of images with a %d00 or a video link
+func PaletteGen(paletteSrc string, dstFile string) (string, error) {
+    // TODO: Make this into a palette method
+    paletteFile := fmt.Sprintf("%s.palette.png", dstFile)
+    paletteErr := ffmpeg.Input(paletteSrc, ffmpeg.KwArgs{}).
+        Output(paletteFile, ffmpeg.KwArgs{
+            "vf": "palettegen",
+        }).OverWriteOutput().Run()
+
+    if paletteErr != nil {
+        log.Printf("Failed to create a palette %s", paletteErr)
+        return "", paletteErr
+    }
+    return paletteFile, nil
+}
+
+// This does not seem to be much faster, but the gif/Webp might be a better toggle.
+func CreateGifFromScreens(screensSrc string, dstFile string) (string, error) {
+    stripExtension := regexp.MustCompile(".png$")
+    dstFile = stripExtension.ReplaceAllString(dstFile, "") 
+
+    // Need a function that determines the preview output filename and takes in the config
+    // for the preview type name...
+    gifFile := fmt.Sprintf("%s.Webp", dstFile)
+    log.Printf("What is the screens %s vs dstFile %s", screensSrc, dstFile)
+
+    // TODO: The whole destination file preview thing is jacked / needs  afix.
+    paletteFile, palErr := PaletteGen(screensSrc, dstFile)
+    if palErr != nil {
+        return "", palErr
+    }
+
+    // Should scale based on a probe of the size maybe?  No need to make something
+    // tiny even smaller.
+    filter := "paletteuse,setpts=6*PTS,scale=iw*.5:ih*.5"
+    screenErr := ffmpeg.Input(paletteFile, ffmpeg.KwArgs{"i": screensSrc}).
+        Output(gifFile, ffmpeg.KwArgs{
+            // "s": "640x480",
+            // "pix_fmt": "yuvj422p",
+            "filter_complex": filter,
+        }).OverWriteOutput().Run()
+    return gifFile, screenErr
+}
+
+// Strip off the PNG, we are just going to dump out some jpegs
+func GetScreensOutputPattern(dstFile string) string {
+    stripExtension := regexp.MustCompile(".png$")
+    dstFile = stripExtension.ReplaceAllString(dstFile, "") // Hate
+    return fmt.Sprintf("%s%s", dstFile, "%03d.jpg")
 }
 
 func CreatePngFromVideo(srcFile string, dstFile string) (string, error) {
