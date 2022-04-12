@@ -122,13 +122,48 @@ func Test_MultiScreen(t *testing.T) {
     if noGif != nil {
         t.Errorf("Did not create a gif from screens %s", gifFile)
     }
-
-    if gifStat.Size() > 302114 {
+    if gifStat.Size() > 702114 {
         t.Errorf("Gif has too much chonk %d", gifStat.Size())
     }
-    ResetPreviewDir(dstDir)
 }
 
+
+func Test_CreatePaletteFile(t *testing.T) {
+    var testDir, _ = envy.MustGet("DIR")
+    srcDir := filepath.Join(testDir, "dir2")
+    testFile := "donut.mp4"
+    dstDir := GetPreviewDst(srcDir)
+    ResetPreviewDir(dstDir)
+
+    previewName := filepath.Join(dstDir, testFile)
+    srcFile := filepath.Join(srcDir, testFile)
+
+    paletteFile, err := PaletteGen(srcFile, previewName)
+    if err != nil {
+        t.Errorf("Couldn't create a palette for %s err %s", srcFile, err)
+    }
+    palStat, noPal := os.Stat(paletteFile)
+    if noPal != nil {
+        t.Errorf("Did not create a palette from a movie %s", paletteFile)
+    }
+    if palStat.Size() <= 0 {
+        t.Errorf("The palette was created empty %s", palStat)
+    }
+    killErr := CleanPaletteFile(paletteFile)
+    if killErr != nil {
+        t.Errorf("Didn't cleanup the paletteFile %s", killErr)
+    }
+    _, noPalNow := os.Stat(paletteFile)
+    if noPalNow == nil {
+        t.Errorf("Now the palette file should be dead")
+    }
+
+    // Deny cleanup of other files
+    denyErr := CleanPaletteFile(srcFile)
+    if denyErr == nil {
+        t.Errorf("better restore the donut file somehow it thought it was a palette")
+    }
+}
 
 func Test_BrokenImagePreview(t *testing.T) {
     var testDir, _ = envy.MustGet("DIR")
