@@ -2,7 +2,9 @@ package utils
 
 import (
     "os"
+    "time"
     "io/ioutil"
+    "fmt"
 //    "errors"
     "path/filepath"
     "testing"
@@ -127,6 +129,39 @@ func Test_MultiScreen(t *testing.T) {
     }
 }
 
+// TODO: Make a damn helper for this type of thing
+func Test_CreateSeekScreens(t *testing.T) {
+    var testDir, _ = envy.MustGet("DIR")
+    testFile := "donut.mp4"
+
+    srcDir := filepath.Join(testDir, "dir2")
+    srcFile := filepath.Join(srcDir, testFile)
+
+    dstDir := GetPreviewDst(srcDir)
+    previewName := filepath.Join(dstDir, testFile)
+    ResetPreviewDir(dstDir)
+
+    err := CreateSeekScreen(srcFile, previewName, 10)
+    if err != nil {
+        t.Errorf("Screen seek failed %s", err)
+    }
+
+
+    // TODO: Need to get a bigger file test
+    startMulti := time.Now()
+    _, multiErr := CreateSeekScreens(srcFile, previewName)
+    if multiErr != nil {
+        t.Errorf("Failed creating multiple screens %s", multiErr)
+    }
+    fmt.Printf("Screen Multi timing %s\n", time.Since(startMulti))
+    
+    singleScreen := time.Now()
+    _, screenErr := CreateScreensFromVideo(srcFile, previewName)
+    if screenErr != nil {
+        t.Errorf("Couldn't create screens all at once %s", screenErr)
+    }
+    fmt.Printf("Screen single execution %s\n", time.Since(singleScreen))
+}
 
 func Test_CreatePaletteFile(t *testing.T) {
     var testDir, _ = envy.MustGet("DIR")

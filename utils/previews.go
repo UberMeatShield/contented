@@ -272,6 +272,46 @@ func CreateScreensFromVideo(srcFile string, dstFile string) (string, error) {
     return screensDst, err
 }
 
+// Need to do timing test with this then a timing test with a much bigger file.
+func CreateSeekScreens(srcFile string, dstFile string) ([]string, error){
+    totalTime, fps, err := GetTotalVideoLength(srcFile)
+    if err != nil {
+        log.Printf("Error creating screens for %s err: %s", srcFile, err)
+    }
+    log.Printf("Total time was %f with %d as the fps", totalTime, fps)
+
+    totalScreens := 10
+    frameSkip := int(totalTime) / totalScreens
+
+    log.Printf("Frame skip is what %d", frameSkip)
+
+    screenFiles := []string{}
+    screenFmt := "%s.screens%03d.jpg"
+    for idx := 1; idx < totalScreens; idx++ {
+        screenFile := fmt.Sprintf(screenFmt, dstFile, idx)
+        log.Printf("Screen file is what %s", screenFile)
+        
+        err := CreateSeekScreen(srcFile, screenFile, (idx * frameSkip))
+        if err != nil {
+            log.Printf("Error creating a seek screen %s", err)
+            break
+        } else {
+            screenFiles = append(screenFiles, screenFile)
+        }
+    }
+    return screenFiles, err
+}
+
+func CreateSeekScreen(srcFile string, dstFile string, screenTime int) error {
+    // frameNum := (int(totalTime) * fps) / 10
+    // screensDst := GetScreensOutputPattern(dstFile)
+    // filter := fmt.Sprintf("select='not(mod(n,%d))',setpts='N/(30*TB)'", frameNum)
+    screenErr := ffmpeg.Input(srcFile, ffmpeg.KwArgs{"ss": screenTime}).
+        Output(dstFile, ffmpeg.KwArgs{"format": "image2", "vframes": 1}).
+        OverWriteOutput().Run()
+    return screenErr // hate
+}
+
 
 // Note a src can b either a set of images with a %d00 or a video link
 func PaletteGen(paletteSrc string, dstFile string) (string, error) {
@@ -320,7 +360,7 @@ func CreateGifFromScreens(screensSrc string, dstFile string) (string, error) {
 // Strip off the PNG, we are just going to dump out some jpegs
 func GetScreensOutputPattern(dstFile string) string {
     stripExtension := regexp.MustCompile(".png$")
-    dstFile = stripExtension.ReplaceAllString(dstFile, "") // Hate
+    dstFile = stripExtension.ReplaceAllString(dstFile, "")
     return fmt.Sprintf("%s%s", dstFile, "%03d.jpg")
 }
 
