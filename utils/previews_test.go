@@ -109,7 +109,7 @@ func Test_MultiScreen(t *testing.T) {
         t.Errorf("Did not get a valid destination file.")
     }
     screens_check, _ := ioutil.ReadDir(dstDir)
-    expected := 11
+    expected := 10
     if len(screens_check) != expected {
         t.Errorf("Not enough screens created %d vs expected %d", len(screens_check), expected)
     }
