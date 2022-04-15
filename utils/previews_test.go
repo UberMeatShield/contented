@@ -5,6 +5,7 @@ import (
     "time"
     "io/ioutil"
     "fmt"
+    "strings"
 //    "errors"
     "path/filepath"
     "testing"
@@ -107,7 +108,6 @@ func Test_MultiScreen(t *testing.T) {
     if screensSrc == "" {
         t.Errorf("Did not get a valid destination file.")
     }
-
     screens_check, _ := ioutil.ReadDir(dstDir)
     expected := 11
     if len(screens_check) != expected {
@@ -115,7 +115,7 @@ func Test_MultiScreen(t *testing.T) {
     }
 
     // TODO: Really need to fix the dest file info
-    gifFile, err := CreateGifFromScreens(screensSrc, destFile)
+    gifFile, err := CreateWebpFromScreens(screensSrc, destFile)
     if err != nil {
         t.Errorf("Failed to create a gif from screens %s", err)
     }
@@ -141,20 +141,41 @@ func Test_CreateSeekScreens(t *testing.T) {
     previewName := filepath.Join(dstDir, testFile)
     ResetPreviewDir(dstDir)
 
-    err := CreateSeekScreen(srcFile, previewName, 10)
+    err := CreateSeekScreen(srcFile, previewName + ".jpeg", 10)
     if err != nil {
         t.Errorf("Screen seek failed %s", err)
     }
-
-
-    // TODO: Need to get a bigger file test
+    // With bigger files ~ 100mb it is much faster to do 10 seek time screens
+    // instead of using a single operation.  The small donut file is faster with
+    // a single operation with a frame selection.
     startMulti := time.Now()
-    _, multiErr := CreateSeekScreens(srcFile, previewName)
+    screens, multiErr, screenPtrn := CreateSeekScreens(srcFile, previewName)
     if multiErr != nil {
         t.Errorf("Failed creating multiple screens %s", multiErr)
     }
     fmt.Printf("Screen Multi timing %s\n", time.Since(startMulti))
+    if len(screens) != 10 {
+        t.Errorf("Didn't find enough screens %d", len(screens))
+    }
+    if strings.Contains("screens", screenPtrn){
+        t.Errorf("We should have a pattern to match against %s", screenPtrn)
+    }
+
+    // Check to ensure you can create a gif from the seek screens
+    webp, webpErr := CreateWebpFromScreens(screenPtrn, previewName)
+    if webpErr != nil {
+        t.Errorf("Failed to create a webp screen collection %s", webpErr)
+    }
+    webInfo, werr := os.Stat(webp)
+    if werr != nil {
+        t.Errorf("The webp file doesn't exist at %s pattern %s", webp, screenPtrn)
+    }
+    size := webInfo.Size()
+    if size > (1024 * 700) || size < 1000 {
+        t.Errorf("The webp Preview was either less than 1000 or too big %d", size)
+    }
     
+    // TODO: Check file size and determine the faster way to create a gif
     singleScreen := time.Now()
     _, screenErr := CreateScreensFromVideo(srcFile, previewName)
     if screenErr != nil {
@@ -303,7 +324,6 @@ func Test_VideoPreviewGif(t *testing.T) {
         t.Errorf("Preview was bigger than video %d > %d", fCheck.Size(), vFile.Size())
     }
     ResetPreviewDir(dstDir)
-    // TODO: Should probably check the size as well
 }
 
 func Test_ShouldCreate(t *testing.T) {

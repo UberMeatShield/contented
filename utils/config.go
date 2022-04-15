@@ -84,6 +84,7 @@ type DirConfigEntry struct {
     // Config around creating preview images (used only by the task db:preview)
     PreviewCount    int    // How many files should be listed for a preview
     PreviewOverSize int64  // Over how many bytes should previews be created for the file
+    PreviewScreensOverSize int64 // Over a certain size video select filters are slow
     PreviewVideoType string // gif|screens|png are the video preview output type
     PreviewCreateFailIsFatal bool  // If set creating an image or movie preview will hard fail
 
