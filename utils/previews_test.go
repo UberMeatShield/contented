@@ -109,23 +109,22 @@ func Test_MultiScreen(t *testing.T) {
         t.Errorf("Did not get a valid destination file.")
     }
     screens_check, _ := ioutil.ReadDir(dstDir)
-    expected := 10
+    expected := 11
     if len(screens_check) != expected {
         t.Errorf("Not enough screens created %d vs expected %d", len(screens_check), expected)
     }
 
     // TODO: Really need to fix the dest file info
-    gifFile, err := CreateWebpFromScreens(screensSrc, destFile)
+    webpFile, err := CreateWebpFromScreens(screensSrc, destFile)
     if err != nil {
         t.Errorf("Failed to create a gif from screens %s", err)
     }
-
-    gifStat, noGif := os.Stat(gifFile)
-    if noGif != nil {
-        t.Errorf("Did not create a gif from screens %s", gifFile)
+    webpStat, noWebp := os.Stat(webpFile)
+    if noWebp != nil {
+        t.Errorf("Did not create a gif from screens %s", webpFile)
     }
-    if gifStat.Size() > 702114 {
-        t.Errorf("Gif has too much chonk %d", gifStat.Size())
+    if webpStat.Size() > (700 * 1024) {
+        t.Errorf("Webp has too much chonk %d", webpStat.Size())
     }
 }
 

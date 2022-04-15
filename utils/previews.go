@@ -254,9 +254,11 @@ func CreateVideoPreview(srcFile string, dstFile string, contentType string) (str
 func CreateScreensFromVideo(srcFile string, dstFile string) (string, error) {
     cfg := GetCfg()
     if FileOverSize(srcFile, cfg.PreviewScreensOverSize) {
+        log.Printf("File size is large for %s using SEEK screen", srcFile)
         _, err, screenFmt := CreateSeekScreens(srcFile, dstFile)
         return screenFmt, err
     } else {
+        log.Printf("File size is small %s using SELECT filter", srcFile)
         return CreateSelectFilterScreens(srcFile, dstFile)
     }
 }
@@ -295,7 +297,7 @@ func CreateSeekScreens(srcFile string, dstFile string) ([]string, error, string)
 
     screenFiles := []string{}
     screenFmt := GetScreensOutputPattern(dstFile)
-    for idx := 1; idx < totalScreens + 1; idx++ {
+    for idx := 0; idx < totalScreens; idx++ {
         screenFile := fmt.Sprintf(screenFmt, idx)
         log.Printf("Screen file is what %s", screenFile)
         

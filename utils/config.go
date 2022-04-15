@@ -125,6 +125,7 @@ func GetCfgDefaults() DirConfigEntry {
        MaxMediaPerContainer: DefaultMaxMediaPerContainer,
        PreviewCount: DefaultPreviewCount,
        PreviewOverSize: 1024000,
+       PreviewScreensOverSize: 50 * 1024000,
        PreviewVideoType: "png",
 
        // Just grab all files by default
@@ -176,6 +177,8 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
     maxMediaPerContainer, medErr := strconv.Atoi(envy.Get("MAX_MEDIA_PER_CONTAINER", strconv.Itoa(DefaultMaxMediaPerContainer)))
 
     psize, perr := strconv.ParseInt(envy.Get("CREATE_PREVIEW_SIZE", "1024000"), 10, 64)
+    useSeekScreenSize, seekErr := strconv.ParseInt(envy.Get("SEEK_SCREEN_OVER_SIZE", "7168000"), 10, 64)
+
     previewType := envy.Get("PREVIEW_VIDEO_TYPE", "png")
     previewFailIsFatal, prevErr := strconv.ParseBool(envy.Get("PREVIEW_CREATE_FAIL_IS_FATAL", "false"))
 
@@ -195,6 +198,8 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
         panic(coreErr)
     } else if perr != nil {
         panic(perr)
+    } else if seekErr != nil {
+        panic(seekErr)
     } else if medErr != nil {
         panic(medErr)
     } else if depthErr != nil {
@@ -214,6 +219,7 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
     cfg.PreviewCount = previewCount
     cfg.PreviewVideoType = previewType
     cfg.PreviewOverSize = psize
+    cfg.PreviewScreensOverSize = useSeekScreenSize
     cfg.PreviewCreateFailIsFatal = previewFailIsFatal
     cfg.IncludeOperator = envy.Get("INCLUDE_OPERATOR", "AND")
     cfg.ExcludeOperator = envy.Get("EXCLUDE_OPERATOR", "AND")
