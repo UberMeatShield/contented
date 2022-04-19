@@ -166,8 +166,33 @@ func Test_VideoLength(t *testing.T) {
     }
 }
 
+func Test_WebpFromVideo(t *testing.T) {
+    srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
+
+    // It will tack on .webp
+    dstFile := filepath.Join(dstDir, testFile)
+    srcFile := filepath.Join(srcDir, testFile)
+
+    // Uses the cfg size to create incremental screens
+    cfg := GetCfg()
+    cfg.PreviewScreensOverSize = 1024
+    SetCfg(*cfg)
+    previewFile, err := CreateWebpFromVideo(srcFile, dstFile)
+    if err != nil {
+        t.Errorf("Couldn't create preview from %s err: %s", srcFile, err)
+    }
+    webpStat, noWebp := os.Stat(previewFile)
+    if noWebp != nil {
+        t.Errorf("Did not create a preview from screens %s", previewFile)
+    }
+    if webpStat.Size() > (700 * 1024) {
+        t.Errorf("Webp has too much chonk %d", webpStat.Size())
+    }
+        
+}
+
 // Test MultiScreen
-func Test_VideoMultiScreen(t *testing.T) {
+func Test_VideoSelectScreens(t *testing.T) {
     srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
 
     empty_check, _ := ioutil.ReadDir(dstDir)
@@ -177,7 +202,7 @@ func Test_VideoMultiScreen(t *testing.T) {
 
     destFile := filepath.Join(dstDir, "donut.png")
     srcFile := filepath.Join(srcDir, testFile)
-    screensSrc, err := CreateScreensFromVideo(srcFile, destFile)
+    screensSrc, err := CreateScreensFromVideoSized(srcFile, destFile, 1024 * 300000)
     if err != nil {
         t.Errorf("Failed to create a set of screens %s", err)
     }

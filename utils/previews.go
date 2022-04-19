@@ -238,8 +238,8 @@ func CreateVideoPreview(srcFile string, dstFile string, contentType string) (str
     if cfg.PreviewVideoType  == "gif" {
         return CreateGifFromVideo(srcFile, dstFile)
     } else if cfg.PreviewVideoType == "screens" {
-        // Should build out a screen composite potentially?
-        return CreateScreensFromVideo(srcFile, dstFile)
+        // This creates screens and also a webp file
+        return CreateWebpFromVideo(srcFile, dstFile)
     } else {
         return CreatePngFromVideo(srcFile, dstFile)
     }
@@ -253,14 +253,30 @@ func CreateVideoPreview(srcFile string, dstFile string, contentType string) (str
 */
 func CreateScreensFromVideo(srcFile string, dstFile string) (string, error) {
     cfg := GetCfg()
-    if FileOverSize(srcFile, cfg.PreviewScreensOverSize) {
+    return CreateScreensFromVideoSized(srcFile, dstFile, cfg.PreviewScreensOverSize)
+}
+
+func CreateScreensFromVideoSized(srcFile string, dstFile string, previewScreensOverSize int64) (string, error) {
+    if FileOverSize(srcFile, previewScreensOverSize) {
         log.Printf("File size is large for %s using SEEK screen", srcFile)
+
+        // Currently I get a list of screens but don't do anything with it.
         _, err, screenFmt := CreateSeekScreens(srcFile, dstFile)
         return screenFmt, err
     } else {
         log.Printf("File size is small %s using SELECT filter", srcFile)
         return CreateSelectFilterScreens(srcFile, dstFile)
     }
+}
+
+// Create screens as needed a palette file and return the image
+func CreateWebpFromVideo(srcFile string, dstFile string) (string, error) {
+    screensSrc, err := CreateScreensFromVideo(srcFile, dstFile)
+    if err != nil {
+        log.Printf("Couldn't create screens for the %s err: %s", srcFile, err)
+        return "", err
+    }
+    return CreateWebpFromScreens(screensSrc, dstFile)
 }
 
 func CreateSelectFilterScreens(srcFile string, dstFile string) (string, error) {
