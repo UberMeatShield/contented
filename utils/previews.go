@@ -292,8 +292,8 @@ func CreateSeekScreens(srcFile string, dstFile string) ([]string, error, string)
     log.Printf("Total time was %f with %d as the fps", totalTime, fps)
 
     totalScreens := 10
-    frameSkip := int(totalTime) / totalScreens
-    log.Printf("Frame skip is what %d", frameSkip)
+    timeSkip := int(totalTime) / totalScreens
+    log.Printf("Frame skip is what %d", timeSkip)
 
     screenFiles := []string{}
     screenFmt := GetScreensOutputPattern(dstFile)
@@ -301,7 +301,7 @@ func CreateSeekScreens(srcFile string, dstFile string) ([]string, error, string)
         screenFile := fmt.Sprintf(screenFmt, idx)
         log.Printf("Screen file is what %s", screenFile)
         
-        err := CreateSeekScreen(srcFile, screenFile, (idx * frameSkip))
+        err := CreateSeekScreen(srcFile, screenFile, (idx * timeSkip))
         if err != nil {
             log.Printf("Error creating a seek screen %s", err)
             break

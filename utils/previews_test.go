@@ -6,12 +6,94 @@ import (
     "io/ioutil"
     "fmt"
     "strings"
-//    "errors"
+    //    "errors" 
     "path/filepath"
     "testing"
  //   "contented/models"
     "github.com/gobuffalo/envy"
 )
+
+// Helper for a common block of video test code
+func Get_VideoAndSetupPaths() (string, string, string) {
+    var testDir, _ = envy.MustGet("DIR")
+    srcDir := filepath.Join(testDir, "dir2")
+    dstDir := GetPreviewDst(srcDir)
+    testFile := "donut.mp4"
+
+    // Ensure that the preview destination directory is clean
+    ResetPreviewDir(dstDir)
+    return srcDir, dstDir, testFile
+}
+
+// Check that handling bad inputs behaves in an expected fashion
+func Test_BrokenImagePreview(t *testing.T) {
+    var testDir, _ = envy.MustGet("DIR")
+    srcDir := filepath.Join(testDir, "dir3")
+    dstDir := GetPreviewDst(srcDir)
+    testFile := "nature-corrupted-free-use.jpg"
+    ResetPreviewDir(dstDir)
+
+    // TODO: This needs to be made into a better place around previews
+    pLoc, err := GetImagePreview(srcDir, testFile, dstDir, 0)
+    if err == nil {
+        t.Errorf("This file should definitely cause an error")
+    }
+    if pLoc != "" {
+        t.Errorf("And it absolutely does not have a preview")
+    }
+}
+
+// Should it Create a preview based on size of the file
+func Test_ShouldCreate(t *testing.T) {
+    var testDir, _ = envy.MustGet("DIR")
+    srcDir := filepath.Join(testDir, "dir1")
+    testFile := "this_is_p_ng"
+
+    filename := filepath.Join(srcDir, testFile)
+    srcImg, fErr := os.Open(filename)
+
+    if fErr != nil {
+        t.Errorf("This file cannot be opened %s with err %s", filename, fErr)
+    }
+
+    preview_no := ShouldCreatePreview(srcImg, 30000)
+    if preview_no != false {
+        t.Errorf("This preview should not be created")
+    }
+    preview_yes := ShouldCreatePreview(srcImg, 1000)
+    if preview_yes != true {
+        t.Errorf("At this size it should create a preview")
+    }
+}
+
+func Test_FileExistsError(t *testing.T) {
+    var testDir, _ = envy.MustGet("DIR")
+    srcDir := filepath.Join(testDir, "dir1")
+    dstDir := GetPreviewDst(srcDir)
+    knownFile := "0_LargeScreen.png"
+
+    ResetPreviewDir(dstDir)
+    fqPath := GetPreviewPathDestination(knownFile, dstDir, "image/png")
+    f, err := os.Create(fqPath)
+    if err != nil {
+        t.Errorf("Could not create the file at %s", fqPath)
+    }
+    _, wErr := f.WriteString("Now something exists in the file")
+    if wErr != nil {
+        t.Errorf("Could not write to the file at %s", fqPath)
+    }
+    f.Sync()
+
+    dstCheck, exists := ErrorOnPreviewExists(knownFile, dstDir, "image/png")
+    if exists == nil {
+        t.Errorf("This file should exist now, so we should have a preview conflict")
+    }
+    if dstCheck != fqPath {
+        t.Errorf("The destination check %s was not == to what we wrote in the test %s", dstCheck, fqPath)
+    }
+    // Write minimal content to file?
+}
+
 
 // Possibly make this some sort of global test helper function (harder to do in GoLang?)
 func Test_JpegPreview(t *testing.T) {
@@ -69,9 +151,7 @@ func Test_PngPreview(t *testing.T) {
 
 // We know this file is 10.08 seconds long
 func Test_VideoLength(t *testing.T) {
-    var testDir, _ = envy.MustGet("DIR")
-    srcDir := filepath.Join(testDir, "dir2")
-    testFile := "donut.mp4"
+    srcDir, _, testFile := Get_VideoAndSetupPaths()
 
     srcFile := filepath.Join(srcDir, testFile)
     checkLen, fps, err := GetTotalVideoLength(srcFile)
@@ -87,12 +167,8 @@ func Test_VideoLength(t *testing.T) {
 }
 
 // Test MultiScreen
-func Test_MultiScreen(t *testing.T) {
-    var testDir, _ = envy.MustGet("DIR")
-    srcDir := filepath.Join(testDir, "dir2")
-    testFile := "donut.mp4"
-    dstDir := GetPreviewDst(srcDir)
-    ResetPreviewDir(dstDir)
+func Test_VideoMultiScreen(t *testing.T) {
+    srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
 
     empty_check, _ := ioutil.ReadDir(dstDir)
     if len(empty_check) > 0 {
@@ -129,16 +205,11 @@ func Test_MultiScreen(t *testing.T) {
 }
 
 // TODO: Make a damn helper for this type of thing
-func Test_CreateSeekScreens(t *testing.T) {
-    var testDir, _ = envy.MustGet("DIR")
-    testFile := "donut.mp4"
+func Test_VideoCreateSeekScreens(t *testing.T) {
+    srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
 
-    srcDir := filepath.Join(testDir, "dir2")
-    srcFile := filepath.Join(srcDir, testFile)
-
-    dstDir := GetPreviewDst(srcDir)
     previewName := filepath.Join(dstDir, testFile)
-    ResetPreviewDir(dstDir)
+    srcFile := filepath.Join(srcDir, testFile)
 
     err := CreateSeekScreen(srcFile, previewName + ".jpeg", 10)
     if err != nil {
@@ -183,12 +254,8 @@ func Test_CreateSeekScreens(t *testing.T) {
     fmt.Printf("Screen single execution %s\n", time.Since(singleScreen))
 }
 
-func Test_CreatePaletteFile(t *testing.T) {
-    var testDir, _ = envy.MustGet("DIR")
-    srcDir := filepath.Join(testDir, "dir2")
-    testFile := "donut.mp4"
-    dstDir := GetPreviewDst(srcDir)
-    ResetPreviewDir(dstDir)
+func Test_VideoCreatePaletteFile(t *testing.T) {
+    srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
 
     previewName := filepath.Join(dstDir, testFile)
     srcFile := filepath.Join(srcDir, testFile)
@@ -204,6 +271,8 @@ func Test_CreatePaletteFile(t *testing.T) {
     if palStat.Size() <= 0 {
         t.Errorf("The palette was created empty %s", palStat)
     }
+
+    // Ensure that we can cleanup a file that is a palette
     killErr := CleanPaletteFile(paletteFile)
     if killErr != nil {
         t.Errorf("Didn't cleanup the paletteFile %s", killErr)
@@ -212,40 +281,18 @@ func Test_CreatePaletteFile(t *testing.T) {
     if noPalNow == nil {
         t.Errorf("Now the palette file should be dead")
     }
-
-    // Deny cleanup of other files
+    // Deny cleanup of non Palette files
     denyErr := CleanPaletteFile(srcFile)
     if denyErr == nil {
         t.Errorf("better restore the donut file somehow it thought it was a palette")
     }
 }
 
-func Test_BrokenImagePreview(t *testing.T) {
-    var testDir, _ = envy.MustGet("DIR")
-    srcDir := filepath.Join(testDir, "dir3")
-    dstDir := GetPreviewDst(srcDir)
-    testFile := "nature-corrupted-free-use.jpg"
-    ResetPreviewDir(dstDir)
-
-    // TODO: This needs to be made into a better place around previews
-    pLoc, err := GetImagePreview(srcDir, testFile, dstDir, 0)
-    if err == nil {
-        t.Errorf("This file should definitely cause an error")
-    }
-    if pLoc != "" {
-        t.Errorf("And it absolutely does not have a preview")
-    }
-}
-
 // Makes it so that the preview is generated
 func Test_VideoPreviewPNG(t *testing.T) {
-    var testDir, _ = envy.MustGet("DIR")
-    srcDir := filepath.Join(testDir, "dir2")
-    dstDir := GetPreviewDst(srcDir)
-    testFile := "donut.mp4"
+    srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
 
     // Add a before each to nuke the dstDir and create it
-    ResetPreviewDir(dstDir)
     expectDst, dErr := ErrorOnPreviewExists(testFile, dstDir, "video/hack")
     if dErr != nil {
         t.Errorf("The dest file already exists %s\n", expectDst)
@@ -266,42 +313,9 @@ func Test_VideoPreviewPNG(t *testing.T) {
     // TODO: Should probably check the size as well
 }
 
-
-func Test_FileExistsError(t *testing.T) {
-    var testDir, _ = envy.MustGet("DIR")
-    srcDir := filepath.Join(testDir, "dir1")
-    dstDir := GetPreviewDst(srcDir)
-    knownFile := "0_LargeScreen.png"
-
-    ResetPreviewDir(dstDir)
-    fqPath := GetPreviewPathDestination(knownFile, dstDir, "image/png")
-    f, err := os.Create(fqPath)
-    if err != nil {
-        t.Errorf("Could not create the file at %s", fqPath)
-    }
-    _, wErr := f.WriteString("Now something exists in the file")
-    if wErr != nil {
-        t.Errorf("Could not write to the file at %s", fqPath)
-    }
-    f.Sync()
-
-    dstCheck, exists := ErrorOnPreviewExists(knownFile, dstDir, "image/png")
-    if exists == nil {
-        t.Errorf("This file should exist now, so we should have a preview conflict")
-    }
-    if dstCheck != fqPath {
-        t.Errorf("The destination check %s was not == to what we wrote in the test %s", dstCheck, fqPath)
-    }
-    //Write minimal content to file
-}
-
 func Test_VideoPreviewGif(t *testing.T) {
-    var testDir, _ = envy.MustGet("DIR")
-    srcDir := filepath.Join(testDir, "dir2")
-    dstDir := GetPreviewDst(srcDir)
-    testFile := "donut.mp4"
+    srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
 
-    ResetPreviewDir(dstDir)
     expectDst, dErr := ErrorOnPreviewExists(testFile, dstDir, "video/hack")
     if dErr != nil {
         t.Errorf("The dest file already exists %s\n", expectDst)
@@ -323,26 +337,4 @@ func Test_VideoPreviewGif(t *testing.T) {
         t.Errorf("Preview was bigger than video %d > %d", fCheck.Size(), vFile.Size())
     }
     ResetPreviewDir(dstDir)
-}
-
-func Test_ShouldCreate(t *testing.T) {
-    var testDir, _ = envy.MustGet("DIR")
-    srcDir := filepath.Join(testDir, "dir1")
-    testFile := "this_is_p_ng"
-
-    filename := filepath.Join(srcDir, testFile)
-    srcImg, fErr := os.Open(filename)
-
-    if fErr != nil {
-        t.Errorf("This file cannot be opened %s with err %s", filename, fErr)
-    }
-
-    preview_no := ShouldCreatePreview(srcImg, 30000)
-    if preview_no != false {
-        t.Errorf("This preview should not be created")
-    }
-    preview_yes := ShouldCreatePreview(srcImg, 1000)
-    if preview_yes != true {
-        t.Errorf("At this size it should create a preview")
-    }
 }
