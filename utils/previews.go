@@ -75,6 +75,17 @@ func ShouldCreatePreview(f *os.File, fsize int64) bool {
     return false
 }
 
+func FileOverSize(srcFile string, fsize int64) bool {
+    finfo, e_err := os.Stat(srcFile)
+    if e_err == nil {
+        if finfo.Size() > fsize {
+            return true
+        }
+    }
+    return false
+}
+
+
 // TODO: make the preview directory name configurable
 // Make it use the container Path instead of the name?
 func GetPreviewDst(fqDir string) string {
@@ -168,6 +179,13 @@ func CleanPaletteFile(paletteFile string) (error) {
     return nil
 }
 
+// Strip off the PNG, we are just going to dump out some jpegs
+func GetScreensOutputPattern(dstFile string) string {
+    stripExtension := regexp.MustCompile(".png$")
+    dstFile = stripExtension.ReplaceAllString(dstFile, "")
+    return fmt.Sprintf("%s%s", dstFile, ".screens.%03d.jpg")
+}
+
 // TODO: Move to utils or make it wrapped for some reason?
 func GetContainerPreviewDst(c *models.Container) string {
 
@@ -211,31 +229,17 @@ func GetImagePreview(path string, filename string, dstPath string, pIfSize int64
     return "", nil
 }
 
-// TODO: Determine if the gif preview just works.  ffmpeg is bloody complicated.
-// TODO: Determine how the heck to check length and output a composite or a few screens.
-func ReadFrameAsJpeg(inFileName string, frameNum int) io.Reader {
-    buf := bytes.NewBuffer(nil)
-    err := ffmpeg.Input(inFileName).
-        Filter("select", ffmpeg.Args{fmt.Sprintf("gte(n,%d)", frameNum)}).
-        Output("pipe:", ffmpeg.KwArgs{"vframes": 1, "format": "image2", "vcodec": "mjpeg"}).
-        WithOutput(buf, os.Stdout).
-        Run()
-    if err != nil {
-        panic(err)
-    }
-    return buf
-}
-
 // Hmmm, how do I make it load the right type?
 func CreateVideoPreview(srcFile string, dstFile string, contentType string) (string, error) {
     // Split based on the environment variable () - Need to set the location
     // And probably the name of the thing better based on the type.
     cfg := GetCfg()
+
     if cfg.PreviewVideoType  == "gif" {
-        // Hmmm, this should maybe also do a palettegen or just always use screens
         return CreateGifFromVideo(srcFile, dstFile)
     } else if cfg.PreviewVideoType == "screens" {
-        return CreateScreensFromVideo(srcFile, dstFile)
+        // This creates screens and also a webp file
+        return CreateWebpFromVideo(srcFile, dstFile)
     } else {
         return CreatePngFromVideo(srcFile, dstFile)
     }
@@ -248,17 +252,40 @@ func CreateVideoPreview(srcFile string, dstFile string, contentType string) (str
 * Creates a set of preview files in the preview directory from the source image.
 */
 func CreateScreensFromVideo(srcFile string, dstFile string) (string, error) {
+    cfg := GetCfg()
+    return CreateScreensFromVideoSized(srcFile, dstFile, cfg.PreviewScreensOverSize)
+}
+
+func CreateScreensFromVideoSized(srcFile string, dstFile string, previewScreensOverSize int64) (string, error) {
+    if FileOverSize(srcFile, previewScreensOverSize) {
+        log.Printf("File size is large for %s using SEEK screen", srcFile)
+
+        // Currently I get a list of screens but don't do anything with it.
+        _, err, screenFmt := CreateSeekScreens(srcFile, dstFile)
+        return screenFmt, err
+    } else {
+        log.Printf("File size is small %s using SELECT filter", srcFile)
+        return CreateSelectFilterScreens(srcFile, dstFile)
+    }
+}
+
+// Create screens as needed a palette file and return the image
+func CreateWebpFromVideo(srcFile string, dstFile string) (string, error) {
+    screensSrc, err := CreateScreensFromVideo(srcFile, dstFile)
+    if err != nil {
+        log.Printf("Couldn't create screens for the %s err: %s", srcFile, err)
+        return "", err
+    }
+    return CreateWebpFromScreens(screensSrc, dstFile)
+}
+
+func CreateSelectFilterScreens(srcFile string, dstFile string) (string, error) {
     totalTime, fps, err := GetTotalVideoLength(srcFile)
     if err != nil {
         log.Printf("Error creating screens for %s err: %s", srcFile, err)
     }
     log.Printf("Total time was %f with %d as the fps", totalTime, fps)
 
-    // TODO: Get a list of the files created and return them.
-    // TODO: Config based screen count and sanity if the video is too short
-    // TODO: Scope how the heck to update previews so they are more clever about more than one
-    // TODO: Prevent file conflict donut.png (create preview) donut.mp4 => preview name stomp
-    // cfg := GetCfg()
     frameNum := (int(totalTime) * fps) / 10
     screensDst := GetScreensOutputPattern(dstFile)
     filter := fmt.Sprintf("select='not(mod(n,%d))',setpts='N/(30*TB)'", frameNum)
@@ -270,6 +297,44 @@ func CreateScreensFromVideo(srcFile string, dstFile string) (string, error) {
     }
     // Rename the dstFile with Indexing information (replace.png with info)
     return screensDst, err
+}
+
+// Need to do timing test with this then a timing test with a much bigger file.
+func CreateSeekScreens(srcFile string, dstFile string) ([]string, error, string){
+    totalTime, fps, err := GetTotalVideoLength(srcFile)
+    if err != nil {
+        log.Printf("Error creating screens for %s err: %s", srcFile, err)
+    }
+    log.Printf("Total time was %f with %d as the fps", totalTime, fps)
+
+    totalScreens := 10
+    timeSkip := int(totalTime) / totalScreens
+    log.Printf("Frame skip is what %d", timeSkip)
+
+    screenFiles := []string{}
+    screenFmt := GetScreensOutputPattern(dstFile)
+    for idx := 0; idx < totalScreens; idx++ {
+        screenFile := fmt.Sprintf(screenFmt, idx)
+        log.Printf("Screen file is what %s", screenFile)
+        
+        err := CreateSeekScreen(srcFile, screenFile, (idx * timeSkip))
+        if err != nil {
+            log.Printf("Error creating a seek screen %s", err)
+            break
+        } else {
+            screenFiles = append(screenFiles, screenFile)
+        }
+    }
+    return screenFiles, err, screenFmt
+}
+
+// This can be much faster to do multiple seek screens vs a filter over about a 50mb
+// video file.  Then creating a palette and using these screens that makes for smaller webp.
+func CreateSeekScreen(srcFile string, dstFile string, screenTime int) error {
+    screenErr := ffmpeg.Input(srcFile, ffmpeg.KwArgs{"ss": screenTime}).
+        Output(dstFile, ffmpeg.KwArgs{"format": "image2", "vframes": 1}).
+        OverWriteOutput().Run()
+    return screenErr
 }
 
 
@@ -290,13 +355,13 @@ func PaletteGen(paletteSrc string, dstFile string) (string, error) {
 }
 
 // This does not seem to be much faster, but the gif/Webp might be a better toggle.
-func CreateGifFromScreens(screensSrc string, dstFile string) (string, error) {
+func CreateWebpFromScreens(screensSrc string, dstFile string) (string, error) {
     stripExtension := regexp.MustCompile(".png$")
     dstFile = stripExtension.ReplaceAllString(dstFile, "") 
 
     // Need a function that determines the preview output filename and takes in the config
     // for the preview type name...
-    gifFile := fmt.Sprintf("%s.Webp", dstFile)
+    gifFile := fmt.Sprintf("%s.webp", dstFile)
     log.Printf("What is the screens %s vs dstFile %s", screensSrc, dstFile)
 
     // TODO: The whole destination file preview thing is jacked / needs  afix.
@@ -317,13 +382,6 @@ func CreateGifFromScreens(screensSrc string, dstFile string) (string, error) {
     return gifFile, screenErr
 }
 
-// Strip off the PNG, we are just going to dump out some jpegs
-func GetScreensOutputPattern(dstFile string) string {
-    stripExtension := regexp.MustCompile(".png$")
-    dstFile = stripExtension.ReplaceAllString(dstFile, "") // Hate
-    return fmt.Sprintf("%s%s", dstFile, "%03d.jpg")
-}
-
 func CreatePngFromVideo(srcFile string, dstFile string) (string, error) {
     reader := ReadFrameAsJpeg(srcFile, 20)  // Determine how to get a better frame
     img, err := imaging.Decode(reader)
@@ -341,6 +399,22 @@ func CreatePngFromVideo(srcFile string, dstFile string) (string, error) {
     }
     return dstFile, nil
 }
+
+// TODO: Determine if the gif preview just works.  ffmpeg is bloody complicated.
+// TODO: Determine how the heck to check length and output a composite or a few screens.
+func ReadFrameAsJpeg(inFileName string, frameNum int) io.Reader {
+    buf := bytes.NewBuffer(nil)
+    err := ffmpeg.Input(inFileName).
+        Filter("select", ffmpeg.Args{fmt.Sprintf("gte(n,%d)", frameNum)}).
+        Output("pipe:", ffmpeg.KwArgs{"vframes": 1, "format": "image2", "vcodec": "mjpeg"}).
+        WithOutput(buf, os.Stdout).
+        Run()
+    if err != nil {
+        panic(err)
+    }
+    return buf
+}
+
 
 // What is up with gjson vs normal processing (this does seem easier to use)?
 // TODO: Consider moving more logic into a MediaHelper (size, rez, probe etc)
