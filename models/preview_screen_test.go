@@ -35,9 +35,9 @@ func (ms *ModelSuite) Test_MediaContainerScreens() {
 	}
 
 	check := MediaContainer{}
-	q_err := ms.DB.Find(&check, mc.ID)
+	q_err := ms.DB.Eager().Find(&check, mc.ID)
 	if q_err != nil {
-		ms.Fail("Could not query for this id" + mc.ID.String())
+		ms.Fail("Could not query for this id %s" + mc.ID.String(), q_err)
 	}
 	if check.Screens == nil {
 		ms.Fail("Failed to load screens" + mc.ID.String())

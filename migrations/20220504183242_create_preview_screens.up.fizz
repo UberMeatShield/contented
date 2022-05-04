@@ -1,0 +1,9 @@
+create_table("preview_screens") {
+	t.Column("id", "uuid", {primary: true})
+    t.Column("src", "string", {"default": ""})
+    t.Column("idx", "integer", {"default": 0})
+    t.Column("size_bytes", "integer", {"default": 0})
+    t.Column("media_container_id", "uuid", {})
+    t.ForeignKey("media_container_id", {"media_containers": ["id"]}, {"on_delete": "cascade",})
+	t.Timestamps()
+}
