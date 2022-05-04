@@ -1,21 +1,21 @@
 package actions
 
 import (
-	"net/http"
-    "net/url"
-	"encoding/json"
-	"contented/models"
 	"contented/internals"
-    "github.com/gobuffalo/nulls"
+	"contented/models"
+	"encoding/json"
+	"github.com/gobuffalo/nulls"
+	"net/http"
+	"net/url"
 )
 
 func CreateResource(src string, container_id nulls.UUID, as *ActionSuite) models.MediaContainer {
-    internals.InitFakeApp(true)
+	internals.InitFakeApp(true)
 	mc := &models.MediaContainer{
-		Src:     src,
-		ContentType:    "test",
-		Preview: "",
-        ContainerID: container_id,
+		Src:         src,
+		ContentType: "test",
+		Preview:     "",
+		ContainerID: container_id,
 	}
 	res := as.JSON("/media").Post(mc)
 	as.Equal(http.StatusCreated, res.Code)
@@ -25,95 +25,93 @@ func CreateResource(src string, container_id nulls.UUID, as *ActionSuite) models
 	return resObj
 }
 
-
 func (as *ActionSuite) Test_MediaSubQuery() {
-    // Create 2 containers
-    internals.InitFakeApp(true)
-    c1 := &models.Container{
-         Total: 2,
-         Path:  "container/1/media",
-         Name:  "Trash1",
-    }
-    c2 := &models.Container{
-         Total: 2,
-         Path:  "container/2/media",
-         Name:  "Trash2",
-    }
-    as.DB.Create(c1)
-    as.DB.Create(c2)
-    as.NotZero(c1.ID)
-    as.NotZero(c2.ID)
+	// Create 2 containers
+	internals.InitFakeApp(true)
+	c1 := &models.Container{
+		Total: 2,
+		Path:  "container/1/media",
+		Name:  "Trash1",
+	}
+	c2 := &models.Container{
+		Total: 2,
+		Path:  "container/2/media",
+		Name:  "Trash2",
+	}
+	as.DB.Create(c1)
+	as.DB.Create(c2)
+	as.NotZero(c1.ID)
+	as.NotZero(c2.ID)
 
-    CreateResource("a", nulls.NewUUID(c1.ID), as)
-    CreateResource("b", nulls.NewUUID(c1.ID), as)
-    CreateResource("c", nulls.NewUUID(c2.ID), as)
-    CreateResource("donut", nulls.NewUUID(c2.ID), as)
-    CreateResource("e", nulls.NewUUID(c2.ID), as)
+	CreateResource("a", nulls.NewUUID(c1.ID), as)
+	CreateResource("b", nulls.NewUUID(c1.ID), as)
+	CreateResource("c", nulls.NewUUID(c2.ID), as)
+	CreateResource("donut", nulls.NewUUID(c2.ID), as)
+	CreateResource("e", nulls.NewUUID(c2.ID), as)
 
-    res1 := as.JSON("/containers/" +  c1.ID.String() +  "/media").Get()
-    res2 := as.JSON("/containers/" +  c2.ID.String() +  "/media").Get()
+	res1 := as.JSON("/containers/" + c1.ID.String() + "/media").Get()
+	res2 := as.JSON("/containers/" + c2.ID.String() + "/media").Get()
 
-    as.Equal(http.StatusOK, res1.Code)
-    as.Equal(http.StatusOK, res2.Code)
-    // Add resources to both
-    // Filter based on container
+	as.Equal(http.StatusOK, res1.Code)
+	as.Equal(http.StatusOK, res2.Code)
+	// Add resources to both
+	// Filter based on container
 	validate1 := models.MediaContainers{}
 	validate2 := models.MediaContainers{}
 	json.NewDecoder(res1.Body).Decode(&validate1)
 	json.NewDecoder(res2.Body).Decode(&validate2)
 
-    as.Equal(len(validate1), 2, "There should be 2 media containers found")
-    as.Equal(len(validate2), 3, "There should be 3 in this one")
+	as.Equal(len(validate1), 2, "There should be 2 media containers found")
+	as.Equal(len(validate2), 3, "There should be 3 in this one")
 
-    // Add in a test that uses the search interface via the actions via DB
-    params := url.Values{}
-    params.Add("text", "donut")
+	// Add in a test that uses the search interface via the actions via DB
+	params := url.Values{}
+	params.Add("text", "donut")
 
-    res3 := as.JSON("/search?%s", params.Encode()).Get()
-    as.Equal(http.StatusOK, res3.Code)
+	res3 := as.JSON("/search?%s", params.Encode()).Get()
+	as.Equal(http.StatusOK, res3.Code)
 	validate3 := SearchResult{}
 	json.NewDecoder(res3.Body).Decode(&validate3)
-    as.Equal(1, len(*validate3.Media), "We have one donut")
+	as.Equal(1, len(*validate3.Media), "We have one donut")
 }
 
-
 func (as *ActionSuite) Test_ManagerDB_Preview() {
-    models.DB.TruncateAll()
-    internals.ResetConfig()
-    internals.InitFakeApp(true)
+	models.DB.TruncateAll()
+	internals.ResetConfig()
+	internals.InitFakeApp(true)
 
-    cnt, media := internals.GetMediaByDirName("dir2")
-    as.Equal(3, len(media), "Dir2 should have 3 items")
-    as.Equal("dir2", cnt.Name, "It should have loaded the right item")
+	cnt, media := internals.GetMediaByDirName("dir2")
+	as.Equal(3, len(media), "Dir2 should have 3 items")
+	as.Equal("dir2", cnt.Name, "It should have loaded the right item")
 
-    as.DB.Create(cnt)
-    as.NotZero(cnt.ID, "We should have an ID now for the container")
-    for _, mc := range media {
-        mc.ContainerID = nulls.NewUUID(cnt.ID)
-        as.DB.Create(&mc)
-        as.NotZero(mc.ID, "It should have a media container ID and id")
-        previewRes := as.JSON("/preview/%s", mc.ID).Get()
-        as.Equal(http.StatusOK, previewRes.Code)
-    }
+	as.DB.Create(cnt)
+	as.NotZero(cnt.ID, "We should have an ID now for the container")
+	for _, mc := range media {
+		mc.ContainerID = nulls.NewUUID(cnt.ID)
+		as.DB.Create(&mc)
+		as.NotZero(mc.ID, "It should have a media container ID and id")
+		previewRes := as.JSON("/preview/%s", mc.ID).Get()
+		as.Equal(http.StatusOK, previewRes.Code)
+	}
 }
 
 func (as *ActionSuite) Test_MemoryAPIBasics() {
-    internals.InitFakeApp(false)
+	internals.InitFakeApp(false)
 	res := as.JSON("/media").Get()
 	as.Equal(http.StatusOK, res.Code)
 
 	validate := models.MediaContainers{}
 	json.NewDecoder(res.Body).Decode(&validate)
-    as.Equal(internals.TOTAL_MEDIA, len(validate), "It should have a known set of mock data")
+	as.Equal(internals.TOTAL_MEDIA, len(validate), "It should have a known set of mock data")
 
 	validate_search := models.MediaContainers{}
 	res_search := as.JSON("/search?text=Large").Get()
 	json.NewDecoder(res_search.Body).Decode(&validate_search)
-    as.Equal(internals.TOTAL_MEDIA, len(validate), "In memory should have these")
+	as.Equal(internals.TOTAL_MEDIA, len(validate), "In memory should have these")
 }
 
 func (as *ActionSuite) Test_MediaContainersResource_List() {
-    internals.InitFakeApp(true)
+	internals.InitFakeApp(true)
 	src := "test_list"
 	CreateResource(src, nulls.UUID{}, as)
 	res := as.JSON("/media").Get()
@@ -122,11 +120,11 @@ func (as *ActionSuite) Test_MediaContainersResource_List() {
 	validate := models.MediaContainers{}
 	json.NewDecoder(res.Body).Decode(&validate)
 	as.Equal(src, validate[0].Src)
-    as.Equal(1, len(validate), "One item should be in the DB")
+	as.Equal(1, len(validate), "One item should be in the DB")
 }
 
 func (as *ActionSuite) Test_MediaContainersResource_Show() {
-    internals.InitFakeApp(true)
+	internals.InitFakeApp(true)
 	src := "test_query"
 	mc := CreateResource(src, nulls.UUID{}, as)
 	check := as.JSON("/media/" + mc.ID.String()).Get()
@@ -150,7 +148,7 @@ func (as *ActionSuite) Test_MediaContainersResource_Update() {
 }
 
 func (as *ActionSuite) Test_MediaContainersResource_Destroy() {
-    internals.InitFakeApp(true)
+	internals.InitFakeApp(true)
 	mc := CreateResource("Nuke Test", nulls.UUID{}, as)
 	del_res := as.JSON("/media/" + mc.ID.String()).Delete()
 	as.Equal(http.StatusOK, del_res.Code)

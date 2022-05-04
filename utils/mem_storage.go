@@ -1,83 +1,86 @@
 package utils
+
 /**
 * This provides a single instance of the content tree that should be hosted when you
 * choose just to use an in memory version of a directory.  It keeps a hash lookup for
 * containers and media and is then used by the MemoryManager.
-*/
+ */
 import (
-    "log"
-    "contented/models"
+	"contented/models"
+	"log"
 )
+
 // GoLang is just making this awkward
 type MemoryStorage struct {
-    Initialized bool
-    ValidMedia      models.MediaMap
-    ValidContainers models.ContainerMap
+	Initialized     bool
+	ValidMedia      models.MediaMap
+	ValidContainers models.ContainerMap
 }
+
 var memStorage MemoryStorage = MemoryStorage{Initialized: false}
 
 func GetMemStorage() *MemoryStorage {
-   return &memStorage 
+	return &memStorage
 }
 
 func InitializeMemory(dir_root string) *MemoryStorage {
-    log.Printf("Initializing Memory Storage %s\n", dir_root)
-    containers, files := PopulateMemoryView(dir_root)
+	log.Printf("Initializing Memory Storage %s\n", dir_root)
+	containers, files := PopulateMemoryView(dir_root)
 
-    memStorage.Initialized = true
-    memStorage.ValidContainers = containers
-    memStorage.ValidMedia = files
+	memStorage.Initialized = true
+	memStorage.ValidContainers = containers
+	memStorage.ValidMedia = files
 
-    return &memStorage
+	return &memStorage
 }
 
 /**
  * Populates the memory view (this code is very similar to the DB version in helper.go)
  */
 func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap) {
-    containers := models.ContainerMap{}
-    files := models.MediaMap{}
+	containers := models.ContainerMap{}
+	files := models.MediaMap{}
 
-    cfg := GetCfg()
-    log.Printf("PopulateMemoryView searching in %s with depth %d", dir_root, cfg.MaxSearchDepth)
-    contentTree, err := CreateStructure(cfg.Dir, cfg, &ContentTree{}, 0)
-    if err != nil {
-        log.Fatalf("Failed to create the intial in memory structure %s", err)
-    }
+	cfg := GetCfg()
+	log.Printf("PopulateMemoryView searching in %s with depth %d", dir_root, cfg.MaxSearchDepth)
+	contentTree, err := CreateStructure(cfg.Dir, cfg, &ContentTree{}, 0)
+	if err != nil {
+		log.Fatalf("Failed to create the intial in memory structure %s", err)
+	}
 
-    tree := *contentTree
-    for idx, ct := range tree {
-        if cfg.ExcludeEmptyContainers && len(ct.Media) == 0 {
-            continue  // SKIP empty container directories
-        }
+	tree := *contentTree
+	for idx, ct := range tree {
+		if cfg.ExcludeEmptyContainers && len(ct.Media) == 0 {
+			continue // SKIP empty container directories
+		}
 
-        // Careful as sometimes we do want containers even if there is no media
-        c := ct.Cnt
-        if len(ct.Media) > 0 {
-            c.PreviewUrl = "/preview/" + ct.Media[0].ID.String()
-            log.Printf("Assigning a preview to %s as %s", c.Name, c.PreviewUrl)
-            for _, mc := range ct.Media {
-                // I should name this as PreviewUrl
-                AssignPreviewIfExists(&c, &mc)
-                files[mc.ID] = mc
-            }
-        }
-        // Remember that assigning into a map is also a copy so any changes must be 
-        // done BEFORE you assign into the map
-        c.Idx = idx
-        containers[c.ID] = c
-    }
-    return containers, files
+		// Careful as sometimes we do want containers even if there is no media
+		c := ct.Cnt
+		if len(ct.Media) > 0 {
+			c.PreviewUrl = "/preview/" + ct.Media[0].ID.String()
+			log.Printf("Assigning a preview to %s as %s", c.Name, c.PreviewUrl)
+			for _, mc := range ct.Media {
+				// I should name this as PreviewUrl
+				AssignPreviewIfExists(&c, &mc)
+				files[mc.ID] = mc
+			}
+		}
+		// Remember that assigning into a map is also a copy so any changes must be
+		// done BEFORE you assign into the map
+		c.Idx = idx
+		containers[c.ID] = c
+	}
+	return containers, files
 }
 
-func AssignPreviewIfExists(c* models.Container, mc *models.MediaContainer) string {
-    // This check is normally to determine if we didn't clear out old previews.
-    // For memory only managers it will just consider that a bonus and use the preview.
-    previewPath := GetPreviewDst(c.GetFqPath())
-    previewFile, exists := ErrorOnPreviewExists(mc.Src, previewPath, mc.ContentType)
-    if exists != nil {
-        mc.Preview = GetRelativePreviewPath(previewFile, c.GetFqPath())
-        log.Printf("Added a preview to media %s", mc.Preview)
-    }
-    return previewFile
+func AssignPreviewIfExists(c *models.Container, mc *models.MediaContainer) string {
+	// This check is normally to determine if we didn't clear out old previews.
+	// For memory only managers it will just consider that a bonus and use the preview.
+	previewPath := GetPreviewDst(c.GetFqPath())
+	previewFile, exists := ErrorOnPreviewExists(mc.Src, previewPath, mc.ContentType)
+	if exists != nil {
+		mc.Preview = GetRelativePreviewPath(previewFile, c.GetFqPath())
+		log.Printf("Added a preview to media %s", mc.Preview)
+	}
+	return previewFile
 }

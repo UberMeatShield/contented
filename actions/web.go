@@ -1,15 +1,15 @@
 package actions
 
 import (
+	"contented/managers"
+	"contented/models"
+	"contented/utils"
+	"github.com/gobuffalo/buffalo"
+	"github.com/gofrs/uuid"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
-	"contented/utils"
-	"contented/managers"
-	"contented/models"
-	"github.com/gobuffalo/buffalo"
-	"github.com/gofrs/uuid"
 )
 
 type HttpError struct {
@@ -18,15 +18,15 @@ type HttpError struct {
 }
 
 type SearchResult struct {
-    Total int `json:"total"`
-    Media *models.MediaContainers `json:"media"`
+	Total int                     `json:"total"`
+	Media *models.MediaContainers `json:"media"`
 }
 
 // Builds out information given the application and the content directory
 func SetupContented(app *buffalo.App, contentDir string, numToPreview int, limit int) {
-    cfg := utils.GetCfg()
+	cfg := utils.GetCfg()
 
-    // TODO: Check DIR exists
+	// TODO: Check DIR exists
 	// TODO: Somehow need to move the dir into App, but first we want to validate the dir...
 	app.ServeFiles("/static", http.Dir(cfg.Dir))
 }
@@ -36,7 +36,7 @@ func FullHandler(c buffalo.Context) error {
 	if bad_uuid != nil {
 		return c.Error(400, bad_uuid)
 	}
-    man := managers.GetManager(&c)
+	man := managers.GetManager(&c)
 	mc, err := man.FindFileRef(mcID)
 	if err != nil {
 		return c.Error(404, err)
@@ -52,16 +52,16 @@ func FullHandler(c buffalo.Context) error {
 }
 
 func SearchHandler(c buffalo.Context) error {
-    man := managers.GetManager(&c)
-    mcs, count, err := man.SearchMediaContext()
-    if err != nil {
+	man := managers.GetManager(&c)
+	mcs, count, err := man.SearchMediaContext()
+	if err != nil {
 		return c.Error(400, err)
-    }
-    sr := SearchResult{
-        Media: mcs,
-        Total: count,
-    }
-    return c.Render(200, r.JSON(sr))
+	}
+	sr := SearchResult{
+		Media: mcs,
+		Total: count,
+	}
+	return c.Render(200, r.JSON(sr))
 }
 
 // Find the preview of a file (if applicable currently it is just returning the full path)
@@ -70,7 +70,7 @@ func PreviewHandler(c buffalo.Context) error {
 	if bad_uuid != nil {
 		return c.Error(400, bad_uuid)
 	}
-    man := managers.GetManager(&c)
+	man := managers.GetManager(&c)
 	mc, err := man.FindFileRef(mcID)
 	if err != nil {
 		return c.Error(404, err)
@@ -88,23 +88,23 @@ func PreviewHandler(c buffalo.Context) error {
 
 // Provides a download handler by directory id and file id
 func DownloadHandler(c buffalo.Context) error {
-    mcID, bad_uuid := uuid.FromString(c.Param("mcID"))
-    if bad_uuid != nil {
-        return c.Error(400, bad_uuid)
-    }
-    man := managers.GetManager(&c)
-    mc, err := man.FindFileRef(mcID)
-    if err != nil {
-        return c.Error(404, err)
-    }
-    fq_path, fq_err := man.FindActualFile(mc)
-    if fq_err != nil {
-        log.Printf("Cannot download file not on disk %s with err %s", fq_path, fq_err)
-        return c.Error(http.StatusUnprocessableEntity, fq_err)
-    }
-    finfo, _ := os.Stat(fq_path)
-    file_contents := utils.GetFileContentsByFqName(fq_path)
-    return c.Render(200, r.Download(c, finfo.Name(), file_contents))
+	mcID, bad_uuid := uuid.FromString(c.Param("mcID"))
+	if bad_uuid != nil {
+		return c.Error(400, bad_uuid)
+	}
+	man := managers.GetManager(&c)
+	mc, err := man.FindFileRef(mcID)
+	if err != nil {
+		return c.Error(404, err)
+	}
+	fq_path, fq_err := man.FindActualFile(mc)
+	if fq_err != nil {
+		log.Printf("Cannot download file not on disk %s with err %s", fq_path, fq_err)
+		return c.Error(http.StatusUnprocessableEntity, fq_err)
+	}
+	finfo, _ := os.Stat(fq_path)
+	file_contents := utils.GetFileContentsByFqName(fq_path)
+	return c.Render(200, r.Download(c, finfo.Name(), file_contents))
 }
 
 // This was the code provided to look up params... this seems cumbersome but "eh?"
@@ -118,4 +118,3 @@ func GetKeyVal(c buffalo.Context, key string, defaultVal string) string {
 	}
 	return defaultVal
 }
-

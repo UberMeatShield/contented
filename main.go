@@ -13,12 +13,12 @@ import (
 // call `app.Serve()`, unless you don't want to start your
 // application that is. :)
 func main() {
-    appCfg := utils.GetCfg()
-    utils.InitConfigEnvy(appCfg)
+	appCfg := utils.GetCfg()
+	utils.InitConfigEnvy(appCfg)
 	app := actions.App(appCfg.UseDatabase)
 
-    // TODO: Update or delete this method as it is not really doing anything
-    // Potentially just do the static hosting in the actions.App bit.
+	// TODO: Update or delete this method as it is not really doing anything
+	// Potentially just do the static hosting in the actions.App bit.
 	actions.SetupContented(app, "", 0, 0)
 	if err := app.Serve(); err != nil {
 		log.Fatal(err)

@@ -1,10 +1,11 @@
 package actions
+
 // These tests are DB based tests, vs in memory manager internals.InitFakeApp(true)
 
 import (
-	"contented/models"
 	"contented/internals"
 	"contented/managers"
+	"contented/models"
 	"encoding/json"
 	"net/http"
 )
@@ -28,7 +29,7 @@ func CreateContainer(name string, as *ActionSuite) models.Container {
 }
 
 func (as *ActionSuite) Test_ContainersResource_Show() {
-    internals.InitFakeApp(true)
+	internals.InitFakeApp(true)
 	name := "Show Test"
 	s := CreateContainer(name, as)
 	as.NotZero(s.ID)
@@ -42,14 +43,14 @@ func (as *ActionSuite) Test_ContainersResource_Show() {
 }
 
 func (as *ActionSuite) Test_ContainersResource_Create() {
-    internals.InitFakeApp(true)
+	internals.InitFakeApp(true)
 	c := &models.Container{
 		Total: 1,
 		Name:  "Derp",
 		Path:  "test/thing",
 	}
 	res := as.JSON("/containers").Post(c)
-    as.Equal(http.StatusCreated, res.Code, "It should be able to create")
+	as.Equal(http.StatusCreated, res.Code, "It should be able to create")
 
 	resObj := models.Container{}
 	json.NewDecoder(res.Body).Decode(&resObj)
@@ -60,7 +61,7 @@ func (as *ActionSuite) Test_ContainersResource_Create() {
 }
 
 func (as *ActionSuite) Test_ContainersResource_Update() {
-    internals.InitFakeApp(true)
+	internals.InitFakeApp(true)
 	s := CreateContainer("Initial Title", as)
 	as.NotZero(s.ID)
 
@@ -71,7 +72,7 @@ func (as *ActionSuite) Test_ContainersResource_Update() {
 }
 
 func (as *ActionSuite) Test_ContainersResource_Destroy() {
-    internals.InitFakeApp(true)
+	internals.InitFakeApp(true)
 	s := CreateContainer("Initial Title", as)
 	as.NotZero(s.ID)
 
@@ -83,43 +84,43 @@ func (as *ActionSuite) Test_ContainersResource_Destroy() {
 }
 
 func (as *ActionSuite) Test_ContainerFixture() {
-    internals.InitFakeApp(true)
-    as.LoadFixture("base")
+	internals.InitFakeApp(true)
+	as.LoadFixture("base")
 
-    res := as.JSON("/containers").Get()
-    as.Equal(http.StatusOK, res.Code)
+	res := as.JSON("/containers").Get()
+	as.Equal(http.StatusOK, res.Code)
 
-    containers := models.Containers{}
+	containers := models.Containers{}
 	json.NewDecoder(res.Body).Decode(&containers)
 
-    as.Equal(2, len(containers), "It should have loaded two fixtures")
+	as.Equal(2, len(containers), "It should have loaded two fixtures")
 
-    var found *models.Container
-    for _, c := range containers {
-        if c.Name == "contain1" {
-            found = &c
-        }
-    }
-    as.NotNil(found, "If it had the fixture loaded we should have this name")
+	var found *models.Container
+	for _, c := range containers {
+		if c.Name == "contain1" {
+			found = &c
+		}
+	}
+	as.NotNil(found, "If it had the fixture loaded we should have this name")
 
-    mediaRes := as.JSON("/containers/" + found.ID.String() + "/media").Get()
-    as.Equal(http.StatusOK, mediaRes.Code)
+	mediaRes := as.JSON("/containers/" + found.ID.String() + "/media").Get()
+	as.Equal(http.StatusOK, mediaRes.Code)
 }
 
 func (as *ActionSuite) Test_MemoryDenyEdit() {
-    cfg := internals.InitFakeApp(false)
-    cfg.UseDatabase = false
-    ctx := internals.GetContext(as.App)
-    man := managers.GetManager(&ctx)
+	cfg := internals.InitFakeApp(false)
+	cfg.UseDatabase = false
+	ctx := internals.GetContext(as.App)
+	man := managers.GetManager(&ctx)
 
-    containers, err := man.ListContainersContext()
-    as.NoError(err, "It should list containers")
+	containers, err := man.ListContainersContext()
+	as.NoError(err, "It should list containers")
 
-    as.Greater(len(*containers), 0, "There should be containers")
+	as.Greater(len(*containers), 0, "There should be containers")
 
-    for _, c := range *containers {
-        c.Name = "Update Should fail"
-        res := as.JSON("/containers/" + c.ID.String()).Put(&c)
-        as.Equal(http.StatusNotImplemented, res.Code)
-    }
+	for _, c := range *containers {
+		c.Name = "Update Should fail"
+		res := as.JSON("/containers/" + c.ID.String()).Put(&c)
+		as.Equal(http.StatusNotImplemented, res.Code)
+	}
 }

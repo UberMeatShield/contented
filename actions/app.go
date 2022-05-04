@@ -1,13 +1,13 @@
 package actions
 
 import (
-    "contented/utils"
-    "contented/internals"
-    "net/http"
-    "github.com/gobuffalo/buffalo"
-    "github.com/gobuffalo/envy"
-    forcessl "github.com/gobuffalo/mw-forcessl"
-    "github.com/unrolled/secure"
+	"contented/internals"
+	"contented/utils"
+	"github.com/gobuffalo/buffalo"
+	"github.com/gobuffalo/envy"
+	forcessl "github.com/gobuffalo/mw-forcessl"
+	"github.com/unrolled/secure"
+	"net/http"
 )
 
 // ENV is used to help switch settings based on where the
@@ -31,34 +31,34 @@ var app *buffalo.App
 // placed last in the route declarations, as it will prevent routes
 // declared after it to never be called.
 func App(UseDatabase bool) *buffalo.App {
-    if app == nil {
-        app = internals.CreateBuffaloApp(UseDatabase, ENV)
-        app.Use(forceSSL())
+	if app == nil {
+		app = internals.CreateBuffaloApp(UseDatabase, ENV)
+		app.Use(forceSSL())
 
-        // Run grift?  Do dev from an actual DB instance?
-        app.GET("/preview/{mcID}", PreviewHandler)
-        app.GET("/view/{mcID}", FullHandler)
-        app.GET("/download/{mcID}", DownloadHandler)
-        app.GET("/search", SearchHandler)
+		// Run grift?  Do dev from an actual DB instance?
+		app.GET("/preview/{mcID}", PreviewHandler)
+		app.GET("/view/{mcID}", FullHandler)
+		app.GET("/download/{mcID}", DownloadHandler)
+		app.GET("/search", SearchHandler)
 
-        // Host the index.html, also assume that all angular UI routes are going to be under contented
-        // Cannot figure out how to just let AngularIndex handle EVERYTHING under ui/*/*
-        app.GET("/", AngularIndex)
-        app.GET("/ui/browse/{path}", AngularIndex)
-        app.GET("/ui/browse/{path}/{idx}", AngularIndex)
-        app.GET("/ui/search", AngularIndex)
+		// Host the index.html, also assume that all angular UI routes are going to be under contented
+		// Cannot figure out how to just let AngularIndex handle EVERYTHING under ui/*/*
+		app.GET("/", AngularIndex)
+		app.GET("/ui/browse/{path}", AngularIndex)
+		app.GET("/ui/browse/{path}/{idx}", AngularIndex)
+		app.GET("/ui/search", AngularIndex)
 
-        // Need to make the file serving location smarter (serve the dir + serve static?)
-        cfg := utils.GetCfg()
-        app.ServeFiles("/public/build", http.Dir(cfg.StaticResourcePath))
-        app.ServeFiles("/public/css", http.Dir(cfg.StaticResourcePath))
+		// Need to make the file serving location smarter (serve the dir + serve static?)
+		cfg := utils.GetCfg()
+		app.ServeFiles("/public/build", http.Dir(cfg.StaticResourcePath))
+		app.ServeFiles("/public/css", http.Dir(cfg.StaticResourcePath))
 
-        // The DIR env environment is then served under /static (see actions.SetupContented)
-        cr := app.Resource("/containers", ContainersResource{})
-        cr.Resource("/media", MediaContainersResource{})
-        app.Resource("/media", MediaContainersResource{})
-    }
-    return app
+		// The DIR env environment is then served under /static (see actions.SetupContented)
+		cr := app.Resource("/containers", ContainersResource{})
+		cr.Resource("/media", MediaContainersResource{})
+		app.Resource("/media", MediaContainersResource{})
+	}
+	return app
 }
 
 // forceSSL will return a middleware that will redirect an incoming request
@@ -67,8 +67,8 @@ func App(UseDatabase bool) *buffalo.App {
 // we recommend using a proxy: https://gobuffalo.io/en/docs/proxy
 // for more information: https://github.com/unrolled/secure/
 func forceSSL() buffalo.MiddlewareFunc {
-    return forcessl.Middleware(secure.Options{
-        SSLRedirect:     ENV == "production",
-        SSLProxyHeaders: map[string]string{"X-Forwarded-Proto": "https"},
-    })
+	return forcessl.Middleware(secure.Options{
+		SSLRedirect:     ENV == "production",
+		SSLProxyHeaders: map[string]string{"X-Forwarded-Proto": "https"},
+	})
 }

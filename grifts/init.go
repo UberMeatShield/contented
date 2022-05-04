@@ -7,6 +7,6 @@ import (
 
 // We do need a DB if you are going to run the grifts
 func init() {
-    UseDatabase := true
+	UseDatabase := true
 	buffalo.Grifts(actions.App(UseDatabase))
 }

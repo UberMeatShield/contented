@@ -19,7 +19,7 @@ RUN ls -la /contented/public && ls -la /contented/public/build/index.html
 #======================================================================================
 # Build out the go binary
 #======================================================================================
-FROM gobuffalo/buffalo:v0.16.21 as builder
+FROM gobuffalo/buffalo:v0.16.10 as builder
 
 ENV GO111MODULE on
 ENV GOPROXY http://proxy.golang.org

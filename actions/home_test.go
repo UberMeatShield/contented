@@ -1,13 +1,13 @@
 package actions
 
 import (
+	"contented/internals"
 	"net/http"
 	"os"
-    "contented/internals"
 )
 
 func (as *ActionSuite) Test_HomeHandler() {
-    internals.InitFakeApp(false)
+	internals.InitFakeApp(false)
 	os.Chdir("../") // The Index file expects to be under the serve director/public/build
 	res := as.HTML("/").Get()
 
