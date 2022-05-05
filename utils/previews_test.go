@@ -13,7 +13,7 @@ import (
 	"github.com/gobuffalo/envy"
 )
 
-// Helper for a common block of video test code
+// Helper for a common block of video test code (duplicated in internals)
 func Get_VideoAndSetupPaths() (string, string, string) {
 	var testDir, _ = envy.MustGet("DIR")
 	srcDir := filepath.Join(testDir, "dir2")

@@ -5,11 +5,14 @@ package internals
  * mock data counts and information.
  */
 import (
-	"contented/models"
-	"contented/utils"
+	"log"
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+    "path/filepath"
+	"contented/models"
+	"contented/utils"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo-pop/v2/pop/popmw"
 	"github.com/gobuffalo/envy"
@@ -18,12 +21,22 @@ import (
 	"github.com/gobuffalo/nulls"
 	"github.com/gobuffalo/x/sessions"
 	"github.com/rs/cors"
-	"log"
-	"net/http"
 )
 
 const TOTAL_CONTAINERS = 5
 const TOTAL_MEDIA = 29
+
+// Helper for a common block of video test code (duplicated in the utils test)
+func Get_VideoAndSetupPaths() (string, string, string) {
+    var testDir, _ = envy.MustGet("DIR")
+    srcDir := filepath.Join(testDir, "dir2")
+    dstDir := utils.GetPreviewDst(srcDir)
+    testFile := "donut.mp4"
+
+    // Ensure that the preview destination directory is clean
+    utils.ResetPreviewDir(dstDir)
+    return srcDir, dstDir, testFile
+}
 
 // Create the basic app but without routes, useful for testing the managers but not routes
 func CreateBuffaloApp(UseDatabase bool, env string) *buffalo.App {
