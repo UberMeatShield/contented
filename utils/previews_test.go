@@ -1,365 +1,364 @@
 package utils
 
 import (
-    "os"
-    "time"
-    "io/ioutil"
-    "fmt"
-    "strings"
-    //    "errors" 
-    "path/filepath"
-    "testing"
- //   "contented/models"
-    "github.com/gobuffalo/envy"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"strings"
+	"time"
+	//    "errors"
+	"path/filepath"
+	"testing"
+	//   "contented/models"
+	"github.com/gobuffalo/envy"
 )
 
-// Helper for a common block of video test code
+// Helper for a common block of video test code (duplicated in internals)
 func Get_VideoAndSetupPaths() (string, string, string) {
-    var testDir, _ = envy.MustGet("DIR")
-    srcDir := filepath.Join(testDir, "dir2")
-    dstDir := GetPreviewDst(srcDir)
-    testFile := "donut.mp4"
+	var testDir, _ = envy.MustGet("DIR")
+	srcDir := filepath.Join(testDir, "dir2")
+	dstDir := GetPreviewDst(srcDir)
+	testFile := "donut.mp4"
 
-    // Ensure that the preview destination directory is clean
-    ResetPreviewDir(dstDir)
-    return srcDir, dstDir, testFile
+	// Ensure that the preview destination directory is clean
+	ResetPreviewDir(dstDir)
+	return srcDir, dstDir, testFile
 }
 
 // Check that handling bad inputs behaves in an expected fashion
 func Test_BrokenImagePreview(t *testing.T) {
-    var testDir, _ = envy.MustGet("DIR")
-    srcDir := filepath.Join(testDir, "dir3")
-    dstDir := GetPreviewDst(srcDir)
-    testFile := "nature-corrupted-free-use.jpg"
-    ResetPreviewDir(dstDir)
+	var testDir, _ = envy.MustGet("DIR")
+	srcDir := filepath.Join(testDir, "dir3")
+	dstDir := GetPreviewDst(srcDir)
+	testFile := "nature-corrupted-free-use.jpg"
+	ResetPreviewDir(dstDir)
 
-    // TODO: This needs to be made into a better place around previews
-    pLoc, err := GetImagePreview(srcDir, testFile, dstDir, 0)
-    if err == nil {
-        t.Errorf("This file should definitely cause an error")
-    }
-    if pLoc != "" {
-        t.Errorf("And it absolutely does not have a preview")
-    }
+	// TODO: This needs to be made into a better place around previews
+	pLoc, err := GetImagePreview(srcDir, testFile, dstDir, 0)
+	if err == nil {
+		t.Errorf("This file should definitely cause an error")
+	}
+	if pLoc != "" {
+		t.Errorf("And it absolutely does not have a preview")
+	}
 }
 
 // Should it Create a preview based on size of the file
 func Test_ShouldCreate(t *testing.T) {
-    var testDir, _ = envy.MustGet("DIR")
-    srcDir := filepath.Join(testDir, "dir1")
-    testFile := "this_is_p_ng"
+	var testDir, _ = envy.MustGet("DIR")
+	srcDir := filepath.Join(testDir, "dir1")
+	testFile := "this_is_p_ng"
 
-    filename := filepath.Join(srcDir, testFile)
-    srcImg, fErr := os.Open(filename)
+	filename := filepath.Join(srcDir, testFile)
+	srcImg, fErr := os.Open(filename)
 
-    if fErr != nil {
-        t.Errorf("This file cannot be opened %s with err %s", filename, fErr)
-    }
+	if fErr != nil {
+		t.Errorf("This file cannot be opened %s with err %s", filename, fErr)
+	}
 
-    preview_no := ShouldCreatePreview(srcImg, 30000)
-    if preview_no != false {
-        t.Errorf("This preview should not be created")
-    }
-    preview_yes := ShouldCreatePreview(srcImg, 1000)
-    if preview_yes != true {
-        t.Errorf("At this size it should create a preview")
-    }
+	preview_no := ShouldCreatePreview(srcImg, 30000)
+	if preview_no != false {
+		t.Errorf("This preview should not be created")
+	}
+	preview_yes := ShouldCreatePreview(srcImg, 1000)
+	if preview_yes != true {
+		t.Errorf("At this size it should create a preview")
+	}
 }
 
 func Test_FileExistsError(t *testing.T) {
-    var testDir, _ = envy.MustGet("DIR")
-    srcDir := filepath.Join(testDir, "dir1")
-    dstDir := GetPreviewDst(srcDir)
-    knownFile := "0_LargeScreen.png"
+	var testDir, _ = envy.MustGet("DIR")
+	srcDir := filepath.Join(testDir, "dir1")
+	dstDir := GetPreviewDst(srcDir)
+	knownFile := "0_LargeScreen.png"
 
-    ResetPreviewDir(dstDir)
-    fqPath := GetPreviewPathDestination(knownFile, dstDir, "image/png")
-    f, err := os.Create(fqPath)
-    if err != nil {
-        t.Errorf("Could not create the file at %s", fqPath)
-    }
-    _, wErr := f.WriteString("Now something exists in the file")
-    if wErr != nil {
-        t.Errorf("Could not write to the file at %s", fqPath)
-    }
-    f.Sync()
+	ResetPreviewDir(dstDir)
+	fqPath := GetPreviewPathDestination(knownFile, dstDir, "image/png")
+	f, err := os.Create(fqPath)
+	if err != nil {
+		t.Errorf("Could not create the file at %s", fqPath)
+	}
+	_, wErr := f.WriteString("Now something exists in the file")
+	if wErr != nil {
+		t.Errorf("Could not write to the file at %s", fqPath)
+	}
+	f.Sync()
 
-    dstCheck, exists := ErrorOnPreviewExists(knownFile, dstDir, "image/png")
-    if exists == nil {
-        t.Errorf("This file should exist now, so we should have a preview conflict")
-    }
-    if dstCheck != fqPath {
-        t.Errorf("The destination check %s was not == to what we wrote in the test %s", dstCheck, fqPath)
-    }
-    // Write minimal content to file?
+	dstCheck, exists := ErrorOnPreviewExists(knownFile, dstDir, "image/png")
+	if exists == nil {
+		t.Errorf("This file should exist now, so we should have a preview conflict")
+	}
+	if dstCheck != fqPath {
+		t.Errorf("The destination check %s was not == to what we wrote in the test %s", dstCheck, fqPath)
+	}
+	// Write minimal content to file?
 }
-
 
 // Possibly make this some sort of global test helper function (harder to do in GoLang?)
 func Test_JpegPreview(t *testing.T) {
-    var testDir, _ = envy.MustGet("DIR")
-    srcDir := filepath.Join(testDir, "dir1")
-    dstDir := GetPreviewDst(srcDir)
-    testFile := "this_is_jp_eg"
+	var testDir, _ = envy.MustGet("DIR")
+	srcDir := filepath.Join(testDir, "dir1")
+	dstDir := GetPreviewDst(srcDir)
+	testFile := "this_is_jp_eg"
 
-    ResetPreviewDir(dstDir)
+	ResetPreviewDir(dstDir)
 
-    var size int64 = 20000
+	var size int64 = 20000
 
-    checkFile, _ := os.Open(filepath.Join(srcDir, testFile))
-    if ShouldCreatePreview(checkFile, size) == true {
-        st, _ := checkFile.Stat()
-        t.Errorf("Error, this should be too small file size was: %d", st.Size())
-    }
+	checkFile, _ := os.Open(filepath.Join(srcDir, testFile))
+	if ShouldCreatePreview(checkFile, size) == true {
+		st, _ := checkFile.Stat()
+		t.Errorf("Error, this should be too small file size was: %d", st.Size())
+	}
 
-    expectNoPreview, err := GetImagePreview(srcDir, testFile, dstDir, size)
-    if err != nil {
-        t.Errorf("Failed to get a preview %v", err)
-    }
-    if expectNoPreview != testFile && expectNoPreview != "" {
-        t.Errorf("File too small for psize found  %s and expected %s", expectNoPreview, testFile)
-    }
+	expectNoPreview, err := GetImagePreview(srcDir, testFile, dstDir, size)
+	if err != nil {
+		t.Errorf("Failed to get a preview %v", err)
+	}
+	if expectNoPreview != testFile && expectNoPreview != "" {
+		t.Errorf("File too small for psize found  %s and expected %s", expectNoPreview, testFile)
+	}
 
-    pLoc, err := GetImagePreview(srcDir, testFile, dstDir, 10)
-    if err != nil {
-        t.Errorf("Error occurred creating preview %v", err)
-    }
-    expectDst := filepath.Join(dstDir, testFile)
-    if expectDst != pLoc {
-        t.Errorf("Failed to find the expected file location %s had %s", expectDst, pLoc)
-    }
+	pLoc, err := GetImagePreview(srcDir, testFile, dstDir, 10)
+	if err != nil {
+		t.Errorf("Error occurred creating preview %v", err)
+	}
+	expectDst := filepath.Join(dstDir, testFile)
+	if expectDst != pLoc {
+		t.Errorf("Failed to find the expected file location %s had %s", expectDst, pLoc)
+	}
 }
 
 // Does it work when there is a png
 func Test_PngPreview(t *testing.T) {
-    var testDir, _ = envy.MustGet("DIR")
-    srcDir := filepath.Join(testDir, "dir1")
-    dstDir := GetPreviewDst(srcDir)
-    testFile := "this_is_p_ng"
+	var testDir, _ = envy.MustGet("DIR")
+	srcDir := filepath.Join(testDir, "dir1")
+	dstDir := GetPreviewDst(srcDir)
+	testFile := "this_is_p_ng"
 
-    // Add a before each to nuke the dstDir and create it
-    ResetPreviewDir(dstDir)
-    pLoc, err := GetImagePreview(srcDir, testFile, dstDir, 10)
-    if err != nil {
-        t.Errorf("Failed to get a preview %v", err)
-    }
-    expectDst := filepath.Join(dstDir, testFile)
-    if expectDst != pLoc {
-        t.Errorf("Failed to find the expected location %s was %s", expectDst, pLoc)
-    }
+	// Add a before each to nuke the dstDir and create it
+	ResetPreviewDir(dstDir)
+	pLoc, err := GetImagePreview(srcDir, testFile, dstDir, 10)
+	if err != nil {
+		t.Errorf("Failed to get a preview %v", err)
+	}
+	expectDst := filepath.Join(dstDir, testFile)
+	if expectDst != pLoc {
+		t.Errorf("Failed to find the expected location %s was %s", expectDst, pLoc)
+	}
 }
 
 // We know this file is 10.08 seconds long
 func Test_VideoLength(t *testing.T) {
-    srcDir, _, testFile := Get_VideoAndSetupPaths()
+	srcDir, _, testFile := Get_VideoAndSetupPaths()
 
-    srcFile := filepath.Join(srcDir, testFile)
-    checkLen, fps, err := GetTotalVideoLength(srcFile)
-    if err != nil {
-        t.Errorf("Failed to load length %s", err)
-    }
-    if (checkLen != 10.08) {
-        t.Errorf("Could not get the length correctly %f", checkLen)
-    }
-    if fps != 25 {
-        t.Errorf("Couldn't get the right FPS from the video %d", fps)
-    }
+	srcFile := filepath.Join(srcDir, testFile)
+	checkLen, fps, err := GetTotalVideoLength(srcFile)
+	if err != nil {
+		t.Errorf("Failed to load length %s", err)
+	}
+	if checkLen != 10.08 {
+		t.Errorf("Could not get the length correctly %f", checkLen)
+	}
+	if fps != 25 {
+		t.Errorf("Couldn't get the right FPS from the video %d", fps)
+	}
 }
 
 func Test_WebpFromVideo(t *testing.T) {
-    srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
+	srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
 
-    // It will tack on .webp
-    dstFile := filepath.Join(dstDir, testFile)
-    srcFile := filepath.Join(srcDir, testFile)
+	// It will tack on .webp
+	dstFile := filepath.Join(dstDir, testFile)
+	srcFile := filepath.Join(srcDir, testFile)
 
-    // Uses the cfg size to create incremental screens
-    cfg := GetCfg()
-    cfg.PreviewScreensOverSize = 1024
-    SetCfg(*cfg)
-    previewFile, err := CreateWebpFromVideo(srcFile, dstFile)
-    if err != nil {
-        t.Errorf("Couldn't create preview from %s err: %s", srcFile, err)
-    }
-    webpStat, noWebp := os.Stat(previewFile)
-    if noWebp != nil {
-        t.Errorf("Did not create a preview from screens %s", previewFile)
-    }
-    if webpStat.Size() > (700 * 1024) {
-        t.Errorf("Webp has too much chonk %d", webpStat.Size())
-    }
-        
+	// Uses the cfg size to create incremental screens
+	cfg := GetCfg()
+	cfg.PreviewScreensOverSize = 1024
+	SetCfg(*cfg)
+	previewFile, err := CreateWebpFromVideo(srcFile, dstFile)
+	if err != nil {
+		t.Errorf("Couldn't create preview from %s err: %s", srcFile, err)
+	}
+	webpStat, noWebp := os.Stat(previewFile)
+	if noWebp != nil {
+		t.Errorf("Did not create a preview from screens %s", previewFile)
+	}
+	if webpStat.Size() > (700 * 1024) {
+		t.Errorf("Webp has too much chonk %d", webpStat.Size())
+	}
+
 }
 
 // Test MultiScreen
 func Test_VideoSelectScreens(t *testing.T) {
-    srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
+	srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
 
-    empty_check, _ := ioutil.ReadDir(dstDir)
-    if len(empty_check) > 0 {
-        t.Errorf("The destination directory was not empty %s", empty_check)
-    }
+	empty_check, _ := ioutil.ReadDir(dstDir)
+	if len(empty_check) > 0 {
+		t.Errorf("The destination directory was not empty %s", empty_check)
+	}
 
-    destFile := filepath.Join(dstDir, "donut.png")
-    srcFile := filepath.Join(srcDir, testFile)
-    screensSrc, err := CreateScreensFromVideoSized(srcFile, destFile, 1024 * 300000)
-    if err != nil {
-        t.Errorf("Failed to create a set of screens %s", err)
-    }
-    if screensSrc == "" {
-        t.Errorf("Did not get a valid destination file.")
-    }
-    screens_check, _ := ioutil.ReadDir(dstDir)
-    expected := 11
-    if len(screens_check) != expected {
-        t.Errorf("Not enough screens created %d vs expected %d", len(screens_check), expected)
-    }
+	destFile := filepath.Join(dstDir, "donut.png")
+	srcFile := filepath.Join(srcDir, testFile)
+	screensSrc, err := CreateScreensFromVideoSized(srcFile, destFile, 1024*300000)
+	if err != nil {
+		t.Errorf("Failed to create a set of screens %s", err)
+	}
+	if screensSrc == "" {
+		t.Errorf("Did not get a valid destination file.")
+	}
+	screens_check, _ := ioutil.ReadDir(dstDir)
+	expected := 11
+	if len(screens_check) != expected {
+		t.Errorf("Not enough screens created %d vs expected %d", len(screens_check), expected)
+	}
 
-    // TODO: Really need to fix the dest file info
-    webpFile, err := CreateWebpFromScreens(screensSrc, destFile)
-    if err != nil {
-        t.Errorf("Failed to create a gif from screens %s", err)
-    }
-    webpStat, noWebp := os.Stat(webpFile)
-    if noWebp != nil {
-        t.Errorf("Did not create a gif from screens %s", webpFile)
-    }
-    if webpStat.Size() > (700 * 1024) {
-        t.Errorf("Webp has too much chonk %d", webpStat.Size())
-    }
+	// TODO: Really need to fix the dest file info
+	webpFile, err := CreateWebpFromScreens(screensSrc, destFile)
+	if err != nil {
+		t.Errorf("Failed to create a gif from screens %s", err)
+	}
+	webpStat, noWebp := os.Stat(webpFile)
+	if noWebp != nil {
+		t.Errorf("Did not create a gif from screens %s", webpFile)
+	}
+	if webpStat.Size() > (700 * 1024) {
+		t.Errorf("Webp has too much chonk %d", webpStat.Size())
+	}
 }
 
 // TODO: Make a damn helper for this type of thing
 func Test_VideoCreateSeekScreens(t *testing.T) {
-    srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
+	srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
 
-    previewName := filepath.Join(dstDir, testFile)
-    srcFile := filepath.Join(srcDir, testFile)
+	previewName := filepath.Join(dstDir, testFile)
+	srcFile := filepath.Join(srcDir, testFile)
 
-    err := CreateSeekScreen(srcFile, previewName + ".jpeg", 10)
-    if err != nil {
-        t.Errorf("Screen seek failed %s", err)
-    }
-    // With bigger files ~ 100mb it is much faster to do 10 seek time screens
-    // instead of using a single operation.  The small donut file is faster with
-    // a single operation with a frame selection.
-    startMulti := time.Now()
-    screens, multiErr, screenPtrn := CreateSeekScreens(srcFile, previewName)
-    if multiErr != nil {
-        t.Errorf("Failed creating multiple screens %s", multiErr)
-    }
-    fmt.Printf("Screen Multi timing %s\n", time.Since(startMulti))
-    if len(screens) != 10 {
-        t.Errorf("Didn't find enough screens %d", len(screens))
-    }
-    if strings.Contains("screens", screenPtrn){
-        t.Errorf("We should have a pattern to match against %s", screenPtrn)
-    }
+	err := CreateSeekScreen(srcFile, previewName+".jpeg", 10)
+	if err != nil {
+		t.Errorf("Screen seek failed %s", err)
+	}
+	// With bigger files ~ 100mb it is much faster to do 10 seek time screens
+	// instead of using a single operation.  The small donut file is faster with
+	// a single operation with a frame selection.
+	startMulti := time.Now()
+	screens, multiErr, screenPtrn := CreateSeekScreens(srcFile, previewName)
+	if multiErr != nil {
+		t.Errorf("Failed creating multiple screens %s", multiErr)
+	}
+	fmt.Printf("Screen Multi timing %s\n", time.Since(startMulti))
+	if len(screens) != 10 {
+		t.Errorf("Didn't find enough screens %d", len(screens))
+	}
+	if strings.Contains("screens", screenPtrn) {
+		t.Errorf("We should have a pattern to match against %s", screenPtrn)
+	}
 
-    // Check to ensure you can create a gif from the seek screens
-    webp, webpErr := CreateWebpFromScreens(screenPtrn, previewName)
-    if webpErr != nil {
-        t.Errorf("Failed to create a webp screen collection %s", webpErr)
-    }
-    webInfo, werr := os.Stat(webp)
-    if werr != nil {
-        t.Errorf("The webp file doesn't exist at %s pattern %s", webp, screenPtrn)
-    }
-    size := webInfo.Size()
-    if size > (1024 * 700) || size < 1000 {
-        t.Errorf("The webp Preview was either less than 1000 or too big %d", size)
-    }
-    
-    // TODO: Check file size and determine the faster way to create a gif
-    singleScreen := time.Now()
-    _, screenErr := CreateScreensFromVideo(srcFile, previewName)
-    if screenErr != nil {
-        t.Errorf("Couldn't create screens all at once %s", screenErr)
-    }
-    fmt.Printf("Screen single execution %s\n", time.Since(singleScreen))
+	// Check to ensure you can create a gif from the seek screens
+	webp, webpErr := CreateWebpFromScreens(screenPtrn, previewName)
+	if webpErr != nil {
+		t.Errorf("Failed to create a webp screen collection %s", webpErr)
+	}
+	webInfo, werr := os.Stat(webp)
+	if werr != nil {
+		t.Errorf("The webp file doesn't exist at %s pattern %s", webp, screenPtrn)
+	}
+	size := webInfo.Size()
+	if size > (1024*700) || size < 1000 {
+		t.Errorf("The webp Preview was either less than 1000 or too big %d", size)
+	}
+
+	// TODO: Check file size and determine the faster way to create a gif
+	singleScreen := time.Now()
+	_, screenErr := CreateScreensFromVideo(srcFile, previewName)
+	if screenErr != nil {
+		t.Errorf("Couldn't create screens all at once %s", screenErr)
+	}
+	fmt.Printf("Screen single execution %s\n", time.Since(singleScreen))
 }
 
 func Test_VideoCreatePaletteFile(t *testing.T) {
-    srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
+	srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
 
-    previewName := filepath.Join(dstDir, testFile)
-    srcFile := filepath.Join(srcDir, testFile)
+	previewName := filepath.Join(dstDir, testFile)
+	srcFile := filepath.Join(srcDir, testFile)
 
-    paletteFile, err := PaletteGen(srcFile, previewName)
-    if err != nil {
-        t.Errorf("Couldn't create a palette for %s err %s", srcFile, err)
-    }
-    palStat, noPal := os.Stat(paletteFile)
-    if noPal != nil {
-        t.Errorf("Did not create a palette from a movie %s", paletteFile)
-    }
-    if palStat.Size() <= 0 {
-        t.Errorf("The palette was created empty %s", palStat)
-    }
+	paletteFile, err := PaletteGen(srcFile, previewName)
+	if err != nil {
+		t.Errorf("Couldn't create a palette for %s err %s", srcFile, err)
+	}
+	palStat, noPal := os.Stat(paletteFile)
+	if noPal != nil {
+		t.Errorf("Did not create a palette from a movie %s", paletteFile)
+	}
+	if palStat.Size() <= 0 {
+		t.Errorf("The palette was created empty %s", palStat)
+	}
 
-    // Ensure that we can cleanup a file that is a palette
-    killErr := CleanPaletteFile(paletteFile)
-    if killErr != nil {
-        t.Errorf("Didn't cleanup the paletteFile %s", killErr)
-    }
-    _, noPalNow := os.Stat(paletteFile)
-    if noPalNow == nil {
-        t.Errorf("Now the palette file should be dead")
-    }
-    // Deny cleanup of non Palette files
-    denyErr := CleanPaletteFile(srcFile)
-    if denyErr == nil {
-        t.Errorf("better restore the donut file somehow it thought it was a palette")
-    }
+	// Ensure that we can cleanup a file that is a palette
+	killErr := CleanPaletteFile(paletteFile)
+	if killErr != nil {
+		t.Errorf("Didn't cleanup the paletteFile %s", killErr)
+	}
+	_, noPalNow := os.Stat(paletteFile)
+	if noPalNow == nil {
+		t.Errorf("Now the palette file should be dead")
+	}
+	// Deny cleanup of non Palette files
+	denyErr := CleanPaletteFile(srcFile)
+	if denyErr == nil {
+		t.Errorf("better restore the donut file somehow it thought it was a palette")
+	}
 }
 
 // Makes it so that the preview is generated
 func Test_VideoPreviewPNG(t *testing.T) {
-    srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
+	srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
 
-    // Add a before each to nuke the dstDir and create it
-    expectDst, dErr := ErrorOnPreviewExists(testFile, dstDir, "video/hack")
-    if dErr != nil {
-        t.Errorf("The dest file already exists %s\n", expectDst)
-    }
+	// Add a before each to nuke the dstDir and create it
+	expectDst, dErr := ErrorOnPreviewExists(testFile, dstDir, "video/hack")
+	if dErr != nil {
+		t.Errorf("The dest file already exists %s\n", expectDst)
+	}
 
-    pLoc, err := GetImagePreview(srcDir, testFile, dstDir, 10)
-    if err != nil {
-        t.Errorf("Failed to get Video preview %v", err)
-    }
-    if expectDst != pLoc {
-        t.Errorf("Failed to find the expected location %s was %s", expectDst, pLoc)
-    }
-    // TODO: Figure out sime sizing constraints
-    _, noFileErr := os.Stat(pLoc); 
-    if noFileErr != nil {
-        t.Errorf("We had no error but the file is not on disk %s", pLoc)
-    }
-    // TODO: Should probably check the size as well
+	pLoc, err := GetImagePreview(srcDir, testFile, dstDir, 10)
+	if err != nil {
+		t.Errorf("Failed to get Video preview %v", err)
+	}
+	if expectDst != pLoc {
+		t.Errorf("Failed to find the expected location %s was %s", expectDst, pLoc)
+	}
+	// TODO: Figure out sime sizing constraints
+	_, noFileErr := os.Stat(pLoc)
+	if noFileErr != nil {
+		t.Errorf("We had no error but the file is not on disk %s", pLoc)
+	}
+	// TODO: Should probably check the size as well
 }
 
 func Test_VideoPreviewGif(t *testing.T) {
-    srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
+	srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
 
-    expectDst, dErr := ErrorOnPreviewExists(testFile, dstDir, "video/hack")
-    if dErr != nil {
-        t.Errorf("The dest file already exists %s\n", expectDst)
-    }
-    
-    vidFile := filepath.Join(srcDir, testFile)
-    vFile, _ := os.Stat(vidFile)
-    destFile := filepath.Join(dstDir, testFile + ".gif")
+	expectDst, dErr := ErrorOnPreviewExists(testFile, dstDir, "video/hack")
+	if dErr != nil {
+		t.Errorf("The dest file already exists %s\n", expectDst)
+	}
 
-    _, err := CreateGifFromVideo(vidFile, destFile)
-    if err != nil {
-        t.Errorf("Failed to create a gif preview %s", err)
-    }
-    fCheck, noFileErr := os.Stat(destFile); 
-    if noFileErr != nil {
-        t.Errorf("We had no error but the file is not on disk %s", destFile)
-    }
-    if fCheck.Size() > vFile.Size()  {
-        t.Errorf("Preview was bigger than video %d > %d", fCheck.Size(), vFile.Size())
-    }
-    ResetPreviewDir(dstDir)
+	vidFile := filepath.Join(srcDir, testFile)
+	vFile, _ := os.Stat(vidFile)
+	destFile := filepath.Join(dstDir, testFile+".gif")
+
+	_, err := CreateGifFromVideo(vidFile, destFile)
+	if err != nil {
+		t.Errorf("Failed to create a gif preview %s", err)
+	}
+	fCheck, noFileErr := os.Stat(destFile)
+	if noFileErr != nil {
+		t.Errorf("We had no error but the file is not on disk %s", destFile)
+	}
+	if fCheck.Size() > vFile.Size() {
+		t.Errorf("Preview was bigger than video %d > %d", fCheck.Size(), vFile.Size())
+	}
+	ResetPreviewDir(dstDir)
 }

@@ -1,17 +1,17 @@
 package actions
 
 import (
+	"contented/internals"
+	"contented/managers"
+	"contented/models"
 	"encoding/json"
 	"fmt"
+	"github.com/gobuffalo/envy"
+	"github.com/gobuffalo/packr/v2"
+	"github.com/gobuffalo/suite/v3"
 	"net/http"
 	"os"
 	"testing"
-	"contented/models"
-	"contented/managers"
-    "contented/internals"
-	"github.com/gobuffalo/envy"
-	"github.com/gobuffalo/packr/v2"
-	"github.com/gobuffalo/suite"
 )
 
 const ExpectCntCount = 5
@@ -32,7 +32,7 @@ func TestMain(m *testing.M) {
 }
 
 func (as *ActionSuite) Test_ContentList() {
-    internals.InitFakeApp(false)
+	internals.InitFakeApp(false)
 
 	res := as.JSON("/containers").Get()
 	as.Equal(http.StatusOK, res.Code)
@@ -51,7 +51,7 @@ func (as *ActionSuite) Test_ContentDirLoad() {
 	as.Equal(ExpectCntCount, len(cnts), "We should have this many dirs present")
 
 	for _, c := range cnts {
-		res := as.JSON("/containers/" + c.ID.String()  + "/media").Get()
+		res := as.JSON("/containers/" + c.ID.String() + "/media").Get()
 		as.Equal(http.StatusOK, res.Code)
 
 		resObj := []models.Containers{}
@@ -69,12 +69,12 @@ func (as *ActionSuite) Test_ViewRef() {
 	// Oof, that is rough... need a better way to select the file not by index but ID
 	internals.InitFakeApp(false)
 
-    app := as.App
-    ctx := internals.GetContext(app)
-    man := managers.GetManager(&ctx)
-    mcs, err := man.ListAllMedia(2, 2)
-    as.NoError(err)
-    as.Equal(2, len(*mcs), "It should have only two results")
+	app := as.App
+	ctx := internals.GetContext(app)
+	man := managers.GetManager(&ctx)
+	mcs, err := man.ListAllMedia(2, 2)
+	as.NoError(err)
+	as.Equal(2, len(*mcs), "It should have only two results")
 
 	// TODO: Make it better about the type checking
 	// TODO: Make it always pass in the file ID
@@ -82,8 +82,8 @@ func (as *ActionSuite) Test_ViewRef() {
 		res := as.HTML("/view/" + mc.ID.String()).Get()
 		as.Equal(http.StatusOK, res.Code)
 		header := res.Header()
-        as.NoError(internals.IsValidContentType(header.Get("Content-Type")))
-        
+		as.NoError(internals.IsValidContentType(header.Get("Content-Type")))
+
 	}
 }
 
@@ -91,19 +91,19 @@ func (as *ActionSuite) Test_ViewRef() {
 func (as *ActionSuite) Test_ContentDirDownload() {
 	internals.InitFakeApp(false)
 
-    ctx := internals.GetContext(as.App)
-    man := managers.GetManager(&ctx)
-    mcs, err := man.ListAllMedia(2, 2)
-    as.NoError(err)
-    as.Equal(2, len(*mcs), "It should have only two results")
+	ctx := internals.GetContext(as.App)
+	man := managers.GetManager(&ctx)
+	mcs, err := man.ListAllMedia(2, 2)
+	as.NoError(err)
+	as.Equal(2, len(*mcs), "It should have only two results")
 
-    // Hate
+	// Hate
 	for _, mc := range *mcs {
 		res := as.HTML("/download/" + mc.ID.String()).Get()
 		as.Equal(http.StatusOK, res.Code)
 		header := res.Header()
-        as.NoError(internals.IsValidContentType(header.Get("Content-Type")))
-    }
+		as.NoError(internals.IsValidContentType(header.Get("Content-Type")))
+	}
 }
 
 // Test if we can get the actual file using just a file ID
@@ -112,10 +112,10 @@ func (as *ActionSuite) Test_FindAndLoadFile() {
 
 	as.Equal(true, cfg.Initialized)
 
-    ctx := internals.GetContext(as.App)
-    man := managers.GetManager(&ctx)
-    mcs, err := man.ListAllMedia(1, 200)
-    as.NoError(err)
+	ctx := internals.GetContext(as.App)
+	man := managers.GetManager(&ctx)
+	mcs, err := man.ListAllMedia(1, 200)
+	as.NoError(err)
 
 	for _, mc := range *mcs {
 		mc_ref, fc_err := man.FindFileRef(mc.ID)
@@ -132,43 +132,43 @@ func (as *ActionSuite) Test_FindAndLoadFile() {
 // This checks that a preview loads when defined and otherwise falls back to the MC itself
 func (as *ActionSuite) Test_PreviewFile() {
 	internals.InitFakeApp(false)
-    ctx := internals.GetContext(as.App)
-    man := managers.GetManager(&ctx)
-    mcs, err := man.ListAllMedia(1, 200)
-    as.NoError(err)
+	ctx := internals.GetContext(as.App)
+	man := managers.GetManager(&ctx)
+	mcs, err := man.ListAllMedia(1, 200)
+	as.NoError(err)
 
 	for _, mc := range *mcs {
 		res := as.HTML("/preview/" + mc.ID.String()).Get()
 		as.Equal(http.StatusOK, res.Code)
 
 		header := res.Header()
-        as.NoError(internals.IsValidContentType(header.Get("Content-Type")))
+		as.NoError(internals.IsValidContentType(header.Get("Content-Type")))
 	}
 }
 
 func (as *ActionSuite) Test_FullFile() {
 	internals.InitFakeApp(false)
-    ctx := internals.GetContext(as.App)
-    man := managers.GetManager(&ctx)
-    mcs, err := man.ListAllMedia(1, 200)
-    as.NoError(err)
+	ctx := internals.GetContext(as.App)
+	man := managers.GetManager(&ctx)
+	mcs, err := man.ListAllMedia(1, 200)
+	as.NoError(err)
 
 	for _, mc := range *mcs {
 		res := as.HTML("/view/" + mc.ID.String()).Get()
 		as.Equal(http.StatusOK, res.Code)
 
 		header := res.Header()
-        as.NoError(internals.IsValidContentType(header.Get("Content-Type")))
+		as.NoError(internals.IsValidContentType(header.Get("Content-Type")))
 	}
 }
 
 // This checks if previews are actually used if defined
 func (as *ActionSuite) Test_PreviewWorking() {
 	internals.InitFakeApp(false)
-    ctx := internals.GetContext(as.App)
-    man := managers.GetManager(&ctx)
-    mcs, err := man.ListAllMedia(1, 200)
-    as.NoError(err)
+	ctx := internals.GetContext(as.App)
+	man := managers.GetManager(&ctx)
+	mcs, err := man.ListAllMedia(1, 200)
+	as.NoError(err)
 
 	for _, mc := range *mcs {
 		if mc.Preview != "" {

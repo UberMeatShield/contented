@@ -8,8 +8,8 @@ func (ms *ModelSuite) Test_MediaContainer() {
 	}
 
 	mc := MediaContainer{
-		Src:     "This is the name of the item",
-		Preview: "preview_location",
+		Src:         "This is the name of the item",
+		Preview:     "preview_location",
 		ContentType: "image/png",
 	}
 	ms.DB.Create(&mc)
