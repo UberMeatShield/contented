@@ -117,7 +117,7 @@ func GetPreviewPathDestination(filename string, dstPath string, contentType stri
         if previewType == "screens" {
 		    dstFilename += ".webp"  
         } else {
-		    dstFilename += ("." + previewType) // hate
+		    dstFilename += ("." + previewType)
         }
 	}
 	return filepath.Join(dstPath, dstFilename)
