@@ -9,7 +9,7 @@ import (
 	//    "errors"
 	"path/filepath"
 	"testing"
-	//   "contented/models"
+    "contented/models"
 	"github.com/gobuffalo/envy"
 )
 
@@ -175,6 +175,7 @@ func Test_WebpFromVideo(t *testing.T) {
 	// Uses the cfg size to create incremental screens
 	cfg := GetCfg()
 	cfg.PreviewScreensOverSize = 1024
+    cfg.PreviewVideoType = "screens"
 	SetCfg(*cfg)
 	previewFile, err := CreateWebpFromVideo(srcFile, dstFile)
 	if err != nil {
@@ -188,6 +189,23 @@ func Test_WebpFromVideo(t *testing.T) {
 		t.Errorf("Webp has too much chonk %d", webpStat.Size())
 	}
 
+    // Check that if we use a screens version it will work as a preview
+    // using memory storage
+    c := &models.Container{
+        Path: filepath.Dir(srcDir),
+        Name: filepath.Base(srcDir),
+    }
+    mc := &models.MediaContainer{
+        ContentType: "video/mp4",
+        Src: testFile,
+    }
+    checkFile := AssignPreviewIfExists(c, mc)
+    if (previewFile != checkFile) {
+        t.Errorf("Check not set to Expected\n %s \n %s", checkFile, previewFile)
+    }
+    if mc.Preview != checkFile {
+        t.Errorf("mc.Preview (%s) not equal check(%s)", mc.Preview, checkFile)
+    }
 }
 
 // Test MultiScreen

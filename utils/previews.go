@@ -113,7 +113,12 @@ func GetPreviewPathDestination(filename string, dstPath string, contentType stri
 	dstFilename := filename
 	if strings.Contains(contentType, "video") {
 		// The image library for video previews sets the output by ext (not a video)
-		dstFilename += ("." + GetCfg().PreviewVideoType)
+        previewType := GetCfg().PreviewVideoType
+        if previewType == "screens" {
+		    dstFilename += ".webp"  
+        } else {
+		    dstFilename += ("." + previewType) // hate
+        }
 	}
 	return filepath.Join(dstPath, dstFilename)
 }
@@ -181,7 +186,7 @@ func CleanPaletteFile(paletteFile string) error {
 
 // Strip off the PNG, we are just going to dump out some jpegs
 func GetScreensOutputPattern(dstFile string) string {
-	stripExtension := regexp.MustCompile(".png$")
+	stripExtension := regexp.MustCompile(".png$|.gif$|.webp$")
 	dstFile = stripExtension.ReplaceAllString(dstFile, "")
 	return fmt.Sprintf("%s%s", dstFile, ".screens.%03d.jpg")
 }
@@ -360,25 +365,21 @@ func CreateWebpFromScreens(screensSrc string, dstFile string) (string, error) {
 
 	// Need a function that determines the preview output filename and takes in the config
 	// for the preview type name...
-	gifFile := fmt.Sprintf("%s.webp", dstFile)
 	log.Printf("What is the screens %s vs dstFile %s", screensSrc, dstFile)
-
-	// TODO: The whole destination file preview thing is jacked / needs  afix.
 	paletteFile, palErr := PaletteGen(screensSrc, dstFile)
 	if palErr != nil {
 		return "", palErr
 	}
 
 	// Should scale based on a probe of the size maybe?  No need to make something
-	// tiny even smaller.
-	filter := "paletteuse,setpts=6*PTS,scale=iw*.5:ih*.5"
+	// tiny even smaller. This seems to produce a "decent" output.
+	filter := "paletteuse,setpts=25*PTS,scale=iw*.5:ih*.5"
 	screenErr := ffmpeg.Input(paletteFile, ffmpeg.KwArgs{"i": screensSrc}).
-		Output(gifFile, ffmpeg.KwArgs{
-			// "s": "640x480",
-			// "pix_fmt": "yuvj422p",
+		Output(dstFile, ffmpeg.KwArgs{
 			"filter_complex": filter,
+            "loop": 0,
 		}).OverWriteOutput().Run()
-	return gifFile, screenErr
+	return dstFile, screenErr
 }
 
 func CreatePngFromVideo(srcFile string, dstFile string) (string, error) {
