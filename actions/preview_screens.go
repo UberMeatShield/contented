@@ -4,7 +4,7 @@ import (
     "log"
 	"fmt"
 	"net/http"
-    "errors"
+    // "errors"
 	"contented/models"
 	"contented/managers"
 	"github.com/gobuffalo/buffalo"
@@ -93,28 +93,16 @@ func (v PreviewScreensResource) Show(c buffalo.Context) error {
 // Create adds a PreviewScreen to the DB. This function is mapped to the
 // path POST /preview_screens
 func (v PreviewScreensResource) Create(c buffalo.Context) error {
-    man := managers.GetManager(&c)
-    if man.CanEdit() == false {
-        return c.Error(
-            http.StatusNotImplemented,
-            errors.New("Edit not supported by this manager"),
-        )
+    _, tx, err := managers.ManagerCanCUD(&c)
+    if err != nil {
+        return err
     }
-
-    log.Printf("What did we post in %s", c.Params())
-
 	// Allocate an empty PreviewScreen
 	previewScreen := &models.PreviewScreen{}
 
 	// Bind previewScreen to the html form/JSON elements
 	if err := c.Bind(previewScreen); err != nil {
 		return err
-	}
-
-	// Get the DB connection from the context
-	tx, ok := c.Value("tx").(*pop.Connection)
-	if !ok {
-		return fmt.Errorf("no transaction found")
 	}
 
 	// Validate the data from the html form
@@ -155,10 +143,10 @@ func (v PreviewScreensResource) Create(c buffalo.Context) error {
 // the path PUT /preview_screens/{preview_screen_id}
 func (v PreviewScreensResource) Update(c buffalo.Context) error {
 	// Get the DB connection from the context
-	tx, ok := c.Value("tx").(*pop.Connection)
-	if !ok {
-		return fmt.Errorf("no transaction found")
-	}
+    _, tx, err := managers.ManagerCanCUD(&c)
+    if err != nil {
+        return err
+    }
 
 	// Allocate an empty PreviewScreen
 	previewScreen := &models.PreviewScreen{}
@@ -211,10 +199,10 @@ func (v PreviewScreensResource) Update(c buffalo.Context) error {
 // to the path DELETE /preview_screens/{preview_screen_id}
 func (v PreviewScreensResource) Destroy(c buffalo.Context) error {
 	// Get the DB connection from the context
-	tx, ok := c.Value("tx").(*pop.Connection)
-	if !ok {
-		return fmt.Errorf("no transaction found")
-	}
+    _, tx, err := managers.ManagerCanCUD(&c)
+    if err != nil {
+        return err
+    }
 
 	// Allocate an empty PreviewScreen
 	previewScreen := &models.PreviewScreen{}

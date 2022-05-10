@@ -3,10 +3,10 @@ package actions
 import (
 	"contented/managers"
 	"contented/models"
-	"errors"
-	"fmt"
+	//"errors"
+	//"fmt"
 	"github.com/gobuffalo/buffalo"
-	"github.com/gobuffalo/pop/v5"
+	//"github.com/gobuffalo/pop/v5"
 	"github.com/gobuffalo/x/responder"
 	"github.com/gofrs/uuid"
 	"net/http"
@@ -80,15 +80,10 @@ func (v ContainersResource) Show(c buffalo.Context) error {
 // path POST /containers
 func (v ContainersResource) Create(c buffalo.Context) error {
 	// Allocate an empty Container
-
-	// TODO: Reject if it is memory manager
-	man := managers.GetManager(&c)
-	if man.CanEdit() == false {
-		return c.Error(
-			http.StatusNotImplemented,
-			errors.New("Edit not supported by this manager"),
-		)
-	}
+    _, tx, err := managers.ManagerCanCUD(&c)
+    if err != nil {
+        return err
+    }
 
 	// Bind container to the html form elements
 	container := &models.Container{}
@@ -96,12 +91,6 @@ func (v ContainersResource) Create(c buffalo.Context) error {
 		return err
 	}
 
-	// Get the DB connection from the context
-	// Validate the data from the html form
-	tx, ok := c.Value("tx").(*pop.Connection)
-	if !ok {
-		return fmt.Errorf("no transaction found")
-	}
 	verrs, err := tx.ValidateAndCreate(container)
 	if err != nil {
 		return err
@@ -131,19 +120,10 @@ func (v ContainersResource) Create(c buffalo.Context) error {
 // the path PUT /containers/{container_id}
 func (v ContainersResource) Update(c buffalo.Context) error {
 	// Get the DB connection from the context
-	man := managers.GetManager(&c)
-	if man.CanEdit() == false {
-		return c.Error(
-			http.StatusNotImplemented,
-			errors.New("Edit not supported by this manager"),
-		)
-	}
-
-	// TODO: Probably should make this update via the manager
-	tx, ok := c.Value("tx").(*pop.Connection)
-	if !ok {
-		return fmt.Errorf("no transaction found")
-	}
+    _, tx, err := managers.ManagerCanCUD(&c)
+    if err != nil {
+        return err
+    }
 
 	// Allocate an empty Container
 	container := &models.Container{}
@@ -184,18 +164,10 @@ func (v ContainersResource) Update(c buffalo.Context) error {
 // to the path DELETE /containers/{container_id}
 func (v ContainersResource) Destroy(c buffalo.Context) error {
 	// Get the DB connection from the context
-	man := managers.GetManager(&c)
-	if man.CanEdit() == false {
-		return c.Error(
-			http.StatusNotImplemented,
-			errors.New("Edit not supported by this manager"),
-		)
-	}
-
-	tx, ok := c.Value("tx").(*pop.Connection)
-	if !ok {
-		return fmt.Errorf("no transaction found")
-	}
+    _, tx, err := managers.ManagerCanCUD(&c)
+    if err != nil {
+        return err
+    }
 
 	// Allocate an empty Container
 	// To find the Container the parameter container_id is used.

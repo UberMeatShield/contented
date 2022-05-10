@@ -10,14 +10,17 @@
 package managers
 
 import (
+	"log"
+    "fmt"
+    "errors"
+	"net/url"
+	"net/http"
+	"strconv"
 	"contented/models"
 	"contented/utils"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
-	"log"
-	"net/url"
-	"strconv"
 )
 
 type GetConnType func() *pop.Connection
@@ -82,6 +85,23 @@ func GetManager(c *buffalo.Context) ContentManager {
 		return &params
 	}
 	return CreateManager(cfg, get_connection, get_params)
+}
+
+// can this manager create, update or destroy
+func ManagerCanCUD(c *buffalo.Context) (*ContentManager, *pop.Connection, error){
+    man := GetManager(c)
+    ctx := *c
+    if man.CanEdit() == false {
+        return &man, nil, ctx.Error(
+            http.StatusNotImplemented,
+            errors.New("Edit not supported by this manager"),
+        )
+    }
+    tx, ok := ctx.Value("tx").(*pop.Connection)
+    if !ok {
+        return &man, nil, fmt.Errorf("No transaction found")
+    }
+    return &man, tx, nil
 }
 
 // Provides the ability to pass a connection function and get params function to the manager so we can handle
