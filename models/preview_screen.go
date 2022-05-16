@@ -5,6 +5,7 @@ import (
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gobuffalo/validate/v3"
 	"github.com/gofrs/uuid"
+    "path/filepath"
 	"time"
 )
 
@@ -14,6 +15,7 @@ type PreviewScreen struct {
     MediaID   uuid.UUID `json:"media_id" db:"media_container_id"`
 	CreatedAt time.Time `json:"created" db:"created_at"`
 	UpdatedAt time.Time `json:"updated" db:"updated_at"`
+    Path      string    `json:"-" db:"path"`
 	Src       string    `json:"src" db:"src"`
 	Idx       int       `json:"idx" db:"idx"`
 	SizeBytes int64     `json:"size" db:"size_bytes"`
@@ -33,6 +35,10 @@ type PreviewMap map[uuid.UUID]PreviewScreen
 func (m PreviewScreens) String() string {
 	jm, _ := json.Marshal(m)
 	return string(jm)
+}
+
+func (m PreviewScreen) GetFqPath() string {
+	return filepath.Join(m.Path, m.Src)
 }
 
 // Validate gets run every time you call a "pop.Validate*" (pop.ValidateAndSave, pop.ValidateAndCreate, pop.                 ValidateAndUpdate) method.

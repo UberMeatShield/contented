@@ -1,5 +1,9 @@
 package models
 
+import (
+    "path/filepath"
+)
+
 func (ms *ModelSuite) Test_MediaContainerScreens() {
 	count, err := ms.DB.Count("media_containers")
 	ms.NoError(err)
@@ -21,10 +25,16 @@ func (ms *ModelSuite) Test_MediaContainerScreens() {
 		MediaID: mc.ID,
 	}
 	p2 := PreviewScreen{
-		Src:     "fake2",
+		Src:     "fake2.png",
 		Idx:     1,
+        Path: "Derp/Monkey",
 		MediaID: mc.ID,
 	}
+
+    p2Loc := p2.GetFqPath()
+    if p2Loc != filepath.Join(p2.Path, p2.Src) {
+        ms.Fail("Didn't create the right fq path")
+    }
 	perr1 := ms.DB.Create(&p1)
 	if perr1 != nil {
 		ms.Fail("Couldn't create preview screen 1 %s", perr1)
@@ -45,7 +55,4 @@ func (ms *ModelSuite) Test_MediaContainerScreens() {
 	if len(check.Screens) != 2 {
 		ms.Fail("The screens did not load back: " + mc.ID.String())
 	}
-
-	//check_screens := PreviewScreens{}
-	//s_err := ms.DB.
 }

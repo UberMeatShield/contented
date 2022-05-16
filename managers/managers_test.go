@@ -369,3 +369,35 @@ func (as *ActionSuite) Test_ManagerDB() {
 	lim_media, _ := man.ListAllMedia(0, 3)
 	as.Equal(3, len(*lim_media), "The DB should be setup with 10 items")
 }
+
+
+func (as *ActionSuite) Test_ManagerDBPreviews() {
+	models.DB.TruncateAll()
+	cfg := internals.InitFakeApp(true)
+
+    mc := models.MediaContainer{Src: "A", Preview: "p", ContentType: "i",}
+    mc2 := models.MediaContainer{Src: "A", Preview: "p", ContentType: "i",}
+    as.DB.Create(&mc)
+    as.DB.Create(&mc2)
+    as.NotZero(mc.ID)
+
+    p1 := models.PreviewScreen{Src: "fake1", Idx: 0, MediaID: mc.ID,}
+    p2 := models.PreviewScreen{Src: "fake2.png", Idx: 1, MediaID: mc.ID,}
+    p3 := models.PreviewScreen{Src: "fake2.png", Idx: 1, MediaID: mc2.ID,}
+    as.DB.Create(&p1)
+    as.DB.Create(&p2)
+    as.DB.Create(&p3)
+
+    man := GetManagerActionSuite(cfg, as)
+    previewList, err := man.ListPreviews(mc.ID, 1, 10)
+    as.NoError(err)
+    as.Equal(len(*previewList), 2, "We should have two previews")
+
+    previewOne, p_err := man.ListPreviews(mc2.ID, 1, 10)
+    as.NoError(p_err)
+    as.Equal(len(*previewOne), 1, "Now there should be 1")
+}
+
+func (as *ActionSuite) Test_ManagerMemoryPreviews() {
+    as.Fail("Implement Memory Manager Preview Test")
+}

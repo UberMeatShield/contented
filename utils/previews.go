@@ -181,7 +181,7 @@ func CleanPaletteFile(paletteFile string) error {
 
 // Strip off the PNG, we are just going to dump out some jpegs
 func GetScreensOutputPattern(dstFile string) string {
-	stripExtension := regexp.MustCompile(".png$")
+	stripExtension := regexp.MustCompile(".png$|.jpeg$|.jpg$")
 	dstFile = stripExtension.ReplaceAllString(dstFile, "")
 	return fmt.Sprintf("%s%s", dstFile, ".screens.%03d.jpg")
 }

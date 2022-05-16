@@ -192,3 +192,38 @@ func (cm ContentManagerDB) FindActualFile(mc *models.MediaContainer) (string, er
 	log.Printf("DB Manager View %s loading up %s\n", mc.ID.String(), mc.Src)
 	return utils.GetFilePathInContainer(mc.Src, cnt.GetFqPath())
 }
+
+
+func (cm ContentManagerDB) ListAllPreviewsContext() (*models.PreviewScreens, error) {
+    _, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
+    return cm.ListAllPreviews(page, limit)
+}
+
+
+func (cm ContentManagerDB) ListAllPreviews(page int, per_page int) (*models.PreviewScreens, error) {
+    tx := cm.GetConnection()
+	q := tx.Paginate(page, per_page)
+	previews := &models.PreviewScreens{}
+    if err := q.All(previews); err != nil {
+        return nil, err
+    }
+    return previews, nil
+}
+
+func (cm ContentManagerDB) ListPreviewContext(mcID uuid.UUID) (*models.PreviewScreens, error) {
+    // Could add the context here correctly
+    _, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
+    return cm.ListPreviews(mcID, page, limit)
+}
+
+// TODO: Re-Assign the preview based on screen information
+func (cm ContentManagerDB) ListPreviews(mcID uuid.UUID, page int, per_page int) (*models.PreviewScreens, error) {
+	tx := cm.GetConnection()
+	previews := &models.PreviewScreens{}
+	q := tx.Paginate(page, per_page)
+	q_conn := q.Where("media_container_id = ?", mcID)
+	if q_err := q_conn.All(previews); q_err != nil {
+		return nil, q_err
+	}
+	return previews, nil
+}

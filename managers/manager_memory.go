@@ -279,3 +279,32 @@ func (cm ContentManagerMemory) SetPreviewIfExists(mc *models.MediaContainer) (st
 	pFile := utils.AssignPreviewIfExists(c, mc)
 	return pFile, nil
 }
+
+
+func (cm ContentManagerMemory) ListPreviewContext(mcID uuid.UUID) (*models.PreviewScreens, error) {
+    // Could add the context here correctly
+    _, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
+    return cm.ListPreviews(mcID, page, limit)
+}
+
+// TODO: Get a pattern for each MC, look at a preview Destination, then match against the pattern
+// And build out a set of screens.
+func (cm ContentManagerMemory)  ListPreviews(mcID uuid.UUID, page int, per_page int) (*models.PreviewScreens, error) {
+    return nil, errors.New("Not implemented")
+
+    // Load up the MC itself
+    // Get container from the MC
+    // Get Preview Path
+    // Get Screens match
+    // Search preview directory for matches
+}
+
+func (cm ContentManagerMemory) ListAllPreviewsContext() (*models.PreviewScreens, error) {
+    _, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
+    return cm.ListAllPreviews(page, limit)
+}
+
+func (cm ContentManagerMemory) ListAllPreviews(page int, per_page int) (*models.PreviewScreens, error) {
+	log.Printf("Using memory manager for previews page %d per_page %d \n", page, per_page)
+    return nil, errors.New("Not implemented")
+}
