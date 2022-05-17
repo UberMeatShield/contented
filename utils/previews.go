@@ -328,7 +328,7 @@ func CreateSeekScreens(srcFile string, dstFile string) ([]string, error, string)
     screenFmt := GetScreensOutputPattern(dstFile)
     for idx := 0; idx < totalScreens; idx++ {
         screenFile := fmt.Sprintf(screenFmt, idx)
-        log.Printf("Screen file is what %s", screenFile)
+        // log.Printf("Screen file is what %s", screenFile)
 
         err := CreateSeekScreen(srcFile, screenFile, (idx * timeSkip))
         if err != nil {

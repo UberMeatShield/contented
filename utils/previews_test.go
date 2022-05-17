@@ -221,7 +221,7 @@ func Test_VideoSelectScreens(t *testing.T) {
 		t.Errorf("The destination directory was not empty %s", empty_check)
 	}
 
-	destFile := filepath.Join(dstDir, "donut.png")
+	destFile := filepath.Join(dstDir, "donut.mp4.webp")
 	srcFile := filepath.Join(srcDir, testFile)
 	screensSrc, err := CreateScreensFromVideoSized(srcFile, destFile, 1024*300000)
 	if err != nil {
@@ -239,11 +239,11 @@ func Test_VideoSelectScreens(t *testing.T) {
 	// TODO: Really need to fix the dest file info
 	webpFile, err := CreateWebpFromScreens(screensSrc, destFile)
 	if err != nil {
-		t.Errorf("Failed to create a gif from screens %s", err)
+		t.Errorf("Failed to create preview %s", err)
 	}
 	webpStat, noWebp := os.Stat(webpFile)
 	if noWebp != nil {
-		t.Errorf("Did not create a gif from screens %s", webpFile)
+		t.Errorf("Did not create a preview from screens %s", webpFile)
 	}
 	if webpStat.Size() > (700 * 1024) {
 		t.Errorf("Webp has too much chonk %d", webpStat.Size())
@@ -254,7 +254,7 @@ func Test_VideoSelectScreens(t *testing.T) {
 func Test_VideoCreateSeekScreens(t *testing.T) {
 	srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
 
-	previewName := filepath.Join(dstDir, testFile)
+	previewName := filepath.Join(dstDir, testFile + ".webp")
 	srcFile := filepath.Join(srcDir, testFile)
 
 	err := CreateSeekScreen(srcFile, previewName+".jpeg", 10)

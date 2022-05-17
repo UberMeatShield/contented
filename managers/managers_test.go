@@ -399,5 +399,12 @@ func (as *ActionSuite) Test_ManagerDBPreviews() {
 }
 
 func (as *ActionSuite) Test_ManagerMemoryPreviews() {
+	cfg := internals.InitFakeApp(false)
+
+    man := GetManagerActionSuite(cfg, as)
+    media := man.ListAllMedia(1, 100)
+    as.Greater(len(media), 0, "It should have media setup")
+
+    // Generate some fake screens
     as.Fail("Implement Memory Manager Preview Test")
 }

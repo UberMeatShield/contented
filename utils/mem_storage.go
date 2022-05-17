@@ -81,7 +81,7 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap) 
 
 func AssignScreensIfExists(c *models.Container, mc *models.MediaContainer) (*models.PreviewScreens) {
     if !strings.Contains(mc.ContentType, "video") {
-        log.Printf("Media is not of type video, no screens likely")
+        // log.Printf("Media is not of type video, no screens likely")
         return nil
     }
 	previewPath := GetPreviewDst(c.GetFqPath())
