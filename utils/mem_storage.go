@@ -66,6 +66,7 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap) 
 			for _, mc := range ct.Media {
 				// I should name this as PreviewUrl
 				AssignPreviewIfExists(&c, &mc)
+                AssignScreensIfExists(&c, &mc)
 				files[mc.ID] = mc
 			}
 		}
@@ -83,7 +84,6 @@ func AssignScreensIfExists(c *models.Container, mc *models.MediaContainer) (*mod
         log.Printf("Media is not of type video, no screens likely")
         return nil
     }
-
 	previewPath := GetPreviewDst(c.GetFqPath())
     maybeScreens, err := ioutil.ReadDir(previewPath)
     if err != nil {
@@ -95,7 +95,7 @@ func AssignScreensIfExists(c *models.Container, mc *models.MediaContainer) (*mod
         if !fRef.IsDir() {
             name := fRef.Name()
             if screenRe.MatchString(name) {
-                log.Printf("Matched file %s idx %d", name, idx) 
+                // log.Printf("Matched file %s idx %d", name, idx) 
                 id, _ := uuid.NewV4()
                 ps := models.PreviewScreen{
                     ID: id,
@@ -106,12 +106,10 @@ func AssignScreensIfExists(c *models.Container, mc *models.MediaContainer) (*mod
                     SizeBytes: fRef.Size(),
                 }
                 previewScreens = append(previewScreens, ps)
-            } else {
-                log.Printf("Did not match %s", name)
-            }
+            } 
         }
     }
-    log.Printf("Looking through a container preview directory %s", screenRe)
+    mc.Screens = previewScreens
     return &previewScreens
 }
 

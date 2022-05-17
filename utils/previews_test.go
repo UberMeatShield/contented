@@ -21,7 +21,7 @@ func Get_VideoAndSetupPaths() (string, string, string) {
 	testFile := "donut.mp4"
 
 	// Ensure that the preview destination directory is clean
-	// ResetPreviewDir(dstDir)
+	ResetPreviewDir(dstDir)
 	return srcDir, dstDir, testFile
 }
 
@@ -173,7 +173,7 @@ func Test_WebpFromVideo(t *testing.T) {
 	SetCfg(*cfg)
 
 	// It will tack on .webp
-	dstFile := filepath.Join(dstDir, testFile)
+	dstFile := GetPreviewPathDestination(testFile, dstDir, "video")
 	srcFile := filepath.Join(srcDir, testFile)
 
 	// Uses the cfg size to create incremental screens
@@ -207,8 +207,8 @@ func Test_WebpFromVideo(t *testing.T) {
     if (previewFile != checkFile) {
         t.Errorf("Check not set to Expected\n check(%s) \n previewFile(%s)", checkFile, previewFile)
     }
-    if mc.Preview != checkFile {
-        t.Errorf("mc.Preview (%s) not equal check(%s)", mc.Preview, checkFile)
+    if !strings.Contains(checkFile, mc.Preview) {
+        t.Errorf("mc.Preview (%s) not contained in check(%s)", mc.Preview, checkFile)
     }
 }
 
