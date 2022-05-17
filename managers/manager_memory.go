@@ -290,13 +290,11 @@ func (cm ContentManagerMemory) ListScreensContext(mcID uuid.UUID) (*models.Previ
 // TODO: Get a pattern for each MC, look at a preview Destination, then match against the pattern
 // And build out a set of screens.
 func (cm ContentManagerMemory)  ListScreens(mcID uuid.UUID, page int, per_page int) (*models.PreviewScreens, error) {
-
-    // Load up the MC itself
-    // Get container from the MC
-    // Get Preview Path
-    // Get Screens match
-    // Search preview directory for matches
-    return nil, errors.New("Not implemented")
+    mc, err := cm.GetMedia(mcID)
+    if err != nil {
+        return nil, err
+    }
+    return &mc.Screens, nil
 }
 
 func (cm ContentManagerMemory) ListAllScreensContext() (*models.PreviewScreens, error) {
@@ -310,5 +308,6 @@ func (cm ContentManagerMemory) ListAllScreens(page int, per_page int) (*models.P
 }
 
 func (cm ContentManagerMemory) GetScreen(psID uuid.UUID) (string, error) {
+    // Need to build out a memory setup and look the damn thing up :(
     return "", errors.New("Not implemented")
 }

@@ -1,5 +1,6 @@
 package models
 
+// Damn it, this should have just been named screen
 import (
 	"encoding/json"
 	"github.com/gobuffalo/pop/v5"

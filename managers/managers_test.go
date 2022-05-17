@@ -8,6 +8,7 @@ import (
 	"github.com/gobuffalo/packr/v2"
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gobuffalo/suite/v3"
+    "github.com/gofrs/uuid"
 	"log"
 	"net/url"
 	"os"
@@ -398,13 +399,32 @@ func (as *ActionSuite) Test_ManagerDBPreviews() {
     as.Equal(len(*previewOne), 1, "Now there should be 1")
 }
 
-func (as *ActionSuite) Test_ManagerMemoryPreviews() {
+func (as *ActionSuite) Test_ManagerMemoryScreens() {
 	cfg := internals.InitFakeApp(false)
 
     man := GetManagerActionSuite(cfg, as)
-    media := man.ListAllMedia(1, 100)
-    as.Greater(len(media), 0, "It should have media setup")
+    media, err := man.ListAllMedia(1, 100)
+    as.NoError(err)
+    as.Greater(len(*media), 0, "It should have media setup")
 
-    // Generate some fake screens
-    as.Fail("Implement Memory Manager Preview Test")
+    mediaArr := *media
+    mc := mediaArr[0]
+    id1, _ := uuid.NewV4()
+    id2, _ := uuid.NewV4()
+
+
+    s1 := models.PreviewScreen{ID: id1, Path: "A", Src: "a.txt", MediaID: mc.ID,}
+    s2 := models.PreviewScreen{ID: id2, Path: "B", Src: "b.txt", MediaID: mc.ID,}
+    mc.Screens = models.PreviewScreens{s1, s2,}
+
+    // Ensure we actually set the right object in the backing Map
+    mem := utils.GetMemStorage()
+    mem.ValidMedia[mc.ID] = mc
+
+    screens, err := man.ListScreens(mc.ID, 1, 10)
+    as.NoError(err)
+    as.NotNil(screens)
+    as.Equal(2, len(*screens))
+
+    as.Fail("Needs to init the app and build a lookup for all the screens somehow")
 }
