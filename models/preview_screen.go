@@ -29,7 +29,7 @@ func (m PreviewScreen) String() string {
 
 // PreviewScreens is not required by pop and may be deleted
 type PreviewScreens []PreviewScreen
-type PreviewMap map[uuid.UUID]PreviewScreen
+type PreviewScreenMap map[uuid.UUID]PreviewScreen
 
 // String is not required by pop and may be deleted
 func (m PreviewScreens) String() string {

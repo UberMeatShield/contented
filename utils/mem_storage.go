@@ -7,7 +7,10 @@ package utils
  */
 import (
 	"contented/models"
+    "strings"
 	"log"
+    "io/ioutil"
+    "github.com/gofrs/uuid"
 )
 
 // GoLang is just making this awkward
@@ -15,6 +18,7 @@ type MemoryStorage struct {
 	Initialized     bool
 	ValidMedia      models.MediaMap
 	ValidContainers models.ContainerMap
+	ValidScreens    models.PreviewScreenMap
 }
 
 var memStorage MemoryStorage = MemoryStorage{Initialized: false}
@@ -72,6 +76,45 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap) 
 	}
 	return containers, files
 }
+
+
+func AssignScreensIfExists(c *models.Container, mc *models.MediaContainer) (*models.PreviewScreens) {
+    if !strings.Contains(mc.ContentType, "video") {
+        log.Printf("Media is not of type video, no screens likely")
+        return nil
+    }
+
+	previewPath := GetPreviewDst(c.GetFqPath())
+    maybeScreens, err := ioutil.ReadDir(previewPath)
+    if err != nil {
+        return nil
+    }
+    previewScreens := models.PreviewScreens{}
+    screenRe := GetScreensMatcherRE(mc.Src)
+    for idx, fRef := range maybeScreens {
+        if !fRef.IsDir() {
+            name := fRef.Name()
+            if screenRe.MatchString(name) {
+                log.Printf("Matched file %s idx %d", name, idx) 
+                id, _ := uuid.NewV4()
+                ps := models.PreviewScreen{
+                    ID: id,
+                    Path: previewPath,
+                    Src: name,
+                    MediaID: mc.ID,
+                    Idx: idx,
+                    SizeBytes: fRef.Size(),
+                }
+                previewScreens = append(previewScreens, ps)
+            } else {
+                log.Printf("Did not match %s", name)
+            }
+        }
+    }
+    log.Printf("Looking through a container preview directory %s", screenRe)
+    return &previewScreens
+}
+
 
 func AssignPreviewIfExists(c *models.Container, mc *models.MediaContainer) string {
 	// This check is normally to determine if we didn't clear out old previews.

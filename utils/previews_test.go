@@ -9,7 +9,7 @@ import (
 	//    "errors"
 	"path/filepath"
 	"testing"
-	//   "contented/models"
+	"contented/models"
 	"github.com/gobuffalo/envy"
 )
 
@@ -21,7 +21,7 @@ func Get_VideoAndSetupPaths() (string, string, string) {
 	testFile := "donut.mp4"
 
 	// Ensure that the preview destination directory is clean
-	ResetPreviewDir(dstDir)
+	// ResetPreviewDir(dstDir)
 	return srcDir, dstDir, testFile
 }
 
@@ -166,16 +166,19 @@ func Test_VideoLength(t *testing.T) {
 }
 
 func Test_WebpFromVideo(t *testing.T) {
-	srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
+	srcDir, _, testFile := Get_VideoAndSetupPaths()
+	cfg := GetCfg()
+	cfg.PreviewScreensOverSize = 1024
+    cfg.PreviewVideoType = "screens"
+	SetCfg(*cfg)
+	// srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
 
+    /*
 	// It will tack on .webp
 	dstFile := filepath.Join(dstDir, testFile)
 	srcFile := filepath.Join(srcDir, testFile)
 
 	// Uses the cfg size to create incremental screens
-	cfg := GetCfg()
-	cfg.PreviewScreensOverSize = 1024
-	SetCfg(*cfg)
 	previewFile, err := CreateWebpFromVideo(srcFile, dstFile)
 	if err != nil {
 		t.Errorf("Couldn't create preview from %s err: %s", srcFile, err)
@@ -187,8 +190,30 @@ func Test_WebpFromVideo(t *testing.T) {
 	if webpStat.Size() > (700 * 1024) {
 		t.Errorf("Webp has too much chonk %d", webpStat.Size())
 	}
+    */
 
-}
+    // Hate
+    c := models.Container{
+        Path:  filepath.Dir(srcDir),
+        Name:  filepath.Base(srcDir),
+    }
+    mc := models.MediaContainer{
+        Src:         testFile,
+        ContentType: "video/mp4",
+    }
+    screens := AssignScreensIfExists(&c, &mc)
+    if len(*screens) != 10 {
+        t.Errorf("Fail to actually find the screens %s", *screens)
+    }
+
+    pf := AssignPreviewIfExists(&c, &mc)
+    if pf == "" {
+        t.Errorf("We didn't find the preview")
+    }
+    if mc.Preview == "" {
+        t.Errorf("It did not actually assign the preview to the media container %s", pf)
+    }
+}       
 
 // Test MultiScreen
 func Test_VideoSelectScreens(t *testing.T) {

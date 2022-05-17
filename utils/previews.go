@@ -179,11 +179,19 @@ func CleanPaletteFile(paletteFile string) error {
 	return nil
 }
 
-// Strip off the PNG, we are just going to dump out some jpegs
+// Strip off the PNG, we are just going to dump out some jpegs and this format works for
+// ffmpeg outputs.
 func GetScreensOutputPattern(dstFile string) string {
 	stripExtension := regexp.MustCompile(".png$|.jpeg$|.jpg$")
 	dstFile = stripExtension.ReplaceAllString(dstFile, "")
 	return fmt.Sprintf("%s%s", dstFile, ".screens.%03d.jpg")
+}
+
+// Used to search for a matched screen
+func GetScreensMatcherRE(dstFile string) *regexp.Regexp {
+	stripExtension := regexp.MustCompile(".png$|.jpeg$|.jpg$")
+	dstFile = stripExtension.ReplaceAllString(dstFile, "")
+    return regexp.MustCompile(fmt.Sprintf("%s%s", dstFile, ".screens.[0-9]+.jpg"))
 }
 
 // TODO: Move to utils or make it wrapped for some reason?
