@@ -166,14 +166,12 @@ func Test_VideoLength(t *testing.T) {
 }
 
 func Test_WebpFromVideo(t *testing.T) {
-	srcDir, _, testFile := Get_VideoAndSetupPaths()
+	srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
 	cfg := GetCfg()
 	cfg.PreviewScreensOverSize = 1024
     cfg.PreviewVideoType = "screens"
 	SetCfg(*cfg)
-	// srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
 
-    /*
 	// It will tack on .webp
 	dstFile := filepath.Join(dstDir, testFile)
 	srcFile := filepath.Join(srcDir, testFile)
@@ -190,30 +188,29 @@ func Test_WebpFromVideo(t *testing.T) {
 	if webpStat.Size() > (700 * 1024) {
 		t.Errorf("Webp has too much chonk %d", webpStat.Size())
 	}
-    */
 
-    // Hate
-    c := models.Container{
-        Path:  filepath.Dir(srcDir),
-        Name:  filepath.Base(srcDir),
+    // Check that if we use a screens version it will work as a preview
+    // using memory storage
+    c := &models.Container{
+        Path: filepath.Dir(srcDir),
+        Name: filepath.Base(srcDir),
     }
-    mc := models.MediaContainer{
-        Src:         testFile,
+    mc := &models.MediaContainer{
         ContentType: "video/mp4",
+        Src: testFile,
     }
-    screens := AssignScreensIfExists(&c, &mc)
+    screens := AssignScreensIfExists(c, mc)
     if len(*screens) != 10 {
         t.Errorf("Fail to actually find the screens %s", *screens)
     }
-
-    pf := AssignPreviewIfExists(&c, &mc)
-    if pf == "" {
-        t.Errorf("We didn't find the preview")
+    checkFile := AssignPreviewIfExists(c, mc)
+    if (previewFile != checkFile) {
+        t.Errorf("Check not set to Expected\n check(%s) \n previewFile(%s)", checkFile, previewFile)
     }
-    if mc.Preview == "" {
-        t.Errorf("It did not actually assign the preview to the media container %s", pf)
+    if mc.Preview != checkFile {
+        t.Errorf("mc.Preview (%s) not equal check(%s)", mc.Preview, checkFile)
     }
-}       
+}
 
 // Test MultiScreen
 func Test_VideoSelectScreens(t *testing.T) {
