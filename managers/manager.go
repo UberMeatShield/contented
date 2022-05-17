@@ -46,10 +46,12 @@ type ContentManager interface {
 	SearchMediaContext() (*models.MediaContainers, int, error)
 	SearchMedia(search string, page int, per_page int, cId string) (*models.MediaContainers, int, error)
 
-    ListAllPreviews(page int, per_page int) (*models.PreviewScreens, error)
-    ListAllPreviewsContext() (*models.PreviewScreens, error)
-    ListPreviewContext(mcID uuid.UUID) (*models.PreviewScreens, error)
-    ListPreviews(mcID uuid.UUID, page int, per_page int) (*models.PreviewScreens, error)
+    // Functions that help with viewing movie screens if found.
+    ListAllScreens(page int, per_page int) (*models.PreviewScreens, error)
+    ListAllScreensContext() (*models.PreviewScreens, error)
+    ListScreensContext(mcID uuid.UUID) (*models.PreviewScreens, error)
+    ListScreens(mcID uuid.UUID, page int, per_page int) (*models.PreviewScreens, error)
+	GetScreen(psID uuid.UUID) (string, error)
 
 	UpdateContainer(c *models.Container) error
 	UpdateMedia(media *models.MediaContainer) error

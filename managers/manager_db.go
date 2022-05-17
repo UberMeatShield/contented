@@ -11,6 +11,7 @@ import (
 	"github.com/gofrs/uuid"
 	"log"
 	"net/url"
+    "os"
 )
 
 // DB version of content management
@@ -194,13 +195,13 @@ func (cm ContentManagerDB) FindActualFile(mc *models.MediaContainer) (string, er
 }
 
 
-func (cm ContentManagerDB) ListAllPreviewsContext() (*models.PreviewScreens, error) {
+func (cm ContentManagerDB) ListAllScreensContext() (*models.PreviewScreens, error) {
     _, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
-    return cm.ListAllPreviews(page, limit)
+    return cm.ListAllScreens(page, limit)
 }
 
 
-func (cm ContentManagerDB) ListAllPreviews(page int, per_page int) (*models.PreviewScreens, error) {
+func (cm ContentManagerDB) ListAllScreens(page int, per_page int) (*models.PreviewScreens, error) {
     tx := cm.GetConnection()
 	q := tx.Paginate(page, per_page)
 	previews := &models.PreviewScreens{}
@@ -210,14 +211,14 @@ func (cm ContentManagerDB) ListAllPreviews(page int, per_page int) (*models.Prev
     return previews, nil
 }
 
-func (cm ContentManagerDB) ListPreviewContext(mcID uuid.UUID) (*models.PreviewScreens, error) {
+func (cm ContentManagerDB) ListScreensContext(mcID uuid.UUID) (*models.PreviewScreens, error) {
     // Could add the context here correctly
     _, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
-    return cm.ListPreviews(mcID, page, limit)
+    return cm.ListScreens(mcID, page, limit)
 }
 
 // TODO: Re-Assign the preview based on screen information
-func (cm ContentManagerDB) ListPreviews(mcID uuid.UUID, page int, per_page int) (*models.PreviewScreens, error) {
+func (cm ContentManagerDB) ListScreens(mcID uuid.UUID, page int, per_page int) (*models.PreviewScreens, error) {
 	tx := cm.GetConnection()
 	previews := &models.PreviewScreens{}
 	q := tx.Paginate(page, per_page)
@@ -226,4 +227,24 @@ func (cm ContentManagerDB) ListPreviews(mcID uuid.UUID, page int, per_page int) 
 		return nil, q_err
 	}
 	return previews, nil
+}
+
+// Need to make it use the manager and just show the file itself
+func (cm ContentManagerDB) GetScreen(psID uuid.UUID) (string, error) {
+    previewScreen := &models.PreviewScreen{}
+    tx := cm.GetConnection()
+    err := tx.Find(previewScreen, psID)
+    if err != nil {
+        return "", err
+    }
+
+    // Check it exists
+    fqPath := previewScreen.GetFqPath()
+    _, fErr := os.Stat(fqPath)
+    if fErr != nil {
+        // TODO: this is debug, remove the path info
+        log.Printf("Cannot download file not on disk %s with err %s", fqPath, fErr)
+        return "", fErr
+    }
+    return fqPath, err
 }

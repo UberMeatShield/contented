@@ -83,7 +83,6 @@ func (as *ActionSuite) Test_ViewRef() {
 		as.Equal(http.StatusOK, res.Code)
 		header := res.Header()
 		as.NoError(internals.IsValidContentType(header.Get("Content-Type")))
-
 	}
 }
 

@@ -389,11 +389,11 @@ func (as *ActionSuite) Test_ManagerDBPreviews() {
     as.DB.Create(&p3)
 
     man := GetManagerActionSuite(cfg, as)
-    previewList, err := man.ListPreviews(mc.ID, 1, 10)
+    previewList, err := man.ListScreens(mc.ID, 1, 10)
     as.NoError(err)
     as.Equal(len(*previewList), 2, "We should have two previews")
 
-    previewOne, p_err := man.ListPreviews(mc2.ID, 1, 10)
+    previewOne, p_err := man.ListScreens(mc2.ID, 1, 10)
     as.NoError(p_err)
     as.Equal(len(*previewOne), 1, "Now there should be 1")
 }
