@@ -307,7 +307,7 @@ func (cm ContentManagerMemory) ListAllScreensContext() (*models.PreviewScreens, 
 
 func (cm ContentManagerMemory) ListAllScreens(page int, per_page int) (*models.PreviewScreens, error) {
 
-	log.Printf("Using memory manager for previews page %d per_page %d \n", page, per_page)
+	log.Printf("Using memory manager for screen page %d per_page %d \n", page, per_page)
     // Did I create this just to sort by Idx across all media?  Kinda strange
     s_arr := models.PreviewScreens{}
     for _, s := range cm.ValidScreens {
