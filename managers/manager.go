@@ -51,7 +51,7 @@ type ContentManager interface {
     ListAllScreensContext() (*models.PreviewScreens, error)
     ListScreensContext(mcID uuid.UUID) (*models.PreviewScreens, error)
     ListScreens(mcID uuid.UUID, page int, per_page int) (*models.PreviewScreens, error)
-	GetScreen(psID uuid.UUID) (string, error)
+	GetScreen(psID uuid.UUID) (*models.PreviewScreen, error)
 
 	UpdateContainer(c *models.Container) error
 	UpdateMedia(media *models.MediaContainer) error

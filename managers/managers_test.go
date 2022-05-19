@@ -333,7 +333,7 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
 	f.Sync()
 
 	// Checks that if a preview exists
-	cnts, media := utils.PopulateMemoryView(cfg.Dir)
+	cnts, media, _ := utils.PopulateMemoryView(cfg.Dir)
 	as.Equal(1, len(cnts), "We should only pull in containers that have media")
 	as.Equal(len(media), 1, "But there is only one video by mime type")
 	for _, mc := range media {
@@ -341,7 +341,7 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
 	}
 
 	cfg.ExcludeEmptyContainers = false
-	all_cnts, one_media := utils.PopulateMemoryView(cfg.Dir)
+	all_cnts, one_media, _ := utils.PopulateMemoryView(cfg.Dir)
 	as.Equal(1, len(one_media), "But there is only one video by mime type")
 
 	as.Equal(internals.TOTAL_CONTAINERS, len(all_cnts), "Allow it to pull in all containers")
@@ -420,11 +420,21 @@ func (as *ActionSuite) Test_ManagerMemoryScreens() {
     // Ensure we actually set the right object in the backing Map
     mem := utils.GetMemStorage()
     mem.ValidMedia[mc.ID] = mc
+    mem.ValidScreens[s1.ID] = s1
+    mem.ValidScreens[s2.ID] = s2
 
     screens, err := man.ListScreens(mc.ID, 1, 10)
     as.NoError(err)
     as.NotNil(screens)
     as.Equal(2, len(*screens))
+    // Check that our single lookup hash is also populated
+    for _, screen := range(*screens) {
+        obj, mia := man.GetScreen(screen.ID)
+        as.NoError(mia)
+        as.Equal(obj.ID, screen.ID)
+    }
 
-    as.Fail("Needs to init the app and build a lookup for all the screens somehow")
+    allScreens, all_err := man.ListAllScreens(0, 10)
+    as.NoError(all_err, "It should work out ok")
+    as.Equal(2, len(*allScreens), "We should have 2 screens")
 }

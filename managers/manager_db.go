@@ -11,7 +11,6 @@ import (
 	"github.com/gofrs/uuid"
 	"log"
 	"net/url"
-    "os"
 )
 
 // DB version of content management
@@ -230,21 +229,13 @@ func (cm ContentManagerDB) ListScreens(mcID uuid.UUID, page int, per_page int) (
 }
 
 // Need to make it use the manager and just show the file itself
-func (cm ContentManagerDB) GetScreen(psID uuid.UUID) (string, error) {
+func (cm ContentManagerDB) GetScreen(psID uuid.UUID) (*models.PreviewScreen, error) {
     previewScreen := &models.PreviewScreen{}
     tx := cm.GetConnection()
     err := tx.Find(previewScreen, psID)
     if err != nil {
-        return "", err
+        return nil, err
     }
+    return previewScreen, nil
 
-    // Check it exists
-    fqPath := previewScreen.GetFqPath()
-    _, fErr := os.Stat(fqPath)
-    if fErr != nil {
-        // TODO: this is debug, remove the path info
-        log.Printf("Cannot download file not on disk %s with err %s", fqPath, fErr)
-        return "", fErr
-    }
-    return fqPath, err
 }

@@ -20,8 +20,10 @@ import (
 type ContentManagerMemory struct {
 	cfg *utils.DirConfigEntry
 
+    // Hmmm, this should use the memory manager probably
 	ValidMedia      models.MediaMap
 	ValidContainers models.ContainerMap
+	ValidScreens    models.PreviewScreenMap
 	validate        string
 
 	params *url.Values
@@ -58,6 +60,7 @@ func (cm *ContentManagerMemory) Initialize() {
 	}
 	cm.ValidContainers = memStorage.ValidContainers
 	cm.ValidMedia = memStorage.ValidMedia
+    cm.ValidScreens = memStorage.ValidScreens
 	log.Printf("Found %d directories with %d media elements \n", len(cm.ValidContainers), len(cm.ValidMedia))
 }
 
@@ -187,7 +190,7 @@ func (cm ContentManagerMemory) ListMedia(ContainerID uuid.UUID, page int, per_pa
 
 // Get a media element by the ID
 func (cm ContentManagerMemory) GetMedia(mcID uuid.UUID) (*models.MediaContainer, error) {
-	log.Printf("Memory Get a single media %s", mcID)
+	// log.Printf("Memory Get a single media %s", mcID)
 	if mc, ok := cm.ValidMedia[mcID]; ok {
 		return &mc, nil
 	}
@@ -303,11 +306,29 @@ func (cm ContentManagerMemory) ListAllScreensContext() (*models.PreviewScreens, 
 }
 
 func (cm ContentManagerMemory) ListAllScreens(page int, per_page int) (*models.PreviewScreens, error) {
+
 	log.Printf("Using memory manager for previews page %d per_page %d \n", page, per_page)
-    return nil, errors.New("Not implemented")
+    // Did I create this just to sort by Idx across all media?  Kinda strange
+    s_arr := models.PreviewScreens{}
+    for _, s := range cm.ValidScreens {
+        s_arr = append(s_arr, s)
+    }
+    sort.SliceStable(s_arr, func(i, j int) bool {
+        return s_arr[i].Idx < s_arr[j].Idx
+    })
+    offset, end := GetOffsetEnd(page, per_page, len(s_arr))
+    if end > 0 { // If it is empty a slice ending in 0 = boom
+        s_arr = s_arr[offset:end]
+        return &s_arr, nil
+    }
+    return &s_arr, nil
 }
 
-func (cm ContentManagerMemory) GetScreen(psID uuid.UUID) (string, error) {
+func (cm ContentManagerMemory) GetScreen(psID uuid.UUID) (*models.PreviewScreen, error) {
     // Need to build out a memory setup and look the damn thing up :(
-    return "", errors.New("Not implemented")
+	memStorage := utils.GetMemStorage()
+	if screen, ok := memStorage.ValidScreens[psID]; ok {
+		return &screen, nil
+	}
+	return nil, errors.New("Screen not found")
 }

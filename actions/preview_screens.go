@@ -2,6 +2,7 @@ package actions
 
 import (
     "log"
+    "os"
 	//"fmt"
 	"net/http"
     // "errors"
@@ -68,12 +69,21 @@ func (v PreviewScreensResource) Show(c buffalo.Context) error {
     if badUUID != nil {
         return c.Error(400, badUUID)
     }
+
     man := managers.GetManager(&c)
-    fqPath, err := man.GetScreen(psID)
-    log.Printf("Preview Screen ID specified %s path %s", psStrID, fqPath)
+    screen, err := man.GetScreen(psID)
     if err != nil {
         return c.Error(404, err)
     }
+
+    // Check it exists
+    fqPath := screen.GetFqPath()
+    _, fErr := os.Stat(fqPath)
+    if fErr != nil {
+       log.Printf("Cannot download file not on disk %s with err %s", fqPath, fErr)
+       return c.Error(404, err)
+    }
+    log.Printf("Preview Screen ID specified %s path %s", psStrID, fqPath)
     http.ServeFile(c.Response(), c.Request(), fqPath)
     return nil
 }

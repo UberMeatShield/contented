@@ -29,11 +29,12 @@ func GetMemStorage() *MemoryStorage {
 
 func InitializeMemory(dir_root string) *MemoryStorage {
 	log.Printf("Initializing Memory Storage %s\n", dir_root)
-	containers, files := PopulateMemoryView(dir_root)
+	containers, files, screens := PopulateMemoryView(dir_root)
 
 	memStorage.Initialized = true
 	memStorage.ValidContainers = containers
 	memStorage.ValidMedia = files
+    memStorage.ValidScreens = screens
 
 	return &memStorage
 }
@@ -41,9 +42,10 @@ func InitializeMemory(dir_root string) *MemoryStorage {
 /**
  * Populates the memory view (this code is very similar to the DB version in helper.go)
  */
-func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap) {
+func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap, models.PreviewScreenMap) {
 	containers := models.ContainerMap{}
 	files := models.MediaMap{}
+    screensMap := models.PreviewScreenMap{}
 
 	cfg := GetCfg()
 	log.Printf("PopulateMemoryView searching in %s with depth %d", dir_root, cfg.MaxSearchDepth)
@@ -66,8 +68,14 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap) 
 			for _, mc := range ct.Media {
 				// I should name this as PreviewUrl
 				AssignPreviewIfExists(&c, &mc)
-                AssignScreensIfExists(&c, &mc)
+                screens := AssignScreensIfExists(&c, &mc)
+
 				files[mc.ID] = mc
+                if screens != nil {
+                    for _, screen := range(*screens) {
+                        screensMap[screen.ID] = screen
+                    }
+                }
 			}
 		}
 		// Remember that assigning into a map is also a copy so any changes must be
@@ -75,7 +83,7 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap) 
 		c.Idx = idx
 		containers[c.ID] = c
 	}
-	return containers, files
+	return containers, files, screensMap
 }
 
 
