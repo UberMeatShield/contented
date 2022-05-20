@@ -53,8 +53,13 @@ type ContentManager interface {
     ListScreens(mcID uuid.UUID, page int, per_page int) (*models.PreviewScreens, error)
 	GetScreen(psID uuid.UUID) (*models.PreviewScreen, error)
 
+    CreateScreen(s *models.PreviewScreen) error
+    CreateMedia(mc *models.MediaContainer) error
+    CreateContainer(mc *models.Container) error
+
 	UpdateContainer(c *models.Container) error
 	UpdateMedia(media *models.MediaContainer) error
+	UpdateScreen(s *models.PreviewScreen) error
 	FindActualFile(mc *models.MediaContainer) (string, error)
 	GetPreviewForMC(mc *models.MediaContainer) (string, error)
 }

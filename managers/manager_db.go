@@ -83,6 +83,11 @@ func (cm ContentManagerDB) UpdateMedia(media *models.MediaContainer) error {
 	return tx.Update(media)
 }
 
+func (cm ContentManagerDB) UpdateScreen(s *models.PreviewScreen) error {
+    tx := cm.GetConnection()
+    return tx.Update(s)
+}
+
 func (cm ContentManagerDB) ListAllMedia(page int, per_page int) (*models.MediaContainers, error) {
 	log.Printf("List all media DB manager")
 	tx := cm.GetConnection()
@@ -238,4 +243,22 @@ func (cm ContentManagerDB) GetScreen(psID uuid.UUID) (*models.PreviewScreen, err
     }
     return previewScreen, nil
 
+}
+
+func (cm ContentManagerDB) CreateScreen(screen *models.PreviewScreen) error {
+    tx := cm.GetConnection()
+    return tx.Create(screen)
+}
+
+func (cm ContentManagerDB) CreateMedia(mc *models.MediaContainer) error {
+    tx := cm.GetConnection()
+    return tx.Create(mc)
+}
+
+
+// TODO: Security vuln need to ensure that you can only create UNDER the directory
+// specified by the initial load.
+func (cm ContentManagerDB) CreateContainer(c *models.Container) error {
+    tx := cm.GetConnection()
+    return tx.Create(c)
 }

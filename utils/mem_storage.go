@@ -7,10 +7,7 @@ package utils
  */
 import (
 	"contented/models"
-    "strings"
 	"log"
-    "io/ioutil"
-    "github.com/gofrs/uuid"
 )
 
 // GoLang is just making this awkward
@@ -84,52 +81,4 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap, 
 		containers[c.ID] = c
 	}
 	return containers, files, screensMap
-}
-
-
-func AssignScreensIfExists(c *models.Container, mc *models.MediaContainer) (*models.PreviewScreens) {
-    if !strings.Contains(mc.ContentType, "video") {
-        // log.Printf("Media is not of type video, no screens likely")
-        return nil
-    }
-	previewPath := GetPreviewDst(c.GetFqPath())
-    maybeScreens, err := ioutil.ReadDir(previewPath)
-    if err != nil {
-        return nil
-    }
-    previewScreens := models.PreviewScreens{}
-    screenRe := GetScreensMatcherRE(mc.Src)
-    for idx, fRef := range maybeScreens {
-        if !fRef.IsDir() {
-            name := fRef.Name()
-            if screenRe.MatchString(name) {
-                // log.Printf("Matched file %s idx %d", name, idx) 
-                id, _ := uuid.NewV4()
-                ps := models.PreviewScreen{
-                    ID: id,
-                    Path: previewPath,
-                    Src: name,
-                    MediaID: mc.ID,
-                    Idx: idx,
-                    SizeBytes: fRef.Size(),
-                }
-                previewScreens = append(previewScreens, ps)
-            } 
-        }
-    }
-    mc.Screens = previewScreens
-    return &previewScreens
-}
-
-
-func AssignPreviewIfExists(c *models.Container, mc *models.MediaContainer) string {
-	// This check is normally to determine if we didn't clear out old previews.
-	// For memory only managers it will just consider that a bonus and use the preview.
-	previewPath := GetPreviewDst(c.GetFqPath())
-	previewFile, exists := ErrorOnPreviewExists(mc.Src, previewPath, mc.ContentType)
-	if exists != nil {
-		mc.Preview = GetRelativePreviewPath(previewFile, c.GetFqPath())
-		log.Printf("Added a preview to media %s", mc.Preview)
-	}
-	return previewFile
 }
