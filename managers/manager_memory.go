@@ -20,8 +20,10 @@ import (
 type ContentManagerMemory struct {
 	cfg *utils.DirConfigEntry
 
+    // Hmmm, this should use the memory manager probably
 	ValidMedia      models.MediaMap
 	ValidContainers models.ContainerMap
+	ValidScreens    models.PreviewScreenMap
 	validate        string
 
 	params *url.Values
@@ -58,6 +60,7 @@ func (cm *ContentManagerMemory) Initialize() {
 	}
 	cm.ValidContainers = memStorage.ValidContainers
 	cm.ValidMedia = memStorage.ValidMedia
+    cm.ValidScreens = memStorage.ValidScreens
 	log.Printf("Found %d directories with %d media elements \n", len(cm.ValidContainers), len(cm.ValidMedia))
 }
 
@@ -187,7 +190,7 @@ func (cm ContentManagerMemory) ListMedia(ContainerID uuid.UUID, page int, per_pa
 
 // Get a media element by the ID
 func (cm ContentManagerMemory) GetMedia(mcID uuid.UUID) (*models.MediaContainer, error) {
-	log.Printf("Memory Get a single media %s", mcID)
+	// log.Printf("Memory Get a single media %s", mcID)
 	if mc, ok := cm.ValidMedia[mcID]; ok {
 		return &mc, nil
 	}
@@ -197,14 +200,28 @@ func (cm ContentManagerMemory) GetMedia(mcID uuid.UUID) (*models.MediaContainer,
 // If you already updated the container in memory you are done
 func (cm ContentManagerMemory) UpdateContainer(c *models.Container) error {
 	// TODO: Validate that this updates the actual reference in mem storage
-	return nil
+	if _, ok := cm.ValidContainers[c.ID]; ok {
+        cm.ValidContainers[c.ID] = *c
+        return nil
+	}
+	return errors.New("Container was not found to update")
 }
 
 // No updates should be allowed for memory management.
-func (cm ContentManagerMemory) UpdateMedia(media *models.MediaContainer) error {
-	// TODO: Validate that this updates the actual reference in mem storage
-	// TODO: Should this just be considered complete if you modified the media?
-	return errors.New("Updates are not allowed for in memory management")
+func (cm ContentManagerMemory) UpdateMedia(mc *models.MediaContainer) error {
+	if _, ok := cm.ValidMedia[mc.ID]; ok {
+        cm.ValidMedia[mc.ID] = *mc
+        return nil
+	}
+	return errors.New("Media was not found to update")
+}
+
+func (cm ContentManagerMemory) UpdateScreen(s *models.PreviewScreen) error {
+	if _, ok := cm.ValidScreens[s.ID]; ok {
+        cm.ValidScreens[s.ID] = *s
+        return nil
+	}
+	return errors.New("Media was not found to update")
 }
 
 // Given the current parameters in the buffalo context return a list of matching containers.
@@ -278,4 +295,104 @@ func (cm ContentManagerMemory) SetPreviewIfExists(mc *models.MediaContainer) (st
 	}
 	pFile := utils.AssignPreviewIfExists(c, mc)
 	return pFile, nil
+}
+
+
+func (cm ContentManagerMemory) ListScreensContext(mcID uuid.UUID) (*models.PreviewScreens, error) {
+    // Could add the context here correctly
+    _, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
+    return cm.ListScreens(mcID, page, limit)
+}
+
+// TODO: Get a pattern for each MC, look at a preview Destination, then match against the pattern
+// And build out a set of screens.
+func (cm ContentManagerMemory)  ListScreens(mcID uuid.UUID, page int, per_page int) (*models.PreviewScreens, error) {
+
+	// Did I create this just to sort by Idx across all media?  Kinda strange
+	s_arr := models.PreviewScreens{}
+	for _, s := range cm.ValidScreens {
+        if s.MediaID == mcID {
+		    s_arr = append(s_arr, s)
+        }
+	}
+	sort.SliceStable(s_arr, func(i, j int) bool {
+		return s_arr[i].Idx < s_arr[j].Idx
+	})
+	offset, end := GetOffsetEnd(page, per_page, len(s_arr))
+	if end > 0 { // If it is empty a slice ending in 0 = boom
+		s_arr = s_arr[offset:end]
+		return &s_arr, nil
+	}
+    return &s_arr, nil
+}
+
+func (cm ContentManagerMemory) ListAllScreensContext() (*models.PreviewScreens, error) {
+    _, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
+    return cm.ListAllScreens(page, limit)
+}
+
+func (cm ContentManagerMemory) ListAllScreens(page int, per_page int) (*models.PreviewScreens, error) {
+
+	log.Printf("Using memory manager for screen page %d per_page %d \n", page, per_page)
+    // Did I create this just to sort by Idx across all media?  Kinda strange
+    s_arr := models.PreviewScreens{}
+    for _, s := range cm.ValidScreens {
+        s_arr = append(s_arr, s)
+    }
+    sort.SliceStable(s_arr, func(i, j int) bool {
+        return s_arr[i].Idx < s_arr[j].Idx
+    })
+    offset, end := GetOffsetEnd(page, per_page, len(s_arr))
+    if end > 0 { // If it is empty a slice ending in 0 = boom
+        s_arr = s_arr[offset:end]
+        return &s_arr, nil
+    }
+    return &s_arr, nil
+}
+
+func (cm ContentManagerMemory) GetScreen(psID uuid.UUID) (*models.PreviewScreen, error) {
+    // Need to build out a memory setup and look the damn thing up :(
+	memStorage := utils.GetMemStorage()
+	if screen, ok := memStorage.ValidScreens[psID]; ok {
+		return &screen, nil
+	}
+	return nil, errors.New("Screen not found")
+}
+
+func AssignID(id uuid.UUID) uuid.UUID {
+    emptyID, _ := uuid.FromString("00000000-0000-0000-0000-000000000000") 
+    if id == emptyID {
+        newID, _ := uuid.NewV4()
+        return newID
+    }
+    return id
+}
+
+// TODO: Fix this so that the screen must be under the
+func (cm ContentManagerMemory) CreateScreen(screen *models.PreviewScreen) error {
+    if screen != nil {
+        screen.ID = AssignID(screen.ID)
+        cm.ValidScreens[screen.ID] = *screen
+        return nil
+    }
+    return errors.New("ContentManagerMemory no screen instance was passed in to CreateScreen")
+}
+
+func (cm ContentManagerMemory) CreateMedia(mc *models.MediaContainer) error {
+    if mc != nil {
+        mc.ID = AssignID(mc.ID)
+        cm.ValidMedia[mc.ID] = *mc
+        return nil
+    }
+    return errors.New("ContentManagerMemory no mediainstance was passed in to CreateMedia")
+}
+
+// Note that we need to lock this down so that it cannot just access arbitrary files
+func (cm ContentManagerMemory) CreateContainer(c *models.Container) error {
+    if c != nil {
+        c.ID = AssignID(c.ID)
+        cm.ValidContainers[c.ID] = *c
+        return nil
+    }
+    return errors.New("ContentManagerMemory no container was passed in to CreateContainer")
 }

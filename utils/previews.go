@@ -24,6 +24,7 @@ import (
     "regexp"
     "strconv"
     "strings"
+    "io/ioutil"
 )
 
 const PREVIEW_DIRECTORY = "container_previews"
@@ -184,11 +185,19 @@ func CleanPaletteFile(paletteFile string) error {
     return nil
 }
 
-// Strip off the PNG, we are just going to dump out some jpegs
+// Strip off the PNG, we are just going to dump out some jpegs and this format works for
+// ffmpeg outputs.
 func GetScreensOutputPattern(dstFile string) string {
     stripExtension := regexp.MustCompile(".png$|.gif$|.webp$")
     dstFile = stripExtension.ReplaceAllString(dstFile, "")
     return fmt.Sprintf("%s%s", dstFile, ".screens.%03d.jpg")
+}
+
+// Used to search for a matched screen
+func GetScreensMatcherRE(dstFile string) *regexp.Regexp {
+	stripExtension := regexp.MustCompile(".png$|.jpeg$|.jpg$")
+	dstFile = stripExtension.ReplaceAllString(dstFile, "")
+    return regexp.MustCompile(fmt.Sprintf("%s%s", dstFile, ".screens.[0-9]+.jpg"))
 }
 
 // TODO: Move to utils or make it wrapped for some reason?
@@ -320,7 +329,7 @@ func CreateSeekScreens(srcFile string, dstFile string) ([]string, error, string)
     screenFmt := GetScreensOutputPattern(dstFile)
     for idx := 0; idx < totalScreens; idx++ {
         screenFile := fmt.Sprintf(screenFmt, idx)
-        log.Printf("Screen file is what %s", screenFile)
+        // log.Printf("Screen file is what %s", screenFile)
 
         err := CreateSeekScreen(srcFile, screenFile, (idx * timeSkip))
         if err != nil {
@@ -511,3 +520,50 @@ func CreateMediaPreview(c *models.Container, mc *models.MediaContainer) (string,
     }
     return GetRelativePreviewPath(dstFqPath, cntPath), err
 }
+
+func AssignScreensIfExists(c *models.Container, mc *models.MediaContainer) (*models.PreviewScreens) {
+    if !strings.Contains(mc.ContentType, "video") {
+        // log.Printf("Media is not of type video, no screens likely")
+        return nil
+    }
+    previewPath := GetPreviewDst(c.GetFqPath())
+    maybeScreens, err := ioutil.ReadDir(previewPath)
+    if err != nil {
+        return nil
+    }
+    previewScreens := models.PreviewScreens{}
+    screenRe := GetScreensMatcherRE(mc.Src)
+    for idx, fRef := range maybeScreens {
+        if !fRef.IsDir() {
+            name := fRef.Name()
+            if screenRe.MatchString(name) {
+                // log.Printf("Matched file %s idx %d", name, idx)
+                id, _ := uuid.NewV4()
+                ps := models.PreviewScreen{
+                    ID: id,
+                    Path: previewPath,
+                    Src: name,
+                    MediaID: mc.ID,
+                    Idx: idx,
+                    SizeBytes: fRef.Size(),
+                }
+                previewScreens = append(previewScreens, ps)
+            }
+        }
+    }
+    mc.Screens = previewScreens
+    return &previewScreens
+}
+
+func AssignPreviewIfExists(c *models.Container, mc *models.MediaContainer) string {
+       // This check is normally to determine if we didn't clear out old previews.
+       // For memory only managers it will just consider that a bonus and use the preview.
+       previewPath := GetPreviewDst(c.GetFqPath())
+       previewFile, exists := ErrorOnPreviewExists(mc.Src, previewPath, mc.ContentType)
+       if exists != nil {
+               mc.Preview = GetRelativePreviewPath(previewFile, c.GetFqPath())
+               log.Printf("Added a preview to media %s", mc.Preview)
+       }
+       return previewFile
+}
+

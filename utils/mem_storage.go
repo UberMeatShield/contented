@@ -15,6 +15,7 @@ type MemoryStorage struct {
 	Initialized     bool
 	ValidMedia      models.MediaMap
 	ValidContainers models.ContainerMap
+	ValidScreens    models.PreviewScreenMap
 }
 
 var memStorage MemoryStorage = MemoryStorage{Initialized: false}
@@ -25,11 +26,12 @@ func GetMemStorage() *MemoryStorage {
 
 func InitializeMemory(dir_root string) *MemoryStorage {
 	log.Printf("Initializing Memory Storage %s\n", dir_root)
-	containers, files := PopulateMemoryView(dir_root)
+	containers, files, screens := PopulateMemoryView(dir_root)
 
 	memStorage.Initialized = true
 	memStorage.ValidContainers = containers
 	memStorage.ValidMedia = files
+    memStorage.ValidScreens = screens
 
 	return &memStorage
 }
@@ -37,9 +39,10 @@ func InitializeMemory(dir_root string) *MemoryStorage {
 /**
  * Populates the memory view (this code is very similar to the DB version in helper.go)
  */
-func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap) {
+func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap, models.PreviewScreenMap) {
 	containers := models.ContainerMap{}
 	files := models.MediaMap{}
+    screensMap := models.PreviewScreenMap{}
 
 	cfg := GetCfg()
 	log.Printf("PopulateMemoryView searching in %s with depth %d", dir_root, cfg.MaxSearchDepth)
@@ -62,7 +65,14 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap) 
 			for _, mc := range ct.Media {
 				// I should name this as PreviewUrl
 				AssignPreviewIfExists(&c, &mc)
+                screens := AssignScreensIfExists(&c, &mc)
+
 				files[mc.ID] = mc
+                if screens != nil {
+                    for _, screen := range(*screens) {
+                        screensMap[screen.ID] = screen
+                    }
+                }
 			}
 		}
 		// Remember that assigning into a map is also a copy so any changes must be
@@ -70,17 +80,5 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap) 
 		c.Idx = idx
 		containers[c.ID] = c
 	}
-	return containers, files
-}
-
-func AssignPreviewIfExists(c *models.Container, mc *models.MediaContainer) string {
-	// This check is normally to determine if we didn't clear out old previews.
-	// For memory only managers it will just consider that a bonus and use the preview.
-	previewPath := GetPreviewDst(c.GetFqPath())
-	previewFile, exists := ErrorOnPreviewExists(mc.Src, previewPath, mc.ContentType)
-	if exists != nil {
-		mc.Preview = GetRelativePreviewPath(previewFile, c.GetFqPath())
-		log.Printf("Added a preview to media %s", mc.Preview)
-	}
-	return previewFile
+	return containers, files, screensMap
 }

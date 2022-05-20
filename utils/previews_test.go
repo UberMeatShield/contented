@@ -9,7 +9,7 @@ import (
 	//    "errors"
 	"path/filepath"
 	"testing"
-    "contented/models"
+	"contented/models"
 	"github.com/gobuffalo/envy"
 )
 
@@ -167,16 +167,16 @@ func Test_VideoLength(t *testing.T) {
 
 func Test_WebpFromVideo(t *testing.T) {
 	srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
-
-	// It will tack on .webp
-	dstFile := filepath.Join(dstDir, testFile)
-	srcFile := filepath.Join(srcDir, testFile)
-
-	// Uses the cfg size to create incremental screens
 	cfg := GetCfg()
 	cfg.PreviewScreensOverSize = 1024
     cfg.PreviewVideoType = "screens"
 	SetCfg(*cfg)
+
+	// It will tack on .webp
+	dstFile := GetPreviewPathDestination(testFile, dstDir, "video")
+	srcFile := filepath.Join(srcDir, testFile)
+
+	// Uses the cfg size to create incremental screens
 	previewFile, err := CreateWebpFromVideo(srcFile, dstFile)
 	if err != nil {
 		t.Errorf("Couldn't create preview from %s err: %s", srcFile, err)
@@ -199,12 +199,16 @@ func Test_WebpFromVideo(t *testing.T) {
         ContentType: "video/mp4",
         Src: testFile,
     }
+    screens := AssignScreensIfExists(c, mc)
+    if len(*screens) != 10 {
+        t.Errorf("Fail to actually find the screens %s", *screens)
+    }
     checkFile := AssignPreviewIfExists(c, mc)
     if (previewFile != checkFile) {
-        t.Errorf("Check not set to Expected\n %s \n %s", checkFile, previewFile)
+        t.Errorf("Check not set to Expected\n check(%s) \n previewFile(%s)", checkFile, previewFile)
     }
-    if mc.Preview != checkFile {
-        t.Errorf("mc.Preview (%s) not equal check(%s)", mc.Preview, checkFile)
+    if !strings.Contains(checkFile, mc.Preview) {
+        t.Errorf("mc.Preview (%s) not contained in check(%s)", mc.Preview, checkFile)
     }
 }
 
@@ -217,7 +221,7 @@ func Test_VideoSelectScreens(t *testing.T) {
 		t.Errorf("The destination directory was not empty %s", empty_check)
 	}
 
-	destFile := filepath.Join(dstDir, "donut.png")
+	destFile := filepath.Join(dstDir, "donut.mp4.webp")
 	srcFile := filepath.Join(srcDir, testFile)
 	screensSrc, err := CreateScreensFromVideoSized(srcFile, destFile, 1024*300000)
 	if err != nil {
@@ -235,11 +239,11 @@ func Test_VideoSelectScreens(t *testing.T) {
 	// TODO: Really need to fix the dest file info
 	webpFile, err := CreateWebpFromScreens(screensSrc, destFile)
 	if err != nil {
-		t.Errorf("Failed to create a gif from screens %s", err)
+		t.Errorf("Failed to create preview %s", err)
 	}
 	webpStat, noWebp := os.Stat(webpFile)
 	if noWebp != nil {
-		t.Errorf("Did not create a gif from screens %s", webpFile)
+		t.Errorf("Did not create a preview from screens %s", webpFile)
 	}
 	if webpStat.Size() > (700 * 1024) {
 		t.Errorf("Webp has too much chonk %d", webpStat.Size())
@@ -250,7 +254,7 @@ func Test_VideoSelectScreens(t *testing.T) {
 func Test_VideoCreateSeekScreens(t *testing.T) {
 	srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
 
-	previewName := filepath.Join(dstDir, testFile)
+	previewName := filepath.Join(dstDir, testFile + ".webp")
 	srcFile := filepath.Join(srcDir, testFile)
 
 	err := CreateSeekScreen(srcFile, previewName+".jpeg", 10)

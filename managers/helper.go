@@ -60,6 +60,8 @@ func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
 		if len(ct.Media) > 0 {
 			c.PreviewUrl = "/preview/" + ct.Media[0].ID.String()
 		}
+
+        // TODO: Port to using the manager somehow (note this is called from a grift)
 		models.DB.Create(&c)
 		log.Printf("Created %s with id %s\n", c.Name, c.ID)
 
@@ -128,11 +130,26 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
 	}
 
 	update_list, err := CreateMediaPreviews(c, *media)
+    if err != nil {
+        log.Printf("Errors while creating media previews %s", err)
+    }
 	log.Printf("Finished creating previews, now updating the database count(%d)", len(update_list))
 	for _, mc := range update_list {
 		if mc.Preview != "" {
 			log.Printf("Created a preview %s for mc %s", mc.Preview, mc.ID.String())
+            screens := utils.AssignScreensIfExists(c, &mc)
+            if screens != nil {
+                log.Printf("Found new screens we should create %d", len(*screens))
+                for _, s := range(*screens) {
+                    cm.CreateScreen(&s)
+                }
+            }
+
+            // Note that UpdateMedia and create screen don't really work for in memory
+            // Though it actually wouldn't be that bad to update the MemStorage...
 			cm.UpdateMedia(&mc)
+
+            // TODO: Add in a search for getting screens based on the container and media
 		} else if mc.Corrupt {
 			cm.UpdateMedia(&mc)
 		}

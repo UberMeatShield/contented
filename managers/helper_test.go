@@ -19,6 +19,7 @@ type ActionSuite struct {
 	*suite.Action
 }
 
+// TODO: This naming is now bad with preview screens
 func GetScreens() (*models.Container, models.MediaContainers) {
 	return internals.GetMediaByDirName("screens")
 }

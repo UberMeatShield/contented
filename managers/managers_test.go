@@ -8,6 +8,8 @@ import (
 	"github.com/gobuffalo/packr/v2"
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gobuffalo/suite/v3"
+    "github.com/gobuffalo/nulls"
+    "github.com/gofrs/uuid"
 	"log"
 	"net/url"
 	"os"
@@ -203,7 +205,6 @@ func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
 	// Test that a search restricting containerID works
 	// Test that search restricting container and text works
 	internals.InitFakeApp(false)
-	//man := GetManagerActionSuite(cfg, as)
 	ctx := internals.GetContext(as.App)
 	man := GetManager(&ctx)
 
@@ -252,15 +253,14 @@ func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
 func (as *ActionSuite) Test_DbManagerSearch() {
 	models.DB.TruncateAll()
 	cfg := internals.InitFakeApp(true)
-
 	man := GetManagerActionSuite(cfg, as)
 	as.Equal(man.CanEdit(), true, "It should be a DB manager")
 
 	cnt, media := internals.GetMediaByDirName("dir1")
-	c_err := models.DB.Create(cnt)
+	c_err := man.CreateContainer(cnt)
 	as.NoError(c_err)
 	for _, mc := range media {
-		models.DB.Create(&mc)
+		man.CreateMedia(&mc)
 	}
 	mcs, _, err := man.SearchMedia("Large", 1, 20, "")
 	as.NoError(err, "It should be able to search")
@@ -332,7 +332,7 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
 	f.Sync()
 
 	// Checks that if a preview exists
-	cnts, media := utils.PopulateMemoryView(cfg.Dir)
+	cnts, media, _ := utils.PopulateMemoryView(cfg.Dir)
 	as.Equal(1, len(cnts), "We should only pull in containers that have media")
 	as.Equal(len(media), 1, "But there is only one video by mime type")
 	for _, mc := range media {
@@ -340,7 +340,7 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
 	}
 
 	cfg.ExcludeEmptyContainers = false
-	all_cnts, one_media := utils.PopulateMemoryView(cfg.Dir)
+	all_cnts, one_media, _ := utils.PopulateMemoryView(cfg.Dir)
 	as.Equal(1, len(one_media), "But there is only one video by mime type")
 
 	as.Equal(internals.TOTAL_CONTAINERS, len(all_cnts), "Allow it to pull in all containers")
@@ -368,4 +368,119 @@ func (as *ActionSuite) Test_ManagerDB() {
 
 	lim_media, _ := man.ListAllMedia(0, 3)
 	as.Equal(3, len(*lim_media), "The DB should be setup with 10 items")
+}
+
+
+func (as *ActionSuite) Test_ManagerDBPreviews() {
+	models.DB.TruncateAll()
+	cfg := internals.InitFakeApp(true)
+    man := GetManagerActionSuite(cfg, as)
+
+    mc := models.MediaContainer{Src: "A", Preview: "p", ContentType: "i",}
+    mc2 := models.MediaContainer{Src: "A", Preview: "p", ContentType: "i",}
+    man.CreateMedia(&mc)
+    man.CreateMedia(&mc2)
+    as.NotZero(mc.ID)
+
+    p1 := models.PreviewScreen{Src: "fake1", Idx: 0, MediaID: mc.ID,}
+    p2 := models.PreviewScreen{Src: "fake2.png", Idx: 1, MediaID: mc.ID,}
+    p3 := models.PreviewScreen{Src: "fake3.png", Idx: 1, MediaID: mc2.ID,}
+
+    man.CreateScreen(&p1)
+    man.CreateScreen(&p2)
+    man.CreateScreen(&p3)
+
+    previewList, err := man.ListScreens(mc.ID, 1, 10)
+    as.NoError(err)
+    as.Equal(len(*previewList), 2, "We should have two previews")
+
+    previewOne, p_err := man.ListScreens(mc2.ID, 1, 10)
+    as.NoError(p_err)
+    as.Equal(len(*previewOne), 1, "Now there should be 1")
+
+    p4 := models.PreviewScreen{Src: "fake4.png", Idx: 1, MediaID: mc2.ID,}
+    c_err := man.CreateScreen(&p4)
+    as.NoError(c_err)
+
+    p4_check, p4_err := man.GetScreen(p4.ID)
+    as.NoError(p4_err, "Failed to pull back the screen by ID" + p4.ID.String())
+    as.Equal(p4_check.Src, p4.Src)
+}
+
+func (as *ActionSuite) Test_ManagerMemoryScreens() {
+	cfg := internals.InitFakeApp(false)
+
+    man := GetManagerActionSuite(cfg, as)
+    media, err := man.ListAllMedia(1, 100)
+    as.NoError(err)
+    as.Greater(len(*media), 0, "It should have media setup")
+
+    mediaArr := *media
+    mc := mediaArr[0]
+    id1, _ := uuid.NewV4()
+    id2, _ := uuid.NewV4()
+
+    s1 := models.PreviewScreen{ID: id1, Path: "A", Src: "a.txt", MediaID: mc.ID,}
+    s2 := models.PreviewScreen{ID: id2, Path: "B", Src: "b.txt", MediaID: mc.ID,}
+    mc.Screens = models.PreviewScreens{s1, s2,}
+
+    // Ensure we actually set the right object in the backing Map
+    mem := utils.GetMemStorage()
+    mem.ValidMedia[mc.ID] = mc
+    mem.ValidScreens[s1.ID] = s1
+    mem.ValidScreens[s2.ID] = s2
+
+    screens, err := man.ListScreens(mc.ID, 1, 10)
+    as.NoError(err)
+    as.NotNil(screens)
+    as.Equal(2, len(*screens))
+    // Check that our single lookup hash is also populated
+    for _, screen := range(*screens) {
+        obj, mia := man.GetScreen(screen.ID)
+        as.NoError(mia)
+        as.Equal(obj.ID, screen.ID)
+    }
+
+    allScreens, all_err := man.ListAllScreens(0, 10)
+    as.NoError(all_err, "It should work out ok")
+    as.Equal(2, len(*allScreens), "We should have 2 screens")
+}
+
+func (as *ActionSuite) Test_ManagerMemoryCRU() {
+	internals.InitFakeApp(false)
+	ctx := internals.GetContext(as.App)
+	man := GetManager(&ctx)
+
+    // TODO: It should probably validate path exists and access
+    c := models.Container{Path: "/a/b"}
+    as.NoError(man.CreateContainer(&c), "Did not create container")
+    c2 := models.Container{Path: "/a/c"}
+    as.NoError(man.CreateContainer(&c2), "Did not create container")
+    c_check, c_err := man.GetContainer(c.ID)
+    as.NoError(c_err, "We should be able to get back the container")
+    as.Equal(c_check.Path, c.Path, "Ensure we are not stomping unset ID data")
+
+    mc := models.MediaContainer{Src: "media", ContainerID: nulls.NewUUID(c.ID)}
+    as.NoError(man.CreateMedia(&mc), "Did not create media correctly")
+    mcUp := models.MediaContainer{Src: "updated", ID: mc.ID}
+    man.UpdateMedia(&mcUp)
+    mc_check, m_err := man.GetMedia(mc.ID)
+    as.NoError(m_err, "It should find this media")
+    as.Equal(mc_check.Src, "updated")
+
+    id, _ := uuid.NewV4()
+    s1 := models.PreviewScreen{Path: "A", Src: "a.txt", MediaID: mc.ID,}
+    s2 := models.PreviewScreen{Path: "B", Src: "b.txt", MediaID: id,}
+    as.NoError(man.CreateScreen(&s1), "Did not associate screen correctly")
+    as.NoError(man.CreateScreen(&s2), "Did not associate screen correctly")
+
+    sCheck, sErr := man.ListScreens(mc.ID, 1, 10)
+    as.NoError(sErr, "Failed to list screens")
+    as.Equal(len(*sCheck), 1, "It should properly filter screens.")
+
+    s1Update := models.PreviewScreen{ID: s1.ID, Path: "C", MediaID: mc.ID,}
+    as.NoError(man.UpdateScreen(&s1Update))
+    s1Check, scErr := man.GetScreen(s1.ID)
+    as.NoError(scErr, "Failed to get the screen back")
+    as.Equal(s1Check.Path, "C")
 }
