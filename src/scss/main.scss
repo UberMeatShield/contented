@@ -132,6 +132,10 @@
 }
 
 // Might need to change how it works in layout
+.media-screens {
+   display: flex; 
+   flex-wrap: wrap;
+}
 .screen-img {
     object-fit: contain;
     width: 100%;
