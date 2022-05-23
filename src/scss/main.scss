@@ -131,6 +131,13 @@
     height: 100%;
 }
 
+// Might need to change how it works in layout
+.screen-img {
+    object-fit: contain;
+    width: 100%;
+    height: 100%;
+}
+
 .current-content-cnt {
   margin: 0 0 0.5rem 0;
   border: 1px solid #aaa;
