@@ -40,6 +40,7 @@ export class ScreensCmp implements OnInit {
                 (screens: Array<Screen>) => {
                     console.log("No screens", screens);
                     this.screens = screens;
+                    this.calculateDimensions();
                 }, err => {
                     console.error(err);
                 }
@@ -50,6 +51,19 @@ export class ScreensCmp implements OnInit {
     public clickMedia(screen: Screen) {
         // Just here in case we want to override what happens on a click
         this.clickedItem.emit({screen: screen});
+    }
+
+    @HostListener('window:resize', ['$event'])
+    public calculateDimensions() {
+
+        // TODO: Should this base the screen sizing on dom container vs the overall window?
+        let perRow = this.screens ? (this.screens.length / 2) : 6;
+        let width = !window['jasmine'] ? window.innerWidth : 800;
+        let height = !window['jasmine'] ? window.innerHeight : 800;
+
+        // This should be based on teh total number of screens?
+        this.previewWidth = ((width - 41) / perRow);
+        this.previewHeight = ((height - 41)/ 2);
     }
 }
 

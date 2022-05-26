@@ -1,0 +1,12 @@
+<div class="media-view-cmp">
+  <div class="media-view-fullscreen" *ngIf="media">
+    <contented-view [media]=media [visible]="true">
+    </contented-view>
+  </div>
+  <div class="loading" *ngIf="loading">
+    Loading...
+  </div>
+  <div class="error" *ngIf="error">
+    Error finding media with this ID
+  </div>
+</div>

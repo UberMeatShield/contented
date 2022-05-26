@@ -18,6 +18,7 @@ import {SearchCmp, SearchDialog} from './search_cmp';
 import {ContainerCmp} from './container_cmp';
 import {ContainerNavCmp} from './container_nav_cmp';
 import {ContentedViewCmp} from './contented_view_cmp';
+import {MediaViewCmp} from './media_view_cmp';
 import {ContentedService} from './contented_service';
 import {ScreensCmp} from './screens_cmp';
 import {Container} from './container';
@@ -46,6 +47,7 @@ import {Screen} from './screen';
       ContentedViewCmp,
       ContainerCmp,
       ContainerNavCmp,
+      MediaViewCmp,
       SearchCmp,
       SearchDialog,
       ScreensCmp,
@@ -57,7 +59,8 @@ import {Screen} from './screen';
       ContainerCmp,
       ContainerNavCmp,
       SearchCmp,
-      SearchDialog
+      MediaViewCmp,
+      SearchDialog,
   ],
   providers: [ContentedService]
 })

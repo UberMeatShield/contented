@@ -46,6 +46,17 @@ export class ContentedService {
             );
     }
 
+    public getMedia(mediaID: string) {
+        let url = `${ApiDef.contented.mediaAll}/${mediaID}`;
+        return this.http.get(url, this.options)
+            .pipe(
+                map(mc => {
+                    return new Media(mc);
+                }),
+                catchError(err => this.handleError(err))
+            );
+    }
+
     // Do a preview load (should it be API?)
 
     // TODO: Make all the test mock data new and or recent

@@ -181,7 +181,7 @@ export class ContentedCmp implements OnInit, OnDestroy {
         }
     }
 
-    // TODO: Being called abusively in the cntective rather than on page resize events
+    // TODO: Being called abusively in the constructor rather than on page resize events
     @HostListener('window:resize', ['$event'])
     public calculateDimensions() {
         let width = !window['jasmine'] ? window.innerWidth : 800;
