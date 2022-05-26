@@ -46,6 +46,7 @@ func App(UseDatabase bool) *buffalo.App {
 		app.GET("/", AngularIndex)
 		app.GET("/ui/browse/{path}", AngularIndex)
 		app.GET("/ui/browse/{path}/{idx}", AngularIndex)
+		app.GET("/ui/media/{id}", AngularIndex)
 		app.GET("/ui/search", AngularIndex)
 
 		// Need to make the file serving location smarter (serve the dir + serve static?)

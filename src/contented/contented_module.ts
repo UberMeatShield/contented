@@ -18,9 +18,12 @@ import {SearchCmp, SearchDialog} from './search_cmp';
 import {ContainerCmp} from './container_cmp';
 import {ContainerNavCmp} from './container_nav_cmp';
 import {ContentedViewCmp} from './contented_view_cmp';
+import {MediaViewCmp} from './media_view_cmp';
 import {ContentedService} from './contented_service';
+import {ScreensCmp} from './screens_cmp';
 import {Container} from './container';
 import {Media} from './media';
+import {Screen} from './screen';
 
 @NgModule({
   imports: [
@@ -38,8 +41,27 @@ import {Media} from './media';
       MatRippleModule,
       MatProgressSpinnerModule,
   ],
-  declarations: [ContentedCmp, ContentedNavCmp, ContentedViewCmp, ContainerCmp, ContainerNavCmp, SearchCmp, SearchDialog],
-  exports: [ContentedCmp, ContentedNavCmp, ContentedViewCmp, ContainerCmp, ContainerNavCmp, SearchCmp, SearchDialog],
+  declarations: [
+      ContentedCmp,
+      ContentedNavCmp,
+      ContentedViewCmp,
+      ContainerCmp,
+      ContainerNavCmp,
+      MediaViewCmp,
+      SearchCmp,
+      SearchDialog,
+      ScreensCmp,
+  ],
+  exports: [
+      ContentedCmp,
+      ContentedNavCmp,
+      ContentedViewCmp,
+      ContainerCmp,
+      ContainerNavCmp,
+      SearchCmp,
+      MediaViewCmp,
+      SearchDialog,
+  ],
   providers: [ContentedService]
 })
 export class ContentedModule {}

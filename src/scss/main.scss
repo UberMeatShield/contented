@@ -1,5 +1,6 @@
 .contented-cmp {
     height: 100%;
+    width: 100%;
     .cnt-contents {
        display: flex;
        flex-wrap: wrap;
@@ -7,7 +8,7 @@
 
     .preview-content {
       flex-shrink: 0;
-      margin: 0.5em;
+      margin: 5px;
     }
 }
 
@@ -25,7 +26,7 @@
 
     .preview-content {
       flex-shrink: 0;
-      margin: 0.5em;
+      margin: 5px;
     }
 
     .search-field {
@@ -126,6 +127,17 @@
 }
 
 .preview-img {
+    object-fit: contain;
+    width: 100%;
+    height: 100%;
+}
+
+// Might need to change how it works in layout
+.media-screens {
+   display: flex; 
+   flex-wrap: wrap;
+}
+.screen-img {
     object-fit: contain;
     width: 100%;
     height: 100%;

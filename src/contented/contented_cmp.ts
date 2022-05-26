@@ -9,6 +9,7 @@ import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 import {GlobalNavEvents, NavTypes} from './nav_events';
 
 import * as _ from 'lodash';
+import * as $ from 'jquery';
 
 @Component({
     selector: 'contented-main',
@@ -181,13 +182,16 @@ export class ContentedCmp implements OnInit, OnDestroy {
         }
     }
 
-    // TODO: Being called abusively in the cntective rather than on page resize events
+    // TODO: Being called abusively in the constructor rather than on page resize events
     @HostListener('window:resize', ['$event'])
     public calculateDimensions() {
+        // This should be based on the container not the window
+        // but unfortunately we call it before it is in the dom and visible
+        // so there is a load operation order issue to solve.  Maybe afterViewInit would work?
         let width = !window['jasmine'] ? window.innerWidth : 800;
         let height = !window['jasmine'] ? window.innerHeight : 800;
 
-        this.previewWidth = (width / 4) - 41;
+        this.previewWidth = (width / 4) - 31;
         this.previewHeight = (height / this.maxVisible) - 41;
     }
 

@@ -2,6 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders, HttpParams, HttpErrorResponse} from '@angular/common/http';
 import {Container, LoadStates} from './container';
 import {Media} from './media';
+import {Screen} from './screen';
 import {ApiDef} from './api_def';
 
 // The manner in which RxJS does this is really stupid, saving 50K for hours of dev time is fail
@@ -29,6 +30,28 @@ export class ContentedService {
             .pipe(
                 map(res => {
                     return _.map(res, cnt => new Container(cnt));
+                }),
+                catchError(err => this.handleError(err))
+            );
+    }
+
+    public getScreens(mediaID: string) {
+        let url = ApiDef.contented.mediaScreens.replace("{mcID}", mediaID);
+        return this.http.get(url, this.options)
+            .pipe(
+                map(res => {
+                    return _.map(res, s => new Screen(s));
+                }),
+                catchError(err => this.handleError(err))
+            );
+    }
+
+    public getMedia(mediaID: string) {
+        let url = `${ApiDef.contented.mediaAll}/${mediaID}`;
+        return this.http.get(url, this.options)
+            .pipe(
+                map(mc => {
+                    return new Media(mc);
                 }),
                 catchError(err => this.handleError(err))
             );

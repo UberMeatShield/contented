@@ -1,0 +1,16 @@
+<div class="screens-cmp">
+  <!-- Allow it to scroll horizonally -->
+  <div *ngIf="screens" class="media-screens" style="min-height: {{(previewHeight + 20) * 2}}px;">
+    <div class="screen"
+      style="width:{{previewWidth}}px; height: {{previewHeight}}px;"
+      *ngFor="let s of screens"
+      >
+      <!-- Assume that every preview is actually going to be an image -->
+      <img class="screen-img" [src]="s?.url">
+    </div>
+  </div>
+  <div class="loading" *ngIf="loading">loading...</div>
+  <div class="screens-empty" *ngIf="!screens">
+    No Screens
+  </div>
+</div>

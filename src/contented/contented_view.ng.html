@@ -5,16 +5,14 @@
       class="media-full-view" 
       style="width:{{maxWidth}}px; height: {{maxHeight}}px;"
     >
-      <img *ngIf="media?.isImage()" 
-        class="full-view-img" 
-        [src]="media.fullUrl"
-      >
-
-      <!-- TODO: should the fullscreen for a video should be totally different -->
-      <video *ngIf="media.isVideo()" [width]="maxWidth" [height]="maxHeight" controls>
-         <source [src]="media.fullUrl" [type]="media.content_type">
-      </video>
-    </div>
+        <img class="media-img" *ngIf="media?.isImage()" 
+          class="full-view-img" 
+          [src]="media.fullUrl"
+        >
+        <!-- TODO: should the fullscreen for a video should be totally different -->
+        <video class="media-video" [width]="maxWidth" [height]="maxHeight" controls>
+           <source [src]="media.fullUrl" [type]="media.content_type">
+        </video>
 
     <a *ngIf="media" class="max-full-url-path" href="{{media?.fullUrl}}">
       {{media.src}}({{media.content_type}})
@@ -22,5 +20,8 @@
     <span *ngIf="!media">
       No Url selected
     </span>
+  </div>
+  <div *ngIf="media && media.isVideo()" class="media-video">
+    <screens-cmp [mediaId]="media.id"></screens-cmp>
   </div>
 </div>
