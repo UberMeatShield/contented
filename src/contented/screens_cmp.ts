@@ -61,9 +61,9 @@ export class ScreensCmp implements OnInit {
         let width = !window['jasmine'] ? window.innerWidth : 800;
         let height = !window['jasmine'] ? window.innerHeight : 800;
 
-        // This should be based on teh total number of screens?
+        // This should be based on the total number of screens?
         this.previewWidth = ((width - 41) / perRow);
-        this.previewHeight = ((height - 41)/ 2);
+        this.previewHeight = (((height / 2) - 41)/ 2);
     }
 }
 
