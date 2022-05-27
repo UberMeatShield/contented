@@ -228,7 +228,6 @@ func Test_WebpFromVideo(t *testing.T) {
 }
 
 
-// hate
 func Test_AssignScreensWithEscapeChars(t *testing.T) {
 	srcDir, dstDir, _ := Get_VideoAndSetupPaths()
 
