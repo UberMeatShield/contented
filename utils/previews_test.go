@@ -231,17 +231,26 @@ func Test_WebpFromVideo(t *testing.T) {
 func Test_AssignScreensWithEscapeChars(t *testing.T) {
 	srcDir, dstDir, _ := Get_VideoAndSetupPaths()
 
-    badFilename := "Bad(a)).jpg"
+    badFilename := "Bad(a))_something_darkside.mp4"
     _, err := WriteScreenFile(dstDir, badFilename, 1)
     if err != nil {
         t.Errorf("Failed to setup the test screen %s", err)
     }
     WriteScreenFile(dstDir, badFilename, 2)
+    WriteScreenFile(dstDir, "ShouldNotMatch", 1)
 
     c := &models.Container{
         Path: filepath.Dir(srcDir),
         Name: filepath.Base(srcDir),
     }
+    files, f_err := GetPotentialScreens(c)
+    if f_err != nil {
+        t.Errorf("Did not find any screens in the preview dir %s", f_err)
+    }
+    if len(*files) != 3 {
+        t.Errorf("We should have looked up all potential files %s", files)
+    }
+
     mc := &models.MediaContainer{
         ContentType: "video/mp4",
         Src: badFilename,
@@ -252,7 +261,7 @@ func Test_AssignScreensWithEscapeChars(t *testing.T) {
         t.Errorf("We did not find matching screens")
     }
     if len(*ps) != 2 {
-        t.Errorf("We did not find the correct number of files")
+        t.Errorf("We did not find the correct number of files %d", len(*ps))
     }
 }
 
