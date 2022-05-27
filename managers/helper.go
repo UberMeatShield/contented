@@ -134,10 +134,11 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
         log.Printf("Errors while creating media previews %s", err)
     }
 	log.Printf("Finished creating previews, now updating the database count(%d)", len(update_list))
+    maybeScreens, _ := utils.GetPotentialScreens(c)
 	for _, mc := range update_list {
 		if mc.Preview != "" {
 			log.Printf("Created a preview %s for mc %s", mc.Preview, mc.ID.String())
-            screens := utils.AssignScreensIfExists(c, &mc)
+            screens := utils.AssignScreensFromSet(c, &mc, maybeScreens)
             if screens != nil {
                 log.Printf("Found new screens we should create %d", len(*screens))
                 for _, s := range(*screens) {

@@ -522,42 +522,70 @@ func CreateMediaPreview(c *models.Container, mc *models.MediaContainer) (string,
     return GetRelativePreviewPath(dstFqPath, cntPath), err
 }
 
-func AssignScreensIfExists(c *models.Container, mc *models.MediaContainer) (*models.PreviewScreens) {
+func AssignScreensFromSet(c *models.Container, mc *models.MediaContainer, maybeScreens *[]os.FileInfo) (*models.PreviewScreens) {
     if !strings.Contains(mc.ContentType, "video") {
         // log.Printf("Media is not of type video, no screens likely")
         return nil
     }
-    previewPath := GetPreviewDst(c.GetFqPath())
-    maybeScreens, err := ioutil.ReadDir(previewPath)
-    if err != nil {
-        return nil
-    }
-    previewScreens := models.PreviewScreens{}
     screenRe, reErr := GetScreensMatcherRE(mc.Src)
     if reErr != nil {
         log.Printf("Error trying to compile re match for %s", mc.Src)
         return nil
     }
-    for idx, fRef := range maybeScreens {
-        if !fRef.IsDir() {
-            name := fRef.Name()
-            if screenRe.MatchString(name) {
-                // log.Printf("Matched file %s idx %d", name, idx)
-                id, _ := uuid.NewV4()
-                ps := models.PreviewScreen{
-                    ID: id,
-                    Path: previewPath,
-                    Src: name,
-                    MediaID: mc.ID,
-                    Idx: idx,
-                    SizeBytes: fRef.Size(),
-                }
-                previewScreens = append(previewScreens, ps)
+
+    // Could probably just go with FileInfo references
+    previewPath := GetPreviewDst(c.GetFqPath())
+    // ie:  900 episodes of One Piece * (15 screens  + 1 webp) in a loop running 
+    // the regex against them all over and over...
+    previewScreens := models.PreviewScreens{}
+    for idx, fRef := range *maybeScreens {
+        name := fRef.Name()
+        if screenRe.MatchString(name) {
+            // log.Printf("Matched file %s idx %d", name, idx)
+            id, _ := uuid.NewV4()
+            ps := models.PreviewScreen{
+                ID: id,
+                Path: previewPath,
+                Src: name,
+                MediaID: mc.ID,
+                Idx: idx,
+                SizeBytes: fRef.Size(),
             }
+            previewScreens = append(previewScreens, ps)
         }
     }
     mc.Screens = previewScreens
     return &previewScreens
+}
+
+func GetPotentialScreens(c *models.Container) (*[]os.FileInfo, error) {
+    previewPath := GetPreviewDst(c.GetFqPath())
+    dirEntries, err := ioutil.ReadDir(previewPath)
+    if err != nil {
+        log.Printf("Couldn't list for path %s err %s", previewPath, err)
+        return nil, err
+    }
+    // This is REALLY slow so I should probably cache the files and cut it into
+    // a more sensible lookup in memory.  Maybe not even FileInfo
+    maybeScreens := []os.FileInfo{}
+    for _, fRef := range dirEntries {
+        if !fRef.IsDir() {  // Quick check to ensure screens is in the filename?
+            maybeScreens = append(maybeScreens, fRef)
+        }
+    }
+    return &maybeScreens, nil
+}
+
+func AssignScreensIfExists(c *models.Container, mc *models.MediaContainer) (*models.PreviewScreens) {
+    if !strings.Contains(mc.ContentType, "video") {
+        // log.Printf("Media is not of type video, no screens likely")
+        return nil
+    }
+    maybeScreens, err := GetPotentialScreens(c)
+    if err != nil {
+        return nil
+    }
+    return AssignScreensFromSet(c, mc, maybeScreens)
 }
 
 func AssignPreviewIfExists(c *models.Container, mc *models.MediaContainer) string {

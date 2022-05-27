@@ -62,10 +62,12 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap, 
 		if len(ct.Media) > 0 {
 			c.PreviewUrl = "/preview/" + ct.Media[0].ID.String()
 			log.Printf("Assigning a preview to %s as %s", c.Name, c.PreviewUrl)
+
+            maybeScreens, _ := GetPotentialScreens(&c)
 			for _, mc := range ct.Media {
 				// I should name this as PreviewUrl
 				AssignPreviewIfExists(&c, &mc)
-                screens := AssignScreensIfExists(&c, &mc)
+                screens := AssignScreensFromSet(&c, &mc, maybeScreens)
 
 				files[mc.ID] = mc
                 if screens != nil {
