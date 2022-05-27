@@ -63,19 +63,24 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap, 
 			c.PreviewUrl = "/preview/" + ct.Media[0].ID.String()
 			log.Printf("Assigning a preview to %s as %s", c.Name, c.PreviewUrl)
 
-            maybeScreens, _ := GetPotentialScreens(&c)
-			for _, mc := range ct.Media {
-				// I should name this as PreviewUrl
-				AssignPreviewIfExists(&c, &mc)
-                screens := AssignScreensFromSet(&c, &mc, maybeScreens)
+            maybeScreens, screenErr := GetPotentialScreens(&c)
+            if screenErr != nil {
+                // There might just not be previews so we ignore this for now?
+                log.Printf("No potential screens present in container %s", c.Path)
+            } else {
+                for _, mc := range ct.Media {
+                    // I should name this as PreviewUrl
+                    AssignPreviewIfExists(&c, &mc)
+                    screens := AssignScreensFromSet(&c, &mc, maybeScreens)
 
-				files[mc.ID] = mc
-                if screens != nil {
-                    for _, screen := range(*screens) {
-                        screensMap[screen.ID] = screen
+                    files[mc.ID] = mc
+                    if screens != nil {
+                        for _, screen := range(*screens) {
+                            screensMap[screen.ID] = screen
+                        }
                     }
                 }
-			}
+            }
 		}
 		// Remember that assigning into a map is also a copy so any changes must be
 		// done BEFORE you assign into the map
