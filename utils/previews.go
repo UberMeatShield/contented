@@ -194,10 +194,11 @@ func GetScreensOutputPattern(dstFile string) string {
 }
 
 // Used to search for a matched screen
-func GetScreensMatcherRE(dstFile string) *regexp.Regexp {
+func GetScreensMatcherRE(dstFile string) (*regexp.Regexp, error) {
 	stripExtension := regexp.MustCompile(".png$|.jpeg$|.jpg$")
 	dstFile = stripExtension.ReplaceAllString(dstFile, "")
-    return regexp.MustCompile(fmt.Sprintf("%s%s", dstFile, ".screens.[0-9]+.jpg"))
+    dstFile = regexp.QuoteMeta(dstFile)
+    return regexp.Compile(fmt.Sprintf("%s%s", dstFile, ".screens.[0-9]+.jpg"))
 }
 
 // TODO: Move to utils or make it wrapped for some reason?
@@ -532,7 +533,11 @@ func AssignScreensIfExists(c *models.Container, mc *models.MediaContainer) (*mod
         return nil
     }
     previewScreens := models.PreviewScreens{}
-    screenRe := GetScreensMatcherRE(mc.Src)
+    screenRe, reErr := GetScreensMatcherRE(mc.Src)
+    if reErr != nil {
+        log.Printf("Error trying to compile re match for %s", mc.Src)
+        return nil
+    }
     for idx, fRef := range maybeScreens {
         if !fRef.IsDir() {
             name := fRef.Name()

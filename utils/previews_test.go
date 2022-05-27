@@ -25,6 +25,21 @@ func Get_VideoAndSetupPaths() (string, string, string) {
 	return srcDir, dstDir, testFile
 }
 
+// Should probably toss this into internals
+func WriteScreenFile(dstPath string, fileName string, count int) (string, error) {
+    screenName := fmt.Sprintf("%s.screens.00%d.jpg", fileName, count)
+	fqPath := filepath.Join(dstPath, screenName)
+	f, err := os.Create(fqPath)
+	if err != nil {
+		return "", err
+	}
+	_, wErr := f.WriteString("Now something exists in the file")
+	if wErr != nil {
+        return "", wErr
+	}
+    return screenName, nil
+}
+
 // Check that handling bad inputs behaves in an expected fashion
 func Test_BrokenImagePreview(t *testing.T) {
 	var testDir, _ = envy.MustGet("DIR")
@@ -212,6 +227,36 @@ func Test_WebpFromVideo(t *testing.T) {
     }
 }
 
+
+// hate
+func Test_AssignScreensWithEscapeChars(t *testing.T) {
+	srcDir, dstDir, _ := Get_VideoAndSetupPaths()
+
+    badFilename := "Bad(a)).jpg"
+    _, err := WriteScreenFile(dstDir, badFilename, 1)
+    if err != nil {
+        t.Errorf("Failed to setup the test screen %s", err)
+    }
+    WriteScreenFile(dstDir, badFilename, 2)
+
+    c := &models.Container{
+        Path: filepath.Dir(srcDir),
+        Name: filepath.Base(srcDir),
+    }
+    mc := &models.MediaContainer{
+        ContentType: "video/mp4",
+        Src: badFilename,
+    }
+    ps := AssignScreensIfExists(c, mc)
+
+    if ps == nil {
+        t.Errorf("We did not find matching screens")
+    }
+    if len(*ps) != 2 {
+        t.Errorf("We did not find the correct number of files")
+    }
+}
+
 // Test MultiScreen
 func Test_VideoSelectScreens(t *testing.T) {
 	srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
@@ -383,4 +428,19 @@ func Test_VideoPreviewGif(t *testing.T) {
 		t.Errorf("Preview was bigger than video %d > %d", fCheck.Size(), vFile.Size())
 	}
 	ResetPreviewDir(dstDir)
+}
+
+func Test_ScreenOutputPatterns(t *testing.T) {
+    badFilename := "Bad(a)).jpg"
+    _, err := GetScreensMatcherRE(badFilename)
+    if err != nil {
+        t.Errorf("Error trying to compile a re match for %s %s", badFilename, err)
+    }
+
+    badTwo := "../Bad[b)).jpg"
+    _, err2 := GetScreensMatcherRE(badTwo)
+    if err2 != nil {
+        t.Errorf("Error trying to compile a re match for %s %s", badTwo, err2)
+    }
+        
 }
