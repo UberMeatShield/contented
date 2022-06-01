@@ -48,11 +48,26 @@ export class ContainerCmp implements OnInit, OnDestroy {
                         console.log("Save the currently selected media");
                         this.saveMedia();
                         break;
+                    case NavTypes.SCROLL_MEDIA_INTO_VIEW:
+                        this.scrollMedia(evt.media);
+                        break;
                     default:
                         break;
                 }
             }
         });
+    }
+
+    public scrollMedia(media: Media) {
+        _.delay(() => {
+            let id = `preview_${media.id}`;
+            let el = document.getElementById(id)
+
+            if (el) {
+                el.scrollIntoView(true);
+                window.scrollBy(0, -30);
+            }
+        }, 20);
     }
 
     public ngOnDestroy() {
