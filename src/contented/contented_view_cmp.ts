@@ -2,6 +2,7 @@ import {OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener}
 import {Media} from './media';
 import {GlobalNavEvents, NavTypes} from './nav_events';
 import {Subscription} from 'rxjs';
+import * as _ from 'lodash';
 
 @Component({
     selector: 'contented-view',
@@ -27,12 +28,18 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
         this.sub = GlobalNavEvents.navEvts.subscribe(evt => {
             switch(evt.action) {
                 case NavTypes.VIEW_FULLSCREEN:
-                    console.log("Viewscreen show media");
                     this.visible = true;
                     this.media = evt.media || this.media;
+                    console.log("Viewscreen show media", this.media);
+                    if (this.media) {
+                        this.scrollMedia(this.media);
+                    }
                     break;
                 case NavTypes.HIDE_FULLSCREEN:
                     console.log("Viewscreen hide media");
+                    if (this.visible && this.media) {
+                        GlobalNavEvents.scrollMediaView(this.media);          
+                    }
                     this.visible = false;
                     break;
                 case NavTypes.SELECT_MEDIA:
@@ -69,4 +76,14 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
         }
     }
 
+    public scrollMedia(media: Media) {
+        _.delay(() => {
+            let id = `MEDIA_VIEW`;
+            let el = document.getElementById(id)
+            if (el) {
+                el.scrollIntoView(true);
+                window.scrollBy(0, -30);
+            }
+        }, 10);
+    }
 }

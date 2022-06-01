@@ -12,6 +12,7 @@ export enum NavTypes {
     HIDE_FULLSCREEN,
     LOAD_MORE,
     SAVE_MEDIA,
+    SCROLL_MEDIA_INTO_VIEW,
 }
 
 export class NavEvents {
@@ -82,6 +83,13 @@ export class NavEvents {
     saveMedia(media: Media = null) {
         this.navEvts.emit({
             action: NavTypes.SAVE_MEDIA,
+            media: media,
+        });
+    }
+
+    scrollMediaView(media: Media = null) {
+        this.navEvts.emit({
+            action: NavTypes.SCROLL_MEDIA_INTO_VIEW,
             media: media,
         });
     }
