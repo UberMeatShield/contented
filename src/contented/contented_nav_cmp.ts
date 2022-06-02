@@ -4,6 +4,7 @@ import {Container} from './container';
 import {Media} from './media';
 import {GlobalNavEvents} from './nav_events';
 import {MatRipple} from '@angular/material/core';
+import {FormControl} from '@angular/forms';
 
 import * as _ from 'lodash';
 import * as $ from 'jquery';
@@ -17,6 +18,9 @@ export class ContentedNavCmp implements OnInit {
     @ViewChild(MatRipple) ripple: MatRipple;
     @Input() navEvts;
     @Input() loading: boolean;
+    @Input() containers: Array<Container>
+
+    public containerFilter = new FormControl('');
 
     constructor(public _contentedService: ContentedService) {
 

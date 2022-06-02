@@ -87,11 +87,11 @@ describe('TestingContentedCmp', () => {
         fixture.detectChanges();
         MockData.handleCmpDefaultLoad(httpMock, fixture);
         tick(2000);
-        expect(comp.allD.length).toBe(4, "We should have 4 containers set");
+        expect(comp.allCnts.length).toBe(4, "We should have 4 containers set");
 
         let dirs = comp.getVisibleContainers();
         expect(dirs.length).toBe(comp.maxVisible, "Should only have the max visible containers present.");
-        expect(dirs.length <= comp.allD.length).toBe(true, "It should never have more data than we asked for.");
+        expect(dirs.length <= comp.allCnts.length).toBe(true, "It should never have more data than we asked for.");
 
         fixture.detectChanges();
         let dirEls = $('.container-contents', el);
@@ -164,7 +164,7 @@ describe('TestingContentedCmp', () => {
         MockData.handleCmpDefaultLoad(httpMock, fixture);
 
         expect(comp.loading).toBe(false, "It should be fine with loading the containers");
-        expect(comp.allD.length).toBeGreaterThan(0, "There should be a number of containers");
+        expect(comp.allCnts.length).toBeGreaterThan(0, "There should be a number of containers");
         fixture.detectChanges();
 
         expect(comp.idx).toBe(0, "It should be on the default page");

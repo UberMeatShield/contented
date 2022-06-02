@@ -29,7 +29,7 @@ export class ContentedCmp implements OnInit, OnDestroy {
     // TODO: Remove this listener
     public fullScreen: boolean = false; // Should we view fullscreen the current item
     public containers: Array<Container>; // Current set of visible containers
-    public allD: Array<Container>; // All the containers we have loaded
+    public allCnts: Array<Container>; // All the containers we have loaded
     public sub: Subscription;
 
     constructor(public _contentedService: ContentedService, public route: ActivatedRoute, public router: Router) {
@@ -92,7 +92,7 @@ export class ContentedCmp implements OnInit, OnDestroy {
 
     public loadDirs() {
         this.loading = true;
-        this._contentedService.getPreview()
+        this._contentedService.getContainers()
             .pipe(finalize(() => {this.loading = false; }))
             .subscribe(
                 res => {
@@ -122,17 +122,17 @@ export class ContentedCmp implements OnInit, OnDestroy {
 
     public reset() {
         this.idx = 0;
-        this.allD = [];
+        this.allCnts = [];
         this.emptyMessage = null;
     }
 
     public getVisibleContainers() {
-        if (this.allD) {
-            let start = this.idx < this.allD.length ? this.idx : this.allD.length - 1;
-            let end = start + this.maxVisible <= this.allD.length ? start + this.maxVisible : this.allD.length;
+        if (this.allCnts) {
+            let start = this.idx < this.allCnts.length ? this.idx : this.allCnts.length - 1;
+            let end = start + this.maxVisible <= this.allCnts.length ? start + this.maxVisible : this.allCnts.length;
             // Only loads if cnt.loadState = LoadStates.NotLoaded
             let currCnt = this.getCurrentContainer();
-            let cnts = this.allD.slice(start, end);
+            let cnts = this.allCnts.slice(start, end);
             _.each(cnts, (cnt, idx) => {
                 let obs = this._contentedService.initialLoad(cnt); 
                 if (obs) { 
@@ -151,19 +151,19 @@ export class ContentedCmp implements OnInit, OnDestroy {
     }
 
     public getCurrentContainer() {
-        if (this.idx < this.allD.length && this.idx >= 0) {
-            return this.allD[this.idx];
+        if (this.idx < this.allCnts.length && this.idx >= 0) {
+            return this.allCnts[this.idx];
         }
         return null;
     }
 
     public updateRoute() {
-        let cnt = this.allD[this.idx];
+        let cnt = this.allCnts[this.idx];
         this.router.navigate([`/ui/browse/${this.idx}/${cnt.rowIdx}`]);
     }
 
     public next(selectFirst: boolean = true) {
-        if (this.allD && this.idx + 1 < this.allD.length) {
+        if (this.allCnts && this.idx + 1 < this.allCnts.length) {
             this.idx++;
             let cnt = this.getCurrentContainer();
             GlobalNavEvents.selectMedia(cnt.getMedia(), cnt);
@@ -197,14 +197,14 @@ export class ContentedCmp implements OnInit, OnDestroy {
 
     public previewResults(containers: Array<Container>) {
         console.log("Results returned from the preview results.", containers);
-        this.allD = containers || [];
+        this.allCnts = containers || [];
         if (_.isEmpty(containers)) {
             this.emptyMessage = "No Directories found, did you load the DB?";
         } else {
             // Maybe just read the current param from the route 
             this.loadView(this.idx, this.rowIdx, true);
         }
-        return this.allD;
+        return this.allCnts;
     }
 
     public fullLoadDir(cnt: Container) {
@@ -238,7 +238,7 @@ export class ContentedCmp implements OnInit, OnDestroy {
     // Could probably move this into a saner location
     public selectedMedia(media: Media, cnt: Container) {
         //console.log("Click event, change currently selected indexes, container etc", media, cnt);
-        let idx = _.findIndex(this.allD, {id: cnt ? cnt.id : -1});
+        let idx = _.findIndex(this.allCnts, {id: cnt ? cnt.id : -1});
         if (idx >= 0) {
             this.idx = idx;
             this.rowIdx = cnt.rowIdx;

@@ -11,6 +11,7 @@ import {MatPaginatorModule} from '@angular/material/paginator';
 import {MatRippleModule} from '@angular/material/core';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
 
 import {ContentedCmp} from './contented_cmp';
 import {ContentedNavCmp} from './contented_nav_cmp';
@@ -40,6 +41,7 @@ import {Screen} from './screen';
       MatPaginatorModule,
       MatRippleModule,
       MatProgressSpinnerModule,
+      MatAutocompleteModule,
   ],
   declarations: [
       ContentedCmp,
