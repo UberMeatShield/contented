@@ -35,35 +35,29 @@
     Keypress Navigation
     <a class="search-link" href="/ui/search">Search</a>
 
-    <div *ngIf="containers">
 
-    <form>
+    <form *ngIf="containers">
       <mat-form-field class="example-full-width" appearance="fill">
         <input type="text"
                placeholder="Pick one"
                aria-label="Number"
                matInput
                [formControl]="containerFilter"
-               [matAutocomplete]="true">
+               [matAutocomplete]="auto">
 
-        <!--
-        <mat-autocomplete #auto="containerFilter">
-          <mat-option *ngFor="let option of containers | async" [value]="option">
-            {{option}}
+        <mat-autocomplete #auto="matAutocomplete">
+          <mat-option *ngFor="let c of filteredContainers | async" [value]="c.id">
+            {{c.name}}
           </mat-option>
         </mat-autocomplete>
-        -->
       </mat-form-field>
     </form>
-    </div>
 
     <!-- Should add in content type filters -->
   </div>
   <div #trigger id="nav-contented-evts">
     <!-- Could use this to scroll in or other evts, but mainly lets us manually trigger on keypress-->
   </div>
-
-
 
   <div *ngIf="loading">
      <mat-progress-spinner

@@ -4,6 +4,7 @@ import {HttpParams} from '@angular/common/http';
 import {HttpClientTestingModule, HttpTestingController} from '@angular/common/http/testing';
 import {DebugElement} from '@angular/core';
 import {FormsModule} from '@angular/forms';
+import {NoopAnimationsModule} from '@angular/platform-browser/animations';
 
 import { RouterTestingModule } from '@angular/router/testing';
 import { Router } from '@angular/router';
@@ -36,7 +37,8 @@ describe('TestingContentedCmp', () => {
                 ),
                 FormsModule,
                 ContentedModule,
-                HttpClientTestingModule
+                HttpClientTestingModule,
+                NoopAnimationsModule,
             ],
             providers: [
                 ContentedService

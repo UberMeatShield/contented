@@ -5,6 +5,8 @@ import {Media} from './media';
 import {GlobalNavEvents} from './nav_events';
 import {MatRipple} from '@angular/material/core';
 import {FormControl} from '@angular/forms';
+import {Observable} from 'rxjs';
+import {map, startWith} from 'rxjs/operators';
 
 import * as _ from 'lodash';
 import * as $ from 'jquery';
@@ -21,6 +23,7 @@ export class ContentedNavCmp implements OnInit {
     @Input() containers: Array<Container>
 
     public containerFilter = new FormControl('');
+    public filteredContainers: Observable<Container[]>;
 
     constructor(public _contentedService: ContentedService) {
 
@@ -28,6 +31,17 @@ export class ContentedNavCmp implements OnInit {
 
     ngOnInit() {
         this.navEvts = this.navEvts || GlobalNavEvents.navEvts;
+        this.filteredContainers = this.containerFilter.valueChanges.pipe(
+            startWith(""),
+            map(value => value ? this.filter(value) : this.containers)
+        );
+    }
+
+    public filter(value: string) {
+        let lcVal = value.toLowerCase();
+        return _.filter(this.containers, c => {
+            return c.name.toLowerCase().includes(lcVal);
+        });
     }
 
     // On the document keypress events, listen for them (probably need to set them only to component somehow)
