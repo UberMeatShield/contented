@@ -14,6 +14,7 @@ import {ContentedService} from '../contented/contented_service';
 import {ContentedModule} from '../contented/contented_module';
 import {Container} from '../contented/container';
 import {ApiDef} from '../contented/api_def';
+import {GlobalNavEvents} from '../contented/nav_events';
 
 import * as _ from 'lodash';
 import {MockData} from './mock/mock_data';
@@ -214,6 +215,25 @@ describe('TestingContentedCmp', () => {
         fixture.detectChanges();
 
         expect(dir.count).toEqual(3, "Now we should have loaded more based on the limit");
+        fixture.detectChanges();
+    }));
+
+    it('Pull in more more contents in a dir', fakeAsync(() => {
+        fixture.detectChanges();
+        MockData.handleCmpDefaultLoad(httpMock, fixture);
+        fixture.detectChanges();
+
+        let cnt = comp.allCnts[3];
+        let media = cnt.getMedia();
+        // Check that a media in container 3 is not visible
+        expect(comp.allCnts.length).toBeGreaterThan(0, "We should have containers");
+        expect(comp.idx).toEqual(0, "We should be at index 0");
+
+        GlobalNavEvents.selectContainer(cnt);
+        fixture.detectChanges();
+        MockData.handleContainerMediaLoad(httpMock, [cnt], 3);
+        expect(comp.idx).toEqual(3, "We should now be on the third index")
+        tick(1000);
         fixture.detectChanges();
     }));
 });

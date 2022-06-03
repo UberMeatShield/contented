@@ -70,12 +70,12 @@ class MockLoader {
         }
     }
 
-    public handleContainerMediaLoad(httpMock, dirs: Array<Container>) {
-        _.each(dirs, dir => {
-            let url = ApiDef.contented.media.replace('{cId}', dir.id);
+    public handleContainerMediaLoad(httpMock, cnts: Array<Container>, count = 2) {
+        _.each(cnts, cnt => {
+            let url = ApiDef.contented.media.replace('{cId}', cnt.id);
             let reqs = httpMock.match(r => r.url === url);
             _.each(reqs, req => {
-                req.flush(MockData.getMedia(dir.dir, 2));
+                req.flush(MockData.getMedia(cnt.name, count));
             });
         });
     }
