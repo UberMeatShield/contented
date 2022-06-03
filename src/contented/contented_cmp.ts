@@ -73,6 +73,9 @@ export class ContentedCmp implements OnInit, OnDestroy {
                 case NavTypes.SELECT_MEDIA:
                     this.selectedMedia(evt.media, evt.cnt);
                     break;
+                case NavTypes.SELECT_CONTAINER:
+                    this.selectContainer(evt.cnt);
+                    break;
                 default:
                     break;
             }
@@ -150,6 +153,14 @@ export class ContentedCmp implements OnInit, OnDestroy {
         return [];
     }
 
+    public selectContainer(cnt: Container) {
+        let idx = _.findIndex(this.allCnts, {id: cnt.id})
+        if (idx >= 0) {
+            this.idx = idx;
+            this.updateRoute();
+        }
+    }
+
     public getCurrentContainer() {
         if (this.idx < this.allCnts.length && this.idx >= 0) {
             return this.allCnts[this.idx];
@@ -175,8 +186,6 @@ export class ContentedCmp implements OnInit, OnDestroy {
         if (this.idx > 0) {
             this.idx--;
             let cnt = this.getCurrentContainer();
-
-            console.log("PREVIOUS", cnt, cnt.getMedia());
             GlobalNavEvents.selectMedia(cnt.getMedia(), cnt);
             this.updateRoute();
         }

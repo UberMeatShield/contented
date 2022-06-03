@@ -4,6 +4,7 @@ import {Container} from './container';
 import {Media} from './media';
 import {GlobalNavEvents} from './nav_events';
 import {MatRipple} from '@angular/material/core';
+import {MatAutocomplete} from '@angular/material/autocomplete';
 import {FormControl} from '@angular/forms';
 import {Observable} from 'rxjs';
 import {map, startWith} from 'rxjs/operators';
@@ -18,11 +19,12 @@ import * as $ from 'jquery';
 export class ContentedNavCmp implements OnInit {
 
     @ViewChild(MatRipple) ripple: MatRipple;
+    @ViewChild(MatAutocomplete) matAutocomplete: MatAutocomplete;
     @Input() navEvts;
     @Input() loading: boolean;
     @Input() containers: Array<Container>
 
-    public containerFilter = new FormControl('');
+    public containerFilter = new FormControl();
     public filteredContainers: Observable<Container[]>;
 
     constructor(public _contentedService: ContentedService) {
@@ -42,6 +44,33 @@ export class ContentedNavCmp implements OnInit {
         return _.filter(this.containers, c => {
             return c.name.toLowerCase().includes(lcVal);
         });
+    }
+
+    public displaySelection(id: string) {
+        let cnt = _.find(this.containers, {id: id});
+        return cnt ? cnt.name : "";
+    }
+
+    public selectedContainer(cnt: Container) {
+        GlobalNavEvents.selectContainer(cnt);
+
+        // If this is not in a delay it will race condition with the selection opening / closing.
+        _.delay(() => {
+            let filterEl = $("#CONTENT_FILTER");
+            filterEl.blur();
+
+            // Should potentially just keep the selected value = selected container
+            filterEl.val("");
+        });
+    }
+
+    // A lot of this stuff is just black magic off stack overflow...
+    // it is not obvious it works from the documentation
+    public chooseFirstOption() {
+        // On enter should turn off focus
+        if (this.matAutocomplete.options.first) {
+            this.matAutocomplete.options.first.select();
+        }
     }
 
     // On the document keypress events, listen for them (probably need to set them only to component somehow)

@@ -39,16 +39,21 @@
     <form *ngIf="containers">
       <mat-form-field class="example-full-width" appearance="fill">
         <input type="text"
-               placeholder="Pick one"
-               aria-label="Number"
-               matInput
-               [formControl]="containerFilter"
-               [matAutocomplete]="auto">
-
-        <mat-autocomplete #auto="matAutocomplete">
-          <mat-option *ngFor="let c of filteredContainers | async" [value]="c.id">
-            {{c.name}}
-          </mat-option>
+          placeholder="Pick one"
+          aria-label="Number"
+          id="CONTENT_FILTER"
+          matInput
+          [formControl]="containerFilter"
+          [matAutocomplete]="auto"
+          (keyup.enter)="chooseFirstOption()"
+          >
+        <mat-autocomplete 
+            #auto="matAutocomplete" 
+            [displayWith]="displaySelection.bind(this)">
+          <mat-option *ngFor="let c of filteredContainers | async" 
+            (onSelectionChange)="selectedContainer(c)"
+            [value]="c.id"
+          >{{c.name}}</mat-option>
         </mat-autocomplete>
       </mat-form-field>
     </form>
