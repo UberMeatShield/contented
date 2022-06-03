@@ -60,7 +60,7 @@ export class ContentedNavCmp implements OnInit {
             filterEl.blur();
 
             // Should potentially just keep the selected value = selected container
-            filterEl.val("");
+            //filterEl.val(null);
         });
     }
 

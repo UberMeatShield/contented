@@ -10,6 +10,7 @@ import {MatButtonModule} from '@angular/material/button';
 import {MatPaginatorModule} from '@angular/material/paginator';
 import {MatRippleModule} from '@angular/material/core';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
+import {MatToolbarModule} from '@angular/material/toolbar';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatAutocompleteModule} from '@angular/material/autocomplete';
 
@@ -42,6 +43,7 @@ import {Screen} from './screen';
       MatRippleModule,
       MatProgressSpinnerModule,
       MatAutocompleteModule,
+      MatToolbarModule,
   ],
   declarations: [
       ContentedCmp,
