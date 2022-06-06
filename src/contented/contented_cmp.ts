@@ -202,8 +202,6 @@ export class ContentedCmp implements OnInit, OnDestroy {
 
         this.previewWidth = (width / 4) - 31;
         this.previewHeight = ((height - 120) / this.maxVisible);
-
-        console.log("Preview height", this.previewHeight);
     }
 
     public previewResults(containers: Array<Container>) {
