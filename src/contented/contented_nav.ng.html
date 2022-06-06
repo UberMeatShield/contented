@@ -1,5 +1,7 @@
-<div class="contented-nav-cmp">
+<mat-toolbar class="contented-nav-cmp">
+
   <div matRipple [matRippleTrigger]="trigger" class="nav-options">
+    <small>Hotkeys</small>
     <button id="BTN_w" title="Move up a container"
       type="button" mat-button
       (click)="handleKey('w')"
@@ -32,17 +34,43 @@
       type="button" mat-button
       (click)="handleKey('x')"
     >x</button>
-    Keypress Navigation
-    
-    <a class="search-link" href="/ui/search">Search</a>
   </div>
+
+
+  <form *ngIf="containers" class="container-search-form">
+    <mat-form-field class="container-nav-search" appearance="outline">
+      <input type="text"
+        placeholder="Navigate to container"
+        aria-label="Number"
+        id="CONTENT_FILTER"
+        matInput
+        [formControl]="containerFilter"
+        [matAutocomplete]="auto"
+        (keyup.enter)="chooseFirstOption()"
+        >
+      <mat-autocomplete 
+          #auto="matAutocomplete" 
+          [displayWith]="displaySelection.bind(this)">
+        <mat-option *ngFor="let c of filteredContainers | async" 
+          (onSelectionChange)="selectedContainer(c)"
+          [value]="c.id"
+        >{{c.name}}</mat-option>
+      </mat-autocomplete>
+    </mat-form-field>
+  </form>
+
   <div #trigger id="nav-contented-evts">
     <!-- Could use this to scroll in or other evts, but mainly lets us manually trigger on keypress-->
   </div>
+
+  <!-- A link to search here is a little odd -->
+  <a class="search-link" href="/ui/search">Search</a>
+
+  <!-- This pretty much just flickers, probably test it is working on larger content -->
   <div *ngIf="loading">
      <mat-progress-spinner
        [diameter]="32"
        [mode]="'indeterminate'">
      </mat-progress-spinner>
   </div>
-</div>
+</mat-toolbar>

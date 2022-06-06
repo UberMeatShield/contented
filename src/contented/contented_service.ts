@@ -25,7 +25,7 @@ export class ContentedService {
         this.options = {headers: headers};
     }
 
-    public getPreview() {
+    public getContainers() {
         return this.http.get(ApiDef.contented.containers, this.options)
             .pipe(
                 map(res => {

@@ -49,7 +49,7 @@ describe('TestingContentedService', () => {
         let reallyRan = false;
 
         let preview = MockData.getPreview();
-        service.getPreview().subscribe(
+        service.getContainers().subscribe(
             (dirs: Array<Container>) => {
                 expect(dirs.length).toEqual(preview.length, "It should kick back data");
 
@@ -121,7 +121,7 @@ describe('TestingContentedService', () => {
 
     it('Can load the entire container', fakeAsync(() => {
         let dirs: Array<Container> = null;
-        service.getPreview().subscribe(
+        service.getContainers().subscribe(
             (previewDirs: Array<Container>) => {
                 dirs = previewDirs;
             },

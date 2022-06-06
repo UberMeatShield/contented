@@ -8,7 +8,7 @@
 
     .preview-content {
       flex-shrink: 0;
-      margin: 5px;
+      margin: 2px;
     }
 }
 
@@ -48,6 +48,31 @@
         object-fit: contain;
         width: 100%;
         height: 100%;
+    }
+}
+
+.container-search-form {
+    font-size: 10px;
+}
+
+.container-search-form {
+    margin-right: 1rem;
+    .mat-form-field-wrapper {
+        padding-bottom: 0rem;
+    }
+}
+
+// The toolbar also has a lot of wasted space
+.contented-nav-cmp {
+    height: 42px;
+}
+
+.container-contents {
+    .mat-card-subtitle{
+        margin-bottom: 0px;
+    }
+    .mat-card {
+        padding: 0px;
     }
 }
 

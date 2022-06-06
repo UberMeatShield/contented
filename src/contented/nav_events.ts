@@ -6,6 +6,7 @@ export enum NavTypes {
     NEXT_CONTAINER,
     PREV_CONTAINER,
     SELECT_MEDIA,
+    SELECT_CONTAINER,
     NEXT_MEDIA,
     PREV_MEDIA,
     VIEW_FULLSCREEN,
@@ -35,6 +36,15 @@ export class NavEvents {
             action: NavTypes.NEXT_CONTAINER
         });
     }
+
+    // TODO: Need a select container event I guess
+    selectContainer(container: Container) {
+        this.navEvts.emit({
+            action: NavTypes.SELECT_CONTAINER,
+            cnt: container,
+        });
+    }
+    
 
     selectMedia(media: Media, container: Container) {
         this.navEvts.emit({

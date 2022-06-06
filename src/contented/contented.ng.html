@@ -1,6 +1,6 @@
 <div class="contented-cmp">
 
-  <contented-nav [loading]="loading"></contented-nav>
+  <contented-nav [containers]="allCnts" [loading]="loading"></contented-nav>
 
   <!-- TODO: A more generic error handling setup -->
   <div class="error no-content" *ngIf="emptyMessage">
@@ -20,7 +20,7 @@
           <container-nav
             [cnt]="cnt"
             [active]="cnt === getCurrentContainer()"
-            [totalContainers]="allD?.length"
+            [totalContainers]="allCnts?.length"
             [rowIdx]="cnt.rowIdx"
             [idx]="idx"
           ></container-nav>
