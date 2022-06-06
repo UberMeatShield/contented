@@ -65,9 +65,10 @@
     <!-- Could use this to scroll in or other evts, but mainly lets us manually trigger on keypress-->
   </div>
 
-  <!-- Search here is a little odd -->
+  <!-- A link to search here is a little odd -->
   <a class="search-link" href="/ui/search">Search</a>
 
+  <!-- This pretty much just flickers, probably test it is working on larger content -->
   <div *ngIf="loading">
      <mat-progress-spinner
        [diameter]="32"

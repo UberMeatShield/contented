@@ -59,8 +59,9 @@ export class ContentedNavCmp implements OnInit {
             let filterEl = $("#CONTENT_FILTER");
             filterEl.blur();
 
-            // Should potentially just keep the selected value = selected container
-            //filterEl.val(null);
+            // We want to use the container value setValue to ensure the autocomplete doesn't
+            // explode.  Using the dom element itself breaks the dropdown a little bit.
+            this.containerFilter.setValue("");
         });
     }
 
