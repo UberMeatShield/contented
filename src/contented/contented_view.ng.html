@@ -6,12 +6,17 @@
       style="width:{{maxWidth}}px; height: {{maxHeight}}px;"
     >
         <img class="media-img" *ngIf="media?.isImage()" 
-          class="full-view-img" 
+          class="full-view-img media-img" 
           [src]="media.fullUrl"
         >
-        <!-- TODO: should the fullscreen for a video should be totally different -->
-        <video class="media-video" [width]="maxWidth" [height]="maxHeight" controls>
-           <source [src]="media.fullUrl" [type]="media.content_type">
+
+        <!-- TODO: should the fullscreen for a video should be totally different? -->
+        <video *ngIf="media.isVideo()" 
+          class="media-video"
+          [width]="maxWidth"
+          [height]="maxHeight"
+          controls>
+          <source [src]="media.fullUrl" [type]="media.content_type">
         </video>
 
     <a *ngIf="media" class="max-full-url-path" href="{{media?.fullUrl}}">

@@ -115,4 +115,21 @@ describe('TestingContentedViewCmp', () => {
         fixture.detectChanges();
         expect(comp.visible).toBe(false, "It should not be visible now");
     });
+
+    it("Should have a video in the case of a video, image for image", () => {
+        let video = new Media({content_type: "video/mp4", fullUrl: "cthulhu"});
+        let img = new Media({content_type: "image/jpeg", fullUrl: "cat/pics.jpg"});
+
+        comp.visible = true;
+        comp.media = img;
+        fixture.detectChanges();
+
+        expect($("img").length).toEqual(1, "We should have an image");
+        expect($("video").length).toEqual(0, "Not a video");
+
+        comp.media = video;
+        fixture.detectChanges();
+        expect($("video").length).toEqual(1, "Now it should be a video");
+        expect($("image").length).toEqual(0, "Not an image");
+    });
 });
