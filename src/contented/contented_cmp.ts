@@ -157,8 +157,16 @@ export class ContentedCmp implements OnInit, OnDestroy {
         let idx = _.findIndex(this.allCnts, {id: cnt.id})
         if (idx >= 0) {
             this.idx = idx;
-            this.updateRoute();
+            this.selectionEvt();
         }
+    }
+
+    // Ensure the route is set and if we moved containers it should show
+    // what has been selected.
+    public selectionEvt() {
+        let cnt = this.getCurrentContainer();
+        GlobalNavEvents.selectMedia(cnt.getMedia(), cnt);
+        this.updateRoute();
     }
 
     public getCurrentContainer() {
@@ -176,18 +184,14 @@ export class ContentedCmp implements OnInit, OnDestroy {
     public next(selectFirst: boolean = true) {
         if (this.allCnts && this.idx + 1 < this.allCnts.length) {
             this.idx++;
-            let cnt = this.getCurrentContainer();
-            GlobalNavEvents.selectMedia(cnt.getMedia(), cnt);
-            this.updateRoute();
+            this.selectionEvt();
         }
     }
 
     public prev(selectLast: boolean = false) {
         if (this.idx > 0) {
             this.idx--;
-            let cnt = this.getCurrentContainer();
-            GlobalNavEvents.selectMedia(cnt.getMedia(), cnt);
-            this.updateRoute();
+            this.selectionEvt();
         }
     }
 
