@@ -64,13 +64,13 @@ const tslint = (done) => {
 // Build our typescript, the default option is to use Angulars watching cli to only recompile changes
 const typescript = (done) => {
     let buildWatch = typeof done === 'function' ? 'false' : 'true';
-    let typescriptCmd = `ng build ${appName} --configuration=dev --watch=${buildWatch} --deploy-url /${dir.deploy}`;
+    let typescriptCmd = `ng build ${appName} --configuration=dev --watch=${buildWatch} --base-href /${dir.deploy}`;
     return ngExec(typescriptCmd, done);
 };
 
 // Full tree shaking production build, removes code, minify etc
 const typescriptProd = (done) => {
-    let cmd = `ng build ${appName} --prod --no-progress --deploy-url /${dir.deploy}`;
+    let cmd = `ng build ${appName} --prod --no-progress --base-href /${dir.deploy}`;
     return ngExec(cmd, done);
 };
 
