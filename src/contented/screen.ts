@@ -23,4 +23,13 @@ export class Screen {
     public links() {
         this.url = `${ApiDef.contented.screens}${this.id}`;
     }
+
+    public parseSecondsFromScreen() {
+        let screenSecondRe = new RegExp(/.*ss(\d+)\.jpg/);
+        let timeCheck = screenSecondRe.exec(this.src);
+        if (timeCheck) {
+            return Number.parseInt(timeCheck[1], 10);
+        }
+        return 0;
+    }
 }

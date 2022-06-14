@@ -127,7 +127,6 @@ export class ContentedNavCmp implements OnInit {
             default:
                 break;
         }
-
     }
 }
 

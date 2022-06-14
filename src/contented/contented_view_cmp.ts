@@ -2,6 +2,7 @@ import {OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener}
 import {Media} from './media';
 import {GlobalNavEvents, NavTypes} from './nav_events';
 import {Subscription} from 'rxjs';
+import {Screen} from './screen';
 import * as _ from 'lodash';
 
 @Component({
@@ -85,5 +86,11 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
                 window.scrollBy(0, -30);
             }
         }, 10);
+    }
+
+    public clickedScreen(evt) {
+        let seconds = evt.screen.parseSecondsFromScreen();
+        let videoEl = <HTMLVideoElement> document.getElementById(`VIDEO_${this.media.id}`);
+        videoEl.currentTime = seconds;
     }
 }
