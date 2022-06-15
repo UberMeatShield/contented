@@ -15,6 +15,9 @@ import (
 
 // Helper for a common block of video test code (duplicated in internals)
 func Get_VideoAndSetupPaths() (string, string, string) {
+    cfg := GetCfgDefaults()
+    SetCfg(cfg)
+
 	var testDir, _ = envy.MustGet("DIR")
 	srcDir := filepath.Join(testDir, "dir2")
 	dstDir := GetPreviewDst(srcDir)
@@ -216,7 +219,7 @@ func Test_WebpFromVideo(t *testing.T) {
     }
     screens := AssignScreensIfExists(c, mc)
     if len(*screens) != 10 {
-        t.Errorf("Fail to actually find the screens %s", *screens)
+        t.Errorf("Failed to actually find the screens %s expected 10 found %d", *screens, len(*screens))
     }
     checkFile := AssignPreviewIfExists(c, mc)
     if (previewFile != checkFile) {

@@ -186,19 +186,35 @@ func CleanPaletteFile(paletteFile string) error {
 }
 
 // Strip off the PNG, we are just going to dump out some jpegs and this format works for
-// ffmpeg outputs.
+// ffmpeg outputs.  Note the output pattern has to work for ffmpeg import params so it
+// has some pretty odd restrictions.
 func GetScreensOutputPattern(dstFile string) string {
     stripExtension := regexp.MustCompile(".png$|.gif$|.webp$")
     dstFile = stripExtension.ReplaceAllString(dstFile, "")
-    return fmt.Sprintf("%s%s", dstFile, ".screens.%03d.jpg")
+
+    cfg := GetCfg()
+    if cfg.PreviewVideoType == "screens" {
+        return fmt.Sprintf("%s%s", dstFile, ".screens.ss%05d.jpg")
+    } else {
+        return fmt.Sprintf("%s%s", dstFile, ".screens.%03d.jpg")
+    }
 }
 
-// Used to search for a matched screen
+// Used to search for a matched screen.   I am using ss to denote that the screen is at 
+// a specific time, this is the most common case but I haven't found a clever way to have
+// smaller video files set their second time using a sel(n, framemod) format.
 func GetScreensMatcherRE(dstFile string) (*regexp.Regexp, error) {
 	stripExtension := regexp.MustCompile(".png$|.jpeg$|.jpg$")
 	dstFile = stripExtension.ReplaceAllString(dstFile, "")
     dstFile = regexp.QuoteMeta(dstFile)
-    return regexp.Compile(fmt.Sprintf("%s%s", dstFile, ".screens.[0-9]+.jpg"))
+
+    // Check if there is a screens option and modify the screen time
+    cfg := GetCfg()
+    if cfg.PreviewVideoType == "screens" {
+        return regexp.Compile(fmt.Sprintf("%s%s", dstFile, ".screens.ss[0-9]+.jpg"))
+    } else {
+        return regexp.Compile(fmt.Sprintf("%s%s", dstFile, ".screens.[0-9]+.jpg"))
+    }
 }
 
 // TODO: Move to utils or make it wrapped for some reason?
@@ -329,10 +345,11 @@ func CreateSeekScreens(srcFile string, dstFile string) ([]string, error, string)
     screenFiles := []string{}
     screenFmt := GetScreensOutputPattern(dstFile)
     for idx := 0; idx < totalScreens; idx++ {
-        screenFile := fmt.Sprintf(screenFmt, idx)
-        // log.Printf("Screen file is what %s", screenFile)
 
-        err := CreateSeekScreen(srcFile, screenFile, (idx * timeSkip))
+        // Screen file can be modified to take a second format which is the time skip
+        ss := idx * timeSkip
+        screenFile := fmt.Sprintf(screenFmt, idx, ss)
+        err := CreateSeekScreen(srcFile, screenFile, ss)
         if err != nil {
             log.Printf("Error creating a seek screen %s", err)
             break

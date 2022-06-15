@@ -93,7 +93,7 @@ func CreateAllPreviews(cm ContentManager) error {
 	for _, cnt := range *cnts {
 		err := CreateContainerPreviews(&cnt, cm)
 		if err != nil {
-			err_msg += fmt.Sprintf("Error creating previews in cnt %s err: %s\n", cnt.ID.String(), err)
+			err_msg += fmt.Sprintf("Error creating previews in cnt %s - %s err: %s\n", cnt.ID.String(), cnt.Name, err)
 		}
 	}
 	if err_msg != "" {

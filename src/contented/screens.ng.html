@@ -4,6 +4,7 @@
     <div class="screen"
       style="width:{{previewWidth}}px; height: {{previewHeight}}px;"
       *ngFor="let s of screens"
+      (click)="clickMedia(s)"
       >
       <!-- Assume that every preview is actually going to be an image -->
       <img class="screen-img" [src]="s?.url">

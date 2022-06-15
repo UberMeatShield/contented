@@ -88,4 +88,18 @@ describe('TestingScreensCmp', () => {
         expect($(".screen-img", el).length).toEqual(screens.length, "There should be screens rendered");
         expect($(".screen", el).length).toEqual(screens.length, "There should be screens rendered");
     }));
+
+    it("Can parse out a screen time", () => {
+        let s = new Screen({
+            id: "a",
+            src: "Something.ss003.jpg",
+        });
+        expect(s.parseSecondsFromScreen()).toEqual(3, "It should parse a second");
+
+        let s2 = new Screen({
+            id: "fake",
+            src: "NoMatch.jpg",
+        });
+        expect(s2.parseSecondsFromScreen()).toEqual(0, "No time should not error");
+    });
 });

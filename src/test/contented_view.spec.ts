@@ -123,7 +123,7 @@ describe('TestingContentedViewCmp', () => {
         comp.visible = true;
         comp.media = img;
         fixture.detectChanges();
-
+        expect($(".media-video-screens").length).toEqual(0, "No screens");
         expect($("img").length).toEqual(1, "We should have an image");
         expect($("video").length).toEqual(0, "Not a video");
 
@@ -131,5 +131,8 @@ describe('TestingContentedViewCmp', () => {
         fixture.detectChanges();
         expect($("video").length).toEqual(1, "Now it should be a video");
         expect($("image").length).toEqual(0, "Not an image");
+        expect(video.isVideo()).toBe(true, "It should be a video file");
+        fixture.detectChanges();
+        expect($(".media-video-screens").length).toEqual(1, "It should have screens");
     });
 });

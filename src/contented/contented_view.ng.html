@@ -12,6 +12,7 @@
 
         <!-- TODO: should the fullscreen for a video should be totally different? -->
         <video *ngIf="media.isVideo()" 
+          id="VIDEO_{{media.id}}"
           class="media-video"
           [width]="maxWidth"
           [height]="maxHeight"
@@ -26,7 +27,11 @@
       No Url selected
     </span>
   </div>
-  <div *ngIf="media && media.isVideo()" class="media-video">
-    <screens-cmp [mediaId]="media.id"></screens-cmp>
+
+  <div *ngIf="media && media.isVideo()" class="media-video-screens">
+    <screens-cmp
+      (clickedItem)="clickedScreen($event)"
+      [mediaId]="media.id"
+    ></screens-cmp>
   </div>
 </div>
