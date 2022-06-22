@@ -44,7 +44,7 @@ type ContentManager interface {
 	ListMediaContext(ContainerID uuid.UUID) (*models.MediaContainers, error)
 	ListAllMedia(page int, per_page int) (*models.MediaContainers, error)
 	SearchMediaContext() (*models.MediaContainers, int, error)
-	SearchMedia(search string, page int, per_page int, cId string) (*models.MediaContainers, int, error)
+	SearchMedia(search string, page int, per_page int, cId string, contentType string) (*models.MediaContainers, int, error)
 
     // Functions that help with viewing movie screens if found.
     ListAllScreens(page int, per_page int) (*models.PreviewScreens, error)

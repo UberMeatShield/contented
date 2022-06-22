@@ -105,24 +105,27 @@ func (cm ContentManagerDB) SearchMediaContext() (*models.MediaContainers, int, e
 	_, per_page, page := GetPagination(params, cm.cfg.Limit)
 	searchStr := StringDefault(params.Get("text"), "")
 	cId := StringDefault(params.Get("cId"), "")
-	return cm.SearchMedia(searchStr, page, per_page, cId)
+	contentType := StringDefault(params.Get("contentType"), "")
+	return cm.SearchMedia(searchStr, page, per_page, cId, contentType)
 }
 
-func (cm ContentManagerDB) SearchMedia(search string, page int, per_page int, cId string) (*models.MediaContainers, int, error) {
+func (cm ContentManagerDB) SearchMedia(search string, page int, per_page int, cId string, contentType string) (*models.MediaContainers, int, error) {
 	mediaContainers := &models.MediaContainers{}
 	tx := cm.GetConnection()
-
-	// TODO: We need to do a count first and preserve that :(  hate
 	q := tx.Paginate(page, per_page)
 	if search != "*" && search != "" {
 		search = ("%" + search + "%")
 		q = q.Where(`src like ?`, search)
 	}
+	if contentType != "" {
+        contentType = ("%" + contentType + "%")
+		q = q.Where(`content_type ilike ?`, contentType)
+    }
 	if cId != "" {
 		q = q.Where(`container_id = ?`, cId)
 	}
 	count, _ := q.Count(&models.MediaContainers{})
-	log.Printf("Total count of search media %d", count)
+	log.Printf("Total count of search media %d using search (%s) and contentType (%s)", count, search, contentType) 
 
 	if q_err := q.All(mediaContainers); q_err != nil {
 		return mediaContainers, count, q_err

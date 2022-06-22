@@ -99,11 +99,12 @@ func (cm ContentManagerMemory) SearchMediaContext() (*models.MediaContainers, in
 	_, per_page, page := GetPagination(params, cm.cfg.Limit)
 	searchStr := StringDefault(params.Get("text"), "")
 	cId := StringDefault(params.Get("cID"), "")
-	return cm.SearchMedia(searchStr, page, per_page, cId)
+    contentType := StringDefault(params.Get("contentType"), "")
+	return cm.SearchMedia(searchStr, page, per_page, cId, contentType)
 }
 
-func (cm ContentManagerMemory) SearchMedia(search string, page int, per_page int, containerID string) (*models.MediaContainers, int, error) {
-	filteredMedia, cErr := cm.getMediaFiltered(containerID, search)
+func (cm ContentManagerMemory) SearchMedia(search string, page int, per_page int, cID string, contentType string) (*models.MediaContainers, int, error) {
+	filteredMedia, cErr := cm.getMediaFiltered(cID, search, contentType)
 	if cErr != nil {
 		return nil, 0, cErr
 	}
@@ -123,49 +124,57 @@ func (cm ContentManagerMemory) SearchMedia(search string, page int, per_page int
 	return &mc_arr, count, nil
 }
 
-func (cm ContentManagerMemory) getMediaFiltered(containerID string, search string) (*models.MediaContainers, error) {
-	// First pass just grab all media in an array OR filter by containerID
-	fp_arr := models.MediaContainers{}
-
+func (cm ContentManagerMemory) getMediaFiltered(containerID string, search string, contentType string) (*models.MediaContainers, error) {
 	// If a containerID is specified and is totally invalid raise an error, otherwise filter
+    var mcArr models.MediaContainers
+	cidArr := models.MediaContainers{}
 	if containerID != "" {
 		cID, cErr := uuid.FromString(containerID)
 		if cErr == nil {
 			for _, mc := range cm.ValidMedia {
 				if mc.ContainerID.Valid && mc.ContainerID.UUID == cID {
-					fp_arr = append(fp_arr, mc)
+					cidArr = append(cidArr, mc)
 				}
 			}
+            mcArr = cidArr
 		} else {
 			return nil, cErr
 		}
 	} else {
 		// Empty string for containerID is considered match all media
 		for _, mc := range cm.ValidMedia {
-			fp_arr = append(fp_arr, mc)
+			cidArr = append(cidArr, mc)
 		}
+        mcArr = cidArr
 	}
 
-	// Second pass we iterate over the sorted array
-	mc_arr := models.MediaContainers{}
 	if search != "" && search != "*" {
-		// Could optimize by offset end but "eh, good enough for in memory"
 		searcher := regexp.MustCompile(search)
-		for _, mc := range fp_arr {
+	    searchArr := models.MediaContainers{}
+		for _, mc := range mcArr {
 			if searcher.MatchString(mc.Src) {
-				mc_arr = append(mc_arr, mc)
+				searchArr = append(searchArr, mc)
 			}
 		}
-	} else {
-		// If there is no search or the default args just return everything that matched
-		mc_arr = fp_arr
+        mcArr = searchArr
 	}
 
+	if contentType != "" && contentType != "*" {
+		searcher := regexp.MustCompile(contentType)
+	    contentArr := models.MediaContainers{}
+		for _, mc := range mcArr {
+			if searcher.MatchString(mc.ContentType) {
+				contentArr = append(contentArr, mc)
+			}
+		}
+        mcArr = contentArr
+    }
+
 	// Finally sort any content that is matching so that pagination will work
-	sort.SliceStable(mc_arr, func(i, j int) bool {
-		return mc_arr[i].Idx < mc_arr[j].Idx
+	sort.SliceStable(mcArr, func(i, j int) bool {
+		return mcArr[i].Idx < mcArr[j].Idx
 	})
-	return &mc_arr, nil
+	return &mcArr, nil
 }
 
 // Awkard GoLang interface support is awkward
