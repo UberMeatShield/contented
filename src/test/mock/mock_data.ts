@@ -20,6 +20,10 @@ class MockLoader {
         return _.clone(require('./search.json'));
     }
 
+    public getVideos() {
+        return _.clone(require('./video_view.json'));
+    }
+
     public getScreens() {
         return _.clone(require('./screens.json'));
     }
