@@ -18,6 +18,11 @@ export class ScreensCmp implements OnInit {
     @Input() previewWidth: number = 480;
     @Input() previewHeight: number = 480;
 
+    // Allow something to force specify the values
+    @Input() containerWidth: number = null;
+    @Input() containerHeight: number = null;
+
+    // TODO: These are not used
     @Input() maxRendered: number = 8; // Default setting for how many should be visible at any given time
     @Input() maxPrevItems: number = 2; // When scrolling through a cnt, how many previous items should be visible
 
@@ -55,11 +60,16 @@ export class ScreensCmp implements OnInit {
 
     @HostListener('window:resize', ['$event'])
     public calculateDimensions() {
-
         // TODO: Should this base the screen sizing on dom container vs the overall window?
         let perRow = this.screens ? (this.screens.length / 2) : 6;
         let width = !window['jasmine'] ? window.innerWidth : 800;
+        if (this.containerWidth) {
+            width = this.containerWidth;
+        }
         let height = !window['jasmine'] ? window.innerHeight : 800;
+        if (this.containerHeight) {
+            height = this.containerHeight;
+        }
 
         // This should be based on the total number of screens?
         this.previewWidth = ((width - 41) / perRow);

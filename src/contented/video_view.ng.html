@@ -1,0 +1,50 @@
+<div class="video-view-cmp">
+  <form #videoForm [formGroup]="options">
+    <mat-form-field apperance="fill" floatLabel="true" class="search-field">
+      <mat-label>
+        Search Media
+      </mat-label>
+      <input type="text" name="videoText"
+        [formControl]="videoText"
+        matInput placeholder=""
+      >
+    </mat-form-field>
+
+    <mat-paginator
+      [length]="total"
+      [pageSize]="pageSize"
+      (page)="pageEvt($event)"
+    ></mat-paginator>
+    <mat-progress-spinner *ngIf="loading"
+      [diameter]="32"
+      [mode]="'indeterminate'">
+    </mat-progress-spinner>
+  </form>
+
+  <div class="video-results" *ngIf="!!media">
+
+      <mat-card *ngFor="let mc of getVisibleSet()">
+          <mat-card-title>{{mc.src}}</mat-card-title>
+          <mat-card-content>
+
+            <div class="video-view">
+              <div class="preview-content video-result video-view"
+                [class.video-overlay]="mc?.content_type?.match('video')"
+                style="width:{{previewWidth}}px; height: {{previewHeight}}px;"
+                (click)="imgClicked(mc)"
+                >
+                <img class="preview-img" [src]="mc?.previewUrl" (load)="imgLoaded($event)">
+              </div>
+
+              <div class="video-view-screens">
+                <screens-cmp 
+                  [mediaId]="mc.id"
+                  [containerWidth]="screenWidth"
+                  [containerHeight]="2 * previewHeight"
+                ></screens-cmp>
+              </div>
+            </div>
+          </mat-card-content>
+      </mat-card>
+  </div>
+</div>
