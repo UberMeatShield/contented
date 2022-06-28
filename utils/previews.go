@@ -571,7 +571,7 @@ func AssignScreensFromSet(c *models.Container, mc *models.MediaContainer, maybeS
 
     // Could probably just go with FileInfo references
     previewPath := GetPreviewDst(c.GetFqPath())
-    // ie:  900 episodes of One Piece * (15 screens  + 1 webp) in a loop running 
+    // ie: 1000 episodes of One Piece * (15 screens  + 1 webp) in a loop running 
     // the regex against them all over and over...
     previewScreens := models.PreviewScreens{}
     for idx, fRef := range *maybeScreens {
