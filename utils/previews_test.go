@@ -16,6 +16,10 @@ import (
 // Helper for a common block of video test code (duplicated in internals)
 func Get_VideoAndSetupPaths() (string, string, string) {
     cfg := GetCfgDefaults()
+
+    // The video we use is only 10.08 seconds long.
+    cfg.PreviewFirstScreenOffset = 2
+    cfg.PreviewNumberOfScreens = 4
     SetCfg(cfg)
 
 	var testDir, _ = envy.MustGet("DIR")
@@ -218,8 +222,9 @@ func Test_WebpFromVideo(t *testing.T) {
         Src: testFile,
     }
     screens := AssignScreensIfExists(c, mc)
-    if len(*screens) != 10 {
-        t.Errorf("Failed to actually find the screens %s expected 10 found %d", *screens, len(*screens))
+    if len(*screens) != cfg.PreviewNumberOfScreens {
+        msg := `Failed to actually find the screens %s expected %d found %d`
+        t.Errorf(msg, *screens, cfg.PreviewNumberOfScreens, len(*screens))
     }
     checkFile := AssignPreviewIfExists(c, mc)
     if (previewFile != checkFile) {
@@ -320,13 +325,15 @@ func Test_VideoCreateSeekScreens(t *testing.T) {
 	// With bigger files ~ 100mb it is much faster to do 10 seek time screens
 	// instead of using a single operation.  The small donut file is faster with
 	// a single operation with a frame selection.
+    cfg := GetCfg()
+
 	startMulti := time.Now()
 	screens, multiErr, screenPtrn := CreateSeekScreens(srcFile, previewName)
 	if multiErr != nil {
 		t.Errorf("Failed creating multiple screens %s", multiErr)
 	}
 	fmt.Printf("Screen Multi timing %s\n", time.Since(startMulti))
-	if len(screens) != 10 {
+	if len(screens) != cfg.PreviewNumberOfScreens {
 		t.Errorf("Didn't find enough screens %d", len(screens))
 	}
 	if strings.Contains("screens", screenPtrn) {

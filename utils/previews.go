@@ -338,16 +338,30 @@ func CreateSeekScreens(srcFile string, dstFile string) ([]string, error, string)
     }
     log.Printf("Total time was %f with %d as the fps", totalTime, fps)
 
-    totalScreens := 10
-    timeSkip := int(totalTime) / totalScreens
-    log.Printf("Frame skip is what %d", timeSkip)
+    // This is ugly enough that maybe it should be a method small files cause
+    // surprising numbers of problems.
+    // For a very short video (testing we don't want to skip or take a lot of screens)
+    // or even do a frame skip, so reassign to something more sensible.
+    cfg := GetCfg()
+    totalScreens := cfg.PreviewNumberOfScreens
+    frameOffset := cfg.PreviewFirstScreenOffset
+    totalScreenTime := int(totalTime) - frameOffset
+    if totalScreenTime <= totalScreens {
+        totalScreens = int(totalTime) / 2
+        totalScreenTime = int(totalTime)
+        frameOffset = 0
+    } 
+    timeSkip := int(totalScreenTime) / totalScreens
+
+    log.Printf("Total time was %f with %d as the fps", totalTime, fps)
+    log.Printf("Setting up screens (%d) with timeSkip (%d)", totalScreens, timeSkip)
 
     screenFiles := []string{}
     screenFmt := GetScreensOutputPattern(dstFile)
-    for idx := 0; idx < totalScreens; idx++ {
 
-        // Screen file can be modified to take a second format which is the time skip
-        ss := idx * timeSkip
+    // Screen file can be modified to take a second format which is the time skip
+    for idx := 0; idx < totalScreens; idx++ {
+        ss := (idx * timeSkip) + frameOffset
         screenFile := fmt.Sprintf(screenFmt, idx, ss)
         err := CreateSeekScreen(srcFile, screenFile, ss)
         if err != nil {
@@ -488,11 +502,16 @@ func CreateGifFromVideo(srcFile string, dstFile string) (string, error) {
         return "", err
     }
 
+    cfg := GetCfg()
     framerate := "0.5"
-    vframes := 10
+    vframes := cfg.PreviewNumberOfScreens
     filter_v := "setpts=PTS/2"
     if int(2*total) < vframes {
         vframes = 5
+    }
+    skipSeconds := cfg.PreviewFirstScreenOffset
+    if skipSeconds >= int(total) {
+        skipSeconds = 2
     }
 
     // This whole mess makes a relatively decent preview gif for a full movie
@@ -507,7 +526,7 @@ func CreateGifFromVideo(srcFile string, dstFile string) (string, error) {
     log.Printf("Gif total time %s framerate %s speedup %s", time_to_encode, framerate, filter_v)
 
     // Framerate vframes
-    gif_err := ffmpeg.Input(srcFile, ffmpeg.KwArgs{"ss": "2"}).
+    gif_err := ffmpeg.Input(srcFile, ffmpeg.KwArgs{"ss": skipSeconds}).
         Output(dstFile, ffmpeg.KwArgs{
             "s":        "640x480",
             "pix_fmt":  "yuvj422p",
