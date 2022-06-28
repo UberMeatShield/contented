@@ -55,7 +55,7 @@ export class ScreensCmp implements OnInit {
 
     public clickMedia(screen: Screen) {
         // Just here in case we want to override what happens on a click
-        this.clickedItem.emit({screen: screen});
+        this.clickedItem.emit({screen: screen, screens: this.screens});
     }
 
     @HostListener('window:resize', ['$event'])

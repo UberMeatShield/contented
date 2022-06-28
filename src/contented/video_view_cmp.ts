@@ -14,6 +14,8 @@ import {
 } from '@angular/core';
 import {ContentedService} from './contented_service';
 import {Media} from './media';
+import {Screen} from './screen';
+import {GlobalNavEvents} from './nav_events';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 import {FormBuilder, NgForm, FormControl, FormGroup} from '@angular/forms';
 
@@ -153,11 +155,16 @@ export class VideoViewCmp implements OnInit{
     }
 
     public fullView(mc: Media) {
-        /*
+        console.log("Full view", mc);
+        GlobalNavEvents.viewFullScreen(mc);
+    }
+
+    public screenEvt(evt) {
+        console.log("Screen Evt", evt);
         const dialogRef = this.dialog.open(
-            SearchDialog,
+            ScreenDialog,
             {
-                data: mc,
+                data: {screen: evt.screen, screens: evt.screens},
                 width: '90%',
                 height: '100%',
                 maxWidth: '100vw',
@@ -167,7 +174,6 @@ export class VideoViewCmp implements OnInit{
         dialogRef.afterClosed().subscribe(result => {
             console.log("Closing the view", result);
         });
-        */
     }
 
     imgLoaded(evt) {
@@ -177,5 +183,42 @@ export class VideoViewCmp implements OnInit{
     imgClicked(mc: Media) {
         console.log("Click the image", mc);
         this.fullView(mc);
+    }
+}
+
+// This just doesn't seem like a great approach :(
+@Component({
+    selector: 'screen-dialog',
+    templateUrl: 'screen_dialog.ng.html'
+})
+export class ScreenDialog implements AfterViewInit {
+
+    public screen: Screen;
+    public screens: Array<Screen>
+
+    public forceHeight: number;
+    public forceWidth: number;
+    public sizeCalculated: boolean = false;
+    @ViewChild('ScreensContent', { static: true }) screenContent;
+    
+    constructor(
+        @Inject(MAT_DIALOG_DATA) public data,
+        public _service: ContentedService) {
+
+        this.screen = data.screen;
+        this.screens = data.screens;
+    }
+
+    ngAfterViewInit() {
+        console.log("Search content is:", this.screenContent);
+        setTimeout(() => {
+            let el = this.screenContent.nativeElement;
+            if (el) {
+                console.log("Element", el, el.offsetWidth, el.offsetHeight);
+                this.forceHeight = el.offsetHeight;
+                this.forceWidth = el.offsetWidth;
+            }
+            this.sizeCalculated = true;
+        }, 100);
     }
 }

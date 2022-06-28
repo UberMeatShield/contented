@@ -198,14 +198,13 @@ export class SearchDialog implements AfterViewInit {
     }
 
     ngAfterViewInit() {
-        console.log("Search content is:", this.searchContent);
-
+        // TODO: Sizing content is a little off and the toolbars are visible based on dialog size
         setTimeout(() => {
             let el = this.searchContent.nativeElement;
             if (el) {
                 console.log("Element", el, el.offsetWidth, el.offsetHeight);
-                this.forceHeight = el.offsetHeight;
-                this.forceWidth = el.offsetWidth;
+                this.forceHeight = el.offsetHeight - 40;
+                this.forceWidth = el.offsetWidth - 40;
             }
             this.sizeCalculated = true;
         }, 100);
