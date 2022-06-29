@@ -14,6 +14,8 @@ import {
 } from '@angular/core';
 import {ContentedService} from './contented_service';
 import {Media} from './media';
+import {Screen} from './screen';
+import {GlobalNavEvents} from './nav_events';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 import {FormBuilder, NgForm, FormControl, FormGroup} from '@angular/forms';
 
@@ -23,17 +25,17 @@ import * as _ from 'lodash';
 
 
 @Component({
-    selector: 'search-cmp',
-    templateUrl: './search.ng.html'
+    selector: 'video-view-cmp',
+    templateUrl: './video_view.ng.html'
 })
-export class SearchCmp implements OnInit{
+export class VideoViewCmp implements OnInit{
 
     // Route needs to exist
     // Take in the search text route param
     // Debounce the search
-    @ViewChild('videoForm', { static: true }) searchControl;
+    @ViewChild('searchForm', { static: true }) searchControl;
     throttleSearch: Subscription;
-    searchText: FormControl;
+    videoText: FormControl;
     options: FormGroup;
     fb: FormBuilder;
 
@@ -42,6 +44,7 @@ export class SearchCmp implements OnInit{
     // TODO: Make this a saner calculation
     public previewWidth = 480;
     public previewHeight = 480;
+    public screenWidth = 960;
     public maxVisible = 3; // How many results show horizontally
     public total = 0;
     public pageSize = 50;
@@ -61,13 +64,10 @@ export class SearchCmp implements OnInit{
         this.resetForm();
         this.route.queryParams.pipe().subscribe(
             (res: ParamMap) => {
-                let st = res['searchText'];
+                let st = res['videoText'];
                 let text = st !== undefined ? st : '';
-                console.log("Search text from url", text, res);
-                this.searchText.setValue(text);
-                if (text !== '') {
-                    this.search(text); 
-                }
+                this.videoText.setValue(text);
+                this.search(text); 
                 this.setupFilterEvts();
             }
         );
@@ -75,9 +75,9 @@ export class SearchCmp implements OnInit{
     }
 
     public resetForm(setupFilterEvents: boolean = false) {
-        this.searchText = new FormControl('');
+        this.videoText = new FormControl('');
         this.options = this.fb.group({
-            searchText: this.searchText,
+            videoText: this.videoText,
         });
         if (setupFilterEvents) {
             this.setupFilterEvts();
@@ -96,7 +96,7 @@ export class SearchCmp implements OnInit{
           )
           .subscribe(
               formData => {
-                  this.search(formData['searchText'] || '');
+                  this.search(formData['videoText'] || '');
               },
               error => {
                    console.error("failed to search, erro", error);
@@ -109,10 +109,10 @@ export class SearchCmp implements OnInit{
     }
 
     pageEvt(evt: PageEvent) {
-        console.log("Event", evt, this.searchText.value);
+        console.log("Event", evt, this.videoText.value);
         let offset = evt.pageIndex * evt.pageSize;
         let limit = evt.pageSize;
-        this.search(this.searchText.value, offset, limit);
+        this.search(this.videoText.value, offset, limit);
         // pageIndex, pageSize
     }
 
@@ -121,22 +121,22 @@ export class SearchCmp implements OnInit{
         // TODO: Wrap the media into a fake container
         this.media = [];
         this.loading = true;
-        this._contentedService.searchMedia(text, offset, limit).pipe(
+        this._contentedService.searchMedia(text, offset, limit, "video").pipe(
             finalize(() => this.loading = false)
         ).subscribe(
             (res) => {
-                let media = _.map((res['media'] || []), m => new Media(m));
+                let media = _.map(res['media'], m => new Media(m));
                 let total = res['total'] || 0;
                 
-                console.log("Search results", media, total);
                 this.media = media;
                 this.total = total;
             }, err => {
-                console.error("Failed to search", err);
+                console.error("Failed to search for video media.", err);
             }
         );
     }
 
+    // This will have to be updated to actually work
     public getVisibleSet() {
         return this.media;
     }
@@ -147,15 +147,24 @@ export class SearchCmp implements OnInit{
         let width = !window['jasmine'] ? window.innerWidth : 800;
         let height = !window['jasmine'] ? window.innerHeight : 800;
 
-        this.previewWidth = (width / 4) - 41;
+        this.previewWidth = width / 5;
         this.previewHeight = (height / this.maxVisible) - 41;
+
+        // screenHeight is just calculated on the component previewHeight * 2
+        this.screenWidth = width - this.previewWidth - 200;  // Fudge factor
     }
 
     public fullView(mc: Media) {
+        console.log("Full view", mc);
+        GlobalNavEvents.viewFullScreen(mc);
+    }
+
+    public screenEvt(evt) {
+        console.log("Screen Evt", evt);
         const dialogRef = this.dialog.open(
-            SearchDialog,
+            ScreenDialog,
             {
-                data: mc,
+                data: {screen: evt.screen, screens: evt.screens},
                 width: '90%',
                 height: '100%',
                 maxWidth: '100vw',
@@ -179,32 +188,35 @@ export class SearchCmp implements OnInit{
 
 // This just doesn't seem like a great approach :(
 @Component({
-    selector: 'search-dialog',
-    templateUrl: 'search_dialog.ng.html'
+    selector: 'screen-dialog',
+    templateUrl: 'screen_dialog.ng.html'
 })
-export class SearchDialog implements AfterViewInit {
+export class ScreenDialog implements AfterViewInit {
 
-    public mediaContainer: Media;
+    public screen: Screen;
+    public screens: Array<Screen>
 
     public forceHeight: number;
     public forceWidth: number;
     public sizeCalculated: boolean = false;
+    @ViewChild('ScreensContent', { static: true }) screenContent;
+    
+    constructor(
+        @Inject(MAT_DIALOG_DATA) public data,
+        public _service: ContentedService) {
 
-    @ViewChild('SearchContent', { static: true }) searchContent;
-
-    constructor(@Inject(MAT_DIALOG_DATA) public mc: Media, public _service: ContentedService) {
-        // console.log("Mass taker opened with items:", items);
-        this.mediaContainer = mc;
+        this.screen = data.screen;
+        this.screens = data.screens;
     }
 
     ngAfterViewInit() {
-        // TODO: Sizing content is a little off and the toolbars are visible based on dialog size
+        console.log("Search content is:", this.screenContent);
         setTimeout(() => {
-            let el = this.searchContent.nativeElement;
+            let el = this.screenContent.nativeElement;
             if (el) {
                 console.log("Element", el, el.offsetWidth, el.offsetHeight);
-                this.forceHeight = el.offsetHeight - 40;
-                this.forceWidth = el.offsetWidth - 40;
+                this.forceHeight = el.offsetHeight;
+                this.forceWidth = el.offsetWidth;
             }
             this.sizeCalculated = true;
         }, 100);

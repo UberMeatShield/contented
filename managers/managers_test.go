@@ -187,16 +187,16 @@ func (as *ActionSuite) Test_MemoryManagerSearch() {
 	as.NotNil(containers, "It should have containers")
 	as.Equal(len(*containers), internals.TOTAL_CONTAINERS, "Wrong number of containers found")
 
-	mcs, total, err := man.SearchMedia("donut", 1, 20, "")
+	mcs, total, err := man.SearchMedia("donut", 1, 20, "", "")
 	as.NoError(err, "Can we search in the memory manager")
 	as.Equal(len(*mcs), 1, "One donut should be found")
 	as.Equal(total, len(*mcs), "It should get the total right")
 
-	mcs_1, _, err_1 := man.SearchMedia("Large", 1, 6, "")
+	mcs_1, _, err_1 := man.SearchMedia("Large", 1, 6, "", "")
 	as.NoError(err_1, "Can we search in the memory manager")
 	as.Equal(3, len(*mcs_1), "One donut should be found")
 
-	all_mc, _, err_all := man.SearchMedia("", 0, 9000, "")
+	all_mc, _, err_all := man.SearchMedia("", 0, 9000, "", "")
 	as.NoError(err_all, "Can in search everything")
 	as.Equal(len(*all_mc), internals.TOTAL_MEDIA, "The Kitchen sink")
 }
@@ -210,7 +210,7 @@ func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
 
 	// Ensure we initialized with a known search
 	as.Equal(man.CanEdit(), false)
-	mcs, total, err := man.SearchMedia("donut", 1, 20, "")
+	mcs, total, err := man.SearchMedia("donut", 1, 20, "", "")
 	as.NoError(err, "Can we search in the memory manager")
 	as.Equal(len(*mcs), 1, "One donut should be found")
 	as.Equal(total, len(*mcs), "It should get the total right")
@@ -223,26 +223,35 @@ func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
 	as.Greater(len(*allMedia), 0, "We should have media")
 	as.NoError(errAll)
 
-	all_media, wild_total, _ := man.SearchMedia("", 0, 40, "")
+	all_media, wild_total, _ := man.SearchMedia("", 0, 40, "", "")
 	as.Greater(wild_total, 0)
 	as.Equal(len(*all_media), wild_total)
 
+	video_media, vid_total, _ := man.SearchMedia("", 0, 40, "", "video")
+    as.Equal(vid_total, 1)
+	as.Equal(len(*video_media), vid_total)
+    vs := *video_media
+    as.Equal(vs[0].Src, "donut.mp4")
+
 	for _, cnt := range *cnts {
 		if cnt.Name == "dir1" {
-			_, no_total, n_err := man.SearchMedia("donut", 1, 20, cnt.ID.String())
+			_, no_total, n_err := man.SearchMedia("donut", 1, 20, cnt.ID.String(), "")
 			as.NoError(n_err)
 			as.Equal(no_total, 0, "It should not be in this directory")
 		}
 		if cnt.Name == "dir2" {
-			yes_match, y_total, r_err := man.SearchMedia("donut", 1, 20, cnt.ID.String())
+			yes_match, y_total, r_err := man.SearchMedia("donut", 1, 20, cnt.ID.String(), "")
 			as.NoError(r_err)
 			as.Equal(y_total, 1, "We did not find the expected media")
 
 			movie := (*yes_match)[0]
 			as.Equal(movie.Src, "donut.mp4")
+
+            _, imgCount, _ := man.SearchMedia("", 0, 20, cnt.ID.String(), "image")
+            as.Equal(imgCount, 2, "It should filter out the donut this time")
 		}
 		if cnt.Name == "dir3" {
-			has_media, _, err := man.SearchMedia("", 0, 1, cnt.ID.String())
+			has_media, _, err := man.SearchMedia("", 0, 1, cnt.ID.String(), "")
 			as.NoError(err, "We should have media")
 			as.Greater(len(*has_media), 0)
 		}
@@ -256,24 +265,39 @@ func (as *ActionSuite) Test_DbManagerSearch() {
 	man := GetManagerActionSuite(cfg, as)
 	as.Equal(man.CanEdit(), true, "It should be a DB manager")
 
-	cnt, media := internals.GetMediaByDirName("dir1")
-	c_err := man.CreateContainer(cnt)
-	as.NoError(c_err)
-	for _, mc := range media {
+	cnt1, media1 := internals.GetMediaByDirName("dir1")
+	cnt2, media2 := internals.GetMediaByDirName("dir2")
+	c1_err := man.CreateContainer(cnt1)
+	as.NoError(c1_err)
+	c2_err := man.CreateContainer(cnt2)
+	as.NoError(c2_err)
+	for _, mc := range media1 {
 		man.CreateMedia(&mc)
 	}
-	mcs, _, err := man.SearchMedia("Large", 1, 20, "")
+	for _, mc := range media2 {
+		man.CreateMedia(&mc)
+	}
+	mcs, _, err := man.SearchMedia("Large", 1, 20, "", "")
 	as.NoError(err, "It should be able to search")
 	as.NotNil(mcs, "It should be")
 	as.Equal(3, len(*mcs), "We should have 3 large images with an ilike compare")
 
-	all_mcs, total, err := man.SearchMedia("", 1, 10, "")
+    _, vsTotal, vErr := man.SearchMedia("donut", 1, 10, "", "")
+	as.NoError(vErr, "Video error by name search failed")
+    as.Equal(1, vsTotal, "Should be able to find donut")
+
+	vids, vidTotal, dbErr := man.SearchMedia("", 1, 40, "", "video")
+	as.NoError(dbErr, "Should search content type")
+	as.Equal(1, vidTotal, "The total count for videos is 1")
+    as.Equal(1, len(*vids), "We should have one result")
+
+	all_mcs, total, err := man.SearchMedia("", 1, 10, cnt1.ID.String(), "")
 	as.NoError(err, "It should be able to empty search")
 	as.Equal(12, total, "The total count for this dir is 12")
 	as.Equal(10, len(*all_mcs), "But we limited the pagination")
 }
 
-func (as *ActionSuite) Test_DbManagerSearchMulti() {
+func (as *ActionSuite) Test_DbManagerMultiSearch() {
 	// Test that a search restricting containerID works
 	// Test that search restricting container and text works
 	models.DB.TruncateAll()
@@ -290,16 +314,16 @@ func (as *ActionSuite) Test_DbManagerSearchMulti() {
 	as.NoError(err2)
 	as.Greater(len(media2), 1)
 
-	found, count, err := man.SearchMedia(media1[1].Src, 0, 10, cnt1.ID.String())
+	found, count, err := man.SearchMedia(media1[1].Src, 0, 10, cnt1.ID.String(), "")
 	as.Equal(len(*found), 1, "We should have found our item")
 	as.Equal(count, 1)
 	as.NoError(err)
 
-	_, n_count, n_err := man.SearchMedia("blah", 0, 10, cnt1.ID.String())
+	_, n_count, n_err := man.SearchMedia("blah", 0, 10, cnt1.ID.String(), "")
 	as.Equal(n_count, 0, "It should not find this the media name is invalid")
 	as.NoError(n_err)
 
-	_, not_in_cnt_count, not_err := man.SearchMedia(media1[1].Src, 0, 10, cnt2.ID.String())
+	_, not_in_cnt_count, not_err := man.SearchMedia(media1[1].Src, 0, 10, cnt2.ID.String(), "")
 	as.Equal(not_in_cnt_count, 0, "It should not find this valid media as it is not in the container")
 	as.NoError(not_err)
 }

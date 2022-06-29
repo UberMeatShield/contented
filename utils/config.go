@@ -24,6 +24,8 @@ const Default bool = false
 const DefaultMaxSearchDepth int = 1
 const DefaultMaxMediaPerContainer int = 90001
 const DefaultExcludeEmptyContainers bool = true
+const DefeaultTotalScreens = 12
+const DefaultPreviewFirstScreenOffset = 5
 
 // Matchers that determine if you want to include specific filenames/content types
 type MediaMatcher func(string, string) bool
@@ -88,6 +90,8 @@ type DirConfigEntry struct {
 	PreviewScreensOverSize   int64  // Over a certain size video select filters are slow
 	PreviewVideoType         string // gif|screens|png are the video preview output type
 	PreviewCreateFailIsFatal bool   // If set creating an image or movie preview will hard fail
+    PreviewNumberOfScreens int  // How many screens should be created to make the preview?
+    PreviewFirstScreenOffset int // Seconds to skip before taking a screen (black screen / titles)
 
 	// Matchers that will determine which media elements to be included or excluded
 	IncMedia        MediaMatcher
@@ -125,8 +129,10 @@ func GetCfgDefaults() DirConfigEntry {
 		MaxMediaPerContainer:   DefaultMaxMediaPerContainer,
 		PreviewCount:           DefaultPreviewCount,
 		PreviewOverSize:        1024000,
-		PreviewScreensOverSize: 50 * 1024000,
 		PreviewVideoType:       "png",
+		PreviewScreensOverSize: 50 * 1024000,
+        PreviewNumberOfScreens: DefeaultTotalScreens,
+        PreviewFirstScreenOffset: DefaultPreviewFirstScreenOffset,
 
 		// Just grab all files by default
 		IncMedia:               IncludeAllFiles,
@@ -182,6 +188,9 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
 	previewType := envy.Get("PREVIEW_VIDEO_TYPE", "png")
 	previewFailIsFatal, prevErr := strconv.ParseBool(envy.Get("PREVIEW_CREATE_FAIL_IS_FATAL", "false"))
 
+    previewNumberOfScreens, totalScreenErr := strconv.Atoi(envy.Get("TOTAL_SCREENS", strconv.Itoa(DefeaultTotalScreens)))
+    previewFirstScreenOffset, offsetErr := strconv.Atoi(envy.Get("FIRST_SCREEN_OFFSET", strconv.Itoa(DefaultPreviewFirstScreenOffset)))
+
 	if err != nil {
 		panic(err)
 	} else if limErr != nil {
@@ -206,7 +215,13 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
 		panic(depthErr)
 	} else if emptyErr != nil {
 		panic(emptyErr)
-	}
+    } else if (totalScreenErr) != nil {
+        panic(totalScreenErr)
+    } else if (offsetErr) != nil {
+        panic(offsetErr)
+    }
+
+
 	if !(previewType == "png" || previewType == "gif" || previewType == "screens") {
 		panic(errors.New("The video preview type is not png or gif"))
 	}
@@ -221,6 +236,9 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
 	cfg.PreviewOverSize = psize
 	cfg.PreviewScreensOverSize = useSeekScreenSize
 	cfg.PreviewCreateFailIsFatal = previewFailIsFatal
+    cfg.PreviewNumberOfScreens = previewNumberOfScreens
+    cfg.PreviewFirstScreenOffset  = previewFirstScreenOffset 
+
 	cfg.IncludeOperator = envy.Get("INCLUDE_OPERATOR", "AND")
 	cfg.ExcludeOperator = envy.Get("EXCLUDE_OPERATOR", "AND")
 

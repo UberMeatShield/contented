@@ -12,8 +12,23 @@
     }
 }
 
+.video-view {
+    width: 100%;
+    display: flex;
+}
+
+.video-view-screens {
+    margin-top: 30px;
+}
+
+.media-screens {
+    display: flex;
+}
+
 .contented-view {
   margin-bottom: 2rem;
+  display: flex;
+  flex-wrap: wrap;
 }
 
 // Might want to make this different than the top level browse component
