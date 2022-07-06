@@ -3,6 +3,7 @@ import {finalize, debounceTime, map, distinctUntilChanged, catchError} from 'rxj
 
 import {
     OnInit,
+    OnDestroy,
     AfterViewInit,
     Component,
     EventEmitter,
@@ -15,7 +16,7 @@ import {
 import {ContentedService} from './contented_service';
 import {Media} from './media';
 import {Screen} from './screen';
-import {GlobalNavEvents} from './nav_events';
+import {GlobalNavEvents, NavTypes} from './nav_events';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 import {FormBuilder, NgForm, FormControl, FormGroup} from '@angular/forms';
 
@@ -28,7 +29,7 @@ import * as _ from 'lodash';
     selector: 'video-view-cmp',
     templateUrl: './video_view.ng.html'
 })
-export class VideoViewCmp implements OnInit{
+export class VideoViewCmp implements OnInit, OnDestroy {
 
     // Route needs to exist
     // Take in the search text route param
@@ -49,6 +50,7 @@ export class VideoViewCmp implements OnInit{
     public total = 0;
     public pageSize = 50;
     public loading: boolean = false;
+    public sub: Subscription;  // Listening for GlobalNavEvents
 
     constructor(
         public _contentedService: ContentedService,
@@ -62,6 +64,8 @@ export class VideoViewCmp implements OnInit{
 
     public ngOnInit() {
         this.resetForm();
+
+        // This should also preserve the current page we have selected and restore it.
         this.route.queryParams.pipe().subscribe(
             (res: ParamMap) => {
                 let st = res['videoText'];
@@ -71,8 +75,55 @@ export class VideoViewCmp implements OnInit{
                 this.setupFilterEvts();
             }
         );
+        this.setupEvtListener();
         this.calculateDimensions();
     }
+
+    ngOnDestroy() {
+         if (this.sub) {
+             this.sub.unsubscribe();
+         }
+     }
+ 
+     // This will listen to nav events.
+     public setupEvtListener() {
+         this.sub = GlobalNavEvents.navEvts.subscribe(evt => {
+             switch(evt.action) {
+                 case NavTypes.NEXT_MEDIA:
+                     this.next();
+                     break;
+                 case NavTypes.PREV_MEDIA:
+                     this.prev();
+                     break;
+                 case NavTypes.LOAD_MORE:
+                     // this.loadMore();
+                     // It might not be TOO abusive to override this and make it page next?
+                     break;
+                 case NavTypes.SELECT_MEDIA:
+                     // this.selectedMedia(evt.media, evt.cnt);
+                     break;
+                 case NavTypes.SELECT_CONTAINER:
+                     // this.selectContainer(evt.cnt);
+                     break;
+                 default:
+                     break;
+             }
+         });
+     }
+
+    public next() {
+        console.log("Next");
+        // It should have a jump to scroll location for the currently selected item
+    }
+
+    public prev() {
+        console.log("Previous");
+    }
+
+    public selectMedia(media: Media) {
+        console.log("Selected media", media);
+    }
+
 
     public resetForm(setupFilterEvents: boolean = false) {
         this.videoText = new FormControl('');
@@ -113,9 +164,10 @@ export class VideoViewCmp implements OnInit{
         let offset = evt.pageIndex * evt.pageSize;
         let limit = evt.pageSize;
         this.search(this.videoText.value, offset, limit);
-        // pageIndex, pageSize
     }
 
+
+    // TODO: Add in optional filter params like the container (filter by container in search?)
     public search(text: string, offset: number = 0, limit: number = 50) {
         console.log("Get the information from the input and search on it", text); 
         // TODO: Wrap the media into a fake container
