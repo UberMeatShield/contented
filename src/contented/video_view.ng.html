@@ -27,7 +27,7 @@
   <contented-view></contented-view>
 
   <div class="video-results" *ngIf="!!media">
-    <mat-card class="video-view-card" *ngFor="let mc of getVisibleSet()">
+    <mat-card id="view_media_{{mc.id}}" class="video-view-card" *ngFor="let mc of getVisibleSet()">
       <mat-card-title>{{mc.src}}</mat-card-title>
       <mat-card-content>
         <div class="video-view">

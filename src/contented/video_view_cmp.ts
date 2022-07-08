@@ -15,6 +15,7 @@ import {
 } from '@angular/core';
 import {ContentedService} from './contented_service';
 import {Media} from './media';
+import {Container} from './container';
 import {Screen} from './screen';
 import {GlobalNavEvents, NavTypes} from './nav_events';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
@@ -40,13 +41,14 @@ export class VideoViewCmp implements OnInit, OnDestroy {
     options: FormGroup;
     fb: FormBuilder;
 
+    public selectedMedia: Media;
     public media: Array<Media>;
 
     // TODO: Make this a saner calculation
     public previewWidth = 480;
     public previewHeight = 480;
     public screenWidth = 960;
-    public maxVisible = 3; // How many results show horizontally
+    public maxVisible = 3; // How many results show vertically
     public total = 0;
     public pageSize = 50;
     public loading: boolean = false;
@@ -100,7 +102,7 @@ export class VideoViewCmp implements OnInit, OnDestroy {
                      // It might not be TOO abusive to override this and make it page next?
                      break;
                  case NavTypes.SELECT_MEDIA:
-                     // this.selectedMedia(evt.media, evt.cnt);
+                     this.selectMedia(evt.media, evt.cnt);
                      break;
                  case NavTypes.SELECT_CONTAINER:
                      // this.selectContainer(evt.cnt);
@@ -112,16 +114,43 @@ export class VideoViewCmp implements OnInit, OnDestroy {
      }
 
     public next() {
-        console.log("Next");
         // It should have a jump to scroll location for the currently selected item
+        console.log("Video next");
+        if (this.selectedMedia && this.media) {
+            let idx = _.findIndex(this.media, {id: this.selectedMedia.id});
+            if ((idx + 1) < this.media.length) {
+                let m = this.media[idx+1];
+                GlobalNavEvents.selectMedia(m, new Container({id: m.container_id}));
+            }
+        }
+        // TOTAL / current page info
     }
 
     public prev() {
-        console.log("Previous");
+        console.log("Video prev");
+        if (this.selectedMedia && this.media) {
+            let idx = _.findIndex(this.media, {id: this.selectedMedia.id});
+            if ((idx - 1) > 0) {
+                let m = this.media[idx-1];
+                GlobalNavEvents.selectMedia(m, new Container({id: m.container_id}));
+            }
+        }
+        // TOTAL / current page info - page search
     }
 
-    public selectMedia(media: Media) {
+    public selectMedia(media: Media, container: Container) {
         console.log("Selected media", media);
+        this.selectedMedia = media;
+        _.delay(() => {
+             let id = `view_media_${media.id}`;
+             let el = document.getElementById(id)
+
+             if (el) {
+                 el.scrollIntoView(true);
+                 window.scrollBy(0, -30);
+             }
+         }, 20);
+
     }
 
 
@@ -170,7 +199,8 @@ export class VideoViewCmp implements OnInit, OnDestroy {
     // TODO: Add in optional filter params like the container (filter by container in search?)
     public search(text: string, offset: number = 0, limit: number = 50) {
         console.log("Get the information from the input and search on it", text); 
-        // TODO: Wrap the media into a fake container
+
+        this.selectedMedia = null;
         this.media = [];
         this.loading = true;
         this._contentedService.searchMedia(text, offset, limit, "video").pipe(
@@ -182,6 +212,10 @@ export class VideoViewCmp implements OnInit, OnDestroy {
                 
                 this.media = media;
                 this.total = total;
+
+                if (media && media.length) {
+                    GlobalNavEvents.selectMedia(media, new Container({id: media.container_id}));
+                }
             }, err => {
                 console.error("Failed to search for video media.", err);
             }

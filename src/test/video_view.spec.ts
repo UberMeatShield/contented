@@ -92,6 +92,7 @@ describe('TestingVideoViewCmp', () => {
         let screenUrl = ApiDef.contented.mediaScreens.replace("{mcID}", mcId);
         let screenReq = httpMock.expectOne(req => req.url == screenUrl);
         screenReq.flush(MockData.getScreens());
+        tick(100);
     }));
 });
 
