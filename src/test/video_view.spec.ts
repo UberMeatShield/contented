@@ -73,10 +73,8 @@ describe('TestingVideoViewCmp', () => {
         let st = "Cthulhu";
         router.navigate(["/ui/video/"], {queryParams: {videoText: st}}); 
         tick(100);
-        console.log("navigate is done");
         fixture.detectChanges();
         let vals = comp.getValues();
-        console.log(vals);
         tick(100);
         expect(vals['videoText']).toBe(st, "It should default via route params");
 
@@ -87,11 +85,26 @@ describe('TestingVideoViewCmp', () => {
         req.flush(sr);
         fixture.detectChanges();
         expect($('.video-view-card').length).toEqual(sr['media'].length);
+        tick(100);
+    }));
 
-        let mcId = sr.media[0].id;
-        let screenUrl = ApiDef.contented.mediaScreens.replace("{mcID}", mcId);
-        let screenReq = httpMock.expectOne(req => req.url == screenUrl);
-        screenReq.flush(MockData.getScreens());
+    it("Will load up screens if they are not provided", fakeAsync(() => {
+        let vRes = MockData.getVideos()
+        _.each(vRes.media, v => {
+            v.screens = null;
+        });
+
+        fixture.detectChanges();
+        let req = httpMock.expectOne(req => req.url === ApiDef.contented.search);
+        req.flush(vRes);
+        fixture.detectChanges();
+        tick(100);
+
+        _.each(vRes.media, mc => {
+            let screenUrl = ApiDef.contented.mediaScreens.replace("{mcID}", mc.id);
+            let screenReq = httpMock.expectOne(req => req.url == screenUrl);
+            screenReq.flush(MockData.getScreens());
+        });
         tick(100);
     }));
 });

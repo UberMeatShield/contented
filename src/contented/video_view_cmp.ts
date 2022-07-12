@@ -50,6 +50,7 @@ export class VideoViewCmp implements OnInit, OnDestroy {
     public screenWidth = 960;
     public maxVisible = 3; // How many results show vertically
     public total = 0;
+    public offset = 0; // Tracking where we are in the position
     public pageSize = 50;
     public loading: boolean = false;
     public sub: Subscription;  // Listening for GlobalNavEvents
@@ -73,7 +74,7 @@ export class VideoViewCmp implements OnInit, OnDestroy {
                 let st = res['videoText'];
                 let text = st !== undefined ? st : '';
                 this.videoText.setValue(text);
-                this.search(text); 
+                this.search(text, this.offset, this.pageSize); 
                 this.setupFilterEvts();
             }
         );
@@ -115,31 +116,34 @@ export class VideoViewCmp implements OnInit, OnDestroy {
 
     public next() {
         // It should have a jump to scroll location for the currently selected item
-        console.log("Video next");
         if (this.selectedMedia && this.media) {
             let idx = _.findIndex(this.media, {id: this.selectedMedia.id});
             if ((idx + 1) < this.media.length) {
                 let m = this.media[idx+1];
-                GlobalNavEvents.selectMedia(m, new Container({id: m.container_id}));
+                if (m.id != this.selectedMedia.id) {
+                    GlobalNavEvents.selectMedia(m, new Container({id: m.container_id}));
+                }       
+            } else if ((this.offset + this.pageSize) < this.total) {
+                this.search(this.videoText.value, (this.offset + this.pageSize), this.pageSize);
             }
         }
-        // TOTAL / current page info
     }
 
     public prev() {
-        console.log("Video prev");
         if (this.selectedMedia && this.media) {
             let idx = _.findIndex(this.media, {id: this.selectedMedia.id});
-            if ((idx - 1) > 0) {
+            if ((idx - 1) >= 0) {
                 let m = this.media[idx-1];
-                GlobalNavEvents.selectMedia(m, new Container({id: m.container_id}));
+                if (m.id != this.selectedMedia.id) {
+                    GlobalNavEvents.selectMedia(m, new Container({id: m.container_id}));
+                }
+            } else if ((this.offset - this.pageSize) >= 0) {
+                this.search(this.videoText.value, (this.offset - this.pageSize), this.pageSize);
             }
         }
-        // TOTAL / current page info - page search
     }
 
     public selectMedia(media: Media, container: Container) {
-        console.log("Selected media", media);
         this.selectedMedia = media;
         _.delay(() => {
              let id = `view_media_${media.id}`;
@@ -198,7 +202,7 @@ export class VideoViewCmp implements OnInit, OnDestroy {
 
     // TODO: Add in optional filter params like the container (filter by container in search?)
     public search(text: string, offset: number = 0, limit: number = 50) {
-        console.log("Get the information from the input and search on it", text); 
+        console.log("Get the information from the input and search on it", text, offset, limit); 
 
         this.selectedMedia = null;
         this.media = [];
@@ -210,11 +214,12 @@ export class VideoViewCmp implements OnInit, OnDestroy {
                 let media = _.map(res['media'], m => new Media(m));
                 let total = res['total'] || 0;
                 
+                this.offset = offset;
                 this.media = media;
                 this.total = total;
 
-                if (media && media.length) {
-                    GlobalNavEvents.selectMedia(media, new Container({id: media.container_id}));
+                if (media && media.length > 0) {
+                    GlobalNavEvents.selectMedia(media[0], new Container({id: media.container_id}));
                 }
             }, err => {
                 console.error("Failed to search for video media.", err);

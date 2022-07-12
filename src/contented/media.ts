@@ -1,5 +1,6 @@
 import * as _ from 'lodash';
 import {ApiDef} from './api_def';
+import {Screen} from './screen';
 
 export class Media {
     public id: string;
@@ -14,6 +15,7 @@ export class Media {
 
     public previewUrl: string;
     public fullUrl: string;
+    public screens: Array<Screen>;
 
     constructor(obj: any = {}) {
         this.fromJson(obj);
@@ -23,6 +25,8 @@ export class Media {
         if (raw) {
             Object.assign(this, raw);
             this.links();
+            this.screens = _.map(raw.screens, s => new Screen(s));
+            console.log("We have screens", this.screens);
         }
     }
 

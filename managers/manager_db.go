@@ -127,6 +127,7 @@ func (cm ContentManagerDB) SearchMedia(search string, page int, per_page int, cI
 	count, _ := q.Count(&models.MediaContainers{})
 	log.Printf("Total count of search media %d using search (%s) and contentType (%s)", count, search, contentType) 
 
+    // TODO: should grab all the screens associated with any media components
 	if q_err := q.All(mediaContainers); q_err != nil {
 		return mediaContainers, count, q_err
 	}
