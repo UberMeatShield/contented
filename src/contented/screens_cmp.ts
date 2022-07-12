@@ -37,13 +37,19 @@ export class ScreensCmp implements OnInit {
     }
 
     public ngOnInit() {
+        if (!_.isEmpty(this.screens)) {
+            _.delay(() => {
+                this.calculateDimensions();
+            });
+            return;
+        }
+
         if (this.mediaId) {
             this.loading = true;
             this._contentedService.getScreens(this.mediaId).pipe(
                 finalize(() => { this.loading = false; })
             ).subscribe(
                 (screens: Array<Screen>) => {
-                    console.log("No screens", screens);
                     this.screens = screens;
                     this.calculateDimensions();
                 }, err => {

@@ -21,7 +21,7 @@ class MockLoader {
     }
 
     public getVideos() {
-        return _.clone(require('./video_view.json'));
+        return _.cloneDeep(require('./video_view.json'));
     }
 
     public getScreens() {

@@ -1,5 +1,8 @@
 <div class="video-view-cmp">
+
+  <!-- Add in the full list of containers and allow for selection events. -->
   <contented-nav [loading]="loading"></contented-nav>
+
   <form #videoForm [formGroup]="options">
     <mat-form-field apperance="fill" floatLabel="true" class="search-field">
       <mat-label>
@@ -24,9 +27,10 @@
   <contented-view></contented-view>
 
   <div class="video-results" *ngIf="!!media">
-    <mat-card class="video-view-card" *ngFor="let mc of getVisibleSet()">
+    <mat-card id="view_media_{{mc.id}}" class="video-view-card" *ngFor="let mc of getVisibleSet()">
       <mat-card-title>{{mc.src}}</mat-card-title>
-      <mat-card-content>
+      <mat-card-content [class.selected-video]="selectedMedia?.id == mc.id">
+            
         <div class="video-view">
           <div class="preview-content video-result video-view"
             [class.video-overlay]="mc?.content_type?.match('video')"
@@ -39,6 +43,7 @@
           <div class="video-view-screens">
             <screens-cmp 
               [mediaId]="mc.id"
+              [screens]="mc.screens"
               [containerWidth]="screenWidth"
               [containerHeight]="2 * previewHeight"
               (clickedItem)="screenEvt($event)"
