@@ -26,7 +26,6 @@ export class Media {
             Object.assign(this, raw);
             this.links();
             this.screens = _.map(raw.screens, s => new Screen(s));
-            console.log("We have screens", this.screens);
         }
     }
 
