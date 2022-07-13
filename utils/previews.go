@@ -315,7 +315,11 @@ func CreateSelectFilterScreens(srcFile string, dstFile string) (string, error) {
     if err != nil {
         log.Printf("Error creating screens for %s err: %s", srcFile, err)
     }
-    log.Printf("Total time was %f with %d as the fps", totalTime, fps)
+    msg := fmt.Sprintf("%s Total time was %f with %d as the fps", srcFile, totalTime, fps)
+    log.Printf(msg)
+    if int(fps) == 0 || int(totalTime) == 0 {
+        return "", errors.New(msg + " Invalid duration or fps")
+    }
 
     frameNum := (int(totalTime) * fps) / 10
     screensDst := GetScreensOutputPattern(dstFile)
@@ -336,7 +340,11 @@ func CreateSeekScreens(srcFile string, dstFile string) ([]string, error, string)
     if err != nil {
         log.Printf("Error creating screens for %s err: %s", srcFile, err)
     }
-    log.Printf("Total time was %f with %d as the fps", totalTime, fps)
+    msg := fmt.Sprintf("%s Total time was %f with %d as the fps", srcFile, totalTime, fps)
+    log.Printf(msg)
+    if int(fps) == 0 || int(totalTime) == 0 {
+        return []string{}, errors.New(msg + " Invalid duration or fps"), "" 
+    }
 
     // This is ugly enough that maybe it should be a method small files cause
     // surprising numbers of problems.
@@ -601,8 +609,6 @@ func GetPotentialScreens(c *models.Container) (*[]os.FileInfo, error) {
         log.Printf("Couldn't list for path %s err %s", previewPath, err)
         return nil, err
     }
-    // This is REALLY slow so I should probably cache the files and cut it into
-    // a more sensible lookup in memory.  Maybe not even FileInfo
     maybeScreens := []os.FileInfo{}
     for _, fRef := range dirEntries {
         if !fRef.IsDir() {  // Quick check to ensure screens is in the filename?
