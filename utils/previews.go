@@ -342,7 +342,7 @@ func CreateSeekScreens(srcFile string, dstFile string) ([]string, error, string)
     }
     msg := fmt.Sprintf("%s Total time was %f with %d as the fps", srcFile, totalTime, fps)
     log.Printf(msg)
-    if int(fps) == 0 || int(totalTime) == 0 {
+    if int(totalTime) == 0 {
         return []string{}, errors.New(msg + " Invalid duration or fps"), "" 
     }
 
@@ -360,8 +360,6 @@ func CreateSeekScreens(srcFile string, dstFile string) ([]string, error, string)
         frameOffset = 0
     } 
     timeSkip := int(totalScreenTime) / totalScreens
-
-    log.Printf("Total time was %f with %d as the fps", totalTime, fps)
     log.Printf("Setting up screens (%d) with timeSkip (%d)", totalScreens, timeSkip)
 
     screenFiles := []string{}
