@@ -13,6 +13,7 @@ import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import {MatToolbarModule} from '@angular/material/toolbar';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatAutocompleteModule} from '@angular/material/autocomplete';
+import {MatIconModule} from '@angular/material/icon';
 
 import {ContentedCmp} from './contented_cmp';
 import {ContentedNavCmp} from './contented_nav_cmp';
@@ -40,6 +41,7 @@ import {Screen} from './screen';
       MatDialogModule,
       MatFormFieldModule,
       MatInputModule,
+      MatIconModule,
       MatPaginatorModule,
       MatRippleModule,
       MatProgressSpinnerModule,

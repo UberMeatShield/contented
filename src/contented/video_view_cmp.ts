@@ -41,8 +41,10 @@ export class VideoViewCmp implements OnInit, OnDestroy {
     options: FormGroup;
     fb: FormBuilder;
 
-    public selectedMedia: Media;
+    public selectedMedia: Media; // For keeping track of where we are in the page
+    public selectedContainer: Container;  // For filtering
     public media: Array<Media>;
+    public containers: Array<Container>;
 
     // TODO: Make this a saner calculation
     public previewWidth = 480;
@@ -73,9 +75,13 @@ export class VideoViewCmp implements OnInit, OnDestroy {
             (res: ParamMap) => {
                 let st = res['videoText'];
                 let text = st !== undefined ? st : '';
+
+                // Add in a param for container_id ?
+
                 this.videoText.setValue(text);
-                this.search(text, this.offset, this.pageSize); 
+                this.search(text, this.offset, this.pageSize, this.getCntId()); 
                 this.setupFilterEvts();
+                this.loadContainers();
             }
         );
         this.setupEvtListener();
@@ -87,6 +93,14 @@ export class VideoViewCmp implements OnInit, OnDestroy {
              this.sub.unsubscribe();
          }
      }
+
+    public loadContainers() {
+        this._contentedService.getContainers().subscribe(
+            (cnts: Array<Container>) => {
+               this.containers = cnts; 
+            }
+        );
+    }
  
      // This will listen to nav events.
      public setupEvtListener() {
@@ -98,6 +112,10 @@ export class VideoViewCmp implements OnInit, OnDestroy {
                  case NavTypes.PREV_MEDIA:
                      this.prev();
                      break;
+                 case NavTypes.HIDE_FULLSCREEN:
+                     // Scroll back into view
+                     this.selectMedia(this.selectedMedia, this.selectedContainer);
+                     break;
                  case NavTypes.LOAD_MORE:
                      // this.loadMore();
                      // It might not be TOO abusive to override this and make it page next?
@@ -106,13 +124,22 @@ export class VideoViewCmp implements OnInit, OnDestroy {
                      this.selectMedia(evt.media, evt.cnt);
                      break;
                  case NavTypes.SELECT_CONTAINER:
-                     // this.selectContainer(evt.cnt);
+                     this.selectContainer(evt.cnt);
                      break;
                  default:
                      break;
              }
          });
      }
+
+    public selectContainer(cnt: Container) {
+        let offset = this.offset;
+        if (_.get(cnt, 'id') != _.get(this.selectedContainer, 'id')) {
+            this.offset = 0;
+        }
+        this.selectedContainer = cnt;
+        this.search(this.videoText.value, this.offset, this.pageSize, this.getCntId());
+    }
 
     public next() {
         // It should have a jump to scroll location for the currently selected item
@@ -124,7 +151,7 @@ export class VideoViewCmp implements OnInit, OnDestroy {
                     GlobalNavEvents.selectMedia(m, new Container({id: m.container_id}));
                 }       
             } else if ((this.offset + this.pageSize) < this.total) {
-                this.search(this.videoText.value, (this.offset + this.pageSize), this.pageSize);
+                this.search(this.videoText.value, (this.offset + this.pageSize), this.pageSize, this.getCntId());
             }
         }
     }
@@ -138,7 +165,7 @@ export class VideoViewCmp implements OnInit, OnDestroy {
                     GlobalNavEvents.selectMedia(m, new Container({id: m.container_id}));
                 }
             } else if ((this.offset - this.pageSize) >= 0) {
-                this.search(this.videoText.value, (this.offset - this.pageSize), this.pageSize);
+                this.search(this.videoText.value, (this.offset - this.pageSize), this.pageSize, this.getCntId());
             }
         }
     }
@@ -180,7 +207,8 @@ export class VideoViewCmp implements OnInit, OnDestroy {
           )
           .subscribe(
               formData => {
-                  this.search(formData['videoText'] || '');
+                  // If the text changes do we reset the search offset etc.
+                  this.search(formData['videoText'] || '', 0, this.pageSize, this.getCntId());
               },
               error => {
                    console.error("failed to search, erro", error);
@@ -196,18 +224,22 @@ export class VideoViewCmp implements OnInit, OnDestroy {
         console.log("Event", evt, this.videoText.value);
         let offset = evt.pageIndex * evt.pageSize;
         let limit = evt.pageSize;
-        this.search(this.videoText.value, offset, limit);
+        this.search(this.videoText.value, offset, limit, this.getCntId());
+    }
+
+    public getCntId() {
+        return !!this.selectedContainer ? this.selectedContainer.id : null;
     }
 
 
     // TODO: Add in optional filter params like the container (filter by container in search?)
-    public search(text: string, offset: number = 0, limit: number = 50) {
-        console.log("Get the information from the input and search on it", text, offset, limit); 
+    public search(text: string, offset: number = 0, limit: number = 50, cntId: string = null) {
+        console.log("Get the information from the input and search on it", text, offset, limit, cntId); 
 
         this.selectedMedia = null;
         this.media = [];
         this.loading = true;
-        this._contentedService.searchMedia(text, offset, limit, "video").pipe(
+        this._contentedService.searchMedia(text, offset, limit, "video", cntId).pipe(
             finalize(() => this.loading = false)
         ).subscribe(
             (res) => {

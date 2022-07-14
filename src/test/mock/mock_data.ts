@@ -64,14 +64,19 @@ class MockLoader {
     }
 
     public handleCmpDefaultLoad(httpMock, fixture = null) {
-         let containers = this.getPreview();
-         let containersReq = httpMock.expectOne(req => req.url === ApiDef.contented.containers);
-         containersReq.flush(containers);
+        let containers = this.handleContainerLoad(httpMock)
 
         if (fixture) {
             fixture.detectChanges();
             this.handleContainerMediaLoad(httpMock, containers);
         }
+    }
+
+    public handleContainerLoad(httpMock) {
+        let containers = this.getPreview();
+        let containersReq = httpMock.expectOne(req => req.url === ApiDef.contented.containers);
+        containersReq.flush(containers);
+        return containers;
     }
 
     public handleContainerMediaLoad(httpMock, cnts: Array<Container>, count = 2) {

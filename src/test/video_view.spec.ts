@@ -78,6 +78,8 @@ describe('TestingVideoViewCmp', () => {
         tick(100);
         expect(vals['videoText']).toBe(st, "It should default via route params");
 
+        MockData.handleContainerLoad(httpMock);
+
         let req = httpMock.expectOne(req => req.url === ApiDef.contented.search);
         let sr = MockData.getVideos()
 
@@ -95,6 +97,7 @@ describe('TestingVideoViewCmp', () => {
         });
 
         fixture.detectChanges();
+        MockData.handleContainerLoad(httpMock);
         let req = httpMock.expectOne(req => req.url === ApiDef.contented.search);
         req.flush(vRes);
         fixture.detectChanges();
