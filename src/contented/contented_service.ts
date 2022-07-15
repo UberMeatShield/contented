@@ -155,11 +155,14 @@ export class ContentedService {
         }
     }
 
-    public searchMedia(text: string, offset: number = 0, limit: number = 0, contentType: string = "") {
+    public searchMedia(text: string, offset: number = 0, limit: number = 0, contentType: string = "", cId: string = "") {
         let params = this.getPaginationParams(offset, limit);
         params = params.set("text", text);
         if (contentType) {
             params = params.set("contentType", contentType);
+        }
+        if (cId) {
+            params = params.set("cID", cId);
         }
         return this.http.get(ApiDef.contented.search, {
             params: params

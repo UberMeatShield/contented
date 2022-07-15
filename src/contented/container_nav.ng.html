@@ -30,7 +30,7 @@
           of <span class="cnt-total">{{cnt?.total}}</span> media
           <span *ngIf="cnt?.contents?.length < cnt.total">
             press (F) or: 
-            <button class="btn btn-primary btn-full-load-ctn" (click)="fullLoadContainer(cnt)">
+            <button class="btn-full-load-ctn" (click)="fullLoadContainer(cnt)">
               Load ({{ cnt.total - cnt.count }}) Items
             </button>
           </span>
