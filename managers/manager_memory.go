@@ -113,7 +113,6 @@ func (cm ContentManagerMemory) SearchMedia(search string, page int, per_page int
 		return &empty, 0, nil
 	}
 
-	// HMMMM
 	mc_arr := *filteredMedia
 	count := len(mc_arr)
 	offset, end := GetOffsetEnd(page, per_page, count)

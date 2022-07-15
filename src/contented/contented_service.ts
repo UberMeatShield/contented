@@ -162,7 +162,7 @@ export class ContentedService {
             params = params.set("contentType", contentType);
         }
         if (cId) {
-            params = params.set("cId", cId);
+            params = params.set("cID", cId);
         }
         return this.http.get(ApiDef.contented.search, {
             params: params
