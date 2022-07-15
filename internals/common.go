@@ -24,7 +24,7 @@ import (
 )
 
 const TOTAL_CONTAINERS = 5
-const TOTAL_MEDIA = 29
+const TOTAL_MEDIA = 31
 
 // Helper for a common block of video test code (duplicated in the utils test)
 func Get_VideoAndSetupPaths() (string, string, string) {
@@ -87,10 +87,12 @@ func GetContextParams(app *buffalo.App, url string, page string, per_page string
 // TODO validate octet/stream
 func IsValidContentType(content_type string) error {
 	valid := map[string]bool{
-		"image/png":                true,
-		"image/jpeg":               true,
+		"image/png": true,
+		"image/jpeg": true,
+        "image/gif": true,
+        "image/webp": true,
 		"application/octet-stream": true,
-		"video/mp4":                true,
+		"video/mp4": true,
 	}
 	if valid[content_type] {
 		return nil
