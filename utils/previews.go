@@ -557,7 +557,7 @@ func CreateMediaPreview(c *models.Container, mc *models.MediaContainer) (string,
     dstFqPath, err := GetImagePreview(cntPath, mc.Src, dstPath, cfg.PreviewOverSize)
     if err != nil {
         log.Printf("Failed to create a preview in %s for mc %s err: %s", dstPath, mc.ID.String(), err)
-        if cfg.PreviewCreateFailIsFatal {
+        if (cfg.PreviewCreateFailIsFatal) {
             log.Fatal(err)
         }
     }
