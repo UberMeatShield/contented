@@ -129,14 +129,27 @@ func (cm ContentManagerDB) SearchMedia(search string, page int, per_page int, cI
 	count, _ := q.Count(&models.MediaContainers{})
 	log.Printf("Total count of search media %d using search (%s) and contentType (%s)", count, search, contentType) 
 
-    // TODO: should grab all the screens associated with any media components
 	if q_err := q.All(mediaContainers); q_err != nil {
 		return mediaContainers, count, q_err
 	}
-	return mediaContainers, count, nil
+    // Now need to get any screens and associate them in a lookup
+    screenMap, s_err := cm.LoadRelatedScreens(mediaContainers)
+    mediaWithScreens := models.MediaContainers{}
+    if s_err == nil {
+        for _, mcPt := range *mediaContainers {
+            mc := mcPt
+            if _, ok := screenMap[mc.ID]; ok {
+                mc.Screens = screenMap[mc.ID]
+                mediaWithScreens = append(mediaWithScreens, mc)
+            } else {
+                mediaWithScreens = append(mediaWithScreens, mc)
+            }
+        }
+    }
+	return &mediaWithScreens, count, nil
 }
 
-func (cm ContentManagerDB) LoadRelatedScreens(media *models.MediaContainers) (*models.PreviewScreens, error) {
+func (cm ContentManagerDB) LoadRelatedScreens(media *models.MediaContainers) (models.PreviewScreenCollection, error) {
     if media == nil || len(*media) == 0{
         return nil, nil
     }
@@ -156,7 +169,18 @@ func (cm ContentManagerDB) LoadRelatedScreens(media *models.MediaContainers) (*m
         log.Printf("Error loading video screens %s", q_err)
         return nil, q_err
     }
-	return screens, nil
+
+    screenMap := models.PreviewScreenCollection{}
+    for _, screen := range *screens {
+        log.Printf("Found screen for %s", screen.MediaID.String())
+        if _, ok := screenMap[screen.MediaID]; ok {
+            screenMap[screen.MediaID] = append(screenMap[screen.MediaID], screen)
+            log.Printf("Screen count %s %s", screen.MediaID, screenMap[screen.MediaID])
+        } else {
+            screenMap[screen.MediaID] = models.PreviewScreens{screen}
+        }
+    }
+	return screenMap, nil
 }
 
 

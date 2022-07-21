@@ -15,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+    "fmt"
 )
 
 var expect_len = map[string]int{
@@ -274,17 +275,24 @@ func (as *ActionSuite) Test_DbManagerSearch() {
 	for _, mc := range media1 {
 		man.CreateMedia(&mc)
 	}
+    // hate
 	for _, mc := range media2 {
 		man.CreateMedia(&mc)
+        if mc.Src == "donut.mp4" {
+            man.CreateScreen(&models.PreviewScreen{MediaID: mc.ID, Src: "screen1"})
+            man.CreateScreen(&models.PreviewScreen{MediaID: mc.ID, Src: "screen2"})
+        }
 	}
 	mcs, _, err := man.SearchMedia("Large", 1, 20, "", "")
 	as.NoError(err, "It should be able to search")
 	as.NotNil(mcs, "It should be")
-	as.Equal(3, len(*mcs), "We should have 3 large images with an ilike compare")
+	as.Equal(3, len(*mcs), fmt.Sprintf("We should have 3 large images with an ilike %s", mcs))
 
-    _, vsTotal, vErr := man.SearchMedia("donut", 1, 10, "", "")
+    mcs_d, vsTotal, vErr := man.SearchMedia("donut", 1, 10, "", "")
 	as.NoError(vErr, "Video error by name search failed")
-    as.Equal(1, vsTotal, "Should be able to find donut")
+    as.Equal(1, vsTotal, "We should be able to find donut.mp4 with an ilike")
+    mc_donut := (*mcs_d)[0]
+    as.Equal(2, len(mc_donut.Screens), fmt.Sprintf("It should load two screens %s", mc_donut.Screens))
 
 	vids, vidTotal, dbErr := man.SearchMedia("", 1, 40, "", "video")
 	as.NoError(dbErr, "Should search content type")
@@ -447,14 +455,17 @@ func (as *ActionSuite) Test_ManagerDBSearchScreens() {
     mc2 := models.MediaContainer{Src: "2", Preview: "none", ContentType: "video/mp4",}
     mc3 := models.MediaContainer{Src: "3", Preview: "none", ContentType: "video/mp4",}
     mc4 := models.MediaContainer{Src: "4", Preview: "none", ContentType: "image/png",}
+    mc5 := models.MediaContainer{Src: "No Previews", Preview: "none", ContentType: "video/mp4",}
     man.CreateMedia(&mc1)
     man.CreateMedia(&mc2)
     man.CreateMedia(&mc3)
+    man.CreateMedia(&mc4)
+    man.CreateMedia(&mc5)
 
     p1 := models.PreviewScreen{Src: "fake1.screen", Idx: 1, MediaID: mc1.ID,}
     p2 := models.PreviewScreen{Src: "fake2.screen", Idx: 1, MediaID: mc2.ID,}
-    p3 := models.PreviewScreen{Src: "fake3.screen", Idx: 1, MediaID: mc3.ID,}
-    p4 := models.PreviewScreen{Src: "fake3.screen", Idx: 1, MediaID: mc3.ID,}
+    p3 := models.PreviewScreen{Src: "fake3.screen1", Idx: 1, MediaID: mc3.ID,}
+    p4 := models.PreviewScreen{Src: "fake3.screen2", Idx: 1, MediaID: mc3.ID,}
     p5 := models.PreviewScreen{Src: "ShouldNotLoadMediaIsImage", Idx: 1, MediaID: mc4.ID,}
     man.CreateScreen(&p1)
     man.CreateScreen(&p2)
@@ -462,17 +473,21 @@ func (as *ActionSuite) Test_ManagerDBSearchScreens() {
     man.CreateScreen(&p4)
     man.CreateScreen(&p5)
 
-    media := models.MediaContainers{mc1, mc3}
+    // Intentionally exclude mc2 to ensure we get some screens, include one with no screens
+    media := models.MediaContainers{mc1, mc3, mc4, mc5}
     screens, s_err := man.LoadRelatedScreens(&media)
     as.NoError(s_err, "It shouldn't error out")
     as.NotNil(screens, "No screens were returned")
-    as.Equal(3, len(*screens), "It should load all the screens")
+    as.Equal(2, len(screens), "It should load all the screens but only two of these have screens")
+
+    as.Equal(1, len(screens[mc1.ID]), "MC1 has 1 screen")
+    as.Equal(2, len(screens[mc3.ID]), "MC3 has 2 screens")
 
     // Test that an image will not load previews
     media_2 := models.MediaContainers{mc2, mc4}
     screens_2, s2_err := man.LoadRelatedScreens(&media_2)
     as.NoError(s2_err, "It shouldn't error out")
-    as.Equal(1, len(*screens_2), "It should load all the screens for mc2 but EXCLUDE mc4")
+    as.Equal(1, len(screens_2), "It should load all the screens for mc2 but EXCLUDE mc4")
 }
 
 func (as *ActionSuite) Test_ManagerMemoryScreens() {
