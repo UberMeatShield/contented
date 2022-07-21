@@ -4,13 +4,15 @@
 package managers
 
 import (
+	"log"
+    "strings"
+	"net/url"
 	"contented/models"
 	"contented/utils"
+    "github.com/lib/pq"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
-	"log"
-	"net/url"
 )
 
 // DB version of content management
@@ -127,12 +129,60 @@ func (cm ContentManagerDB) SearchMedia(search string, page int, per_page int, cI
 	count, _ := q.Count(&models.MediaContainers{})
 	log.Printf("Total count of search media %d using search (%s) and contentType (%s)", count, search, contentType) 
 
-    // TODO: should grab all the screens associated with any media components
 	if q_err := q.All(mediaContainers); q_err != nil {
 		return mediaContainers, count, q_err
 	}
-	return mediaContainers, count, nil
+    // Now need to get any screens and associate them in a lookup
+    screenMap, s_err := cm.LoadRelatedScreens(mediaContainers)
+    mediaWithScreens := models.MediaContainers{}
+    if s_err == nil {
+        for _, mcPt := range *mediaContainers {
+            mc := mcPt
+            if _, ok := screenMap[mc.ID]; ok {
+                mc.Screens = screenMap[mc.ID]
+                mediaWithScreens = append(mediaWithScreens, mc)
+            } else {
+                mediaWithScreens = append(mediaWithScreens, mc)
+            }
+        }
+    }
+	return &mediaWithScreens, count, nil
 }
+
+func (cm ContentManagerDB) LoadRelatedScreens(media *models.MediaContainers) (models.PreviewScreenCollection, error) {
+    if media == nil || len(*media) == 0{
+        return nil, nil
+    }
+    videoIds := []string{}
+    for _, mc := range *media {
+        if strings.Contains(mc.ContentType, "video") {
+            videoIds = append(videoIds, mc.ID.String())
+        }
+    }
+    if len(videoIds) == 0 {
+        log.Printf("None of these media were a video, skipping")
+        return nil, nil
+    }
+	q := cm.GetConnection().Q().Where(`media_container_id = any($1)`, pq.Array(videoIds))
+    screens := &models.PreviewScreens{}
+	if q_err := q.All(screens); q_err != nil {
+        log.Printf("Error loading video screens %s", q_err)
+        return nil, q_err
+    }
+
+    screenMap := models.PreviewScreenCollection{}
+    for _, screen := range *screens {
+        log.Printf("Found screen for %s", screen.MediaID.String())
+        if _, ok := screenMap[screen.MediaID]; ok {
+            screenMap[screen.MediaID] = append(screenMap[screen.MediaID], screen)
+            log.Printf("Screen count %s %s", screen.MediaID, screenMap[screen.MediaID])
+        } else {
+            screenMap[screen.MediaID] = models.PreviewScreens{screen}
+        }
+    }
+	return screenMap, nil
+}
+
 
 // The default list using the current manager configuration
 func (cm ContentManagerDB) ListContainersContext() (*models.Containers, error) {
