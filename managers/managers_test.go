@@ -400,21 +400,23 @@ func (as *ActionSuite) Test_ManagerDBPreviews() {
 	cfg := internals.InitFakeApp(true)
     man := GetManagerActionSuite(cfg, as)
 
-    mc := models.MediaContainer{Src: "A", Preview: "p", ContentType: "i",}
-    mc2 := models.MediaContainer{Src: "A", Preview: "p", ContentType: "i",}
-    man.CreateMedia(&mc)
+    mc1 := models.MediaContainer{Src: "A", Preview: "p", ContentType: "video",}
+    mc2 := models.MediaContainer{Src: "B", Preview: "p", ContentType: "video",}
+    mc3 := models.MediaContainer{Src: "C", Preview: "p", ContentType: "video",}
+    man.CreateMedia(&mc1)
     man.CreateMedia(&mc2)
-    as.NotZero(mc.ID)
+    man.CreateMedia(&mc3)
+    as.NotZero(mc1.ID)
 
-    p1 := models.PreviewScreen{Src: "fake1", Idx: 0, MediaID: mc.ID,}
-    p2 := models.PreviewScreen{Src: "fake2.png", Idx: 1, MediaID: mc.ID,}
+    p1 := models.PreviewScreen{Src: "fake1", Idx: 0, MediaID: mc1.ID,}
+    p2 := models.PreviewScreen{Src: "fake2.png", Idx: 1, MediaID: mc1.ID,}
     p3 := models.PreviewScreen{Src: "fake3.png", Idx: 1, MediaID: mc2.ID,}
 
     man.CreateScreen(&p1)
     man.CreateScreen(&p2)
     man.CreateScreen(&p3)
 
-    previewList, err := man.ListScreens(mc.ID, 1, 10)
+    previewList, err := man.ListScreens(mc1.ID, 1, 10)
     as.NoError(err)
     as.Equal(len(*previewList), 2, "We should have two previews")
 
@@ -429,6 +431,44 @@ func (as *ActionSuite) Test_ManagerDBPreviews() {
     p4_check, p4_err := man.GetScreen(p4.ID)
     as.NoError(p4_err, "Failed to pull back the screen by ID" + p4.ID.String())
     as.Equal(p4_check.Src, p4.Src)
+}
+
+func (as *ActionSuite) Test_ManagerDBSearchScreens() {
+	models.DB.TruncateAll()
+	cfg := internals.InitFakeApp(true)
+
+    man := ContentManagerDB{cfg: cfg}
+    man.GetConnection = func() *pop.Connection {
+		return models.DB
+	}
+
+    // Hmm, might want to make a wrapper for the create
+    mc1 := models.MediaContainer{Src: "1", Preview: "one", ContentType: "video/mp4",}
+    mc2 := models.MediaContainer{Src: "2", Preview: "none", ContentType: "video/mp4",}
+    mc3 := models.MediaContainer{Src: "3", Preview: "none", ContentType: "video/mp4",}
+    man.CreateMedia(&mc1)
+    man.CreateMedia(&mc2)
+    man.CreateMedia(&mc3)
+
+    p1 := models.PreviewScreen{Src: "fake1.png", Idx: 1, MediaID: mc1.ID,}
+    p2 := models.PreviewScreen{Src: "fake2.png", Idx: 1, MediaID: mc2.ID,}
+    p3 := models.PreviewScreen{Src: "fake3.png", Idx: 1, MediaID: mc3.ID,}
+    p4 := models.PreviewScreen{Src: "fake4.png", Idx: 1, MediaID: mc3.ID,}
+    man.CreateScreen(&p1)
+    man.CreateScreen(&p2)
+    man.CreateScreen(&p3)
+    man.CreateScreen(&p4)
+
+    media := models.MediaContainers{mc1, mc3}
+    screens, s_err := man.LoadRelatedScreens(&media)
+    as.NoError(s_err, "It shouldn't error out")
+    as.NotNil(screens, "No screens were returned")
+    as.Equal(3, len(*screens), "It should load all the screens")
+
+    media_2 := models.MediaContainers{mc2}
+    screens_2, s2_err := man.LoadRelatedScreens(&media_2)
+    as.NoError(s2_err, "It shouldn't error out")
+    as.Equal(1, len(*screens_2), "It should load all the screens")
 }
 
 func (as *ActionSuite) Test_ManagerMemoryScreens() {

@@ -4,13 +4,15 @@
 package managers
 
 import (
+	"log"
+    "strings"
+	"net/url"
 	"contented/models"
 	"contented/utils"
+    "github.com/lib/pq"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
-	"log"
-	"net/url"
 )
 
 // DB version of content management
@@ -133,6 +135,35 @@ func (cm ContentManagerDB) SearchMedia(search string, page int, per_page int, cI
 	}
 	return mediaContainers, count, nil
 }
+
+func (cm ContentManagerDB) LoadRelatedScreens(media *models.MediaContainers) (*models.PreviewScreens, error) {
+    if media == nil || len(*media) == 0{
+        return nil, nil
+    }
+    videoIds := []string{}
+    for _, mc := range *media {
+        if strings.Contains(mc.ContentType, "video") {
+            videoIds = append(videoIds, mc.ID.String())
+        }
+    }
+    if len(videoIds) == 0 {
+        log.Printf("None of these media were a video, skip")
+        return nil, nil
+    }
+    log.Printf("How many videos did we find %s", videoIds)
+
+    // hate
+	q := cm.GetConnection().Q()
+    q = q.Where(`media_container_id = any($1)`, pq.Array(videoIds))
+	//q = q.Where(`media_container_id = ?`, videoIds[0])
+    screens := &models.PreviewScreens{}
+	if q_err := q.All(screens); q_err != nil {
+        log.Printf("Error loading video screens %s", q_err)
+        return nil, q_err
+    }
+	return screens, nil
+}
+
 
 // The default list using the current manager configuration
 func (cm ContentManagerDB) ListContainersContext() (*models.Containers, error) {
