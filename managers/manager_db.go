@@ -147,15 +147,10 @@ func (cm ContentManagerDB) LoadRelatedScreens(media *models.MediaContainers) (*m
         }
     }
     if len(videoIds) == 0 {
-        log.Printf("None of these media were a video, skip")
+        log.Printf("None of these media were a video, skipping")
         return nil, nil
     }
-    log.Printf("How many videos did we find %s", videoIds)
-
-    // hate
-	q := cm.GetConnection().Q()
-    q = q.Where(`media_container_id = any($1)`, pq.Array(videoIds))
-	//q = q.Where(`media_container_id = ?`, videoIds[0])
+	q := cm.GetConnection().Q().Where(`media_container_id = any($1)`, pq.Array(videoIds))
     screens := &models.PreviewScreens{}
 	if q_err := q.All(screens); q_err != nil {
         log.Printf("Error loading video screens %s", q_err)

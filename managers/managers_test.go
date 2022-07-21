@@ -446,18 +446,21 @@ func (as *ActionSuite) Test_ManagerDBSearchScreens() {
     mc1 := models.MediaContainer{Src: "1", Preview: "one", ContentType: "video/mp4",}
     mc2 := models.MediaContainer{Src: "2", Preview: "none", ContentType: "video/mp4",}
     mc3 := models.MediaContainer{Src: "3", Preview: "none", ContentType: "video/mp4",}
+    mc4 := models.MediaContainer{Src: "4", Preview: "none", ContentType: "image/png",}
     man.CreateMedia(&mc1)
     man.CreateMedia(&mc2)
     man.CreateMedia(&mc3)
 
-    p1 := models.PreviewScreen{Src: "fake1.png", Idx: 1, MediaID: mc1.ID,}
-    p2 := models.PreviewScreen{Src: "fake2.png", Idx: 1, MediaID: mc2.ID,}
-    p3 := models.PreviewScreen{Src: "fake3.png", Idx: 1, MediaID: mc3.ID,}
-    p4 := models.PreviewScreen{Src: "fake4.png", Idx: 1, MediaID: mc3.ID,}
+    p1 := models.PreviewScreen{Src: "fake1.screen", Idx: 1, MediaID: mc1.ID,}
+    p2 := models.PreviewScreen{Src: "fake2.screen", Idx: 1, MediaID: mc2.ID,}
+    p3 := models.PreviewScreen{Src: "fake3.screen", Idx: 1, MediaID: mc3.ID,}
+    p4 := models.PreviewScreen{Src: "fake3.screen", Idx: 1, MediaID: mc3.ID,}
+    p5 := models.PreviewScreen{Src: "ShouldNotLoadMediaIsImage", Idx: 1, MediaID: mc4.ID,}
     man.CreateScreen(&p1)
     man.CreateScreen(&p2)
     man.CreateScreen(&p3)
     man.CreateScreen(&p4)
+    man.CreateScreen(&p5)
 
     media := models.MediaContainers{mc1, mc3}
     screens, s_err := man.LoadRelatedScreens(&media)
@@ -465,10 +468,11 @@ func (as *ActionSuite) Test_ManagerDBSearchScreens() {
     as.NotNil(screens, "No screens were returned")
     as.Equal(3, len(*screens), "It should load all the screens")
 
-    media_2 := models.MediaContainers{mc2}
+    // Test that an image will not load previews
+    media_2 := models.MediaContainers{mc2, mc4}
     screens_2, s2_err := man.LoadRelatedScreens(&media_2)
     as.NoError(s2_err, "It shouldn't error out")
-    as.Equal(1, len(*screens_2), "It should load all the screens")
+    as.Equal(1, len(*screens_2), "It should load all the screens for mc2 but EXCLUDE mc4")
 }
 
 func (as *ActionSuite) Test_ManagerMemoryScreens() {
