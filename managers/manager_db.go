@@ -137,13 +137,11 @@ func (cm ContentManagerDB) SearchMedia(search string, page int, per_page int, cI
     mediaWithScreens := models.MediaContainers{}
     if s_err == nil {
         for _, mcPt := range *mediaContainers {
-            mc := mcPt
+            mc := mcPt  // GoLang... sometimes this just makes me sad.
             if _, ok := screenMap[mc.ID]; ok {
                 mc.Screens = screenMap[mc.ID]
-                mediaWithScreens = append(mediaWithScreens, mc)
-            } else {
-                mediaWithScreens = append(mediaWithScreens, mc)
-            }
+            } 
+            mediaWithScreens = append(mediaWithScreens, mc)
         }
     }
 	return &mediaWithScreens, count, nil
