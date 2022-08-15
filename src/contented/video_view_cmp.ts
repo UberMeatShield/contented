@@ -20,7 +20,6 @@ import {Screen} from './screen';
 import {GlobalNavEvents, NavTypes} from './nav_events';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 import {FormBuilder, NgForm, FormControl, FormGroup} from '@angular/forms';
-// import {ByteFormatterPipe} from ''
 
 import {PageEvent} from '@angular/material/paginator';
 import {MatDialog, MatDialogConfig, MAT_DIALOG_DATA} from '@angular/material/dialog';
