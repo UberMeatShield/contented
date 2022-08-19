@@ -338,10 +338,33 @@ export class ScreenDialog implements AfterViewInit {
             let el = this.screenContent.nativeElement;
             if (el) {
                 console.log("Element", el, el.offsetWidth, el.offsetHeight);
-                this.forceHeight = el.offsetHeight;
-                this.forceWidth = el.offsetWidth;
+                this.forceHeight = el.offsetHeight - 100;
+                this.forceWidth = el.offsetWidth - 100;
             }
             this.sizeCalculated = true;
         }, 100);
+
+        this.idx();
+    }
+
+    idx() {
+        if (this.screens && this.screen) {
+            return _.findIndex(this.screens, {id: this.screen.id});
+        }
+        return -1;
+    }
+
+    next() {
+        let i = this.idx();
+        if (i < this.screens.length - 1) {
+            this.screen = this.screens[i + 1];
+        }
+    }
+
+    prev() {
+        let i = this.idx();
+        if (i - 1 >=  0) {
+            this.screen = this.screens[i - 1];
+        }
     }
 }

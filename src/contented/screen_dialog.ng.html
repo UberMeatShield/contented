@@ -1,11 +1,14 @@
 <mat-dialog-content #ScreensContent class="search-dialog">
-   <div class="screen"
-     style="width: {{forceWidth}}px; height: {{forceHeight}}px;"
-     >
+   <div class="screen-dialog" style="width: {{forceWidth}}px; height: {{forceHeight}}px;">
+    <button type="button" mat-button-raised (click)="prev()"
+      [disabled]="!(idx() > 0)"
+    ><mat-icon>skip_previous</mat-icon></button>
     <img class="screen-img" [src]="screen?.url">
+    <button type="button" mat-button-raised (click)="next()"
+      [disabled]="!(idx() >= 0 && idx() < (screens.length - 1))"
+    ><mat-icon>skip_next</mat-icon></button>
   </div>
 </mat-dialog-content>
-
 <mat-dialog-actions align="end">
   <button mat-raised-button
      mat-dialog-close
