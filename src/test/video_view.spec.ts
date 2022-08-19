@@ -109,6 +109,7 @@ describe('TestingVideoViewCmp', () => {
             screenReq.flush(MockData.getScreens());
         });
         tick(100);
+        expect($(".video-details").length).toEqual(4, "Should show 4 details sections");
     }));
 });
 
