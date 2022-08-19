@@ -343,8 +343,6 @@ export class ScreenDialog implements AfterViewInit {
             }
             this.sizeCalculated = true;
         }, 100);
-
-        this.idx();
     }
 
     idx() {
