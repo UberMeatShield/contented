@@ -57,6 +57,16 @@
             ></screens-cmp>
           </div>
         </div>
+        <div class="video-details">
+          <a mat-raised-button href="/view/{{mc.id}}" title="Open in new tab" target="window">
+            New Fullscreen Tab
+            <mat-icon>tab</mat-icon>
+          </a>
+          <a mat-raised-button href="/download/{{mc.id}}" title="Downlaod">
+            {{mc.size | byteFormatter: 0}}
+            <mat-icon >download</mat-icon>
+          </a>
+        </div>
       </mat-card-content>
     </mat-card>
   </div>

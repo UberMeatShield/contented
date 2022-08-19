@@ -181,6 +181,11 @@
    display: flex; 
    flex-wrap: wrap;
 }
+
+.screen-dialog {
+    display: flex;
+}
+
 .screen-img {
     object-fit: contain;
     width: 100%;

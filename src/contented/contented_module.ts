@@ -28,6 +28,7 @@ import {ScreensCmp} from './screens_cmp';
 import {Container} from './container';
 import {Media} from './media';
 import {Screen} from './screen';
+import {ByteFormatterPipe} from './filters';
 
 @NgModule({
   imports: [
@@ -60,6 +61,7 @@ import {Screen} from './screen';
       SearchCmp,
       SearchDialog,
       ScreensCmp,
+      ByteFormatterPipe
   ],
   exports: [
       ContentedCmp,
