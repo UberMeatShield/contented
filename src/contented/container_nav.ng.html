@@ -41,13 +41,12 @@
           <a target="window" class="cnt-name"
             href="/containers/{{cnt?.id}}"
           >{{cnt?.name}}</a>
-          <span *ngIf="currentMedia">/</span> 
-          <a target="window" class="current-item" 
-            *ngIf="currentMedia" 
-            href="{{currentMedia.fullUrl}}">
-            {{currentMedia?.src}}
-          </a>
-          &nbsp; {{currentMedia?.content_type}}
+          <span *ngIf="currentMedia">
+              /
+              <a target="window" class="current-item" href="{{currentMedia.fullUrl}}"> {{currentMedia?.src}}</a>
+              <span class="media-size-info"> {{currentMedia.size | byteFormatter: 0}}</span>
+              <span class="media-content-type"> {{currentMedia?.content_type}}</span>
+          </span>
           </span>
         </div>
     </div> <!-- End Container bar info -->
