@@ -35,9 +35,19 @@
 
   <div class="video-results" *ngIf="!!media">
     <mat-card id="view_media_{{mc.id}}" class="video-view-card" *ngFor="let mc of getVisibleSet()">
-      <mat-card-title>{{mc.src}}</mat-card-title>
+      <mat-card-title>
+        <a mat-raised-button href="/view/{{mc.id}}" title="Open in new tab" target="window">
+          New Fullscreen Tab
+          <mat-icon>tab</mat-icon>
+        </a>
+        <a mat-raised-button href="/download/{{mc.id}}" title="Downlaod">
+          {{mc.size | byteFormatter: 0}}
+          <mat-icon >download</mat-icon>
+        </a>
+        <span class="video-title">{{mc.src}}</span>
+      </mat-card-title>
+
       <mat-card-content [class.selected-video]="selectedMedia?.id == mc.id">
-            
         <div class="video-view">
           <div class="preview-content video-result video-view"
             [class.video-overlay]="mc?.content_type?.match('video')"
@@ -56,16 +66,6 @@
               (clickedItem)="screenEvt($event)"
             ></screens-cmp>
           </div>
-        </div>
-        <div class="video-details">
-          <a mat-raised-button href="/view/{{mc.id}}" title="Open in new tab" target="window">
-            New Fullscreen Tab
-            <mat-icon>tab</mat-icon>
-          </a>
-          <a mat-raised-button href="/download/{{mc.id}}" title="Downlaod">
-            {{mc.size | byteFormatter: 0}}
-            <mat-icon >download</mat-icon>
-          </a>
         </div>
       </mat-card-content>
     </mat-card>
