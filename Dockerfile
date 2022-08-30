@@ -35,7 +35,8 @@ COPY go.sum go.sum
 RUN go mod download
 
 ADD . .
-RUN buffalo build --static -o /bin/contented
+RUN ls -lah
+RUN buffalo build --skip-assets -v --static -o /bin/contented
 
 
 #======================================================================================

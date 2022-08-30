@@ -13,6 +13,7 @@ require (
 	github.com/gobuffalo/nulls v0.4.1
 	github.com/gobuffalo/packr/v2 v2.8.3
 	github.com/gobuffalo/pop/v5 v5.3.2
+	github.com/gobuffalo/pop/v6 v6.0.6
 	github.com/gobuffalo/suite/v3 v3.0.2
 	github.com/gobuffalo/validate/v3 v3.3.2
 	github.com/gobuffalo/x v0.1.0
@@ -51,7 +52,6 @@ require (
 	github.com/gobuffalo/mw-csrf v1.0.1 // indirect
 	github.com/gobuffalo/packd v1.0.1 // indirect
 	github.com/gobuffalo/plush/v4 v4.1.14 // indirect
-	github.com/gobuffalo/pop/v6 v6.0.6 // indirect
 	github.com/gobuffalo/refresh v1.13.1 // indirect
 	github.com/gobuffalo/tags/v3 v3.1.3 // indirect
 	github.com/gofrs/uuid/v3 v3.1.2 // indirect

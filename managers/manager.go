@@ -19,7 +19,7 @@ import (
 	"contented/models"
 	"contented/utils"
 	"github.com/gobuffalo/buffalo"
-	"github.com/gobuffalo/pop/v5"
+	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 )
 

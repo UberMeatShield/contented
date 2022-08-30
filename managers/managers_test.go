@@ -6,7 +6,7 @@ import (
 	"contented/utils"
 	"github.com/gobuffalo/envy"
 	"github.com/gobuffalo/packr/v2"
-	"github.com/gobuffalo/pop/v5"
+	"github.com/gobuffalo/pop/v6"
 	"github.com/gobuffalo/suite/v3"
     "github.com/gobuffalo/nulls"
     "github.com/gofrs/uuid"
