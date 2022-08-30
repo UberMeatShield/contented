@@ -31,7 +31,7 @@ func InitializeMemory(dir_root string) *MemoryStorage {
 	memStorage.Initialized = true
 	memStorage.ValidContainers = containers
 	memStorage.ValidMedia = files
-    memStorage.ValidScreens = screens
+	memStorage.ValidScreens = screens
 
 	return &memStorage
 }
@@ -42,7 +42,7 @@ func InitializeMemory(dir_root string) *MemoryStorage {
 func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap, models.PreviewScreenMap) {
 	containers := models.ContainerMap{}
 	files := models.MediaMap{}
-    screensMap := models.PreviewScreenMap{}
+	screensMap := models.PreviewScreenMap{}
 
 	cfg := GetCfg()
 	log.Printf("PopulateMemoryView searching in %s with depth %d", dir_root, cfg.MaxSearchDepth)
@@ -63,22 +63,22 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap, 
 			c.PreviewUrl = "/preview/" + ct.Media[0].ID.String()
 			log.Printf("Assigning a preview to %s as %s", c.Name, c.PreviewUrl)
 
-            maybeScreens, screenErr := GetPotentialScreens(&c)
-            for _, mc := range ct.Media {
-                // Assign anything required to the media before we put it in the lookup hash
-                AssignPreviewIfExists(&c, &mc)
-                if screenErr == nil {
-                    screens := AssignScreensFromSet(&c, &mc, maybeScreens)
-                    if screens != nil {
-                        for _, screen := range(*screens) {
-                            screensMap[screen.ID] = screen
-                        }
-                    }
-                } else {
-                    log.Printf("No potential screens present in container %s", c.Path)
-                }
-                files[mc.ID] = mc
-            }
+			maybeScreens, screenErr := GetPotentialScreens(&c)
+			for _, mc := range ct.Media {
+				// Assign anything required to the media before we put it in the lookup hash
+				AssignPreviewIfExists(&c, &mc)
+				if screenErr == nil {
+					screens := AssignScreensFromSet(&c, &mc, maybeScreens)
+					if screens != nil {
+						for _, screen := range *screens {
+							screensMap[screen.ID] = screen
+						}
+					}
+				} else {
+					log.Printf("No potential screens present in container %s", c.Path)
+				}
+				files[mc.ID] = mc
+			}
 		}
 		// Remember that assigning into a map is also a copy so any changes must be
 		// done BEFORE you assign into the map

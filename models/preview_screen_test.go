@@ -1,7 +1,7 @@
 package models
 
 import (
-    "path/filepath"
+	"path/filepath"
 )
 
 func (ms *ModelSuite) Test_MediaContainerScreens() {
@@ -27,14 +27,14 @@ func (ms *ModelSuite) Test_MediaContainerScreens() {
 	p2 := PreviewScreen{
 		Src:     "fake2.png",
 		Idx:     1,
-        Path: "Derp/Monkey",
+		Path:    "Derp/Monkey",
 		MediaID: mc.ID,
 	}
 
-    p2Loc := p2.GetFqPath()
-    if p2Loc != filepath.Join(p2.Path, p2.Src) {
-        ms.Fail("Didn't create the right fq path")
-    }
+	p2Loc := p2.GetFqPath()
+	if p2Loc != filepath.Join(p2.Path, p2.Src) {
+		ms.Fail("Didn't create the right fq path")
+	}
 	perr1 := ms.DB.Create(&p1)
 	if perr1 != nil {
 		ms.Fail("Couldn't create preview screen 1 %s", perr1)
@@ -47,7 +47,7 @@ func (ms *ModelSuite) Test_MediaContainerScreens() {
 	check := MediaContainer{}
 	q_err := ms.DB.Eager().Find(&check, mc.ID)
 	if q_err != nil {
-		ms.Fail("Could not query for this id %s" + mc.ID.String(), q_err)
+		ms.Fail("Could not query for this id %s"+mc.ID.String(), q_err)
 	}
 	if check.Screens == nil {
 		ms.Fail("Failed to load screens" + mc.ID.String())

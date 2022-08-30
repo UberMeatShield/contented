@@ -1,17 +1,17 @@
 package actions
 
 import (
-    "log"
-    "os"
+	"log"
+	"os"
 	//"fmt"
 	"net/http"
-    // "errors"
-	"contented/models"
+	// "errors"
 	"contented/managers"
+	"contented/models"
 	"github.com/gobuffalo/buffalo"
 	//"github.com/gobuffalo/pop/v5"
 	"github.com/gobuffalo/x/responder"
-    "github.com/gofrs/uuid"
+	"github.com/gofrs/uuid"
 )
 
 // Following naming logic is implemented in Buffalo:
@@ -30,26 +30,26 @@ type PreviewScreensResource struct {
 // GET /preview_screens
 func (v PreviewScreensResource) List(c buffalo.Context) error {
 	// Get the DB connection from the context
-    var previewScreens *models.PreviewScreens
-    var err error
+	var previewScreens *models.PreviewScreens
+	var err error
 
-    mcStrID := c.Param("media_container_id")
-    log.Printf("Media ID specified %s", mcStrID)
+	mcStrID := c.Param("media_container_id")
+	log.Printf("Media ID specified %s", mcStrID)
 
-    man := managers.GetManager(&c)
-    if mcStrID != "" {
-        mcID, err := uuid.FromString(mcStrID)
-        if err != nil {
-            return c.Error(http.StatusBadRequest, err)
-        }
-        previewScreens, err = man.ListScreensContext(mcID)
+	man := managers.GetManager(&c)
+	if mcStrID != "" {
+		mcID, err := uuid.FromString(mcStrID)
+		if err != nil {
+			return c.Error(http.StatusBadRequest, err)
+		}
+		previewScreens, err = man.ListScreensContext(mcID)
 
-    } else {
-        previewScreens, err = man.ListAllScreensContext()
-        if err != nil {
-            return c.Error(http.StatusBadRequest, err)
-        }
-    }
+	} else {
+		previewScreens, err = man.ListAllScreensContext()
+		if err != nil {
+			return c.Error(http.StatusBadRequest, err)
+		}
+	}
 
 	return responder.Wants("html", func(c buffalo.Context) error {
 		// Add the paginator to the context so it can be used in the template.
@@ -64,37 +64,37 @@ func (v PreviewScreensResource) List(c buffalo.Context) error {
 // Show gets the data for one PreviewScreen. This function is mapped to
 // the path GET /preview_screens/{preview_screen_id}
 func (v PreviewScreensResource) Show(c buffalo.Context) error {
-    psStrID := c.Param("preview_screen_id")
-    psID, badUUID := uuid.FromString(psStrID)
-    if badUUID != nil {
-        return c.Error(400, badUUID)
-    }
+	psStrID := c.Param("preview_screen_id")
+	psID, badUUID := uuid.FromString(psStrID)
+	if badUUID != nil {
+		return c.Error(400, badUUID)
+	}
 
-    man := managers.GetManager(&c)
-    screen, err := man.GetScreen(psID)
-    if err != nil {
-        return c.Error(404, err)
-    }
+	man := managers.GetManager(&c)
+	screen, err := man.GetScreen(psID)
+	if err != nil {
+		return c.Error(404, err)
+	}
 
-    // Check it exists
-    fqPath := screen.GetFqPath()
-    _, fErr := os.Stat(fqPath)
-    if fErr != nil {
-       log.Printf("Cannot download file not on disk %s with err %s", fqPath, fErr)
-       return c.Error(404, err)
-    }
-    log.Printf("Preview Screen ID specified %s path %s", psStrID, fqPath)
-    http.ServeFile(c.Response(), c.Request(), fqPath)
-    return nil
+	// Check it exists
+	fqPath := screen.GetFqPath()
+	_, fErr := os.Stat(fqPath)
+	if fErr != nil {
+		log.Printf("Cannot download file not on disk %s with err %s", fqPath, fErr)
+		return c.Error(404, err)
+	}
+	log.Printf("Preview Screen ID specified %s path %s", psStrID, fqPath)
+	http.ServeFile(c.Response(), c.Request(), fqPath)
+	return nil
 }
 
 // Create adds a PreviewScreen to the DB. This function is mapped to the
 // path POST /preview_screens
 func (v PreviewScreensResource) Create(c buffalo.Context) error {
-    _, tx, err := managers.ManagerCanCUD(&c)
-    if err != nil {
-        return err
-    }
+	_, tx, err := managers.ManagerCanCUD(&c)
+	if err != nil {
+		return err
+	}
 	// Allocate an empty PreviewScreen
 	previewScreen := &models.PreviewScreen{}
 
@@ -140,10 +140,10 @@ func (v PreviewScreensResource) Create(c buffalo.Context) error {
 // the path PUT /preview_screens/{preview_screen_id}
 func (v PreviewScreensResource) Update(c buffalo.Context) error {
 	// Get the DB connection from the context
-    _, tx, err := managers.ManagerCanCUD(&c)
-    if err != nil {
-        return err
-    }
+	_, tx, err := managers.ManagerCanCUD(&c)
+	if err != nil {
+		return err
+	}
 
 	// Allocate an empty PreviewScreen
 	previewScreen := &models.PreviewScreen{}
@@ -196,10 +196,10 @@ func (v PreviewScreensResource) Update(c buffalo.Context) error {
 // to the path DELETE /preview_screens/{preview_screen_id}
 func (v PreviewScreensResource) Destroy(c buffalo.Context) error {
 	// Get the DB connection from the context
-    _, tx, err := managers.ManagerCanCUD(&c)
-    if err != nil {
-        return err
-    }
+	_, tx, err := managers.ManagerCanCUD(&c)
+	if err != nil {
+		return err
+	}
 
 	// Allocate an empty PreviewScreen
 	previewScreen := &models.PreviewScreen{}

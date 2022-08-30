@@ -10,17 +10,17 @@
 package managers
 
 import (
-	"log"
-    "fmt"
-    "errors"
-	"net/url"
-	"net/http"
-	"strconv"
 	"contented/models"
 	"contented/utils"
+	"errors"
+	"fmt"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
+	"log"
+	"net/http"
+	"net/url"
+	"strconv"
 )
 
 type GetConnType func() *pop.Connection
@@ -46,16 +46,16 @@ type ContentManager interface {
 	SearchMediaContext() (*models.MediaContainers, int, error)
 	SearchMedia(search string, page int, per_page int, cId string, contentType string) (*models.MediaContainers, int, error)
 
-    // Functions that help with viewing movie screens if found.
-    ListAllScreens(page int, per_page int) (*models.PreviewScreens, error)
-    ListAllScreensContext() (*models.PreviewScreens, error)
-    ListScreensContext(mcID uuid.UUID) (*models.PreviewScreens, error)
-    ListScreens(mcID uuid.UUID, page int, per_page int) (*models.PreviewScreens, error)
+	// Functions that help with viewing movie screens if found.
+	ListAllScreens(page int, per_page int) (*models.PreviewScreens, error)
+	ListAllScreensContext() (*models.PreviewScreens, error)
+	ListScreensContext(mcID uuid.UUID) (*models.PreviewScreens, error)
+	ListScreens(mcID uuid.UUID, page int, per_page int) (*models.PreviewScreens, error)
 	GetScreen(psID uuid.UUID) (*models.PreviewScreen, error)
 
-    CreateScreen(s *models.PreviewScreen) error
-    CreateMedia(mc *models.MediaContainer) error
-    CreateContainer(mc *models.Container) error
+	CreateScreen(s *models.PreviewScreen) error
+	CreateMedia(mc *models.MediaContainer) error
+	CreateContainer(mc *models.Container) error
 
 	UpdateContainer(c *models.Container) error
 	UpdateMedia(media *models.MediaContainer) error
@@ -100,20 +100,20 @@ func GetManager(c *buffalo.Context) ContentManager {
 }
 
 // can this manager create, update or destroy
-func ManagerCanCUD(c *buffalo.Context) (*ContentManager, *pop.Connection, error){
-    man := GetManager(c)
-    ctx := *c
-    if man.CanEdit() == false {
-        return &man, nil, ctx.Error(
-            http.StatusNotImplemented,
-            errors.New("Edit not supported by this manager"),
-        )
-    }
-    tx, ok := ctx.Value("tx").(*pop.Connection)
-    if !ok {
-        return &man, nil, fmt.Errorf("No transaction found")
-    }
-    return &man, tx, nil
+func ManagerCanCUD(c *buffalo.Context) (*ContentManager, *pop.Connection, error) {
+	man := GetManager(c)
+	ctx := *c
+	if man.CanEdit() == false {
+		return &man, nil, ctx.Error(
+			http.StatusNotImplemented,
+			errors.New("Edit not supported by this manager"),
+		)
+	}
+	tx, ok := ctx.Value("tx").(*pop.Connection)
+	if !ok {
+		return &man, nil, fmt.Errorf("No transaction found")
+	}
+	return &man, tx, nil
 }
 
 // Provides the ability to pass a connection function and get params function to the manager so we can handle

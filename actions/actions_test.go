@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gobuffalo/envy"
-	"github.com/gobuffalo/packr/v2"
 	"github.com/gobuffalo/suite/v3"
 	"net/http"
 	"os"
@@ -179,7 +178,7 @@ func (as *ActionSuite) Test_PreviewWorking() {
 }
 
 func Test_ManagerSuite(t *testing.T) {
-	action, err := suite.NewActionWithFixtures(App(true), packr.New("Test_ManagerSuite", "../fixtures"))
+	action, err := suite.NewActionWithFixtures(App(true), os.DirFS("../fixtures"))
 	if err != nil {
 		t.Fatal(err)
 	}

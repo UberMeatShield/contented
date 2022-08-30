@@ -59,10 +59,10 @@ func App(UseDatabase bool) *buffalo.App {
 		cr := app.Resource("/containers", ContainersResource{})
 		cr.Resource("/media", MediaContainersResource{})
 
-        mc_r := app.Resource("/media", MediaContainersResource{})
-        mc_r.Resource("/screens", PreviewScreensResource{})
+		mc_r := app.Resource("/media", MediaContainersResource{})
+		mc_r.Resource("/screens", PreviewScreensResource{})
 
-        app.Resource("/screens", PreviewScreensResource{})
+		app.Resource("/screens", PreviewScreensResource{})
 	}
 	return app
 }

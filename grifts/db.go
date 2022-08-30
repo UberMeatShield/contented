@@ -6,8 +6,8 @@ import (
 	"contented/utils"
 	"fmt"
 	"github.com/gobuffalo/envy"
+	"github.com/gobuffalo/grift/grift"
 	"github.com/gobuffalo/pop/v6"
-	"github.com/markbates/grift/grift"
 	"github.com/pkg/errors"
 	"net/url"
 )

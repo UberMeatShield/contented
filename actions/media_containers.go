@@ -98,10 +98,10 @@ func (v MediaContainersResource) Show(c buffalo.Context) error {
 // Create adds a MediaContainer to the DB. This function is mapped to the
 // path POST /media_containers
 func (v MediaContainersResource) Create(c buffalo.Context) error {
-    _, tx, err := managers.ManagerCanCUD(&c)
-    if err != nil {
-        return err
-    }
+	_, tx, err := managers.ManagerCanCUD(&c)
+	if err != nil {
+		return err
+	}
 	// Allocate an empty MediaContainer
 	// Bind mediaContainer to the html form elements (probably not required?)
 	mediaContainer := &models.MediaContainer{}
@@ -137,10 +137,10 @@ func (v MediaContainersResource) Create(c buffalo.Context) error {
 // Update changes a MediaContainer in the DB. This function is mapped to
 // the path PUT /media_containers/{media_container_id}
 func (v MediaContainersResource) Update(c buffalo.Context) error {
-    _, tx, err := managers.ManagerCanCUD(&c)
-    if err != nil {
-        return err
-    }
+	_, tx, err := managers.ManagerCanCUD(&c)
+	if err != nil {
+		return err
+	}
 
 	// Allocate an empty MediaContainer
 	mediaContainer := &models.MediaContainer{}
@@ -176,16 +176,15 @@ func (v MediaContainersResource) Update(c buffalo.Context) error {
 	}).Respond(c)
 }
 
-
 // Destroy deletes a MediaContainer from the DB. This function is mapped
 // to the path DELETE /media_containers/{media_container_id}
 func (v MediaContainersResource) Destroy(c buffalo.Context) error {
-    _, tx, err := managers.ManagerCanCUD(&c)
-    if err != nil {
-        return err
-    }
+	_, tx, err := managers.ManagerCanCUD(&c)
+	if err != nil {
+		return err
+	}
 
-    // TODO: Manager should probably be the thing doing updates etc.
+	// TODO: Manager should probably be the thing doing updates etc.
 	// Allocate an empty MediaContainer
 	mediaContainer := &models.MediaContainer{}
 

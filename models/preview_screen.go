@@ -3,20 +3,20 @@ package models
 // Damn it, this should have just been named screen
 import (
 	"encoding/json"
-	"github.com/gobuffalo/pop/v5"
+	"github.com/gobuffalo/pop/v6"
 	"github.com/gobuffalo/validate/v3"
 	"github.com/gofrs/uuid"
-    "path/filepath"
+	"path/filepath"
 	"time"
 )
 
 // A set of previews for a particular media element.
 type PreviewScreen struct {
 	ID        uuid.UUID `json:"id" db:"id"`
-    MediaID   uuid.UUID `json:"media_id" db:"media_container_id"`
+	MediaID   uuid.UUID `json:"media_id" db:"media_container_id"`
 	CreatedAt time.Time `json:"created" db:"created_at"`
 	UpdatedAt time.Time `json:"updated" db:"updated_at"`
-    Path      string    `json:"-" db:"path"`
+	Path      string    `json:"-" db:"path"`
 	Src       string    `json:"src" db:"src"`
 	Idx       int       `json:"idx" db:"idx"`
 	SizeBytes int64     `json:"size" db:"size_bytes"`

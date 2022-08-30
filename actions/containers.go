@@ -80,10 +80,10 @@ func (v ContainersResource) Show(c buffalo.Context) error {
 // path POST /containers
 func (v ContainersResource) Create(c buffalo.Context) error {
 	// Allocate an empty Container
-    _, tx, err := managers.ManagerCanCUD(&c)
-    if err != nil {
-        return err
-    }
+	_, tx, err := managers.ManagerCanCUD(&c)
+	if err != nil {
+		return err
+	}
 
 	// Bind container to the html form elements
 	container := &models.Container{}
@@ -120,10 +120,10 @@ func (v ContainersResource) Create(c buffalo.Context) error {
 // the path PUT /containers/{container_id}
 func (v ContainersResource) Update(c buffalo.Context) error {
 	// Get the DB connection from the context
-    _, tx, err := managers.ManagerCanCUD(&c)
-    if err != nil {
-        return err
-    }
+	_, tx, err := managers.ManagerCanCUD(&c)
+	if err != nil {
+		return err
+	}
 
 	// Allocate an empty Container
 	container := &models.Container{}
@@ -164,10 +164,10 @@ func (v ContainersResource) Update(c buffalo.Context) error {
 // to the path DELETE /containers/{container_id}
 func (v ContainersResource) Destroy(c buffalo.Context) error {
 	// Get the DB connection from the context
-    _, tx, err := managers.ManagerCanCUD(&c)
-    if err != nil {
-        return err
-    }
+	_, tx, err := managers.ManagerCanCUD(&c)
+	if err != nil {
+		return err
+	}
 
 	// Allocate an empty Container
 	// To find the Container the parameter container_id is used.

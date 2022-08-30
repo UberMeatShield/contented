@@ -7,20 +7,20 @@ import (
 	"strings"
 	"time"
 	//    "errors"
-	"path/filepath"
-	"testing"
 	"contented/models"
 	"github.com/gobuffalo/envy"
+	"path/filepath"
+	"testing"
 )
 
 // Helper for a common block of video test code (duplicated in internals)
 func Get_VideoAndSetupPaths() (string, string, string) {
-    cfg := GetCfgDefaults()
+	cfg := GetCfgDefaults()
 
-    // The video we use is only 10.08 seconds long.
-    cfg.PreviewFirstScreenOffset = 2
-    cfg.PreviewNumberOfScreens = 4
-    SetCfg(cfg)
+	// The video we use is only 10.08 seconds long.
+	cfg.PreviewFirstScreenOffset = 2
+	cfg.PreviewNumberOfScreens = 4
+	SetCfg(cfg)
 
 	var testDir, _ = envy.MustGet("DIR")
 	srcDir := filepath.Join(testDir, "dir2")
@@ -34,7 +34,7 @@ func Get_VideoAndSetupPaths() (string, string, string) {
 
 // Should probably toss this into internals
 func WriteScreenFile(dstPath string, fileName string, count int) (string, error) {
-    screenName := fmt.Sprintf("%s.screens.00%d.jpg", fileName, count)
+	screenName := fmt.Sprintf("%s.screens.00%d.jpg", fileName, count)
 	fqPath := filepath.Join(dstPath, screenName)
 	f, err := os.Create(fqPath)
 	if err != nil {
@@ -42,9 +42,9 @@ func WriteScreenFile(dstPath string, fileName string, count int) (string, error)
 	}
 	_, wErr := f.WriteString("Now something exists in the file")
 	if wErr != nil {
-        return "", wErr
+		return "", wErr
 	}
-    return screenName, nil
+	return screenName, nil
 }
 
 // Check that handling bad inputs behaves in an expected fashion
@@ -191,7 +191,7 @@ func Test_WebpFromVideo(t *testing.T) {
 	srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
 	cfg := GetCfg()
 	cfg.PreviewScreensOverSize = 1024
-    cfg.PreviewVideoType = "screens"
+	cfg.PreviewVideoType = "screens"
 	SetCfg(*cfg)
 
 	// It will tack on .webp
@@ -211,66 +211,65 @@ func Test_WebpFromVideo(t *testing.T) {
 		t.Errorf("Webp has too much chonk %d", webpStat.Size())
 	}
 
-    // Check that if we use a screens version it will work as a preview
-    // using memory storage
-    c := &models.Container{
-        Path: filepath.Dir(srcDir),
-        Name: filepath.Base(srcDir),
-    }
-    mc := &models.MediaContainer{
-        ContentType: "video/mp4",
-        Src: testFile,
-    }
-    screens := AssignScreensIfExists(c, mc)
-    if len(*screens) != cfg.PreviewNumberOfScreens {
-        msg := `Failed to actually find the screens %s expected %d found %d`
-        t.Errorf(msg, *screens, cfg.PreviewNumberOfScreens, len(*screens))
-    }
-    checkFile := AssignPreviewIfExists(c, mc)
-    if (previewFile != checkFile) {
-        t.Errorf("Check not set to Expected\n check(%s) \n previewFile(%s)", checkFile, previewFile)
-    }
-    if !strings.Contains(checkFile, mc.Preview) {
-        t.Errorf("mc.Preview (%s) not contained in check(%s)", mc.Preview, checkFile)
-    }
+	// Check that if we use a screens version it will work as a preview
+	// using memory storage
+	c := &models.Container{
+		Path: filepath.Dir(srcDir),
+		Name: filepath.Base(srcDir),
+	}
+	mc := &models.MediaContainer{
+		ContentType: "video/mp4",
+		Src:         testFile,
+	}
+	screens := AssignScreensIfExists(c, mc)
+	if len(*screens) != cfg.PreviewNumberOfScreens {
+		msg := `Failed to actually find the screens %s expected %d found %d`
+		t.Errorf(msg, *screens, cfg.PreviewNumberOfScreens, len(*screens))
+	}
+	checkFile := AssignPreviewIfExists(c, mc)
+	if previewFile != checkFile {
+		t.Errorf("Check not set to Expected\n check(%s) \n previewFile(%s)", checkFile, previewFile)
+	}
+	if !strings.Contains(checkFile, mc.Preview) {
+		t.Errorf("mc.Preview (%s) not contained in check(%s)", mc.Preview, checkFile)
+	}
 }
-
 
 func Test_AssignScreensWithEscapeChars(t *testing.T) {
 	srcDir, dstDir, _ := Get_VideoAndSetupPaths()
 
-    badFilename := "Bad(a))_something_darkside.mp4"
-    _, err := WriteScreenFile(dstDir, badFilename, 1)
-    if err != nil {
-        t.Errorf("Failed to setup the test screen %s", err)
-    }
-    WriteScreenFile(dstDir, badFilename, 2)
-    WriteScreenFile(dstDir, "ShouldNotMatch", 1)
+	badFilename := "Bad(a))_something_darkside.mp4"
+	_, err := WriteScreenFile(dstDir, badFilename, 1)
+	if err != nil {
+		t.Errorf("Failed to setup the test screen %s", err)
+	}
+	WriteScreenFile(dstDir, badFilename, 2)
+	WriteScreenFile(dstDir, "ShouldNotMatch", 1)
 
-    c := &models.Container{
-        Path: filepath.Dir(srcDir),
-        Name: filepath.Base(srcDir),
-    }
-    files, f_err := GetPotentialScreens(c)
-    if f_err != nil {
-        t.Errorf("Did not find any screens in the preview dir %s", f_err)
-    }
-    if len(*files) != 3 {
-        t.Errorf("We should have looked up all potential files %s", files)
-    }
+	c := &models.Container{
+		Path: filepath.Dir(srcDir),
+		Name: filepath.Base(srcDir),
+	}
+	files, f_err := GetPotentialScreens(c)
+	if f_err != nil {
+		t.Errorf("Did not find any screens in the preview dir %s", f_err)
+	}
+	if len(*files) != 3 {
+		t.Errorf("We should have looked up all potential files %s", files)
+	}
 
-    mc := &models.MediaContainer{
-        ContentType: "video/mp4",
-        Src: badFilename,
-    }
-    ps := AssignScreensIfExists(c, mc)
+	mc := &models.MediaContainer{
+		ContentType: "video/mp4",
+		Src:         badFilename,
+	}
+	ps := AssignScreensIfExists(c, mc)
 
-    if ps == nil {
-        t.Errorf("We did not find matching screens")
-    }
-    if len(*ps) != 2 {
-        t.Errorf("We did not find the correct number of files %d", len(*ps))
-    }
+	if ps == nil {
+		t.Errorf("We did not find matching screens")
+	}
+	if len(*ps) != 2 {
+		t.Errorf("We did not find the correct number of files %d", len(*ps))
+	}
 }
 
 // Test MultiScreen
@@ -315,7 +314,7 @@ func Test_VideoSelectScreens(t *testing.T) {
 func Test_VideoCreateSeekScreens(t *testing.T) {
 	srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
 
-	previewName := filepath.Join(dstDir, testFile + ".webp")
+	previewName := filepath.Join(dstDir, testFile+".webp")
 	srcFile := filepath.Join(srcDir, testFile)
 
 	err := CreateSeekScreen(srcFile, previewName+".jpeg", 10)
@@ -325,7 +324,7 @@ func Test_VideoCreateSeekScreens(t *testing.T) {
 	// With bigger files ~ 100mb it is much faster to do 10 seek time screens
 	// instead of using a single operation.  The small donut file is faster with
 	// a single operation with a frame selection.
-    cfg := GetCfg()
+	cfg := GetCfg()
 
 	startMulti := time.Now()
 	screens, multiErr, screenPtrn := CreateSeekScreens(srcFile, previewName)
@@ -449,16 +448,16 @@ func Test_VideoPreviewGif(t *testing.T) {
 }
 
 func Test_ScreenOutputPatterns(t *testing.T) {
-    badFilename := "Bad(a)).jpg"
-    _, err := GetScreensMatcherRE(badFilename)
-    if err != nil {
-        t.Errorf("Error trying to compile a re match for %s %s", badFilename, err)
-    }
+	badFilename := "Bad(a)).jpg"
+	_, err := GetScreensMatcherRE(badFilename)
+	if err != nil {
+		t.Errorf("Error trying to compile a re match for %s %s", badFilename, err)
+	}
 
-    badTwo := "../Bad[b)).jpg"
-    _, err2 := GetScreensMatcherRE(badTwo)
-    if err2 != nil {
-        t.Errorf("Error trying to compile a re match for %s %s", badTwo, err2)
-    }
-        
+	badTwo := "../Bad[b)).jpg"
+	_, err2 := GetScreensMatcherRE(badTwo)
+	if err2 != nil {
+		t.Errorf("Error trying to compile a re match for %s %s", badTwo, err2)
+	}
+
 }

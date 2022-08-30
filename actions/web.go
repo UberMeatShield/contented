@@ -58,7 +58,7 @@ func SearchHandler(c buffalo.Context) error {
 		return c.Error(400, err)
 	}
 
-    // TODO: Hmmm, maybe it should always load the screens in a sane fashion?
+	// TODO: Hmmm, maybe it should always load the screens in a sane fashion?
 	sr := SearchResult{
 		Media: mcs,
 		Total: count,

@@ -4,15 +4,15 @@
 package managers
 
 import (
-	"log"
-    "strings"
-	"net/url"
 	"contented/models"
 	"contented/utils"
-    "github.com/lib/pq"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
+	"github.com/lib/pq"
+	"log"
+	"net/url"
+	"strings"
 )
 
 // DB version of content management
@@ -86,8 +86,8 @@ func (cm ContentManagerDB) UpdateMedia(media *models.MediaContainer) error {
 }
 
 func (cm ContentManagerDB) UpdateScreen(s *models.PreviewScreen) error {
-    tx := cm.GetConnection()
-    return tx.Update(s)
+	tx := cm.GetConnection()
+	return tx.Update(s)
 }
 
 func (cm ContentManagerDB) ListAllMedia(page int, per_page int) (*models.MediaContainers, error) {
@@ -120,67 +120,66 @@ func (cm ContentManagerDB) SearchMedia(search string, page int, per_page int, cI
 		q = q.Where(`src like ?`, search)
 	}
 	if contentType != "" {
-        contentType = ("%" + contentType + "%")
+		contentType = ("%" + contentType + "%")
 		q = q.Where(`content_type ilike ?`, contentType)
-    }
+	}
 	if cId != "" {
 		q = q.Where(`container_id = ?`, cId)
 	}
 	count, _ := q.Count(&models.MediaContainers{})
-	log.Printf("Total count of search media %d using search (%s) and contentType (%s)", count, search, contentType) 
+	log.Printf("Total count of search media %d using search (%s) and contentType (%s)", count, search, contentType)
 
 	if q_err := q.All(mediaContainers); q_err != nil {
 		return mediaContainers, count, q_err
 	}
-    // Now need to get any screens and associate them in a lookup
-    screenMap, s_err := cm.LoadRelatedScreens(mediaContainers)
-    mediaWithScreens := models.MediaContainers{}
-    if s_err == nil {
-        for _, mcPt := range *mediaContainers {
-            mc := mcPt  // GoLang... sometimes this just makes me sad.
-            if _, ok := screenMap[mc.ID]; ok {
-                mc.Screens = screenMap[mc.ID]
-            } 
-            mediaWithScreens = append(mediaWithScreens, mc)
-        }
-    }
+	// Now need to get any screens and associate them in a lookup
+	screenMap, s_err := cm.LoadRelatedScreens(mediaContainers)
+	mediaWithScreens := models.MediaContainers{}
+	if s_err == nil {
+		for _, mcPt := range *mediaContainers {
+			mc := mcPt // GoLang... sometimes this just makes me sad.
+			if _, ok := screenMap[mc.ID]; ok {
+				mc.Screens = screenMap[mc.ID]
+			}
+			mediaWithScreens = append(mediaWithScreens, mc)
+		}
+	}
 	return &mediaWithScreens, count, nil
 }
 
 func (cm ContentManagerDB) LoadRelatedScreens(media *models.MediaContainers) (models.PreviewScreenCollection, error) {
-    if media == nil || len(*media) == 0{
-        return nil, nil
-    }
-    videoIds := []string{}
-    for _, mc := range *media {
-        if strings.Contains(mc.ContentType, "video") {
-            videoIds = append(videoIds, mc.ID.String())
-        }
-    }
-    if len(videoIds) == 0 {
-        log.Printf("None of these media were a video, skipping")
-        return nil, nil
-    }
+	if media == nil || len(*media) == 0 {
+		return nil, nil
+	}
+	videoIds := []string{}
+	for _, mc := range *media {
+		if strings.Contains(mc.ContentType, "video") {
+			videoIds = append(videoIds, mc.ID.String())
+		}
+	}
+	if len(videoIds) == 0 {
+		log.Printf("None of these media were a video, skipping")
+		return nil, nil
+	}
 	q := cm.GetConnection().Q().Where(`media_container_id = any($1)`, pq.Array(videoIds))
-    screens := &models.PreviewScreens{}
+	screens := &models.PreviewScreens{}
 	if q_err := q.All(screens); q_err != nil {
-        log.Printf("Error loading video screens %s", q_err)
-        return nil, q_err
-    }
+		log.Printf("Error loading video screens %s", q_err)
+		return nil, q_err
+	}
 
-    screenMap := models.PreviewScreenCollection{}
-    for _, screen := range *screens {
-        log.Printf("Found screen for %s", screen.MediaID.String())
-        if _, ok := screenMap[screen.MediaID]; ok {
-            screenMap[screen.MediaID] = append(screenMap[screen.MediaID], screen)
-            log.Printf("Screen count %s %s", screen.MediaID, screenMap[screen.MediaID])
-        } else {
-            screenMap[screen.MediaID] = models.PreviewScreens{screen}
-        }
-    }
+	screenMap := models.PreviewScreenCollection{}
+	for _, screen := range *screens {
+		log.Printf("Found screen for %s", screen.MediaID.String())
+		if _, ok := screenMap[screen.MediaID]; ok {
+			screenMap[screen.MediaID] = append(screenMap[screen.MediaID], screen)
+			log.Printf("Screen count %s %s", screen.MediaID, screenMap[screen.MediaID])
+		} else {
+			screenMap[screen.MediaID] = models.PreviewScreens{screen}
+		}
+	}
 	return screenMap, nil
 }
-
 
 // The default list using the current manager configuration
 func (cm ContentManagerDB) ListContainersContext() (*models.Containers, error) {
@@ -250,27 +249,25 @@ func (cm ContentManagerDB) FindActualFile(mc *models.MediaContainer) (string, er
 	return utils.GetFilePathInContainer(mc.Src, cnt.GetFqPath())
 }
 
-
 func (cm ContentManagerDB) ListAllScreensContext() (*models.PreviewScreens, error) {
-    _, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
-    return cm.ListAllScreens(page, limit)
+	_, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
+	return cm.ListAllScreens(page, limit)
 }
 
-
 func (cm ContentManagerDB) ListAllScreens(page int, per_page int) (*models.PreviewScreens, error) {
-    tx := cm.GetConnection()
+	tx := cm.GetConnection()
 	q := tx.Paginate(page, per_page)
 	previews := &models.PreviewScreens{}
-    if err := q.All(previews); err != nil {
-        return nil, err
-    }
-    return previews, nil
+	if err := q.All(previews); err != nil {
+		return nil, err
+	}
+	return previews, nil
 }
 
 func (cm ContentManagerDB) ListScreensContext(mcID uuid.UUID) (*models.PreviewScreens, error) {
-    // Could add the context here correctly
-    _, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
-    return cm.ListScreens(mcID, page, limit)
+	// Could add the context here correctly
+	_, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
+	return cm.ListScreens(mcID, page, limit)
 }
 
 // TODO: Re-Assign the preview based on screen information
@@ -287,30 +284,29 @@ func (cm ContentManagerDB) ListScreens(mcID uuid.UUID, page int, per_page int) (
 
 // Need to make it use the manager and just show the file itself
 func (cm ContentManagerDB) GetScreen(psID uuid.UUID) (*models.PreviewScreen, error) {
-    previewScreen := &models.PreviewScreen{}
-    tx := cm.GetConnection()
-    err := tx.Find(previewScreen, psID)
-    if err != nil {
-        return nil, err
-    }
-    return previewScreen, nil
+	previewScreen := &models.PreviewScreen{}
+	tx := cm.GetConnection()
+	err := tx.Find(previewScreen, psID)
+	if err != nil {
+		return nil, err
+	}
+	return previewScreen, nil
 
 }
 
 func (cm ContentManagerDB) CreateScreen(screen *models.PreviewScreen) error {
-    tx := cm.GetConnection()
-    return tx.Create(screen)
+	tx := cm.GetConnection()
+	return tx.Create(screen)
 }
 
 func (cm ContentManagerDB) CreateMedia(mc *models.MediaContainer) error {
-    tx := cm.GetConnection()
-    return tx.Create(mc)
+	tx := cm.GetConnection()
+	return tx.Create(mc)
 }
-
 
 // TODO: Security vuln need to ensure that you can only create UNDER the directory
 // specified by the initial load.
 func (cm ContentManagerDB) CreateContainer(c *models.Container) error {
-    tx := cm.GetConnection()
-    return tx.Create(c)
+	tx := cm.GetConnection()
+	return tx.Create(c)
 }
