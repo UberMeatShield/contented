@@ -24,9 +24,9 @@ There is a docker compose file that you can use to bring up a postgres db for de
 database using buffalo commands.
 
     $ docker-compose up -d db
-    $ buffalo pop create -a
-    $ buffalo pop migrate
-    $ buffalo pop reset
+    $ buffalo db create -a
+    $ buffalo db migrate
+    $ buffalo db reset
 
 To populate the DB with the test directory you can set an environment variable in DIR (fully qualified) and then
 run the db grift to populate the db.
