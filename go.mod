@@ -1,6 +1,6 @@
 module contented
 
-go 1.19
+go 1.18
 
 require (
 	github.com/disintegration/imaging v1.6.2
@@ -12,7 +12,7 @@ require (
 	github.com/gobuffalo/mw-paramlogger v1.0.1
 	github.com/gobuffalo/nulls v0.4.1
 	github.com/gobuffalo/packr/v2 v2.8.3
-	github.com/gobuffalo/pop/v5 v5.3.4
+	github.com/gobuffalo/pop/v5 v5.3.2
 	github.com/gobuffalo/suite/v3 v3.0.2
 	github.com/gobuffalo/validate/v3 v3.3.2
 	github.com/gobuffalo/x v0.1.0
@@ -77,9 +77,7 @@ require (
 	github.com/luna-duclos/instrumentedsql v1.1.3 // indirect
 	github.com/markbates/errx v1.1.0 // indirect
 	github.com/markbates/oncer v1.0.0 // indirect
-	github.com/markbates/refresh v1.12.0 // indirect
 	github.com/markbates/safe v1.0.1 // indirect
-	github.com/markbates/sigtx v1.0.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
