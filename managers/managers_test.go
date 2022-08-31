@@ -51,10 +51,8 @@ func TestMain(m *testing.M) {
 
 func Test_ManagerSuite(t *testing.T) {
 	app := internals.CreateBuffaloApp(true, "test")
-	action, err := suite.NewActionWithFixtures(app, os.DirFS("../fixtures"))
-	if err != nil {
-		t.Fatal(err)
-	}
+    //action, err := suite.NewActionWithFixtures(app, os.DirFS("../fixtures"))
+    action := suite.NewAction(app)
 	as := &ActionSuite{
 		Action: action,
 	}

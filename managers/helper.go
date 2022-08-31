@@ -216,9 +216,8 @@ func CreateMediaPreviews(c *models.Container, media models.MediaContainers) (mod
 				mc_update.Preview = result.Preview
 				previews = append(previews, mc_update)
 			} else if result.Err != nil {
-				log.Printf("ERROR: Failed to create a preview %s\n", result.Err)
+				log.Printf("ERROR: Failed to create a preview %s for %s \n", result.Err, mc_update.Src)
 				error_list += "" + result.Err.Error()
-
 				mc_update.Preview = ""
 				mc_update.Corrupt = true
 				previews = append(previews, mc_update)

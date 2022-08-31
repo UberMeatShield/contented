@@ -14,7 +14,6 @@ import (
 )
 
 const ExpectCntCount = 5
-
 type ActionSuite struct {
 	*suite.Action
 }
@@ -178,10 +177,7 @@ func (as *ActionSuite) Test_PreviewWorking() {
 }
 
 func Test_ManagerSuite(t *testing.T) {
-	action, err := suite.NewActionWithFixtures(App(true), os.DirFS("../fixtures"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	action := suite.NewAction(App(true))
 	as := &ActionSuite{
 		Action: action,
 	}

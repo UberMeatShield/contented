@@ -368,7 +368,7 @@ func CreateSeekScreens(srcFile string, dstFile string) ([]string, error, string)
 	// Screen file can be modified to take a second format which is the time skip
 	for idx := 0; idx < totalScreens; idx++ {
 		ss := (idx * timeSkip) + frameOffset
-		screenFile := fmt.Sprintf(screenFmt, idx, ss)
+		screenFile := fmt.Sprintf(screenFmt, ss)
 		err := CreateSeekScreen(srcFile, screenFile, ss)
 		if err != nil {
 			log.Printf("Error creating a seek screen %s", err)

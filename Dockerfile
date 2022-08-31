@@ -15,8 +15,26 @@ COPY go.sum go.sum
 RUN go mod download
 
 ADD . .
-RUN buffalo build --static -o /bin/app
+RUN buffalo build --static -o --skip-assets /bin/app
 
+#======================================================================================
+# Build out the angular and front end code
+#======================================================================================
+FROM node:16 as angular
+
+RUN mkdir /contented
+WORKDIR /contented
+ADD . .
+
+# Clear out any Mac or other OS binaries from an external install
+RUN rm -rf public && rm -rf node_modules && mkdir -p public
+RUN yarn install
+RUN yarn run gulp buildDeploy
+RUN ls -la /contented/public && ls -la /contented/public/build/index.html
+
+#======================================================================================
+# Build out the main hosted container that doesn't have all the build dependencies
+#======================================================================================
 FROM alpine
 RUN apk add --no-cache bash
 RUN apk add --no-cache ca-certificates
