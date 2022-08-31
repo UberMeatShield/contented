@@ -35,7 +35,7 @@
 
   <div class="video-results" *ngIf="!!media">
     <mat-card id="view_media_{{mc.id}}" class="video-view-card" *ngFor="let mc of getVisibleSet()">
-      <mat-card-title>
+      <mat-card-title class="video-details">
         <a mat-raised-button href="/view/{{mc.id}}" title="Open in new tab" target="window">
           New Fullscreen Tab
           <mat-icon>tab</mat-icon>

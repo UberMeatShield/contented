@@ -1,30 +1,30 @@
 package actions
 
 import (
-    "os"
     "fmt"
     "net/http"
-//    "net/url"
-    "encoding/json"
-    "path/filepath"
+    "os"
+    //    "net/url"
     "contented/internals"
     "contented/models"
+    "encoding/json"
     "github.com/gobuffalo/nulls"
     "github.com/gofrs/uuid"
+    "path/filepath"
 )
 
 func CreatePreview(src string, mediaID uuid.UUID, as *ActionSuite) models.PreviewScreen {
-     mc := &models.PreviewScreen{
-         Src:     src,
-         MediaID: mediaID,
-         Idx: 1,
-     }
-     res := as.JSON("/screens").Post(mc)
-     as.Equal(http.StatusCreated, res.Code)
+    mc := &models.PreviewScreen{
+        Src:     src,
+        MediaID: mediaID,
+        Idx:     1,
+    }
+    res := as.JSON("/screens").Post(mc)
+    as.Equal(http.StatusCreated, res.Code)
 
-     resObj := models.PreviewScreen{}
-     json.NewDecoder(res.Body).Decode(&resObj)
-     return resObj
+    resObj := models.PreviewScreen{}
+    json.NewDecoder(res.Body).Decode(&resObj)
+    return resObj
 
 }
 
@@ -41,10 +41,10 @@ func CreateTestContainerWithMedia(as *ActionSuite) (*models.Container, *models.M
     // TODO: Ensure that this path is actually correct, should actually make a REAL jpeg copy
     screenSrc := filepath.Join(dstDir, fmt.Sprintf("%s.screen.001.jpg", testFile))
     mc := &models.MediaContainer{
-      Src:         testFile,
-      ContentType: "video/mp4",
-      Preview:     screenSrc,
-      ContainerID: nulls.NewUUID(c.ID),
+        Src:         testFile,
+        ContentType: "video/mp4",
+        Preview:     screenSrc,
+        ContainerID: nulls.NewUUID(c.ID),
     }
     as.DB.Create(mc)
 
@@ -62,16 +62,14 @@ func CreateTestContainerWithMedia(as *ActionSuite) (*models.Container, *models.M
     return c, mc, screenSrc
 }
 
-
 func CreatePreviewScreen(as *ActionSuite) (*models.Container, *models.MediaContainer, *models.PreviewScreen) {
     c, mc, screenSrc := CreateTestContainerWithMedia(as)
     ps := CreatePreview(screenSrc, mc.ID, as)
     return c, mc, &ps
 }
 
-
 func (as *ActionSuite) Test_PreviewScreensResource_List() {
-    internals.InitFakeApp(true) 
+    internals.InitFakeApp(true)
     CreatePreviewScreen(as)
     CreatePreviewScreen(as)
 
@@ -84,8 +82,8 @@ func (as *ActionSuite) Test_PreviewScreensResource_List() {
 }
 
 func (as *ActionSuite) Test_PreviewScreensResource_ListMC() {
-    internals.InitFakeApp(true) 
-    
+    internals.InitFakeApp(true)
+
     // This creates a preview screen making the total 3 in the DB
     // Note it also resets the container_preview dir right now
     CreatePreviewScreen(as)
@@ -100,7 +98,7 @@ func (as *ActionSuite) Test_PreviewScreensResource_ListMC() {
     as.Equal(len(validate), 2, "Note we should have only two screens")
     for _, ps := range validate {
         as.Equal(ps.MediaID, mc1.ID)
-        as.Equal(ps.Path, "")  // Path should not be visible in the API
+        as.Equal(ps.Path, "") // Path should not be visible in the API
     }
 }
 
@@ -118,7 +116,7 @@ func (as *ActionSuite) Test_PreviewScreensResource_Show() {
 
 // TODO: Create a screen that is actually on disk.
 func (as *ActionSuite) Test_PreviewScreensResource_Create() {
-    internals.InitFakeApp(true) 
+    internals.InitFakeApp(true)
     _, mc, screenSrc := CreateTestContainerWithMedia(as)
     ps := CreatePreview(screenSrc, mc.ID, as)
     as.Equal(ps.Src, screenSrc)
@@ -129,7 +127,7 @@ func (as *ActionSuite) Test_PreviewScreensResource_Create() {
 }
 
 func (as *ActionSuite) Test_PreviewScreensResource_Update() {
-    internals.InitFakeApp(true) 
+    internals.InitFakeApp(true)
     _, mc, screenSrc := CreateTestContainerWithMedia(as)
     ps := CreatePreview(screenSrc, mc.ID, as)
     ps.Src = "UP"
@@ -138,7 +136,7 @@ func (as *ActionSuite) Test_PreviewScreensResource_Update() {
 }
 
 func (as *ActionSuite) Test_PreviewScreensResource_Destroy() {
-    internals.InitFakeApp(true) 
+    internals.InitFakeApp(true)
     _, mc, screenSrc := CreateTestContainerWithMedia(as)
     ps := CreatePreview(screenSrc, mc.ID, as)
 
@@ -147,7 +145,7 @@ func (as *ActionSuite) Test_PreviewScreensResource_Destroy() {
 }
 
 func (as *ActionSuite) Test_PreviewScreensResource_CannotDestroy() {
-    internals.InitFakeApp(false) 
+    internals.InitFakeApp(false)
     ps := &models.PreviewScreen{
         Src: "Shouldn't Allow Create",
         Idx: 1,

@@ -18,13 +18,13 @@ import (
     "image/jpeg"
     "image/png"
     "io"
+    "io/ioutil"
     "log"
     "os"
     "path/filepath"
     "regexp"
     "strconv"
     "strings"
-    "io/ioutil"
 )
 
 const PREVIEW_DIRECTORY = "container_previews"
@@ -116,7 +116,7 @@ func GetPreviewPathDestination(filename string, dstPath string, contentType stri
         // The image library for video previews sets the output by ext (not a video)
         previewType := GetCfg().PreviewVideoType
         if previewType == "screens" {
-            dstFilename += ".webp"  
+            dstFilename += ".webp"
         } else {
             dstFilename += ("." + previewType)
         }
@@ -200,12 +200,12 @@ func GetScreensOutputPattern(dstFile string) string {
     }
 }
 
-// Used to search for a matched screen.   I am using ss to denote that the screen is at 
+// Used to search for a matched screen.   I am using ss to denote that the screen is at
 // a specific time, this is the most common case but I haven't found a clever way to have
 // smaller video files set their second time using a sel(n, framemod) format.
 func GetScreensMatcherRE(dstFile string) (*regexp.Regexp, error) {
-	stripExtension := regexp.MustCompile(".png$|.jpeg$|.jpg$")
-	dstFile = stripExtension.ReplaceAllString(dstFile, "")
+    stripExtension := regexp.MustCompile(".png$|.jpeg$|.jpg$")
+    dstFile = stripExtension.ReplaceAllString(dstFile, "")
     dstFile = regexp.QuoteMeta(dstFile)
 
     // Check if there is a screens option and modify the screen time
@@ -343,7 +343,7 @@ func CreateSeekScreens(srcFile string, dstFile string) ([]string, error, string)
     msg := fmt.Sprintf("%s Total time was %f with %d as the fps", srcFile, totalTime, fps)
     log.Printf(msg)
     if int(totalTime) == 0 {
-        return []string{}, errors.New(msg + " Invalid duration or fps"), "" 
+        return []string{}, errors.New(msg + " Invalid duration or fps"), ""
     }
 
     // This is ugly enough that maybe it should be a method small files cause
@@ -358,7 +358,7 @@ func CreateSeekScreens(srcFile string, dstFile string) ([]string, error, string)
         totalScreens = int(totalTime) / 2
         totalScreenTime = int(totalTime)
         frameOffset = 0
-    } 
+    }
     timeSkip := int(totalScreenTime) / totalScreens
     log.Printf("Setting up screens (%d) with timeSkip (%d)", totalScreens, timeSkip)
 
@@ -368,7 +368,7 @@ func CreateSeekScreens(srcFile string, dstFile string) ([]string, error, string)
     // Screen file can be modified to take a second format which is the time skip
     for idx := 0; idx < totalScreens; idx++ {
         ss := (idx * timeSkip) + frameOffset
-        screenFile := fmt.Sprintf(screenFmt, idx, ss)
+        screenFile := fmt.Sprintf(screenFmt, ss)
         err := CreateSeekScreen(srcFile, screenFile, ss)
         if err != nil {
             log.Printf("Error creating a seek screen %s", err)
@@ -424,7 +424,7 @@ func CreateWebpFromScreens(screensSrc string, dstFile string) (string, error) {
     screenErr := ffmpeg.Input(paletteFile, ffmpeg.KwArgs{"i": screensSrc}).
         Output(dstFile, ffmpeg.KwArgs{
             "filter_complex": filter,
-            "loop": 0,
+            "loop":           0,
         }).OverWriteOutput().Run()
     return dstFile, screenErr
 }
@@ -557,14 +557,14 @@ func CreateMediaPreview(c *models.Container, mc *models.MediaContainer) (string,
     dstFqPath, err := GetImagePreview(cntPath, mc.Src, dstPath, cfg.PreviewOverSize)
     if err != nil {
         log.Printf("Failed to create a preview in %s for mc %s err: %s", dstPath, mc.ID.String(), err)
-        if (cfg.PreviewCreateFailIsFatal) {
+        if cfg.PreviewCreateFailIsFatal {
             log.Fatal(err)
         }
     }
     return GetRelativePreviewPath(dstFqPath, cntPath), err
 }
 
-func AssignScreensFromSet(c *models.Container, mc *models.MediaContainer, maybeScreens *[]os.FileInfo) (*models.PreviewScreens) {
+func AssignScreensFromSet(c *models.Container, mc *models.MediaContainer, maybeScreens *[]os.FileInfo) *models.PreviewScreens {
     if !strings.Contains(mc.ContentType, "video") {
         // log.Printf("Media is not of type video, no screens likely")
         return nil
@@ -577,7 +577,7 @@ func AssignScreensFromSet(c *models.Container, mc *models.MediaContainer, maybeS
 
     // Could probably just go with FileInfo references
     previewPath := GetPreviewDst(c.GetFqPath())
-    // ie: 1000 episodes of One Piece * (15 screens  + 1 webp) in a loop running 
+    // ie: 1000 episodes of One Piece * (15 screens  + 1 webp) in a loop running
     // the regex against them all over and over...
     previewScreens := models.PreviewScreens{}
     for idx, fRef := range *maybeScreens {
@@ -586,11 +586,11 @@ func AssignScreensFromSet(c *models.Container, mc *models.MediaContainer, maybeS
             // log.Printf("Matched file %s idx %d", name, idx)
             id, _ := uuid.NewV4()
             ps := models.PreviewScreen{
-                ID: id,
-                Path: previewPath,
-                Src: name,
-                MediaID: mc.ID,
-                Idx: idx,
+                ID:        id,
+                Path:      previewPath,
+                Src:       name,
+                MediaID:   mc.ID,
+                Idx:       idx,
                 SizeBytes: fRef.Size(),
             }
             previewScreens = append(previewScreens, ps)
@@ -609,14 +609,14 @@ func GetPotentialScreens(c *models.Container) (*[]os.FileInfo, error) {
     }
     maybeScreens := []os.FileInfo{}
     for _, fRef := range dirEntries {
-        if !fRef.IsDir() {  // Quick check to ensure screens is in the filename?
+        if !fRef.IsDir() { // Quick check to ensure screens is in the filename?
             maybeScreens = append(maybeScreens, fRef)
         }
     }
     return &maybeScreens, nil
 }
 
-func AssignScreensIfExists(c *models.Container, mc *models.MediaContainer) (*models.PreviewScreens) {
+func AssignScreensIfExists(c *models.Container, mc *models.MediaContainer) *models.PreviewScreens {
     if !strings.Contains(mc.ContentType, "video") {
         // log.Printf("Media is not of type video, no screens likely")
         return nil
@@ -629,14 +629,13 @@ func AssignScreensIfExists(c *models.Container, mc *models.MediaContainer) (*mod
 }
 
 func AssignPreviewIfExists(c *models.Container, mc *models.MediaContainer) string {
-       // This check is normally to determine if we didn't clear out old previews.
-       // For memory only managers it will just consider that a bonus and use the preview.
-       previewPath := GetPreviewDst(c.GetFqPath())
-       previewFile, exists := ErrorOnPreviewExists(mc.Src, previewPath, mc.ContentType)
-       if exists != nil {
-               mc.Preview = GetRelativePreviewPath(previewFile, c.GetFqPath())
-               log.Printf("Added a preview to media %s", mc.Preview)
-       }
-       return previewFile
+    // This check is normally to determine if we didn't clear out old previews.
+    // For memory only managers it will just consider that a bonus and use the preview.
+    previewPath := GetPreviewDst(c.GetFqPath())
+    previewFile, exists := ErrorOnPreviewExists(mc.Src, previewPath, mc.ContentType)
+    if exists != nil {
+        mc.Preview = GetRelativePreviewPath(previewFile, c.GetFqPath())
+        log.Printf("Added a preview to media %s", mc.Preview)
+    }
+    return previewFile
 }
-

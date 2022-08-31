@@ -4,6 +4,8 @@ version: "3"
 services:
   web:
     image: "contented:latest"
+    build:
+      context: .
     ports: 
       - "3000:3000"
     volumes:
@@ -14,8 +16,7 @@ services:
       CONTENT_DIR: "/content"
       STATIC_RESOURCE_PATH: "/public/build"
       USE_DATABASE: "true"
-      LIMIT: 5000
-      PREVIEW: 12
+      LIMIT: 10000
 
   db:
     image: "postgres:10.7-alpine"

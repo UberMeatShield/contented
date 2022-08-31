@@ -97,7 +97,7 @@ func CreateAllPreviews(cm ContentManager) error {
             err_msg = append(err_msg, msg)
         }
     }
-    
+
     // TODO: Cut down how much spam is getting kicked out by this summary
     if len(err_msg) > 0 {
         return errors.New(strings.Join(err_msg, "\n"))
@@ -143,7 +143,7 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
             screens := utils.AssignScreensFromSet(c, &mc, maybeScreens)
             if screens != nil {
                 log.Printf("Found new screens we should create %d", len(*screens))
-                for _, s := range(*screens) {
+                for _, s := range *screens {
                     cm.CreateScreen(&s)
                 }
             }
@@ -216,9 +216,8 @@ func CreateMediaPreviews(c *models.Container, media models.MediaContainers) (mod
                 mc_update.Preview = result.Preview
                 previews = append(previews, mc_update)
             } else if result.Err != nil {
-                log.Printf("ERROR: Failed to create a preview %s\n", result.Err)
+                log.Printf("ERROR: Failed to create a preview %s for %s \n", result.Err, mc_update.Src)
                 error_list += "" + result.Err.Error()
-
                 mc_update.Preview = ""
                 mc_update.Corrupt = true
                 previews = append(previews, mc_update)
