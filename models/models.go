@@ -1,10 +1,10 @@
 package models
 
 import (
-	"log"
+    "log"
 
-	"github.com/gobuffalo/envy"
-	"github.com/gobuffalo/pop/v6"
+    "github.com/gobuffalo/envy"
+    "github.com/gobuffalo/pop/v6"
 )
 
 // DB is a connection to your database to be used
@@ -12,11 +12,11 @@ import (
 var DB *pop.Connection
 
 func init() {
-	var err error
-	env := envy.Get("GO_ENV", "development")
-	DB, err = pop.Connect(env)
-	if err != nil {
-		log.Fatal(err)
-	}
-	pop.Debug = env == "development"
+    var err error
+    env := envy.Get("GO_ENV", "development")
+    DB, err = pop.Connect(env)
+    if err != nil {
+        log.Fatal(err)
+    }
+    pop.Debug = env == "development"
 }
