@@ -25,7 +25,9 @@ type MediaContainer struct {
     Corrupt     bool           `json:"corrupt" db:"corrupt"`
     SizeBytes   int64          `json:"size" db:"size_bytes"`
     Description string         `json:"description" db:"description"`
-    Screens     PreviewScreens `json:"screens" has_many:"preview_screens" db:"-"`
+    // Joins
+    Screens PreviewScreens `json:"screens" has_many:"preview_screens" db:"-"`
+    Tagged Tags `json:"tags" many_to_many:"media_containers_tags" db:"-"`
 
     // TODO: Maybe, MAYBE drop this?  None of the code currently really looks at the encoding
     // till actually creating a preview.

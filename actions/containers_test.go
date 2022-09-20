@@ -83,10 +83,13 @@ func (as *ActionSuite) Test_ContainersResource_Destroy() {
     as.Equal(http.StatusNotFound, notFoundRes.Code)
 }
 
-func (as *ActionSuite) Test_ContainerFixture() {
+func (as *ActionSuite) Test_ContainerList() {
     internals.InitFakeApp(true)
-    as.LoadFixture("base")
 
+    cnt1, _ := internals.GetMediaByDirName("dir1")
+    cnt2, _ := internals.GetMediaByDirName("dir2")
+    models.DB.Create(cnt1)
+    models.DB.Create(cnt2)
     res := as.JSON("/containers").Get()
     as.Equal(http.StatusOK, res.Code)
 
@@ -94,10 +97,9 @@ func (as *ActionSuite) Test_ContainerFixture() {
     json.NewDecoder(res.Body).Decode(&containers)
 
     as.Equal(2, len(containers), "It should have loaded two fixtures")
-
     var found *models.Container
     for _, c := range containers {
-        if c.Name == "contain1" {
+        if c.Name == "dir2" {
             found = &c
         }
     }
