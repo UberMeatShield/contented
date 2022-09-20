@@ -1,0 +1,12 @@
+create_table("tags") {
+	t.Column("id", "uuid", {primary: true})
+	t.Column("name", "string", {unique: true})
+	t.Timestamps()
+}
+
+create_table("media_containers_tags") {
+    t.Column("media_container_id", "uuid", {})
+    t.ForeignKey("media_container_id", {"media_containers": ["id"]}, {})
+    t.Column("tag_id", "uuid", {})
+    t.ForeignKey("tag_id", {"tags": ["id"]}, {})
+}
