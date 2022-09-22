@@ -10,6 +10,7 @@ import (
     "github.com/gobuffalo/pop/v6"
     "github.com/gofrs/uuid"
     "github.com/lib/pq"
+    "errors"
     "log"
     "net/url"
     "strings"
@@ -302,6 +303,14 @@ func (cm ContentManagerDB) CreateScreen(screen *models.PreviewScreen) error {
 func (cm ContentManagerDB) CreateMedia(mc *models.MediaContainer) error {
     tx := cm.GetConnection()
     return tx.Create(mc)
+}
+
+func (cm ContentManagerDB) ListAllTags(page int, perPage int) (*models.Tags, error) {
+    return nil, errors.New("Not implemented")
+}
+
+func (cm ContentManagerDB) ListAllTagsContext(page int, perPage int) (*models.Tags, error) {
+    return nil, errors.New("Not implemented")
 }
 
 // TODO: Security vuln need to ensure that you can only create UNDER the directory

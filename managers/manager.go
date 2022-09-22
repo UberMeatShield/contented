@@ -53,6 +53,9 @@ type ContentManager interface {
     ListScreens(mcID uuid.UUID, page int, per_page int) (*models.PreviewScreens, error)
     GetScreen(psID uuid.UUID) (*models.PreviewScreen, error)
 
+    // Tags listing
+    ListAllTags(page int, perPage int) (*models.Tags, error)
+
     CreateScreen(s *models.PreviewScreen) error
     CreateMedia(mc *models.MediaContainer) error
     CreateContainer(mc *models.Container) error

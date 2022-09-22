@@ -366,6 +366,14 @@ func (cm ContentManagerMemory) GetScreen(psID uuid.UUID) (*models.PreviewScreen,
     return nil, errors.New("Screen not found")
 }
 
+func (cm ContentManagerMemory) ListAllTags(page int, perPage int) (*models.Tags, error) {
+    return nil, errors.New("Not implemented")
+}
+
+func (cm ContentManagerMemory) ListAllTagsContext() (*models.Tags, error) {
+    return nil, errors.New("Not implemented")
+}
+
 func AssignID(id uuid.UUID) uuid.UUID {
     emptyID, _ := uuid.FromString("00000000-0000-0000-0000-000000000000")
     if id == emptyID {

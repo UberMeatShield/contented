@@ -399,6 +399,26 @@ func (as *ActionSuite) Test_ManagerDB() {
     as.Equal(3, len(*lim_media), "The DB should be setup with 10 items")
 }
 
+func (as *ActionSuite) Test_ManagerTagsDB() {
+    models.DB.TruncateAll()
+    cfg := internals.InitFakeApp(true)
+
+    man := GetManagerActionSuite(cfg, as)
+    tags, err := man.ListAllTags(0, 3)
+    as.NoError(err, "It should be able to list tags")
+    as.Equal(len(*tags), 2, "We should have two tags")
+}
+
+func (as *ActionSuite) Test_ManagerTagsMemory() {
+    models.DB.TruncateAll()
+    cfg := internals.InitFakeApp(false)
+
+    man := GetManagerActionSuite(cfg, as)
+    tags, err := man.ListAllTags(0, 3)
+    as.NoError(err, "It should be able to list tags")
+    as.Equal(len(*tags), 2, "We should have two tags")
+}
+
 func (as *ActionSuite) Test_ManagerDBPreviews() {
     models.DB.TruncateAll()
     cfg := internals.InitFakeApp(true)
