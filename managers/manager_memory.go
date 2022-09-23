@@ -24,6 +24,7 @@ type ContentManagerMemory struct {
     ValidMedia      models.MediaMap
     ValidContainers models.ContainerMap
     ValidScreens    models.PreviewScreenMap
+    ValidTags       models.TagsMap
     validate        string
 
     params *url.Values
@@ -61,6 +62,7 @@ func (cm *ContentManagerMemory) Initialize() {
     cm.ValidContainers = memStorage.ValidContainers
     cm.ValidMedia = memStorage.ValidMedia
     cm.ValidScreens = memStorage.ValidScreens
+    cm.ValidTags = memStorage.ValidTags
     log.Printf("Found %d directories with %d media elements \n", len(cm.ValidContainers), len(cm.ValidMedia))
 }
 
@@ -366,12 +368,37 @@ func (cm ContentManagerMemory) GetScreen(psID uuid.UUID) (*models.PreviewScreen,
     return nil, errors.New("Screen not found")
 }
 
+// It really seems like it would be nicer to have a base class do this...
 func (cm ContentManagerMemory) ListAllTags(page int, perPage int) (*models.Tags, error) {
+    log.Printf("Using memory manager for tag page %d perPage %d \n", page, perPage)
+    t_arr := models.Tags{}
+    for _, t := range cm.ValidTags {
+        t_arr = append(t_arr, t)
+    }
+    sort.SliceStable(t_arr, func(i, j int) bool {
+        return t_arr[i].Name < t_arr[j].Name
+    })
+    offset, end := GetOffsetEnd(page, perPage, len(t_arr))
+    if end > 0 { // If it is empty a slice ending in 0 = boom
+        t_arr = t_arr[offset:end]
+        return &t_arr, nil
+    }
     return nil, errors.New("Not implemented")
 }
 
+// hate
 func (cm ContentManagerMemory) ListAllTagsContext() (*models.Tags, error) {
-    return nil, errors.New("Not implemented")
+    _, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
+    return cm.ListAllTags(page, limit)
+}
+
+func (cm ContentManagerMemory) CreateTag(tag *models.Tag) (error) {
+    if tag != nil {
+        tag.ID = AssignID(tag.ID)
+        cm.ValidTags[tag.ID] = *tag
+        return nil
+    }
+    return errors.New("ContentManagerMemory no tag provided.")
 }
 
 func AssignID(id uuid.UUID) uuid.UUID {

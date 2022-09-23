@@ -404,6 +404,8 @@ func (as *ActionSuite) Test_ManagerTagsDB() {
     cfg := internals.InitFakeApp(true)
 
     man := GetManagerActionSuite(cfg, as)
+    as.NoError(man.CreateTag(&models.Tag{Name: "A",}), "couldn't create tag A")
+    as.NoError(man.CreateTag(&models.Tag{Name: "B",}), "couldn't create tag B")
     tags, err := man.ListAllTags(0, 3)
     as.NoError(err, "It should be able to list tags")
     as.Equal(len(*tags), 2, "We should have two tags")
@@ -414,6 +416,8 @@ func (as *ActionSuite) Test_ManagerTagsMemory() {
     cfg := internals.InitFakeApp(false)
 
     man := GetManagerActionSuite(cfg, as)
+    as.NoError(man.CreateTag(&models.Tag{Name: "A",}), "couldn't create tag A")
+    as.NoError(man.CreateTag(&models.Tag{Name: "B",}), "couldn't create tag B")
     tags, err := man.ListAllTags(0, 3)
     as.NoError(err, "It should be able to list tags")
     as.Equal(len(*tags), 2, "We should have two tags")

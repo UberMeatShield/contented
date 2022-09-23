@@ -55,10 +55,12 @@ type ContentManager interface {
 
     // Tags listing
     ListAllTags(page int, perPage int) (*models.Tags, error)
+    ListAllTagsContext() (*models.Tags, error)
 
     CreateScreen(s *models.PreviewScreen) error
     CreateMedia(mc *models.MediaContainer) error
     CreateContainer(mc *models.Container) error
+    CreateTag(tag *models.Tag) error
 
     UpdateContainer(c *models.Container) error
     UpdateMedia(media *models.MediaContainer) error

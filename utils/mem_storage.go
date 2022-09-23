@@ -16,6 +16,7 @@ type MemoryStorage struct {
     ValidMedia      models.MediaMap
     ValidContainers models.ContainerMap
     ValidScreens    models.PreviewScreenMap
+    ValidTags       models.TagsMap
 }
 
 var memStorage MemoryStorage = MemoryStorage{Initialized: false}
@@ -32,6 +33,7 @@ func InitializeMemory(dir_root string) *MemoryStorage {
     memStorage.ValidContainers = containers
     memStorage.ValidMedia = files
     memStorage.ValidScreens = screens
+    memStorage.ValidTags = models.TagsMap{}
 
     return &memStorage
 }
