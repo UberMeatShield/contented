@@ -400,6 +400,31 @@ func (cm ContentManagerMemory) CreateTag(tag *models.Tag) (error) {
     return errors.New("ContentManagerMemory no tag provided.")
 }
 
+// If you already updated the container in memory you are done
+func (cm ContentManagerMemory) UpdateTag(t *models.Tag) error {
+    // TODO: Validate that this updates the actual reference in mem storage
+    if _, ok := cm.ValidTags[t.ID]; ok {
+        cm.ValidTags[t.ID] = *t
+        return nil
+    }
+    return errors.New("ContentManagerMemory Update failed, not found.")
+}
+
+func (cm ContentManagerMemory) DeleteTag(t *models.Tag) error {
+    if _, ok := cm.ValidTags[t.ID]; ok {
+        delete(cm.ValidTags, t.ID)
+        return nil
+    }
+    return errors.New("ContentManagerMemory Update failed, not found.")
+}
+
+func (cm ContentManagerMemory) AssociateTag(t *models.Tag, mc *models.MediaContainer) error {
+    if _, ok := cm.ValidTags[t.ID]; ok {
+        return errors.New("Not implemented")
+    }
+    return errors.New("ContentManagerMemory Update failed, not found.")
+}
+
 func AssignID(id uuid.UUID) uuid.UUID {
     emptyID, _ := uuid.FromString("00000000-0000-0000-0000-000000000000")
     if id == emptyID {

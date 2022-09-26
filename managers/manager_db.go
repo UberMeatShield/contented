@@ -10,7 +10,7 @@ import (
     "github.com/gobuffalo/pop/v6"
     "github.com/gofrs/uuid"
     "github.com/lib/pq"
-//    "errors"
+    "errors"
     "log"
     "net/url"
     "strings"
@@ -323,6 +323,20 @@ func (cm ContentManagerDB) ListAllTagsContext() (*models.Tags, error) {
 func (cm ContentManagerDB) CreateTag(tag *models.Tag) (error) {
     tx := cm.GetConnection()
     return tx.Create(tag)
+}
+
+func (cm ContentManagerDB) UpdateTag(tag *models.Tag) (error) {
+    tx := cm.GetConnection()
+    return tx.Update(tag)
+}
+
+func (cm ContentManagerDB) DeleteTag(tag *models.Tag) (error) {
+    tx := cm.GetConnection()
+    return tx.Destroy(tag)
+}
+
+func (cm ContentManagerDB) AssociateTag(t *models.Tag, mc *models.MediaContainer) error {
+    return errors.New("Not implemented")
 }
 
 // TODO: Security vuln need to ensure that you can only create UNDER the directory
