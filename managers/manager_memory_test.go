@@ -254,13 +254,30 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
 
 func (as *ActionSuite) Test_ManagerTagsMemory() {
     cfg := internals.InitFakeApp(false)
-
     man := GetManagerActionSuite(cfg, as)
     as.NoError(man.CreateTag(&models.Tag{Name: "A",}), "couldn't create tag A")
     as.NoError(man.CreateTag(&models.Tag{Name: "B",}), "couldn't create tag B")
     tags, err := man.ListAllTags(0, 3)
     as.NoError(err, "It should be able to list tags")
     as.Equal(len(*tags), 2, "We should have two tags")
+}
+
+func (as *ActionSuite) Test_MangerTagsMemoryCRUD() {
+    cfg := internals.InitFakeApp(false)
+    man := GetManagerActionSuite(cfg, as)
+
+    t := models.Tag{Name: "A",}
+    as.NoError(man.CreateTag(&t), "couldn't create tag A")
+    t.Name = "Changed"
+    as.NoError(man.UpdateTag(&t), "It should udpate")
+
+    tags, err := man.ListAllTags(0, 3)
+    as.NoError(err)
+    as.Equal(len(*tags), 1, "We should have one tag")
+    as.Equal((*tags)[0].Name, "Changed", "It should update")
+    man.DeleteTag(&t)
+    tags_gone, _ := man.ListAllTags(0, 3)
+    as.Equal(len(*tags_gone), 0, "Now there should be no tags")
 }
 
 

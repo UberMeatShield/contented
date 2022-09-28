@@ -79,11 +79,14 @@ func (cm ContentManagerMemory) ListMediaContext(cID uuid.UUID) (*models.MediaCon
 
 func (cm ContentManagerMemory) ListAllMedia(page int, per_page int) (*models.MediaContainers, error) {
     m_arr := models.MediaContainers{}
-
-    // Did I create this just to sort by Idx across all media?  Kinda strange
     for _, m := range cm.ValidMedia {
         m_arr = append(m_arr, m)
     }
+    if len(m_arr) == 0 {
+        return &m_arr, nil
+    }
+
+    // Did I create this just to sort by Idx across all media?  Kinda strange but required.
     sort.SliceStable(m_arr, func(i, j int) bool {
         return m_arr[i].Idx < m_arr[j].Idx
     })
@@ -375,6 +378,10 @@ func (cm ContentManagerMemory) ListAllTags(page int, perPage int) (*models.Tags,
     for _, t := range cm.ValidTags {
         t_arr = append(t_arr, t)
     }
+    if len(t_arr) == 0 {
+        return &t_arr, nil
+    }
+
     sort.SliceStable(t_arr, func(i, j int) bool {
         return t_arr[i].Name < t_arr[j].Name
     })

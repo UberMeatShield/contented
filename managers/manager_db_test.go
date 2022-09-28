@@ -113,14 +113,33 @@ func (as *ActionSuite) Test_ManagerDB() {
 func (as *ActionSuite) Test_ManagerTagsDB() {
     models.DB.TruncateAll()
     cfg := internals.InitFakeApp(true)
-
     man := GetManagerActionSuite(cfg, as)
+
     as.NoError(man.CreateTag(&models.Tag{Name: "A",}), "couldn't create tag A")
     as.NoError(man.CreateTag(&models.Tag{Name: "B",}), "couldn't create tag B")
     tags, err := man.ListAllTags(0, 3)
     as.NoError(err, "It should be able to list tags")
     as.Equal(len(*tags), 2, "We should have two tags")
 }
+
+func (as *ActionSuite) Test_ManagerTagsDBCRUD() {
+    cfg := internals.InitFakeApp(true)
+    man := GetManagerActionSuite(cfg, as)
+
+    t := models.Tag{Name: "A",}
+    as.NoError(man.CreateTag(&t), "couldn't create tag A")
+    t.Name = "Changed"
+    as.NoError(man.UpdateTag(&t), "It should udpate")
+
+    tags, err := man.ListAllTags(0, 3)
+    as.NoError(err)
+    as.Equal(len(*tags), 1, "We should have one tag")
+    as.Equal((*tags)[0].Name, "Changed", "It should update")
+    man.DeleteTag(&t)
+    tags_gone, _ := man.ListAllTags(0, 3)
+    as.Equal(len(*tags_gone), 0, "No tags should be in the DB")
+}
+
 
 
 func (as *ActionSuite) Test_ManagerDBPreviews() {
