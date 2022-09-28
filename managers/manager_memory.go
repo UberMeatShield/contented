@@ -432,6 +432,11 @@ func (cm ContentManagerMemory) AssociateTag(t *models.Tag, mc *models.MediaConta
     return errors.New("ContentManagerMemory Update failed, not found.")
 }
 
+func (cm ContentManagerMemory) AssociateTagByID(tagId uuid.UUID, mcID uuid.UUID) error {
+    return errors.New("ContentMangerMemory Not implemented")
+}
+
+
 func AssignID(id uuid.UUID) uuid.UUID {
     emptyID, _ := uuid.FromString("00000000-0000-0000-0000-000000000000")
     if id == emptyID {

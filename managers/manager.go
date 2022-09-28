@@ -70,6 +70,7 @@ type ContentManager interface {
     UpdateTag(tag *models.Tag) error
     DeleteTag(tag *models.Tag) error
     AssociateTag(tag *models.Tag, c *models.MediaContainer) error
+    AssociateTagByID(tagId uuid.UUID, mcID uuid.UUID) error
 }
 
 // Dealing with buffalo.Context vs grift.Context is kinda annoying, this handles the

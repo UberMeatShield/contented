@@ -12,6 +12,7 @@ import (
     "github.com/lib/pq"
     "errors"
     "log"
+    "fmt"
     "net/url"
     "strings"
 )
@@ -69,11 +70,11 @@ func (cm ContentManagerDB) ListMedia(cID uuid.UUID, page int, per_page int) (*mo
 func (cm ContentManagerDB) GetMedia(mcID uuid.UUID) (*models.MediaContainer, error) {
     log.Printf("Get a single media %s", mcID)
     tx := cm.GetConnection()
-    container := &models.MediaContainer{}
-    if err := tx.Find(container, mcID); err != nil {
+    mc := &models.MediaContainer{}
+    if err := tx.Eager().Find(mc, mcID); err != nil {
         return nil, err
     }
-    return container, nil
+    return mc, nil
 }
 
 func (cm ContentManagerDB) UpdateContainer(c *models.Container) error {
@@ -335,8 +336,29 @@ func (cm ContentManagerDB) DeleteTag(tag *models.Tag) (error) {
     return tx.Destroy(tag)
 }
 
+func (cm ContentManagerDB) GetTag(tagID uuid.UUID) (*models.Tag, error) {
+    log.Printf("DB Get a tag %s", tagID)
+    tx := cm.GetConnection()
+    t := &models.Tag{}
+    if err := tx.Find(t, tagID); err != nil {
+        return nil, err
+    }
+    return t, nil
+}
+
 func (cm ContentManagerDB) AssociateTag(t *models.Tag, mc *models.MediaContainer) error {
-    return errors.New("Not implemented")
+    mc.Tagged = append(mc.Tagged, *t)
+    print(fmt.Printf("Found %s with %s", mc.ID.String(), t.ID.String()))
+    return cm.UpdateMedia(mc)
+}
+
+func (cm ContentManagerDB) AssociateTagByID(tagId uuid.UUID, mcID uuid.UUID) error {
+    mc, m_err := cm.GetMedia(mcID)
+    t, t_err := cm.GetTag(tagId)
+    if m_err != nil || t_err != nil {
+        return errors.New("DB Tag or media container not found")
+    }
+    return cm.AssociateTag(t, mc)
 }
 
 // TODO: Security vuln need to ensure that you can only create UNDER the directory

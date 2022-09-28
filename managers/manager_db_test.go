@@ -125,7 +125,6 @@ func (as *ActionSuite) Test_ManagerTagsDB() {
 func (as *ActionSuite) Test_ManagerTagsDBCRUD() {
     cfg := internals.InitFakeApp(true)
     man := GetManagerActionSuite(cfg, as)
-
     t := models.Tag{Name: "A",}
     as.NoError(man.CreateTag(&t), "couldn't create tag A")
     t.Name = "Changed"
@@ -140,6 +139,23 @@ func (as *ActionSuite) Test_ManagerTagsDBCRUD() {
     as.Equal(len(*tags_gone), 0, "No tags should be in the DB")
 }
 
+
+func (as *ActionSuite) Test_ManagerAssociateTags() {
+    cfg := internals.InitFakeApp(true)
+    man := GetManagerActionSuite(cfg, as)
+
+    t := models.Tag{Name: "A",}
+    mc := models.MediaContainer{Src: "A", Preview: "p", ContentType: "video"}
+    man.CreateMedia(&mc)
+    man.CreateTag(&t)
+    as.Equal(len(mc.Tagged), 0, "There should be no tags at this point")
+
+    err := man.AssociateTagByID(t.ID, mc.ID)
+    as.NoError(err, "We shouldn't have an issue associating this")
+    mc, mc_err := man.GetMedia(mc.ID)
+    as.NoError(mc_err, "We should be able to load back the media")
+    as.Equal(len(mc.Tagged), 1, "There should be a new tag")
+}
 
 
 func (as *ActionSuite) Test_ManagerDBPreviews() {
