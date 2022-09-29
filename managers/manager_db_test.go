@@ -23,12 +23,11 @@ func (as *ActionSuite) Test_DbManagerSearch() {
     for _, mc := range media1 {
         man.CreateMedia(&mc)
     }
-    // hate
     for _, mc := range media2 {
         man.CreateMedia(&mc)
         if mc.Src == "donut.mp4" {
-            man.CreateScreen(&models.PreviewScreen{MediaID: mc.ID, Src: "screen1"})
-            man.CreateScreen(&models.PreviewScreen{MediaID: mc.ID, Src: "screen2"})
+            man.CreateScreen(&models.Screen{MediaID: mc.ID, Src: "screen1"})
+            man.CreateScreen(&models.Screen{MediaID: mc.ID, Src: "screen2"})
         }
     }
     mcs, _, err := man.SearchMedia("Large", 1, 20, "", "")
@@ -123,6 +122,7 @@ func (as *ActionSuite) Test_ManagerTagsDB() {
 }
 
 func (as *ActionSuite) Test_ManagerTagsDBCRUD() {
+    models.DB.TruncateAll()
     cfg := internals.InitFakeApp(true)
     man := GetManagerActionSuite(cfg, as)
     t := models.Tag{Name: "A",}
@@ -140,21 +140,47 @@ func (as *ActionSuite) Test_ManagerTagsDBCRUD() {
 }
 
 
-func (as *ActionSuite) Test_ManagerAssociateTags() {
+func (as *ActionSuite) Test_ManagerAssociateTagsDB() {
+    models.DB.TruncateAll()
     cfg := internals.InitFakeApp(true)
     man := GetManagerActionSuite(cfg, as)
 
-    t := models.Tag{Name: "A",}
+    // hate
+    t1 := models.Tag{Name: "A",}
+    t2 := models.Tag{Name: "B",}
+    man.CreateTag(&t1)
+    man.CreateTag(&t2)
     mc := models.MediaContainer{Src: "A", Preview: "p", ContentType: "video"}
+    mc.Tags = models.Tags{t1, t2,}
     man.CreateMedia(&mc)
-    man.CreateTag(&t)
-    as.Equal(len(mc.Tagged), 0, "There should be no tags at this point")
 
-    err := man.AssociateTagByID(t.ID, mc.ID)
+    s := models.Screen{Src: "screen1", MediaID: mc.ID}
+    man.CreateScreen(&s)
+    mc.Screens = models.Screens{s,}
+    man.UpdateMedia(&mc)
+    // as.Equal(len(mc.Tags), 0, "There should be no tags at this point")
+
+    tags, t_err := man.ListAllTags(0, 10)
+    as.NoError(t_err, "We should be able to list tags.")
+    as.Equal(2, len(*tags), fmt.Sprintf("There should be two tags %s", mc))
+
+    screens, s_err := man.ListScreens(mc.ID, 0, 10)
+    as.NoError(s_err, "Screens should list")
+    as.Equal(1, len(*screens), "We should have a screen associated")
+
+    // TODO: list screens
+    //screens, s_err := man.(0, 10)
+
+    // TODO: ok so the damn eager loading is just not working?
+    tCheck, _ := man.GetMedia(mc.ID)
+    as.Equal(2, len(tCheck.Tags), fmt.Sprintf("Wat %s", tCheck))
+    /*
+    err := man.AssociateTagByID(t1.ID, mc.ID)
     as.NoError(err, "We shouldn't have an issue associating this")
-    mc, mc_err := man.GetMedia(mc.ID)
+    mcCheck, mc_err := man.GetMedia(mc.ID)
     as.NoError(mc_err, "We should be able to load back the media")
-    as.Equal(len(mc.Tagged), 1, "There should be a new tag")
+    as.Equal(1, len(mcCheck.Tags), fmt.Sprintf("There should be a new tag %s", mcCheck))
+    */
 }
 
 
@@ -171,9 +197,9 @@ func (as *ActionSuite) Test_ManagerDBPreviews() {
     man.CreateMedia(&mc3)
     as.NotZero(mc1.ID)
 
-    p1 := models.PreviewScreen{Src: "fake1", Idx: 0, MediaID: mc1.ID}
-    p2 := models.PreviewScreen{Src: "fake2.png", Idx: 1, MediaID: mc1.ID}
-    p3 := models.PreviewScreen{Src: "fake3.png", Idx: 1, MediaID: mc2.ID}
+    p1 := models.Screen{Src: "fake1", Idx: 0, MediaID: mc1.ID}
+    p2 := models.Screen{Src: "fake2.png", Idx: 1, MediaID: mc1.ID}
+    p3 := models.Screen{Src: "fake3.png", Idx: 1, MediaID: mc2.ID}
 
     man.CreateScreen(&p1)
     man.CreateScreen(&p2)
@@ -187,7 +213,7 @@ func (as *ActionSuite) Test_ManagerDBPreviews() {
     as.NoError(p_err)
     as.Equal(len(*previewOne), 1, "Now there should be 1")
 
-    p4 := models.PreviewScreen{Src: "fake4.png", Idx: 1, MediaID: mc2.ID}
+    p4 := models.Screen{Src: "fake4.png", Idx: 1, MediaID: mc2.ID}
     c_err := man.CreateScreen(&p4)
     as.NoError(c_err)
 
@@ -218,11 +244,11 @@ func (as *ActionSuite) Test_ManagerDBSearchScreens() {
     man.CreateMedia(&mc4)
     man.CreateMedia(&mc5)
 
-    p1 := models.PreviewScreen{Src: "fake1.screen", Idx: 1, MediaID: mc1.ID}
-    p2 := models.PreviewScreen{Src: "fake2.screen", Idx: 1, MediaID: mc2.ID}
-    p3 := models.PreviewScreen{Src: "fake3.screen1", Idx: 1, MediaID: mc3.ID}
-    p4 := models.PreviewScreen{Src: "fake3.screen2", Idx: 1, MediaID: mc3.ID}
-    p5 := models.PreviewScreen{Src: "ShouldNotLoadMediaIsImage", Idx: 1, MediaID: mc4.ID}
+    p1 := models.Screen{Src: "fake1.screen", Idx: 1, MediaID: mc1.ID}
+    p2 := models.Screen{Src: "fake2.screen", Idx: 1, MediaID: mc2.ID}
+    p3 := models.Screen{Src: "fake3.screen1", Idx: 1, MediaID: mc3.ID}
+    p4 := models.Screen{Src: "fake3.screen2", Idx: 1, MediaID: mc3.ID}
+    p5 := models.Screen{Src: "ShouldNotLoadMediaIsImage", Idx: 1, MediaID: mc4.ID}
     man.CreateScreen(&p1)
     man.CreateScreen(&p2)
     man.CreateScreen(&p3)

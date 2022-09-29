@@ -1,1 +1,1 @@
-drop_table("preview_screens")
+drop_table("screens")

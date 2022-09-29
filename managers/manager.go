@@ -55,13 +55,13 @@ type ContentManager interface {
     GetPreviewForMC(mc *models.MediaContainer) (string, error)
 
     // Functions that help with viewing movie screens if found.
-    ListAllScreens(page int, per_page int) (*models.PreviewScreens, error)
-    ListAllScreensContext() (*models.PreviewScreens, error)
-    ListScreensContext(mcID uuid.UUID) (*models.PreviewScreens, error)
-    ListScreens(mcID uuid.UUID, page int, per_page int) (*models.PreviewScreens, error)
-    GetScreen(psID uuid.UUID) (*models.PreviewScreen, error)
-    CreateScreen(s *models.PreviewScreen) error
-    UpdateScreen(s *models.PreviewScreen) error
+    ListAllScreens(page int, per_page int) (*models.Screens, error)
+    ListAllScreensContext() (*models.Screens, error)
+    ListScreensContext(mcID uuid.UUID) (*models.Screens, error)
+    ListScreens(mcID uuid.UUID, page int, per_page int) (*models.Screens, error)
+    GetScreen(psID uuid.UUID) (*models.Screen, error)
+    CreateScreen(s *models.Screen) error
+    UpdateScreen(s *models.Screen) error
 
     // Tags listing
     ListAllTags(page int, perPage int) (*models.Tags, error)

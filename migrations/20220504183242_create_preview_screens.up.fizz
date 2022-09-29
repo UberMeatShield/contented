@@ -1,4 +1,4 @@
-create_table("preview_screens") {
+create_table("screens") {
 	t.Column("id", "uuid", {primary: true})
     t.Column("src", "string", {"default": ""})
     t.Column("path", "string", {"default": ""})

@@ -15,7 +15,7 @@ type MemoryStorage struct {
     Initialized     bool
     ValidMedia      models.MediaMap
     ValidContainers models.ContainerMap
-    ValidScreens    models.PreviewScreenMap
+    ValidScreens    models.ScreenMap
     ValidTags       models.TagsMap
 }
 
@@ -41,10 +41,10 @@ func InitializeMemory(dir_root string) *MemoryStorage {
 /**
  * Populates the memory view (this code is very similar to the DB version in helper.go)
  */
-func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap, models.PreviewScreenMap) {
+func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap, models.ScreenMap) {
     containers := models.ContainerMap{}
     files := models.MediaMap{}
-    screensMap := models.PreviewScreenMap{}
+    screensMap := models.ScreenMap{}
 
     cfg := GetCfg()
     log.Printf("PopulateMemoryView searching in %s with depth %d", dir_root, cfg.MaxSearchDepth)

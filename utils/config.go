@@ -87,7 +87,7 @@ type DirConfigEntry struct {
         // Config around creating preview images (used only by the task db:preview)
         PreviewCount             int    // How many files should be listed for a preview
         PreviewOverSize          int64  // Over how many bytes should previews be created for the file
-        PreviewScreensOverSize   int64  // Over a certain size video select filters are slow
+        ScreensOverSize   int64  // Over a certain size video select filters are slow
         PreviewVideoType         string // gif|screens|png are the video preview output type
         PreviewCreateFailIsFatal bool   // If set creating an image or movie preview will hard fail
         PreviewNumberOfScreens   int    // How many screens should be created to make the preview?
@@ -130,7 +130,7 @@ func GetCfgDefaults() DirConfigEntry {
                 PreviewCount:             DefaultPreviewCount,
                 PreviewOverSize:          1024000,
                 PreviewVideoType:         "png",
-                PreviewScreensOverSize:   50 * 1024000,
+                ScreensOverSize:   50 * 1024000,
                 PreviewNumberOfScreens:   DefeaultTotalScreens,
                 PreviewFirstScreenOffset: DefaultPreviewFirstScreenOffset,
 
@@ -233,7 +233,7 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
         cfg.PreviewCount = previewCount
         cfg.PreviewVideoType = previewType
         cfg.PreviewOverSize = psize
-        cfg.PreviewScreensOverSize = useSeekScreenSize
+        cfg.ScreensOverSize = useSeekScreenSize
         cfg.PreviewCreateFailIsFatal = previewFailIsFatal
         cfg.PreviewNumberOfScreens = previewNumberOfScreens
         cfg.PreviewFirstScreenOffset = previewFirstScreenOffset

@@ -294,9 +294,9 @@ func (as *ActionSuite) Test_ManagerMemoryScreens() {
     id1, _ := uuid.NewV4()
     id2, _ := uuid.NewV4()
 
-    s1 := models.PreviewScreen{ID: id1, Path: "A", Src: "a.txt", MediaID: mc.ID}
-    s2 := models.PreviewScreen{ID: id2, Path: "B", Src: "b.txt", MediaID: mc.ID}
-    mc.Screens = models.PreviewScreens{s1, s2}
+    s1 := models.Screen{ID: id1, Path: "A", Src: "a.txt", MediaID: mc.ID}
+    s2 := models.Screen{ID: id2, Path: "B", Src: "b.txt", MediaID: mc.ID}
+    mc.Screens = models.Screens{s1, s2}
 
     // Ensure we actually set the right object in the backing Map
     mem := utils.GetMemStorage()
@@ -343,8 +343,8 @@ func (as *ActionSuite) Test_ManagerMemoryCRU() {
     as.Equal(mc_check.Src, "updated")
 
     id, _ := uuid.NewV4()
-    s1 := models.PreviewScreen{Path: "A", Src: "a.txt", MediaID: mc.ID}
-    s2 := models.PreviewScreen{Path: "B", Src: "b.txt", MediaID: id}
+    s1 := models.Screen{Path: "A", Src: "a.txt", MediaID: mc.ID}
+    s2 := models.Screen{Path: "B", Src: "b.txt", MediaID: id}
     as.NoError(man.CreateScreen(&s1), "Did not associate screen correctly")
     as.NoError(man.CreateScreen(&s2), "Did not associate screen correctly")
 
@@ -352,7 +352,7 @@ func (as *ActionSuite) Test_ManagerMemoryCRU() {
     as.NoError(sErr, "Failed to list screens")
     as.Equal(len(*sCheck), 1, "It should properly filter screens.")
 
-    s1Update := models.PreviewScreen{ID: s1.ID, Path: "C", MediaID: mc.ID}
+    s1Update := models.Screen{ID: s1.ID, Path: "C", MediaID: mc.ID}
     as.NoError(man.UpdateScreen(&s1Update))
     s1Check, scErr := man.GetScreen(s1.ID)
     as.NoError(scErr, "Failed to get the screen back")

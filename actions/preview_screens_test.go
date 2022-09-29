@@ -13,8 +13,8 @@ import (
     "path/filepath"
 )
 
-func CreatePreview(src string, mediaID uuid.UUID, as *ActionSuite) models.PreviewScreen {
-    mc := &models.PreviewScreen{
+func CreatePreview(src string, mediaID uuid.UUID, as *ActionSuite) models.Screen {
+    mc := &models.Screen{
         Src:     src,
         MediaID: mediaID,
         Idx:     1,
@@ -22,7 +22,7 @@ func CreatePreview(src string, mediaID uuid.UUID, as *ActionSuite) models.Previe
     res := as.JSON("/screens").Post(mc)
     as.Equal(http.StatusCreated, res.Code)
 
-    resObj := models.PreviewScreen{}
+    resObj := models.Screen{}
     json.NewDecoder(res.Body).Decode(&resObj)
     return resObj
 
@@ -62,38 +62,38 @@ func CreateTestContainerWithMedia(as *ActionSuite) (*models.Container, *models.M
     return c, mc, screenSrc
 }
 
-func CreatePreviewScreen(as *ActionSuite) (*models.Container, *models.MediaContainer, *models.PreviewScreen) {
+func CreateScreen(as *ActionSuite) (*models.Container, *models.MediaContainer, *models.Screen) {
     c, mc, screenSrc := CreateTestContainerWithMedia(as)
     ps := CreatePreview(screenSrc, mc.ID, as)
     return c, mc, &ps
 }
 
-func (as *ActionSuite) Test_PreviewScreensResource_List() {
+func (as *ActionSuite) Test_ScreensResource_List() {
     internals.InitFakeApp(true)
-    CreatePreviewScreen(as)
-    CreatePreviewScreen(as)
+    CreateScreen(as)
+    CreateScreen(as)
 
     res := as.JSON("/screens/").Get()
     as.Equal(http.StatusOK, res.Code)
 
-    validate := models.PreviewScreens{}
+    validate := models.Screens{}
     json.NewDecoder(res.Body).Decode(&validate)
     as.Equal(len(validate), 2, "There should be two preview screens")
 }
 
-func (as *ActionSuite) Test_PreviewScreensResource_ListMC() {
+func (as *ActionSuite) Test_ScreensResource_ListMC() {
     internals.InitFakeApp(true)
 
     // This creates a preview screen making the total 3 in the DB
     // Note it also resets the container_preview dir right now
-    CreatePreviewScreen(as)
+    CreateScreen(as)
 
-    _, mc1, _ := CreatePreviewScreen(as)
+    _, mc1, _ := CreateScreen(as)
     CreatePreview("A", mc1.ID, as)
     res := as.JSON(fmt.Sprintf("/media/%s/screens", mc1.ID.String())).Get()
     as.Equal(http.StatusOK, res.Code)
 
-    validate := models.PreviewScreens{}
+    validate := models.Screens{}
     json.NewDecoder(res.Body).Decode(&validate)
     as.Equal(len(validate), 2, "Note we should have only two screens")
     for _, ps := range validate {
@@ -102,9 +102,9 @@ func (as *ActionSuite) Test_PreviewScreensResource_ListMC() {
     }
 }
 
-func (as *ActionSuite) Test_PreviewScreensResource_Show() {
+func (as *ActionSuite) Test_ScreensResource_Show() {
     internals.InitFakeApp(true)
-    _, _, ps := CreatePreviewScreen(as)
+    _, _, ps := CreateScreen(as)
 
     res := as.JSON(fmt.Sprintf("/screens/%s", ps.ID.String())).Get()
     as.Equal(http.StatusOK, res.Code)
@@ -115,18 +115,18 @@ func (as *ActionSuite) Test_PreviewScreensResource_Show() {
 }
 
 // TODO: Create a screen that is actually on disk.
-func (as *ActionSuite) Test_PreviewScreensResource_Create() {
+func (as *ActionSuite) Test_ScreensResource_Create() {
     internals.InitFakeApp(true)
     _, mc, screenSrc := CreateTestContainerWithMedia(as)
     ps := CreatePreview(screenSrc, mc.ID, as)
     as.Equal(ps.Src, screenSrc)
 
-    screens := models.PreviewScreens{}
+    screens := models.Screens{}
     as.DB.Where("media_container_id = ?", mc.ID).All(&screens)
     as.Equal(len(screens), 1, "There should be a screen in the DB")
 }
 
-func (as *ActionSuite) Test_PreviewScreensResource_Update() {
+func (as *ActionSuite) Test_ScreensResource_Update() {
     internals.InitFakeApp(true)
     _, mc, screenSrc := CreateTestContainerWithMedia(as)
     ps := CreatePreview(screenSrc, mc.ID, as)
@@ -135,7 +135,7 @@ func (as *ActionSuite) Test_PreviewScreensResource_Update() {
     as.Equal(http.StatusOK, res.Code)
 }
 
-func (as *ActionSuite) Test_PreviewScreensResource_Destroy() {
+func (as *ActionSuite) Test_ScreensResource_Destroy() {
     internals.InitFakeApp(true)
     _, mc, screenSrc := CreateTestContainerWithMedia(as)
     ps := CreatePreview(screenSrc, mc.ID, as)
@@ -144,9 +144,9 @@ func (as *ActionSuite) Test_PreviewScreensResource_Destroy() {
     as.Equal(http.StatusOK, del_res.Code)
 }
 
-func (as *ActionSuite) Test_PreviewScreensResource_CannotDestroy() {
+func (as *ActionSuite) Test_ScreensResource_CannotDestroy() {
     internals.InitFakeApp(false)
-    ps := &models.PreviewScreen{
+    ps := &models.Screen{
         Src: "Shouldn't Allow Create",
         Idx: 1,
     }

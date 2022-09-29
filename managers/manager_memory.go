@@ -23,7 +23,7 @@ type ContentManagerMemory struct {
     // Hmmm, this should use the memory manager probably
     ValidMedia      models.MediaMap
     ValidContainers models.ContainerMap
-    ValidScreens    models.PreviewScreenMap
+    ValidScreens    models.ScreenMap
     ValidTags       models.TagsMap
     validate        string
 
@@ -229,7 +229,7 @@ func (cm ContentManagerMemory) UpdateMedia(mc *models.MediaContainer) error {
     return errors.New("Media was not found to update")
 }
 
-func (cm ContentManagerMemory) UpdateScreen(s *models.PreviewScreen) error {
+func (cm ContentManagerMemory) UpdateScreen(s *models.Screen) error {
     if _, ok := cm.ValidScreens[s.ID]; ok {
         cm.ValidScreens[s.ID] = *s
         return nil
@@ -310,7 +310,7 @@ func (cm ContentManagerMemory) SetPreviewIfExists(mc *models.MediaContainer) (st
     return pFile, nil
 }
 
-func (cm ContentManagerMemory) ListScreensContext(mcID uuid.UUID) (*models.PreviewScreens, error) {
+func (cm ContentManagerMemory) ListScreensContext(mcID uuid.UUID) (*models.Screens, error) {
     // Could add the context here correctly
     _, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
     return cm.ListScreens(mcID, page, limit)
@@ -318,10 +318,10 @@ func (cm ContentManagerMemory) ListScreensContext(mcID uuid.UUID) (*models.Previ
 
 // TODO: Get a pattern for each MC, look at a preview Destination, then match against the pattern
 // And build out a set of screens.
-func (cm ContentManagerMemory) ListScreens(mcID uuid.UUID, page int, per_page int) (*models.PreviewScreens, error) {
+func (cm ContentManagerMemory) ListScreens(mcID uuid.UUID, page int, per_page int) (*models.Screens, error) {
 
     // Did I create this just to sort by Idx across all media?  Kinda strange
-    s_arr := models.PreviewScreens{}
+    s_arr := models.Screens{}
     for _, s := range cm.ValidScreens {
         if s.MediaID == mcID {
             s_arr = append(s_arr, s)
@@ -338,16 +338,16 @@ func (cm ContentManagerMemory) ListScreens(mcID uuid.UUID, page int, per_page in
     return &s_arr, nil
 }
 
-func (cm ContentManagerMemory) ListAllScreensContext() (*models.PreviewScreens, error) {
+func (cm ContentManagerMemory) ListAllScreensContext() (*models.Screens, error) {
     _, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
     return cm.ListAllScreens(page, limit)
 }
 
-func (cm ContentManagerMemory) ListAllScreens(page int, per_page int) (*models.PreviewScreens, error) {
+func (cm ContentManagerMemory) ListAllScreens(page int, per_page int) (*models.Screens, error) {
 
     log.Printf("Using memory manager for screen page %d per_page %d \n", page, per_page)
     // Did I create this just to sort by Idx across all media?  Kinda strange
-    s_arr := models.PreviewScreens{}
+    s_arr := models.Screens{}
     for _, s := range cm.ValidScreens {
         s_arr = append(s_arr, s)
     }
@@ -362,7 +362,7 @@ func (cm ContentManagerMemory) ListAllScreens(page int, per_page int) (*models.P
     return &s_arr, nil
 }
 
-func (cm ContentManagerMemory) GetScreen(psID uuid.UUID) (*models.PreviewScreen, error) {
+func (cm ContentManagerMemory) GetScreen(psID uuid.UUID) (*models.Screen, error) {
     // Need to build out a memory setup and look the damn thing up :(
     memStorage := utils.GetMemStorage()
     if screen, ok := memStorage.ValidScreens[psID]; ok {
@@ -447,7 +447,7 @@ func AssignID(id uuid.UUID) uuid.UUID {
 }
 
 // TODO: Fix this so that the screen must be under the
-func (cm ContentManagerMemory) CreateScreen(screen *models.PreviewScreen) error {
+func (cm ContentManagerMemory) CreateScreen(screen *models.Screen) error {
     if screen != nil {
         screen.ID = AssignID(screen.ID)
         cm.ValidScreens[screen.ID] = *screen

@@ -284,7 +284,7 @@ func CreateVideoPreview(srcFile string, dstFile string, contentType string) (str
  */
 func CreateScreensFromVideo(srcFile string, dstFile string) (string, error) {
     cfg := GetCfg()
-    return CreateScreensFromVideoSized(srcFile, dstFile, cfg.PreviewScreensOverSize)
+    return CreateScreensFromVideoSized(srcFile, dstFile, cfg.ScreensOverSize)
 }
 
 func CreateScreensFromVideoSized(srcFile string, dstFile string, previewScreensOverSize int64) (string, error) {
@@ -564,7 +564,7 @@ func CreateMediaPreview(c *models.Container, mc *models.MediaContainer) (string,
     return GetRelativePreviewPath(dstFqPath, cntPath), err
 }
 
-func AssignScreensFromSet(c *models.Container, mc *models.MediaContainer, maybeScreens *[]os.FileInfo) *models.PreviewScreens {
+func AssignScreensFromSet(c *models.Container, mc *models.MediaContainer, maybeScreens *[]os.FileInfo) *models.Screens {
     if !strings.Contains(mc.ContentType, "video") {
         // log.Printf("Media is not of type video, no screens likely")
         return nil
@@ -579,13 +579,13 @@ func AssignScreensFromSet(c *models.Container, mc *models.MediaContainer, maybeS
     previewPath := GetPreviewDst(c.GetFqPath())
     // ie: 1000 episodes of One Piece * (15 screens  + 1 webp) in a loop running
     // the regex against them all over and over...
-    previewScreens := models.PreviewScreens{}
+    previewScreens := models.Screens{}
     for idx, fRef := range *maybeScreens {
         name := fRef.Name()
         if screenRe.MatchString(name) {
             // log.Printf("Matched file %s idx %d", name, idx)
             id, _ := uuid.NewV4()
-            ps := models.PreviewScreen{
+            ps := models.Screen{
                 ID:        id,
                 Path:      previewPath,
                 Src:       name,
@@ -616,7 +616,7 @@ func GetPotentialScreens(c *models.Container) (*[]os.FileInfo, error) {
     return &maybeScreens, nil
 }
 
-func AssignScreensIfExists(c *models.Container, mc *models.MediaContainer) *models.PreviewScreens {
+func AssignScreensIfExists(c *models.Container, mc *models.MediaContainer) *models.Screens {
     if !strings.Contains(mc.ContentType, "video") {
         // log.Printf("Media is not of type video, no screens likely")
         return nil

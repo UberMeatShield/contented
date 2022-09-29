@@ -70,10 +70,15 @@ func (cm ContentManagerDB) ListMedia(cID uuid.UUID, page int, per_page int) (*mo
 func (cm ContentManagerDB) GetMedia(mcID uuid.UUID) (*models.MediaContainer, error) {
     log.Printf("Get a single media %s", mcID)
     tx := cm.GetConnection()
-    mc := &models.MediaContainer{}
-    if err := tx.Eager().Find(mc, mcID); err != nil {
+    mc := &models.MediaContainer{
+        //Screens: models.Screens{},
+        //Tags: models.Tags{},
+    }
+    if err := tx.EagerPreload().Find(mc, mcID); err != nil {
         return nil, err
     }
+    //tx.Load(&mc, "Screens")
+    // wat := tx.Load(&mc.Tags, "Tags")
     return mc, nil
 }
 
@@ -84,10 +89,10 @@ func (cm ContentManagerDB) UpdateContainer(c *models.Container) error {
 
 func (cm ContentManagerDB) UpdateMedia(media *models.MediaContainer) error {
     tx := cm.GetConnection()
-    return tx.Update(media)
+    return tx.Eager().Update(media)
 }
 
-func (cm ContentManagerDB) UpdateScreen(s *models.PreviewScreen) error {
+func (cm ContentManagerDB) UpdateScreen(s *models.Screen) error {
     tx := cm.GetConnection()
     return tx.Update(s)
 }
@@ -149,7 +154,7 @@ func (cm ContentManagerDB) SearchMedia(search string, page int, per_page int, cI
     return &mediaWithScreens, count, nil
 }
 
-func (cm ContentManagerDB) LoadRelatedScreens(media *models.MediaContainers) (models.PreviewScreenCollection, error) {
+func (cm ContentManagerDB) LoadRelatedScreens(media *models.MediaContainers) (models.ScreenCollection, error) {
     if media == nil || len(*media) == 0 {
         return nil, nil
     }
@@ -164,20 +169,20 @@ func (cm ContentManagerDB) LoadRelatedScreens(media *models.MediaContainers) (mo
         return nil, nil
     }
     q := cm.GetConnection().Q().Where(`media_container_id = any($1)`, pq.Array(videoIds))
-    screens := &models.PreviewScreens{}
+    screens := &models.Screens{}
     if q_err := q.All(screens); q_err != nil {
         log.Printf("Error loading video screens %s", q_err)
         return nil, q_err
     }
 
-    screenMap := models.PreviewScreenCollection{}
+    screenMap := models.ScreenCollection{}
     for _, screen := range *screens {
         log.Printf("Found screen for %s", screen.MediaID.String())
         if _, ok := screenMap[screen.MediaID]; ok {
             screenMap[screen.MediaID] = append(screenMap[screen.MediaID], screen)
             log.Printf("Screen count %s %s", screen.MediaID, screenMap[screen.MediaID])
         } else {
-            screenMap[screen.MediaID] = models.PreviewScreens{screen}
+            screenMap[screen.MediaID] = models.Screens{screen}
         }
     }
     return screenMap, nil
@@ -251,31 +256,31 @@ func (cm ContentManagerDB) FindActualFile(mc *models.MediaContainer) (string, er
     return utils.GetFilePathInContainer(mc.Src, cnt.GetFqPath())
 }
 
-func (cm ContentManagerDB) ListAllScreensContext() (*models.PreviewScreens, error) {
+func (cm ContentManagerDB) ListAllScreensContext() (*models.Screens, error) {
     _, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
     return cm.ListAllScreens(page, limit)
 }
 
-func (cm ContentManagerDB) ListAllScreens(page int, per_page int) (*models.PreviewScreens, error) {
+func (cm ContentManagerDB) ListAllScreens(page int, per_page int) (*models.Screens, error) {
+    previews := &models.Screens{}
     tx := cm.GetConnection()
     q := tx.Paginate(page, per_page)
-    previews := &models.PreviewScreens{}
     if err := q.All(previews); err != nil {
         return nil, err
     }
     return previews, nil
 }
 
-func (cm ContentManagerDB) ListScreensContext(mcID uuid.UUID) (*models.PreviewScreens, error) {
+func (cm ContentManagerDB) ListScreensContext(mcID uuid.UUID) (*models.Screens, error) {
     // Could add the context here correctly
     _, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
     return cm.ListScreens(mcID, page, limit)
 }
 
 // TODO: Re-Assign the preview based on screen information
-func (cm ContentManagerDB) ListScreens(mcID uuid.UUID, page int, per_page int) (*models.PreviewScreens, error) {
+func (cm ContentManagerDB) ListScreens(mcID uuid.UUID, page int, per_page int) (*models.Screens, error) {
     tx := cm.GetConnection()
-    previews := &models.PreviewScreens{}
+    previews := &models.Screens{}
     q := tx.Paginate(page, per_page)
     q_conn := q.Where("media_container_id = ?", mcID)
     if q_err := q_conn.All(previews); q_err != nil {
@@ -285,8 +290,8 @@ func (cm ContentManagerDB) ListScreens(mcID uuid.UUID, page int, per_page int) (
 }
 
 // Need to make it use the manager and just show the file itself
-func (cm ContentManagerDB) GetScreen(psID uuid.UUID) (*models.PreviewScreen, error) {
-    previewScreen := &models.PreviewScreen{}
+func (cm ContentManagerDB) GetScreen(psID uuid.UUID) (*models.Screen, error) {
+    previewScreen := &models.Screen{}
     tx := cm.GetConnection()
     err := tx.Find(previewScreen, psID)
     if err != nil {
@@ -296,14 +301,16 @@ func (cm ContentManagerDB) GetScreen(psID uuid.UUID) (*models.PreviewScreen, err
 
 }
 
-func (cm ContentManagerDB) CreateScreen(screen *models.PreviewScreen) error {
+func (cm ContentManagerDB) CreateScreen(screen *models.Screen) error {
     tx := cm.GetConnection()
     return tx.Create(screen)
 }
 
 func (cm ContentManagerDB) CreateMedia(mc *models.MediaContainer) error {
     tx := cm.GetConnection()
-    return tx.Create(mc)
+    err := tx.Create(mc)
+    log.Printf("What is the media %s", mc)
+    return err
 }
 
 func (cm ContentManagerDB) ListAllTags(page int, perPage int) (*models.Tags, error) {
@@ -347,9 +354,12 @@ func (cm ContentManagerDB) GetTag(tagID uuid.UUID) (*models.Tag, error) {
 }
 
 func (cm ContentManagerDB) AssociateTag(t *models.Tag, mc *models.MediaContainer) error {
-    mc.Tagged = append(mc.Tagged, *t)
-    print(fmt.Printf("Found %s with %s", mc.ID.String(), t.ID.String()))
-    return cm.UpdateMedia(mc)
+    mc.Tags = append(mc.Tags, *t)
+    print(fmt.Printf("Found %s with %s what the %s", mc.ID.String(), t.ID.String(), mc.Tags))
+    tx := cm.GetConnection()
+    tx.ValidateAndUpdate(mc)
+    return nil
+    // return cm.UpdateMedia(mc)
 }
 
 func (cm ContentManagerDB) AssociateTagByID(tagId uuid.UUID, mcID uuid.UUID) error {

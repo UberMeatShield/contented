@@ -15,22 +15,22 @@ import (
 )
 
 // Following naming logic is implemented in Buffalo:
-// Model: Singular (PreviewScreen)
+// Model: Singular (Screen)
 // DB Table: Plural (preview_screens)
-// Resource: Plural (PreviewScreens)
+// Resource: Plural (Screens)
 // Path: Plural (/preview_screens)
 // View Template Folder: Plural (/templates/preview_screens/)
 
-// PreviewScreensResource is the resource for the PreviewScreen model
-type PreviewScreensResource struct {
+// ScreensResource is the resource for the Screen model
+type ScreensResource struct {
     buffalo.Resource
 }
 
-// List gets all PreviewScreens. This function is mapped to the path
+// List gets all Screens. This function is mapped to the path
 // GET /preview_screens
-func (v PreviewScreensResource) List(c buffalo.Context) error {
+func (v ScreensResource) List(c buffalo.Context) error {
     // Get the DB connection from the context
-    var previewScreens *models.PreviewScreens
+    var previewScreens *models.Screens
     var err error
 
     mcStrID := c.Param("media_container_id")
@@ -61,9 +61,9 @@ func (v PreviewScreensResource) List(c buffalo.Context) error {
     }).Respond(c)
 }
 
-// Show gets the data for one PreviewScreen. This function is mapped to
+// Show gets the data for one Screen. This function is mapped to
 // the path GET /preview_screens/{preview_screen_id}
-func (v PreviewScreensResource) Show(c buffalo.Context) error {
+func (v ScreensResource) Show(c buffalo.Context) error {
     psStrID := c.Param("preview_screen_id")
     psID, badUUID := uuid.FromString(psStrID)
     if badUUID != nil {
@@ -88,15 +88,15 @@ func (v PreviewScreensResource) Show(c buffalo.Context) error {
     return nil
 }
 
-// Create adds a PreviewScreen to the DB. This function is mapped to the
+// Create adds a Screen to the DB. This function is mapped to the
 // path POST /preview_screens
-func (v PreviewScreensResource) Create(c buffalo.Context) error {
+func (v ScreensResource) Create(c buffalo.Context) error {
     _, tx, err := managers.ManagerCanCUD(&c)
     if err != nil {
         return err
     }
-    // Allocate an empty PreviewScreen
-    previewScreen := &models.PreviewScreen{}
+    // Allocate an empty Screen
+    previewScreen := &models.Screen{}
 
     // Bind previewScreen to the html form/JSON elements
     if err := c.Bind(previewScreen); err != nil {
@@ -136,23 +136,23 @@ func (v PreviewScreensResource) Create(c buffalo.Context) error {
     }).Respond(c)
 }
 
-// Update changes a PreviewScreen in the DB. This function is mapped to
+// Update changes a Screen in the DB. This function is mapped to
 // the path PUT /preview_screens/{preview_screen_id}
-func (v PreviewScreensResource) Update(c buffalo.Context) error {
+func (v ScreensResource) Update(c buffalo.Context) error {
     // Get the DB connection from the context
     _, tx, err := managers.ManagerCanCUD(&c)
     if err != nil {
         return err
     }
 
-    // Allocate an empty PreviewScreen
-    previewScreen := &models.PreviewScreen{}
+    // Allocate an empty Screen
+    previewScreen := &models.Screen{}
 
     if err := tx.Find(previewScreen, c.Param("preview_screen_id")); err != nil {
         return c.Error(http.StatusNotFound, err)
     }
 
-    // Bind PreviewScreen to the html form elements
+    // Bind Screen to the html form elements
     if err := c.Bind(previewScreen); err != nil {
         return err
     }
@@ -192,19 +192,19 @@ func (v PreviewScreensResource) Update(c buffalo.Context) error {
     }).Respond(c)
 }
 
-// Destroy deletes a PreviewScreen from the DB. This function is mapped
+// Destroy deletes a Screen from the DB. This function is mapped
 // to the path DELETE /preview_screens/{preview_screen_id}
-func (v PreviewScreensResource) Destroy(c buffalo.Context) error {
+func (v ScreensResource) Destroy(c buffalo.Context) error {
     // Get the DB connection from the context
     _, tx, err := managers.ManagerCanCUD(&c)
     if err != nil {
         return err
     }
 
-    // Allocate an empty PreviewScreen
-    previewScreen := &models.PreviewScreen{}
+    // Allocate an empty Screen
+    previewScreen := &models.Screen{}
 
-    // To find the PreviewScreen the parameter preview_screen_id is used.
+    // To find the Screen the parameter preview_screen_id is used.
     if err := tx.Find(previewScreen, c.Param("preview_screen_id")); err != nil {
         return c.Error(http.StatusNotFound, err)
     }

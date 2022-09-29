@@ -190,7 +190,7 @@ func Test_VideoLength(t *testing.T) {
 func Test_WebpFromVideo(t *testing.T) {
     srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
     cfg := GetCfg()
-    cfg.PreviewScreensOverSize = 1024
+    cfg.ScreensOverSize = 1024
     cfg.PreviewVideoType = "screens"
     SetCfg(*cfg)
 

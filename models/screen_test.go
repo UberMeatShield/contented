@@ -19,12 +19,12 @@ func (ms *ModelSuite) Test_MediaContainerScreens() {
     ms.DB.Create(&mc)
     ms.NotZero(mc.ID)
 
-    p1 := PreviewScreen{
+    p1 := Screen{
         Src:     "fake1",
         Idx:     0,
         MediaID: mc.ID,
     }
-    p2 := PreviewScreen{
+    p2 := Screen{
         Src:     "fake2.png",
         Idx:     1,
         Path:    "Derp/Monkey",
