@@ -16,7 +16,7 @@ import (
     "sort"
 )
 
-// Provides the support for looking up media by ID while only using memory
+// Provides the support for looking up content by ID while only using memory
 type ContentManagerMemory struct {
     cfg *utils.DirConfigEntry
 
@@ -63,7 +63,7 @@ func (cm *ContentManagerMemory) Initialize() {
     cm.ValidContent = memStorage.ValidContent
     cm.ValidScreens = memStorage.ValidScreens
     cm.ValidTags = memStorage.ValidTags
-    log.Printf("Found %d directories with %d media elements \n", len(cm.ValidContainers), len(cm.ValidContent))
+    log.Printf("Found %d directories with %d content elements \n", len(cm.ValidContainers), len(cm.ValidContent))
 }
 
 // Kinda strange but it seems hard to assign the type into an interface
@@ -86,7 +86,7 @@ func (cm ContentManagerMemory) ListAllContent(page int, per_page int) (*models.C
         return &m_arr, nil
     }
 
-    // Did I create this just to sort by Idx across all media?  Kinda strange but required.
+    // Did I create this just to sort by Idx across all content?  Kinda strange but required.
     sort.SliceStable(m_arr, func(i, j int) bool {
         return m_arr[i].Idx < m_arr[j].Idx
     })
@@ -145,7 +145,7 @@ func (cm ContentManagerMemory) getContentFiltered(containerID string, search str
             return nil, cErr
         }
     } else {
-        // Empty string for containerID is considered match all media
+        // Empty string for containerID is considered match all content
         for _, mc := range cm.ValidContent {
             cidArr = append(cidArr, mc)
         }
@@ -197,13 +197,13 @@ func (cm ContentManagerMemory) ListContent(ContainerID uuid.UUID, page int, per_
         m_arr = m_arr[offset:end]
         return &m_arr, nil
     }
-    log.Printf("Get a list of media offset(%d), end(%d) we should have some %d", offset, end, len(m_arr))
+    log.Printf("Get a list of content offset(%d), end(%d) we should have some %d", offset, end, len(m_arr))
     return &m_arr, nil
 }
 
-// Get a media element by the ID
+// Get a content element by the ID
 func (cm ContentManagerMemory) GetContent(mcID uuid.UUID) (*models.Content, error) {
-    // log.Printf("Memory Get a single media %s", mcID)
+    // log.Printf("Memory Get a single content %s", mcID)
     if mc, ok := cm.ValidContent[mcID]; ok {
         return &mc, nil
     }
@@ -320,7 +320,7 @@ func (cm ContentManagerMemory) ListScreensContext(mcID uuid.UUID) (*models.Scree
 // And build out a set of screens.
 func (cm ContentManagerMemory) ListScreens(mcID uuid.UUID, page int, per_page int) (*models.Screens, error) {
 
-    // Did I create this just to sort by Idx across all media?  Kinda strange
+    // Did I create this just to sort by Idx across all content?  Kinda strange
     s_arr := models.Screens{}
     for _, s := range cm.ValidScreens {
         if s.ContentID == mcID {
@@ -346,7 +346,7 @@ func (cm ContentManagerMemory) ListAllScreensContext() (*models.Screens, error) 
 func (cm ContentManagerMemory) ListAllScreens(page int, per_page int) (*models.Screens, error) {
 
     log.Printf("Using memory manager for screen page %d per_page %d \n", page, per_page)
-    // Did I create this just to sort by Idx across all media?  Kinda strange
+    // Did I create this just to sort by Idx across all content?  Kinda strange
     s_arr := models.Screens{}
     for _, s := range cm.ValidScreens {
         s_arr = append(s_arr, s)
@@ -462,7 +462,7 @@ func (cm ContentManagerMemory) CreateContent(mc *models.Content) error {
         cm.ValidContent[mc.ID] = *mc
         return nil
     }
-    return errors.New("ContentManagerMemory no mediainstance was passed in to CreateContent")
+    return errors.New("ContentManagerMemory no contentinstance was passed in to CreateContent")
 }
 
 // Note that we need to lock this down so that it cannot just access arbitrary files

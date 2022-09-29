@@ -126,7 +126,7 @@ func GetPreviewPathDestination(filename string, dstPath string, contentType stri
 
 // Break this down better using just a file object?
 func CreateImagePreview(srcImg *os.File, dstFile string, contentType string) (string, error) {
-    // Attempt to create previews for different media types
+    // Attempt to create previews for different content types
     var img image.Image
     var dErr error
 
@@ -635,7 +635,7 @@ func AssignPreviewIfExists(c *models.Container, mc *models.Content) string {
     previewFile, exists := ErrorOnPreviewExists(mc.Src, previewPath, mc.ContentType)
     if exists != nil {
         mc.Preview = GetRelativePreviewPath(previewFile, c.GetFqPath())
-        log.Printf("Added a preview to media %s", mc.Preview)
+        log.Printf("Added a preview to content %s", mc.Preview)
     }
     return previewFile
 }

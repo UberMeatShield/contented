@@ -49,7 +49,7 @@ func (as *ActionSuite) Test_ContentDirLoad() {
     as.Equal(ExpectCntCount, len(cnts), "We should have this many dirs present")
 
     for _, c := range cnts {
-        res := as.JSON("/containers/" + c.ID.String() + "/media").Get()
+        res := as.JSON("/containers/" + c.ID.String() + "/content").Get()
         as.Equal(http.StatusOK, res.Code)
 
         resObj := []models.Containers{}

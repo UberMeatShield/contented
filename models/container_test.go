@@ -49,7 +49,7 @@ func (ms *ModelSuite) Test_Container_Query() {
         ms.Fail("Could not query the DB %s", err)
     }
     if len(load_back.Contents) != 2 {
-        ms.Fail("Could not load up the contents media containers %s", load_back)
+        ms.Fail("Could not load up the contents content containers %s", load_back)
     }
 
 }

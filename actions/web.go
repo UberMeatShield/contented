@@ -19,7 +19,7 @@ type HttpError struct {
 
 type SearchResult struct {
     Total int                     `json:"total"`
-    Content *models.Contents `json:"media"`
+    Content *models.Contents `json:"content"`
 }
 
 // Builds out information given the application and the content directory

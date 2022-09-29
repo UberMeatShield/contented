@@ -49,8 +49,8 @@ func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
         // Prepare to at the container to the DB
         c := ct.Cnt
         c.Idx = idx
-        media := ct.Content
-        log.Printf("Adding Content to %s with total media %d \n", c.Name, len(media))
+        content := ct.Content
+        log.Printf("Adding Content to %s with total content %d \n", c.Name, len(content))
 
         // Use the database version of uuid generation (minimize the miniscule conflict)
         unset_uuid, _ := uuid.FromString("00000000-0000-0000-0000-000000000000")
@@ -66,7 +66,7 @@ func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
         log.Printf("Created %s with id %s\n", c.Name, c.ID)
 
         // There MUST be a way to do this as a single commit
-        for _, mc := range media {
+        for _, mc := range content {
             mc.ContainerID = nulls.NewUUID(c.ID)
             c_err := models.DB.Create(&mc)
 
@@ -118,22 +118,22 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
     }
 
     // TODO: It should fix up the total count there (-1 for unlimited?)
-    media, q_err := cm.ListContent(c.ID, 0, 90000)
+    content, q_err := cm.ListContent(c.ID, 0, 90000)
     if q_err != nil {
-        log.Fatal(q_err) // Also fatal if we can no longer list media
+        log.Fatal(q_err) // Also fatal if we can no longer list content
     }
 
     // It would be nice to maybe abstract this into a better place?
-    log.Printf("Found a set of media to make previews for %d", len(*media))
-    if media != nil && len(*media) > 0 {
-        mcs := *media
+    log.Printf("Found a set of content to make previews for %d", len(*content))
+    if content != nil && len(*content) > 0 {
+        mcs := *content
         c.PreviewUrl = "/preview/" + mcs[0].ID.String()
         cm.UpdateContainer(c)
     }
 
-    update_list, err := CreateContentPreviews(c, *media)
+    update_list, err := CreateContentPreviews(c, *content)
     if err != nil {
-        log.Printf("Summary of Errors while creating media previews %s", err)
+        log.Printf("Summary of Errors while creating content previews %s", err)
     }
     log.Printf("Finished creating previews, now updating the database count(%d)", len(update_list))
     maybeScreens, _ := utils.GetPotentialScreens(c)
@@ -152,7 +152,7 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
             // Though it actually wouldn't be that bad to update the MemStorage...
             cm.UpdateContent(&mc)
 
-            // TODO: Add in a search for getting screens based on the container and media
+            // TODO: Add in a search for getting screens based on the container and content
         } else if mc.Corrupt {
             cm.UpdateContent(&mc)
         }
@@ -162,8 +162,8 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
 
 // TODO: This maybe could be ported to just a ContentTree Element or something
 // This is complicated but a way to do many previews at once
-func CreateContentPreviews(c *models.Container, media models.Contents) (models.Contents, error) {
-    if len(media) == 0 {
+func CreateContentPreviews(c *models.Container, content models.Contents) (models.Contents, error) {
+    if len(content) == 0 {
         return models.Contents{}, nil
     }
     cfg := utils.GetCfg()
@@ -174,7 +174,7 @@ func CreateContentPreviews(c *models.Container, media models.Contents) (models.C
     log.Printf("Creating %d listeners for processing previews", processors)
 
     // We expect a result for every message so can create the channels in a way that they have a length
-    expected_total := len(media)
+    expected_total := len(content)
     reply := make(chan utils.PreviewResult, expected_total)
     input := make(chan utils.PreviewRequest, expected_total)
 
@@ -185,9 +185,9 @@ func CreateContentPreviews(c *models.Container, media models.Contents) (models.C
     }
 
     // Queue up a bunch of preview work
-    mediaMap := models.ContentMap{}
-    for _, mc := range media {
-        mediaMap[mc.ID] = mc
+    contentMap := models.ContentMap{}
+    for _, mc := range content {
+        contentMap[mc.ID] = mc
         ref_mc := mc
         input <- utils.PreviewRequest{
             C:   c,
@@ -204,13 +204,13 @@ func CreateContentPreviews(c *models.Container, media models.Contents) (models.C
     for result := range reply {
         total++
         if total == expected_total {
-            close(input) // Do I close this immediately
+            close(input) // Do I close this imcontenttely
             close(reply)
         }
 
         // Get a list of just the preview items?  Or just update by reference?
         log.Printf("Found a result for %s\n", result.MC_ID.String())
-        if mc_update, ok := mediaMap[result.MC_ID]; ok {
+        if mc_update, ok := contentMap[result.MC_ID]; ok {
             if result.Preview != "" {
                 log.Printf("We found a reply around this %s id was %s \n", result.Preview, result.MC_ID)
                 mc_update.Preview = result.Preview
@@ -222,7 +222,7 @@ func CreateContentPreviews(c *models.Container, media models.Contents) (models.C
                 mc_update.Corrupt = true
                 previews = append(previews, mc_update)
             } else {
-                log.Printf("No preview was needed for media %s", result.MC_ID)
+                log.Printf("No preview was needed for content %s", result.MC_ID)
             }
         } else {
             log.Printf("Missing Response ID, something went really wrong %s\n", result.MC_ID)

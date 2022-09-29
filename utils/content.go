@@ -78,12 +78,12 @@ func FindContentMatcher(cnt models.Container, limit int, start_offset int, yup C
     var arr = models.Contents{}
 
     fqDirPath := filepath.Join(cnt.Path, cnt.Name)
-    maybe_media, _ := ioutil.ReadDir(fqDirPath)
+    maybe_content, _ := ioutil.ReadDir(fqDirPath)
 
     // TODO: Move away from "img" into something else
     total := 0
     imgs := []os.FileInfo{} // To get indexing 'right' you have to exlcude directories
-    for _, img := range maybe_media {
+    for _, img := range maybe_content {
         if !img.IsDir() {
             imgs = append(imgs, img)
         }
@@ -93,18 +93,18 @@ func FindContentMatcher(cnt models.Container, limit int, start_offset int, yup C
         if !img.IsDir() {
             if len(arr) < limit && idx >= start_offset {
                 id, _ := uuid.NewV4()
-                media := getContent(id, img, fqDirPath)
-                media.ContainerID = nulls.NewUUID(cnt.ID)
-                media.Idx = idx
+                content := getContent(id, img, fqDirPath)
+                content.ContainerID = nulls.NewUUID(cnt.ID)
+                content.Idx = idx
 
-                if yup(media.Src, media.ContentType) && !nope(media.Src, media.ContentType) {
-                    arr = append(arr, media)
+                if yup(content.Src, content.ContentType) && !nope(content.Src, content.ContentType) {
+                    arr = append(arr, content)
                 }
             }
             total++ // Only add a total for non-directory files (exclude other types?)
         }
     }
-    //log.Printf("Finished reading from %s and found %d media", fqDirPath, len(arr))
+    //log.Printf("Finished reading from %s and found %d content", fqDirPath, len(arr))
     return arr
 }
 
@@ -179,15 +179,15 @@ func getContent(id uuid.UUID, fileInfo os.FileInfo, path string) models.Content 
     // I could do an ffmpeg.Probe(srcFile) to determine encoding and resolution
     // For images I could try and probe the encoding & resolution
 
-    // TODO: Need to add the unique ID for each media (are they uniq?)
-    // TODO: Should I get a Hash onto the media as well?
-    media := models.Content{
+    // TODO: Need to add the unique ID for each content (are they uniq?)
+    // TODO: Should I get a Hash onto the content as well?
+    content := models.Content{
         ID:          id,
         Src:         fileInfo.Name(),
         SizeBytes:   fileInfo.Size(),
         ContentType: contentType,
     }
-    return media
+    return content
 }
 
 // Write a recurse method for getting all the data up to depth N
@@ -201,11 +201,11 @@ func CreateStructure(dir string, cfg *DirConfigEntry, results *ContentTree, dept
     // Could specify the cfg to use with the matching?
     cnts := FindContainersMatcher(dir, cfg.IncContainer, cfg.ExcContainer)
     for _, cnt := range cnts {
-        media := FindContentMatcher(cnt, cfg.MaxContentPerContainer, 0, cfg.IncContent, cfg.ExcContent)
-        cnt.Total = len(media)
+        content := FindContentMatcher(cnt, cfg.MaxContentPerContainer, 0, cfg.IncContent, cfg.ExcContent)
+        cnt.Total = len(content)
         cTree := ContentInformation{
             Cnt:   cnt,
-            Content: media,
+            Content: content,
         }
         tree := append(*results, cTree)
         subDir := filepath.Join(dir, cnt.Name)

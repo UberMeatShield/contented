@@ -10,10 +10,10 @@ import (
     "time"
 )
 
-// A set of previews for a particular media element.
+// A set of previews for a particular content element.
 type Screen struct {
     ID        uuid.UUID `json:"id" db:"id"`
-    ContentID   uuid.UUID `json:"media_id" db:"media_id"`
+    ContentID   uuid.UUID `json:"content_id" db:"content_id"`
     CreatedAt time.Time `json:"created" db:"created_at"`
     UpdatedAt time.Time `json:"updated" db:"updated_at"`
     Path      string    `json:"-" db:"path"`

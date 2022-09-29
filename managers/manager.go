@@ -44,13 +44,13 @@ type ContentManager interface {
     CreateContainer(mc *models.Container) error
 
     // Content listing
-    GetContent(media_id uuid.UUID) (*models.Content, error)
+    GetContent(content_id uuid.UUID) (*models.Content, error)
     ListContent(ContainerID uuid.UUID, page int, per_page int) (*models.Contents, error)
     ListContentContext(ContainerID uuid.UUID) (*models.Contents, error)
     ListAllContent(page int, per_page int) (*models.Contents, error)
     SearchContentContext() (*models.Contents, int, error)
     SearchContent(search string, page int, per_page int, cId string, contentType string) (*models.Contents, int, error)
-    UpdateContent(media *models.Content) error
+    UpdateContent(content *models.Content) error
     CreateContent(mc *models.Content) error
     GetPreviewForMC(mc *models.Content) (string, error)
 

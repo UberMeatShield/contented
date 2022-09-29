@@ -11,7 +11,7 @@ import (
     "github.com/gofrs/uuid"
 )
 
-// Content is used by pop to map your medias database table to your go code.
+// Content is used by pop to map your contents database table to your go code.
 type Content struct {
     ID          uuid.UUID      `json:"id" db:"id"`
     CreatedAt   time.Time      `json:"created" db:"created_at"`
@@ -28,7 +28,7 @@ type Content struct {
 
     // Joins (Eager loading is not working?)
     Screens Screens `json:"screens" has_many:"preview_screens"`
-    Tags Tags `json:"tags" many_to_many:"medias_tags"`
+    Tags Tags `json:"tags" many_to_many:"contents_tags"`
 
     // TODO: Maybe, MAYBE drop this?  None of the code currently really looks at the encoding
     // till actually creating a preview.

@@ -13,10 +13,10 @@ import (
     "path/filepath"
 )
 
-func CreatePreview(src string, mediaID uuid.UUID, as *ActionSuite) models.Screen {
+func CreatePreview(src string, contentID uuid.UUID, as *ActionSuite) models.Screen {
     mc := &models.Screen{
         Src:     src,
-        ContentID: mediaID,
+        ContentID: contentID,
         Idx:     1,
     }
     res := as.JSON("/screens").Post(mc)
@@ -90,7 +90,7 @@ func (as *ActionSuite) Test_ScreensResource_ListMC() {
 
     _, mc1, _ := CreateScreen(as)
     CreatePreview("A", mc1.ID, as)
-    res := as.JSON(fmt.Sprintf("/media/%s/screens", mc1.ID.String())).Get()
+    res := as.JSON(fmt.Sprintf("/content/%s/screens", mc1.ID.String())).Get()
     as.Equal(http.StatusOK, res.Code)
 
     validate := models.Screens{}
@@ -122,7 +122,7 @@ func (as *ActionSuite) Test_ScreensResource_Create() {
     as.Equal(ps.Src, screenSrc)
 
     screens := models.Screens{}
-    as.DB.Where("media_id = ?", mc.ID).All(&screens)
+    as.DB.Where("content_id = ?", mc.ID).All(&screens)
     as.Equal(len(screens), 1, "There should be a screen in the DB")
 }
 

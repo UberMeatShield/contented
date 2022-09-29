@@ -54,21 +54,21 @@ func (cm ContentManagerDB) ListContentContext(cID uuid.UUID) (*models.Contents, 
 
 // Awkard GoLang interface support is awkward
 func (cm ContentManagerDB) ListContent(cID uuid.UUID, page int, per_page int) (*models.Contents, error) {
-    log.Printf("Get a list of media from DB, we should have some %s", cID.String())
+    log.Printf("Get a list of content from DB, we should have some %s", cID.String())
     tx := cm.GetConnection()
-    mediaContainers := &models.Contents{}
+    contentContainers := &models.Contents{}
 
     // Paginate results. Params "page" and "per_page" control pagination.
     q := tx.Paginate(page, per_page)
     q_conn := q.Where("container_id = ?", cID)
-    if q_err := q_conn.All(mediaContainers); q_err != nil {
+    if q_err := q_conn.All(contentContainers); q_err != nil {
         return nil, q_err
     }
-    return mediaContainers, nil
+    return contentContainers, nil
 }
 
 func (cm ContentManagerDB) GetContent(mcID uuid.UUID) (*models.Content, error) {
-    log.Printf("Get a single media %s", mcID)
+    log.Printf("Get a single content %s", mcID)
     tx := cm.GetConnection()
     mc := &models.Content{
         //Screens: models.Screens{},
@@ -87,9 +87,9 @@ func (cm ContentManagerDB) UpdateContainer(c *models.Container) error {
     return tx.Update(c)
 }
 
-func (cm ContentManagerDB) UpdateContent(media *models.Content) error {
+func (cm ContentManagerDB) UpdateContent(content *models.Content) error {
     tx := cm.GetConnection()
-    return tx.Eager().Update(media)
+    return tx.Eager().Update(content)
 }
 
 func (cm ContentManagerDB) UpdateScreen(s *models.Screen) error {
@@ -98,14 +98,14 @@ func (cm ContentManagerDB) UpdateScreen(s *models.Screen) error {
 }
 
 func (cm ContentManagerDB) ListAllContent(page int, per_page int) (*models.Contents, error) {
-    log.Printf("List all media DB manager")
+    log.Printf("List all content DB manager")
     tx := cm.GetConnection()
     q := tx.Paginate(page, per_page)
-    mediaContainers := &models.Contents{}
-    if err := q.All(mediaContainers); err != nil {
+    contentContainers := &models.Contents{}
+    if err := q.All(contentContainers); err != nil {
         return nil, err
     }
-    return mediaContainers, nil
+    return contentContainers, nil
 }
 
 // It should probably be able to search the container too?
@@ -119,7 +119,7 @@ func (cm ContentManagerDB) SearchContentContext() (*models.Contents, int, error)
 }
 
 func (cm ContentManagerDB) SearchContent(search string, page int, per_page int, cId string, contentType string) (*models.Contents, int, error) {
-    mediaContainers := &models.Contents{}
+    contentContainers := &models.Contents{}
     tx := cm.GetConnection()
     q := tx.Paginate(page, per_page)
     if search != "*" && search != "" {
@@ -134,41 +134,41 @@ func (cm ContentManagerDB) SearchContent(search string, page int, per_page int, 
         q = q.Where(`container_id = ?`, cId)
     }
     count, _ := q.Count(&models.Contents{})
-    log.Printf("Total count of search media %d using search (%s) and contentType (%s)", count, search, contentType)
+    log.Printf("Total count of search content %d using search (%s) and contentType (%s)", count, search, contentType)
 
-    if q_err := q.All(mediaContainers); q_err != nil {
-        return mediaContainers, count, q_err
+    if q_err := q.All(contentContainers); q_err != nil {
+        return contentContainers, count, q_err
     }
     // Now need to get any screens and associate them in a lookup
-    screenMap, s_err := cm.LoadRelatedScreens(mediaContainers)
-    mediaWithScreens := models.Contents{}
+    screenMap, s_err := cm.LoadRelatedScreens(contentContainers)
+    contentWithScreens := models.Contents{}
     if s_err == nil {
-        for _, mcPt := range *mediaContainers {
+        for _, mcPt := range *contentContainers {
             mc := mcPt // GoLang... sometimes this just makes me sad.
             if _, ok := screenMap[mc.ID]; ok {
                 mc.Screens = screenMap[mc.ID]
             }
-            mediaWithScreens = append(mediaWithScreens, mc)
+            contentWithScreens = append(contentWithScreens, mc)
         }
     }
-    return &mediaWithScreens, count, nil
+    return &contentWithScreens, count, nil
 }
 
-func (cm ContentManagerDB) LoadRelatedScreens(media *models.Contents) (models.ScreenCollection, error) {
-    if media == nil || len(*media) == 0 {
+func (cm ContentManagerDB) LoadRelatedScreens(content *models.Contents) (models.ScreenCollection, error) {
+    if content == nil || len(*content) == 0 {
         return nil, nil
     }
     videoIds := []string{}
-    for _, mc := range *media {
+    for _, mc := range *content {
         if strings.Contains(mc.ContentType, "video") {
             videoIds = append(videoIds, mc.ID.String())
         }
     }
     if len(videoIds) == 0 {
-        log.Printf("None of these media were a video, skipping")
+        log.Printf("None of these content were a video, skipping")
         return nil, nil
     }
-    q := cm.GetConnection().Q().Where(`media_id = any($1)`, pq.Array(videoIds))
+    q := cm.GetConnection().Q().Where(`content_id = any($1)`, pq.Array(videoIds))
     screens := &models.Screens{}
     if q_err := q.All(screens); q_err != nil {
         log.Printf("Error loading video screens %s", q_err)
@@ -282,7 +282,7 @@ func (cm ContentManagerDB) ListScreens(mcID uuid.UUID, page int, per_page int) (
     tx := cm.GetConnection()
     previews := &models.Screens{}
     q := tx.Paginate(page, per_page)
-    q_conn := q.Where("media_id = ?", mcID)
+    q_conn := q.Where("content_id = ?", mcID)
     if q_err := q_conn.All(previews); q_err != nil {
         return nil, q_err
     }
@@ -309,7 +309,7 @@ func (cm ContentManagerDB) CreateScreen(screen *models.Screen) error {
 func (cm ContentManagerDB) CreateContent(mc *models.Content) error {
     tx := cm.GetConnection()
     err := tx.Create(mc)
-    log.Printf("What is the media %s", mc)
+    log.Printf("What is the content %s", mc)
     return err
 }
 
@@ -366,7 +366,7 @@ func (cm ContentManagerDB) AssociateTagByID(tagId uuid.UUID, mcID uuid.UUID) err
     mc, m_err := cm.GetContent(mcID)
     t, t_err := cm.GetTag(tagId)
     if m_err != nil || t_err != nil {
-        return errors.New("DB Tag or media container not found")
+        return errors.New("DB Tag or content container not found")
     }
     return cm.AssociateTag(t, mc)
 }

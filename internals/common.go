@@ -141,20 +141,20 @@ func InitFakeApp(use_db bool) *utils.DirConfigEntry {
 }
 
 func CreateContentByDirName(test_dir_name string) (*models.Container, models.Contents, error) {
-    cnt, media := GetContentByDirName(test_dir_name)
+    cnt, content := GetContentByDirName(test_dir_name)
 
     c_err := models.DB.Create(cnt)
     if c_err != nil {
         return nil, nil, c_err
     }
-    for _, mc := range media {
+    for _, mc := range content {
         mc.ContainerID = nulls.NewUUID(cnt.ID)
         m_err := models.DB.Create(&mc)
         if m_err != nil {
             return nil, nil, m_err
         }
     }
-    return cnt, media, nil
+    return cnt, content, nil
 }
 
 func GetContentByDirName(test_dir_name string) (*models.Container, models.Contents) {
@@ -173,7 +173,7 @@ func GetContentByDirName(test_dir_name string) (*models.Container, models.Conten
     if cnt == nil {
         log.Panic("Could not find the directory: " + test_dir_name)
     }
-    media := utils.FindContentMatcher(*cnt, 42, 0, cfg.IncContent, cfg.ExcContent)
-    cnt.Total = len(media)
-    return cnt, media
+    content := utils.FindContentMatcher(*cnt, 42, 0, cfg.IncContent, cfg.ExcContent)
+    cnt.Total = len(content)
+    return cnt, content
 }

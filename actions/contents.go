@@ -20,10 +20,10 @@ import (
 
 // Following naming logic is implemented in Buffalo:
 // Model: Singular (Content)
-// DB Table: Plural (medias)
+// DB Table: Plural (contents)
 // Resource: Plural (Contents)
-// Path: Plural (/medias)
-// View Template Folder: Plural (/templates/medias/)
+// Path: Plural (/contents)
+// View Template Folder: Plural (/templates/contents/)
 
 // ContentsResource is the resource for the Content model
 type ContentsResource struct {
@@ -31,17 +31,17 @@ type ContentsResource struct {
 }
 
 // List gets all Contents. This function is mapped to the path
-// GET /medias
+// GET /contents
 func (v ContentsResource) List(c buffalo.Context) error {
     // Get the DB connection from the context
 
     man := managers.GetManager(&c)
-    var mediaContainers *models.Contents
+    var contentContainers *models.Contents
 
     // Optional params suuuuck in GoLang
     cID_str := c.Param("container_id")
     if cID_str != "" {
-        log.Printf("Attempting to get media using %s", cID_str)
+        log.Printf("Attempting to get content using %s", cID_str)
         cID, err := uuid.FromString(cID_str)
         if err != nil {
             return c.Error(http.StatusBadRequest, err)
@@ -50,7 +50,7 @@ func (v ContentsResource) List(c buffalo.Context) error {
         if q_err != nil {
             return c.Error(http.StatusBadRequest, err)
         }
-        mediaContainers = mcs
+        contentContainers = mcs
     } else {
         log.Printf("List all Content No Restriction on the container ID")
         // TODO: Fix the lack of page support and TEST IT
@@ -59,58 +59,58 @@ func (v ContentsResource) List(c buffalo.Context) error {
         if err != nil {
             return c.Error(http.StatusBadRequest, err)
         }
-        mediaContainers = mcs
+        contentContainers = mcs
     }
     return responder.Wants("html", func(c buffalo.Context) error {
-        return c.Render(200, r.JSON(mediaContainers))
+        return c.Render(200, r.JSON(contentContainers))
     }).Wants("json", func(c buffalo.Context) error {
-        return c.Render(200, r.JSON(mediaContainers))
+        return c.Render(200, r.JSON(contentContainers))
     }).Wants("xml", func(c buffalo.Context) error {
-        return c.Render(200, r.XML(mediaContainers))
+        return c.Render(200, r.XML(contentContainers))
     }).Respond(c)
 }
 
 // Show gets the data for one Content. This function is mapped to
-// the path GET /medias/{media_id}
+// the path GET /contents/{content_id}
 func (v ContentsResource) Show(c buffalo.Context) error {
     man := managers.GetManager(&c)
 
-    // TODO: Make it actually just handle /media (page, number)
-    uuid, err := uuid.FromString(c.Param("media_id"))
+    // TODO: Make it actually just handle /content (page, number)
+    uuid, err := uuid.FromString(c.Param("content_id"))
     if err != nil {
         return c.Error(http.StatusBadRequest, err)
     }
 
-    mediaContainer, missing_err := man.GetContent(uuid)
+    contentContainer, missing_err := man.GetContent(uuid)
     if missing_err != nil {
         return c.Error(http.StatusNotFound, missing_err)
     }
 
     return responder.Wants("html", func(c buffalo.Context) error {
-        return c.Render(200, r.JSON(mediaContainer))
+        return c.Render(200, r.JSON(contentContainer))
     }).Wants("json", func(c buffalo.Context) error {
-        return c.Render(200, r.JSON(mediaContainer))
+        return c.Render(200, r.JSON(contentContainer))
     }).Wants("xml", func(c buffalo.Context) error {
-        return c.Render(200, r.XML(mediaContainer))
+        return c.Render(200, r.XML(contentContainer))
     }).Respond(c)
 }
 
 // Create adds a Content to the DB. This function is mapped to the
-// path POST /medias
+// path POST /contents
 func (v ContentsResource) Create(c buffalo.Context) error {
     _, tx, err := managers.ManagerCanCUD(&c)
     if err != nil {
         return err
     }
     // Allocate an empty Content
-    // Bind mediaContainer to the html form elements (probably not required?)
-    mediaContainer := &models.Content{}
-    if err := c.Bind(mediaContainer); err != nil {
+    // Bind contentContainer to the html form elements (probably not required?)
+    contentContainer := &models.Content{}
+    if err := c.Bind(contentContainer); err != nil {
         return err
     }
 
     // Validate the data from the html form
-    verrs, err := tx.ValidateAndCreate(mediaContainer)
+    verrs, err := tx.ValidateAndCreate(contentContainer)
     if err != nil {
         return err
     }
@@ -126,16 +126,16 @@ func (v ContentsResource) Create(c buffalo.Context) error {
     }
 
     return responder.Wants("html", func(c buffalo.Context) error {
-        return c.Render(http.StatusCreated, r.JSON(mediaContainer))
+        return c.Render(http.StatusCreated, r.JSON(contentContainer))
     }).Wants("json", func(c buffalo.Context) error {
-        return c.Render(http.StatusCreated, r.JSON(mediaContainer))
+        return c.Render(http.StatusCreated, r.JSON(contentContainer))
     }).Wants("xml", func(c buffalo.Context) error {
-        return c.Render(http.StatusCreated, r.XML(mediaContainer))
+        return c.Render(http.StatusCreated, r.XML(contentContainer))
     }).Respond(c)
 }
 
 // Update changes a Content in the DB. This function is mapped to
-// the path PUT /medias/{media_id}
+// the path PUT /contents/{content_id}
 func (v ContentsResource) Update(c buffalo.Context) error {
     _, tx, err := managers.ManagerCanCUD(&c)
     if err != nil {
@@ -143,16 +143,16 @@ func (v ContentsResource) Update(c buffalo.Context) error {
     }
 
     // Allocate an empty Content
-    mediaContainer := &models.Content{}
-    if err := tx.Find(mediaContainer, c.Param("media_id")); err != nil {
+    contentContainer := &models.Content{}
+    if err := tx.Find(contentContainer, c.Param("content_id")); err != nil {
         return c.Error(http.StatusNotFound, err)
     }
 
     // Bind Content to the html form elements (Nuke this)
-    if err := c.Bind(mediaContainer); err != nil {
+    if err := c.Bind(contentContainer); err != nil {
         return err
     }
-    verrs, err := tx.ValidateAndUpdate(mediaContainer)
+    verrs, err := tx.ValidateAndUpdate(contentContainer)
     if err != nil {
         return err
     }
@@ -168,16 +168,16 @@ func (v ContentsResource) Update(c buffalo.Context) error {
     }
 
     return responder.Wants("html", func(c buffalo.Context) error {
-        return c.Render(http.StatusOK, r.JSON(mediaContainer))
+        return c.Render(http.StatusOK, r.JSON(contentContainer))
     }).Wants("json", func(c buffalo.Context) error {
-        return c.Render(http.StatusOK, r.JSON(mediaContainer))
+        return c.Render(http.StatusOK, r.JSON(contentContainer))
     }).Wants("xml", func(c buffalo.Context) error {
-        return c.Render(http.StatusOK, r.XML(mediaContainer))
+        return c.Render(http.StatusOK, r.XML(contentContainer))
     }).Respond(c)
 }
 
 // Destroy deletes a Content from the DB. This function is mapped
-// to the path DELETE /medias/{media_id}
+// to the path DELETE /contents/{content_id}
 func (v ContentsResource) Destroy(c buffalo.Context) error {
     _, tx, err := managers.ManagerCanCUD(&c)
     if err != nil {
@@ -186,21 +186,21 @@ func (v ContentsResource) Destroy(c buffalo.Context) error {
 
     // TODO: Manager should probably be the thing doing updates etc.
     // Allocate an empty Content
-    mediaContainer := &models.Content{}
+    contentContainer := &models.Content{}
 
-    // To find the Content the parameter media_id is used.
-    if err := tx.Find(mediaContainer, c.Param("media_id")); err != nil {
+    // To find the Content the parameter content_id is used.
+    if err := tx.Find(contentContainer, c.Param("content_id")); err != nil {
         return c.Error(http.StatusNotFound, err)
     }
-    if err := tx.Destroy(mediaContainer); err != nil {
+    if err := tx.Destroy(contentContainer); err != nil {
         return err
     }
 
     return responder.Wants("html", func(c buffalo.Context) error {
-        return c.Render(http.StatusOK, r.JSON(mediaContainer))
+        return c.Render(http.StatusOK, r.JSON(contentContainer))
     }).Wants("json", func(c buffalo.Context) error {
-        return c.Render(http.StatusOK, r.JSON(mediaContainer))
+        return c.Render(http.StatusOK, r.JSON(contentContainer))
     }).Wants("xml", func(c buffalo.Context) error {
-        return c.Render(http.StatusOK, r.XML(mediaContainer))
+        return c.Render(http.StatusOK, r.XML(contentContainer))
     }).Respond(c)
 }

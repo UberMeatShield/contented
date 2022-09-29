@@ -3,7 +3,7 @@ package utils
 /**
 * This provides a single instance of the content tree that should be hosted when you
 * choose just to use an in memory version of a directory.  It keeps a hash lookup for
-* containers and media and is then used by the MemoryManager.
+* containers and content and is then used by the MemoryManager.
  */
 import (
     "contented/models"
@@ -59,7 +59,7 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.ContentMap
             continue // SKIP empty container directories
         }
 
-        // Careful as sometimes we do want containers even if there is no media
+        // Careful as sometimes we do want containers even if there is no content
         c := ct.Cnt
         if len(ct.Content) > 0 {
             c.PreviewUrl = "/preview/" + ct.Content[0].ID.String()
@@ -67,7 +67,7 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.ContentMap
 
             maybeScreens, screenErr := GetPotentialScreens(&c)
             for _, mc := range ct.Content {
-                // Assign anything required to the media before we put it in the lookup hash
+                // Assign anything required to the content before we put it in the lookup hash
                 AssignPreviewIfExists(&c, &mc)
                 if screenErr == nil {
                     screens := AssignScreensFromSet(&c, &mc, maybeScreens)

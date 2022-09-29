@@ -1,7 +1,7 @@
 package models
 
 func (ms *ModelSuite) Test_Content() {
-    count, err := ms.DB.Count("medias")
+    count, err := ms.DB.Count("contents")
     ms.NoError(err)
     if count > 0 {
         ms.Fail("The DB was not reset")

@@ -36,9 +36,9 @@ func Test_FindContent(t *testing.T) {
     cfg.Dir = testDir
     containers := FindContainers(testDir)
     for _, c := range containers {
-        media := FindContent(c, 42, 0)
-        if len(media) == 0 {
-            t.Errorf("Failed to lookup media in container %s", c.Name)
+        content := FindContent(c, 42, 0)
+        if len(content) == 0 {
+            t.Errorf("Failed to lookup content in container %s", c.Name)
         }
     }
 }
@@ -73,11 +73,11 @@ func Test_SetupContentMatchers(t *testing.T) {
     containers := FindContainers(testDir)
     found := false
     for _, c := range containers {
-        media := FindContentMatcher(c, 42, 0, cfg.IncContent, cfg.ExcContent)
+        content := FindContentMatcher(c, 42, 0, cfg.IncContent, cfg.ExcContent)
         if c.Name == "dir2" {
             found = true
-            if len(media) != 2 {
-                t.Errorf("It did not exclude the movie by partial name match %s", media)
+            if len(content) != 2 {
+                t.Errorf("It did not exclude the movie by partial name match %s", content)
             }
         }
     }
@@ -96,8 +96,8 @@ func Test_ContentMatcher(t *testing.T) {
 
     // The positive include all cases handled by using FindContent tests (default include all matches)
     for _, cnt := range containers {
-        media := FindContentMatcher(cnt, 0, 20, IncludeAllFiles, FailAll)
-        if len(media) != 0 {
+        content := FindContentMatcher(cnt, 0, 20, IncludeAllFiles, FailAll)
+        if len(content) != 0 {
             t.Errorf("All Files should be excluded")
         }
         inc_test := FindContentMatcher(cnt, 0, 20, FailAll, ExcludeNoFiles)
@@ -179,8 +179,8 @@ func Test_FindContentOffset(t *testing.T) {
     for _, c := range containers {
         if c.Name == "dir3" {
             expect_dir = true
-            media := FindContent(c, 2, 0)
-            if len(media) > 3 {
+            content := FindContent(c, 2, 0)
+            if len(content) > 3 {
                 t.Error("Limit failed to restrict contents")
             }
             allm := FindContent(c, 42, 0)

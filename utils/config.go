@@ -93,7 +93,7 @@ type DirConfigEntry struct {
         PreviewNumberOfScreens   int    // How many screens should be created to make the preview?
         PreviewFirstScreenOffset int    // Seconds to skip before taking a screen (black screen / titles)
 
-        // Matchers that will determine which media elements to be included or excluded
+        // Matchers that will determine which content elements to be included or excluded
         IncContent        ContentMatcher
         IncludeOperator string
         ExcContent        ContentMatcher
@@ -261,11 +261,11 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
         return cfg
 }
 
-// Setup the matchers on the configuration, these are used to determine which media elments should match
+// Setup the matchers on the configuration, these are used to determine which content elments should match
 // yes filename matches, yes mime matches, no if the filename matches, no if the mime matches.
 func SetupContentMatchers(cfg *DirConfigEntry, y_fn string, y_mime string, n_fn string, n_mime string) {
 
-        //To include media only if it matches the filename or mime type
+        //To include content only if it matches the filename or mime type
         if y_fn != "" || y_mime != "" {
                 cfg.IncContent = CreateContentMatcher(y_fn, y_mime, cfg.IncludeOperator)
         } else {

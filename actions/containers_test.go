@@ -105,8 +105,8 @@ func (as *ActionSuite) Test_ContainerList() {
     }
     as.NotNil(found, "If it had the fixture loaded we should have this name")
 
-    mediaRes := as.JSON("/containers/" + found.ID.String() + "/media").Get()
-    as.Equal(http.StatusOK, mediaRes.Code)
+    contentRes := as.JSON("/containers/" + found.ID.String() + "/content").Get()
+    as.Equal(http.StatusOK, contentRes.Code)
 }
 
 func (as *ActionSuite) Test_MemoryDenyEdit() {
