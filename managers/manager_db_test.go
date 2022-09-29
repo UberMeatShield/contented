@@ -14,39 +14,39 @@ func (as *ActionSuite) Test_DbManagerSearch() {
     man := GetManagerActionSuite(cfg, as)
     as.Equal(man.CanEdit(), true, "It should be a DB manager")
 
-    cnt1, media1 := internals.GetMediaByDirName("dir1")
-    cnt2, media2 := internals.GetMediaByDirName("dir2")
+    cnt1, media1 := internals.GetContentByDirName("dir1")
+    cnt2, media2 := internals.GetContentByDirName("dir2")
     c1_err := man.CreateContainer(cnt1)
     as.NoError(c1_err)
     c2_err := man.CreateContainer(cnt2)
     as.NoError(c2_err)
     for _, mc := range media1 {
-        man.CreateMedia(&mc)
+        man.CreateContent(&mc)
     }
     for _, mc := range media2 {
-        man.CreateMedia(&mc)
+        man.CreateContent(&mc)
         if mc.Src == "donut.mp4" {
-            man.CreateScreen(&models.Screen{MediaID: mc.ID, Src: "screen1"})
-            man.CreateScreen(&models.Screen{MediaID: mc.ID, Src: "screen2"})
+            man.CreateScreen(&models.Screen{ContentID: mc.ID, Src: "screen1"})
+            man.CreateScreen(&models.Screen{ContentID: mc.ID, Src: "screen2"})
         }
     }
-    mcs, _, err := man.SearchMedia("Large", 1, 20, "", "")
+    mcs, _, err := man.SearchContent("Large", 1, 20, "", "")
     as.NoError(err, "It should be able to search")
     as.NotNil(mcs, "It should be")
     as.Equal(3, len(*mcs), fmt.Sprintf("We should have 3 large images with an ilike %s", mcs))
 
-    mcs_d, vsTotal, vErr := man.SearchMedia("donut", 1, 10, "", "")
+    mcs_d, vsTotal, vErr := man.SearchContent("donut", 1, 10, "", "")
     as.NoError(vErr, "Video error by name search failed")
     as.Equal(1, vsTotal, "We should be able to find donut.mp4 with an ilike")
     mc_donut := (*mcs_d)[0]
     as.Equal(2, len(mc_donut.Screens), fmt.Sprintf("It should load two screens %s", mc_donut.Screens))
 
-    vids, vidTotal, dbErr := man.SearchMedia("", 1, 40, "", "video")
+    vids, vidTotal, dbErr := man.SearchContent("", 1, 40, "", "video")
     as.NoError(dbErr, "Should search content type")
     as.Equal(1, vidTotal, "The total count for videos is 1")
     as.Equal(1, len(*vids), "We should have one result")
 
-    all_mcs, total, err := man.SearchMedia("", 1, 10, cnt1.ID.String(), "")
+    all_mcs, total, err := man.SearchContent("", 1, 10, cnt1.ID.String(), "")
     as.NoError(err, "It should be able to empty search")
     as.Equal(12, total, "The total count for this dir is 12")
     as.Equal(10, len(*all_mcs), "But we limited the pagination")
@@ -61,24 +61,24 @@ func (as *ActionSuite) Test_DbManagerMultiSearch() {
     man := GetManagerActionSuite(cfg, as)
     as.Equal(man.CanEdit(), true)
 
-    cnt1, media1, err1 := internals.CreateMediaByDirName("dir1")
+    cnt1, media1, err1 := internals.CreateContentByDirName("dir1")
     as.NoError(err1)
     as.Greater(len(media1), 1)
 
-    cnt2, media2, err2 := internals.CreateMediaByDirName("dir2")
+    cnt2, media2, err2 := internals.CreateContentByDirName("dir2")
     as.NoError(err2)
     as.Greater(len(media2), 1)
 
-    found, count, err := man.SearchMedia(media1[1].Src, 0, 10, cnt1.ID.String(), "")
+    found, count, err := man.SearchContent(media1[1].Src, 0, 10, cnt1.ID.String(), "")
     as.Equal(len(*found), 1, "We should have found our item")
     as.Equal(count, 1)
     as.NoError(err)
 
-    _, n_count, n_err := man.SearchMedia("blah", 0, 10, cnt1.ID.String(), "")
+    _, n_count, n_err := man.SearchContent("blah", 0, 10, cnt1.ID.String(), "")
     as.Equal(n_count, 0, "It should not find this the media name is invalid")
     as.NoError(n_err)
 
-    _, not_in_cnt_count, not_err := man.SearchMedia(media1[1].Src, 0, 10, cnt2.ID.String(), "")
+    _, not_in_cnt_count, not_err := man.SearchContent(media1[1].Src, 0, 10, cnt2.ID.String(), "")
     as.Equal(not_in_cnt_count, 0, "It should not find this valid media as it is not in the container")
     as.NoError(not_err)
 }
@@ -88,7 +88,7 @@ func (as *ActionSuite) Test_ManagerDB() {
     models.DB.TruncateAll()
     cfg := internals.InitFakeApp(true)
 
-    cnt, media := internals.GetMediaByDirName("dir1")
+    cnt, media := internals.GetContentByDirName("dir1")
     as.Equal("dir1", cnt.Name, "It should be the right dir")
     as.Equal(12, cnt.Total, "The container total should be this for dir1")
     as.Equal(12, len(media))
@@ -100,11 +100,11 @@ func (as *ActionSuite) Test_ManagerDB() {
     }
 
     man := GetManagerActionSuite(cfg, as)
-    q_media, err := man.ListAllMedia(0, 14)
+    q_media, err := man.ListAllContent(0, 14)
     as.NoError(err, "We should be able to list")
     as.Equal(len(*q_media), 12, "there should be 12 results")
 
-    lim_media, _ := man.ListAllMedia(0, 3)
+    lim_media, _ := man.ListAllContent(0, 3)
     as.Equal(3, len(*lim_media), "The DB should be setup with 10 items")
 }
 
@@ -150,14 +150,14 @@ func (as *ActionSuite) Test_ManagerAssociateTagsDB() {
     t2 := models.Tag{Name: "B",}
     man.CreateTag(&t1)
     man.CreateTag(&t2)
-    mc := models.MediaContainer{Src: "A", Preview: "p", ContentType: "video"}
+    mc := models.Content{Src: "A", Preview: "p", ContentType: "video"}
     mc.Tags = models.Tags{t1, t2,}
-    man.CreateMedia(&mc)
+    man.CreateContent(&mc)
 
-    s := models.Screen{Src: "screen1", MediaID: mc.ID}
+    s := models.Screen{Src: "screen1", ContentID: mc.ID}
     man.CreateScreen(&s)
     mc.Screens = models.Screens{s,}
-    man.UpdateMedia(&mc)
+    man.UpdateContent(&mc)
     // as.Equal(len(mc.Tags), 0, "There should be no tags at this point")
 
     tags, t_err := man.ListAllTags(0, 10)
@@ -172,12 +172,12 @@ func (as *ActionSuite) Test_ManagerAssociateTagsDB() {
     //screens, s_err := man.(0, 10)
 
     // TODO: ok so the damn eager loading is just not working?
-    tCheck, _ := man.GetMedia(mc.ID)
+    tCheck, _ := man.GetContent(mc.ID)
     as.Equal(2, len(tCheck.Tags), fmt.Sprintf("Wat %s", tCheck))
     /*
     err := man.AssociateTagByID(t1.ID, mc.ID)
     as.NoError(err, "We shouldn't have an issue associating this")
-    mcCheck, mc_err := man.GetMedia(mc.ID)
+    mcCheck, mc_err := man.GetContent(mc.ID)
     as.NoError(mc_err, "We should be able to load back the media")
     as.Equal(1, len(mcCheck.Tags), fmt.Sprintf("There should be a new tag %s", mcCheck))
     */
@@ -189,17 +189,17 @@ func (as *ActionSuite) Test_ManagerDBPreviews() {
     cfg := internals.InitFakeApp(true)
     man := GetManagerActionSuite(cfg, as)
 
-    mc1 := models.MediaContainer{Src: "A", Preview: "p", ContentType: "video"}
-    mc2 := models.MediaContainer{Src: "B", Preview: "p", ContentType: "video"}
-    mc3 := models.MediaContainer{Src: "C", Preview: "p", ContentType: "video"}
-    man.CreateMedia(&mc1)
-    man.CreateMedia(&mc2)
-    man.CreateMedia(&mc3)
+    mc1 := models.Content{Src: "A", Preview: "p", ContentType: "video"}
+    mc2 := models.Content{Src: "B", Preview: "p", ContentType: "video"}
+    mc3 := models.Content{Src: "C", Preview: "p", ContentType: "video"}
+    man.CreateContent(&mc1)
+    man.CreateContent(&mc2)
+    man.CreateContent(&mc3)
     as.NotZero(mc1.ID)
 
-    p1 := models.Screen{Src: "fake1", Idx: 0, MediaID: mc1.ID}
-    p2 := models.Screen{Src: "fake2.png", Idx: 1, MediaID: mc1.ID}
-    p3 := models.Screen{Src: "fake3.png", Idx: 1, MediaID: mc2.ID}
+    p1 := models.Screen{Src: "fake1", Idx: 0, ContentID: mc1.ID}
+    p2 := models.Screen{Src: "fake2.png", Idx: 1, ContentID: mc1.ID}
+    p3 := models.Screen{Src: "fake3.png", Idx: 1, ContentID: mc2.ID}
 
     man.CreateScreen(&p1)
     man.CreateScreen(&p2)
@@ -213,7 +213,7 @@ func (as *ActionSuite) Test_ManagerDBPreviews() {
     as.NoError(p_err)
     as.Equal(len(*previewOne), 1, "Now there should be 1")
 
-    p4 := models.Screen{Src: "fake4.png", Idx: 1, MediaID: mc2.ID}
+    p4 := models.Screen{Src: "fake4.png", Idx: 1, ContentID: mc2.ID}
     c_err := man.CreateScreen(&p4)
     as.NoError(c_err)
 
@@ -233,22 +233,22 @@ func (as *ActionSuite) Test_ManagerDBSearchScreens() {
     }
 
     // Hmm, might want to make a wrapper for the create
-    mc1 := models.MediaContainer{Src: "1", Preview: "one", ContentType: "video/mp4"}
-    mc2 := models.MediaContainer{Src: "2", Preview: "none", ContentType: "video/mp4"}
-    mc3 := models.MediaContainer{Src: "3", Preview: "none", ContentType: "video/mp4"}
-    mc4 := models.MediaContainer{Src: "4", Preview: "none", ContentType: "image/png"}
-    mc5 := models.MediaContainer{Src: "No Previews", Preview: "none", ContentType: "video/mp4"}
-    man.CreateMedia(&mc1)
-    man.CreateMedia(&mc2)
-    man.CreateMedia(&mc3)
-    man.CreateMedia(&mc4)
-    man.CreateMedia(&mc5)
+    mc1 := models.Content{Src: "1", Preview: "one", ContentType: "video/mp4"}
+    mc2 := models.Content{Src: "2", Preview: "none", ContentType: "video/mp4"}
+    mc3 := models.Content{Src: "3", Preview: "none", ContentType: "video/mp4"}
+    mc4 := models.Content{Src: "4", Preview: "none", ContentType: "image/png"}
+    mc5 := models.Content{Src: "No Previews", Preview: "none", ContentType: "video/mp4"}
+    man.CreateContent(&mc1)
+    man.CreateContent(&mc2)
+    man.CreateContent(&mc3)
+    man.CreateContent(&mc4)
+    man.CreateContent(&mc5)
 
-    p1 := models.Screen{Src: "fake1.screen", Idx: 1, MediaID: mc1.ID}
-    p2 := models.Screen{Src: "fake2.screen", Idx: 1, MediaID: mc2.ID}
-    p3 := models.Screen{Src: "fake3.screen1", Idx: 1, MediaID: mc3.ID}
-    p4 := models.Screen{Src: "fake3.screen2", Idx: 1, MediaID: mc3.ID}
-    p5 := models.Screen{Src: "ShouldNotLoadMediaIsImage", Idx: 1, MediaID: mc4.ID}
+    p1 := models.Screen{Src: "fake1.screen", Idx: 1, ContentID: mc1.ID}
+    p2 := models.Screen{Src: "fake2.screen", Idx: 1, ContentID: mc2.ID}
+    p3 := models.Screen{Src: "fake3.screen1", Idx: 1, ContentID: mc3.ID}
+    p4 := models.Screen{Src: "fake3.screen2", Idx: 1, ContentID: mc3.ID}
+    p5 := models.Screen{Src: "ShouldNotLoadContentIsImage", Idx: 1, ContentID: mc4.ID}
     man.CreateScreen(&p1)
     man.CreateScreen(&p2)
     man.CreateScreen(&p3)
@@ -256,7 +256,7 @@ func (as *ActionSuite) Test_ManagerDBSearchScreens() {
     man.CreateScreen(&p5)
 
     // Intentionally exclude mc2 to ensure we get some screens, include one with no screens
-    media := models.MediaContainers{mc1, mc3, mc4, mc5}
+    media := models.Contents{mc1, mc3, mc4, mc5}
     screens, s_err := man.LoadRelatedScreens(&media)
     as.NoError(s_err, "It shouldn't error out")
     as.NotNil(screens, "No screens were returned")
@@ -266,7 +266,7 @@ func (as *ActionSuite) Test_ManagerDBSearchScreens() {
     as.Equal(2, len(screens[mc3.ID]), "MC3 has 2 screens")
 
     // Test that an image will not load previews
-    media_2 := models.MediaContainers{mc2, mc4}
+    media_2 := models.Contents{mc2, mc4}
     screens_2, s2_err := man.LoadRelatedScreens(&media_2)
     as.NoError(s2_err, "It shouldn't error out")
     as.Equal(1, len(screens_2), "It should load all the screens for mc2 but EXCLUDE mc4")

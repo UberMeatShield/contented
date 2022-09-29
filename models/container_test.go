@@ -6,7 +6,7 @@ import (
 
 func (ms *ModelSuite) Test_Container() {
     // ms.LoadFixture("Container")
-    // ms.LoadFixture("MediaContainer")
+    // ms.LoadFixture("Content")
     count, err := ms.DB.Count("containers")
     ms.NoError(err)
     if count > 0 {
@@ -31,11 +31,11 @@ func (ms *ModelSuite) Test_Container_Query() {
     ms.DB.Create(&c)
     ms.NotZero(c.ID)
 
-    mc1 := MediaContainer{
+    mc1 := Content{
         Src:         "first",
         ContainerID: nulls.NewUUID(c.ID),
     }
-    mc2 := MediaContainer{
+    mc2 := Content{
         Src:         "second",
         ContainerID: nulls.NewUUID(c.ID),
     }

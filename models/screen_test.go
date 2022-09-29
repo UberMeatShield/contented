@@ -4,14 +4,14 @@ import (
     "path/filepath"
 )
 
-func (ms *ModelSuite) Test_MediaContainerScreens() {
-    count, err := ms.DB.Count("media_containers")
+func (ms *ModelSuite) Test_ContentScreens() {
+    count, err := ms.DB.Count("medias")
     ms.NoError(err)
     if count > 0 {
         ms.Fail("The DB was not reset")
     }
 
-    mc := MediaContainer{
+    mc := Content{
         Src:         "We should be able to create a set of screens",
         Preview:     "preview_location",
         ContentType: "image/png",
@@ -22,13 +22,13 @@ func (ms *ModelSuite) Test_MediaContainerScreens() {
     p1 := Screen{
         Src:     "fake1",
         Idx:     0,
-        MediaID: mc.ID,
+        ContentID: mc.ID,
     }
     p2 := Screen{
         Src:     "fake2.png",
         Idx:     1,
         Path:    "Derp/Monkey",
-        MediaID: mc.ID,
+        ContentID: mc.ID,
     }
 
     p2Loc := p2.GetFqPath()
@@ -44,7 +44,7 @@ func (ms *ModelSuite) Test_MediaContainerScreens() {
         ms.Fail("Couldn't create preview screen 2 %s", perr2)
     }
 
-    check := MediaContainer{}
+    check := Content{}
     q_err := ms.DB.Eager().Find(&check, mc.ID)
     if q_err != nil {
         ms.Fail("Could not query for this id %s"+mc.ID.String(), q_err)

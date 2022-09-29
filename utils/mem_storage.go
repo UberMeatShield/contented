@@ -13,7 +13,7 @@ import (
 // GoLang is just making this awkward
 type MemoryStorage struct {
     Initialized     bool
-    ValidMedia      models.MediaMap
+    ValidContent      models.ContentMap
     ValidContainers models.ContainerMap
     ValidScreens    models.ScreenMap
     ValidTags       models.TagsMap
@@ -31,7 +31,7 @@ func InitializeMemory(dir_root string) *MemoryStorage {
 
     memStorage.Initialized = true
     memStorage.ValidContainers = containers
-    memStorage.ValidMedia = files
+    memStorage.ValidContent = files
     memStorage.ValidScreens = screens
     memStorage.ValidTags = models.TagsMap{}
 
@@ -41,9 +41,9 @@ func InitializeMemory(dir_root string) *MemoryStorage {
 /**
  * Populates the memory view (this code is very similar to the DB version in helper.go)
  */
-func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap, models.ScreenMap) {
+func PopulateMemoryView(dir_root string) (models.ContainerMap, models.ContentMap, models.ScreenMap) {
     containers := models.ContainerMap{}
-    files := models.MediaMap{}
+    files := models.ContentMap{}
     screensMap := models.ScreenMap{}
 
     cfg := GetCfg()
@@ -55,18 +55,18 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap, 
 
     tree := *contentTree
     for idx, ct := range tree {
-        if cfg.ExcludeEmptyContainers && len(ct.Media) == 0 {
+        if cfg.ExcludeEmptyContainers && len(ct.Content) == 0 {
             continue // SKIP empty container directories
         }
 
         // Careful as sometimes we do want containers even if there is no media
         c := ct.Cnt
-        if len(ct.Media) > 0 {
-            c.PreviewUrl = "/preview/" + ct.Media[0].ID.String()
+        if len(ct.Content) > 0 {
+            c.PreviewUrl = "/preview/" + ct.Content[0].ID.String()
             log.Printf("Assigning a preview to %s as %s", c.Name, c.PreviewUrl)
 
             maybeScreens, screenErr := GetPotentialScreens(&c)
-            for _, mc := range ct.Media {
+            for _, mc := range ct.Content {
                 // Assign anything required to the media before we put it in the lookup hash
                 AssignPreviewIfExists(&c, &mc)
                 if screenErr == nil {

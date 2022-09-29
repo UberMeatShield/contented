@@ -22,13 +22,13 @@ const DefaultPreviewCount int = 8
 const DefaultUseDatabase bool = false
 const Default bool = false
 const DefaultMaxSearchDepth int = 1
-const DefaultMaxMediaPerContainer int = 90001
+const DefaultMaxContentPerContainer int = 90001
 const DefaultExcludeEmptyContainers bool = true
 const DefeaultTotalScreens = 12
 const DefaultPreviewFirstScreenOffset = 5
 
 // Matchers that determine if you want to include specific filenames/content types
-type MediaMatcher func(string, string) bool
+type ContentMatcher func(string, string) bool
 type ContainerMatcher func(string) bool
 
 func ExcludeNoFiles(filename string, content_type string) bool {
@@ -54,7 +54,7 @@ func IncludeAllContainers(name string) bool {
 
 // Create a matcher that will check filename and content type and return true if it matches
 // both in the case of AND matching (default) and true if either matches if matchType is OR
-func CreateMediaMatcher(filenameStrRE string, typesStrRE string, matchType string) MediaMatcher {
+func CreateContentMatcher(filenameStrRE string, typesStrRE string, matchType string) ContentMatcher {
         filenameRE := regexp.MustCompile(filenameStrRE)
         typeRE := regexp.MustCompile(typesStrRE)
 
@@ -94,16 +94,16 @@ type DirConfigEntry struct {
         PreviewFirstScreenOffset int    // Seconds to skip before taking a screen (black screen / titles)
 
         // Matchers that will determine which media elements to be included or excluded
-        IncMedia        MediaMatcher
+        IncContent        ContentMatcher
         IncludeOperator string
-        ExcMedia        MediaMatcher
+        ExcContent        ContentMatcher
         ExcludeOperator string
 
         IncContainer ContainerMatcher
         ExcContainer ContainerMatcher
 
         MaxSearchDepth         int  // When we search for data how far down the filesystem to search
-        MaxMediaPerContainer   int  // When we search for data how far down the filesystem to search
+        MaxContentPerContainer   int  // When we search for data how far down the filesystem to search
         ExcludeEmptyContainers bool // If there is no content, should we list the container default true
 }
 
@@ -126,7 +126,7 @@ func GetCfgDefaults() DirConfigEntry {
                 CoreCount:                4,
                 Limit:                    DefaultLimit,
                 MaxSearchDepth:           DefaultMaxSearchDepth,
-                MaxMediaPerContainer:     DefaultMaxMediaPerContainer,
+                MaxContentPerContainer:     DefaultMaxContentPerContainer,
                 PreviewCount:             DefaultPreviewCount,
                 PreviewOverSize:          1024000,
                 PreviewVideoType:         "png",
@@ -135,9 +135,9 @@ func GetCfgDefaults() DirConfigEntry {
                 PreviewFirstScreenOffset: DefaultPreviewFirstScreenOffset,
 
                 // Just grab all files by default
-                IncMedia:               IncludeAllFiles,
+                IncContent:               IncludeAllFiles,
                 IncludeOperator:        "AND",
-                ExcMedia:               ExcludeNoFiles,
+                ExcContent:               ExcludeNoFiles,
                 ExcludeOperator:        "AND",
                 IncContainer:           IncludeAllContainers,
                 ExcContainer:           ExcludeContainerDefault,
@@ -154,7 +154,7 @@ func GetCfgDefaults() DirConfigEntry {
 func InitConfig(dir_root string, cfg *DirConfigEntry) *DirConfigEntry {
         cfg.Dir = dir_root // Always Common
         cfg.Initialized = true
-        SetupMediaMatchers(cfg, "", "", "", "")
+        SetupContentMatchers(cfg, "", "", "", "")
         SetupContainerMatchers(cfg, "", "")
         return cfg
 }
@@ -180,7 +180,7 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
         // There must be a cleaner way to do some of this default loading...
         excludeEmpty, emptyErr := strconv.ParseBool(envy.Get("EXCLUDE_EMPTY_CONTAINER", strconv.FormatBool(DefaultExcludeEmptyContainers)))
         maxSearchDepth, depthErr := strconv.Atoi(envy.Get("MAX_SEARCH_DEPTH", strconv.Itoa(DefaultMaxSearchDepth)))
-        maxMediaPerContainer, medErr := strconv.Atoi(envy.Get("MAX_MEDIA_PER_CONTAINER", strconv.Itoa(DefaultMaxMediaPerContainer)))
+        maxContentPerContainer, medErr := strconv.Atoi(envy.Get("MAX_MEDIA_PER_CONTAINER", strconv.Itoa(DefaultMaxContentPerContainer)))
 
         psize, perr := strconv.ParseInt(envy.Get("CREATE_PREVIEW_SIZE", "1024000"), 10, 64)
         useSeekScreenSize, seekErr := strconv.ParseInt(envy.Get("SEEK_SCREEN_OVER_SIZE", "7168000"), 10, 64)
@@ -243,9 +243,9 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
 
         cfg.ExcludeEmptyContainers = excludeEmpty
         cfg.MaxSearchDepth = maxSearchDepth
-        cfg.MaxMediaPerContainer = maxMediaPerContainer
+        cfg.MaxContentPerContainer = maxContentPerContainer
 
-        SetupMediaMatchers(
+        SetupContentMatchers(
                 cfg,
                 envy.Get("INCLUDE_MEDIA_MATCH", ""),
                 envy.Get("INCLUDE_TYPES_MATCH", ""),
@@ -263,20 +263,20 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
 
 // Setup the matchers on the configuration, these are used to determine which media elments should match
 // yes filename matches, yes mime matches, no if the filename matches, no if the mime matches.
-func SetupMediaMatchers(cfg *DirConfigEntry, y_fn string, y_mime string, n_fn string, n_mime string) {
+func SetupContentMatchers(cfg *DirConfigEntry, y_fn string, y_mime string, n_fn string, n_mime string) {
 
         //To include media only if it matches the filename or mime type
         if y_fn != "" || y_mime != "" {
-                cfg.IncMedia = CreateMediaMatcher(y_fn, y_mime, cfg.IncludeOperator)
+                cfg.IncContent = CreateContentMatcher(y_fn, y_mime, cfg.IncludeOperator)
         } else {
-                cfg.IncMedia = IncludeAllFiles
+                cfg.IncContent = IncludeAllFiles
         }
 
         // If you do not specify exclusion regexes it will just include everything
         if n_fn != "" || n_mime != "" {
-                cfg.ExcMedia = CreateMediaMatcher(n_fn, n_mime, cfg.ExcludeOperator)
+                cfg.ExcContent = CreateContentMatcher(n_fn, n_mime, cfg.ExcludeOperator)
         } else {
-                cfg.ExcMedia = ExcludeNoFiles
+                cfg.ExcContent = ExcludeNoFiles
         }
 }
 

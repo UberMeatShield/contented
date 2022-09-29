@@ -21,7 +21,7 @@ type ContentManagerMemory struct {
     cfg *utils.DirConfigEntry
 
     // Hmmm, this should use the memory manager probably
-    ValidMedia      models.MediaMap
+    ValidContent      models.ContentMap
     ValidContainers models.ContainerMap
     ValidScreens    models.ScreenMap
     ValidTags       models.TagsMap
@@ -60,10 +60,10 @@ func (cm *ContentManagerMemory) Initialize() {
         memStorage = utils.InitializeMemory(cm.cfg.Dir)
     }
     cm.ValidContainers = memStorage.ValidContainers
-    cm.ValidMedia = memStorage.ValidMedia
+    cm.ValidContent = memStorage.ValidContent
     cm.ValidScreens = memStorage.ValidScreens
     cm.ValidTags = memStorage.ValidTags
-    log.Printf("Found %d directories with %d media elements \n", len(cm.ValidContainers), len(cm.ValidMedia))
+    log.Printf("Found %d directories with %d media elements \n", len(cm.ValidContainers), len(cm.ValidContent))
 }
 
 // Kinda strange but it seems hard to assign the type into an interface
@@ -72,14 +72,14 @@ func (cm ContentManagerMemory) GetParams() *url.Values {
     return cm.Params()
 }
 
-func (cm ContentManagerMemory) ListMediaContext(cID uuid.UUID) (*models.MediaContainers, error) {
+func (cm ContentManagerMemory) ListContentContext(cID uuid.UUID) (*models.Contents, error) {
     _, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
-    return cm.ListMedia(cID, page, limit)
+    return cm.ListContent(cID, page, limit)
 }
 
-func (cm ContentManagerMemory) ListAllMedia(page int, per_page int) (*models.MediaContainers, error) {
-    m_arr := models.MediaContainers{}
-    for _, m := range cm.ValidMedia {
+func (cm ContentManagerMemory) ListAllContent(page int, per_page int) (*models.Contents, error) {
+    m_arr := models.Contents{}
+    for _, m := range cm.ValidContent {
         m_arr = append(m_arr, m)
     }
     if len(m_arr) == 0 {
@@ -99,26 +99,26 @@ func (cm ContentManagerMemory) ListAllMedia(page int, per_page int) (*models.Med
 }
 
 // It should probably be able to search the container too?
-func (cm ContentManagerMemory) SearchMediaContext() (*models.MediaContainers, int, error) {
+func (cm ContentManagerMemory) SearchContentContext() (*models.Contents, int, error) {
     params := cm.Params()
     _, per_page, page := GetPagination(params, cm.cfg.Limit)
     searchStr := StringDefault(params.Get("text"), "")
     cId := StringDefault(params.Get("cID"), "")
     contentType := StringDefault(params.Get("contentType"), "")
-    return cm.SearchMedia(searchStr, page, per_page, cId, contentType)
+    return cm.SearchContent(searchStr, page, per_page, cId, contentType)
 }
 
-func (cm ContentManagerMemory) SearchMedia(search string, page int, per_page int, cID string, contentType string) (*models.MediaContainers, int, error) {
-    filteredMedia, cErr := cm.getMediaFiltered(cID, search, contentType)
+func (cm ContentManagerMemory) SearchContent(search string, page int, per_page int, cID string, contentType string) (*models.Contents, int, error) {
+    filteredContent, cErr := cm.getContentFiltered(cID, search, contentType)
     if cErr != nil {
         return nil, 0, cErr
     }
-    if filteredMedia == nil {
-        empty := models.MediaContainers{}
+    if filteredContent == nil {
+        empty := models.Contents{}
         return &empty, 0, nil
     }
 
-    mc_arr := *filteredMedia
+    mc_arr := *filteredContent
     count := len(mc_arr)
     offset, end := GetOffsetEnd(page, per_page, count)
     if end > 0 { // If it is empty a slice ending in 0 = boom
@@ -128,14 +128,14 @@ func (cm ContentManagerMemory) SearchMedia(search string, page int, per_page int
     return &mc_arr, count, nil
 }
 
-func (cm ContentManagerMemory) getMediaFiltered(containerID string, search string, contentType string) (*models.MediaContainers, error) {
+func (cm ContentManagerMemory) getContentFiltered(containerID string, search string, contentType string) (*models.Contents, error) {
     // If a containerID is specified and is totally invalid raise an error, otherwise filter
-    var mcArr models.MediaContainers
-    cidArr := models.MediaContainers{}
+    var mcArr models.Contents
+    cidArr := models.Contents{}
     if containerID != "" {
         cID, cErr := uuid.FromString(containerID)
         if cErr == nil {
-            for _, mc := range cm.ValidMedia {
+            for _, mc := range cm.ValidContent {
                 if mc.ContainerID.Valid && mc.ContainerID.UUID == cID {
                     cidArr = append(cidArr, mc)
                 }
@@ -146,7 +146,7 @@ func (cm ContentManagerMemory) getMediaFiltered(containerID string, search strin
         }
     } else {
         // Empty string for containerID is considered match all media
-        for _, mc := range cm.ValidMedia {
+        for _, mc := range cm.ValidContent {
             cidArr = append(cidArr, mc)
         }
         mcArr = cidArr
@@ -154,7 +154,7 @@ func (cm ContentManagerMemory) getMediaFiltered(containerID string, search strin
 
     if search != "" && search != "*" {
         searcher := regexp.MustCompile(search)
-        searchArr := models.MediaContainers{}
+        searchArr := models.Contents{}
         for _, mc := range mcArr {
             if searcher.MatchString(mc.Src) {
                 searchArr = append(searchArr, mc)
@@ -165,7 +165,7 @@ func (cm ContentManagerMemory) getMediaFiltered(containerID string, search strin
 
     if contentType != "" && contentType != "*" {
         searcher := regexp.MustCompile(contentType)
-        contentArr := models.MediaContainers{}
+        contentArr := models.Contents{}
         for _, mc := range mcArr {
             if searcher.MatchString(mc.ContentType) {
                 contentArr = append(contentArr, mc)
@@ -182,9 +182,9 @@ func (cm ContentManagerMemory) getMediaFiltered(containerID string, search strin
 }
 
 // Awkard GoLang interface support is awkward
-func (cm ContentManagerMemory) ListMedia(ContainerID uuid.UUID, page int, per_page int) (*models.MediaContainers, error) {
-    m_arr := models.MediaContainers{}
-    for _, m := range cm.ValidMedia {
+func (cm ContentManagerMemory) ListContent(ContainerID uuid.UUID, page int, per_page int) (*models.Contents, error) {
+    m_arr := models.Contents{}
+    for _, m := range cm.ValidContent {
         if m.ContainerID.Valid && m.ContainerID.UUID == ContainerID {
             m_arr = append(m_arr, m)
         }
@@ -202,12 +202,12 @@ func (cm ContentManagerMemory) ListMedia(ContainerID uuid.UUID, page int, per_pa
 }
 
 // Get a media element by the ID
-func (cm ContentManagerMemory) GetMedia(mcID uuid.UUID) (*models.MediaContainer, error) {
+func (cm ContentManagerMemory) GetContent(mcID uuid.UUID) (*models.Content, error) {
     // log.Printf("Memory Get a single media %s", mcID)
-    if mc, ok := cm.ValidMedia[mcID]; ok {
+    if mc, ok := cm.ValidContent[mcID]; ok {
         return &mc, nil
     }
-    return nil, errors.New("Media was not found in memory")
+    return nil, errors.New("Content was not found in memory")
 }
 
 // If you already updated the container in memory you are done
@@ -221,12 +221,12 @@ func (cm ContentManagerMemory) UpdateContainer(c *models.Container) error {
 }
 
 // No updates should be allowed for memory management.
-func (cm ContentManagerMemory) UpdateMedia(mc *models.MediaContainer) error {
-    if _, ok := cm.ValidMedia[mc.ID]; ok {
-        cm.ValidMedia[mc.ID] = *mc
+func (cm ContentManagerMemory) UpdateContent(mc *models.Content) error {
+    if _, ok := cm.ValidContent[mc.ID]; ok {
+        cm.ValidContent[mc.ID] = *mc
         return nil
     }
-    return errors.New("Media was not found to update")
+    return errors.New("Content was not found to update")
 }
 
 func (cm ContentManagerMemory) UpdateScreen(s *models.Screen) error {
@@ -234,7 +234,7 @@ func (cm ContentManagerMemory) UpdateScreen(s *models.Screen) error {
         cm.ValidScreens[s.ID] = *s
         return nil
     }
-    return errors.New("Media was not found to update")
+    return errors.New("Content was not found to update")
 }
 
 // Given the current parameters in the buffalo context return a list of matching containers.
@@ -269,14 +269,14 @@ func (cm ContentManagerMemory) GetContainer(cID uuid.UUID) (*models.Container, e
     return nil, errors.New("Memory manager did not find this container id: " + cID.String())
 }
 
-func (cm ContentManagerMemory) FindFileRef(mcID uuid.UUID) (*models.MediaContainer, error) {
-    if mc, ok := cm.ValidMedia[mcID]; ok {
+func (cm ContentManagerMemory) FindFileRef(mcID uuid.UUID) (*models.Content, error) {
+    if mc, ok := cm.ValidContent[mcID]; ok {
         return &mc, nil
     }
     return nil, errors.New("File was not found in the current list of files")
 }
 
-func (cm ContentManagerMemory) GetPreviewForMC(mc *models.MediaContainer) (string, error) {
+func (cm ContentManagerMemory) GetPreviewForMC(mc *models.Content) (string, error) {
     cnt, err := cm.GetContainer(mc.ContainerID.UUID)
     if err != nil {
         return "Memory Manager Preview no Parent Found", err
@@ -289,7 +289,7 @@ func (cm ContentManagerMemory) GetPreviewForMC(mc *models.MediaContainer) (strin
     return utils.GetFilePathInContainer(src, cnt.GetFqPath())
 }
 
-func (cm ContentManagerMemory) FindActualFile(mc *models.MediaContainer) (string, error) {
+func (cm ContentManagerMemory) FindActualFile(mc *models.Content) (string, error) {
     cnt, err := cm.GetContainer(mc.ContainerID.UUID)
     if err != nil {
         return "Memory Manager View no Parent Found", err
@@ -300,7 +300,7 @@ func (cm ContentManagerMemory) FindActualFile(mc *models.MediaContainer) (string
 
 // If you want to do in memory testing and already manually created previews this will
 // then try and use the previews for the in memory manager.
-func (cm ContentManagerMemory) SetPreviewIfExists(mc *models.MediaContainer) (string, error) {
+func (cm ContentManagerMemory) SetPreviewIfExists(mc *models.Content) (string, error) {
     c, err := cm.GetContainer(mc.ContainerID.UUID)
     if err != nil {
         log.Fatal(err)
@@ -323,7 +323,7 @@ func (cm ContentManagerMemory) ListScreens(mcID uuid.UUID, page int, per_page in
     // Did I create this just to sort by Idx across all media?  Kinda strange
     s_arr := models.Screens{}
     for _, s := range cm.ValidScreens {
-        if s.MediaID == mcID {
+        if s.ContentID == mcID {
             s_arr = append(s_arr, s)
         }
     }
@@ -425,7 +425,7 @@ func (cm ContentManagerMemory) DeleteTag(t *models.Tag) error {
     return errors.New("ContentManagerMemory Update failed, not found.")
 }
 
-func (cm ContentManagerMemory) AssociateTag(t *models.Tag, mc *models.MediaContainer) error {
+func (cm ContentManagerMemory) AssociateTag(t *models.Tag, mc *models.Content) error {
     if _, ok := cm.ValidTags[t.ID]; ok {
         return errors.New("Not implemented")
     }
@@ -456,13 +456,13 @@ func (cm ContentManagerMemory) CreateScreen(screen *models.Screen) error {
     return errors.New("ContentManagerMemory no screen instance was passed in to CreateScreen")
 }
 
-func (cm ContentManagerMemory) CreateMedia(mc *models.MediaContainer) error {
+func (cm ContentManagerMemory) CreateContent(mc *models.Content) error {
     if mc != nil {
         mc.ID = AssignID(mc.ID)
-        cm.ValidMedia[mc.ID] = *mc
+        cm.ValidContent[mc.ID] = *mc
         return nil
     }
-    return errors.New("ContentManagerMemory no mediainstance was passed in to CreateMedia")
+    return errors.New("ContentManagerMemory no mediainstance was passed in to CreateContent")
 }
 
 // Note that we need to lock this down so that it cannot just access arbitrary files

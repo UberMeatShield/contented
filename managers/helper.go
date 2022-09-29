@@ -41,7 +41,7 @@ func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
 
     // TODO: Need to do this in a single transaction vs partial
     for idx, ct := range content {
-        if cfg.ExcludeEmptyContainers && len(ct.Media) == 0 {
+        if cfg.ExcludeEmptyContainers && len(ct.Content) == 0 {
             log.Printf("Excluding %s/%s as it had no content found\n", ct.Cnt.Path, ct.Cnt.Name)
             continue // SKIP empty container directories
         }
@@ -49,16 +49,16 @@ func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
         // Prepare to at the container to the DB
         c := ct.Cnt
         c.Idx = idx
-        media := ct.Media
-        log.Printf("Adding Media to %s with total media %d \n", c.Name, len(media))
+        media := ct.Content
+        log.Printf("Adding Content to %s with total media %d \n", c.Name, len(media))
 
         // Use the database version of uuid generation (minimize the miniscule conflict)
         unset_uuid, _ := uuid.FromString("00000000-0000-0000-0000-000000000000")
         c.ID = unset_uuid
 
         // Assign a default preview (maybe move this into create Structure?)
-        if len(ct.Media) > 0 {
-            c.PreviewUrl = "/preview/" + ct.Media[0].ID.String()
+        if len(ct.Content) > 0 {
+            c.PreviewUrl = "/preview/" + ct.Content[0].ID.String()
         }
 
         // TODO: Port to using the manager somehow (note this is called from a grift)
@@ -118,7 +118,7 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
     }
 
     // TODO: It should fix up the total count there (-1 for unlimited?)
-    media, q_err := cm.ListMedia(c.ID, 0, 90000)
+    media, q_err := cm.ListContent(c.ID, 0, 90000)
     if q_err != nil {
         log.Fatal(q_err) // Also fatal if we can no longer list media
     }
@@ -131,7 +131,7 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
         cm.UpdateContainer(c)
     }
 
-    update_list, err := CreateMediaPreviews(c, *media)
+    update_list, err := CreateContentPreviews(c, *media)
     if err != nil {
         log.Printf("Summary of Errors while creating media previews %s", err)
     }
@@ -148,13 +148,13 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
                 }
             }
 
-            // Note that UpdateMedia and create screen don't really work for in memory
+            // Note that UpdateContent and create screen don't really work for in memory
             // Though it actually wouldn't be that bad to update the MemStorage...
-            cm.UpdateMedia(&mc)
+            cm.UpdateContent(&mc)
 
             // TODO: Add in a search for getting screens based on the container and media
         } else if mc.Corrupt {
-            cm.UpdateMedia(&mc)
+            cm.UpdateContent(&mc)
         }
     }
     return err
@@ -162,9 +162,9 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
 
 // TODO: This maybe could be ported to just a ContentTree Element or something
 // This is complicated but a way to do many previews at once
-func CreateMediaPreviews(c *models.Container, media models.MediaContainers) (models.MediaContainers, error) {
+func CreateContentPreviews(c *models.Container, media models.Contents) (models.Contents, error) {
     if len(media) == 0 {
-        return models.MediaContainers{}, nil
+        return models.Contents{}, nil
     }
     cfg := utils.GetCfg()
     processors := cfg.CoreCount
@@ -185,7 +185,7 @@ func CreateMediaPreviews(c *models.Container, media models.MediaContainers) (mod
     }
 
     // Queue up a bunch of preview work
-    mediaMap := models.MediaMap{}
+    mediaMap := models.ContentMap{}
     for _, mc := range media {
         mediaMap[mc.ID] = mc
         ref_mc := mc
@@ -198,7 +198,7 @@ func CreateMediaPreviews(c *models.Container, media models.MediaContainers) (mod
 
     // Exception handling should close the input and output probably
     total := 0
-    previews := models.MediaContainers{}
+    previews := models.Contents{}
 
     error_list := ""
     for result := range reply {
@@ -242,7 +242,7 @@ func StartWorker(w utils.PreviewWorker) {
         c := pr.C
         mc := pr.Mc
         log.Printf("Worker %d Doing a preview for %s\n", w.Id, mc.ID.String())
-        preview, err := utils.CreateMediaPreview(c, mc)
+        preview, err := utils.CreateContentPreview(c, mc)
         pr.Out <- utils.PreviewResult{
             C_ID:    c.ID,
             MC_ID:   mc.ID,

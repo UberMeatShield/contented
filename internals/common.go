@@ -106,7 +106,7 @@ func ResetConfig() *utils.DirConfigEntry {
     cfg.Dir = dir
     utils.InitConfig(dir, &cfg)
     utils.SetupContainerMatchers(&cfg, "", "DS_Store|container_previews")
-    utils.SetupMediaMatchers(&cfg, "", "image|video", "DS_Store", "")
+    utils.SetupContentMatchers(&cfg, "", "image|video", "DS_Store", "")
     utils.SetCfg(cfg)
     return utils.GetCfg()
 }
@@ -130,7 +130,7 @@ func InitFakeApp(use_db bool) *utils.DirConfigEntry {
 
         // cnts := memStorage.ValidContainers
         // for _, c := range cnts {
-        mcs := memStorage.ValidMedia
+        mcs := memStorage.ValidContent
         for _, mc := range mcs {
             if mc.Src == "this_is_p_ng" {
                 mc.Preview = "preview_this_is_p_ng"
@@ -140,8 +140,8 @@ func InitFakeApp(use_db bool) *utils.DirConfigEntry {
     return cfg
 }
 
-func CreateMediaByDirName(test_dir_name string) (*models.Container, models.MediaContainers, error) {
-    cnt, media := GetMediaByDirName(test_dir_name)
+func CreateContentByDirName(test_dir_name string) (*models.Container, models.Contents, error) {
+    cnt, media := GetContentByDirName(test_dir_name)
 
     c_err := models.DB.Create(cnt)
     if c_err != nil {
@@ -157,7 +157,7 @@ func CreateMediaByDirName(test_dir_name string) (*models.Container, models.Media
     return cnt, media, nil
 }
 
-func GetMediaByDirName(test_dir_name string) (*models.Container, models.MediaContainers) {
+func GetContentByDirName(test_dir_name string) (*models.Container, models.Contents) {
     dir, _ := envy.MustGet("DIR")
     cfg := utils.GetCfg()
     cfg.Dir = dir
@@ -173,7 +173,7 @@ func GetMediaByDirName(test_dir_name string) (*models.Container, models.MediaCon
     if cnt == nil {
         log.Panic("Could not find the directory: " + test_dir_name)
     }
-    media := utils.FindMediaMatcher(*cnt, 42, 0, cfg.IncMedia, cfg.ExcMedia)
+    media := utils.FindContentMatcher(*cnt, 42, 0, cfg.IncContent, cfg.ExcContent)
     cnt.Total = len(media)
     return cnt, media
 }

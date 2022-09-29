@@ -19,24 +19,24 @@ import (
 // edit this file.
 
 // Following naming logic is implemented in Buffalo:
-// Model: Singular (MediaContainer)
-// DB Table: Plural (media_containers)
-// Resource: Plural (MediaContainers)
-// Path: Plural (/media_containers)
-// View Template Folder: Plural (/templates/media_containers/)
+// Model: Singular (Content)
+// DB Table: Plural (medias)
+// Resource: Plural (Contents)
+// Path: Plural (/medias)
+// View Template Folder: Plural (/templates/medias/)
 
-// MediaContainersResource is the resource for the MediaContainer model
-type MediaContainersResource struct {
+// ContentsResource is the resource for the Content model
+type ContentsResource struct {
     buffalo.Resource
 }
 
-// List gets all MediaContainers. This function is mapped to the path
-// GET /media_containers
-func (v MediaContainersResource) List(c buffalo.Context) error {
+// List gets all Contents. This function is mapped to the path
+// GET /medias
+func (v ContentsResource) List(c buffalo.Context) error {
     // Get the DB connection from the context
 
     man := managers.GetManager(&c)
-    var mediaContainers *models.MediaContainers
+    var mediaContainers *models.Contents
 
     // Optional params suuuuck in GoLang
     cID_str := c.Param("container_id")
@@ -46,16 +46,16 @@ func (v MediaContainersResource) List(c buffalo.Context) error {
         if err != nil {
             return c.Error(http.StatusBadRequest, err)
         }
-        mcs, q_err := man.ListMediaContext(cID)
+        mcs, q_err := man.ListContentContext(cID)
         if q_err != nil {
             return c.Error(http.StatusBadRequest, err)
         }
         mediaContainers = mcs
     } else {
-        log.Printf("List all Media No Restriction on the container ID")
+        log.Printf("List all Content No Restriction on the container ID")
         // TODO: Fix the lack of page support and TEST IT
         _, per_page, page := managers.GetPagination(c.Params(), man.GetCfg().Limit)
-        mcs, err := man.ListAllMedia(page, per_page)
+        mcs, err := man.ListAllContent(page, per_page)
         if err != nil {
             return c.Error(http.StatusBadRequest, err)
         }
@@ -70,18 +70,18 @@ func (v MediaContainersResource) List(c buffalo.Context) error {
     }).Respond(c)
 }
 
-// Show gets the data for one MediaContainer. This function is mapped to
-// the path GET /media_containers/{media_container_id}
-func (v MediaContainersResource) Show(c buffalo.Context) error {
+// Show gets the data for one Content. This function is mapped to
+// the path GET /medias/{media_id}
+func (v ContentsResource) Show(c buffalo.Context) error {
     man := managers.GetManager(&c)
 
     // TODO: Make it actually just handle /media (page, number)
-    uuid, err := uuid.FromString(c.Param("media_container_id"))
+    uuid, err := uuid.FromString(c.Param("media_id"))
     if err != nil {
         return c.Error(http.StatusBadRequest, err)
     }
 
-    mediaContainer, missing_err := man.GetMedia(uuid)
+    mediaContainer, missing_err := man.GetContent(uuid)
     if missing_err != nil {
         return c.Error(http.StatusNotFound, missing_err)
     }
@@ -95,16 +95,16 @@ func (v MediaContainersResource) Show(c buffalo.Context) error {
     }).Respond(c)
 }
 
-// Create adds a MediaContainer to the DB. This function is mapped to the
-// path POST /media_containers
-func (v MediaContainersResource) Create(c buffalo.Context) error {
+// Create adds a Content to the DB. This function is mapped to the
+// path POST /medias
+func (v ContentsResource) Create(c buffalo.Context) error {
     _, tx, err := managers.ManagerCanCUD(&c)
     if err != nil {
         return err
     }
-    // Allocate an empty MediaContainer
+    // Allocate an empty Content
     // Bind mediaContainer to the html form elements (probably not required?)
-    mediaContainer := &models.MediaContainer{}
+    mediaContainer := &models.Content{}
     if err := c.Bind(mediaContainer); err != nil {
         return err
     }
@@ -134,21 +134,21 @@ func (v MediaContainersResource) Create(c buffalo.Context) error {
     }).Respond(c)
 }
 
-// Update changes a MediaContainer in the DB. This function is mapped to
-// the path PUT /media_containers/{media_container_id}
-func (v MediaContainersResource) Update(c buffalo.Context) error {
+// Update changes a Content in the DB. This function is mapped to
+// the path PUT /medias/{media_id}
+func (v ContentsResource) Update(c buffalo.Context) error {
     _, tx, err := managers.ManagerCanCUD(&c)
     if err != nil {
         return err
     }
 
-    // Allocate an empty MediaContainer
-    mediaContainer := &models.MediaContainer{}
-    if err := tx.Find(mediaContainer, c.Param("media_container_id")); err != nil {
+    // Allocate an empty Content
+    mediaContainer := &models.Content{}
+    if err := tx.Find(mediaContainer, c.Param("media_id")); err != nil {
         return c.Error(http.StatusNotFound, err)
     }
 
-    // Bind MediaContainer to the html form elements (Nuke this)
+    // Bind Content to the html form elements (Nuke this)
     if err := c.Bind(mediaContainer); err != nil {
         return err
     }
@@ -176,20 +176,20 @@ func (v MediaContainersResource) Update(c buffalo.Context) error {
     }).Respond(c)
 }
 
-// Destroy deletes a MediaContainer from the DB. This function is mapped
-// to the path DELETE /media_containers/{media_container_id}
-func (v MediaContainersResource) Destroy(c buffalo.Context) error {
+// Destroy deletes a Content from the DB. This function is mapped
+// to the path DELETE /medias/{media_id}
+func (v ContentsResource) Destroy(c buffalo.Context) error {
     _, tx, err := managers.ManagerCanCUD(&c)
     if err != nil {
         return err
     }
 
     // TODO: Manager should probably be the thing doing updates etc.
-    // Allocate an empty MediaContainer
-    mediaContainer := &models.MediaContainer{}
+    // Allocate an empty Content
+    mediaContainer := &models.Content{}
 
-    // To find the MediaContainer the parameter media_container_id is used.
-    if err := tx.Find(mediaContainer, c.Param("media_container_id")); err != nil {
+    // To find the Content the parameter media_id is used.
+    if err := tx.Find(mediaContainer, c.Param("media_id")); err != nil {
         return c.Error(http.StatusNotFound, err)
     }
     if err := tx.Destroy(mediaContainer); err != nil {

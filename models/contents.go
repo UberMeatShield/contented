@@ -11,8 +11,8 @@ import (
     "github.com/gofrs/uuid"
 )
 
-// MediaContainer is used by pop to map your media_containers database table to your go code.
-type MediaContainer struct {
+// Content is used by pop to map your medias database table to your go code.
+type Content struct {
     ID          uuid.UUID      `json:"id" db:"id"`
     CreatedAt   time.Time      `json:"created" db:"created_at"`
     UpdatedAt   time.Time      `json:"updated" db:"updated_at"`
@@ -28,7 +28,7 @@ type MediaContainer struct {
 
     // Joins (Eager loading is not working?)
     Screens Screens `json:"screens" has_many:"preview_screens"`
-    Tags Tags `json:"tags" many_to_many:"media_containers_tags"`
+    Tags Tags `json:"tags" many_to_many:"medias_tags"`
 
     // TODO: Maybe, MAYBE drop this?  None of the code currently really looks at the encoding
     // till actually creating a preview.
@@ -36,35 +36,35 @@ type MediaContainer struct {
 }
 
 // String is not required by pop and may be deleted
-func (m MediaContainer) String() string {
+func (m Content) String() string {
     jm, _ := json.Marshal(m)
     return string(jm)
 }
 
-// MediaContainers is not required by pop and may be deleted
-type MediaContainers []MediaContainer
-type MediaMap map[uuid.UUID]MediaContainer
+// Contents is not required by pop and may be deleted
+type Contents []Content
+type ContentMap map[uuid.UUID]Content
 
 // String is not required by pop and may be deleted
-func (m MediaContainers) String() string {
+func (m Contents) String() string {
     jm, _ := json.Marshal(m)
     return string(jm)
 }
 
 // Validate gets run every time you call a "pop.Validate*" (pop.ValidateAndSave, pop.ValidateAndCreate, pop.ValidateAndUpdate) method.
 // This method is not required and may be deleted.
-func (m *MediaContainer) Validate(tx *pop.Connection) (*validate.Errors, error) {
+func (m *Content) Validate(tx *pop.Connection) (*validate.Errors, error) {
     return validate.NewErrors(), nil
 }
 
 // ValidateCreate gets run every time you call "pop.ValidateAndCreate" method.
 // This method is not required and may be deleted.
-func (m *MediaContainer) ValidateCreate(tx *pop.Connection) (*validate.Errors, error) {
+func (m *Content) ValidateCreate(tx *pop.Connection) (*validate.Errors, error) {
     return validate.NewErrors(), nil
 }
 
 // ValidateUpdate gets run every time you call "pop.ValidateAndUpdate" method.
 // This method is not required and may be deleted.
-func (m *MediaContainer) ValidateUpdate(tx *pop.Connection) (*validate.Errors, error) {
+func (m *Content) ValidateUpdate(tx *pop.Connection) (*validate.Errors, error) {
     return validate.NewErrors(), nil
 }

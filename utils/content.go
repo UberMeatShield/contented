@@ -25,7 +25,7 @@ import (
 // Content Information is used as an array to dfs from a directory
 type ContentInformation struct {
     Cnt   models.Container
-    Media models.MediaContainers
+    Content models.Contents
 }
 type ContentTree []ContentInformation
 
@@ -68,14 +68,14 @@ func FindContainersMatcher(dir_root string, incCnt ContainerMatcher, excCnt Cont
 /**
  *  Get all the content in a particular directory (would be good to filter down to certain file types?)
  */
-func FindMedia(cnt models.Container, limit int, start_offset int) models.MediaContainers {
-    return FindMediaMatcher(cnt, limit, start_offset, IncludeAllFiles, ExcludeNoFiles)
+func FindContent(cnt models.Container, limit int, start_offset int) models.Contents {
+    return FindContentMatcher(cnt, limit, start_offset, IncludeAllFiles, ExcludeNoFiles)
 }
 
 // func yup(string, string) bool is a required positive check on the filename and content type (default .*)
 // func nope(string, string) bool is a negative check (ie no zip files) default (everything is fine)
-func FindMediaMatcher(cnt models.Container, limit int, start_offset int, yup MediaMatcher, nope MediaMatcher) models.MediaContainers {
-    var arr = models.MediaContainers{}
+func FindContentMatcher(cnt models.Container, limit int, start_offset int, yup ContentMatcher, nope ContentMatcher) models.Contents {
+    var arr = models.Contents{}
 
     fqDirPath := filepath.Join(cnt.Path, cnt.Name)
     maybe_media, _ := ioutil.ReadDir(fqDirPath)
@@ -93,7 +93,7 @@ func FindMediaMatcher(cnt models.Container, limit int, start_offset int, yup Med
         if !img.IsDir() {
             if len(arr) < limit && idx >= start_offset {
                 id, _ := uuid.NewV4()
-                media := getMediaContainer(id, img, fqDirPath)
+                media := getContent(id, img, fqDirPath)
                 media.ContainerID = nulls.NewUUID(cnt.ID)
                 media.Idx = idx
 
@@ -168,7 +168,7 @@ func SniffFileType(content *os.File) (string, error) {
     return ctype, nil
 }
 
-func getMediaContainer(id uuid.UUID, fileInfo os.FileInfo, path string) models.MediaContainer {
+func getContent(id uuid.UUID, fileInfo os.FileInfo, path string) models.Content {
     // https://golangcode.com/get-the-content-type-of-file/
     contentType, err := GetMimeType(path, fileInfo.Name())
     if err != nil {
@@ -181,7 +181,7 @@ func getMediaContainer(id uuid.UUID, fileInfo os.FileInfo, path string) models.M
 
     // TODO: Need to add the unique ID for each media (are they uniq?)
     // TODO: Should I get a Hash onto the media as well?
-    media := models.MediaContainer{
+    media := models.Content{
         ID:          id,
         Src:         fileInfo.Name(),
         SizeBytes:   fileInfo.Size(),
@@ -201,11 +201,11 @@ func CreateStructure(dir string, cfg *DirConfigEntry, results *ContentTree, dept
     // Could specify the cfg to use with the matching?
     cnts := FindContainersMatcher(dir, cfg.IncContainer, cfg.ExcContainer)
     for _, cnt := range cnts {
-        media := FindMediaMatcher(cnt, cfg.MaxMediaPerContainer, 0, cfg.IncMedia, cfg.ExcMedia)
+        media := FindContentMatcher(cnt, cfg.MaxContentPerContainer, 0, cfg.IncContent, cfg.ExcContent)
         cnt.Total = len(media)
         cTree := ContentInformation{
             Cnt:   cnt,
-            Media: media,
+            Content: media,
         }
         tree := append(*results, cTree)
         subDir := filepath.Join(dir, cnt.Name)

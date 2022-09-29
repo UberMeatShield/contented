@@ -4,7 +4,7 @@ create_table("screens") {
     t.Column("path", "string", {"default": ""})
     t.Column("idx", "integer", {"default": 0})
     t.Column("size_bytes", "integer", {"default": 0})
-    t.Column("media_container_id", "uuid", {})
-    t.ForeignKey("media_container_id", {"media_containers": ["id"]}, {"on_delete": "cascade",})
+    t.Column("content_id", "uuid", {})
+    t.ForeignKey("content_id", {"contents": ["id"]}, {"on_delete": "cascade",})
 	t.Timestamps()
 }

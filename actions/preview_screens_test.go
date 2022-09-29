@@ -16,7 +16,7 @@ import (
 func CreatePreview(src string, mediaID uuid.UUID, as *ActionSuite) models.Screen {
     mc := &models.Screen{
         Src:     src,
-        MediaID: mediaID,
+        ContentID: mediaID,
         Idx:     1,
     }
     res := as.JSON("/screens").Post(mc)
@@ -29,7 +29,7 @@ func CreatePreview(src string, mediaID uuid.UUID, as *ActionSuite) models.Screen
 }
 
 // Kind of a pain in the ass to create all the way down to a valid preview screen
-func CreateTestContainerWithMedia(as *ActionSuite) (*models.Container, *models.MediaContainer, string) {
+func CreateTestContainerWithContent(as *ActionSuite) (*models.Container, *models.Content, string) {
     srcDir, dstDir, testFile := internals.Get_VideoAndSetupPaths()
     c := &models.Container{
         Total: 4,
@@ -40,7 +40,7 @@ func CreateTestContainerWithMedia(as *ActionSuite) (*models.Container, *models.M
 
     // TODO: Ensure that this path is actually correct, should actually make a REAL jpeg copy
     screenSrc := filepath.Join(dstDir, fmt.Sprintf("%s.screen.001.jpg", testFile))
-    mc := &models.MediaContainer{
+    mc := &models.Content{
         Src:         testFile,
         ContentType: "video/mp4",
         Preview:     screenSrc,
@@ -62,8 +62,8 @@ func CreateTestContainerWithMedia(as *ActionSuite) (*models.Container, *models.M
     return c, mc, screenSrc
 }
 
-func CreateScreen(as *ActionSuite) (*models.Container, *models.MediaContainer, *models.Screen) {
-    c, mc, screenSrc := CreateTestContainerWithMedia(as)
+func CreateScreen(as *ActionSuite) (*models.Container, *models.Content, *models.Screen) {
+    c, mc, screenSrc := CreateTestContainerWithContent(as)
     ps := CreatePreview(screenSrc, mc.ID, as)
     return c, mc, &ps
 }
@@ -97,7 +97,7 @@ func (as *ActionSuite) Test_ScreensResource_ListMC() {
     json.NewDecoder(res.Body).Decode(&validate)
     as.Equal(len(validate), 2, "Note we should have only two screens")
     for _, ps := range validate {
-        as.Equal(ps.MediaID, mc1.ID)
+        as.Equal(ps.ContentID, mc1.ID)
         as.Equal(ps.Path, "") // Path should not be visible in the API
     }
 }
@@ -117,18 +117,18 @@ func (as *ActionSuite) Test_ScreensResource_Show() {
 // TODO: Create a screen that is actually on disk.
 func (as *ActionSuite) Test_ScreensResource_Create() {
     internals.InitFakeApp(true)
-    _, mc, screenSrc := CreateTestContainerWithMedia(as)
+    _, mc, screenSrc := CreateTestContainerWithContent(as)
     ps := CreatePreview(screenSrc, mc.ID, as)
     as.Equal(ps.Src, screenSrc)
 
     screens := models.Screens{}
-    as.DB.Where("media_container_id = ?", mc.ID).All(&screens)
+    as.DB.Where("media_id = ?", mc.ID).All(&screens)
     as.Equal(len(screens), 1, "There should be a screen in the DB")
 }
 
 func (as *ActionSuite) Test_ScreensResource_Update() {
     internals.InitFakeApp(true)
-    _, mc, screenSrc := CreateTestContainerWithMedia(as)
+    _, mc, screenSrc := CreateTestContainerWithContent(as)
     ps := CreatePreview(screenSrc, mc.ID, as)
     ps.Src = "UP"
     res := as.JSON(fmt.Sprintf("/screens/%s", ps.ID.String())).Put(ps)
@@ -137,7 +137,7 @@ func (as *ActionSuite) Test_ScreensResource_Update() {
 
 func (as *ActionSuite) Test_ScreensResource_Destroy() {
     internals.InitFakeApp(true)
-    _, mc, screenSrc := CreateTestContainerWithMedia(as)
+    _, mc, screenSrc := CreateTestContainerWithContent(as)
     ps := CreatePreview(screenSrc, mc.ID, as)
 
     del_res := as.JSON(fmt.Sprintf("/screens/%s", ps.ID.String())).Delete()

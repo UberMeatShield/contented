@@ -33,8 +33,8 @@ type ContentManager interface {
 
     // Utility
     GetParams() *url.Values
-    FindActualFile(mc *models.MediaContainer) (string, error)
-    FindFileRef(mcID uuid.UUID) (*models.MediaContainer, error)
+    FindActualFile(mc *models.Content) (string, error)
+    FindFileRef(mcID uuid.UUID) (*models.Content, error)
 
     // Container Management
     GetContainer(cID uuid.UUID) (*models.Container, error)
@@ -43,16 +43,16 @@ type ContentManager interface {
     UpdateContainer(c *models.Container) error
     CreateContainer(mc *models.Container) error
 
-    // Media listing
-    GetMedia(media_id uuid.UUID) (*models.MediaContainer, error)
-    ListMedia(ContainerID uuid.UUID, page int, per_page int) (*models.MediaContainers, error)
-    ListMediaContext(ContainerID uuid.UUID) (*models.MediaContainers, error)
-    ListAllMedia(page int, per_page int) (*models.MediaContainers, error)
-    SearchMediaContext() (*models.MediaContainers, int, error)
-    SearchMedia(search string, page int, per_page int, cId string, contentType string) (*models.MediaContainers, int, error)
-    UpdateMedia(media *models.MediaContainer) error
-    CreateMedia(mc *models.MediaContainer) error
-    GetPreviewForMC(mc *models.MediaContainer) (string, error)
+    // Content listing
+    GetContent(media_id uuid.UUID) (*models.Content, error)
+    ListContent(ContainerID uuid.UUID, page int, per_page int) (*models.Contents, error)
+    ListContentContext(ContainerID uuid.UUID) (*models.Contents, error)
+    ListAllContent(page int, per_page int) (*models.Contents, error)
+    SearchContentContext() (*models.Contents, int, error)
+    SearchContent(search string, page int, per_page int, cId string, contentType string) (*models.Contents, int, error)
+    UpdateContent(media *models.Content) error
+    CreateContent(mc *models.Content) error
+    GetPreviewForMC(mc *models.Content) (string, error)
 
     // Functions that help with viewing movie screens if found.
     ListAllScreens(page int, per_page int) (*models.Screens, error)
@@ -69,7 +69,7 @@ type ContentManager interface {
     CreateTag(tag *models.Tag) error
     UpdateTag(tag *models.Tag) error
     DeleteTag(tag *models.Tag) error
-    AssociateTag(tag *models.Tag, c *models.MediaContainer) error
+    AssociateTag(tag *models.Tag, c *models.Content) error
     AssociateTagByID(tagId uuid.UUID, mcID uuid.UUID) error
 }
 

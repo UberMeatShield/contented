@@ -27,11 +27,11 @@ func (as *ActionSuite) Test_ManagerContainers() {
     }
 }
 
-func (as *ActionSuite) Test_ManagerMediaContainer() {
+func (as *ActionSuite) Test_ManagerContent() {
     internals.InitFakeApp(false)
     ctx := internals.GetContext(as.App)
     man := GetManager(&ctx)
-    mcs, err := man.ListAllMedia(1, 9001)
+    mcs, err := man.ListAllContent(1, 9001)
     as.NoError(err)
 
     for _, mc := range *mcs {
@@ -55,14 +55,14 @@ func (as *ActionSuite) Test_AssignManager() {
 
     memCfg := mem.GetCfg()
     as.NotNil(memCfg, "It should be defined")
-    mcs, err := mem.ListAllMedia(1, 9001)
+    mcs, err := mem.ListAllContent(1, 9001)
     as.NoError(err)
     as.Greater(len(*mcs), 0, "It should have valid files in the manager")
 
     cfg.UseDatabase = false
     ctx := internals.GetContext(as.App)
     man := GetManager(&ctx) // New Reference but should have the same count of media
-    mcs_2, _ := man.ListAllMedia(1, 9000)
+    mcs_2, _ := man.ListAllContent(1, 9000)
 
     as.Equal(len(*mcs), len(*mcs_2), "A new instance should use the same storage")
 }
@@ -84,10 +84,10 @@ func (as *ActionSuite) Test_MemoryManagerPaginate() {
     as.Equal(cnt.Total, 12, "There should be 12 test images in the first ORDERED containers")
     as.NoError(err)
     as.NotEqual("", cnt.PreviewUrl, "The previewUrl should be set")
-    media_page_1, _ := man.ListMedia(cnt.ID, 1, 4)
+    media_page_1, _ := man.ListContent(cnt.ID, 1, 4)
     as.Equal(len(*media_page_1), 4, "It should respect page size")
 
-    media_page_3, _ := man.ListMedia(cnt.ID, 3, 4)
+    media_page_3, _ := man.ListContent(cnt.ID, 3, 4)
     as.Equal(len(*media_page_3), 4, "It should respect page size and get the last page")
     as.NotEqual((*media_page_3)[3].ID, (*media_page_1)[3].ID, "Ensure it actually paged")
 
@@ -113,12 +113,12 @@ func (as *ActionSuite) Test_ManagerInitialize() {
     // Memory test working
     for _, c := range *containers {
         // fmt.Printf("Searching for this container %s with name %s\n", c.ID, c.Name)
-        media, err := man.ListMediaContext(c.ID)
+        media, err := man.ListContentContext(c.ID)
         as.NoError(err)
         as.NotNil(media)
 
         media_len := len(*media)
-        // fmt.Printf("Media length was %d\n", media_len)
+        // fmt.Printf("Content length was %d\n", media_len)
         as.Greater(media_len, 0, "There should be a number of media")
         as.Equal(expect_len[c.Name], media_len, "It should have this many instances: "+c.Name)
         as.Greater(c.Total, 0, "All of them should have a total assigned")
@@ -137,16 +137,16 @@ func (as *ActionSuite) Test_MemoryManagerSearch() {
     as.NotNil(containers, "It should have containers")
     as.Equal(len(*containers), internals.TOTAL_CONTAINERS, "Wrong number of containers found")
 
-    mcs, total, err := man.SearchMedia("donut", 1, 20, "", "")
+    mcs, total, err := man.SearchContent("donut", 1, 20, "", "")
     as.NoError(err, "Can we search in the memory manager")
     as.Equal(len(*mcs), 1, "One donut should be found")
     as.Equal(total, len(*mcs), "It should get the total right")
 
-    mcs_1, _, err_1 := man.SearchMedia("Large", 1, 6, "", "")
+    mcs_1, _, err_1 := man.SearchContent("Large", 1, 6, "", "")
     as.NoError(err_1, "Can we search in the memory manager")
     as.Equal(3, len(*mcs_1), "One donut should be found")
 
-    all_mc, _, err_all := man.SearchMedia("", 0, 9000, "", "")
+    all_mc, _, err_all := man.SearchContent("", 0, 9000, "", "")
     as.NoError(err_all, "Can in search everything")
     as.Equal(len(*all_mc), internals.TOTAL_MEDIA, "The Kitchen sink")
 }
@@ -160,7 +160,7 @@ func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
 
     // Ensure we initialized with a known search
     as.Equal(man.CanEdit(), false)
-    mcs, total, err := man.SearchMedia("donut", 1, 20, "", "")
+    mcs, total, err := man.SearchContent("donut", 1, 20, "", "")
     as.NoError(err, "Can we search in the memory manager")
     as.Equal(len(*mcs), 1, "One donut should be found")
     as.Equal(total, len(*mcs), "It should get the total right")
@@ -169,15 +169,15 @@ func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
     as.NoError(eep, "It should have 4 containers")
     as.Greater(len(*cnts), 1, "We should have containers")
 
-    allMedia, errAll := man.ListAllMedia(0, 50)
-    as.Greater(len(*allMedia), 0, "We should have media")
+    allContent, errAll := man.ListAllContent(0, 50)
+    as.Greater(len(*allContent), 0, "We should have media")
     as.NoError(errAll)
 
-    all_media, wild_total, _ := man.SearchMedia("", 0, 40, "", "")
+    all_media, wild_total, _ := man.SearchContent("", 0, 40, "", "")
     as.Greater(wild_total, 0)
     as.Equal(len(*all_media), wild_total)
 
-    video_media, vid_total, _ := man.SearchMedia("", 0, 40, "", "video")
+    video_media, vid_total, _ := man.SearchContent("", 0, 40, "", "video")
     as.Equal(vid_total, 1)
     as.Equal(len(*video_media), vid_total)
     vs := *video_media
@@ -185,23 +185,23 @@ func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
 
     for _, cnt := range *cnts {
         if cnt.Name == "dir1" {
-            _, no_total, n_err := man.SearchMedia("donut", 1, 20, cnt.ID.String(), "")
+            _, no_total, n_err := man.SearchContent("donut", 1, 20, cnt.ID.String(), "")
             as.NoError(n_err)
             as.Equal(no_total, 0, "It should not be in this directory")
         }
         if cnt.Name == "dir2" {
-            yes_match, y_total, r_err := man.SearchMedia("donut", 1, 20, cnt.ID.String(), "")
+            yes_match, y_total, r_err := man.SearchContent("donut", 1, 20, cnt.ID.String(), "")
             as.NoError(r_err)
             as.Equal(y_total, 1, "We did not find the expected media")
 
             movie := (*yes_match)[0]
             as.Equal(movie.Src, "donut.mp4")
 
-            _, imgCount, _ := man.SearchMedia("", 0, 20, cnt.ID.String(), "image")
+            _, imgCount, _ := man.SearchContent("", 0, 20, cnt.ID.String(), "image")
             as.Equal(imgCount, 2, "It should filter out the donut this time")
         }
         if cnt.Name == "dir3" {
-            has_media, _, err := man.SearchMedia("", 0, 1, cnt.ID.String(), "")
+            has_media, _, err := man.SearchContent("", 0, 1, cnt.ID.String(), "")
             as.NoError(err, "We should have media")
             as.Greater(len(*has_media), 0)
         }
@@ -212,7 +212,7 @@ func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
 func (as *ActionSuite) Test_MemoryPreviewInitialization() {
     cfg := internals.ResetConfig()
     cfg.MaxSearchDepth = 1
-    utils.SetupMediaMatchers(cfg, "", "video", "DS_Store", "")
+    utils.SetupContentMatchers(cfg, "", "video", "DS_Store", "")
     utils.SetCfg(*cfg)
 
     // Create a fake file that would sub in by name for a preview
@@ -285,7 +285,7 @@ func (as *ActionSuite) Test_ManagerMemoryScreens() {
     cfg := internals.InitFakeApp(false)
 
     man := GetManagerActionSuite(cfg, as)
-    media, err := man.ListAllMedia(1, 100)
+    media, err := man.ListAllContent(1, 100)
     as.NoError(err)
     as.Greater(len(*media), 0, "It should have media setup")
 
@@ -294,13 +294,13 @@ func (as *ActionSuite) Test_ManagerMemoryScreens() {
     id1, _ := uuid.NewV4()
     id2, _ := uuid.NewV4()
 
-    s1 := models.Screen{ID: id1, Path: "A", Src: "a.txt", MediaID: mc.ID}
-    s2 := models.Screen{ID: id2, Path: "B", Src: "b.txt", MediaID: mc.ID}
+    s1 := models.Screen{ID: id1, Path: "A", Src: "a.txt", ContentID: mc.ID}
+    s2 := models.Screen{ID: id2, Path: "B", Src: "b.txt", ContentID: mc.ID}
     mc.Screens = models.Screens{s1, s2}
 
     // Ensure we actually set the right object in the backing Map
     mem := utils.GetMemStorage()
-    mem.ValidMedia[mc.ID] = mc
+    mem.ValidContent[mc.ID] = mc
     mem.ValidScreens[s1.ID] = s1
     mem.ValidScreens[s2.ID] = s2
 
@@ -334,17 +334,17 @@ func (as *ActionSuite) Test_ManagerMemoryCRU() {
     as.NoError(c_err, "We should be able to get back the container")
     as.Equal(c_check.Path, c.Path, "Ensure we are not stomping unset ID data")
 
-    mc := models.MediaContainer{Src: "media", ContainerID: nulls.NewUUID(c.ID)}
-    as.NoError(man.CreateMedia(&mc), "Did not create media correctly")
-    mcUp := models.MediaContainer{Src: "updated", ID: mc.ID}
-    man.UpdateMedia(&mcUp)
-    mc_check, m_err := man.GetMedia(mc.ID)
+    mc := models.Content{Src: "media", ContainerID: nulls.NewUUID(c.ID)}
+    as.NoError(man.CreateContent(&mc), "Did not create media correctly")
+    mcUp := models.Content{Src: "updated", ID: mc.ID}
+    man.UpdateContent(&mcUp)
+    mc_check, m_err := man.GetContent(mc.ID)
     as.NoError(m_err, "It should find this media")
     as.Equal(mc_check.Src, "updated")
 
     id, _ := uuid.NewV4()
-    s1 := models.Screen{Path: "A", Src: "a.txt", MediaID: mc.ID}
-    s2 := models.Screen{Path: "B", Src: "b.txt", MediaID: id}
+    s1 := models.Screen{Path: "A", Src: "a.txt", ContentID: mc.ID}
+    s2 := models.Screen{Path: "B", Src: "b.txt", ContentID: id}
     as.NoError(man.CreateScreen(&s1), "Did not associate screen correctly")
     as.NoError(man.CreateScreen(&s2), "Did not associate screen correctly")
 
@@ -352,7 +352,7 @@ func (as *ActionSuite) Test_ManagerMemoryCRU() {
     as.NoError(sErr, "Failed to list screens")
     as.Equal(len(*sCheck), 1, "It should properly filter screens.")
 
-    s1Update := models.Screen{ID: s1.ID, Path: "C", MediaID: mc.ID}
+    s1Update := models.Screen{ID: s1.ID, Path: "C", ContentID: mc.ID}
     as.NoError(man.UpdateScreen(&s1Update))
     s1Check, scErr := man.GetScreen(s1.ID)
     as.NoError(scErr, "Failed to get the screen back")

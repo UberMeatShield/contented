@@ -1,2 +1,2 @@
 drop_table("tags")
-drop_table("media_containers_tags")
+drop_table("contents_tags")

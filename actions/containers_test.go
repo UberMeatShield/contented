@@ -86,8 +86,8 @@ func (as *ActionSuite) Test_ContainersResource_Destroy() {
 func (as *ActionSuite) Test_ContainerList() {
     internals.InitFakeApp(true)
 
-    cnt1, _ := internals.GetMediaByDirName("dir1")
-    cnt2, _ := internals.GetMediaByDirName("dir2")
+    cnt1, _ := internals.GetContentByDirName("dir1")
+    cnt2, _ := internals.GetContentByDirName("dir2")
     models.DB.Create(cnt1)
     models.DB.Create(cnt2)
     res := as.JSON("/containers").Get()

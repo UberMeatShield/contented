@@ -19,7 +19,7 @@ type HttpError struct {
 
 type SearchResult struct {
     Total int                     `json:"total"`
-    Media *models.MediaContainers `json:"media"`
+    Content *models.Contents `json:"media"`
 }
 
 // Builds out information given the application and the content directory
@@ -53,14 +53,14 @@ func FullHandler(c buffalo.Context) error {
 
 func SearchHandler(c buffalo.Context) error {
     man := managers.GetManager(&c)
-    mcs, count, err := man.SearchMediaContext()
+    mcs, count, err := man.SearchContentContext()
     if err != nil {
         return c.Error(400, err)
     }
 
     // TODO: Hmmm, maybe it should always load the screens in a sane fashion?
     sr := SearchResult{
-        Media: mcs,
+        Content: mcs,
         Total: count,
     }
     return c.Render(200, r.JSON(sr))

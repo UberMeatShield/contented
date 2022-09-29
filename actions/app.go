@@ -57,9 +57,9 @@ func App(UseDatabase bool) *buffalo.App {
 
         // The DIR env environment is then served under /static (see actions.SetupContented)
         cr := app.Resource("/containers", ContainersResource{})
-        cr.Resource("/media", MediaContainersResource{})
+        cr.Resource("/media", ContentsResource{})
 
-        mc_r := app.Resource("/media", MediaContainersResource{})
+        mc_r := app.Resource("/media", ContentsResource{})
         mc_r.Resource("/screens", ScreensResource{})
 
         app.Resource("/screens", ScreensResource{})

@@ -33,8 +33,8 @@ func (v ScreensResource) List(c buffalo.Context) error {
     var previewScreens *models.Screens
     var err error
 
-    mcStrID := c.Param("media_container_id")
-    log.Printf("Media ID specified %s", mcStrID)
+    mcStrID := c.Param("media_id")
+    log.Printf("Content ID specified %s", mcStrID)
 
     man := managers.GetManager(&c)
     if mcStrID != "" {
