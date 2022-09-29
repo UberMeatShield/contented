@@ -13,7 +13,7 @@ import {
     Inject
 } from '@angular/core';
 import {ContentedService} from './contented_service';
-import {Media} from './media';
+import {Content} from './content';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 import {FormBuilder, NgForm, FormControl, FormGroup} from '@angular/forms';
 
@@ -37,7 +37,7 @@ export class SearchCmp implements OnInit{
     options: FormGroup;
     fb: FormBuilder;
 
-    public media: Array<Media>;
+    public content: Array<Content>;
 
     // TODO: Make this a saner calculation
     public previewWidth = 480;
@@ -118,18 +118,18 @@ export class SearchCmp implements OnInit{
 
     public search(text: string, offset: number = 0, limit: number = 50) {
         console.log("Get the information from the input and search on it", text); 
-        // TODO: Wrap the media into a fake container
-        this.media = [];
+        // TODO: Wrap the content into a fake container
+        this.content = [];
         this.loading = true;
-        this._contentedService.searchMedia(text, offset, limit).pipe(
+        this._contentedService.searchContent(text, offset, limit).pipe(
             finalize(() => this.loading = false)
         ).subscribe(
             (res) => {
-                let media = _.map((res['media'] || []), m => new Media(m));
+                let content = _.map((res['content'] || []), m => new Content(m));
                 let total = res['total'] || 0;
                 
-                console.log("Search results", media, total);
-                this.media = media;
+                console.log("Search results", content, total);
+                this.content = content;
                 this.total = total;
             }, err => {
                 console.error("Failed to search", err);
@@ -138,7 +138,7 @@ export class SearchCmp implements OnInit{
     }
 
     public getVisibleSet() {
-        return this.media;
+        return this.content;
     }
 
     // TODO: Being called abusively in the cntective rather than on page resize events
@@ -151,7 +151,7 @@ export class SearchCmp implements OnInit{
         this.previewHeight = (height / this.maxVisible) - 41;
     }
 
-    public fullView(mc: Media) {
+    public fullView(mc: Content) {
         const dialogRef = this.dialog.open(
             SearchDialog,
             {
@@ -171,7 +171,7 @@ export class SearchCmp implements OnInit{
         // Debugging / hooks but could also be a hook into a total loaded.
     }
 
-    imgClicked(mc: Media) {
+    imgClicked(mc: Content) {
         console.log("Click the image", mc);
         this.fullView(mc);
     }
@@ -184,7 +184,7 @@ export class SearchCmp implements OnInit{
 })
 export class SearchDialog implements AfterViewInit {
 
-    public mediaContainer: Media;
+    public contentContainer: Content;
 
     public forceHeight: number;
     public forceWidth: number;
@@ -192,9 +192,9 @@ export class SearchDialog implements AfterViewInit {
 
     @ViewChild('SearchContent', { static: true }) searchContent;
 
-    constructor(@Inject(MAT_DIALOG_DATA) public mc: Media, public _service: ContentedService) {
+    constructor(@Inject(MAT_DIALOG_DATA) public mc: Content, public _service: ContentedService) {
         // console.log("Mass taker opened with items:", items);
-        this.mediaContainer = mc;
+        this.contentContainer = mc;
     }
 
     ngAfterViewInit() {

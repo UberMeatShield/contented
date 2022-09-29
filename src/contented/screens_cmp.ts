@@ -13,7 +13,7 @@ import * as _ from 'lodash';
 })
 export class ScreensCmp implements OnInit {
 
-    @Input() mediaId: string;
+    @Input() contentId: string;
     @Input() screens: Array<Screen>;
     @Input() previewWidth: number = 480;
     @Input() previewHeight: number = 480;
@@ -44,9 +44,9 @@ export class ScreensCmp implements OnInit {
             return;
         }
 
-        if (this.mediaId) {
+        if (this.contentId) {
             this.loading = true;
-            this._contentedService.getScreens(this.mediaId).pipe(
+            this._contentedService.getScreens(this.contentId).pipe(
                 finalize(() => { this.loading = false; })
             ).subscribe(
                 (screens: Array<Screen>) => {
@@ -59,7 +59,7 @@ export class ScreensCmp implements OnInit {
         }
     }
 
-    public clickMedia(screen: Screen) {
+    public clickContent(screen: Screen) {
         // Just here in case we want to override what happens on a click
         this.clickedItem.emit({screen: screen, screens: this.screens});
     }

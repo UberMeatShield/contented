@@ -8,10 +8,10 @@ export let ApiDef = {
         download: base + 'download/{mcID}',
         preview: base + 'preview/',
         containers: base + 'containers/',
-        media: base + 'containers/{cId}/media',
-        mediaScreens: base + 'media/{mcID}/screens',
+        content: base + 'containers/{cId}/content',
+        contentScreens: base + 'content/{mcID}/screens',
         screens: base + 'screens/',
-        mediaAll: base + 'media/',
+        contentAll: base + 'content/',
         search: base + "search",
     }
 };

@@ -73,11 +73,11 @@ describe('TestingContentedCmp', () => {
         // expect(comp.idx).toBe(2, "It should pull the dir index from ");
     }));
 
-    function handleContainerMediaLoad(dirs: Array<Container>) {
+    function handleContainerContentLoad(dirs: Array<Container>) {
         _.each(dirs, dir => {
-            let url = ApiDef.contented.media.replace('{cId}', dir.id);
+            let url = ApiDef.contented.content.replace('{cId}', dir.id);
             let req = httpMock.expectOne(r => r.url === url);
-            req.flush(MockData.getMedia(dir.dir, 2));
+            req.flush(MockData.getContent(dir.dir, 2));
         });
     }
 
@@ -123,7 +123,7 @@ describe('TestingContentedCmp', () => {
 
         let containers = MockData.getPreview();
         MockData.handleCmpDefaultLoad(httpMock, fixture);
-        expect($('.media-full-view').length).toBe(0, "It should not have a view");
+        expect($('.content-full-view').length).toBe(0, "It should not have a view");
         fixture.detectChanges();
         tick(1000);
         fixture.detectChanges();
@@ -137,7 +137,7 @@ describe('TestingContentedCmp', () => {
         fixture.detectChanges();
         let imgs = $('.preview-img');
         expect(imgs.length).toBeGreaterThan(2, "A bunch of images should be visible");
-        expect($('.media-full-view').length).toBe(0, "It should not have a view");
+        expect($('.content-full-view').length).toBe(0, "It should not have a view");
 
         let toClick = $(imgs[3]).trigger('click');
         fixture.detectChanges();
@@ -154,7 +154,7 @@ describe('TestingContentedCmp', () => {
         // now attempt to load data from the newly visible container
         let cnts = comp.getVisibleContainers()
         let nextContainer = cnts[1];
-        let url = ApiDef.contented.media.replace("{cId}", nextContainer.id);
+        let url = ApiDef.contented.content.replace("{cId}", nextContainer.id);
         httpMock.expectOne(r => r.url == url);
         tick(1000);
     }));
@@ -199,7 +199,7 @@ describe('TestingContentedCmp', () => {
 
         service.LIMIT = 1;
         comp.loadMore();
-        let url = ApiDef.contented.media.replace('{cId}', dir.id);
+        let url = ApiDef.contented.content.replace('{cId}', dir.id);
         let loadReq = httpMock.expectOne(req => req.url === url);
         let checkParams: HttpParams = loadReq.request.params;
         expect(checkParams.get('per_page')).toBe('1', "We set a different limit");
@@ -210,8 +210,8 @@ describe('TestingContentedCmp', () => {
         expect(page).toBeGreaterThan(2, "It should load more, not the beginning");
         expect(offset).toEqual(3, "Calculating the offset should be more than the current count");
 
-        let media = MockData.getMedia(dir.id, service.LIMIT);
-        loadReq.flush(media);
+        let content = MockData.getContent(dir.id, service.LIMIT);
+        loadReq.flush(content);
         fixture.detectChanges();
 
         expect(dir.count).toEqual(3, "Now we should have loaded more based on the limit");
@@ -224,14 +224,14 @@ describe('TestingContentedCmp', () => {
         fixture.detectChanges();
 
         let cnt = comp.allCnts[3];
-        let media = cnt.getMedia();
-        // Check that a media in container 3 is not visible
+        let content = cnt.getContent();
+        // Check that a content in container 3 is not visible
         expect(comp.allCnts.length).toBeGreaterThan(0, "We should have containers");
         expect(comp.idx).toEqual(0, "We should be at index 0");
 
         GlobalNavEvents.selectContainer(cnt);
         fixture.detectChanges();
-        MockData.handleContainerMediaLoad(httpMock, [cnt], 3);
+        MockData.handleContainerContentLoad(httpMock, [cnt], 3);
         expect(comp.idx).toEqual(3, "We should now be on the third index")
         tick(1000);
         fixture.detectChanges();

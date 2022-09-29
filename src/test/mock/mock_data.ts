@@ -1,6 +1,6 @@
 import {Observable, from as observableFrom} from 'rxjs';
 import {Container} from './../../contented/container';
-import {Media} from './../../contented/media';
+import {Content} from './../../contented/content';
 import {ApiDef} from './../../contented/api_def';
 import * as _ from 'lodash';
 
@@ -28,16 +28,16 @@ class MockLoader {
         return _.clone(require('./screens.json'));
     }
 
-    public getMedia(container_id = null, count = null) {
-        let media = _.clone(require('./media.json'));
+    public getContent(container_id = null, count = null) {
+        let content = _.clone(require('./content.json'));
         if (container_id) {
-            _.each(media, m => {
+            _.each(content, m => {
                 m.id = m.id + container_id;
                 m.container_id = container_id;
             });
         }
-        // TODO: Create fake media / id info if given a count
-        return media.slice(0, count);
+        // TODO: Create fake content / id info if given a count
+        return content.slice(0, count);
     }
 
     public getFullContainer() {
@@ -68,7 +68,7 @@ class MockLoader {
 
         if (fixture) {
             fixture.detectChanges();
-            this.handleContainerMediaLoad(httpMock, containers);
+            this.handleContainerContentLoad(httpMock, containers);
         }
     }
 
@@ -79,19 +79,19 @@ class MockLoader {
         return containers;
     }
 
-    public handleContainerMediaLoad(httpMock, cnts: Array<Container>, count = 2) {
+    public handleContainerContentLoad(httpMock, cnts: Array<Container>, count = 2) {
         _.each(cnts, cnt => {
-            let url = ApiDef.contented.media.replace('{cId}', cnt.id);
+            let url = ApiDef.contented.content.replace('{cId}', cnt.id);
             let reqs = httpMock.match(r => r.url === url);
             _.each(reqs, req => {
-                req.flush(MockData.getMedia(cnt.name, count));
+                req.flush(MockData.getContent(cnt.name, count));
             });
         });
     }
 
     public getImg() {
-        let img = new Media();
-        img.fromJson(this.getMedia("10", 1)[0]);
+        let img = new Content();
+        img.fromJson(this.getContent("10", 1)[0]);
         return img;
     }
 }

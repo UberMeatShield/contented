@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import {ApiDef} from './api_def';
 import {Screen} from './screen';
 
-export class Media {
+export class Content {
     public id: string;
     public src: string;
     public idx: number;

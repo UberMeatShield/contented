@@ -6,7 +6,7 @@ export class Screen {
     public src: string;
     public idx: number;
 
-    public media_container_id: string;
+    public content_container_id: string;
     public url: string;
 
     constructor(obj: any = {}) {

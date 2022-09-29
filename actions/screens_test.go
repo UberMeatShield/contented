@@ -140,6 +140,8 @@ func (as *ActionSuite) Test_ScreensResource_Destroy() {
     _, mc, screenSrc := CreateTestContainerWithContent(as)
     ps := CreatePreview(screenSrc, mc.ID, as)
 
+    fmt.Printf("What the fuck %s", ps.ID.String())
+
     del_res := as.JSON(fmt.Sprintf("/screens/%s", ps.ID.String())).Delete()
     as.Equal(http.StatusOK, del_res.Code)
 }

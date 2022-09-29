@@ -14,7 +14,7 @@ import {
     Inject
 } from '@angular/core';
 import {ContentedService} from './contented_service';
-import {Media} from './media';
+import {Content} from './content';
 import {Container} from './container';
 import {Screen} from './screen';
 import {GlobalNavEvents, NavTypes} from './nav_events';
@@ -41,9 +41,9 @@ export class VideoViewCmp implements OnInit, OnDestroy {
     options: FormGroup;
     fb: FormBuilder;
 
-    public selectedMedia: Media; // For keeping track of where we are in the page
+    public selectedContent: Content; // For keeping track of where we are in the page
     public selectedContainer: Container;  // For filtering
-    public media: Array<Media>;
+    public content: Array<Content>;
     public containers: Array<Container>;
 
     // TODO: Make this a saner calculation
@@ -114,14 +114,14 @@ export class VideoViewCmp implements OnInit, OnDestroy {
                      break;
                  case NavTypes.HIDE_FULLSCREEN:
                      // Scroll back into view
-                     this.selectMedia(this.selectedMedia, this.selectedContainer);
+                     this.selectContent(this.selectedContent, this.selectedContainer);
                      break;
                  case NavTypes.LOAD_MORE:
                      // this.loadMore();
                      // It might not be TOO abusive to override this and make it page next?
                      break;
                  case NavTypes.SELECT_MEDIA:
-                     this.selectMedia(evt.media, evt.cnt);
+                     this.selectContent(evt.content, evt.cnt);
                      break;
                  case NavTypes.SELECT_CONTAINER:
                      this.selectContainer(evt.cnt);
@@ -143,12 +143,12 @@ export class VideoViewCmp implements OnInit, OnDestroy {
 
     public next() {
         // It should have a jump to scroll location for the currently selected item
-        if (this.selectedMedia && this.media) {
-            let idx = _.findIndex(this.media, {id: this.selectedMedia.id});
-            if ((idx + 1) < this.media.length) {
-                let m = this.media[idx+1];
-                if (m.id != this.selectedMedia.id) {
-                    GlobalNavEvents.selectMedia(m, new Container({id: m.container_id}));
+        if (this.selectedContent && this.content) {
+            let idx = _.findIndex(this.content, {id: this.selectedContent.id});
+            if ((idx + 1) < this.content.length) {
+                let m = this.content[idx+1];
+                if (m.id != this.selectedContent.id) {
+                    GlobalNavEvents.selectContent(m, new Container({id: m.container_id}));
                 }       
             } else if ((this.offset + this.pageSize) < this.total) {
                 this.search(this.videoText.value, (this.offset + this.pageSize), this.pageSize, this.getCntId());
@@ -157,12 +157,12 @@ export class VideoViewCmp implements OnInit, OnDestroy {
     }
 
     public prev() {
-        if (this.selectedMedia && this.media) {
-            let idx = _.findIndex(this.media, {id: this.selectedMedia.id});
+        if (this.selectedContent && this.content) {
+            let idx = _.findIndex(this.content, {id: this.selectedContent.id});
             if ((idx - 1) >= 0) {
-                let m = this.media[idx-1];
-                if (m.id != this.selectedMedia.id) {
-                    GlobalNavEvents.selectMedia(m, new Container({id: m.container_id}));
+                let m = this.content[idx-1];
+                if (m.id != this.selectedContent.id) {
+                    GlobalNavEvents.selectContent(m, new Container({id: m.container_id}));
                 }
             } else if ((this.offset - this.pageSize) >= 0) {
                 this.search(this.videoText.value, (this.offset - this.pageSize), this.pageSize, this.getCntId());
@@ -170,10 +170,10 @@ export class VideoViewCmp implements OnInit, OnDestroy {
         }
     }
 
-    public selectMedia(media: Media, container: Container) {
-        this.selectedMedia = media;
+    public selectContent(content: Content, container: Container) {
+        this.selectedContent = content;
         _.delay(() => {
-             let id = `view_media_${media.id}`;
+             let id = `view_content_${content.id}`;
              let el = document.getElementById(id)
 
              if (el) {
@@ -236,32 +236,32 @@ export class VideoViewCmp implements OnInit, OnDestroy {
     public search(text: string, offset: number = 0, limit: number = 50, cntId: string = null) {
         console.log("Get the information from the input and search on it", text, offset, limit, cntId); 
 
-        this.selectedMedia = null;
-        this.media = [];
+        this.selectedContent = null;
+        this.content = [];
         this.loading = true;
-        this._contentedService.searchMedia(text, offset, limit, "video", cntId).pipe(
+        this._contentedService.searchContent(text, offset, limit, "video", cntId).pipe(
             finalize(() => this.loading = false)
         ).subscribe(
             (res) => {
-                let media = _.map(res['media'], m => new Media(m));
+                let content = _.map(res['content'], m => new Content(m));
                 let total = res['total'] || 0;
                 
                 this.offset = offset;
-                this.media = media;
+                this.content = content;
                 this.total = total;
 
-                if (media && media.length > 0) {
-                    GlobalNavEvents.selectMedia(media[0], new Container({id: media.container_id}));
+                if (content && content.length > 0) {
+                    GlobalNavEvents.selectContent(content[0], new Container({id: content.container_id}));
                 }
             }, err => {
-                console.error("Failed to search for video media.", err);
+                console.error("Failed to search for video content.", err);
             }
         );
     }
 
     // This will have to be updated to actually work
     public getVisibleSet() {
-        return this.media;
+        return this.content;
     }
 
     // TODO: Being called abusively in the cntective rather than on page resize events
@@ -277,7 +277,7 @@ export class VideoViewCmp implements OnInit, OnDestroy {
         this.screenWidth = width - this.previewWidth - 200;  // Fudge factor
     }
 
-    public fullView(mc: Media) {
+    public fullView(mc: Content) {
         console.log("Full view", mc);
         GlobalNavEvents.viewFullScreen(mc);
     }
@@ -303,7 +303,7 @@ export class VideoViewCmp implements OnInit, OnDestroy {
         // Debugging / hooks but could also be a hook into a total loaded.
     }
 
-    imgClicked(mc: Media) {
+    imgClicked(mc: Content) {
         console.log("Click the image", mc);
         this.fullView(mc);
     }

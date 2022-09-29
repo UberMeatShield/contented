@@ -2,7 +2,7 @@ import {Subscription} from 'rxjs';
 import {OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
 import {ContentedService} from './contented_service';
 import {Container} from './container';
-import {Media} from './media';
+import {Content} from './content';
 import {finalize, switchMap} from 'rxjs/operators';
 
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
@@ -18,7 +18,7 @@ import * as $ from 'jquery';
 export class ContentedCmp implements OnInit, OnDestroy {
 
     @Input() maxVisible: number = 2; // How many of the loaded containers should we be viewing
-    @Input() rowIdx: number = 0; // Which row (media item) are we on
+    @Input() rowIdx: number = 0; // Which row (content item) are we on
     @Input() idx: number = 0; // Which item within the container are we viewing
 
     public loading: boolean = false;
@@ -71,7 +71,7 @@ export class ContentedCmp implements OnInit, OnDestroy {
                     this.loadMore();
                     break;
                 case NavTypes.SELECT_MEDIA:
-                    this.selectedMedia(evt.media, evt.cnt);
+                    this.selectedContent(evt.content, evt.cnt);
                     break;
                 case NavTypes.SELECT_CONTAINER:
                     this.selectContainer(evt.cnt);
@@ -140,9 +140,9 @@ export class ContentedCmp implements OnInit, OnDestroy {
                 let obs = this._contentedService.initialLoad(cnt); 
                 if (obs) { 
                     obs.subscribe(
-                        media => {
+                        content => {
                             if (cnt == currCnt) {
-                                GlobalNavEvents.selectMedia(cnt.getMedia(), cnt);
+                                GlobalNavEvents.selectContent(cnt.getContent(), cnt);
                             }
                         }, err => console.error
                     );
@@ -165,7 +165,7 @@ export class ContentedCmp implements OnInit, OnDestroy {
     // what has been selected.
     public selectionEvt() {
         let cnt = this.getCurrentContainer();
-        GlobalNavEvents.selectMedia(cnt.getMedia(), cnt);
+        GlobalNavEvents.selectContent(cnt.getContent(), cnt);
         this.updateRoute();
     }
 
@@ -225,7 +225,7 @@ export class ContentedCmp implements OnInit, OnDestroy {
         this._contentedService.fullLoadDir(cnt).subscribe(
             (loadedCnt: Container) => {
                 console.log("Fully loaded up the container", loadedCnt);
-                GlobalNavEvents.selectMedia(loadedCnt.getMedia(), loadedCnt);
+                GlobalNavEvents.selectContent(loadedCnt.getContent(), loadedCnt);
             },
             err => {console.error("Failed to load", err); }
         );
@@ -244,20 +244,20 @@ export class ContentedCmp implements OnInit, OnDestroy {
             this.fullLoadDir(currDir);
         } else if (triggerSelect) {
             let cnt = this.getCurrentContainer();
-            GlobalNavEvents.selectMedia(cnt.getMedia(), cnt);
+            GlobalNavEvents.selectContent(cnt.getContent(), cnt);
         }
     }
 
     // Could probably move this into a saner location
-    public selectedMedia(media: Media, cnt: Container) {
-        //console.log("Click event, change currently selected indexes, container etc", media, cnt);
+    public selectedContent(content: Content, cnt: Container) {
+        //console.log("Click event, change currently selected indexes, container etc", content, cnt);
         let idx = _.findIndex(this.allCnts, {id: cnt ? cnt.id : -1});
         if (idx >= 0) {
             this.idx = idx;
             this.rowIdx = cnt.rowIdx;
             this.updateRoute();
         } else {
-            console.error("Should not be able to click an item we cannot find.", cnt, media);
+            console.error("Should not be able to click an item we cannot find.", cnt, content);
         }
     }
 }

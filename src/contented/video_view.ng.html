@@ -6,7 +6,7 @@
   <form #videoForm [formGroup]="options">
     <mat-form-field apperance="fill" floatLabel="true" class="search-field">
       <mat-label>
-        Search Media
+        Search Content
       </mat-label>
       <input type="text" name="videoText"
         [formControl]="videoText"
@@ -33,8 +33,8 @@
 
   <contented-view></contented-view>
 
-  <div class="video-results" *ngIf="!!media">
-    <mat-card id="view_media_{{mc.id}}" class="video-view-card" *ngFor="let mc of getVisibleSet()">
+  <div class="video-results" *ngIf="!!content">
+    <mat-card id="view_content_{{mc.id}}" class="video-view-card" *ngFor="let mc of getVisibleSet()">
       <mat-card-title class="video-details">
         <a mat-raised-button href="/view/{{mc.id}}" title="Open in new tab" target="window">
           New Fullscreen Tab
@@ -47,7 +47,7 @@
         <span class="video-title">{{mc.src}}</span>
       </mat-card-title>
 
-      <mat-card-content [class.selected-video]="selectedMedia?.id == mc.id">
+      <mat-card-content [class.selected-video]="selectedContent?.id == mc.id">
         <div class="video-view">
           <div class="preview-content video-result video-view"
             [class.video-overlay]="mc?.content_type?.match('video')"
@@ -59,7 +59,7 @@
 
           <div class="video-view-screens">
             <screens-cmp 
-              [mediaId]="mc.id"
+              [contentId]="mc.id"
               [screens]="mc.screens"
               [containerWidth]="screenWidth"
               [containerHeight]="2 * previewHeight"

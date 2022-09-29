@@ -11,7 +11,7 @@ import { Router } from '@angular/router';
 import {ContentedViewCmp} from '../contented/contented_view_cmp';
 import {ContentedService} from '../contented/contented_service';
 import {ContentedModule} from '../contented/contented_module';
-import {Media} from '../contented/media';
+import {Content} from '../contented/content';
 import {Container} from '../contented/container';
 import {ApiDef} from '../contented/api_def';
 import {GlobalNavEvents} from '../contented/nav_events';
@@ -66,24 +66,24 @@ describe('TestingContentedViewCmp', () => {
     });
 
     it('Can render an image and render', () => {
-        comp.media = null;
+        comp.content = null;
         comp.visible = true;
         fixture.detectChanges();
-        expect($('.media-full-view').length).toBe(0, "It should not be visible");
+        expect($('.content-full-view').length).toBe(0, "It should not be visible");
 
         let img = MockData.getImg();
-        comp.media = img;
+        comp.content = img;
         fixture.detectChanges();
-        expect($('.media-full-view').length).toBe(1, "It should be visible");
+        expect($('.content-full-view').length).toBe(1, "It should be visible");
     });
 
     it('Forcing a width and height will be respected', () => {
-        comp.media = MockData.getImg();
+        comp.content = MockData.getImg();
         comp.forceWidth = 666;
         comp.forceHeight = 42;
         comp.visible = true;
         fixture.detectChanges();
-        expect($('.media-full-view').length).toBe(1, "It should be visible");
+        expect($('.content-full-view').length).toBe(1, "It should be visible");
 
         window.dispatchEvent(new Event('resize'));
         fixture.detectChanges();
@@ -97,19 +97,19 @@ describe('TestingContentedViewCmp', () => {
     // Test that we listen to nav events correctly
     it('Should register nav events', () => {
         fixture.detectChanges();
-        expect($('.media-full-view').length).toBe(0, "Nothing in the view");
+        expect($('.content-full-view').length).toBe(0, "Nothing in the view");
 
-        let initialSel = new Media({id: 'A'})
-        GlobalNavEvents.selectMedia(initialSel, new Container({id: '1'}));
+        let initialSel = new Content({id: 'A'})
+        GlobalNavEvents.selectContent(initialSel, new Container({id: '1'}));
         fixture.detectChanges();
-        expect(comp.media).toEqual(initialSel);
+        expect(comp.content).toEqual(initialSel);
 
-        let media = MockData.getImg();
-        GlobalNavEvents.viewFullScreen(media);
+        let content = MockData.getImg();
+        GlobalNavEvents.viewFullScreen(content);
         fixture.detectChanges();
-        expect($('.media-full-view').length).toBe(1, "It should now be visible");
+        expect($('.content-full-view').length).toBe(1, "It should now be visible");
         expect($('.full-view-img').length).toBe(1, "And it is an image");
-        expect(comp.media).toEqual(media, "A view event with a media item should change it");
+        expect(comp.content).toEqual(content, "A view event with a content item should change it");
 
         GlobalNavEvents.hideFullScreen();
         fixture.detectChanges();
@@ -117,22 +117,22 @@ describe('TestingContentedViewCmp', () => {
     });
 
     it("Should have a video in the case of a video, image for image", () => {
-        let video = new Media({content_type: "video/mp4", fullUrl: "cthulhu"});
-        let img = new Media({content_type: "image/jpeg", fullUrl: "cat/pics.jpg"});
+        let video = new Content({content_type: "video/mp4", fullUrl: "cthulhu"});
+        let img = new Content({content_type: "image/jpeg", fullUrl: "cat/pics.jpg"});
 
         comp.visible = true;
-        comp.media = img;
+        comp.content = img;
         fixture.detectChanges();
-        expect($(".media-video-screens").length).toEqual(0, "No screens");
+        expect($(".content-video-screens").length).toEqual(0, "No screens");
         expect($("img").length).toEqual(1, "We should have an image");
         expect($("video").length).toEqual(0, "Not a video");
 
-        comp.media = video;
+        comp.content = video;
         fixture.detectChanges();
         expect($("video").length).toEqual(1, "Now it should be a video");
         expect($("image").length).toEqual(0, "Not an image");
         expect(video.isVideo()).toBe(true, "It should be a video file");
         fixture.detectChanges();
-        expect($(".media-video-screens").length).toEqual(1, "It should have screens");
+        expect($(".content-video-screens").length).toEqual(1, "It should have screens");
     });
 });

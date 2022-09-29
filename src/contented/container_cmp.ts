@@ -3,7 +3,7 @@ import {OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener}
 import {ContentedService} from './contented_service';
 
 import {Container} from './container';
-import {Media} from './media';
+import {Content} from './content';
 import {GlobalNavEvents, NavTypes} from './nav_events';
 import * as _ from 'lodash';
 
@@ -24,7 +24,7 @@ export class ContainerCmp implements OnInit, OnDestroy {
     @Output() clickedItem: EventEmitter<any> = new EventEmitter<any>();
 
     // @Output clickEvt: EventEmitter<any>;
-    public visibleSet: Array<Media>; // The currently visible set of items from in the container
+    public visibleSet: Array<Content>; // The currently visible set of items from in the container
     public sub: Subscription;
 
     constructor(public _contentedService: ContentedService) {
@@ -38,18 +38,18 @@ export class ContainerCmp implements OnInit, OnDestroy {
                 switch (evt.action) {
                     case NavTypes.NEXT_MEDIA:
                         console.log("Next in container");
-                        this.nextMedia();
+                        this.nextContent();
                         break;
                     case NavTypes.PREV_MEDIA:
                         console.log("Prev in container");
-                        this.prevMedia();
+                        this.prevContent();
                         break;
                     case NavTypes.SAVE_MEDIA:
-                        console.log("Save the currently selected media");
-                        this.saveMedia();
+                        console.log("Save the currently selected content");
+                        this.saveContent();
                         break;
                     case NavTypes.SCROLL_MEDIA_INTO_VIEW:
-                        this.scrollMedia(evt.media);
+                        this.scrollContent(evt.content);
                         break;
                     default:
                         break;
@@ -58,9 +58,9 @@ export class ContainerCmp implements OnInit, OnDestroy {
         });
     }
 
-    public scrollMedia(media: Media) {
+    public scrollContent(content: Content) {
         _.delay(() => {
-            let id = `preview_${media.id}`;
+            let id = `preview_${content.id}`;
             let el = document.getElementById(id)
 
             if (el) {
@@ -74,34 +74,34 @@ export class ContainerCmp implements OnInit, OnDestroy {
         this.sub.unsubscribe();
     }
 
-    public saveMedia() {
+    public saveContent() {
         this._contentedService.download(this.container, this.container.rowIdx);
     }
 
-    public nextMedia() {
-        let mediaList = this.container.getContentList() || [];
-        if (this.container.rowIdx < mediaList.length) {
+    public nextContent() {
+        let contentList = this.container.getContentList() || [];
+        if (this.container.rowIdx < contentList.length) {
             this.container.rowIdx++;
-            if (this.container.rowIdx === mediaList.length) {
+            if (this.container.rowIdx === contentList.length) {
                 GlobalNavEvents.nextContainer();
             } else {
-                GlobalNavEvents.selectMedia(this.container.getCurrentMedia(), this.container);
+                GlobalNavEvents.selectContent(this.container.getCurrentContent(), this.container);
             }
         }
     }
 
-    public prevMedia() {
+    public prevContent() {
          if (this.container.rowIdx > 0) {
              this.container.rowIdx--;
-             GlobalNavEvents.selectMedia(this.container.getCurrentMedia(), this.container);
+             GlobalNavEvents.selectContent(this.container.getCurrentContent(), this.container);
          } else {
              GlobalNavEvents.prevContainer();
          }
     }
 
-    public getVisibleSet(currentItem: Media = null, max: number = this.maxRendered) {
-        let media: Media = currentItem || this.container.getCurrentMedia();
-        this.visibleSet = this.container.getIntervalAround(media, max, this.maxPrevItems);
+    public getVisibleSet(currentItem: Content = null, max: number = this.maxRendered) {
+        let content: Content = currentItem || this.container.getCurrentContent();
+        this.visibleSet = this.container.getIntervalAround(content, max, this.maxPrevItems);
         return this.visibleSet;
     }
 
@@ -111,15 +111,15 @@ export class ContainerCmp implements OnInit, OnDestroy {
         //console.log("Img Loaded", img.naturalHeight, img.naturalWidth, img);
     }
 
-    public clickMedia(media: Media) {
+    public clickContent(content: Content) {
         // Little strange on the selection
-        this.container.rowIdx = _.findIndex(this.container.contents, {id: media.id});
+        this.container.rowIdx = _.findIndex(this.container.contents, {id: content.id});
 
-        GlobalNavEvents.selectMedia(media, this.container);
-        GlobalNavEvents.viewFullScreen(media);
+        GlobalNavEvents.selectContent(content, this.container);
+        GlobalNavEvents.viewFullScreen(content);
 
         // Just here in case we want to override what happens on a click
-        this.clickedItem.emit({cnt: this.container, media: media});
+        this.clickedItem.emit({cnt: this.container, content: content});
     }
 }
 

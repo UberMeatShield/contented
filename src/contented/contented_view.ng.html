@@ -1,37 +1,37 @@
 <div class="contented-view-cmp">
   <div *ngIf="visible" class="contented-view" id="MEDIA_VIEW">
-    <!-- swap the terms here and make media into 'media' -->
-    <div *ngIf="media"
-      class="media-full-view" 
+    <!-- swap the terms here and make content into 'content' -->
+    <div *ngIf="content"
+      class="content-full-view" 
       style="width:{{maxWidth}}px; height: {{maxHeight}}px;"
     >
-        <img class="media-img" *ngIf="media?.isImage()" 
-          class="full-view-img media-img" 
-          [src]="media.fullUrl"
+        <img class="content-img" *ngIf="content?.isImage()" 
+          class="full-view-img content-img" 
+          [src]="content.fullUrl"
         >
 
         <!-- TODO: should the fullscreen for a video should be totally different? -->
-        <video *ngIf="media.isVideo()" 
-          id="VIDEO_{{media.id}}"
-          class="media-video"
+        <video *ngIf="content.isVideo()" 
+          id="VIDEO_{{content.id}}"
+          class="content-video"
           [width]="maxWidth"
           [height]="maxHeight"
           controls>
-          <source [src]="media.fullUrl" [type]="media.content_type">
+          <source [src]="content.fullUrl" [type]="content.content_type">
         </video>
 
-    <a *ngIf="media" class="max-full-url-path" href="{{media?.fullUrl}}">
-      {{media.src}}({{media.content_type}})
+    <a *ngIf="content" class="max-full-url-path" href="{{content?.fullUrl}}">
+      {{content.src}}({{content.content_type}})
     </a>
-    <span *ngIf="!media">
+    <span *ngIf="!content">
       No Url selected
     </span>
   </div>
 
-  <div *ngIf="media && media.isVideo()" class="media-video-screens">
+  <div *ngIf="content && content.isVideo()" class="content-video-screens">
     <screens-cmp
       (clickedItem)="clickedScreen($event)"
-      [mediaId]="media.id"
+      [contentId]="content.id"
     ></screens-cmp>
   </div>
 </div>

@@ -1,6 +1,6 @@
 {
   "total": 4,
-  "media": [
+  "content": [
     {
       "id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
       "created": "0001-01-01T00:00:00Z",
@@ -17,7 +17,7 @@
       "screens": [
         {
           "id": "59400077-d6e0-4dbe-87b9-5d5c2de8b41f",
-          "media_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
+          "content_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
           "created": "0001-01-01T00:00:00Z",
           "updated": "0001-01-01T00:00:00Z",
           "src": "181004_10_LABORATORIES-SCIENCE_12_preview.mp4.screens.ss00001.jpg",
@@ -26,7 +26,7 @@
         },
         {
           "id": "5abe639b-e4fb-4b6c-925c-508a79b6d5ba",
-          "media_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
+          "content_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
           "created": "0001-01-01T00:00:00Z",
           "updated": "0001-01-01T00:00:00Z",
           "src": "181004_10_LABORATORIES-SCIENCE_12_preview.mp4.screens.ss00002.jpg",
@@ -35,7 +35,7 @@
         },
         {
           "id": "e715c2f4-60e1-4b69-a999-5a1703639426",
-          "media_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
+          "content_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
           "created": "0001-01-01T00:00:00Z",
           "updated": "0001-01-01T00:00:00Z",
           "src": "181004_10_LABORATORIES-SCIENCE_12_preview.mp4.screens.ss00003.jpg",
@@ -44,7 +44,7 @@
         },
         {
           "id": "1ff786af-42f1-498a-9f4d-ac79b5ede696",
-          "media_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
+          "content_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
           "created": "0001-01-01T00:00:00Z",
           "updated": "0001-01-01T00:00:00Z",
           "src": "181004_10_LABORATORIES-SCIENCE_12_preview.mp4.screens.ss00004.jpg",
@@ -53,7 +53,7 @@
         },
         {
           "id": "bf12b5c8-f9c5-4aa1-a1e4-98001e94b0bd",
-          "media_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
+          "content_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
           "created": "0001-01-01T00:00:00Z",
           "updated": "0001-01-01T00:00:00Z",
           "src": "181004_10_LABORATORIES-SCIENCE_12_preview.mp4.screens.ss00005.jpg",
@@ -62,7 +62,7 @@
         },
         {
           "id": "1fd32283-a410-4747-89d5-818632361d03",
-          "media_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
+          "content_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
           "created": "0001-01-01T00:00:00Z",
           "updated": "0001-01-01T00:00:00Z",
           "src": "181004_10_LABORATORIES-SCIENCE_12_preview.mp4.screens.ss00006.jpg",
@@ -71,7 +71,7 @@
         },
         {
           "id": "3b5cbe27-c7e1-4870-9052-ec2683aba547",
-          "media_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
+          "content_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
           "created": "0001-01-01T00:00:00Z",
           "updated": "0001-01-01T00:00:00Z",
           "src": "181004_10_LABORATORIES-SCIENCE_12_preview.mp4.screens.ss00007.jpg",
@@ -80,7 +80,7 @@
         },
         {
           "id": "79e63dfe-94b3-4724-ba7a-753f64b4abf9",
-          "media_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
+          "content_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
           "created": "0001-01-01T00:00:00Z",
           "updated": "0001-01-01T00:00:00Z",
           "src": "181004_10_LABORATORIES-SCIENCE_12_preview.mp4.screens.ss00008.jpg",
@@ -89,7 +89,7 @@
         },
         {
           "id": "44af25cd-3713-4484-90ad-4732c803d0f9",
-          "media_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
+          "content_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
           "created": "0001-01-01T00:00:00Z",
           "updated": "0001-01-01T00:00:00Z",
           "src": "181004_10_LABORATORIES-SCIENCE_12_preview.mp4.screens.ss00009.jpg",
@@ -98,7 +98,7 @@
         },
         {
           "id": "09978770-cb4f-47ef-9d96-b810e1859ba8",
-          "media_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
+          "content_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
           "created": "0001-01-01T00:00:00Z",
           "updated": "0001-01-01T00:00:00Z",
           "src": "181004_10_LABORATORIES-SCIENCE_12_preview.mp4.screens.ss00010.jpg",
@@ -107,7 +107,7 @@
         },
         {
           "id": "4130a54f-362f-41ce-8d3f-a0de44c0f2a7",
-          "media_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
+          "content_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
           "created": "0001-01-01T00:00:00Z",
           "updated": "0001-01-01T00:00:00Z",
           "src": "181004_10_LABORATORIES-SCIENCE_12_preview.mp4.screens.ss00011.jpg",
@@ -133,7 +133,7 @@
       "screens": [
         {
           "id": "990da5e0-33be-4661-b6cc-1312c5e9f406",
-          "media_id": "12bdbae5-5644-4b61-8ab9-97dc2f3206ca",
+          "content_id": "12bdbae5-5644-4b61-8ab9-97dc2f3206ca",
           "created": "0001-01-01T00:00:00Z",
           "updated": "0001-01-01T00:00:00Z",
           "src": "donut.mp4.screens.ss00000.jpg",
@@ -142,7 +142,7 @@
         },
         {
           "id": "6ee5a66a-4b3e-4947-9360-c9ef5bd11895",
-          "media_id": "12bdbae5-5644-4b61-8ab9-97dc2f3206ca",
+          "content_id": "12bdbae5-5644-4b61-8ab9-97dc2f3206ca",
           "created": "0001-01-01T00:00:00Z",
           "updated": "0001-01-01T00:00:00Z",
           "src": "donut.mp4.screens.ss00001.jpg",
@@ -151,7 +151,7 @@
         },
         {
           "id": "725b4e14-a1c8-4fdf-87a5-deb33723da78",
-          "media_id": "12bdbae5-5644-4b61-8ab9-97dc2f3206ca",
+          "content_id": "12bdbae5-5644-4b61-8ab9-97dc2f3206ca",
           "created": "0001-01-01T00:00:00Z",
           "updated": "0001-01-01T00:00:00Z",
           "src": "donut.mp4.screens.ss00002.jpg",
@@ -160,7 +160,7 @@
         },
         {
           "id": "3decd312-83cf-48d0-9312-be57f75122c7",
-          "media_id": "12bdbae5-5644-4b61-8ab9-97dc2f3206ca",
+          "content_id": "12bdbae5-5644-4b61-8ab9-97dc2f3206ca",
           "created": "0001-01-01T00:00:00Z",
           "updated": "0001-01-01T00:00:00Z",
           "src": "donut.mp4.screens.ss00003.jpg",
@@ -169,7 +169,7 @@
         },
         {
           "id": "42dcd26f-edbf-45aa-be35-723dfcebdc81",
-          "media_id": "12bdbae5-5644-4b61-8ab9-97dc2f3206ca",
+          "content_id": "12bdbae5-5644-4b61-8ab9-97dc2f3206ca",
           "created": "0001-01-01T00:00:00Z",
           "updated": "0001-01-01T00:00:00Z",
           "src": "donut.mp4.screens.ss00004.jpg",
@@ -195,7 +195,7 @@
       "screens": [
         {
           "id": "b5731e14-2052-41c8-89f6-47187c847fe1",
-          "media_id": "c29f7cb8-1573-425d-b79a-52a47e02cdf4",
+          "content_id": "c29f7cb8-1573-425d-b79a-52a47e02cdf4",
           "created": "0001-01-01T00:00:00Z",
           "updated": "0001-01-01T00:00:00Z",
           "src": "Microscope_5__Scientist__Videvo_preview.mp4.screens.ss00000.jpg",
@@ -204,7 +204,7 @@
         },
         {
           "id": "ada214bc-4e35-48d0-b607-815fd739f994",
-          "media_id": "c29f7cb8-1573-425d-b79a-52a47e02cdf4",
+          "content_id": "c29f7cb8-1573-425d-b79a-52a47e02cdf4",
           "created": "0001-01-01T00:00:00Z",
           "updated": "0001-01-01T00:00:00Z",
           "src": "Microscope_5__Scientist__Videvo_preview.mp4.screens.ss00001.jpg",
@@ -213,7 +213,7 @@
         },
         {
           "id": "250c210a-8064-418e-817d-b0e7b200806a",
-          "media_id": "c29f7cb8-1573-425d-b79a-52a47e02cdf4",
+          "content_id": "c29f7cb8-1573-425d-b79a-52a47e02cdf4",
           "created": "0001-01-01T00:00:00Z",
           "updated": "0001-01-01T00:00:00Z",
           "src": "Microscope_5__Scientist__Videvo_preview.mp4.screens.ss00002.jpg",
@@ -222,7 +222,7 @@
         },
         {
           "id": "a9182fba-a53e-4afd-aeac-cfc9510063af",
-          "media_id": "c29f7cb8-1573-425d-b79a-52a47e02cdf4",
+          "content_id": "c29f7cb8-1573-425d-b79a-52a47e02cdf4",
           "created": "0001-01-01T00:00:00Z",
           "updated": "0001-01-01T00:00:00Z",
           "src": "Microscope_5__Scientist__Videvo_preview.mp4.screens.ss00003.jpg",
@@ -231,7 +231,7 @@
         },
         {
           "id": "8db5a374-4a64-4394-8e4e-4741b50d12db",
-          "media_id": "c29f7cb8-1573-425d-b79a-52a47e02cdf4",
+          "content_id": "c29f7cb8-1573-425d-b79a-52a47e02cdf4",
           "created": "0001-01-01T00:00:00Z",
           "updated": "0001-01-01T00:00:00Z",
           "src": "Microscope_5__Scientist__Videvo_preview.mp4.screens.ss00004.jpg",
@@ -240,7 +240,7 @@
         },
         {
           "id": "a92bda85-f649-4f2a-9e3f-949e33e52d56",
-          "media_id": "c29f7cb8-1573-425d-b79a-52a47e02cdf4",
+          "content_id": "c29f7cb8-1573-425d-b79a-52a47e02cdf4",
           "created": "0001-01-01T00:00:00Z",
           "updated": "0001-01-01T00:00:00Z",
           "src": "Microscope_5__Scientist__Videvo_preview.mp4.screens.ss00005.jpg",
@@ -249,7 +249,7 @@
         },
         {
           "id": "07cdca1c-ea74-43b3-a7df-c6d0f28f8e5e",
-          "media_id": "c29f7cb8-1573-425d-b79a-52a47e02cdf4",
+          "content_id": "c29f7cb8-1573-425d-b79a-52a47e02cdf4",
           "created": "0001-01-01T00:00:00Z",
           "updated": "0001-01-01T00:00:00Z",
           "src": "Microscope_5__Scientist__Videvo_preview.mp4.screens.ss00006.jpg",
@@ -258,7 +258,7 @@
         },
         {
           "id": "c73ec05c-5a4e-4518-ac96-14ff8b86e693",
-          "media_id": "c29f7cb8-1573-425d-b79a-52a47e02cdf4",
+          "content_id": "c29f7cb8-1573-425d-b79a-52a47e02cdf4",
           "created": "0001-01-01T00:00:00Z",
           "updated": "0001-01-01T00:00:00Z",
           "src": "Microscope_5__Scientist__Videvo_preview.mp4.screens.ss00007.jpg",
@@ -284,7 +284,7 @@
       "screens": [
         {
           "id": "f06b13bf-8880-44ff-9e10-6afb6dba88d6",
-          "media_id": "f6eac974-dc55-43b8-b617-82dfab29bb32",
+          "content_id": "f6eac974-dc55-43b8-b617-82dfab29bb32",
           "created": "0001-01-01T00:00:00Z",
           "updated": "0001-01-01T00:00:00Z",
           "src": "young_chemist.mp4.screens.ss00001.jpg",

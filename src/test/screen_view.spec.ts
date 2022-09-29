@@ -69,13 +69,13 @@ describe('TestingScreensCmp', () => {
         expect($(".screens-cmp").length).toEqual(1, "The component should exist");
     });
 
-    it('Given a media id it will try and render screens', fakeAsync(() => {
-        let mediaId = "uuid-really";
-        comp.mediaId = mediaId;
+    it('Given a content id it will try and render screens', fakeAsync(() => {
+        let contentId = "uuid-really";
+        comp.contentId = contentId;
         fixture.detectChanges();
         expect(comp.loading).toBeTrue();
 
-        let url = ApiDef.contented.mediaScreens.replace("{mcID}", mediaId);
+        let url = ApiDef.contented.contentScreens.replace("{mcID}", contentId);
         let req = httpMock.expectOne(req => req.url == url);
         let screens = MockData.getScreens();
         expect(screens.length).toBeGreaterThan(0, "We should have screens in the mock data");

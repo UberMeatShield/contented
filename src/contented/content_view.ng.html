@@ -1,0 +1,12 @@
+<div class="content-view-cmp">
+  <div class="content-view-fullscreen" *ngIf="content">
+    <contented-view [content]=content [visible]="true">
+    </contented-view>
+  </div>
+  <div class="loading" *ngIf="loading">
+    Loading...
+  </div>
+  <div class="error" *ngIf="error">
+    Error finding content with this ID
+  </div>
+</div>

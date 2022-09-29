@@ -1,5 +1,5 @@
 import {EventEmitter} from '@angular/core';
-import {Media} from './media';
+import {Content} from './content';
 import {Container} from './container';
 
 export enum NavTypes {
@@ -46,61 +46,61 @@ export class NavEvents {
     }
     
 
-    selectMedia(media: Media, container: Container) {
+    selectContent(content: Content, container: Container) {
         this.navEvts.emit({
             action: NavTypes.SELECT_MEDIA,
-            media: media,
+            content: content,
             cnt: container,
         });
     }
 
-    nextMedia(container: Container = null) {
+    nextContent(container: Container = null) {
         this.navEvts.emit({
             action: NavTypes.NEXT_MEDIA,
             cnt: container,
         });
     }
 
-    prevMedia(container: Container = null) {
+    prevContent(container: Container = null) {
         this.navEvts.emit({
             action: NavTypes.PREV_MEDIA ,
             cnt: container,
         });
     }
 
-    viewFullScreen(media: Media = null) {
+    viewFullScreen(content: Content = null) {
         this.navEvts.emit({
             action: NavTypes.VIEW_FULLSCREEN,
-            media: media,
+            content: content,
         });
     }
 
     hideFullScreen() {
-        // Require no media
+        // Require no content
         this.navEvts.emit({
             action: NavTypes.HIDE_FULLSCREEN,
         });
     }
 
-    loadMoreMedia(container: Container = null) {
+    loadMoreContent(container: Container = null) {
         this.navEvts.emit({
             action: NavTypes.LOAD_MORE,
             cnt: container,
         });
     }
 
-    // Determine if this should require a media element
-    saveMedia(media: Media = null) {
+    // Determine if this should require a content element
+    saveContent(content: Content = null) {
         this.navEvts.emit({
             action: NavTypes.SAVE_MEDIA,
-            media: media,
+            content: content,
         });
     }
 
-    scrollMediaView(media: Media = null) {
+    scrollContentView(content: Content = null) {
         this.navEvts.emit({
             action: NavTypes.SCROLL_MEDIA_INTO_VIEW,
-            media: media,
+            content: content,
         });
     }
 }

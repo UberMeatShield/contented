@@ -3,7 +3,7 @@ import {By} from '@angular/platform-browser';
 
 import * as _ from 'lodash';
 import {Container} from './../contented/container';
-import {Media} from './../contented/media';
+import {Content} from './../contented/content';
 import {MockData} from './mock/mock_data';
 
 describe('TestingContainer', () => {

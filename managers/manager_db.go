@@ -70,10 +70,7 @@ func (cm ContentManagerDB) ListContent(cID uuid.UUID, page int, per_page int) (*
 func (cm ContentManagerDB) GetContent(mcID uuid.UUID) (*models.Content, error) {
     log.Printf("Get a single content %s", mcID)
     tx := cm.GetConnection()
-    mc := &models.Content{
-        //Screens: models.Screens{},
-        //Tags: models.Tags{},
-    }
+    mc := &models.Content{}
     if err := tx.EagerPreload().Find(mc, mcID); err != nil {
         return nil, err
     }

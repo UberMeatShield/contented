@@ -16,10 +16,10 @@ import (
 
 // Following naming logic is implemented in Buffalo:
 // Model: Singular (Screen)
-// DB Table: Plural (preview_screens)
+// DB Table: Plural (screens)
 // Resource: Plural (Screens)
-// Path: Plural (/preview_screens)
-// View Template Folder: Plural (/templates/preview_screens/)
+// Path: Plural (/screens)
+// View Template Folder: Plural (/templates/screens/)
 
 // ScreensResource is the resource for the Screen model
 type ScreensResource struct {
@@ -27,7 +27,7 @@ type ScreensResource struct {
 }
 
 // List gets all Screens. This function is mapped to the path
-// GET /preview_screens
+// GET /screens
 func (v ScreensResource) List(c buffalo.Context) error {
     // Get the DB connection from the context
     var previewScreens *models.Screens
@@ -62,9 +62,9 @@ func (v ScreensResource) List(c buffalo.Context) error {
 }
 
 // Show gets the data for one Screen. This function is mapped to
-// the path GET /preview_screens/{preview_screen_id}
+// the path GET /screens/{screen_id}
 func (v ScreensResource) Show(c buffalo.Context) error {
-    psStrID := c.Param("preview_screen_id")
+    psStrID := c.Param("screen_id")
     psID, badUUID := uuid.FromString(psStrID)
     if badUUID != nil {
         return c.Error(400, badUUID)
@@ -89,7 +89,7 @@ func (v ScreensResource) Show(c buffalo.Context) error {
 }
 
 // Create adds a Screen to the DB. This function is mapped to the
-// path POST /preview_screens
+// path POST /screens
 func (v ScreensResource) Create(c buffalo.Context) error {
     _, tx, err := managers.ManagerCanCUD(&c)
     if err != nil {
@@ -118,7 +118,7 @@ func (v ScreensResource) Create(c buffalo.Context) error {
             // correct the input.
             c.Set("previewScreen", previewScreen)
 
-            return c.Render(http.StatusUnprocessableEntity, r.HTML("/preview_screens/new.plush.html"))
+            return c.Render(http.StatusUnprocessableEntity, r.HTML("/screens/new.plush.html"))
         }).Wants("json", func(c buffalo.Context) error {
             return c.Render(http.StatusUnprocessableEntity, r.JSON(verrs))
         }).Wants("xml", func(c buffalo.Context) error {
@@ -137,7 +137,7 @@ func (v ScreensResource) Create(c buffalo.Context) error {
 }
 
 // Update changes a Screen in the DB. This function is mapped to
-// the path PUT /preview_screens/{preview_screen_id}
+// the path PUT /screens/{screen_id}
 func (v ScreensResource) Update(c buffalo.Context) error {
     // Get the DB connection from the context
     _, tx, err := managers.ManagerCanCUD(&c)
@@ -148,7 +148,7 @@ func (v ScreensResource) Update(c buffalo.Context) error {
     // Allocate an empty Screen
     previewScreen := &models.Screen{}
 
-    if err := tx.Find(previewScreen, c.Param("preview_screen_id")); err != nil {
+    if err := tx.Find(previewScreen, c.Param("screen_id")); err != nil {
         return c.Error(http.StatusNotFound, err)
     }
 
@@ -171,7 +171,7 @@ func (v ScreensResource) Update(c buffalo.Context) error {
             // correct the input.
             c.Set("previewScreen", previewScreen)
 
-            return c.Render(http.StatusUnprocessableEntity, r.HTML("/preview_screens/edit.plush.html"))
+            return c.Render(http.StatusUnprocessableEntity, r.HTML("/screens/edit.plush.html"))
         }).Wants("json", func(c buffalo.Context) error {
             return c.Render(http.StatusUnprocessableEntity, r.JSON(verrs))
         }).Wants("xml", func(c buffalo.Context) error {
@@ -184,7 +184,7 @@ func (v ScreensResource) Update(c buffalo.Context) error {
         //c.Flash().Add("success", T.Translate(c, "previewScreen.updated.success"))
 
         // and redirect to the show page
-        return c.Redirect(http.StatusSeeOther, "/preview_screens/%v", previewScreen.ID)
+        return c.Redirect(http.StatusSeeOther, "/screens/%v", previewScreen.ID)
     }).Wants("json", func(c buffalo.Context) error {
         return c.Render(http.StatusOK, r.JSON(previewScreen))
     }).Wants("xml", func(c buffalo.Context) error {
@@ -193,7 +193,7 @@ func (v ScreensResource) Update(c buffalo.Context) error {
 }
 
 // Destroy deletes a Screen from the DB. This function is mapped
-// to the path DELETE /preview_screens/{preview_screen_id}
+// to the path DELETE /screens/{screen_id}
 func (v ScreensResource) Destroy(c buffalo.Context) error {
     // Get the DB connection from the context
     _, tx, err := managers.ManagerCanCUD(&c)
@@ -204,8 +204,8 @@ func (v ScreensResource) Destroy(c buffalo.Context) error {
     // Allocate an empty Screen
     previewScreen := &models.Screen{}
 
-    // To find the Screen the parameter preview_screen_id is used.
-    if err := tx.Find(previewScreen, c.Param("preview_screen_id")); err != nil {
+    // To find the Screen the parameter screen_id is used.
+    if err := tx.Find(previewScreen, c.Param("screen_id")); err != nil {
         return c.Error(http.StatusNotFound, err)
     }
 
@@ -217,7 +217,7 @@ func (v ScreensResource) Destroy(c buffalo.Context) error {
         // If there are no errors set a flash message
         //c.Flash().Add("success", T.Translate(c, "previewScreen.destroyed.success"))
         // Redirect to the index page
-        return c.Redirect(http.StatusSeeOther, "/preview_screens")
+        return c.Redirect(http.StatusSeeOther, "/screens")
     }).Wants("json", func(c buffalo.Context) error {
         return c.Render(http.StatusOK, r.JSON(previewScreen))
     }).Wants("xml", func(c buffalo.Context) error {
