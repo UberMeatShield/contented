@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import {Media} from './media';
+import {Content} from './content';
 import {ApiDef} from './api_def';
 
 function trail(path: string, whatWith: string) {
@@ -17,7 +17,7 @@ export enum LoadStates {
 }
 
 export class Container {
-    public contents: Array<Media>;
+    public contents: Array<Content>;
     public total: number;
     public count: number;
     public path: string;
@@ -29,8 +29,8 @@ export class Container {
     public loadState: LoadStates = LoadStates.NotLoaded;
 
     // All potential items that can be rendered from the contents
-    public renderable: Array<Media>;
-    public visibleSet: Array<Media> = [];
+    public renderable: Array<Content>;
+    public visibleSet: Array<Content> = [];
 
     // The currently selected Index
     public rowIdx: number = 0;
@@ -43,7 +43,7 @@ export class Container {
         this.setContents(this.buildImgs(_.get(cnt, 'contents') || []));
     }
 
-    public getCurrentMedia() {
+    public getCurrentContent() {
         let cntList = this.getContentList() || [];
         if (this.rowIdx >= 0 && this.rowIdx < cntList.length) {
             return cntList[this.rowIdx];
@@ -52,7 +52,7 @@ export class Container {
     }
 
     // For use in determining what should actually be visible at any time
-    public getIntervalAround(currentItem: Media, requestedVisible: number = 4, before: number = 0) {
+    public getIntervalAround(currentItem: Content, requestedVisible: number = 4, before: number = 0) {
         this.visibleSet = null;
 
         let items = this.getContentList() || [];
@@ -76,7 +76,7 @@ export class Container {
         return this.visibleSet;
     }
 
-    public indexOf(item: Media, contents: Array<Media> = null) {
+    public indexOf(item: Content, contents: Array<Content> = null) {
         contents = contents || this.getContentList() || [];
         if ( item && contents ) {
             return _.findIndex(contents, {id: item.id});
@@ -85,10 +85,10 @@ export class Container {
     }
 
     public buildImgs(imgData: Array<any>) {
-        return _.map(imgData, data => new Media(data));
+        return _.map(imgData, data => new Content(data));
     }
 
-    public setContents(contents: Array<Media>) {
+    public setContents(contents: Array<Content>) {
         this.contents = _.sortBy(_.uniqBy(contents || [], 'id'), 'idx');
         this.count = this.contents.length;
         this.renderable = null;
@@ -100,13 +100,13 @@ export class Container {
         }
     }
 
-    public addContents(contents: Array<Media>) {
+    public addContents(contents: Array<Content>) {
         let sorted = _.sortBy((this.contents || []).concat(contents), 'idx');
         this.setContents(sorted);
         return sorted;
     }
 
-    public getMedia(rowIdx: number = null) {
+    public getContent(rowIdx: number = null) {
         rowIdx = rowIdx === null ? this.rowIdx : rowIdx;
         if (rowIdx >= 0 && rowIdx < this.contents.length) {
             return this.contents[rowIdx];
@@ -117,7 +117,7 @@ export class Container {
     // This is the actual URL you can get a pointer to for the scroll / load
     public getContentList() {
         if (!this.renderable) {
-            this.renderable = _.map(this.contents, (c: Media) => {
+            this.renderable = _.map(this.contents, (c: Content) => {
                 return c;
             });
         }

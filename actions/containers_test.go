@@ -86,8 +86,8 @@ func (as *ActionSuite) Test_ContainersResource_Destroy() {
 func (as *ActionSuite) Test_ContainerList() {
     internals.InitFakeApp(true)
 
-    cnt1, _ := internals.GetMediaByDirName("dir1")
-    cnt2, _ := internals.GetMediaByDirName("dir2")
+    cnt1, _ := internals.GetContentByDirName("dir1")
+    cnt2, _ := internals.GetContentByDirName("dir2")
     models.DB.Create(cnt1)
     models.DB.Create(cnt2)
     res := as.JSON("/containers").Get()
@@ -105,8 +105,8 @@ func (as *ActionSuite) Test_ContainerList() {
     }
     as.NotNil(found, "If it had the fixture loaded we should have this name")
 
-    mediaRes := as.JSON("/containers/" + found.ID.String() + "/media").Get()
-    as.Equal(http.StatusOK, mediaRes.Code)
+    contentRes := as.JSON("/containers/" + found.ID.String() + "/content").Get()
+    as.Equal(http.StatusOK, contentRes.Code)
 }
 
 func (as *ActionSuite) Test_MemoryDenyEdit() {

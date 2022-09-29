@@ -46,7 +46,7 @@ func App(UseDatabase bool) *buffalo.App {
         app.GET("/", AngularIndex)
         app.GET("/ui/browse/{path}", AngularIndex)
         app.GET("/ui/browse/{path}/{idx}", AngularIndex)
-        app.GET("/ui/media/{id}", AngularIndex)
+        app.GET("/ui/content/{id}", AngularIndex)
         app.GET("/ui/search", AngularIndex)
         app.GET("/ui/video", AngularIndex)
 
@@ -57,12 +57,12 @@ func App(UseDatabase bool) *buffalo.App {
 
         // The DIR env environment is then served under /static (see actions.SetupContented)
         cr := app.Resource("/containers", ContainersResource{})
-        cr.Resource("/media", MediaContainersResource{})
+        cr.Resource("/content", ContentsResource{})
 
-        mc_r := app.Resource("/media", MediaContainersResource{})
-        mc_r.Resource("/screens", PreviewScreensResource{})
+        mc_r := app.Resource("/content", ContentsResource{})
+        mc_r.Resource("/screens", ScreensResource{})
 
-        app.Resource("/screens", PreviewScreensResource{})
+        app.Resource("/screens", ScreensResource{})
     }
     return app
 }

@@ -1,7 +1,7 @@
 [
   {
     "id": "3e4e5465-5b82-4f2d-b132-243eb95a519d",
-    "media_id": "b25985ae-6430-4ea6-8193-caf8781b0c67",
+    "content_id": "b25985ae-6430-4ea6-8193-caf8781b0c67",
     "created": "0001-01-01T00:00:00Z",
     "updated": "0001-01-01T00:00:00Z",
     "src": "donut.mp4.screens.000.jpg",
@@ -10,7 +10,7 @@
   },
   {
     "id": "41e04317-0be4-4ea9-95ac-460e8ec1b8b1",
-    "media_id": "b25985ae-6430-4ea6-8193-caf8781b0c67",
+    "content_id": "b25985ae-6430-4ea6-8193-caf8781b0c67",
     "created": "0001-01-01T00:00:00Z",
     "updated": "0001-01-01T00:00:00Z",
     "src": "donut.mp4.screens.001.jpg",
@@ -19,7 +19,7 @@
   },
   {
     "id": "167a177c-fa94-4668-9fdf-5a5e9108505a",
-    "media_id": "b25985ae-6430-4ea6-8193-caf8781b0c67",
+    "content_id": "b25985ae-6430-4ea6-8193-caf8781b0c67",
     "created": "0001-01-01T00:00:00Z",
     "updated": "0001-01-01T00:00:00Z",
     "src": "donut.mp4.screens.002.jpg",
@@ -28,7 +28,7 @@
   },
   {
     "id": "df8e16a3-ff36-42c8-8d9b-8a83a6b3314d",
-    "media_id": "b25985ae-6430-4ea6-8193-caf8781b0c67",
+    "content_id": "b25985ae-6430-4ea6-8193-caf8781b0c67",
     "created": "0001-01-01T00:00:00Z",
     "updated": "0001-01-01T00:00:00Z",
     "src": "donut.mp4.screens.003.jpg",
@@ -37,7 +37,7 @@
   },
   {
     "id": "2220eb44-d6d7-403d-a6a0-25a4a6361646",
-    "media_id": "b25985ae-6430-4ea6-8193-caf8781b0c67",
+    "content_id": "b25985ae-6430-4ea6-8193-caf8781b0c67",
     "created": "0001-01-01T00:00:00Z",
     "updated": "0001-01-01T00:00:00Z",
     "src": "donut.mp4.screens.004.jpg",
@@ -46,7 +46,7 @@
   },
   {
     "id": "d98ad195-ee85-4cf6-abb9-8a8d7fe78b1d",
-    "media_id": "b25985ae-6430-4ea6-8193-caf8781b0c67",
+    "content_id": "b25985ae-6430-4ea6-8193-caf8781b0c67",
     "created": "0001-01-01T00:00:00Z",
     "updated": "0001-01-01T00:00:00Z",
     "src": "donut.mp4.screens.005.jpg",
@@ -55,7 +55,7 @@
   },
   {
     "id": "cda28ac6-12c3-40a1-b24f-f406d63ec3fc",
-    "media_id": "b25985ae-6430-4ea6-8193-caf8781b0c67",
+    "content_id": "b25985ae-6430-4ea6-8193-caf8781b0c67",
     "created": "0001-01-01T00:00:00Z",
     "updated": "0001-01-01T00:00:00Z",
     "src": "donut.mp4.screens.006.jpg",
@@ -64,7 +64,7 @@
   },
   {
     "id": "b8d697e7-cec8-4628-8acb-b1eb4acfe100",
-    "media_id": "b25985ae-6430-4ea6-8193-caf8781b0c67",
+    "content_id": "b25985ae-6430-4ea6-8193-caf8781b0c67",
     "created": "0001-01-01T00:00:00Z",
     "updated": "0001-01-01T00:00:00Z",
     "src": "donut.mp4.screens.007.jpg",
@@ -73,7 +73,7 @@
   },
   {
     "id": "e094c026-bbcc-4d02-9149-d26f3143e3c0",
-    "media_id": "b25985ae-6430-4ea6-8193-caf8781b0c67",
+    "content_id": "b25985ae-6430-4ea6-8193-caf8781b0c67",
     "created": "0001-01-01T00:00:00Z",
     "updated": "0001-01-01T00:00:00Z",
     "src": "donut.mp4.screens.008.jpg",
@@ -82,7 +82,7 @@
   },
   {
     "id": "412035aa-019c-4d47-97ab-ed5bc070ab66",
-    "media_id": "b25985ae-6430-4ea6-8193-caf8781b0c67",
+    "content_id": "b25985ae-6430-4ea6-8193-caf8781b0c67",
     "created": "0001-01-01T00:00:00Z",
     "updated": "0001-01-01T00:00:00Z",
     "src": "donut.mp4.screens.009.jpg",

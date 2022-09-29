@@ -3,7 +3,7 @@ package utils
 /**
 * This provides a single instance of the content tree that should be hosted when you
 * choose just to use an in memory version of a directory.  It keeps a hash lookup for
-* containers and media and is then used by the MemoryManager.
+* containers and content and is then used by the MemoryManager.
  */
 import (
     "contented/models"
@@ -13,9 +13,10 @@ import (
 // GoLang is just making this awkward
 type MemoryStorage struct {
     Initialized     bool
-    ValidMedia      models.MediaMap
+    ValidContent      models.ContentMap
     ValidContainers models.ContainerMap
-    ValidScreens    models.PreviewScreenMap
+    ValidScreens    models.ScreenMap
+    ValidTags       models.TagsMap
 }
 
 var memStorage MemoryStorage = MemoryStorage{Initialized: false}
@@ -30,8 +31,9 @@ func InitializeMemory(dir_root string) *MemoryStorage {
 
     memStorage.Initialized = true
     memStorage.ValidContainers = containers
-    memStorage.ValidMedia = files
+    memStorage.ValidContent = files
     memStorage.ValidScreens = screens
+    memStorage.ValidTags = models.TagsMap{}
 
     return &memStorage
 }
@@ -39,10 +41,10 @@ func InitializeMemory(dir_root string) *MemoryStorage {
 /**
  * Populates the memory view (this code is very similar to the DB version in helper.go)
  */
-func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap, models.PreviewScreenMap) {
+func PopulateMemoryView(dir_root string) (models.ContainerMap, models.ContentMap, models.ScreenMap) {
     containers := models.ContainerMap{}
-    files := models.MediaMap{}
-    screensMap := models.PreviewScreenMap{}
+    files := models.ContentMap{}
+    screensMap := models.ScreenMap{}
 
     cfg := GetCfg()
     log.Printf("PopulateMemoryView searching in %s with depth %d", dir_root, cfg.MaxSearchDepth)
@@ -53,19 +55,19 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.MediaMap, 
 
     tree := *contentTree
     for idx, ct := range tree {
-        if cfg.ExcludeEmptyContainers && len(ct.Media) == 0 {
+        if cfg.ExcludeEmptyContainers && len(ct.Content) == 0 {
             continue // SKIP empty container directories
         }
 
-        // Careful as sometimes we do want containers even if there is no media
+        // Careful as sometimes we do want containers even if there is no content
         c := ct.Cnt
-        if len(ct.Media) > 0 {
-            c.PreviewUrl = "/preview/" + ct.Media[0].ID.String()
+        if len(ct.Content) > 0 {
+            c.PreviewUrl = "/preview/" + ct.Content[0].ID.String()
             log.Printf("Assigning a preview to %s as %s", c.Name, c.PreviewUrl)
 
             maybeScreens, screenErr := GetPotentialScreens(&c)
-            for _, mc := range ct.Media {
-                // Assign anything required to the media before we put it in the lookup hash
+            for _, mc := range ct.Content {
+                // Assign anything required to the content before we put it in the lookup hash
                 AssignPreviewIfExists(&c, &mc)
                 if screenErr == nil {
                     screens := AssignScreensFromSet(&c, &mc, maybeScreens)

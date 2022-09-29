@@ -31,37 +31,46 @@ type ContentManager interface {
     GetCfg() *utils.DirConfigEntry
     CanEdit() bool // Do we support CRUD or just R
 
+    // Utility
     GetParams() *url.Values
+    FindActualFile(mc *models.Content) (string, error)
+    FindFileRef(mcID uuid.UUID) (*models.Content, error)
 
-    FindFileRef(mcID uuid.UUID) (*models.MediaContainer, error)
-
+    // Container Management
     GetContainer(cID uuid.UUID) (*models.Container, error)
     ListContainers(page int, per_page int) (*models.Containers, error)
     ListContainersContext() (*models.Containers, error)
-
-    GetMedia(media_id uuid.UUID) (*models.MediaContainer, error)
-    ListMedia(ContainerID uuid.UUID, page int, per_page int) (*models.MediaContainers, error)
-    ListMediaContext(ContainerID uuid.UUID) (*models.MediaContainers, error)
-    ListAllMedia(page int, per_page int) (*models.MediaContainers, error)
-    SearchMediaContext() (*models.MediaContainers, int, error)
-    SearchMedia(search string, page int, per_page int, cId string, contentType string) (*models.MediaContainers, int, error)
-
-    // Functions that help with viewing movie screens if found.
-    ListAllScreens(page int, per_page int) (*models.PreviewScreens, error)
-    ListAllScreensContext() (*models.PreviewScreens, error)
-    ListScreensContext(mcID uuid.UUID) (*models.PreviewScreens, error)
-    ListScreens(mcID uuid.UUID, page int, per_page int) (*models.PreviewScreens, error)
-    GetScreen(psID uuid.UUID) (*models.PreviewScreen, error)
-
-    CreateScreen(s *models.PreviewScreen) error
-    CreateMedia(mc *models.MediaContainer) error
+    UpdateContainer(c *models.Container) error
     CreateContainer(mc *models.Container) error
 
-    UpdateContainer(c *models.Container) error
-    UpdateMedia(media *models.MediaContainer) error
-    UpdateScreen(s *models.PreviewScreen) error
-    FindActualFile(mc *models.MediaContainer) (string, error)
-    GetPreviewForMC(mc *models.MediaContainer) (string, error)
+    // Content listing
+    GetContent(content_id uuid.UUID) (*models.Content, error)
+    ListContent(ContainerID uuid.UUID, page int, per_page int) (*models.Contents, error)
+    ListContentContext(ContainerID uuid.UUID) (*models.Contents, error)
+    ListAllContent(page int, per_page int) (*models.Contents, error)
+    SearchContentContext() (*models.Contents, int, error)
+    SearchContent(search string, page int, per_page int, cId string, contentType string) (*models.Contents, int, error)
+    UpdateContent(content *models.Content) error
+    CreateContent(mc *models.Content) error
+    GetPreviewForMC(mc *models.Content) (string, error)
+
+    // Functions that help with viewing movie screens if found.
+    ListAllScreens(page int, per_page int) (*models.Screens, error)
+    ListAllScreensContext() (*models.Screens, error)
+    ListScreensContext(mcID uuid.UUID) (*models.Screens, error)
+    ListScreens(mcID uuid.UUID, page int, per_page int) (*models.Screens, error)
+    GetScreen(psID uuid.UUID) (*models.Screen, error)
+    CreateScreen(s *models.Screen) error
+    UpdateScreen(s *models.Screen) error
+
+    // Tags listing
+    ListAllTags(page int, perPage int) (*models.Tags, error)
+    ListAllTagsContext() (*models.Tags, error)
+    CreateTag(tag *models.Tag) error
+    UpdateTag(tag *models.Tag) error
+    DeleteTag(tag *models.Tag) error
+    AssociateTag(tag *models.Tag, c *models.Content) error
+    AssociateTagByID(tagId uuid.UUID, mcID uuid.UUID) error
 }
 
 // Dealing with buffalo.Context vs grift.Context is kinda annoying, this handles the

@@ -19,7 +19,7 @@ type Container struct {
     UpdatedAt time.Time       `json:"updated" db:"updated_at"`
     Active    bool            `json:"active" db:"active"`
     Idx       int             `json:"idx" db:"idx"`
-    Contents  MediaContainers `json:"contents" has_many:"media_containers" db:"-"`
+    Contents  Contents `json:"contents" has_many:"contents" db:"-"`
 
     // This is expected to be a URL where often a configured /preview/{mcID} is going
     // to be assigned by default.  However you should be able to use any link but it is

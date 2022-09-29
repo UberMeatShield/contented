@@ -21,12 +21,12 @@ import {SearchCmp, SearchDialog} from './search_cmp';
 import {ContainerCmp} from './container_cmp';
 import {ContainerNavCmp} from './container_nav_cmp';
 import {ContentedViewCmp} from './contented_view_cmp';
-import {MediaViewCmp} from './media_view_cmp';
+import {ContentViewCmp} from './content_view_cmp';
 import {VideoViewCmp, ScreenDialog} from './video_view_cmp';
 import {ContentedService} from './contented_service';
 import {ScreensCmp} from './screens_cmp';
 import {Container} from './container';
-import {Media} from './media';
+import {Content} from './content';
 import {Screen} from './screen';
 import {ByteFormatterPipe} from './filters';
 
@@ -55,7 +55,7 @@ import {ByteFormatterPipe} from './filters';
       ContentedViewCmp,
       ContainerCmp,
       ContainerNavCmp,
-      MediaViewCmp,
+      ContentViewCmp,
       VideoViewCmp,
       ScreenDialog,
       SearchCmp,
@@ -71,7 +71,7 @@ import {ByteFormatterPipe} from './filters';
       ContainerNavCmp,
       SearchCmp,
       VideoViewCmp,
-      MediaViewCmp,
+      ContentViewCmp,
       SearchDialog,
   ],
   providers: [ContentedService]

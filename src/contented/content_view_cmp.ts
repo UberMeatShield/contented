@@ -1,17 +1,17 @@
 import {OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
-import {Media} from './media';
+import {Content} from './content';
 import {ContentedService} from './contented_service';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 
 import {finalize} from 'rxjs/operators';
 
 @Component({
-    selector: 'media-view',
-    templateUrl: './media_view.ng.html'
+    selector: 'content-view',
+    templateUrl: './content_view.ng.html'
 })
-export class MediaViewCmp implements OnInit {
+export class ContentViewCmp implements OnInit {
 
-    @Input() media: Media;
+    @Input() content: Content;
     @Input() forceWidth: number;
     @Input() forceHeight: number;
     @Input() visible: boolean = false;
@@ -28,24 +28,24 @@ export class MediaViewCmp implements OnInit {
     public ngOnInit() {
         this.route.paramMap.pipe().subscribe(
             (res: ParamMap) => {
-                let mediaID = res.get("id")
-                if (mediaID) {
-                    this.loadMedia(mediaID);
+                let contentID = res.get("id")
+                if (contentID) {
+                    this.loadContent(contentID);
                 }
             }, err => { console.error(err); }
         )
     }
 
-    public loadMedia(mediaID: string) {
+    public loadContent(contentID: string) {
         this.loading = true;
-        this._service.getMedia(mediaID).pipe(
+        this._service.getContent(contentID).pipe(
             finalize(() => { this.loading = false; })
         ).subscribe(
-            (m: Media) => {
-                this.media = m;
+            (m: Content) => {
+                this.content = m;
             }, err => {
-                console.error("Failed to load media", err);
-                this.error = "Failed to find mediaID" + err;
+                console.error("Failed to load content", err);
+                this.error = "Failed to find contentID" + err;
             }
         )
     }

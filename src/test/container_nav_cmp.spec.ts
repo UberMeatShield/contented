@@ -57,7 +57,7 @@ describe('TestingContainerNavCmp', () => {
         fullLoadBtn.trigger('click');
         fixture.detectChanges();
 
-        let url = ApiDef.contented.media.replace("{cId}", cnt.id);
+        let url = ApiDef.contented.content.replace("{cId}", cnt.id);
         let req = httpMock.expectOne(r => r.url === url);
     }));
 });

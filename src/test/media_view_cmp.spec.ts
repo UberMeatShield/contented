@@ -8,7 +8,7 @@ import {FormsModule} from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Router } from '@angular/router';
 
-import {MediaViewCmp} from '../contented/media_view_cmp';
+import {ContentViewCmp} from '../contented/content_view_cmp';
 import {ContentedService} from '../contented/contented_service';
 import {ContentedModule} from '../contented/contented_module';
 import {ApiDef} from '../contented/api_def';
@@ -34,10 +34,10 @@ const donutMock = {
     updated: "0001-01-01T00:00:00Z",
 };
 
-describe('TestingMediaViewCmp', () => {
-    let fixture: ComponentFixture<MediaViewCmp>;
+describe('TestingContentViewCmp', () => {
+    let fixture: ComponentFixture<ContentViewCmp>;
     let service: ContentedService;
-    let comp: MediaViewCmp;
+    let comp: ContentViewCmp;
     let el: HTMLElement;
     let de: DebugElement;
     let router: Router;
@@ -48,7 +48,7 @@ describe('TestingMediaViewCmp', () => {
         TestBed.configureTestingModule({
             imports: [
                 RouterTestingModule.withRoutes(
-                    [{path: 'ui/view/:id', component: MediaViewCmp}]
+                    [{path: 'ui/view/:id', component: ContentViewCmp}]
                 ),
                 FormsModule,
                 ContentedModule,
@@ -60,11 +60,11 @@ describe('TestingMediaViewCmp', () => {
         }).compileComponents();
 
         service = TestBed.get(ContentedService);
-        fixture = TestBed.createComponent(MediaViewCmp);
+        fixture = TestBed.createComponent(ContentViewCmp);
         httpMock = TestBed.get(HttpTestingController);
         comp = fixture.componentInstance;
 
-        de = fixture.debugElement.query(By.css('.media-view-cmp'));
+        de = fixture.debugElement.query(By.css('.content-view-cmp'));
         el = de.nativeElement;
         router = TestBed.get(Router);
         router.initialNavigation();
@@ -93,27 +93,27 @@ describe('TestingMediaViewCmp', () => {
         // TODO: Make a test that actually works with the damn activated route params
         // The route subscription doesn't actually seem to change or happen in tests.
         tick(1000);
-        // expect(comp.mediaID).toEqual(id);
+        // expect(comp.contentID).toEqual(id);
     }));
 
-    it("Can load up a media ID and will render the correct elements", () => {
+    it("Can load up a content ID and will render the correct elements", () => {
         fixture.detectChanges();
-        expect($(".media-view-fullscreen").length).toEqual(0, "It shouldn't be visible");
+        expect($(".content-view-fullscreen").length).toEqual(0, "It shouldn't be visible");
         expect($(".loading").length).toEqual(0, "Nothing should be loading");
 
         let fakeID = donutMock.id;
-        comp.loadMedia(fakeID);
+        comp.loadContent(fakeID);
         expect(comp.loading).toBeTrue()
         fixture.detectChanges();
         expect($(".loading").length).toEqual(1, "Loading UI should be present");
 
-        let url = `${ApiDef.contented.mediaAll}/${fakeID}`;
+        let url = `${ApiDef.contented.contentAll}/${fakeID}`;
         let req = httpMock.expectOne(url);
         req.flush(donutMock);
         fixture.detectChanges();
-        expect($(".media-view-fullscreen").length).toEqual(1, "It should now be visible");
+        expect($(".content-view-fullscreen").length).toEqual(1, "It should now be visible");
 
-        let screenUrl = ApiDef.contented.mediaScreens.replace("{mcID}", fakeID);
+        let screenUrl = ApiDef.contented.contentScreens.replace("{mcID}", fakeID);
         let screenReq = httpMock.expectOne(screenUrl);
         let screens = MockData.getScreens();
         screenReq.flush(screens);

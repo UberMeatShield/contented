@@ -27,7 +27,7 @@
         <form class="container-meta-text bar-spacer">
           Current Index: <input name="rowIdx" type="number" [(ngModel)]="cnt.rowIdx">
           Loaded: <span class="cnt-max-count"> {{cnt?.contents?.length}}</span>
-          of <span class="cnt-total">{{cnt?.total}}</span> media
+          of <span class="cnt-total">{{cnt?.total}}</span> content
           <span *ngIf="cnt?.contents?.length < cnt.total">
             press (F) or: 
             <button class="btn-full-load-ctn" (click)="fullLoadContainer(cnt)">
@@ -41,11 +41,11 @@
           <a target="window" class="cnt-name"
             href="/containers/{{cnt?.id}}"
           >{{cnt?.name}}</a>
-          <span *ngIf="currentMedia">
+          <span *ngIf="currentContent">
               /
-              <a target="window" class="current-item" href="{{currentMedia.fullUrl}}"> {{currentMedia?.src}}</a>
-              <span class="media-size-info"> {{currentMedia.size | byteFormatter: 0}}</span>
-              <span class="media-content-type"> {{currentMedia?.content_type}}</span>
+              <a target="window" class="current-item" href="{{currentContent.fullUrl}}"> {{currentContent?.src}}</a>
+              <span class="content-size-info"> {{currentContent.size | byteFormatter: 0}}</span>
+              <span class="content-content-type"> {{currentContent?.content_type}}</span>
           </span>
           </span>
         </div>

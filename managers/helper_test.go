@@ -20,12 +20,12 @@ type ActionSuite struct {
 }
 
 // TODO: This naming is now bad with preview screens
-func GetScreens() (*models.Container, models.MediaContainers) {
-    return internals.GetMediaByDirName("screens")
+func GetScreens() (*models.Container, models.Contents) {
+    return internals.GetContentByDirName("screens")
 }
 
-func SetupScreensPreview(as *ActionSuite) (*models.Container, models.MediaContainers) {
-    c_pt, media := GetScreens()
+func SetupScreensPreview(as *ActionSuite) (*models.Container, models.Contents) {
+    c_pt, content := GetScreens()
     err := models.DB.TruncateAll()
     as.NoError(err, "It should dump the DB")
     clear_err := utils.ClearContainerPreviews(c_pt)
@@ -38,7 +38,7 @@ func SetupScreensPreview(as *ActionSuite) (*models.Container, models.MediaContai
     empty, read_err := ioutil.ReadDir(dstPath)
     as.Equal(len(empty), 0, "It should start completely empty")
     as.NoError(read_err, "It should be able to read the dst directory")
-    return c_pt, media
+    return c_pt, content
 }
 
 func (as *ActionSuite) Test_InitialCreation() {
@@ -46,7 +46,7 @@ func (as *ActionSuite) Test_InitialCreation() {
     as.NotEmpty(dir, "The test must specify a directory to run on")
 
     cfg := internals.ResetConfig()
-    as.True(cfg.ExcMedia(".DS_Store", "application/octet-stream"), "This should not be allowed")
+    as.True(cfg.ExcContent(".DS_Store", "application/octet-stream"), "This should not be allowed")
 
     err := CreateInitialStructure(cfg)
     as.NoError(err, "It should successfully create the full DB setup")
@@ -55,43 +55,43 @@ func (as *ActionSuite) Test_InitialCreation() {
     as.DB.All(&cnts)
     as.Equal(internals.TOTAL_CONTAINERS, len(cnts), "The mocks have a specific expected number of items")
 
-    media := models.MediaContainers{}
-    as.DB.All(&media)
-    as.Equal(internals.TOTAL_MEDIA, len(media), "The mocks have a specific expected number of items")
+    content := models.Contents{}
+    as.DB.All(&content)
+    as.Equal(internals.TOTAL_MEDIA, len(content), "The mocks have a specific expected number of items")
 }
 
-func (as *ActionSuite) Test_CfgIncExcMedia() {
+func (as *ActionSuite) Test_CfgIncExcContent() {
     models.DB.TruncateAll()
 
     // Exclude all images
     dir, _ := envy.MustGet("DIR")
     cfg := internals.ResetConfig()
     cfg.Dir = dir
-    nope := utils.CreateMediaMatcher("DS_Store", "image", "OR")
+    nope := utils.CreateContentMatcher("DS_Store", "image", "OR")
 
     as.True(nope(".DS_Store", "image/png"))
-    cfg.ExcMedia = nope
+    cfg.ExcContent = nope
     utils.SetCfg(*cfg)
     err := CreateInitialStructure(cfg)
     as.NoError(err)
 
-    media := models.MediaContainers{}
-    as.DB.All(&media)
-    dbg, _ := json.Marshal(media)
-    as.Equal(1, len(media), "There should be one match: "+string(dbg))
-    as.Equal(media[0].ContentType, "video/mp4", "It should be the video")
+    content := models.Contents{}
+    as.DB.All(&content)
+    dbg, _ := json.Marshal(content)
+    as.Equal(1, len(content), "There should be one match: "+string(dbg))
+    as.Equal(content[0].ContentType, "video/mp4", "It should be the video")
 
     clear_err := models.DB.TruncateAll()
     as.NoError(clear_err)
-    cfg.ExcMedia = utils.ExcludeNoFiles
-    cfg.IncMedia = utils.CreateMediaMatcher("", "jpeg", "AND")
+    cfg.ExcContent = utils.ExcludeNoFiles
+    cfg.IncContent = utils.CreateContentMatcher("", "jpeg", "AND")
 
     err_png := CreateInitialStructure(cfg)
     as.NoError(err_png)
 
-    jpeg_media := models.MediaContainers{}
-    as.DB.All(&jpeg_media)
-    as.Equal(1, len(media), "There is one jpeg")
+    jpeg_content := models.Contents{}
+    as.DB.All(&jpeg_content)
+    as.Equal(1, len(content), "There is one jpeg")
 }
 
 func (as *ActionSuite) Test_ImgShouldCreatePreview() {
@@ -107,11 +107,11 @@ func (as *ActionSuite) Test_ImgShouldCreatePreview() {
         ID:     id,
         Active: true,
     }
-    media := utils.FindMedia(cnt, 4, 0)
-    as.Equal(len(media), 4)
+    content := utils.FindContent(cnt, 4, 0)
+    as.Equal(len(content), 4)
 
     // Basic sanity check that things exist and can preview
-    for _, m := range media {
+    for _, m := range content {
         fq_path, err := utils.GetFilePathInContainer(m.Src, cnt.GetFqPath())
         as.NoError(err, "It should not fail getting a full file path"+m.Src)
 
@@ -124,10 +124,10 @@ func (as *ActionSuite) Test_ImgShouldCreatePreview() {
 // TODO: This should eventually move to utils/previews_test.go
 func (as *ActionSuite) Test_CreatePreview() {
     // Create one that is a fail
-    c_pt, media := GetScreens()
+    c_pt, content := GetScreens()
     err := utils.ClearContainerPreviews(c_pt)
     as.NoError(err, "It should nuke out the preview directory")
-    as.Equal(TOTAL_IN_SCREENS, len(media), "There should be 4 of these in the screens dir")
+    as.Equal(TOTAL_IN_SCREENS, len(content), "There should be 4 of these in the screens dir")
 
     dstPath := utils.GetContainerPreviewDst(c_pt)
     dir_err := utils.MakePreviewPath(dstPath)
@@ -136,8 +136,8 @@ func (as *ActionSuite) Test_CreatePreview() {
     // Create one that does create a preview
     cfg := utils.GetCfg()
     cfg.PreviewOverSize = 0
-    for _, mc := range media {
-        preview_path, err := utils.CreateMediaPreview(c_pt, &mc)
+    for _, mc := range content {
+        preview_path, err := utils.CreateContentPreview(c_pt, &mc)
         as.NoError(err, "It should be ble to create previews")
         as.NotEqual(preview_path, "", "The path should be defined")
     }
@@ -147,23 +147,23 @@ func (as *ActionSuite) Test_CreatePreview() {
 }
 
 func (as *ActionSuite) Test_CreateContainerPreviews() {
-    // Get a local not in DB setup for the container and media
+    // Get a local not in DB setup for the container and content
     // Create a bunch of previews
     cfg := internals.ResetConfig()
     cfg.UseDatabase = true
     cfg.PreviewOverSize = 0
 
     // Now add the data into the database
-    c_pt, media := SetupScreensPreview(as)
+    c_pt, content := SetupScreensPreview(as)
     c_err := models.DB.Create(c_pt)
     as.NoError(c_err)
 
     nulls.NewUUID(c_pt.ID)
-    as.Greater(len(media), 0, "We should have media")
+    as.Greater(len(content), 0, "We should have content")
 
     // Check that we have a container preview at this point
     expect_c_preview := ""
-    for _, mc := range media {
+    for _, mc := range content {
         mc.ContainerID = nulls.NewUUID(c_pt.ID)
         mc_err := models.DB.Create(&mc)
         as.NoError(mc_err)
@@ -185,30 +185,30 @@ func (as *ActionSuite) Test_CreateContainerPreviews() {
     as.Equal(TOTAL_IN_SCREENS, len(previews), "It should create 6 previews")
     as.NoError(read_err, "It should be able to read the directory")
 
-    // Validate that the media was updated in the DB
-    media_check := models.MediaContainers{}
-    models.DB.Where("container_id = ?", c_pt.ID).All(&media_check)
-    as.Equal(TOTAL_IN_SCREENS, len(media_check), "We should just have 6 things to check")
-    for _, mc_check := range media_check {
+    // Validate that the content was updated in the DB
+    content_check := models.Contents{}
+    models.DB.Where("container_id = ?", c_pt.ID).All(&content_check)
+    as.Equal(TOTAL_IN_SCREENS, len(content_check), "We should just have 6 things to check")
+    for _, mc_check := range content_check {
         as.NotEqual(mc_check.Preview, "", "It should now have a preview")
     }
 }
 
 func (as *ActionSuite) Test_AsyncContainerPreviews() {
-    c_pt, media := SetupScreensPreview(as)
+    c_pt, content := SetupScreensPreview(as)
 
     // On the DB side these would then need to be updated in the DB for linkage
     cfg := utils.GetCfg()
     cfg.PreviewOverSize = 0
-    previews, err := CreateMediaPreviews(c_pt, media)
+    previews, err := CreateContentPreviews(c_pt, content)
     as.NoError(err, "It should be able to create all previews successfully")
 
-    as.Equal(len(previews), len(media), "With size zero we should have 4 previews")
+    as.Equal(len(previews), len(content), "With size zero we should have 4 previews")
     for _, p_mc := range previews {
         as.NotEqual(p_mc.Preview, "", "All results should have a preview")
     }
     // TODO: Validate the previews are created on disk
-    // Map the results back to the media containers
+    // Map the results back to the content containers
     // Maybe just return them vs update the DB
 }
 
@@ -222,7 +222,7 @@ func (as *ActionSuite) Test_PreviewAllData() {
     cfg := utils.GetCfg()
     cfg.UseDatabase = true
     cfg.Dir = dir
-    cfg.ExcMedia = utils.CreateMediaMatcher("corrupted", "", cfg.ExcludeOperator)
+    cfg.ExcContent = utils.CreateContentMatcher("corrupted", "", cfg.ExcludeOperator)
 
     c_err := CreateInitialStructure(cfg)
     man := GetManagerActionSuite(cfg, as)
@@ -255,18 +255,18 @@ func (as *ActionSuite) Test_PreviewsWithCorrupted() {
     cfg.Dir = dir
 
     // Match only our corrupted files
-    cfg.IncMedia = utils.CreateMediaMatcher(".*corrupted.*", "", cfg.IncludeOperator)
-    cfg.ExcMedia = utils.ExcludeNoFiles
+    cfg.IncContent = utils.CreateContentMatcher(".*corrupted.*", "", cfg.IncludeOperator)
+    cfg.ExcContent = utils.ExcludeNoFiles
 
     c_err := CreateInitialStructure(cfg)
     man := GetManagerActionSuite(cfg, as)
     as.NoError(c_err, "Failed to build out the initial database")
     as.Equal(true, man.CanEdit(), "It should be able to edit")
 
-    media, m_err := man.ListAllMedia(0, 42)
+    content, m_err := man.ListAllContent(0, 42)
     as.NoError(m_err)
-    as.Equal(2, len(*media), "It should all be loaded in the db")
-    for _, mc := range *media {
+    as.Equal(2, len(*content), "It should all be loaded in the db")
+    for _, mc := range *content {
         as.Equal(mc.Corrupt, false, "And at this point nothing is corrupt")
     }
 
@@ -275,11 +275,11 @@ func (as *ActionSuite) Test_PreviewsWithCorrupted() {
     all_created_err := CreateAllPreviews(man)
     as.Error(all_created_err, "It should ACTUALLY have an error now.")
 
-    media_check, m_err := man.ListAllMedia(0, 42)
+    content_check, m_err := man.ListAllContent(0, 42)
     as.NoError(m_err)
-    as.Equal(2, len(*media_check), "It should have two corrupt media items")
+    as.Equal(2, len(*content_check), "It should have two corrupt content items")
 
-    for _, mc_check := range *media_check {
+    for _, mc_check := range *content_check {
         as.Equal(mc_check.Corrupt, true, "These images should actually be corrupt")
     }
 }

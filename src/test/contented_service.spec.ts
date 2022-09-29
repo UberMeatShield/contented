@@ -88,7 +88,7 @@ describe('TestingContentedService', () => {
 
         service.fullLoadDir(dir, 5000);
 
-        let url = ApiDef.contented.media.replace('{cId}', dir.id);
+        let url = ApiDef.contented.content.replace('{cId}', dir.id);
         let calls = httpMock.match((req: HttpRequest<any>) => {
             return req.url === url;
         });
@@ -140,17 +140,17 @@ describe('TestingContentedService', () => {
         expect(dirs.length).toBeGreaterThan(1, "Should have containers");
         expect(dirs[0].total).toEqual(total);
 
-        let media = dirs[0];
-        expect(media.count).toBeLessThan(media.total, "We should not be loaded");
+        let content = dirs[0];
+        expect(content.count).toBeLessThan(content.total, "We should not be loaded");
 
         let loaded: Container;
-        let expectedNumberCalls = media.total - media.count;
-        service.fullLoadDir(media, 1).subscribe(
+        let expectedNumberCalls = content.total - content.count;
+        service.fullLoadDir(content, 1).subscribe(
             (dir: Container) => {
                 loaded = dir;
             }, err => { fail(err); }
         );
-        let url = ApiDef.contented.media.replace('{cId}', media.id);
+        let url = ApiDef.contented.content.replace('{cId}', content.id);
         let calls = httpMock.match((req: HttpRequest<any>) => {
             return req.url === url;
         });

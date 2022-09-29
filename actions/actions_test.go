@@ -49,7 +49,7 @@ func (as *ActionSuite) Test_ContentDirLoad() {
     as.Equal(ExpectCntCount, len(cnts), "We should have this many dirs present")
 
     for _, c := range cnts {
-        res := as.JSON("/containers/" + c.ID.String() + "/media").Get()
+        res := as.JSON("/containers/" + c.ID.String() + "/content").Get()
         as.Equal(http.StatusOK, res.Code)
 
         resObj := []models.Containers{}
@@ -70,7 +70,7 @@ func (as *ActionSuite) Test_ViewRef() {
     app := as.App
     ctx := internals.GetContext(app)
     man := managers.GetManager(&ctx)
-    mcs, err := man.ListAllMedia(2, 2)
+    mcs, err := man.ListAllContent(2, 2)
     as.NoError(err)
     as.Equal(2, len(*mcs), "It should have only two results")
 
@@ -90,7 +90,7 @@ func (as *ActionSuite) Test_ContentDirDownload() {
 
     ctx := internals.GetContext(as.App)
     man := managers.GetManager(&ctx)
-    mcs, err := man.ListAllMedia(2, 2)
+    mcs, err := man.ListAllContent(2, 2)
     as.NoError(err)
     as.Equal(2, len(*mcs), "It should have only two results")
 
@@ -111,7 +111,7 @@ func (as *ActionSuite) Test_FindAndLoadFile() {
 
     ctx := internals.GetContext(as.App)
     man := managers.GetManager(&ctx)
-    mcs, err := man.ListAllMedia(1, 200)
+    mcs, err := man.ListAllContent(1, 200)
     as.NoError(err)
 
     for _, mc := range *mcs {
@@ -131,7 +131,7 @@ func (as *ActionSuite) Test_PreviewFile() {
     internals.InitFakeApp(false)
     ctx := internals.GetContext(as.App)
     man := managers.GetManager(&ctx)
-    mcs, err := man.ListAllMedia(1, 200)
+    mcs, err := man.ListAllContent(1, 200)
     as.NoError(err)
 
     for _, mc := range *mcs {
@@ -147,7 +147,7 @@ func (as *ActionSuite) Test_FullFile() {
     internals.InitFakeApp(false)
     ctx := internals.GetContext(as.App)
     man := managers.GetManager(&ctx)
-    mcs, err := man.ListAllMedia(1, 200)
+    mcs, err := man.ListAllContent(1, 200)
     as.NoError(err)
 
     for _, mc := range *mcs {
@@ -164,7 +164,7 @@ func (as *ActionSuite) Test_PreviewWorking() {
     internals.InitFakeApp(false)
     ctx := internals.GetContext(as.App)
     man := managers.GetManager(&ctx)
-    mcs, err := man.ListAllMedia(1, 200)
+    mcs, err := man.ListAllContent(1, 200)
     as.NoError(err)
 
     for _, mc := range *mcs {

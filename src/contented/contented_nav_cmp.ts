@@ -1,7 +1,7 @@
 import {OnInit, Component, EventEmitter, Input, Output, HostListener, ViewChild} from '@angular/core';
 import {ContentedService} from './contented_service';
 import {Container} from './container';
-import {Media} from './media';
+import {Content} from './content';
 import {GlobalNavEvents} from './nav_events';
 import {MatRipple} from '@angular/material/core';
 import {MatAutocomplete} from '@angular/material/autocomplete';
@@ -107,10 +107,10 @@ export class ContentedNavCmp implements OnInit {
                 GlobalNavEvents.nextContainer();
                 break;
             case 'a':
-                GlobalNavEvents.prevMedia();
+                GlobalNavEvents.prevContent();
                 break;
             case 'd':
-                GlobalNavEvents.nextMedia();
+                GlobalNavEvents.nextContent();
                 break;
             case 'e':
                 GlobalNavEvents.viewFullScreen();
@@ -119,10 +119,10 @@ export class ContentedNavCmp implements OnInit {
                 GlobalNavEvents.hideFullScreen();
                 break;
             case 'f':
-                GlobalNavEvents.loadMoreMedia();
+                GlobalNavEvents.loadMoreContent();
                 break;
             case 'x':
-                GlobalNavEvents.saveMedia();
+                GlobalNavEvents.saveContent();
                 break;
             default:
                 break;

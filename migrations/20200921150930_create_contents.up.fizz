@@ -1,4 +1,4 @@
-create_table("media_containers") {
+create_table("contents") {
 	t.Column("id", "uuid", {primary: true})
 	t.Column("src", "string", {"default": ""})
 	t.Column("content_type", "string", {"default": ""})

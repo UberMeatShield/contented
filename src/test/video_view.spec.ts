@@ -83,16 +83,16 @@ describe('TestingVideoViewCmp', () => {
         let req = httpMock.expectOne(req => req.url === ApiDef.contented.search);
         let sr = MockData.getVideos()
 
-        expect(sr['media'].length).toBeGreaterThan(0, "We need some search results.");
+        expect(sr['content'].length).toBeGreaterThan(0, "We need some search results.");
         req.flush(sr);
         fixture.detectChanges();
-        expect($('.video-view-card').length).toEqual(sr['media'].length);
+        expect($('.video-view-card').length).toEqual(sr['content'].length);
         tick(100);
     }));
 
     it("Will load up screens if they are not provided", fakeAsync(() => {
         let vRes = MockData.getVideos()
-        _.each(vRes.media, v => {
+        _.each(vRes.content, v => {
             v.screens = null;
         });
 
@@ -103,8 +103,8 @@ describe('TestingVideoViewCmp', () => {
         fixture.detectChanges();
         tick(100);
 
-        _.each(vRes.media, mc => {
-            let screenUrl = ApiDef.contented.mediaScreens.replace("{mcID}", mc.id);
+        _.each(vRes.content, mc => {
+            let screenUrl = ApiDef.contented.contentScreens.replace("{mcID}", mc.id);
             let screenReq = httpMock.expectOne(req => req.url == screenUrl);
             screenReq.flush(MockData.getScreens());
         });

@@ -4,12 +4,12 @@
       [class.video-overlay]="mc?.content_type?.match('video')"
       style="width:{{previewWidth}}px; height: {{previewHeight}}px;"
       *ngFor="let mc of getVisibleSet()"
-      (click)="clickMedia(mc)"
+      (click)="clickContent(mc)"
       >
       <!-- Assume that every preview is actually going to be an image -->
       <img class="preview-img"
         [id]="'preview_' + mc.id"
-        [class.current-img]="active && (mc === container.getCurrentMedia())"
+        [class.current-img]="active && (mc === container.getCurrentContent())"
         [src]="mc?.previewUrl" 
         (load)="imgLoaded($event)"
       > 

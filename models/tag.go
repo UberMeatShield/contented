@@ -23,6 +23,8 @@ func (t Tag) String() string {
 
 // Tags is not required by pop and may be deleted
 type Tags []Tag
+type TagsMap map[uuid.UUID]Tag
+type TagsCollection map[uuid.UUID]Tags
 
 // String is not required by pop and may be deleted
 func (t Tags) String() string {

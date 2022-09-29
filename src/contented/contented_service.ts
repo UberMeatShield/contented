@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders, HttpParams, HttpErrorResponse} from '@angular/common/http';
 import {Container, LoadStates} from './container';
-import {Media} from './media';
+import {Content} from './content';
 import {Screen} from './screen';
 import {ApiDef} from './api_def';
 
@@ -35,8 +35,8 @@ export class ContentedService {
             );
     }
 
-    public getScreens(mediaID: string) {
-        let url = ApiDef.contented.mediaScreens.replace("{mcID}", mediaID);
+    public getScreens(contentID: string) {
+        let url = ApiDef.contented.contentScreens.replace("{mcID}", contentID);
         return this.http.get(url, this.options)
             .pipe(
                 map(res => {
@@ -46,12 +46,12 @@ export class ContentedService {
             );
     }
 
-    public getMedia(mediaID: string) {
-        let url = `${ApiDef.contented.mediaAll}/${mediaID}`;
+    public getContent(contentID: string) {
+        let url = `${ApiDef.contented.contentAll}/${contentID}`;
         return this.http.get(url, this.options)
             .pipe(
                 map(mc => {
-                    return new Media(mc);
+                    return new Content(mc);
                 }),
                 catchError(err => this.handleError(err))
             );
@@ -63,7 +63,7 @@ export class ContentedService {
     public download(cnt: Container, rowIdx: number) {
         console.log("Attempting to download", cnt, rowIdx);
 
-        let img: Media = cnt.contents[rowIdx];
+        let img: Content = cnt.contents[rowIdx];
         let filename = cnt && rowIdx >= 0 && rowIdx < cnt.contents.length ? cnt.contents[rowIdx].src : '';
         if (!filename) {
             console.log("No file specified at rowIdx", rowIdx);
@@ -122,7 +122,7 @@ export class ContentedService {
     }
 
     public getFullContainer(cnt: string, offset: number = 0, limit: number = null) {
-        let url = ApiDef.contented.media.replace('{cId}', cnt);
+        let url = ApiDef.contented.content.replace('{cId}', cnt);
         return this.http.get(url, {
             params: this.getPaginationParams(offset, limit),
             headers: this.options.headers
@@ -145,7 +145,7 @@ export class ContentedService {
         if (cnt.loadState === LoadStates.NotLoaded) {
             cnt.loadState = LoadStates.Loading;
 
-            let url = ApiDef.contented.media.replace('{cId}', cnt.id);
+            let url = ApiDef.contented.content.replace('{cId}', cnt.id);
             return this.http.get(url, {
                 params: this.getPaginationParams(0, this.LIMIT),
                 headers: this.options.headers
@@ -155,7 +155,7 @@ export class ContentedService {
         }
     }
 
-    public searchMedia(text: string, offset: number = 0, limit: number = 0, contentType: string = "", cId: string = "") {
+    public searchContent(text: string, offset: number = 0, limit: number = 0, contentType: string = "", cId: string = "") {
         let params = this.getPaginationParams(offset, limit);
         params = params.set("text", text);
         if (contentType) {

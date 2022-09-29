@@ -1,5 +1,5 @@
 import {OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
-import {Media} from './media';
+import {Content} from './content';
 import {GlobalNavEvents, NavTypes} from './nav_events';
 import {Subscription} from 'rxjs';
 import {Screen} from './screen';
@@ -11,7 +11,7 @@ import * as _ from 'lodash';
 })
 export class ContentedViewCmp implements OnInit, OnDestroy {
 
-    @Input() media: Media;
+    @Input() content: Content;
     @Input() forceWidth: number;
     @Input() forceHeight: number;
     @Input() visible: boolean = false;
@@ -30,21 +30,21 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
             switch(evt.action) {
                 case NavTypes.VIEW_FULLSCREEN:
                     this.visible = true;
-                    this.media = evt.media || this.media;
-                    console.log("Viewscreen show media", this.media);
-                    if (this.media) {
-                        this.scrollMedia(this.media);
+                    this.content = evt.content || this.content;
+                    console.log("Viewscreen show content", this.content);
+                    if (this.content) {
+                        this.scrollContent(this.content);
                     }
                     break;
                 case NavTypes.HIDE_FULLSCREEN:
-                    console.log("Viewscreen hide media");
-                    if (this.visible && this.media) {
-                        GlobalNavEvents.scrollMediaView(this.media);          
+                    console.log("Viewscreen hide content");
+                    if (this.visible && this.content) {
+                        GlobalNavEvents.scrollContentView(this.content);          
                     }
                     this.visible = false;
                     break;
                 case NavTypes.SELECT_MEDIA:
-                    this.media = evt.media;
+                    this.content = evt.content;
                     break;
             }
             // console.log("Listen for the fullscreen");
@@ -77,7 +77,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
         }
     }
 
-    public scrollMedia(media: Media) {
+    public scrollContent(content: Content) {
         _.delay(() => {
             let id = `MEDIA_VIEW`;
             let el = document.getElementById(id)
@@ -90,7 +90,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
 
     public clickedScreen(evt) {
         let seconds = evt.screen.parseSecondsFromScreen();
-        let videoEl = <HTMLVideoElement> document.getElementById(`VIDEO_${this.media.id}`);
+        let videoEl = <HTMLVideoElement> document.getElementById(`VIDEO_${this.content.id}`);
         videoEl.currentTime = seconds;
     }
 }

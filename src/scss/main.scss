@@ -29,7 +29,7 @@ $thumbHeight:  64px;
     margin-left: 2rem;
 }
 
-.media-screens {
+.content-screens {
     display: flex;
 }
 
@@ -135,11 +135,11 @@ $thumbHeight:  64px;
     height: 100%;
 }
 
-.media-full-view {
+.content-full-view {
 
 }
 
-.media-video-screens {
+.content-video-screens {
     margin-top: 2rem;
 }
 
@@ -185,7 +185,7 @@ $thumbHeight:  64px;
 }
 
 // Might need to change how it works in layout
-.media-screens {
+.content-screens {
    display: flex; 
    flex-wrap: wrap;
 }

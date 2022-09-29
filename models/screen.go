@@ -10,10 +10,10 @@ import (
     "time"
 )
 
-// A set of previews for a particular media element.
-type PreviewScreen struct {
+// A set of previews for a particular content element.
+type Screen struct {
     ID        uuid.UUID `json:"id" db:"id"`
-    MediaID   uuid.UUID `json:"media_id" db:"media_container_id"`
+    ContentID   uuid.UUID `json:"content_id" db:"content_id"`
     CreatedAt time.Time `json:"created" db:"created_at"`
     UpdatedAt time.Time `json:"updated" db:"updated_at"`
     Path      string    `json:"-" db:"path"`
@@ -23,40 +23,40 @@ type PreviewScreen struct {
 }
 
 // String is not required by pop and may be deleted
-func (m PreviewScreen) String() string {
+func (m Screen) String() string {
     jm, _ := json.Marshal(m)
     return string(jm)
 }
 
-// PreviewScreens is not required by pop and may be deleted
-type PreviewScreens []PreviewScreen
-type PreviewScreenMap map[uuid.UUID]PreviewScreen
-type PreviewScreenCollection map[uuid.UUID]PreviewScreens
+// Screens is not required by pop and may be deleted
+type Screens []Screen
+type ScreenMap map[uuid.UUID]Screen
+type ScreenCollection map[uuid.UUID]Screens
 
 // String is not required by pop and may be deleted
-func (m PreviewScreens) String() string {
+func (m Screens) String() string {
     jm, _ := json.Marshal(m)
     return string(jm)
 }
 
-func (m PreviewScreen) GetFqPath() string {
+func (m Screen) GetFqPath() string {
     return filepath.Join(m.Path, m.Src)
 }
 
 // Validate gets run every time you call a "pop.Validate*" (pop.ValidateAndSave, pop.ValidateAndCreate, pop.                 ValidateAndUpdate) method.
 // This method is not required and may be deleted.
-func (m *PreviewScreen) Validate(tx *pop.Connection) (*validate.Errors, error) {
+func (m *Screen) Validate(tx *pop.Connection) (*validate.Errors, error) {
     return validate.NewErrors(), nil
 }
 
 // ValidateCreate gets run every time you call "pop.ValidateAndCreate" method.
 // This method is not required and may be deleted.
-func (m *PreviewScreen) ValidateCreate(tx *pop.Connection) (*validate.Errors, error) {
+func (m *Screen) ValidateCreate(tx *pop.Connection) (*validate.Errors, error) {
     return validate.NewErrors(), nil
 }
 
 // ValidateUpdate gets run every time you call "pop.ValidateAndUpdate" method.
 // This method is not required and may be deleted.
-func (m *PreviewScreen) ValidateUpdate(tx *pop.Connection) (*validate.Errors, error) {
+func (m *Screen) ValidateUpdate(tx *pop.Connection) (*validate.Errors, error) {
     return validate.NewErrors(), nil
 }

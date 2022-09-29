@@ -1,7 +1,7 @@
 package utils
 
 /**
-*  These are helper functions around creating Media preview information for large images
+*  These are helper functions around creating Content preview information for large images
 * and video content.   It can be configured to generate a single image or a gif for a video.
  */
 import (
@@ -39,7 +39,7 @@ type PreviewResult struct {
 
 type PreviewRequest struct {
     C    *models.Container
-    Mc   *models.MediaContainer
+    Mc   *models.Content
     Out  chan PreviewResult
     Size int64
 }
@@ -126,7 +126,7 @@ func GetPreviewPathDestination(filename string, dstPath string, contentType stri
 
 // Break this down better using just a file object?
 func CreateImagePreview(srcImg *os.File, dstFile string, contentType string) (string, error) {
-    // Attempt to create previews for different media types
+    // Attempt to create previews for different content types
     var img image.Image
     var dErr error
 
@@ -284,7 +284,7 @@ func CreateVideoPreview(srcFile string, dstFile string, contentType string) (str
  */
 func CreateScreensFromVideo(srcFile string, dstFile string) (string, error) {
     cfg := GetCfg()
-    return CreateScreensFromVideoSized(srcFile, dstFile, cfg.PreviewScreensOverSize)
+    return CreateScreensFromVideoSized(srcFile, dstFile, cfg.ScreensOverSize)
 }
 
 func CreateScreensFromVideoSized(srcFile string, dstFile string, previewScreensOverSize int64) (string, error) {
@@ -463,7 +463,7 @@ func ReadFrameAsJpeg(inFileName string, frameNum int) io.Reader {
 }
 
 // What is up with gjson vs normal processing (this does seem easier to use)?
-// TODO: Consider moving more logic into a MediaHelper (size, rez, probe etc)
+// TODO: Consider moving more logic into a ContentHelper (size, rez, probe etc)
 // TODO: Rename this as a helper around the Probe
 func GetTotalVideoLength(srcFile string) (float64, int, error) {
     vidInfo, err := ffmpeg.Probe(srcFile)
@@ -549,7 +549,7 @@ func CreateGifFromVideo(srcFile string, dstFile string) (string, error) {
 
 // This might not need to be a fatal on an error, but is nice for debugging now
 // Unit test is in helper_test...
-func CreateMediaPreview(c *models.Container, mc *models.MediaContainer) (string, error) {
+func CreateContentPreview(c *models.Container, mc *models.Content) (string, error) {
     cfg := GetCfg()
     cntPath := filepath.Join(c.Path, c.Name)
     dstPath := GetContainerPreviewDst(c)
@@ -564,9 +564,9 @@ func CreateMediaPreview(c *models.Container, mc *models.MediaContainer) (string,
     return GetRelativePreviewPath(dstFqPath, cntPath), err
 }
 
-func AssignScreensFromSet(c *models.Container, mc *models.MediaContainer, maybeScreens *[]os.FileInfo) *models.PreviewScreens {
+func AssignScreensFromSet(c *models.Container, mc *models.Content, maybeScreens *[]os.FileInfo) *models.Screens {
     if !strings.Contains(mc.ContentType, "video") {
-        // log.Printf("Media is not of type video, no screens likely")
+        // log.Printf("Content is not of type video, no screens likely")
         return nil
     }
     screenRe, reErr := GetScreensMatcherRE(mc.Src)
@@ -579,17 +579,17 @@ func AssignScreensFromSet(c *models.Container, mc *models.MediaContainer, maybeS
     previewPath := GetPreviewDst(c.GetFqPath())
     // ie: 1000 episodes of One Piece * (15 screens  + 1 webp) in a loop running
     // the regex against them all over and over...
-    previewScreens := models.PreviewScreens{}
+    previewScreens := models.Screens{}
     for idx, fRef := range *maybeScreens {
         name := fRef.Name()
         if screenRe.MatchString(name) {
             // log.Printf("Matched file %s idx %d", name, idx)
             id, _ := uuid.NewV4()
-            ps := models.PreviewScreen{
+            ps := models.Screen{
                 ID:        id,
                 Path:      previewPath,
                 Src:       name,
-                MediaID:   mc.ID,
+                ContentID:   mc.ID,
                 Idx:       idx,
                 SizeBytes: fRef.Size(),
             }
@@ -616,9 +616,9 @@ func GetPotentialScreens(c *models.Container) (*[]os.FileInfo, error) {
     return &maybeScreens, nil
 }
 
-func AssignScreensIfExists(c *models.Container, mc *models.MediaContainer) *models.PreviewScreens {
+func AssignScreensIfExists(c *models.Container, mc *models.Content) *models.Screens {
     if !strings.Contains(mc.ContentType, "video") {
-        // log.Printf("Media is not of type video, no screens likely")
+        // log.Printf("Content is not of type video, no screens likely")
         return nil
     }
     maybeScreens, err := GetPotentialScreens(c)
@@ -628,14 +628,14 @@ func AssignScreensIfExists(c *models.Container, mc *models.MediaContainer) *mode
     return AssignScreensFromSet(c, mc, maybeScreens)
 }
 
-func AssignPreviewIfExists(c *models.Container, mc *models.MediaContainer) string {
+func AssignPreviewIfExists(c *models.Container, mc *models.Content) string {
     // This check is normally to determine if we didn't clear out old previews.
     // For memory only managers it will just consider that a bonus and use the preview.
     previewPath := GetPreviewDst(c.GetFqPath())
     previewFile, exists := ErrorOnPreviewExists(mc.Src, previewPath, mc.ContentType)
     if exists != nil {
         mc.Preview = GetRelativePreviewPath(previewFile, c.GetFqPath())
-        log.Printf("Added a preview to media %s", mc.Preview)
+        log.Printf("Added a preview to content %s", mc.Preview)
     }
     return previewFile
 }

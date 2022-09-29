@@ -4,9 +4,9 @@ create_table("tags") {
 	t.Timestamps()
 }
 
-create_table("media_containers_tags") {
-    t.Column("media_container_id", "uuid", {})
-    t.ForeignKey("media_container_id", {"media_containers": ["id"]}, {})
+create_table("contents_tags") {
+    t.Column("content_id", "uuid", {})
+    t.ForeignKey("content_id", {"contents": ["id"]}, {})
     t.Column("tag_id", "uuid", {})
     t.ForeignKey("tag_id", {"tags": ["id"]}, {})
 }

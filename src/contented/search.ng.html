@@ -2,7 +2,7 @@
   <form #searchForm [formGroup]="options">
     <mat-form-field apperance="fill" floatLabel="true" class="search-field">
       <mat-label>
-        Search Media
+        Search Content
       </mat-label>
       <input type="text" name="searchText"
         [formControl]="searchText"
@@ -27,7 +27,7 @@
     ></mat-paginator>
   </div>
 
-  <div class="search-results" *ngIf="!!media">
+  <div class="search-results" *ngIf="!!content">
      <div class="preview-content search-result"
        [class.video-overlay]="mc?.content_type?.match('video')"
        style="width:{{previewWidth}}px; height: {{previewHeight}}px;"
