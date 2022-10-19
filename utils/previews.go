@@ -210,6 +210,9 @@ func GetScreensMatcherRE(dstFile string) (*regexp.Regexp, error) {
 
     // Check if there is a screens option and modify the screen time
     cfg := GetCfg()
+
+    // This can be changed to use ffmpeg -pattern_type glob -i 'name.ss*.jpg' which is BETTER on linux
+    // but seemingly would never work on windows which is annoying.
     if cfg.PreviewVideoType == "screens" {
         return regexp.Compile(fmt.Sprintf("%s%s", dstFile, ".screens.ss[0-9]+.jpg"))
     } else {
@@ -352,7 +355,7 @@ func CreateSeekScreens(srcFile string, dstFile string) ([]string, error, string)
     // or even do a frame skip, so reassign to something more sensible.
     cfg := GetCfg()
     totalScreens := cfg.PreviewNumberOfScreens
-    frameOffset := cfg.PreviewFirstScreenOffset
+    frameOffset := cfg.PreviewFirstScreenOffset   // IMPORTANT if this is > 4 it will break ffmpeg finding the screens.
     totalScreenTime := int(totalTime) - frameOffset
     if totalScreenTime <= totalScreens {
         totalScreens = int(totalTime) / 2
