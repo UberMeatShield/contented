@@ -191,12 +191,27 @@ func CleanPaletteFile(paletteFile string) error {
 func GetScreensOutputPattern(dstFile string) string {
     stripExtension := regexp.MustCompile(".png$|.gif$|.webp$")
     dstFile = stripExtension.ReplaceAllString(dstFile, "")
-
+    // Hate
     cfg := GetCfg()
     if cfg.PreviewVideoType == "screens" {
-        return fmt.Sprintf("%s%s", dstFile, ".screens.ss%05d.jpg")
+        // Used to be able to do seek screen input matching but now it is being dumb
+        // return fmt.Sprintf("%s%s", dstFile, ".screens.ss%05d.jpg")
+        return fmt.Sprintf("%s%s", dstFile, ".screens.ss%05d.%03d.jpg")
     } else {
         return fmt.Sprintf("%s%s", dstFile, ".screens.%03d.jpg")
+    }
+}
+
+// Holy crap this is terrible, at some point the default must have been swapped to sequence
+// in ffmpeg from glob_sequence so the same matchers just don't work right.
+func GetScreensOutputGlob(dstFile string) string {
+    stripExtension := regexp.MustCompile(".png$|.gif$|.webp$")
+    dstFile = stripExtension.ReplaceAllString(dstFile, "")
+    cfg := GetCfg()
+    if cfg.PreviewVideoType == "screens" {
+        return fmt.Sprintf("%s%s", dstFile, ".screens.ss*.*.jpg")
+    } else {
+        return fmt.Sprintf("'%s%s'", dstFile, ".screens.*.jpg")
     }
 }
 
@@ -305,12 +320,14 @@ func CreateScreensFromVideoSized(srcFile string, dstFile string, previewScreensO
 
 // Create screens as needed a palette file and return the image
 func CreateWebpFromVideo(srcFile string, dstFile string) (string, error) {
-    screensSrc, err := CreateScreensFromVideo(srcFile, dstFile)
+    // screensSrc, err := CreateScreensFromVideo(srcFile, dstFile)
+    _, err := CreateScreensFromVideo(srcFile, dstFile)
     if err != nil {
         log.Printf("Couldn't create screens for the %s err: %s", srcFile, err)
         return "", err
     }
-    return CreateWebpFromScreens(screensSrc, dstFile)
+    globMatch := GetScreensOutputGlob(dstFile)
+    return CreateWebpFromScreens(globMatch, dstFile)
 }
 
 func CreateSelectFilterScreens(srcFile string, dstFile string) (string, error) {
@@ -365,13 +382,16 @@ func CreateSeekScreens(srcFile string, dstFile string) ([]string, error, string)
     timeSkip := int(totalScreenTime) / totalScreens
     log.Printf("Setting up screens (%d) with timeSkip (%d)", totalScreens, timeSkip)
 
+    // Hate
     screenFiles := []string{}
     screenFmt := GetScreensOutputPattern(dstFile)
 
     // Screen file can be modified to take a second format which is the time skip
     for idx := 0; idx < totalScreens; idx++ {
         ss := (idx * timeSkip) + frameOffset
-        screenFile := fmt.Sprintf(screenFmt, ss)
+        // screenFile := fmt.Sprintf(screenFmt, ss)
+        screenFile := fmt.Sprintf(screenFmt, ss, idx)
+       // screenFile := fmt.Sprintf(screenFmt, idx)
         err := CreateSeekScreen(srcFile, screenFile, ss)
         if err != nil {
             log.Printf("Error creating a seek screen %s", err)
@@ -396,10 +416,11 @@ func CreateSeekScreen(srcFile string, dstFile string, screenTime int) error {
 func PaletteGen(paletteSrc string, dstFile string) (string, error) {
     // TODO: Make this into a palette method
     paletteFile := fmt.Sprintf("%s.palette.png", dstFile)
-    paletteErr := ffmpeg.Input(paletteSrc, ffmpeg.KwArgs{}).
-        Output(paletteFile, ffmpeg.KwArgs{
-            "vf": "palettegen",
-        }).OverWriteOutput().Run()
+    paletteErr := ffmpeg.Input(paletteSrc, ffmpeg.KwArgs{
+        "pattern_type": "glob",
+    }).Output(paletteFile, ffmpeg.KwArgs{
+         "vf": "palettegen",
+    }).OverWriteOutput().Run()
 
     if paletteErr != nil {
         log.Printf("Failed to create a palette %s", paletteErr)
@@ -424,11 +445,13 @@ func CreateWebpFromScreens(screensSrc string, dstFile string) (string, error) {
     // Should scale based on a probe of the size maybe?  No need to make something
     // tiny even smaller. This seems to produce a "decent" output.
     filter := "paletteuse,setpts=25*PTS,scale=iw*.5:ih*.5"
-    screenErr := ffmpeg.Input(paletteFile, ffmpeg.KwArgs{"i": screensSrc}).
-        Output(dstFile, ffmpeg.KwArgs{
-            "filter_complex": filter,
-            "loop":           0,
-        }).OverWriteOutput().Run()
+    screenErr := ffmpeg.Input(screensSrc, ffmpeg.KwArgs{
+        "pattern_type": "glob",
+    }).Output(dstFile, ffmpeg.KwArgs{
+        "i": paletteFile,
+        "filter_complex": filter,
+        "loop":           0,
+    }).OverWriteOutput().Run()
     return dstFile, screenErr
 }
 
