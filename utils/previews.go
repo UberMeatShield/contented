@@ -191,7 +191,6 @@ func CleanPaletteFile(paletteFile string) error {
 func GetScreensOutputPattern(dstFile string) string {
     stripExtension := regexp.MustCompile(".png$|.gif$|.webp$")
     dstFile = stripExtension.ReplaceAllString(dstFile, "")
-    // Hate
     cfg := GetCfg()
     if cfg.PreviewVideoType == "screens" {
         // Used to be able to do seek screen input matching but now it is being dumb
@@ -208,11 +207,17 @@ func GetScreensOutputGlob(dstFile string) string {
     stripExtension := regexp.MustCompile(".png$|.gif$|.webp$")
     dstFile = stripExtension.ReplaceAllString(dstFile, "")
     cfg := GetCfg()
+
+    // The destination filename must be properly escaped for the glob pattern 
+    // check for (_ [] & etc).  Create unit test around this
+    globy := "" 
     if cfg.PreviewVideoType == "screens" {
-        return fmt.Sprintf("%s%s", dstFile, ".screens.ss*.*.jpg")
+        globy = fmt.Sprintf("%s%s", dstFile, ".screens.ss*.*.jpg")
     } else {
-        return fmt.Sprintf("'%s%s'", dstFile, ".screens.*.jpg")
+        globy = fmt.Sprintf("'%s%s'", dstFile, ".screens.*.jpg") 
     }
+    // globy = regexp.QuoteMeta(globy)
+    return globy
 }
 
 // Used to search for a matched screen.   I am using ss to denote that the screen is at
@@ -416,12 +421,17 @@ func CreateSeekScreen(srcFile string, dstFile string, screenTime int) error {
 func PaletteGen(paletteSrc string, dstFile string) (string, error) {
     // TODO: Make this into a palette method
     paletteFile := fmt.Sprintf("%s.palette.png", dstFile)
+
+    // Hate
     paletteErr := ffmpeg.Input(paletteSrc, ffmpeg.KwArgs{
         "pattern_type": "glob",
     }).Output(paletteFile, ffmpeg.KwArgs{
+         "update": "true",
+         "frames:v": 1,
          "vf": "palettegen",
     }).OverWriteOutput().Run()
 
+    // What the shit is going wrong with this?
     if paletteErr != nil {
         log.Printf("Failed to create a palette %s", paletteErr)
         return "", paletteErr
@@ -437,6 +447,8 @@ func CreateWebpFromScreens(screensSrc string, dstFile string) (string, error) {
     // Need a function that determines the preview output filename and takes in the config
     // for the preview type name...
     log.Printf("What is the screens %s vs dstFile %s", screensSrc, dstFile)
+
+    // HATE
     paletteFile, palErr := PaletteGen(screensSrc, dstFile)
     if palErr != nil {
         return "", palErr

@@ -297,7 +297,8 @@ func Test_VideoSelectScreens(t *testing.T) {
     }
 
     // TODO: Really need to fix the dest file info
-    webpFile, err := CreateWebpFromScreens(screensSrc, destFile)
+    globMatch := GetScreensOutputGlob(destFile)
+    webpFile, err := CreateWebpFromScreens(globMatch, destFile)
     if err != nil {
         t.Errorf("Failed to create preview %s", err)
     }
@@ -372,6 +373,7 @@ func Test_VideoCreatePaletteFile(t *testing.T) {
     if err != nil {
         t.Errorf("Couldn't create a palette for %s err %s", srcFile, err)
     }
+
     palStat, noPal := os.Stat(paletteFile)
     if noPal != nil {
         t.Errorf("Did not create a palette from a movie %s", paletteFile)
