@@ -424,7 +424,8 @@ func PaletteGen(paletteSrc string, dstFile string) (string, error) {
     }
     paletteErr := ffmpeg.Input(paletteSrc, paletteArgs).
         Output(paletteFile, outputArgs).
-        OverWriteOutput().ErrorToStdOut().Run()
+        OverWriteOutput().Run()
+     //   OverWriteOutput().ErrorToStdOut().Run()
 
     if paletteErr != nil {
         log.Printf("Failed to create a palette %s", paletteErr)
