@@ -8,6 +8,7 @@ import (
     "github.com/gobuffalo/nulls"
     "github.com/gofrs/uuid"
     "os"
+    "fmt"
     "path/filepath"
 )
 
@@ -181,7 +182,7 @@ func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
     as.Equal(vid_total, 1)
     as.Equal(len(*video_content), vid_total)
     vs := *video_content
-    as.Equal(vs[0].Src, "donut.mp4")
+    as.Equal(vs[0].Src, internals.VIDEO_FILENAME)
 
     for _, cnt := range *cnts {
         if cnt.Name == "dir1" {
@@ -195,7 +196,7 @@ func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
             as.Equal(y_total, 1, "We did not find the expected content")
 
             movie := (*yes_match)[0]
-            as.Equal(movie.Src, "donut.mp4")
+            as.Equal(movie.Src, internals.VIDEO_FILENAME)
 
             _, imgCount, _ := man.SearchContent("", 0, 20, cnt.ID.String(), "image")
             as.Equal(imgCount, 2, "It should filter out the donut this time")
@@ -219,7 +220,7 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
     var testDir, _ = envy.MustGet("DIR")
     srcDir := filepath.Join(testDir, "dir2")
     dstDir := utils.GetPreviewDst(srcDir)
-    testFile := "donut.mp4"
+    testFile := internals.VIDEO_FILENAME
 
     // Create a fake preview
     utils.ResetPreviewDir(dstDir)
@@ -233,7 +234,7 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
     if wErr != nil {
         as.T().Errorf("Could not write to the file at %s", fqPath)
     }
-    as.Contains(fqPath, "donut.mp4.png")
+    as.Contains(fqPath, fmt.Sprintf("%s.png", internals.VIDEO_FILENAME))
     f.Sync()
 
     // Checks that if a preview exists
@@ -241,7 +242,8 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
     as.Equal(1, len(cnts), "We should only pull in containers that have content")
     as.Equal(len(content), 1, "But there is only one video by mime type")
     for _, mc := range content {
-        as.Equal("/container_previews/donut.mp4.png", mc.Preview)
+        expect := fmt.Sprintf("/container_previews/%s.png", internals.VIDEO_FILENAME)
+        as.Equal(expect, mc.Preview)
     }
 
     cfg.ExcludeEmptyContainers = false

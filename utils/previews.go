@@ -204,6 +204,7 @@ func GetScreensOutputPattern(dstFile string) string {
 func GetScreensOutputGlob(dstFile string) string {
     stripExtension := regexp.MustCompile(".png$|.gif$|.webp$")
     dstFile = stripExtension.ReplaceAllString(dstFile, "")
+    dstFile = regexp.QuoteMeta(dstFile)
     // The destination filename must be properly escaped for the glob pattern 
     // check for (_ [] & etc).  Create unit test around this
     return fmt.Sprintf("%s%s", dstFile, ".screens.*ss*.jpg")

@@ -25,7 +25,7 @@ func (as *ActionSuite) Test_DbManagerSearch() {
     }
     for _, mc := range content2 {
         man.CreateContent(&mc)
-        if mc.Src == "donut.mp4" {
+        if mc.Src == internals.VIDEO_FILENAME {
             man.CreateScreen(&models.Screen{ContentID: mc.ID, Src: "screen1"})
             man.CreateScreen(&models.Screen{ContentID: mc.ID, Src: "screen2"})
         }
