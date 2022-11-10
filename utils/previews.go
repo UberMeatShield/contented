@@ -193,11 +193,9 @@ func GetScreensOutputPattern(dstFile string) string {
     dstFile = stripExtension.ReplaceAllString(dstFile, "")
     cfg := GetCfg()
     if cfg.PreviewVideoType == "screens" {
-        // Used to be able to do seek screen input matching but now it is being dumb
-        // return fmt.Sprintf("%s%s", dstFile, ".screens.ss%05d.jpg")
-        return fmt.Sprintf("%s%s", dstFile, ".screens.ss%05d.%03d.jpg")
+        return fmt.Sprintf("%s%s", dstFile, ".screens.%03dss%05d.jpg")
     } else {
-        return fmt.Sprintf("%s%s", dstFile, ".screens.%03d.jpg")
+        return fmt.Sprintf("%s%s", dstFile, ".screens.%03dss00000.jpg")
     }
 }
 
@@ -206,18 +204,9 @@ func GetScreensOutputPattern(dstFile string) string {
 func GetScreensOutputGlob(dstFile string) string {
     stripExtension := regexp.MustCompile(".png$|.gif$|.webp$")
     dstFile = stripExtension.ReplaceAllString(dstFile, "")
-    cfg := GetCfg()
-
     // The destination filename must be properly escaped for the glob pattern 
     // check for (_ [] & etc).  Create unit test around this
-    globy := "" 
-    if cfg.PreviewVideoType == "screens" {
-        globy = fmt.Sprintf("%s%s", dstFile, ".screens.ss*.*.jpg")
-    } else {
-        globy = fmt.Sprintf("'%s%s'", dstFile, ".screens.*.jpg") 
-    }
-    // globy = regexp.QuoteMeta(globy)
-    return globy
+    return fmt.Sprintf("%s%s", dstFile, ".screens.*ss*.jpg")
 }
 
 // Used to search for a matched screen.   I am using ss to denote that the screen is at
@@ -234,7 +223,7 @@ func GetScreensMatcherRE(dstFile string) (*regexp.Regexp, error) {
     // This can be changed to use ffmpeg -pattern_type glob -i 'name.ss*.jpg' which is BETTER on linux
     // but seemingly would never work on windows which is annoying.
     if cfg.PreviewVideoType == "screens" {
-        return regexp.Compile(fmt.Sprintf("%s%s", dstFile, ".screens.ss[0-9]+.jpg"))
+        return regexp.Compile(fmt.Sprintf("%s%s", dstFile, ".screens.[0-9]+ss[0-9]+.jpg"))
     } else {
         return regexp.Compile(fmt.Sprintf("%s%s", dstFile, ".screens.[0-9]+.jpg"))
     }
@@ -395,7 +384,7 @@ func CreateSeekScreens(srcFile string, dstFile string) ([]string, error, string)
     for idx := 0; idx < totalScreens; idx++ {
         ss := (idx * timeSkip) + frameOffset
         // screenFile := fmt.Sprintf(screenFmt, ss)
-        screenFile := fmt.Sprintf(screenFmt, ss, idx)
+        screenFile := fmt.Sprintf(screenFmt, idx, ss)
        // screenFile := fmt.Sprintf(screenFmt, idx)
         err := CreateSeekScreen(srcFile, screenFile, ss)
         if err != nil {
@@ -422,16 +411,22 @@ func PaletteGen(paletteSrc string, dstFile string) (string, error) {
     // TODO: Make this into a palette method
     paletteFile := fmt.Sprintf("%s.palette.png", dstFile)
 
-    // Hate
-    paletteErr := ffmpeg.Input(paletteSrc, ffmpeg.KwArgs{
-        "pattern_type": "glob",
-    }).Output(paletteFile, ffmpeg.KwArgs{
+    // A single file will fail if you give it a glob, even if the glob SHOULD match
+    paletteArgs := ffmpeg.KwArgs{}
+    if strings.Contains(paletteSrc, "*") {
+        paletteArgs = ffmpeg.KwArgs{
+            "pattern_type": "glob",
+        }
+    }
+    outputArgs := ffmpeg.KwArgs{
          "update": "true",
          "frames:v": 1,
          "vf": "palettegen",
-    }).OverWriteOutput().Run()
+    }
+    paletteErr := ffmpeg.Input(paletteSrc, paletteArgs).
+        Output(paletteFile, outputArgs).
+        OverWriteOutput().ErrorToStdOut().Run()
 
-    // What the shit is going wrong with this?
     if paletteErr != nil {
         log.Printf("Failed to create a palette %s", paletteErr)
         return "", paletteErr
@@ -627,7 +622,7 @@ func AssignScreensFromSet(c *models.Container, mc *models.Content, maybeScreens 
                 ID:        id,
                 Path:      previewPath,
                 Src:       name,
-                ContentID:   mc.ID,
+                ContentID: mc.ID,
                 Idx:       idx,
                 SizeBytes: fRef.Size(),
             }
