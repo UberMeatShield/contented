@@ -191,13 +191,22 @@ func CleanPaletteFile(paletteFile string) error {
 func GetScreensOutputPattern(dstFile string) string {
     stripExtension := regexp.MustCompile(".png$|.gif$|.webp$")
     dstFile = stripExtension.ReplaceAllString(dstFile, "")
-
     cfg := GetCfg()
     if cfg.PreviewVideoType == "screens" {
-        return fmt.Sprintf("%s%s", dstFile, ".screens.ss%05d.jpg")
+        return fmt.Sprintf("%s%s", dstFile, ".screens.%03dss%05d.jpg")
     } else {
-        return fmt.Sprintf("%s%s", dstFile, ".screens.%03d.jpg")
+        return fmt.Sprintf("%s%s", dstFile, ".screens.%03dss00000.jpg")
     }
+}
+
+// Holy crap this is terrible, at some point the default must have been swapped to sequence
+// in ffmpeg from glob_sequence so the same matchers just don't work right.
+func GetScreensOutputGlob(dstFile string) string {
+    stripExtension := regexp.MustCompile(".png$|.gif$|.webp$")
+    dstFile = stripExtension.ReplaceAllString(dstFile, "")
+    // The destination filename must be properly escaped for the glob pattern 
+    // check for (_ [] & etc).  Create unit test around this
+    return fmt.Sprintf("%s%s", dstFile, ".screens.*ss*.jpg")
 }
 
 // Used to search for a matched screen.   I am using ss to denote that the screen is at
@@ -214,7 +223,7 @@ func GetScreensMatcherRE(dstFile string) (*regexp.Regexp, error) {
     // This can be changed to use ffmpeg -pattern_type glob -i 'name.ss*.jpg' which is BETTER on linux
     // but seemingly would never work on windows which is annoying.
     if cfg.PreviewVideoType == "screens" {
-        return regexp.Compile(fmt.Sprintf("%s%s", dstFile, ".screens.ss[0-9]+.jpg"))
+        return regexp.Compile(fmt.Sprintf("%s%s", dstFile, ".screens.[0-9]+ss[0-9]+.jpg"))
     } else {
         return regexp.Compile(fmt.Sprintf("%s%s", dstFile, ".screens.[0-9]+.jpg"))
     }
@@ -305,12 +314,14 @@ func CreateScreensFromVideoSized(srcFile string, dstFile string, previewScreensO
 
 // Create screens as needed a palette file and return the image
 func CreateWebpFromVideo(srcFile string, dstFile string) (string, error) {
-    screensSrc, err := CreateScreensFromVideo(srcFile, dstFile)
+    // screensSrc, err := CreateScreensFromVideo(srcFile, dstFile)
+    _, err := CreateScreensFromVideo(srcFile, dstFile)
     if err != nil {
         log.Printf("Couldn't create screens for the %s err: %s", srcFile, err)
         return "", err
     }
-    return CreateWebpFromScreens(screensSrc, dstFile)
+    globMatch := GetScreensOutputGlob(dstFile)
+    return CreateWebpFromScreens(globMatch, dstFile)
 }
 
 func CreateSelectFilterScreens(srcFile string, dstFile string) (string, error) {
@@ -371,7 +382,9 @@ func CreateSeekScreens(srcFile string, dstFile string) ([]string, error, string)
     // Screen file can be modified to take a second format which is the time skip
     for idx := 0; idx < totalScreens; idx++ {
         ss := (idx * timeSkip) + frameOffset
-        screenFile := fmt.Sprintf(screenFmt, ss)
+        // screenFile := fmt.Sprintf(screenFmt, ss)
+        screenFile := fmt.Sprintf(screenFmt, idx, ss)
+       // screenFile := fmt.Sprintf(screenFmt, idx)
         err := CreateSeekScreen(srcFile, screenFile, ss)
         if err != nil {
             log.Printf("Error creating a seek screen %s", err)
@@ -396,10 +409,22 @@ func CreateSeekScreen(srcFile string, dstFile string, screenTime int) error {
 func PaletteGen(paletteSrc string, dstFile string) (string, error) {
     // TODO: Make this into a palette method
     paletteFile := fmt.Sprintf("%s.palette.png", dstFile)
-    paletteErr := ffmpeg.Input(paletteSrc, ffmpeg.KwArgs{}).
-        Output(paletteFile, ffmpeg.KwArgs{
-            "vf": "palettegen",
-        }).OverWriteOutput().Run()
+
+    // A single file will fail if you give it a glob, even if the glob SHOULD match
+    paletteArgs := ffmpeg.KwArgs{}
+    if strings.Contains(paletteSrc, "*") {
+        paletteArgs = ffmpeg.KwArgs{
+            "pattern_type": "glob",
+        }
+    }
+    outputArgs := ffmpeg.KwArgs{
+         "update": "true",
+         "frames:v": 1,
+         "vf": "palettegen",
+    }
+    paletteErr := ffmpeg.Input(paletteSrc, paletteArgs).
+        Output(paletteFile, outputArgs).
+        OverWriteOutput().ErrorToStdOut().Run()
 
     if paletteErr != nil {
         log.Printf("Failed to create a palette %s", paletteErr)
@@ -424,11 +449,13 @@ func CreateWebpFromScreens(screensSrc string, dstFile string) (string, error) {
     // Should scale based on a probe of the size maybe?  No need to make something
     // tiny even smaller. This seems to produce a "decent" output.
     filter := "paletteuse,setpts=25*PTS,scale=iw*.5:ih*.5"
-    screenErr := ffmpeg.Input(paletteFile, ffmpeg.KwArgs{"i": screensSrc}).
-        Output(dstFile, ffmpeg.KwArgs{
-            "filter_complex": filter,
-            "loop":           0,
-        }).OverWriteOutput().Run()
+    screenErr := ffmpeg.Input(screensSrc, ffmpeg.KwArgs{
+        "pattern_type": "glob",
+    }).Output(dstFile, ffmpeg.KwArgs{
+        "i": paletteFile,
+        "filter_complex": filter,
+        "loop":           0,
+    }).OverWriteOutput().Run()
     return dstFile, screenErr
 }
 
@@ -592,7 +619,7 @@ func AssignScreensFromSet(c *models.Container, mc *models.Content, maybeScreens 
                 ID:        id,
                 Path:      previewPath,
                 Src:       name,
-                ContentID:   mc.ID,
+                ContentID: mc.ID,
                 Idx:       idx,
                 SizeBytes: fRef.Size(),
             }

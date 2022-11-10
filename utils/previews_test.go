@@ -272,7 +272,7 @@ func Test_AssignScreensWithEscapeChars(t *testing.T) {
     }
 }
 
-// Test MultiScreen
+// Test Generating screens using the sampling method vs seeking.
 func Test_VideoSelectScreens(t *testing.T) {
     srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
 
@@ -297,7 +297,8 @@ func Test_VideoSelectScreens(t *testing.T) {
     }
 
     // TODO: Really need to fix the dest file info
-    webpFile, err := CreateWebpFromScreens(screensSrc, destFile)
+    globMatch := GetScreensOutputGlob(destFile)
+    webpFile, err := CreateWebpFromScreens(globMatch, destFile)
     if err != nil {
         t.Errorf("Failed to create preview %s", err)
     }
@@ -313,6 +314,12 @@ func Test_VideoSelectScreens(t *testing.T) {
 // TODO: Make a damn helper for this type of thing
 func Test_VideoCreateSeekScreens(t *testing.T) {
     srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
+    // With bigger files ~ 100mb it is much faster to do 10 seek time screens
+    // instead of using a single operation.  The small donut file is faster with
+    // a single operation with a frame selection.
+    cfg := GetCfg()
+    cfg.ScreensOverSize = 1024
+    cfg.PreviewVideoType = "screens"
 
     previewName := filepath.Join(dstDir, testFile+".webp")
     srcFile := filepath.Join(srcDir, testFile)
@@ -321,10 +328,6 @@ func Test_VideoCreateSeekScreens(t *testing.T) {
     if err != nil {
         t.Errorf("Screen seek failed %s", err)
     }
-    // With bigger files ~ 100mb it is much faster to do 10 seek time screens
-    // instead of using a single operation.  The small donut file is faster with
-    // a single operation with a frame selection.
-    cfg := GetCfg()
 
     startMulti := time.Now()
     screens, multiErr, screenPtrn := CreateSeekScreens(srcFile, previewName)
@@ -340,7 +343,8 @@ func Test_VideoCreateSeekScreens(t *testing.T) {
     }
 
     // Check to ensure you can create a gif from the seek screens
-    webp, webpErr := CreateWebpFromScreens(screenPtrn, previewName)
+    globMatch := GetScreensOutputGlob(previewName)
+    webp, webpErr := CreateWebpFromScreens(globMatch, previewName)
     if webpErr != nil {
         t.Errorf("Failed to create a webp screen collection %s", webpErr)
     }
@@ -372,6 +376,7 @@ func Test_VideoCreatePaletteFile(t *testing.T) {
     if err != nil {
         t.Errorf("Couldn't create a palette for %s err %s", srcFile, err)
     }
+
     palStat, noPal := os.Stat(paletteFile)
     if noPal != nil {
         t.Errorf("Did not create a palette from a movie %s", paletteFile)
