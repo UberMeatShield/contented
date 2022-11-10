@@ -25,7 +25,7 @@ func Get_VideoAndSetupPaths() (string, string, string) {
     var testDir, _ = envy.MustGet("DIR")
     srcDir := filepath.Join(testDir, "dir2")
     dstDir := GetPreviewDst(srcDir)
-    testFile := "donut.mp4"
+    testFile := "donut_[special( gunk.mp4"
 
     // Ensure that the preview destination directory is clean
     ResetPreviewDir(dstDir)
