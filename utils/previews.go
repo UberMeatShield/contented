@@ -376,7 +376,6 @@ func CreateSeekScreens(srcFile string, dstFile string) ([]string, error, string)
     timeSkip := int(totalScreenTime) / totalScreens
     log.Printf("Setting up screens (%d) with timeSkip (%d)", totalScreens, timeSkip)
 
-    // Hate
     screenFiles := []string{}
     screenFmt := GetScreensOutputPattern(dstFile)
 
@@ -442,8 +441,6 @@ func CreateWebpFromScreens(screensSrc string, dstFile string) (string, error) {
     // Need a function that determines the preview output filename and takes in the config
     // for the preview type name...
     log.Printf("What is the screens %s vs dstFile %s", screensSrc, dstFile)
-
-    // HATE
     paletteFile, palErr := PaletteGen(screensSrc, dstFile)
     if palErr != nil {
         return "", palErr

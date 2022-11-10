@@ -342,7 +342,6 @@ func Test_VideoCreateSeekScreens(t *testing.T) {
         t.Errorf("We should have a pattern to match against %s", screenPtrn)
     }
 
-    // hate
     // Check to ensure you can create a gif from the seek screens
     globMatch := GetScreensOutputGlob(previewName)
     webp, webpErr := CreateWebpFromScreens(globMatch, previewName)
