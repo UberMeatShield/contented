@@ -204,9 +204,11 @@ export class VideoViewCmp implements OnInit, OnDestroy {
           .pipe(
             debounceTime(500),
             distinctUntilChanged()
+            // Prevent bubble on keypress
           )
           .subscribe(
               formData => {
+                  console.log("Form data changing");
                   // If the text changes do we reset the search offset etc.
                   this.search(formData['videoText'] || '', 0, this.pageSize, this.getCntId());
               },

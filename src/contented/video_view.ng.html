@@ -3,7 +3,8 @@
   <!-- Add in the full list of containers and allow for selection events. -->
   <contented-nav [loading]="loading" [containers]="containers"></contented-nav>
 
-  <form #videoForm [formGroup]="options">
+  <form #videoForm [formGroup]="options" (keypress)="$event.stopPropagation()">
+        
     <mat-form-field apperance="fill" floatLabel="true" class="search-field">
       <mat-label>
         Search Content

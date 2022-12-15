@@ -138,14 +138,14 @@ func (as *ActionSuite) Test_MemoryManagerSearch() {
     as.NotNil(containers, "It should have containers")
     as.Equal(len(*containers), internals.TOTAL_CONTAINERS, "Wrong number of containers found")
 
-    mcs, total, err := man.SearchContent("donut", 1, 20, "", "")
+    mcs, total, err := man.SearchContent("Donut", 1, 20, "", "")
     as.NoError(err, "Can we search in the memory manager")
     as.Equal(len(*mcs), 1, "One donut should be found")
     as.Equal(total, len(*mcs), "It should get the total right")
 
     mcs_1, _, err_1 := man.SearchContent("Large", 1, 6, "", "")
     as.NoError(err_1, "Can we search in the memory manager")
-    as.Equal(3, len(*mcs_1), "One donut should be found")
+    as.Equal(5, len(*mcs_1), "There are 5 images with 'large' in them ignoring case")
 
     all_mc, _, err_all := man.SearchContent("", 0, 9000, "", "")
     as.NoError(err_all, "Can in search everything")

@@ -153,7 +153,7 @@ func (cm ContentManagerMemory) getContentFiltered(containerID string, search str
     }
 
     if search != "" && search != "*" {
-        searcher := regexp.MustCompile(search)
+        searcher := regexp.MustCompile("(?i)"+search)
         searchArr := models.Contents{}
         for _, mc := range mcArr {
             if searcher.MatchString(mc.Src) {
