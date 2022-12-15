@@ -37,7 +37,7 @@
   </div>
 
 
-  <form *ngIf="containers" class="container-search-form">
+  <form *ngIf="containers" class="container-search-form" (keypress)="$event.stopPropagation()">
     <mat-form-field class="container-nav-search" appearance="outline">
       <input type="text"
         placeholder="Navigate to container"
@@ -65,6 +65,10 @@
 
   <!-- A link to search here is a little odd -->
   <a class="search-link" href="/ui/search">Search</a>
+  &nbsp;
+  <a class="search-link" href="/ui/video">Video</a>
+  &nbsp;
+  <a class="search-link" href="/ui/browse/0/0/">Browse</a>
 
   <!-- This pretty much just flickers, probably test it is working on larger content -->
   <div *ngIf="loading">
