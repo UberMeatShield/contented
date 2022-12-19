@@ -1,7 +1,7 @@
 package managers
 
 import (
-    "contented/internals"
+    "contented/test_common"
     "contented/models"
     "contented/utils"
     "encoding/json"
@@ -21,7 +21,7 @@ type ActionSuite struct {
 
 // TODO: This naming is now bad with preview screens
 func GetScreens() (*models.Container, models.Contents) {
-    return internals.GetContentByDirName("screens")
+    return test_common.GetContentByDirName("screens")
 }
 
 func SetupScreensPreview(as *ActionSuite) (*models.Container, models.Contents) {
@@ -45,7 +45,7 @@ func (as *ActionSuite) Test_InitialCreation() {
     dir, _ := envy.MustGet("DIR")
     as.NotEmpty(dir, "The test must specify a directory to run on")
 
-    cfg := internals.ResetConfig()
+    cfg := test_common.ResetConfig()
     as.True(cfg.ExcContent(".DS_Store", "application/octet-stream"), "This should not be allowed")
 
     err := CreateInitialStructure(cfg)
@@ -53,11 +53,11 @@ func (as *ActionSuite) Test_InitialCreation() {
 
     cnts := models.Containers{}
     as.DB.All(&cnts)
-    as.Equal(internals.TOTAL_CONTAINERS, len(cnts), "The mocks have a specific expected number of items")
+    as.Equal(test_common.TOTAL_CONTAINERS, len(cnts), "The mocks have a specific expected number of items")
 
     content := models.Contents{}
     as.DB.All(&content)
-    as.Equal(internals.TOTAL_MEDIA, len(content), "The mocks have a specific expected number of items")
+    as.Equal(test_common.TOTAL_MEDIA, len(content), "The mocks have a specific expected number of items")
 }
 
 func (as *ActionSuite) Test_CfgIncExcContent() {
@@ -65,7 +65,7 @@ func (as *ActionSuite) Test_CfgIncExcContent() {
 
     // Exclude all images
     dir, _ := envy.MustGet("DIR")
-    cfg := internals.ResetConfig()
+    cfg := test_common.ResetConfig()
     cfg.Dir = dir
     nope := utils.CreateContentMatcher("DS_Store", "image", "OR")
 
@@ -149,7 +149,7 @@ func (as *ActionSuite) Test_CreatePreview() {
 func (as *ActionSuite) Test_CreateContainerPreviews() {
     // Get a local not in DB setup for the container and content
     // Create a bunch of previews
-    cfg := internals.ResetConfig()
+    cfg := test_common.ResetConfig()
     cfg.UseDatabase = true
     cfg.PreviewOverSize = 0
 

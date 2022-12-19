@@ -2,6 +2,7 @@ package managers
 
 import (
     "contented/internals"
+    "contented/test_common"
     "contented/models"
     "contented/utils"
     "github.com/gobuffalo/envy"
@@ -22,7 +23,7 @@ var expect_len = map[string]int{
 }
 
 func GetManagerActionSuite(cfg *utils.DirConfigEntry, as *ActionSuite) ContentManager {
-    ctx := internals.GetContext(as.App)
+    ctx := test_common.GetContext(as.App)
     get_params := func() *url.Values {
         vals := ctx.Params().(url.Values)
         return &vals

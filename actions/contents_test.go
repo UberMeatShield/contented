@@ -1,7 +1,7 @@
 package actions
 
 import (
-    "contented/internals"
+    "contented/test_common"
     "contented/models"
     "encoding/json"
     "github.com/gobuffalo/nulls"
@@ -10,7 +10,7 @@ import (
 )
 
 func CreateResource(src string, container_id nulls.UUID, as *ActionSuite) models.Content {
-    internals.InitFakeApp(true)
+    test_common.InitFakeApp(true)
     mc := &models.Content{
         Src:         src,
         ContentType: "test",
@@ -27,7 +27,7 @@ func CreateResource(src string, container_id nulls.UUID, as *ActionSuite) models
 
 func (as *ActionSuite) Test_ContentSubQuery() {
     // Create 2 containers
-    internals.InitFakeApp(true)
+    test_common.InitFakeApp(true)
     c1 := &models.Container{
         Total: 2,
         Path:  "container/1/content",
@@ -77,10 +77,10 @@ func (as *ActionSuite) Test_ContentSubQuery() {
 
 func (as *ActionSuite) Test_ManagerDB_Preview() {
     models.DB.TruncateAll()
-    internals.ResetConfig()
-    internals.InitFakeApp(true)
+    test_common.ResetConfig()
+    test_common.InitFakeApp(true)
 
-    cnt, content := internals.GetContentByDirName("dir2")
+    cnt, content := test_common.GetContentByDirName("dir2")
     as.Equal(3, len(content), "Dir2 should have 3 items")
     as.Equal("dir2", cnt.Name, "It should have loaded the right item")
 
@@ -96,22 +96,22 @@ func (as *ActionSuite) Test_ManagerDB_Preview() {
 }
 
 func (as *ActionSuite) Test_MemoryAPIBasics() {
-    internals.InitFakeApp(false)
+    test_common.InitFakeApp(false)
     res := as.JSON("/content").Get()
     as.Equal(http.StatusOK, res.Code)
 
     validate := models.Contents{}
     json.NewDecoder(res.Body).Decode(&validate)
-    as.Equal(internals.TOTAL_MEDIA, len(validate), "It should have a known set of mock data")
+    as.Equal(test_common.TOTAL_MEDIA, len(validate), "It should have a known set of mock data")
 
     validate_search := models.Contents{}
     res_search := as.JSON("/search?text=Large").Get()
     json.NewDecoder(res_search.Body).Decode(&validate_search)
-    as.Equal(internals.TOTAL_MEDIA, len(validate), "In memory should have these")
+    as.Equal(test_common.TOTAL_MEDIA, len(validate), "In memory should have these")
 }
 
 func (as *ActionSuite) Test_ContentsResource_List() {
-    internals.InitFakeApp(true)
+    test_common.InitFakeApp(true)
     src := "test_list"
     CreateResource(src, nulls.UUID{}, as)
     res := as.JSON("/content").Get()
@@ -124,7 +124,7 @@ func (as *ActionSuite) Test_ContentsResource_List() {
 }
 
 func (as *ActionSuite) Test_ContentsResource_Show() {
-    internals.InitFakeApp(true)
+    test_common.InitFakeApp(true)
     src := "test_query"
     mc := CreateResource(src, nulls.UUID{}, as)
     check := as.JSON("/content/" + mc.ID.String()).Get()
@@ -148,7 +148,7 @@ func (as *ActionSuite) Test_ContentsResource_Update() {
 }
 
 func (as *ActionSuite) Test_ContentsResource_Destroy() {
-    internals.InitFakeApp(true)
+    test_common.InitFakeApp(true)
     mc := CreateResource("Nuke Test", nulls.UUID{}, as)
     del_res := as.JSON("/content/" + mc.ID.String()).Delete()
     as.Equal(http.StatusOK, del_res.Code)
