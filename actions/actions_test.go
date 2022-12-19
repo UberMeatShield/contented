@@ -1,7 +1,7 @@
 package actions
 
 import (
-    "contented/internals"
+    "contented/test_common"
     "contented/managers"
     "contented/models"
     "encoding/json"
@@ -30,7 +30,7 @@ func TestMain(m *testing.M) {
 }
 
 func (as *ActionSuite) Test_ContentList() {
-    internals.InitFakeApp(false)
+    test_common.InitFakeApp(false)
 
     res := as.JSON("/containers").Get()
     as.Equal(http.StatusOK, res.Code)
@@ -40,7 +40,7 @@ func (as *ActionSuite) Test_ContentList() {
 }
 
 func (as *ActionSuite) Test_ContentDirLoad() {
-    internals.InitFakeApp(false)
+    test_common.InitFakeApp(false)
 
     res := as.JSON("/containers").Get()
     as.Equal(http.StatusOK, res.Code)
@@ -65,10 +65,10 @@ func (as *ActionSuite) Test_ContentDirLoad() {
 
 func (as *ActionSuite) Test_ViewRef() {
     // Oof, that is rough... need a better way to select the file not by index but ID
-    internals.InitFakeApp(false)
+    test_common.InitFakeApp(false)
 
     app := as.App
-    ctx := internals.GetContext(app)
+    ctx := test_common.GetContext(app)
     man := managers.GetManager(&ctx)
     mcs, err := man.ListAllContent(2, 2)
     as.NoError(err)
@@ -80,15 +80,15 @@ func (as *ActionSuite) Test_ViewRef() {
         res := as.HTML("/view/" + mc.ID.String()).Get()
         as.Equal(http.StatusOK, res.Code)
         header := res.Header()
-        as.NoError(internals.IsValidContentType(header.Get("Content-Type")))
+        as.NoError(test_common.IsValidContentType(header.Get("Content-Type")))
     }
 }
 
 // Oof, that is rough... need a better way to select the file not by index but ID
 func (as *ActionSuite) Test_ContentDirDownload() {
-    internals.InitFakeApp(false)
+    test_common.InitFakeApp(false)
 
-    ctx := internals.GetContext(as.App)
+    ctx := test_common.GetContext(as.App)
     man := managers.GetManager(&ctx)
     mcs, err := man.ListAllContent(2, 2)
     as.NoError(err)
@@ -99,17 +99,17 @@ func (as *ActionSuite) Test_ContentDirDownload() {
         res := as.HTML("/download/" + mc.ID.String()).Get()
         as.Equal(http.StatusOK, res.Code)
         header := res.Header()
-        as.NoError(internals.IsValidContentType(header.Get("Content-Type")))
+        as.NoError(test_common.IsValidContentType(header.Get("Content-Type")))
     }
 }
 
 // Test if we can get the actual file using just a file ID
 func (as *ActionSuite) Test_FindAndLoadFile() {
-    cfg := internals.InitFakeApp(false)
+    cfg := test_common.InitFakeApp(false)
 
     as.Equal(true, cfg.Initialized)
 
-    ctx := internals.GetContext(as.App)
+    ctx := test_common.GetContext(as.App)
     man := managers.GetManager(&ctx)
     mcs, err := man.ListAllContent(1, 200)
     as.NoError(err)
@@ -128,8 +128,8 @@ func (as *ActionSuite) Test_FindAndLoadFile() {
 
 // This checks that a preview loads when defined and otherwise falls back to the MC itself
 func (as *ActionSuite) Test_PreviewFile() {
-    internals.InitFakeApp(false)
-    ctx := internals.GetContext(as.App)
+    test_common.InitFakeApp(false)
+    ctx := test_common.GetContext(as.App)
     man := managers.GetManager(&ctx)
     mcs, err := man.ListAllContent(1, 200)
     as.NoError(err)
@@ -139,13 +139,13 @@ func (as *ActionSuite) Test_PreviewFile() {
         as.Equal(http.StatusOK, res.Code)
 
         header := res.Header()
-        as.NoError(internals.IsValidContentType(header.Get("Content-Type")))
+        as.NoError(test_common.IsValidContentType(header.Get("Content-Type")))
     }
 }
 
 func (as *ActionSuite) Test_FullFile() {
-    internals.InitFakeApp(false)
-    ctx := internals.GetContext(as.App)
+    test_common.InitFakeApp(false)
+    ctx := test_common.GetContext(as.App)
     man := managers.GetManager(&ctx)
     mcs, err := man.ListAllContent(1, 200)
     as.NoError(err)
@@ -155,14 +155,14 @@ func (as *ActionSuite) Test_FullFile() {
         as.Equal(http.StatusOK, res.Code)
 
         header := res.Header()
-        as.NoError(internals.IsValidContentType(header.Get("Content-Type")))
+        as.NoError(test_common.IsValidContentType(header.Get("Content-Type")))
     }
 }
 
 // This checks if previews are actually used if defined
 func (as *ActionSuite) Test_PreviewWorking() {
-    internals.InitFakeApp(false)
-    ctx := internals.GetContext(as.App)
+    test_common.InitFakeApp(false)
+    ctx := test_common.GetContext(as.App)
     man := managers.GetManager(&ctx)
     mcs, err := man.ListAllContent(1, 200)
     as.NoError(err)

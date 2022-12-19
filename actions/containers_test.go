@@ -1,9 +1,9 @@
 package actions
 
-// These tests are DB based tests, vs in memory manager internals.InitFakeApp(true)
+// These tests are DB based tests, vs in memory manager test_common.InitFakeApp(true)
 
 import (
-    "contented/internals"
+    "contented/test_common"
     "contented/managers"
     "contented/models"
     "encoding/json"
@@ -29,7 +29,7 @@ func CreateContainer(name string, as *ActionSuite) models.Container {
 }
 
 func (as *ActionSuite) Test_ContainersResource_Show() {
-    internals.InitFakeApp(true)
+    test_common.InitFakeApp(true)
     name := "Show Test"
     s := CreateContainer(name, as)
     as.NotZero(s.ID)
@@ -43,7 +43,7 @@ func (as *ActionSuite) Test_ContainersResource_Show() {
 }
 
 func (as *ActionSuite) Test_ContainersResource_Create() {
-    internals.InitFakeApp(true)
+    test_common.InitFakeApp(true)
     c := &models.Container{
         Total: 1,
         Name:  "Derp",
@@ -61,7 +61,7 @@ func (as *ActionSuite) Test_ContainersResource_Create() {
 }
 
 func (as *ActionSuite) Test_ContainersResource_Update() {
-    internals.InitFakeApp(true)
+    test_common.InitFakeApp(true)
     s := CreateContainer("Initial Title", as)
     as.NotZero(s.ID)
 
@@ -72,7 +72,7 @@ func (as *ActionSuite) Test_ContainersResource_Update() {
 }
 
 func (as *ActionSuite) Test_ContainersResource_Destroy() {
-    internals.InitFakeApp(true)
+    test_common.InitFakeApp(true)
     s := CreateContainer("Initial Title", as)
     as.NotZero(s.ID)
 
@@ -84,10 +84,10 @@ func (as *ActionSuite) Test_ContainersResource_Destroy() {
 }
 
 func (as *ActionSuite) Test_ContainerList() {
-    internals.InitFakeApp(true)
+    test_common.InitFakeApp(true)
 
-    cnt1, _ := internals.GetContentByDirName("dir1")
-    cnt2, _ := internals.GetContentByDirName("dir2")
+    cnt1, _ := test_common.GetContentByDirName("dir1")
+    cnt2, _ := test_common.GetContentByDirName("dir2")
     models.DB.Create(cnt1)
     models.DB.Create(cnt2)
     res := as.JSON("/containers").Get()
@@ -110,9 +110,9 @@ func (as *ActionSuite) Test_ContainerList() {
 }
 
 func (as *ActionSuite) Test_MemoryDenyEdit() {
-    cfg := internals.InitFakeApp(false)
+    cfg := test_common.InitFakeApp(false)
     cfg.UseDatabase = false
-    ctx := internals.GetContext(as.App)
+    ctx := test_common.GetContext(as.App)
     man := managers.GetManager(&ctx)
 
     containers, err := man.ListContainersContext()

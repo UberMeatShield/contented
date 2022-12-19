@@ -1,7 +1,7 @@
 package managers
 
 import (
-    "contented/internals"
+    "contented/test_common"
     "contented/models"
     "fmt"
     "github.com/gobuffalo/pop/v6"
@@ -10,12 +10,12 @@ import (
 // A basic DB search (ilike matching)
 func (as *ActionSuite) Test_DbManagerSearch() {
     models.DB.TruncateAll()
-    cfg := internals.InitFakeApp(true)
+    cfg := test_common.InitFakeApp(true)
     man := GetManagerActionSuite(cfg, as)
     as.Equal(man.CanEdit(), true, "It should be a DB manager")
 
-    cnt1, content1 := internals.GetContentByDirName("dir1")
-    cnt2, content2 := internals.GetContentByDirName("dir2")
+    cnt1, content1 := test_common.GetContentByDirName("dir1")
+    cnt2, content2 := test_common.GetContentByDirName("dir2")
     c1_err := man.CreateContainer(cnt1)
     as.NoError(c1_err)
     c2_err := man.CreateContainer(cnt2)
@@ -25,7 +25,7 @@ func (as *ActionSuite) Test_DbManagerSearch() {
     }
     for _, mc := range content2 {
         man.CreateContent(&mc)
-        if mc.Src == internals.VIDEO_FILENAME {
+        if mc.Src == test_common.VIDEO_FILENAME {
             man.CreateScreen(&models.Screen{ContentID: mc.ID, Src: "screen1"})
             man.CreateScreen(&models.Screen{ContentID: mc.ID, Src: "screen2"})
         }
@@ -56,16 +56,16 @@ func (as *ActionSuite) Test_DbManagerMultiSearch() {
     // Test that a search restricting containerID works
     // Test that search restricting container and text works
     models.DB.TruncateAll()
-    cfg := internals.InitFakeApp(true)
+    cfg := test_common.InitFakeApp(true)
 
     man := GetManagerActionSuite(cfg, as)
     as.Equal(man.CanEdit(), true)
 
-    cnt1, content1, err1 := internals.CreateContentByDirName("dir1")
+    cnt1, content1, err1 := test_common.CreateContentByDirName("dir1")
     as.NoError(err1)
     as.Greater(len(content1), 1)
 
-    cnt2, content2, err2 := internals.CreateContentByDirName("dir2")
+    cnt2, content2, err2 := test_common.CreateContentByDirName("dir2")
     as.NoError(err2)
     as.Greater(len(content2), 1)
 
@@ -86,9 +86,9 @@ func (as *ActionSuite) Test_DbManagerMultiSearch() {
 
 func (as *ActionSuite) Test_ManagerDB() {
     models.DB.TruncateAll()
-    cfg := internals.InitFakeApp(true)
+    cfg := test_common.InitFakeApp(true)
 
-    cnt, content := internals.GetContentByDirName("dir1")
+    cnt, content := test_common.GetContentByDirName("dir1")
     as.Equal("dir1", cnt.Name, "It should be the right dir")
     as.Equal(12, cnt.Total, "The container total should be this for dir1")
     as.Equal(12, len(content))
@@ -111,7 +111,7 @@ func (as *ActionSuite) Test_ManagerDB() {
 
 func (as *ActionSuite) Test_ManagerTagsDB() {
     models.DB.TruncateAll()
-    cfg := internals.InitFakeApp(true)
+    cfg := test_common.InitFakeApp(true)
     man := GetManagerActionSuite(cfg, as)
 
     as.NoError(man.CreateTag(&models.Tag{Name: "A",}), "couldn't create tag A")
@@ -123,7 +123,7 @@ func (as *ActionSuite) Test_ManagerTagsDB() {
 
 func (as *ActionSuite) Test_ManagerTagsDBCRUD() {
     models.DB.TruncateAll()
-    cfg := internals.InitFakeApp(true)
+    cfg := test_common.InitFakeApp(true)
     man := GetManagerActionSuite(cfg, as)
     t := models.Tag{Name: "A",}
     as.NoError(man.CreateTag(&t), "couldn't create tag A")
@@ -143,7 +143,7 @@ func (as *ActionSuite) Test_ManagerTagsDBCRUD() {
     /*
 func (as *ActionSuite) Test_ManagerAssociateTagsDB() {
     models.DB.TruncateAll()
-    cfg := internals.InitFakeApp(true)
+    cfg := test_common.InitFakeApp(true)
     man := GetManagerActionSuite(cfg, as)
 
     // hate
@@ -186,7 +186,7 @@ func (as *ActionSuite) Test_ManagerAssociateTagsDB() {
 
 func (as *ActionSuite) Test_ManagerDBPreviews() {
     models.DB.TruncateAll()
-    cfg := internals.InitFakeApp(true)
+    cfg := test_common.InitFakeApp(true)
     man := GetManagerActionSuite(cfg, as)
 
     mc1 := models.Content{Src: "A", Preview: "p", ContentType: "video"}
@@ -225,7 +225,7 @@ func (as *ActionSuite) Test_ManagerDBPreviews() {
 
 func (as *ActionSuite) Test_ManagerDBSearchScreens() {
     models.DB.TruncateAll()
-    cfg := internals.InitFakeApp(true)
+    cfg := test_common.InitFakeApp(true)
 
     man := ContentManagerDB{cfg: cfg}
     man.GetConnection = func() *pop.Connection {

@@ -1,7 +1,7 @@
 package managers
 
 import (
-    "contented/internals"
+    "contented/test_common"
     "contented/models"
     "contented/utils"
     "github.com/gobuffalo/envy"
@@ -13,8 +13,8 @@ import (
 )
 
 func (as *ActionSuite) Test_ManagerContainers() {
-    internals.InitFakeApp(false)
-    ctx := internals.GetContext(as.App)
+    test_common.InitFakeApp(false)
+    ctx := test_common.GetContext(as.App)
     man := GetManager(&ctx)
     containers, err := man.ListContainersContext()
     as.NoError(err)
@@ -29,8 +29,8 @@ func (as *ActionSuite) Test_ManagerContainers() {
 }
 
 func (as *ActionSuite) Test_ManagerContent() {
-    internals.InitFakeApp(false)
-    ctx := internals.GetContext(as.App)
+    test_common.InitFakeApp(false)
+    ctx := test_common.GetContext(as.App)
     man := GetManager(&ctx)
     mcs, err := man.ListAllContent(1, 9001)
     as.NoError(err)
@@ -45,7 +45,7 @@ func (as *ActionSuite) Test_ManagerContent() {
 }
 
 func (as *ActionSuite) Test_AssignManager() {
-    cfg := internals.ResetConfig()
+    cfg := test_common.ResetConfig()
     cfg.UseDatabase = false
     utils.InitConfig(cfg.Dir, cfg)
 
@@ -61,7 +61,7 @@ func (as *ActionSuite) Test_AssignManager() {
     as.Greater(len(*mcs), 0, "It should have valid files in the manager")
 
     cfg.UseDatabase = false
-    ctx := internals.GetContext(as.App)
+    ctx := test_common.GetContext(as.App)
     man := GetManager(&ctx) // New Reference but should have the same count of content
     mcs_2, _ := man.ListAllContent(1, 9000)
 
@@ -69,10 +69,10 @@ func (as *ActionSuite) Test_AssignManager() {
 }
 
 func (as *ActionSuite) Test_MemoryManagerPaginate() {
-    cfg := internals.InitFakeApp(false)
+    cfg := test_common.InitFakeApp(false)
     cfg.UseDatabase = false
 
-    ctx := internals.GetContextParams(as.App, "/containers", "1", "2")
+    ctx := test_common.GetContextParams(as.App, "/containers", "1", "2")
     man := GetManager(&ctx)
     as.Equal(man.CanEdit(), false, "Memory manager should not allow editing")
 
@@ -100,16 +100,16 @@ func (as *ActionSuite) Test_MemoryManagerPaginate() {
 }
 
 func (as *ActionSuite) Test_ManagerInitialize() {
-    internals.InitFakeApp(false)
+    test_common.InitFakeApp(false)
 
-    ctx := internals.GetContext(as.App)
+    ctx := test_common.GetContext(as.App)
     man := GetManager(&ctx)
     as.NotNil(man, "It should have a manager defined after init")
 
     containers, err := man.ListContainersContext()
     as.NoError(err, "It should list all containers")
     as.NotNil(containers, "It should have containers")
-    as.Equal(len(*containers), internals.TOTAL_CONTAINERS, "Unexpected container count")
+    as.Equal(len(*containers), test_common.TOTAL_CONTAINERS, "Unexpected container count")
 
     // Memory test working
     for _, c := range *containers {
@@ -127,16 +127,16 @@ func (as *ActionSuite) Test_ManagerInitialize() {
 }
 
 func (as *ActionSuite) Test_MemoryManagerSearch() {
-    internals.InitFakeApp(false)
+    test_common.InitFakeApp(false)
 
-    ctx := internals.GetContext(as.App)
+    ctx := test_common.GetContext(as.App)
     man := GetManager(&ctx)
     as.NotNil(man, "It should have a manager defined after init")
 
     containers, err := man.ListContainersContext()
     as.NoError(err, "It should list all containers")
     as.NotNil(containers, "It should have containers")
-    as.Equal(len(*containers), internals.TOTAL_CONTAINERS, "Wrong number of containers found")
+    as.Equal(len(*containers), test_common.TOTAL_CONTAINERS, "Wrong number of containers found")
 
     mcs, total, err := man.SearchContent("Donut", 1, 20, "", "")
     as.NoError(err, "Can we search in the memory manager")
@@ -149,14 +149,14 @@ func (as *ActionSuite) Test_MemoryManagerSearch() {
 
     all_mc, _, err_all := man.SearchContent("", 0, 9000, "", "")
     as.NoError(err_all, "Can in search everything")
-    as.Equal(len(*all_mc), internals.TOTAL_MEDIA, "The Kitchen sink")
+    as.Equal(len(*all_mc), test_common.TOTAL_MEDIA, "The Kitchen sink")
 }
 
 func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
     // Test that a search restricting containerID works
     // Test that search restricting container and text works
-    internals.InitFakeApp(false)
-    ctx := internals.GetContext(as.App)
+    test_common.InitFakeApp(false)
+    ctx := test_common.GetContext(as.App)
     man := GetManager(&ctx)
 
     // Ensure we initialized with a known search
@@ -182,7 +182,7 @@ func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
     as.Equal(vid_total, 1)
     as.Equal(len(*video_content), vid_total)
     vs := *video_content
-    as.Equal(vs[0].Src, internals.VIDEO_FILENAME)
+    as.Equal(vs[0].Src, test_common.VIDEO_FILENAME)
 
     for _, cnt := range *cnts {
         if cnt.Name == "dir1" {
@@ -196,7 +196,7 @@ func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
             as.Equal(y_total, 1, "We did not find the expected content")
 
             movie := (*yes_match)[0]
-            as.Equal(movie.Src, internals.VIDEO_FILENAME)
+            as.Equal(movie.Src, test_common.VIDEO_FILENAME)
 
             _, imgCount, _ := man.SearchContent("", 0, 20, cnt.ID.String(), "image")
             as.Equal(imgCount, 2, "It should filter out the donut this time")
@@ -211,7 +211,7 @@ func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
 
 
 func (as *ActionSuite) Test_MemoryPreviewInitialization() {
-    cfg := internals.ResetConfig()
+    cfg := test_common.ResetConfig()
     cfg.MaxSearchDepth = 1
     utils.SetupContentMatchers(cfg, "", "video", "DS_Store", "")
     utils.SetCfg(*cfg)
@@ -220,7 +220,7 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
     var testDir, _ = envy.MustGet("DIR")
     srcDir := filepath.Join(testDir, "dir2")
     dstDir := utils.GetPreviewDst(srcDir)
-    testFile := internals.VIDEO_FILENAME
+    testFile := test_common.VIDEO_FILENAME
 
     // Create a fake preview
     utils.ResetPreviewDir(dstDir)
@@ -234,7 +234,7 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
     if wErr != nil {
         as.T().Errorf("Could not write to the file at %s", fqPath)
     }
-    as.Contains(fqPath, fmt.Sprintf("%s.png", internals.VIDEO_FILENAME))
+    as.Contains(fqPath, fmt.Sprintf("%s.png", test_common.VIDEO_FILENAME))
     f.Sync()
 
     // Checks that if a preview exists
@@ -242,7 +242,7 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
     as.Equal(1, len(cnts), "We should only pull in containers that have content")
     as.Equal(len(content), 1, "But there is only one video by mime type")
     for _, mc := range content {
-        expect := fmt.Sprintf("/container_previews/%s.png", internals.VIDEO_FILENAME)
+        expect := fmt.Sprintf("/container_previews/%s.png", test_common.VIDEO_FILENAME)
         as.Equal(expect, mc.Preview)
     }
 
@@ -250,12 +250,12 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
     all_cnts, one_content, _ := utils.PopulateMemoryView(cfg.Dir)
     as.Equal(1, len(one_content), "But there is only one video by mime type")
 
-    as.Equal(internals.TOTAL_CONTAINERS, len(all_cnts), "Allow it to pull in all containers")
+    as.Equal(test_common.TOTAL_CONTAINERS, len(all_cnts), "Allow it to pull in all containers")
 }
 
 
 func (as *ActionSuite) Test_ManagerTagsMemory() {
-    cfg := internals.InitFakeApp(false)
+    cfg := test_common.InitFakeApp(false)
     man := GetManagerActionSuite(cfg, as)
     as.NoError(man.CreateTag(&models.Tag{Name: "A",}), "couldn't create tag A")
     as.NoError(man.CreateTag(&models.Tag{Name: "B",}), "couldn't create tag B")
@@ -265,7 +265,7 @@ func (as *ActionSuite) Test_ManagerTagsMemory() {
 }
 
 func (as *ActionSuite) Test_MangerTagsMemoryCRUD() {
-    cfg := internals.InitFakeApp(false)
+    cfg := test_common.InitFakeApp(false)
     man := GetManagerActionSuite(cfg, as)
 
     t := models.Tag{Name: "A",}
@@ -284,7 +284,7 @@ func (as *ActionSuite) Test_MangerTagsMemoryCRUD() {
 
 
 func (as *ActionSuite) Test_ManagerMemoryScreens() {
-    cfg := internals.InitFakeApp(false)
+    cfg := test_common.InitFakeApp(false)
 
     man := GetManagerActionSuite(cfg, as)
     content, err := man.ListAllContent(1, 100)
@@ -323,8 +323,8 @@ func (as *ActionSuite) Test_ManagerMemoryScreens() {
 }
 
 func (as *ActionSuite) Test_ManagerMemoryCRU() {
-    internals.InitFakeApp(false)
-    ctx := internals.GetContext(as.App)
+    test_common.InitFakeApp(false)
+    ctx := test_common.GetContext(as.App)
     man := GetManager(&ctx)
 
     // TODO: It should probably validate path exists and access
