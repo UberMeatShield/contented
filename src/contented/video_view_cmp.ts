@@ -114,6 +114,7 @@ export class VideoViewCmp implements OnInit, OnDestroy {
                      break;
                  case NavTypes.HIDE_FULLSCREEN:
                      // Scroll back into view
+                     console.log("selectedContent", this.selectedContent, evt);
                      this.selectContent(this.selectedContent, this.selectedContainer);
                      break;
                  case NavTypes.LOAD_MORE:
@@ -172,6 +173,7 @@ export class VideoViewCmp implements OnInit, OnDestroy {
 
     public selectContent(content: Content, container: Container) {
         this.selectedContent = content;
+        console.log("Select content is executing.");
         _.delay(() => {
              let id = `view_content_${content.id}`;
              let el = document.getElementById(id)
@@ -180,8 +182,7 @@ export class VideoViewCmp implements OnInit, OnDestroy {
                  el.scrollIntoView(true);
                  window.scrollBy(0, -30);
              }
-         }, 20);
-
+         }, 50);
     }
 
 
@@ -280,8 +281,20 @@ export class VideoViewCmp implements OnInit, OnDestroy {
     }
 
     public fullView(mc: Content) {
-        console.log("Full view", mc);
-        GlobalNavEvents.viewFullScreen(mc);
+        let c = this.getContainer(mc.container_id);
+        console.log("Video Full handler", mc, c);
+        GlobalNavEvents.selectContent(mc, c);
+
+        // Just makes sure the selection event doesn't race condition the scroll
+        // into view event.  So the click triggers, scrolls and then we scroll to
+        // the fullscreen element.
+        _.delay(() => {
+            GlobalNavEvents.viewFullScreen(mc);
+        }, 100);
+    }
+
+    public getContainer(cId: string) {
+        return _.find(this.containers, {id: cId});
     }
 
     public screenEvt(evt) {
