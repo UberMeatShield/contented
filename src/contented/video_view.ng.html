@@ -48,7 +48,7 @@
         <span class="video-title">{{mc.src}}</span>
       </mat-card-title>
 
-      <mat-card-content [class.selected-video]="selectedContent?.id == mc.id">
+      <mat-card-content [class.selected-video]="selectedContent?.id === mc.id">
         <div class="video-view">
           <div class="preview-content video-result video-view"
             [class.video-overlay]="mc?.content_type?.match('video')"
