@@ -12,6 +12,15 @@ build:
 test:
 	export DIR=`pwd`/mocks/content && buffalo test ./models ./utils ./managers ./actions
 
+# This works with gotestsum, something about a DB reset is missing or magical Buffalo code.
+.PHONY: gotestsum
+gtest:
+	export DIR=`pwd`/mocks/content
+	gotestsum --format testname ./models
+	gotestsum --format testname ./utils
+	gotestsum --format testname ./managers
+	gotestsum --format testname ./actions
+
 .PHONY: dev
 dev:
 	export DIR=`pwd`/mocks/content && buffalo dev
