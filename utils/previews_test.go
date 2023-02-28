@@ -464,5 +464,4 @@ func Test_ScreenOutputPatterns(t *testing.T) {
     if err2 != nil {
         t.Errorf("Error trying to compile a re match for %s %s", badTwo, err2)
     }
-
 }

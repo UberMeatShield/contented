@@ -1,5 +1,8 @@
 /.angular/cache
 node_modules/*
+bin/*
+locales/*
+migrations/schema.sql
 
 tmp/*
 public/build/*

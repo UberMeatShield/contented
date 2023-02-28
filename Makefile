@@ -15,11 +15,12 @@ test:
 # This works with gotestsum, something about a DB reset is missing or magical Buffalo code.
 .PHONY: gotestsum
 gtest:
-	export DIR=`pwd`/mocks/content
-	gotestsum --format testname ./models
-	gotestsum --format testname ./utils
-	gotestsum --format testname ./managers
-	gotestsum --format testname ./actions
+	export DIR=`pwd`/mocks/content && gotestsum --format testname ./models
+	export DIR=`pwd`/mocks/content && gotestsum --format testname ./utils
+	# The Database side of things doesn't get created with gotestsum yet
+	# To run one test you can steal this line and pass --run <TestName>
+	# export DIR=`pwd`/mocks/content && gotestsum --format testname ./managers
+	# export DIR=`pwd`/mocks/content && gotestsum --format testname ./actions
 
 .PHONY: dev
 dev:

@@ -671,3 +671,45 @@ func AssignPreviewIfExists(c *models.Container, mc *models.Content) string {
     }
     return previewFile
 }
+
+func ConvertVideoToH256(srcFile string, dstFile string) (string, error) {
+    //fmt := "h256"
+    //log.Printf("Converting srcFile %s to dstFile %s with fmt %s", srcFile, dstFile, fmt)
+    //contentType, tErr := GetMimeType(path, filename)
+    filename := filepath.Base(srcFile)
+    path := filepath.Dir(srcFile)
+    contentType, tErr := GetMimeType(path, filename)
+    if tErr != nil {
+        return "", tErr
+    }
+    if !strings.Contains(contentType, "video") {
+        msg := fmt.Sprintf("Not a video file so not converting %s", contentType)
+        return "", errors.New(msg)
+    }
+    vidInfo, err := ffmpeg.Probe(srcFile)
+    if err != nil {
+        return "", err
+    }
+
+    if _, err := os.Stat(dstFile); !os.IsNotExist(err) {
+        existsMsg := fmt.Sprintf("Destination file already exists %s", dstFile)
+        log.Printf(existsMsg)
+        return "", errors.New(existsMsg)
+    }
+    // Check that the converted file doesn't exist
+    codecName := gjson.Get(vidInfo, "streams.0.codecName").String()
+    conversion_codec := "libx265"
+    log.Printf("The vidinfo codec %s converting to %s", codecName, conversion_codec)
+
+    // If codec in list of conversion codecs, then do it
+    encode_err := ffmpeg.Input(srcFile).
+		Output(dstFile, ffmpeg.KwArgs{"c:v": conversion_codec}).
+		OverWriteOutput().ErrorToStdOut().Run()
+
+    if encode_err != nil {
+        return "", err
+    }
+
+    log.Printf("What is going on %s and %s ct %s contentType", filename, path, contentType)
+    return "", nil
+}
