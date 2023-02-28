@@ -53,8 +53,8 @@ func Test_VideoEncoding(t *testing.T) {
         t.Errorf("Failed to encode with %s dstFile: %s was not hevc but %s", cfg.CodecForConversion, dstFile, codecName)
         t.Fail()
     }
-
-    // Test should check the ffmpeg.Probe of both files and check length
-    // Test should validate the new file uses a new codec
-    // There should be an option to ignore vs nuke the test file
 }
+
+// TODO: Add a test converting an image
+// TODO: Test ignoring a particular codec
+// TODO: Change some of the error messages into 'success' states and a ran conversion message
