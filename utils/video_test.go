@@ -45,7 +45,6 @@ func Test_VideoEncoding(t *testing.T) {
     if totalTimeSrc != totalTimeDst {
         t.Errorf("Failed to create a valid output times are different %f vs %f", totalTimeSrc, totalTimeDst)
     }
-
     // Cleanup after the test
     nukeFile(dstFile)
 
