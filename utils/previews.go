@@ -688,28 +688,48 @@ func ConvertVideoToH256(srcFile string, dstFile string) (string, error) {
     }
     vidInfo, err := ffmpeg.Probe(srcFile)
     if err != nil {
+        log.Printf("Couldn't probe %s", srcFile)
         return "", err
     }
-
     if _, err := os.Stat(dstFile); !os.IsNotExist(err) {
         existsMsg := fmt.Sprintf("Destination file already exists %s", dstFile)
         log.Printf(existsMsg)
         return "", errors.New(existsMsg)
     }
+
     // Check that the converted file doesn't exist
-    codecName := gjson.Get(vidInfo, "streams.0.codecName").String()
-    conversion_codec := "libx265"
-    log.Printf("The vidinfo codec %s converting to %s", codecName, conversion_codec)
+    cfg := GetCfg()
+    codecName := gjson.Get(vidInfo, "streams.0.codec_name").String()
+    log.Printf("The vidinfo codec %s converting to %s", codecName, cfg.CodecForConversion)
+
+    // The CodecForConversion is NOT the name of the thing you convert to...
+    if cfg.CodecForConversion == codecName {
+        okMsg := fmt.Sprintf("%s Already in the desired codec %s", srcFile, cfg.CodecForConversion)
+        log.Printf(okMsg)
+        return okMsg, nil
+    }
+
+    matcher := regexp.MustCompile(cfg.CodecsToConvert)
+    if !matcher.MatchString(codecName) {
+        ignoreMsg := fmt.Sprintf("%s Not on the conversion list %s", srcFile, cfg.CodecsToConvert)
+        log.Printf(ignoreMsg)
+        return ignoreMsg, nil
+    }
+    ignore := regexp.MustCompile(cfg.CodecsToIgnore)
+    if ignore.MatchString(codecName) {
+        ignoreMsg := fmt.Sprintf("%s ignored because it matched %s ", srcFile, cfg.CodecsToIgnore)
+        log.Printf(ignoreMsg)
+        return ignoreMsg, nil
+    }
 
     // If codec in list of conversion codecs, then do it
+    log.Printf("%s will be converted from %s to %s", srcFile, codecName, cfg.CodecForConversion)
     encode_err := ffmpeg.Input(srcFile).
-		Output(dstFile, ffmpeg.KwArgs{"c:v": conversion_codec}).
+        Output(dstFile, ffmpeg.KwArgs{"c:v": cfg.CodecForConversion, "vtag": "hvc1"}).
 		OverWriteOutput().ErrorToStdOut().Run()
-
     if encode_err != nil {
         return "", err
     }
-
-    log.Printf("What is going on %s and %s ct %s contentType", filename, path, contentType)
-    return "", nil
+    msg := fmt.Sprintf("%s will be converted from %s to %s", srcFile, codecName, cfg.CodecForConversion)
+    return msg, nil
 }

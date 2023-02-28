@@ -26,6 +26,9 @@ const DefaultMaxContentPerContainer int = 90001
 const DefaultExcludeEmptyContainers bool = true
 const DefeaultTotalScreens = 12
 const DefaultPreviewFirstScreenOffset = 5
+const DefaultCodecsToConvert = ".*"  // regex match
+const DefaultCodecsToIgnore = "hevc" // regex match
+const DefaultCodecForConversion = "libx265"
 
 // Matchers that determine if you want to include specific filenames/content types
 type ContentMatcher func(string, string) bool
@@ -55,24 +58,24 @@ func IncludeAllContainers(name string) bool {
 // Create a matcher that will check filename and content type and return true if it matches
 // both in the case of AND matching (default) and true if either matches if matchType is OR
 func CreateContentMatcher(filenameStrRE string, typesStrRE string, matchType string) ContentMatcher {
-        filenameRE := regexp.MustCompile(filenameStrRE)
-        typeRE := regexp.MustCompile(typesStrRE)
+    filenameRE := regexp.MustCompile(filenameStrRE)
+    typeRE := regexp.MustCompile(typesStrRE)
 
-        if matchType == "OR" {
-                return func(filename string, content_type string) bool {
-                        return filenameRE.MatchString(filename) || typeRE.MatchString(content_type)
-                }
-        }
+    if matchType == "OR" {
         return func(filename string, content_type string) bool {
-                return filenameRE.MatchString(filename) && typeRE.MatchString(content_type)
+                return filenameRE.MatchString(filename) || typeRE.MatchString(content_type)
         }
+    }
+    return func(filename string, content_type string) bool {
+        return filenameRE.MatchString(filename) && typeRE.MatchString(content_type)
+    }
 }
 
 func CreateContainerMatcher(filenameStrRE string) ContainerMatcher {
-        cntRE := regexp.MustCompile(filenameStrRE)
-        return func(cntName string) bool {
-                return cntRE.MatchString(cntName)
-        }
+    cntRE := regexp.MustCompile(filenameStrRE)
+    return func(cntName string) bool {
+        return cntRE.MatchString(cntName)
+    }
 }
 
 // TODO: this might be useful to add into the utils
@@ -92,6 +95,11 @@ type DirConfigEntry struct {
         PreviewCreateFailIsFatal bool   // If set creating an image or movie preview will hard fail
         PreviewNumberOfScreens   int    // How many screens should be created to make the preview?
         PreviewFirstScreenOffset int    // Seconds to skip before taking a screen (black screen / titles)
+
+        // Convertion script configuration
+        CodecsToConvert string  // A matching regex for codecs to convert 
+        CodecsToIgnore string   // Which codecs should not be converted (hevc is libx265 so default ignore)
+        CodecForConversion string  // libx265 is the default and that makes hevc files
 
         // Matchers that will determine which content elements to be included or excluded
         IncContent        ContentMatcher
@@ -133,6 +141,11 @@ func GetCfgDefaults() DirConfigEntry {
                 ScreensOverSize:   50 * 1024000,
                 PreviewNumberOfScreens:   DefeaultTotalScreens,
                 PreviewFirstScreenOffset: DefaultPreviewFirstScreenOffset,
+
+                // Conversion codecs 
+                CodecsToConvert: DefaultCodecsToConvert,
+                CodecsToIgnore: DefaultCodecsToIgnore,
+                CodecForConversion: DefaultCodecForConversion,
 
                 // Just grab all files by default
                 IncContent:               IncludeAllFiles,
@@ -191,6 +204,7 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
         previewNumberOfScreens, totalScreenErr := strconv.Atoi(envy.Get("TOTAL_SCREENS", strconv.Itoa(DefeaultTotalScreens)))
         previewFirstScreenOffset, offsetErr := strconv.Atoi(envy.Get("FIRST_SCREEN_OFFSET", strconv.Itoa(DefaultPreviewFirstScreenOffset)))
 
+
         if err != nil {
                 panic(err)
         } else if limErr != nil {
@@ -241,6 +255,11 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
         cfg.IncludeOperator = envy.Get("INCLUDE_OPERATOR", "AND")
         cfg.ExcludeOperator = envy.Get("EXCLUDE_OPERATOR", "AND")
 
+        // For video conversion options (eventually)
+        cfg.CodecsToConvert = envy.Get("CODECS_TO_CONVERT", DefaultCodecsToConvert)
+        cfg.CodecsToIgnore = envy.Get("CODECS_TO_IGNORE", DefaultCodecsToIgnore)
+        cfg.CodecForConversion = envy.Get("CODEC_FOR_CONVERSION", DefaultCodecForConversion)
+
         cfg.ExcludeEmptyContainers = excludeEmpty
         cfg.MaxSearchDepth = maxSearchDepth
         cfg.MaxContentPerContainer = maxContentPerContainer
@@ -265,31 +284,31 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
 // yes filename matches, yes mime matches, no if the filename matches, no if the mime matches.
 func SetupContentMatchers(cfg *DirConfigEntry, y_fn string, y_mime string, n_fn string, n_mime string) {
 
-        //To include content only if it matches the filename or mime type
-        if y_fn != "" || y_mime != "" {
-                cfg.IncContent = CreateContentMatcher(y_fn, y_mime, cfg.IncludeOperator)
-        } else {
-                cfg.IncContent = IncludeAllFiles
-        }
+    //To include content only if it matches the filename or mime type
+    if y_fn != "" || y_mime != "" {
+            cfg.IncContent = CreateContentMatcher(y_fn, y_mime, cfg.IncludeOperator)
+    } else {
+            cfg.IncContent = IncludeAllFiles
+    }
 
-        // If you do not specify exclusion regexes it will just include everything
-        if n_fn != "" || n_mime != "" {
-                cfg.ExcContent = CreateContentMatcher(n_fn, n_mime, cfg.ExcludeOperator)
-        } else {
-                cfg.ExcContent = ExcludeNoFiles
-        }
+    // If you do not specify exclusion regexes it will just include everything
+    if n_fn != "" || n_mime != "" {
+            cfg.ExcContent = CreateContentMatcher(n_fn, n_mime, cfg.ExcludeOperator)
+    } else {
+            cfg.ExcContent = ExcludeNoFiles
+    }
 }
 
 func SetupContainerMatchers(cfg *DirConfigEntry, y_cnt string, n_cnt string) {
-        if y_cnt != "" {
-                cfg.IncContainer = CreateContainerMatcher(y_cnt)
-        } else {
-                cfg.IncContainer = IncludeAllContainers
-        }
-        if n_cnt != "" {
-                cfg.ExcContainer = CreateContainerMatcher(n_cnt)
-        } else {
-                // ExcludeNoContainers is not used because we really don't want .DS_Store and previews
-                cfg.ExcContainer = ExcludeContainerDefault
-        }
+    if y_cnt != "" {
+            cfg.IncContainer = CreateContainerMatcher(y_cnt)
+    } else {
+            cfg.IncContainer = IncludeAllContainers
+    }
+    if n_cnt != "" {
+            cfg.ExcContainer = CreateContainerMatcher(n_cnt)
+    } else {
+            // ExcludeNoContainers is not used because we really don't want .DS_Store and previews
+            cfg.ExcContainer = ExcludeContainerDefault
+    }
 }
