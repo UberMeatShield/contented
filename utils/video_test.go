@@ -40,6 +40,12 @@ func Test_VideoEncoding(t *testing.T) {
     cfg := GetCfg()
     vidInfo, err := ffmpeg.Probe(dstFile)
 
+    totalTimeSrc, _, _ := GetTotalVideoLength(srcFile)
+    totalTimeDst, _, _ := GetTotalVideoLength(dstFile)
+    if totalTimeSrc != totalTimeDst {
+        t.Errorf("Failed to create a valid output times are different %f vs %f", totalTimeSrc, totalTimeDst)
+    }
+
     // Cleanup after the test
     nukeFile(dstFile)
 
@@ -48,6 +54,7 @@ func Test_VideoEncoding(t *testing.T) {
         t.Errorf("Failed to encode with %s dstFile: %s was not hevc but %s", cfg.CodecForConversion, dstFile, codecName)
         t.Fail()
     }
+
     // Test should check the ffmpeg.Probe of both files and check length
     // Test should validate the new file uses a new codec
     // There should be an option to ignore vs nuke the test file
