@@ -717,7 +717,7 @@ func ConvertVideoToH256(srcFile string, dstFile string) (string, error) {
     }
     ignore := regexp.MustCompile(cfg.CodecsToIgnore)
     if ignore.MatchString(codecName) {
-        ignoreMsg := fmt.Sprintf("%s ignored because it matched %s ", srcFile, cfg.CodecsToIgnore)
+        ignoreMsg := fmt.Sprintf("%s ignored because it matched %s", srcFile, cfg.CodecsToIgnore)
         log.Printf(ignoreMsg)
         return ignoreMsg, nil
     }

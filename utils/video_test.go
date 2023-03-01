@@ -4,6 +4,7 @@ import (
   "os"
   "fmt"
   "testing"
+  "strings"
   "path/filepath"
   "github.com/tidwall/gjson"
   ffmpeg "github.com/u2takey/ffmpeg-go"
@@ -34,7 +35,6 @@ func Test_VideoEncoding(t *testing.T) {
     }
     if _, err := os.Stat(dstFile); os.IsNotExist(err) {
         t.Errorf("We should have a file called %s", dstFile)
-        t.Fail()
     }
 
     cfg := GetCfg()
@@ -43,18 +43,36 @@ func Test_VideoEncoding(t *testing.T) {
     totalTimeSrc, _, _ := GetTotalVideoLength(srcFile)
     totalTimeDst, _, _ := GetTotalVideoLength(dstFile)
     if totalTimeSrc != totalTimeDst {
-        t.Errorf("Failed to create a valid output times are different %f vs %f", totalTimeSrc, totalTimeDst)
+        t.Errorf("Invalid output times are different %f vs %f", totalTimeSrc, totalTimeDst)
     }
-    // Cleanup after the test
-    nukeFile(dstFile)
-
     codecName := gjson.Get(vidInfo, "streams.0.codec_name").String()
     if codecName != "hevc" {
-        t.Errorf("Failed to encode with %s dstFile: %s was not hevc but %s", cfg.CodecForConversion, dstFile, codecName)
-        t.Fail()
+        t.Errorf("Failed encoding %s dstFile: %s was not hevc but %s", cfg.CodecForConversion, dstFile, codecName)
     }
+    checkMsg, err := ConvertVideoToH256(dstFile, dstFile + "FAIL")
+    if !strings.Contains(checkMsg, "ignored because it matched") || err != nil {
+        t.Errorf("This should be encoded as hevc and shouldn't work %s err: %s", checkMsg, err)
+    }
+    nukeFile(dstFile)
+    nukeFile(dstFile + "FAIL")
 }
 
-// TODO: Add a test converting an image
-// TODO: Test ignoring a particular codec
-// TODO: Change some of the error messages into 'success' states and a ran conversion message
+
+func Test_VideoEncodingNotMatching(t *testing.T) {
+    srcDir, _, testFile := Get_VideoAndSetupPaths()
+    srcFile := filepath.Join(srcDir, testFile)
+    dstFile := fmt.Sprintf("%s.%s", srcFile, "[h256].mp4")
+
+    nukeFile(dstFile) // Ensure a previous test fail doesn't leave files
+    cfg := GetCfg()
+    cfg.CodecsToConvert = "windows_trash|quicktime"  // Shouldn't match
+    SetCfg(*cfg)
+
+    checkMsg, checkErr := ConvertVideoToH256(srcFile, dstFile)
+    if _, err := os.Stat(dstFile); !os.IsNotExist(err) {
+        t.Errorf("We should NOT have a file called %s", dstFile)
+    }
+    if checkErr != nil || !strings.Contains(checkMsg, "Not on the conversion list") {
+        t.Errorf("It should not try and convert a codec that doesn't match")
+    }
+}
