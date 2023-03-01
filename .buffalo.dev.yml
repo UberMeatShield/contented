@@ -16,6 +16,7 @@ ignored_folders:
 - grifts
 - tmp
 - bin
+- src
 - node_modules
 - .sass-cache
 included_extensions:
