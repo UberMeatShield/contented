@@ -13,14 +13,14 @@ test:
 	export DIR=`pwd`/mocks/content && buffalo test ./models ./utils ./managers ./actions
 
 # This works with gotestsum, something about a DB reset is missing or magical Buffalo code.
+# The Database side of things doesn't get created with gotestsum yet
+# To run one test with gotestsum you can steal this line and pass --run <TestName>
 .PHONY: gotestsum
 gtest:
 	export DIR=`pwd`/mocks/content && gotestsum --format testname ./models
 	export DIR=`pwd`/mocks/content && gotestsum --format testname ./utils
-	# The Database side of things doesn't get created with gotestsum yet
-	# To run one test you can steal this line and pass --run <TestName>
-	# export DIR=`pwd`/mocks/content && gotestsum --format testname ./managers
-	# export DIR=`pwd`/mocks/content && gotestsum --format testname ./actions
+	export DIR=`pwd`/mocks/content && buffalo test ./managers
+	export DIR=`pwd`/mocks/content && buffalo test ./actions
 
 .PHONY: dev
 dev:
