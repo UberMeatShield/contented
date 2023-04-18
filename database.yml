@@ -3,20 +3,23 @@ development:
   dialect: postgres
   database: content_development
   user: postgres
-  password: postgres
+  password: 
+  port: 5432
   host: 127.0.0.1
   pool: 30
 
-docker_development:
-  dialect: postgres
-  database: content_development
-  user: postgres
-  password: postgres
-  host: db
-  pool: 30
+  # When the docker version works again, but buffalo setup seems to be a pile a junk
+  #docker_development:
+    #dialect: postgres
+    #database: content_development
+    #user: postgres
+    #password: 
+    #port: 5432
+    #host: db
+    #pool: 30
 
 test:
-  url: {{envOr "TEST_DATABASE_URL" "postgres://postgres:postgres@127.0.0.1:5432/content_test?sslmode=disable"}}
+  url: {{envOr "TEST_DATABASE_URL" "postgres://postgres:@127.0.0.1:5432/content_test?sslmode=disable"}}
 
 production:
-  url: {{envOr "DATABASE_URL" "postgres://postgres:postgres@127.0.0.1:5432/content_production?sslmode=disable"}}
+  url: {{envOr "DATABASE_URL" "postgres://postgres:@127.0.0.1:5432/content_production?sslmode=disable"}}

@@ -1,5 +1,7 @@
 .DEFAULT_GOAL := build
 
+# You are going to need to have buffalo installed https://gobuffalo.io/documentation/getting_started/installation/
+
 .PHONY: build
 build:
 	docker build .
@@ -29,6 +31,7 @@ dev:
 .PHONY: install
 install:
 	go get contented
+	buffalo plugin install
 	yarn install
 
 # Typically you want a different window doing your jsbuilds and golang stuff for sanity
