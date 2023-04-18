@@ -19,7 +19,7 @@ services:
       LIMIT: 10000
 
   db:
-    image: "postgres:10.7-alpine"
+    image: "postgres:13-alpine3.17"
     ports:
       - "5432:5432"
     environment:
