@@ -672,29 +672,31 @@ func AssignPreviewIfExists(c *models.Container, mc *models.Content) string {
     return previewFile
 }
 
-func ConvertVideoToH256(srcFile string, dstFile string) (string, error) {
-    //fmt := "h256"
-    //log.Printf("Converting srcFile %s to dstFile %s with fmt %s", srcFile, dstFile, fmt)
-    //contentType, tErr := GetMimeType(path, filename)
+// Check if we should actually try and encode this file, uses config settings
+// and information about the file.  Checks that the file is not already encoded,
+// that the file exists, that it is in the list of codecs we want to convert etc.
+// Returns ("the reason for the choice", "error if it happened", "should it encode")
+func ShouldEncodeVideo(srcFile string, dstFile string) (string, error, bool) {
     filename := filepath.Base(srcFile)
     path := filepath.Dir(srcFile)
     contentType, tErr := GetMimeType(path, filename)
     if tErr != nil {
-        return "", tErr
+        return "", tErr, false
     }
     if !strings.Contains(contentType, "video") {
         msg := fmt.Sprintf("Not a video file so not converting %s", contentType)
-        return "", errors.New(msg)
+        return "", errors.New(msg), false
     }
     vidInfo, err := ffmpeg.Probe(srcFile)
     if err != nil {
         log.Printf("Couldn't probe %s", srcFile)
-        return "", err
+        return "", err, false
     }
+    // TODO: Optional config to overwrite?
     if _, err := os.Stat(dstFile); !os.IsNotExist(err) {
         existsMsg := fmt.Sprintf("Destination file already exists %s", dstFile)
         log.Printf(existsMsg)
-        return "", errors.New(existsMsg)
+        return "", errors.New(existsMsg), false
     }
 
     // Check that the converted file doesn't exist
@@ -706,30 +708,44 @@ func ConvertVideoToH256(srcFile string, dstFile string) (string, error) {
     if cfg.CodecForConversion == codecName {
         okMsg := fmt.Sprintf("%s Already in the desired codec %s", srcFile, cfg.CodecForConversion)
         log.Printf(okMsg)
-        return okMsg, nil
+        return okMsg, nil, false
     }
 
     matcher := regexp.MustCompile(cfg.CodecsToConvert)
     if !matcher.MatchString(codecName) {
         ignoreMsg := fmt.Sprintf("%s Not on the conversion list %s", srcFile, cfg.CodecsToConvert)
         log.Printf(ignoreMsg)
-        return ignoreMsg, nil
+        return ignoreMsg, nil, false
     }
     ignore := regexp.MustCompile(cfg.CodecsToIgnore)
     if ignore.MatchString(codecName) {
         ignoreMsg := fmt.Sprintf("%s ignored because it matched %s", srcFile, cfg.CodecsToIgnore)
         log.Printf(ignoreMsg)
-        return ignoreMsg, nil
+        return ignoreMsg, nil, false
+    }
+    msg := fmt.Sprintf("%s will be converted from %s to %s", srcFile, codecName, cfg.CodecForConversion)
+    log.Printf(msg)
+    return msg, nil, true
+}
+
+// This will check if we should convert the source file then run the ffmpeg converter
+// Returns 
+//  - (msg: string) : What happened in human readable form
+//  - (err: error) : did we hit a full error state
+//  - (encoded: bool) : Did actual encoding take place vs just 'should not do it (ie: already encoded)'
+func ConvertVideoToH256(srcFile string, dstFile string) (string, error, bool) {
+    reason, err, shouldConvert := ShouldEncodeVideo(srcFile, dstFile)
+    if shouldConvert == false {
+        return reason, err, shouldConvert
     }
 
     // If codec in list of conversion codecs, then do it
-    log.Printf("%s will be converted from %s to %s", srcFile, codecName, cfg.CodecForConversion)
+    cfg := GetCfg()
     encode_err := ffmpeg.Input(srcFile).
         Output(dstFile, ffmpeg.KwArgs{"c:v": cfg.CodecForConversion, "vtag": "hvc1"}).
 		OverWriteOutput().ErrorToStdOut().Run()
     if encode_err != nil {
-        return "", err
+        return "", err, false
     }
-    msg := fmt.Sprintf("%s will be converted from %s to %s", srcFile, codecName, cfg.CodecForConversion)
-    return msg, nil
+    return "Success: " + reason, nil, true
 }

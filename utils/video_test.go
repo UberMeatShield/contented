@@ -26,7 +26,7 @@ func Test_VideoEncoding(t *testing.T) {
 
     nukeFile(dstFile)
     // Check if the dstFile exists and delete it if it does.
-    msg, err := ConvertVideoToH256(srcFile, dstFile)
+    msg, err, encoded := ConvertVideoToH256(srcFile, dstFile)
     if err != nil {
         t.Errorf("Failed to convert %s", err)
     }
@@ -35,6 +35,9 @@ func Test_VideoEncoding(t *testing.T) {
     }
     if _, err := os.Stat(dstFile); os.IsNotExist(err) {
         t.Errorf("We should have a file called %s", dstFile)
+    }
+    if encoded == false {
+        t.Errorf("It should have encoded but something went wrong: %s, err: %s", msg, err)
     }
 
     cfg := GetCfg()
@@ -49,12 +52,16 @@ func Test_VideoEncoding(t *testing.T) {
     if codecName != "hevc" {
         t.Errorf("Failed encoding %s dstFile: %s was not hevc but %s", cfg.CodecForConversion, dstFile, codecName)
     }
-    checkMsg, err := ConvertVideoToH256(dstFile, dstFile + "FAIL")
+    shouldNotEncodeTwice := dstFile + "ShouldNotEncodeAlreadyDone.mp4"
+    checkMsg, err, encoded := ConvertVideoToH256(dstFile, shouldNotEncodeTwice)
     if !strings.Contains(checkMsg, "ignored because it matched") || err != nil {
         t.Errorf("This should be encoded as hevc and shouldn't work %s err: %s", checkMsg, err)
     }
+    if encoded == true {
+        t.Errorf("It should not consider an already encoded file as something converted")
+    }
     nukeFile(dstFile)
-    nukeFile(dstFile + "FAIL")
+    nukeFile(shouldNotEncodeTwice)  // If it did encode it should error out blow it up anyway
 }
 
 
@@ -68,11 +75,14 @@ func Test_VideoEncodingNotMatching(t *testing.T) {
     cfg.CodecsToConvert = "windows_trash|quicktime"  // Shouldn't match
     SetCfg(*cfg)
 
-    checkMsg, checkErr := ConvertVideoToH256(srcFile, dstFile)
+    checkMsg, checkErr, encoded := ConvertVideoToH256(srcFile, dstFile)
     if _, err := os.Stat(dstFile); !os.IsNotExist(err) {
         t.Errorf("We should NOT have a file called %s", dstFile)
     }
     if checkErr != nil || !strings.Contains(checkMsg, "Not on the conversion list") {
         t.Errorf("It should not try and convert a codec that doesn't match")
+    }
+    if encoded == true {
+        t.Errorf("The state set should show we did NOT successfully encode")
     }
 }
