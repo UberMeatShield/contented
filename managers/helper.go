@@ -9,12 +9,9 @@ package managers
  */
 
 import (
-    //    "os"
     "fmt"
     "log"
-    // "time"
     "strings"
-    //"path/filepath"
     "contented/models"
     "contented/utils"
     "github.com/gobuffalo/nulls"
@@ -81,7 +78,8 @@ func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
 
 // Init a manager and pass it in or just do this via config value instead of a pass in
 func CreateAllPreviews(cm ContentManager) error {
-    cnts, c_err := cm.ListContainers(0, 9001)
+
+    cnts, c_err := cm.ListContainers(0, 9001) // Might need to make this smarter :(
     if c_err != nil {
         return c_err
     }
@@ -97,7 +95,6 @@ func CreateAllPreviews(cm ContentManager) error {
             err_msg = append(err_msg, msg)
         }
     }
-
     // TODO: Cut down how much spam is getting kicked out by this summary
     if len(err_msg) > 0 {
         return errors.New(strings.Join(err_msg, "\n"))
