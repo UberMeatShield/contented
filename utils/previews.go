@@ -685,7 +685,7 @@ func ShouldEncodeVideo(srcFile string, dstFile string) (string, error, bool) {
     }
     if !strings.Contains(contentType, "video") {
         msg := fmt.Sprintf("Not a video file so not converting %s", contentType)
-        return "", errors.New(msg), false
+        return msg, nil, false
     }
     vidInfo, err := ffmpeg.Probe(srcFile)
     if err != nil {

@@ -45,13 +45,16 @@ func EncodeContainer(c* models.Container, cm ContentManager) (error){
     for _, mc := range *content {
         srcFile, _ := utils.GetFilePathInContainer(mc.Src, c.GetFqPath())
 
+        // DstFile should split off the final extension \.xyz and replace it
         dstFile := fmt.Sprintf("%s.%s", srcFile, "[h256].mp4")
         msg, err, encode := utils.ShouldEncodeVideo(srcFile, dstFile)
 
-        if (encode && err == nil) {
-            log.Printf("We should try and re-encode %s", srcFile)
+        if encode {
+            log.Printf("Will attempt to convert %s", msg)
+        } else if err != nil {
+            log.Printf("Error attempting to encode %s msg: %s", err, msg)
         } else {
-            log.Printf("Ignoring this file because: %s or err: %s", msg, err)
+            log.Printf("Ignoring this file msg: %s", msg)
         }
     }
     return nil
