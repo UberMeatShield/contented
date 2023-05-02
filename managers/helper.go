@@ -201,7 +201,7 @@ func CreateContentPreviews(c *models.Container, content models.Contents) (models
     for result := range reply {
         total++
         if total == expected_total {
-            close(input) // Do I close this on error or on potential timeout?
+            close(input) // Do I close this on error or on potential timeout (it seems like there should be a way)
             close(reply)
         }
 

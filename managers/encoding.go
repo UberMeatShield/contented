@@ -13,8 +13,7 @@ import (
 
 // Init a manager and pass it in or just do this via config value instead of a pass in
 func EncodeVideos(cm ContentManager) error {
-
-    cnts, c_err := cm.ListContainers(0, 9001) // Might need to make this smarter :(
+    cnts, c_err := cm.ListContainers(0, 9001) // Might need to make this smarter (obviously)
     if c_err != nil {
         return c_err
     }
@@ -46,16 +45,20 @@ func EncodeContainer(c* models.Container, cm ContentManager) (error){
         srcFile, _ := utils.GetFilePathInContainer(mc.Src, c.GetFqPath())
 
         // DstFile should split off the final extension \.xyz and replace it
-        dstFile := fmt.Sprintf("%s.%s", srcFile, "[h256].mp4")
+        dstFile := utils.GetVideoConversionName(srcFile)
         msg, err, encode := utils.ShouldEncodeVideo(srcFile, dstFile)
 
         if encode {
             log.Printf("Will attempt to convert %s", msg)
         } else if err != nil {
-            log.Printf("Error attempting to encode %s msg: %s", err, msg)
+            log.Printf("Error attempting to determine encoding err: %s msg: %s", err, msg)
         } else {
-            log.Printf("Ignoring this file msg: %s", msg)
+            // log.Printf("Ignoring this file msg: %s", msg)
         }
     }
     return nil
 }
+
+// Do encoding in parallel but many fewer processors.  It will be an interesting mix of
+// disk write and CPU use vs single process and heavy disk use.  Plus encoding video takes
+// some pretty serious memory use.
