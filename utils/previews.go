@@ -5,8 +5,12 @@ package utils
 * and video content.   It can be configured to generate a single image or a gif for a video.
  */
 import (
+    "log"
+    "os"
+    "regexp"
+    "strconv"
+    "strings"
     "bytes"
-    "contented/models"
     "errors"
     "fmt"
     "github.com/disintegration/imaging"
@@ -14,17 +18,13 @@ import (
     "github.com/nfnt/resize"
     "github.com/tidwall/gjson"
     ffmpeg "github.com/u2takey/ffmpeg-go"
+    "contented/models"
     "image"
     "image/jpeg"
     "image/png"
     "io"
     "io/ioutil"
-    "log"
-    "os"
     "path/filepath"
-    "regexp"
-    "strconv"
-    "strings"
 )
 
 const PREVIEW_DIRECTORY = "container_previews"

@@ -1,20 +1,42 @@
 package utils
 
 /**
-*  These are helper functions around creating Content preview information for large images
-* and video content.   It can be configured to generate a single image or a gif for a video.
+ * These functions deal with using ffmpeg to encode video to new formats (h265)
  */
 import (
     "errors"
-    "fmt"
-    "github.com/tidwall/gjson"
-    ffmpeg "github.com/u2takey/ffmpeg-go"
     "log"
     "os"
-    "path/filepath"
     "regexp"
     "strings"
+    "fmt"
+    "path/filepath"
+    "github.com/tidwall/gjson"
+    "github.com/gofrs/uuid"
+    ffmpeg "github.com/u2takey/ffmpeg-go"
+    "contented/models"
 )
+
+// Used in the case of async processing when creating Preview results
+type EncodingResult struct {
+    C_ID    uuid.UUID
+    MC_ID   uuid.UUID
+    NewVideo string
+    Err     error
+}
+
+type EncodingRequest struct {
+    C    *models.Container
+    Mc   *models.Content
+    Out  chan EncodingResult
+    Size int64
+}
+
+type EncodingWorker struct {
+    Id int
+    In chan EncodingRequest
+}
+
 
 func ShouldEncodeVideo(srcFile string, dstFile string) (string, error, bool) {
     filename := filepath.Base(srcFile)
