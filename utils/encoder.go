@@ -17,25 +17,31 @@ import (
     "contented/models"
 )
 
-// Used in the case of async processing when creating Preview results
+// Used in the case of async processing when encoding.
+// Pretty much identical to previews but I might have to tweak this a lot
 type EncodingResult struct {
     C_ID    uuid.UUID
     MC_ID   uuid.UUID
     NewVideo string
     Err     error
+
+    // We should ensure that there are some stats gathered around this.
+    InitialSize int64
+    EncodedSize int64
 }
 
 type EncodingRequest struct {
     C    *models.Container
     Mc   *models.Content
     Out  chan EncodingResult
-    Size int64
 }
 
 type EncodingWorker struct {
     Id int
     In chan EncodingRequest
 }
+type EncodingRequests []EncodingRequest
+type EncodingResults []EncodingResults
 
 
 func ShouldEncodeVideo(srcFile string, dstFile string) (string, error, bool) {
@@ -81,8 +87,8 @@ func ShouldEncodeVideo(srcFile string, dstFile string) (string, error, bool) {
         ignoreMsg := fmt.Sprintf("%s ignored because it matched %s", srcFile, cfg.CodecsToIgnore)
         return ignoreMsg, nil, false
     }
-    msg := fmt.Sprintf("%s will be converted from %s to %s named %s", srcFile, codecName, cfg.CodecForConversion, filepath.Base(dstFile))
-    // log.Printf(msg)
+
+    msg := fmt.Sprintf("File will be converted from %s to %s\nOld File: %s\nNew File: %s", codecName, cfg.CodecForConversion, srcFile, dstFile)
     return msg, nil, true
 }
 
@@ -91,6 +97,11 @@ func GetVideoConversionName(srcFile string) string {
     path := filepath.Dir(srcFile)
     filename := filepath.Base(srcFile)
     ext := filepath.Ext(filename)
+
+    cfg := GetCfg()
+    if cfg.EncodingDestination != "" {
+        path = cfg.EncodingDestination
+    }
     stripExtension := regexp.MustCompile(fmt.Sprintf("%s$", ext))
     newFilename := stripExtension.ReplaceAllString(filename, "_h256.mp4")
     return filepath.Join(path, newFilename) 

@@ -28,6 +28,7 @@ const DefeaultTotalScreens = 12
 const DefaultPreviewFirstScreenOffset = 5
 const DefaultCodecsToConvert = ".*"  // regex match
 const DefaultCodecsToIgnore = "hevc" // regex match
+const DefaultEncodingDestination = ""
 const DefaultCodecForConversion = "libx265"
 
 // Matchers that determine if you want to include specific filenames/content types
@@ -100,6 +101,7 @@ type DirConfigEntry struct {
         CodecsToConvert string  // A matching regex for codecs to convert 
         CodecsToIgnore string   // Which codecs should not be converted (hevc is libx265 so default ignore)
         CodecForConversion string  // libx265 is the default and that makes hevc files
+        EncodingDestination string // defaults to same directory but can override as well
 
         // Matchers that will determine which content elements to be included or excluded
         IncContent        ContentMatcher
@@ -146,6 +148,7 @@ func GetCfgDefaults() DirConfigEntry {
                 CodecsToConvert: DefaultCodecsToConvert,
                 CodecsToIgnore: DefaultCodecsToIgnore,
                 CodecForConversion: DefaultCodecForConversion,
+                EncodingDestination: DefaultEncodingDestination,
 
                 // Just grab all files by default
                 IncContent:               IncludeAllFiles,
@@ -259,6 +262,7 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
         cfg.CodecsToConvert = envy.Get("CODECS_TO_CONVERT", DefaultCodecsToConvert)
         cfg.CodecsToIgnore = envy.Get("CODECS_TO_IGNORE", DefaultCodecsToIgnore)
         cfg.CodecForConversion = envy.Get("CODEC_FOR_CONVERSION", DefaultCodecForConversion)
+        cfg.CodecForConversion = envy.Get("ENCODING_DESTINATION", DefaultEncodingDestination)
 
         cfg.ExcludeEmptyContainers = excludeEmpty
         cfg.MaxSearchDepth = maxSearchDepth

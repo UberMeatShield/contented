@@ -23,7 +23,7 @@ func EncodeVideos(cm ContentManager) error {
 
     err_msg := []string{}
     for _, cnt := range *cnts {
-        err := EncodeContainer(&cnt, cm)
+        _, err := EncodeContainer(&cnt, cm)
         if err != nil {
             msg := fmt.Sprintf("Error creating previews in cnt %s - %s err: %s\n", cnt.ID.String(), cnt.Name, err)
             err_msg = append(err_msg, msg)
@@ -36,11 +36,13 @@ func EncodeVideos(cm ContentManager) error {
     return nil
 }
 
-func EncodeContainer(c* models.Container, cm ContentManager) (error){
+func EncodeContainer(c* models.Container, cm ContentManager) (*utils.EncodingResults, error) {
     content, q_err := cm.ListContent(c.ID, 0, 90000)
     if q_err != nil {
       log.Fatal(q_err) // Also fatal if we can no longer list content (empty is just [])
     }
+
+    toEncode := utils.EncodingRequests{}
     for _, mc := range *content {
         srcFile, _ := utils.GetFilePathInContainer(mc.Src, c.GetFqPath())
 
@@ -50,15 +52,77 @@ func EncodeContainer(c* models.Container, cm ContentManager) (error){
 
         if encode {
             log.Printf("Will attempt to convert %s", msg)
+            req := utils.EncodingRequest{C: c, Mc: &mc}
+            toEncode = append(toEncode, req)
+
         } else if err != nil {
             log.Printf("Error attempting to determine encoding err: %s msg: %s", err, msg)
         } else {
             // log.Printf("Ignoring this file msg: %s", msg)
         }
     }
-    return nil
+    if len(toEncode) > 0 {
+        return EncodeContainerContent(&toEncode, cm)
+    }
+    return nil, nil
 }
 
 // Do encoding in parallel but many fewer processors.  It will be an interesting mix of
 // disk write and CPU use vs single process and heavy disk use.  Plus encoding video takes
 // some pretty serious memory use.
+func EncodeContainerContent(toEncode *utils.EncodingRequests, cm ContentManager) (*utils.EncodingResults, error) {
+    expected := len(*toEncode)
+    log.Printf("Attempting to encode N(%d) video files", expected)
+
+    cfg := utils.GetCfg()
+    processors := cfg.CoreCount // TODO: Another config... SO MANY
+    if processors <= 0 {
+        processors = 1 // Without at least one processor this will hang forever
+    }
+
+    reply := make(chan utils.EncodingResult, expected)
+    input := make(chan utils.EncodingRequest, expected)
+    // Starts the workers
+    for i := 0; i < processors; i++ {
+        pw := utils.EncodingWorker{Id: i, In: input}
+        go StartEncoder(pw)
+    }
+
+    for _, req := range *toEncode {
+        req.Out = reply
+        input <- req
+    }
+
+    total := 0
+    results := utils.EncodingResults{}
+    for res := range reply {
+        total++
+        if total == expected {
+            close(input)
+            close(reply)
+        }
+        log.Printf("Finished and found result: %s", res)
+        //results = append(results, res)
+    }
+    return &results, nil
+}
+
+func StartEncoder(ew utils.EncodingWorker) {
+    for req := range ew.In {
+        c := req.C
+        mc := req.Mc
+
+        // Should check the on disk size and add a check to look at a post encode filesize
+        log.Printf("Worker %d Doing encoding for %s\n", ew.Id, mc.ID.String())
+        err := errors.New("Yar")
+
+        req.Out <- utils.EncodingResult{
+            C_ID:    c.ID,
+            MC_ID:   mc.ID,
+            NewVideo: "Yar",
+            InitialSize: mc.SizeBytes,
+            EncodedSize: 0,
+            Err:     err,
+        }
+    }
+}
