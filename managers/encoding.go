@@ -52,9 +52,8 @@ func EncodeContainer(c* models.Container, cm ContentManager) (*utils.EncodingRes
 
         if encode {
             log.Printf("Will attempt to convert %s", msg)
-            req := utils.EncodingRequest{C: c, Mc: &mc}
+            req := utils.EncodingRequest{C: c, Mc: &mc, DstFile: dstFile, SrcFile: srcFile}
             toEncode = append(toEncode, req)
-
         } else if err != nil {
             log.Printf("Error attempting to determine encoding err: %s msg: %s", err, msg)
         } else {
@@ -113,16 +112,26 @@ func StartEncoder(ew utils.EncodingWorker) {
         mc := req.Mc
 
         // Should check the on disk size and add a check to look at a post encode filesize
-        log.Printf("Worker %d Doing encoding for %s\n", ew.Id, mc.ID.String())
-        err := errors.New("Yar")
+        log.Printf("Worker %d Doing encoding for %s - %s\n", ew.Id, mc.ID.String(), mc.Src)
 
+        msg, err, converted := utils.ConvertVideoToH256(req.SrcFile, req.DstFile)
+
+        if err == nil && converted == false {
+            err = errors.New(fmt.Sprintf("A request was made to convert %s but it did not encode %s", req.SrcFile, msg))
+        }
+
+        // Check that the destination is ACTUALLY a valid file
+        encodedSize := int64(0)
+        if err == nil {
+            _, encodedSize, err = utils.IsValidVideo(req.DstFile)
+        }
         req.Out <- utils.EncodingResult{
             C_ID:    c.ID,
             MC_ID:   mc.ID,
-            NewVideo: "Yar",
+            NewVideo: req.DstFile,
             InitialSize: mc.SizeBytes,
-            EncodedSize: 0,
-            Err:     err,
+            EncodedSize: encodedSize,
+            Err: err,
         }
     }
 }

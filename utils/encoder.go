@@ -33,6 +33,8 @@ type EncodingResult struct {
 type EncodingRequest struct {
     C    *models.Container
     Mc   *models.Content
+    SrcFile string
+    DstFile string
     Out  chan EncodingResult
 }
 
@@ -44,31 +46,55 @@ type EncodingRequests []EncodingRequest
 type EncodingResults []EncodingResults
 
 
-func ShouldEncodeVideo(srcFile string, dstFile string) (string, error, bool) {
+// Returns a message about the video codec, size of it, or if it is invalid.
+func IsValidVideo(srcFile string) (string, int64, error) {
+    srcStat, statErr := os.Stat(srcFile)
+    fileSize := int64(0)
+    codecName := ""
+    if statErr != nil {
+        return codecName, fileSize, statErr
+    }
+    fileSize = int64(srcStat.Size())
+    if fileSize == 0 {
+        return codecName, fileSize, errors.New(fmt.Sprintf("%s was empty or small %d", srcFile, fileSize))
+    }
+
     filename := filepath.Base(srcFile)
     path := filepath.Dir(srcFile)
     contentType, tErr := GetMimeType(path, filename)
     if tErr != nil {
-        return "", tErr, false
+        return codecName, fileSize, tErr
     }
     if !strings.Contains(contentType, "video") {
         msg := fmt.Sprintf("Not a video file so not converting %s", contentType)
-        return msg, nil, false
+        return codecName, fileSize, errors.New(msg)
     }
-    vidInfo, err := ffmpeg.Probe(srcFile)
-    if err != nil {
+    vidInfo, probeErr := ffmpeg.Probe(srcFile)
+    if probeErr != nil {
         log.Printf("Couldn't probe %s", srcFile)
-        return "", err, false
+        return codecName, fileSize, probeErr
+    }
+    codecName = gjson.Get(vidInfo, "streams.0.codec_name").String()
+    return codecName, fileSize, nil
+}
+
+/**
+ *  This returns a message about what is happening with the encoding (should it do it etc).
+ */
+func ShouldEncodeVideo(srcFile string, dstFile string) (string, error, bool) {
+    codecName, _, videoInvalid := IsValidVideo(srcFile)
+    if videoInvalid != nil {
+        return fmt.Sprintf("Not valid video %s", videoInvalid), nil, false
     }
     // TODO: Optional config to overwrite?
-    if _, err := os.Stat(dstFile); !os.IsNotExist(err) {
+    _, statErr := os.Stat(dstFile)
+    if !os.IsNotExist(statErr) {
         existsMsg := fmt.Sprintf("Destination file already exists %s", dstFile)
         return "", errors.New(existsMsg), false
     }
 
     // Check that the converted file doesn't exist
     cfg := GetCfg()
-    codecName := gjson.Get(vidInfo, "streams.0.codec_name").String()
     log.Printf("The vidinfo codec %s converting to %s", codecName, cfg.CodecForConversion)
 
     // The CodecForConversion is NOT the name of the thing you convert to...
@@ -125,8 +151,10 @@ func ConvertVideoToH256(srcFile string, dstFile string) (string, error, bool) {
     encode_err := ffmpeg.Input(srcFile).
         Output(dstFile, ffmpeg.KwArgs{"c:v": cfg.CodecForConversion, "vtag": "hvc1"}).
 		OverWriteOutput().ErrorToStdOut().Run()
+
     if encode_err != nil {
-        return "", err, false
+        log.Printf("Encoding error when actually running ffmpeg  %s", encode_err)
+        return "", encode_err, false
     }
     return "Success: " + reason, nil, true
 }
