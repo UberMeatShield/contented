@@ -86,12 +86,12 @@ func ShouldEncodeVideo(srcFile string, dstFile string) (string, error, bool) {
     if videoInvalid != nil {
         return fmt.Sprintf("Not valid video %s", videoInvalid), nil, false
     }
-    // TODO: Optional config to overwrite?
     _, statErr := os.Stat(dstFile)
     if !os.IsNotExist(statErr) {
         existsMsg := fmt.Sprintf("Destination file already exists %s", dstFile)
         return "", errors.New(existsMsg), false
     }
+    // TODO: Config setting where if the filesize is too small we should _NOT_ reencode
 
     // Check that the converted file doesn't exist
     cfg := GetCfg()
@@ -144,12 +144,12 @@ func ConvertVideoToH256(srcFile string, dstFile string) (string, error, bool) {
         log.Printf("Not converting %s", reason)
         return reason, err, shouldConvert
     }
-    log.Printf("About to convert %s", reason)
 
     // If codec in list of conversion codecs, then do it
     cfg := GetCfg()
+    log.Printf("About to convert %s to codec %s", reason, cfg.CodecForConversion)
     encode_err := ffmpeg.Input(srcFile).
-        Output(dstFile, ffmpeg.KwArgs{"c:v": cfg.CodecForConversion, "vtag": "hvc1"}).
+        Output(dstFile, ffmpeg.KwArgs{"c:v": cfg.CodecForConversion, "tag:v": "hvc1"}).
 		OverWriteOutput().ErrorToStdOut().Run()
 
     if encode_err != nil {

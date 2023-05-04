@@ -262,7 +262,7 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
         cfg.CodecsToConvert = envy.Get("CODECS_TO_CONVERT", DefaultCodecsToConvert)
         cfg.CodecsToIgnore = envy.Get("CODECS_TO_IGNORE", DefaultCodecsToIgnore)
         cfg.CodecForConversion = envy.Get("CODEC_FOR_CONVERSION", DefaultCodecForConversion)
-        cfg.CodecForConversion = envy.Get("ENCODING_DESTINATION", DefaultEncodingDestination)
+        cfg.EncodingDestination = envy.Get("ENCODING_DESTINATION", DefaultEncodingDestination)
 
         cfg.ExcludeEmptyContainers = excludeEmpty
         cfg.MaxSearchDepth = maxSearchDepth

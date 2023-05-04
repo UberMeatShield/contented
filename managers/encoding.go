@@ -42,6 +42,9 @@ func EncodeContainer(c* models.Container, cm ContentManager) (*utils.EncodingRes
       log.Fatal(q_err) // Also fatal if we can no longer list content (empty is just [])
     }
 
+
+    // Remember that references in a range loop CHANGE the pointer on each loop so you MUST
+    // re-assign a variable if you want to build a new object with pointers.
     toEncode := utils.EncodingRequests{}
     for _, mc := range *content {
         srcFile, _ := utils.GetFilePathInContainer(mc.Src, c.GetFqPath())
@@ -52,7 +55,8 @@ func EncodeContainer(c* models.Container, cm ContentManager) (*utils.EncodingRes
 
         if encode {
             log.Printf("Will attempt to convert %s", msg)
-            req := utils.EncodingRequest{C: c, Mc: &mc, DstFile: dstFile, SrcFile: srcFile}
+            ref_mc := mc  // Ensure the pointers don't get messed up
+            req := utils.EncodingRequest{C: c, Mc: &ref_mc, DstFile: dstFile, SrcFile: srcFile}
             toEncode = append(toEncode, req)
         } else if err != nil {
             log.Printf("Error attempting to determine encoding err: %s msg: %s", err, msg)
@@ -125,6 +129,8 @@ func StartEncoder(ew utils.EncodingWorker) {
         if err == nil {
             _, encodedSize, err = utils.IsValidVideo(req.DstFile)
         }
+
+        log.Printf("Size of the media %d and encoded %d", mc.SizeBytes, encodedSize)
         req.Out <- utils.EncodingResult{
             C_ID:    c.ID,
             MC_ID:   mc.ID,

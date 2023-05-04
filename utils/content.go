@@ -183,7 +183,7 @@ func getContent(id uuid.UUID, fileInfo os.FileInfo, path string) models.Content 
     content := models.Content{
         ID:          id,
         Src:         fileInfo.Name(),
-        SizeBytes:   fileInfo.Size(),
+        SizeBytes:   int64(fileInfo.Size()),
         ContentType: contentType,
     }
     return content
