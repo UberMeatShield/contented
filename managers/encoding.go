@@ -3,7 +3,7 @@ package managers
 import (
   "fmt"
   "log"
-  "strings"
+//  "strings"
   "contented/models"
   "contented/utils"
   //"github.com/gobuffalo/nulls"
@@ -21,17 +21,35 @@ func EncodeVideos(cm ContentManager) error {
         return errors.New("No Containers were found in the database")
     }
 
-    err_msg := []string{}
+    all_results := utils.EncodingResults{}
     for _, cnt := range *cnts {
-        _, err := EncodeContainer(&cnt, cm)
-        if err != nil {
-            msg := fmt.Sprintf("Error creating previews in cnt %s - %s err: %s\n", cnt.ID.String(), cnt.Name, err)
-            err_msg = append(err_msg, msg)
+        results, err := EncodeContainer(&cnt, cm)
+        if (err == nil && results != nil && len(*results) > 0) {
+            all_results = append(all_results, *results...)
         }
     }
-    // TODO: Cut down how much spam is getting kicked out by this summary
-    if len(err_msg) > 0 {
-        return errors.New(strings.Join(err_msg, "\n"))
+
+    if len(all_results) == 0 {
+        log.Printf("Found nothing that should be encoded (or everything is already encoded)")
+        return nil
+    }
+
+    log.Printf("Encoding complete\n===================\n")
+    for _, res := range all_results {
+        if res.Err == nil {
+            log.Printf("Successfully encoded %s", res)
+        }
+    }
+    log.Printf("Failures\n===================\n")
+    err_cnt := 0
+    for _, res := range all_results {
+        if res.Err != nil {
+            log.Printf("Failure encoding %s", res)
+            err_cnt++
+        }
+    }
+    if err_cnt > 0 {
+        return errors.New(fmt.Sprintf("Encoding had errors count(%d)", err_cnt))
     }
     return nil
 }
@@ -41,7 +59,6 @@ func EncodeContainer(c* models.Container, cm ContentManager) (*utils.EncodingRes
     if q_err != nil {
       log.Fatal(q_err) // Also fatal if we can no longer list content (empty is just [])
     }
-
 
     // Remember that references in a range loop CHANGE the pointer on each loop so you MUST
     // re-assign a variable if you want to build a new object with pointers.
@@ -67,6 +84,7 @@ func EncodeContainer(c* models.Container, cm ContentManager) (*utils.EncodingRes
     if len(toEncode) > 0 {
         return EncodeContainerContent(&toEncode, cm)
     }
+    log.Printf("Did not find anything to encode under %s", c.Name)
     return nil, nil
 }
 
@@ -76,9 +94,8 @@ func EncodeContainer(c* models.Container, cm ContentManager) (*utils.EncodingRes
 func EncodeContainerContent(toEncode *utils.EncodingRequests, cm ContentManager) (*utils.EncodingResults, error) {
     expected := len(*toEncode)
     log.Printf("Attempting to encode N(%d) video files", expected)
-
     cfg := utils.GetCfg()
-    processors := cfg.CoreCount // TODO: Another config... SO MANY
+    processors := cfg.CoreCount / 2 // TODO: Another config... SO MANY
     if processors <= 0 {
         processors = 1 // Without at least one processor this will hang forever
     }
@@ -104,9 +121,13 @@ func EncodeContainerContent(toEncode *utils.EncodingRequests, cm ContentManager)
             close(input)
             close(reply)
         }
-        log.Printf("Finished and found result: %s", res)
-        //results = append(results, res)
+        r_cp := res
+        if r_cp.Err != nil {
+            log.Printf("FAILED to encode %s", r_cp)
+        }
+        results = append(results, r_cp)
     }
+    // We don't really have an error case here.
     return &results, nil
 }
 

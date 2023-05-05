@@ -43,7 +43,7 @@ type EncodingWorker struct {
     In chan EncodingRequest
 }
 type EncodingRequests []EncodingRequest
-type EncodingResults []EncodingResults
+type EncodingResults []EncodingResult
 
 
 // Returns a message about the video codec, size of it, or if it is invalid.
