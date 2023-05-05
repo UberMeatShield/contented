@@ -34,13 +34,14 @@ func EncodeVideos(cm ContentManager) error {
         return nil
     }
 
-    log.Printf("Encoding complete\n===================\n")
+    lineBreak := "===================================================="
+    log.Printf("Encoding complete\n%s\n", lineBreak)
     for _, res := range all_results {
         if res.Err == nil {
             log.Printf("Successfully encoded %s", res)
         }
     }
-    log.Printf("Failures\n===================\n")
+    log.Printf("Failures\n%s\n", lineBreak)
     err_cnt := 0
     for _, res := range all_results {
         if res.Err != nil {
