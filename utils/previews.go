@@ -5,8 +5,12 @@ package utils
 * and video content.   It can be configured to generate a single image or a gif for a video.
  */
 import (
+    "log"
+    "os"
+    "regexp"
+    "strconv"
+    "strings"
     "bytes"
-    "contented/models"
     "errors"
     "fmt"
     "github.com/disintegration/imaging"
@@ -14,17 +18,13 @@ import (
     "github.com/nfnt/resize"
     "github.com/tidwall/gjson"
     ffmpeg "github.com/u2takey/ffmpeg-go"
+    "contented/models"
     "image"
     "image/jpeg"
     "image/png"
     "io"
     "io/ioutil"
-    "log"
-    "os"
     "path/filepath"
-    "regexp"
-    "strconv"
-    "strings"
 )
 
 const PREVIEW_DIRECTORY = "container_previews"
@@ -670,66 +670,4 @@ func AssignPreviewIfExists(c *models.Container, mc *models.Content) string {
         log.Printf("Added a preview to content %s", mc.Preview)
     }
     return previewFile
-}
-
-func ConvertVideoToH256(srcFile string, dstFile string) (string, error) {
-    //fmt := "h256"
-    //log.Printf("Converting srcFile %s to dstFile %s with fmt %s", srcFile, dstFile, fmt)
-    //contentType, tErr := GetMimeType(path, filename)
-    filename := filepath.Base(srcFile)
-    path := filepath.Dir(srcFile)
-    contentType, tErr := GetMimeType(path, filename)
-    if tErr != nil {
-        return "", tErr
-    }
-    if !strings.Contains(contentType, "video") {
-        msg := fmt.Sprintf("Not a video file so not converting %s", contentType)
-        return "", errors.New(msg)
-    }
-    vidInfo, err := ffmpeg.Probe(srcFile)
-    if err != nil {
-        log.Printf("Couldn't probe %s", srcFile)
-        return "", err
-    }
-    if _, err := os.Stat(dstFile); !os.IsNotExist(err) {
-        existsMsg := fmt.Sprintf("Destination file already exists %s", dstFile)
-        log.Printf(existsMsg)
-        return "", errors.New(existsMsg)
-    }
-
-    // Check that the converted file doesn't exist
-    cfg := GetCfg()
-    codecName := gjson.Get(vidInfo, "streams.0.codec_name").String()
-    log.Printf("The vidinfo codec %s converting to %s", codecName, cfg.CodecForConversion)
-
-    // The CodecForConversion is NOT the name of the thing you convert to...
-    if cfg.CodecForConversion == codecName {
-        okMsg := fmt.Sprintf("%s Already in the desired codec %s", srcFile, cfg.CodecForConversion)
-        log.Printf(okMsg)
-        return okMsg, nil
-    }
-
-    matcher := regexp.MustCompile(cfg.CodecsToConvert)
-    if !matcher.MatchString(codecName) {
-        ignoreMsg := fmt.Sprintf("%s Not on the conversion list %s", srcFile, cfg.CodecsToConvert)
-        log.Printf(ignoreMsg)
-        return ignoreMsg, nil
-    }
-    ignore := regexp.MustCompile(cfg.CodecsToIgnore)
-    if ignore.MatchString(codecName) {
-        ignoreMsg := fmt.Sprintf("%s ignored because it matched %s", srcFile, cfg.CodecsToIgnore)
-        log.Printf(ignoreMsg)
-        return ignoreMsg, nil
-    }
-
-    // If codec in list of conversion codecs, then do it
-    log.Printf("%s will be converted from %s to %s", srcFile, codecName, cfg.CodecForConversion)
-    encode_err := ffmpeg.Input(srcFile).
-        Output(dstFile, ffmpeg.KwArgs{"c:v": cfg.CodecForConversion, "vtag": "hvc1"}).
-		OverWriteOutput().ErrorToStdOut().Run()
-    if encode_err != nil {
-        return "", err
-    }
-    msg := fmt.Sprintf("%s will be converted from %s to %s", srcFile, codecName, cfg.CodecForConversion)
-    return msg, nil
 }

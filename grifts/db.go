@@ -38,34 +38,63 @@ var _ = grift.Namespace("db", func() {
         return models.DB.TruncateAll()
     })
 
+    get_params := func() *url.Values {
+        vals := url.Values{} // TODO: Maybe set this via something sensible
+        return &vals
+    }
+    no_connection := func() *pop.Connection {
+        return nil // Do not do anything with the DB
+    }
+
     grift.Add("preview", func(c *grift.Context) error {
         cfg := utils.GetCfg()
         utils.InitConfigEnvy(cfg)
         fmt.Printf("Configuration is loaded %s doing preview creation", cfg.Dir)
 
-        get_params := func() *url.Values {
-            vals := url.Values{} // TODO: Maybe set this via something sensible
-            return &vals
-        }
         if cfg.UseDatabase {
             // The scope of transactions is a bit odd.  Seems like this is handled in
-            // buffalo via the magical buffalo middleware.
+            // buffalo via the magical buffalo middleware
             fmt.Printf("DB Manager setup")
             return models.DB.Transaction(func(tx *pop.Connection) error {
                 get_connection := func() *pop.Connection {
                     return tx
                 }
                 man := managers.CreateManager(cfg, get_connection, get_params)
-                fmt.Printf("Creating previews %t", man.CanEdit())
+                fmt.Printf("Creating previews images %t with db manager", man.CanEdit())
                 return managers.CreateAllPreviews(man)
             })
         } else {
-            get_connection := func() *pop.Connection {
-                return nil // Do not do anything with the DB
-            }
+            get_connection := no_connection
             man := managers.CreateManager(cfg, get_connection, get_params)
-            fmt.Printf("Use memory manager %t", man.CanEdit())
+            fmt.Printf("Use memory manager %t for preview images", man.CanEdit())
             return managers.CreateAllPreviews(man)
         }
     })
+
+
+    grift.Add("encode", func(c *grift.Context) error {
+        cfg := utils.GetCfg()
+        utils.InitConfigEnvy(cfg)
+        fmt.Printf("Configuration is loaded %s Starting Video conversion", cfg.Dir)
+
+        if cfg.UseDatabase {
+            // The scope of transactions is a bit odd.  Seems like this is handled in
+            // buffalo via the magical buffalo middleware
+            fmt.Printf("DB Manager setup Video encoding lookup")
+            return models.DB.Transaction(func(tx *pop.Connection) error {
+                get_connection := func() *pop.Connection {
+                    return tx
+                }
+                man := managers.CreateManager(cfg, get_connection, get_params)
+                fmt.Printf("Starting to encode %t TODO: Summary of config", man.CanEdit())
+                return managers.EncodeVideos(man)
+            })
+        } else {
+            get_connection := no_connection
+            man := managers.CreateManager(cfg, get_connection, get_params)
+            fmt.Printf("Use memory manager %t for video encoding lookups" , man.CanEdit())
+            return managers.EncodeVideos(man)
+        }
+    })
+
 })

@@ -41,9 +41,9 @@ type ContentManager interface {
     ListContainers(page int, per_page int) (*models.Containers, error)
     ListContainersContext() (*models.Containers, error)
     UpdateContainer(c *models.Container) error
-    CreateContainer(mc *models.Container) error
+    CreateContainer(c *models.Container) error
 
-    // Content listing
+    // Content listing (why did I name it Content vs Media?)
     GetContent(content_id uuid.UUID) (*models.Content, error)
     ListContent(ContainerID uuid.UUID, page int, per_page int) (*models.Contents, error)
     ListContentContext(ContainerID uuid.UUID) (*models.Contents, error)

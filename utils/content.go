@@ -118,7 +118,6 @@ func GetFileContents(dir string, filename string) *bufio.Reader {
 // Given a container ID and the src of a file in there, get a path and check if it exists
 func GetFilePathInContainer(src string, path string) (string, error) {
     //TODO: Potentially I should look at cfg.Dir, cnt.Path and src
-    //cfg := GetCfg()
     fq_path := filepath.Join(path, src)
     if _, os_err := os.Stat(fq_path); os_err != nil {
         return fq_path, os_err
@@ -184,7 +183,7 @@ func getContent(id uuid.UUID, fileInfo os.FileInfo, path string) models.Content 
     content := models.Content{
         ID:          id,
         Src:         fileInfo.Name(),
-        SizeBytes:   fileInfo.Size(),
+        SizeBytes:   int64(fileInfo.Size()),
         ContentType: contentType,
     }
     return content
