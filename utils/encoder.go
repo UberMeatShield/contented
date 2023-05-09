@@ -69,13 +69,20 @@ func IsValidVideo(srcFile string) (string, int64, error) {
         msg := fmt.Sprintf("Not a video file so not converting %s", contentType)
         return codecName, fileSize, errors.New(msg)
     }
-    vidInfo, probeErr := ffmpeg.Probe(srcFile)
+
+    vidInfo, probeErr := GetVideoInfo(srcFile)
     if probeErr != nil {
         log.Printf("Couldn't probe %s", srcFile)
         return codecName, fileSize, probeErr
     }
     codecName = gjson.Get(vidInfo, "streams.0.codec_name").String()
     return codecName, fileSize, nil
+}
+
+
+// Expand this into something that can trim down the video info to the little bits we care about
+func GetVideoInfo(srcFile string) (string, error) {
+    return ffmpeg.Probe(srcFile)
 }
 
 /**

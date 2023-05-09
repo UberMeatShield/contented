@@ -7,6 +7,8 @@ package utils
  */
 import (
     "os"
+    "strings"
+    "fmt"
     //"errors"
     "bufio"
     "contented/models"
@@ -167,6 +169,7 @@ func SniffFileType(content *os.File) (string, error) {
     return ctype, nil
 }
 
+
 func getContent(id uuid.UUID, fileInfo os.FileInfo, path string) models.Content {
     // https://golangcode.com/get-the-content-type-of-file/
     contentType, err := GetMimeType(path, fileInfo.Name())
@@ -177,6 +180,22 @@ func getContent(id uuid.UUID, fileInfo os.FileInfo, path string) models.Content 
 
     // I could do an ffmpeg.Probe(srcFile) to determine encoding and resolution
     // For images I could try and probe the encoding & resolution
+    meta := ""
+    corrupt := false
+
+    srcFile := filepath.Join(path, fileInfo.Name())
+    if strings.Contains(contentType, "image")  {
+        meta = "image stuff"   
+        // TODO: Determine if we can use the image library to get some information about the file.
+    } else if strings.Contains(contentType, "video") {
+        vidInfo, probeErr := GetVideoInfo(srcFile)
+        if probeErr == nil {
+            meta = vidInfo
+        } else {
+            meta = fmt.Sprintf("Failed to probe video %s", probeErr)
+            corrupt = true
+        }
+    }
 
     // TODO: Need to add the unique ID for each content (are they uniq?)
     // TODO: Should I get a Hash onto the content as well?
@@ -185,6 +204,8 @@ func getContent(id uuid.UUID, fileInfo os.FileInfo, path string) models.Content 
         Src:         fileInfo.Name(),
         SizeBytes:   int64(fileInfo.Size()),
         ContentType: contentType,
+        Meta: meta,
+        Corrupt: corrupt,
     }
     return content
 }

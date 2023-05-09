@@ -26,6 +26,9 @@ type Content struct {
     SizeBytes   int64          `json:"size" db:"size_bytes"`
     Description string         `json:"description" db:"description"`
 
+    // This is for information about the file content (video / image mostly stats, rez etc)
+    Meta string `json:"meta" db:"meta"` 
+
     // Joins (Eager loading is not working?)
     Screens Screens `json:"screens" has_many:"preview_screens"`
     Tags Tags `json:"tags" many_to_many:"contents_tags"`
