@@ -38,14 +38,18 @@ func EncodeVideos(cm ContentManager) error {
     log.Printf("Encoding complete\n%s\n", lineBreak)
     for _, res := range all_results {
         if res.Err == nil {
-            log.Printf("Successfully encoded %s", res)
+            // Again, original mc lookup?
+            msg := fmt.Sprintf("Successfully encoded %s media ID %s", res.NewVideo, res.MC_ID.String())
+            log.Print(msg)
         }
     }
     log.Printf("Failures\n%s\n", lineBreak)
     err_cnt := 0
     for _, res := range all_results {
         if res.Err != nil {
-            log.Printf("Failure encoding %s", res)
+            // Might want get the full link to the original video but it should be in the error
+            msg := fmt.Sprintf("Failure encoding %s failure was %s", res.Err, res.MC_ID.String())
+            log.Print(msg)
             err_cnt++
         }
     }
@@ -123,9 +127,6 @@ func EncodeContainerContent(toEncode *utils.EncodingRequests, cm ContentManager)
             close(reply)
         }
         r_cp := res
-        if r_cp.Err != nil {
-            log.Printf("FAILED to encode %s", r_cp)
-        }
         results = append(results, r_cp)
     }
     // We don't really have an error case here.
