@@ -47,6 +47,22 @@ func WriteScreenFile(dstPath string, fileName string, count int) (string, error)
     return screenName, nil
 }
 
+func Test_ImageMetaLookup(t *testing.T) {
+    var testDir, _ = envy.MustGet("DIR")
+    srcDir := filepath.Join(testDir, "dir2")
+    testFile := "fff&text=00-dir2.png"
+
+    srcFile := filepath.Join(srcDir, testFile)
+    meta, corrupt := GetImageMeta(srcFile)
+    if corrupt == true {
+        t.Errorf("This file should generate acceptable meta %s", meta)
+    }
+
+    if !strings.Contains(meta, "600") || !strings.Contains(meta, "400") {
+        t.Errorf("We should have valid meta %s", meta)
+    }
+}
+
 // Check that handling bad inputs behaves in an expected fashion
 func Test_BrokenImagePreview(t *testing.T) {
     var testDir, _ = envy.MustGet("DIR")
@@ -54,6 +70,12 @@ func Test_BrokenImagePreview(t *testing.T) {
     dstDir := GetPreviewDst(srcDir)
     testFile := "nature-corrupted-free-use.jpg"
     ResetPreviewDir(dstDir)
+
+    srcFile := filepath.Join(srcDir, testFile)
+    meta, corrupt := GetImageMeta(srcFile)
+    if corrupt == false {
+        t.Errorf("This should cause an error %s", meta)
+    }
 
     // TODO: This needs to be made into a better place around previews
     pLoc, err := GetImagePreview(srcDir, testFile, dstDir, 0)
@@ -73,10 +95,10 @@ func Test_ShouldCreate(t *testing.T) {
 
     filename := filepath.Join(srcDir, testFile)
     srcImg, fErr := os.Open(filename)
-
     if fErr != nil {
         t.Errorf("This file cannot be opened %s with err %s", filename, fErr)
     }
+    defer srcImg.Close()
 
     preview_no := ShouldCreatePreview(srcImg, 30000)
     if preview_no != false {

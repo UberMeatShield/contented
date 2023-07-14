@@ -11,6 +11,7 @@ import (
     "github.com/gofrs/uuid"
     "io/ioutil"
     "os"
+    "fmt"
 )
 
 var TOTAL_IN_SCREENS = 4
@@ -267,7 +268,9 @@ func (as *ActionSuite) Test_PreviewsWithCorrupted() {
     as.NoError(m_err)
     as.Equal(2, len(*content), "It should all be loaded in the db")
     for _, mc := range *content {
-        as.Equal(mc.Corrupt, false, "And at this point nothing is corrupt")
+        if mc.Src != "nature-corrupted-free-use.jpg" && mc.Src != "snow-corrupted-free-use.png" {
+            as.Equal(mc.Corrupt, false, fmt.Sprintf("And at this point nothing is corrupt %s", mc.Src))
+        }
     }
 
     // Exclude the corrupted files

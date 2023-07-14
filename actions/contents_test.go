@@ -90,10 +90,11 @@ func (as *ActionSuite) Test_ManagerDB_Preview() {
     as.NotZero(cnt.ID, "We should have an ID now for the container")
     for _, mc := range content {
         mc.ContainerID = nulls.NewUUID(cnt.ID)
-        as.DB.Create(&mc)
+        err := as.DB.Create(&mc)
+        as.NoError(err, fmt.Sprintf("It should create item %s with err %s", mc.Src, err))
         as.NotZero(mc.ID, "It should have a content container ID and id")
         previewRes := as.JSON("/preview/%s", mc.ID).Get()
-        as.Equal(http.StatusOK, previewRes.Code, fmt.Sprintf("Failed to find preview for %s preview (%s)", mc.Src))
+        as.Equal(http.StatusOK, previewRes.Code, fmt.Sprintf("Failed to find preview for %s preview (%s)", mc.Src, previewRes.Response.Body))
     }
 }
 

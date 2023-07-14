@@ -9,6 +9,7 @@ import (
     "os"
     "strings"
     "fmt"
+    "image"
     //"errors"
     "bufio"
     "contented/models"
@@ -169,7 +170,6 @@ func SniffFileType(content *os.File) (string, error) {
     return ctype, nil
 }
 
-
 func getContent(id uuid.UUID, fileInfo os.FileInfo, path string) models.Content {
     // https://golangcode.com/get-the-content-type-of-file/
     contentType, err := GetMimeType(path, fileInfo.Name())
@@ -185,7 +185,7 @@ func getContent(id uuid.UUID, fileInfo os.FileInfo, path string) models.Content 
     corrupt := false
     srcFile := filepath.Join(path, fileInfo.Name())
     if strings.Contains(contentType, "image")  {
-        meta = "image stuff"   
+        meta, corrupt = GetImageMeta(srcFile)
         // TODO: Determine if we can use the image library to get some information about the file.
     } else if strings.Contains(contentType, "video") {
         vidInfo, probeErr := GetVideoInfo(srcFile)
@@ -209,6 +209,32 @@ func getContent(id uuid.UUID, fileInfo os.FileInfo, path string) models.Content 
     }
     return content
 }
+
+func GetImageMeta(srcFile string) (string, bool) {
+    corrupt := false
+    meta := ""
+
+    reader, err := os.Open(srcFile)
+    if err != nil {
+       return fmt.Sprintf("%s", err), true
+    }
+    defer reader.Close()
+
+    m, _, i_err := image.Decode(reader)
+    if i_err != nil {
+        meta = "Couldn't Determine Image info"
+        corrupt = true
+    } else {
+        // TODO: What information is good?  Add it to meta
+        bounds := m.Bounds()  // Do we want all the meta?
+        w := bounds.Dx()
+        h := bounds.Dy()
+        meta = fmt.Sprintf("{\"width\": %d, \"height\": %d}", w, h)
+    }
+    return meta, corrupt
+}
+
+
 
 // Write a recurse method for getting all the data up to depth N
 func CreateStructure(dir string, cfg *DirConfigEntry, results *ContentTree, depth int) (*ContentTree, error) {

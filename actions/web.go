@@ -72,6 +72,7 @@ func PreviewHandler(c buffalo.Context) error {
     if bad_uuid != nil {
         return c.Error(400, bad_uuid)
     }
+
     man := managers.GetManager(&c)
     mc, err := man.FindFileRef(mcID)
     if err != nil {
