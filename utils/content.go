@@ -180,9 +180,9 @@ func getContent(id uuid.UUID, fileInfo os.FileInfo, path string) models.Content 
 
     // I could do an ffmpeg.Probe(srcFile) to determine encoding and resolution
     // For images I could try and probe the encoding & resolution
+
     meta := ""
     corrupt := false
-
     srcFile := filepath.Join(path, fileInfo.Name())
     if strings.Contains(contentType, "image")  {
         meta = "image stuff"   
