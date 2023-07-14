@@ -7,6 +7,7 @@ import (
   "strings"
   "path/filepath"
   "github.com/tidwall/gjson"
+  "github.com/gofrs/uuid"
   ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
@@ -16,6 +17,26 @@ func nukeFile(dstFile string) {
     if _, err := os.Stat(dstFile); !os.IsNotExist(err) {
         os.Remove(dstFile)
     }
+}
+
+func Test_VideoMeta(t *testing.T) {
+    srcDir, _, testFile := Get_VideoAndSetupPaths()
+    srcFile := filepath.Join(srcDir, testFile)
+    
+    id, _ := uuid.NewV4() //   hate
+    finfo, err := os.Stat(srcFile)
+    if err != nil {
+        t.Errorf("Failed to stat %s err: %s", srcFile, err)
+    }
+    c := getContent(id, finfo, srcDir)
+    if c.Corrupt {
+        t.Errorf("Failure, file is corrupt %s", c.Meta)
+    }
+    codec := gjson.Get(c.Meta, "streams.0.codec_name").String()
+    if codec != "h264" {
+        t.Errorf("Codec format incorrect %s wanted h264 found %s", c.Meta, codec)
+    }
+
 }
 
 

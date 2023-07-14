@@ -6,6 +6,7 @@ create_table("contents") {
 	t.Column("container_id", "uuid", {"null": true, "default": nil})
     t.ForeignKey("container_id", {"containers": ["id"]}, {"on_delete": "cascade", "null": true})
 	t.Column("active", "bool", {"default": true})
+	t.Column("meta", "text", {"default": ""})
 	t.Column("corrupt", "bool", {"default": false})
 	t.Column("idx", "integer", {"default": 0})
 	t.Column("size_bytes", "bigint", {"default": 0})

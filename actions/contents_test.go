@@ -1,6 +1,7 @@
 package actions
 
 import (
+    "fmt"
     "contented/test_common"
     "contented/models"
     "encoding/json"
@@ -81,17 +82,19 @@ func (as *ActionSuite) Test_ManagerDB_Preview() {
     test_common.InitFakeApp(true)
 
     cnt, content := test_common.GetContentByDirName("dir2")
-    as.Equal(3, len(content), "Dir2 should have 3 items")
+    
     as.Equal("dir2", cnt.Name, "It should have loaded the right item")
+    as.Equal(3, len(content), fmt.Sprintf("Dir2 should have 3 items %s", content))
 
     as.DB.Create(cnt)
     as.NotZero(cnt.ID, "We should have an ID now for the container")
     for _, mc := range content {
         mc.ContainerID = nulls.NewUUID(cnt.ID)
-        as.DB.Create(&mc)
+        err := as.DB.Create(&mc)
+        as.NoError(err, fmt.Sprintf("It should create item %s with err %s", mc.Src, err))
         as.NotZero(mc.ID, "It should have a content container ID and id")
         previewRes := as.JSON("/preview/%s", mc.ID).Get()
-        as.Equal(http.StatusOK, previewRes.Code)
+        as.Equal(http.StatusOK, previewRes.Code, fmt.Sprintf("Failed to find preview for %s preview (%s)", mc.Src, previewRes.Response.Body))
     }
 }
 

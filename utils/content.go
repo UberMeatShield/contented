@@ -7,6 +7,9 @@ package utils
  */
 import (
     "os"
+    "strings"
+    "fmt"
+    "image"
     //"errors"
     "bufio"
     "contented/models"
@@ -178,6 +181,22 @@ func getContent(id uuid.UUID, fileInfo os.FileInfo, path string) models.Content 
     // I could do an ffmpeg.Probe(srcFile) to determine encoding and resolution
     // For images I could try and probe the encoding & resolution
 
+    meta := ""
+    corrupt := false
+    srcFile := filepath.Join(path, fileInfo.Name())
+    if strings.Contains(contentType, "image")  {
+        meta, corrupt = GetImageMeta(srcFile)
+        // TODO: Determine if we can use the image library to get some information about the file.
+    } else if strings.Contains(contentType, "video") {
+        vidInfo, probeErr := GetVideoInfo(srcFile)
+        if probeErr == nil {
+            meta = vidInfo
+        } else {
+            meta = fmt.Sprintf("Failed to probe video %s", probeErr)
+            corrupt = true
+        }
+    }
+
     // TODO: Need to add the unique ID for each content (are they uniq?)
     // TODO: Should I get a Hash onto the content as well?
     content := models.Content{
@@ -185,9 +204,37 @@ func getContent(id uuid.UUID, fileInfo os.FileInfo, path string) models.Content 
         Src:         fileInfo.Name(),
         SizeBytes:   int64(fileInfo.Size()),
         ContentType: contentType,
+        Meta: meta,
+        Corrupt: corrupt,
     }
     return content
 }
+
+func GetImageMeta(srcFile string) (string, bool) {
+    corrupt := false
+    meta := ""
+
+    reader, err := os.Open(srcFile)
+    if err != nil {
+       return fmt.Sprintf("%s", err), true
+    }
+    defer reader.Close()
+
+    m, _, i_err := image.Decode(reader)
+    if i_err != nil {
+        meta = "Couldn't Determine Image info"
+        corrupt = true
+    } else {
+        // TODO: What information is good?  Add it to meta
+        bounds := m.Bounds()  // Do we want all the meta?
+        w := bounds.Dx()
+        h := bounds.Dy()
+        meta = fmt.Sprintf("{\"width\": %d, \"height\": %d}", w, h)
+    }
+    return meta, corrupt
+}
+
+
 
 // Write a recurse method for getting all the data up to depth N
 func CreateStructure(dir string, cfg *DirConfigEntry, results *ContentTree, depth int) (*ContentTree, error) {
