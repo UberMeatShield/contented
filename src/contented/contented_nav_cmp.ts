@@ -5,7 +5,7 @@ import {Content} from './content';
 import {GlobalNavEvents} from './nav_events';
 import {MatRipple} from '@angular/material/core';
 import {MatAutocomplete} from '@angular/material/autocomplete';
-import {FormControl} from '@angular/forms';
+import {UntypedFormControl} from '@angular/forms';
 import {Observable} from 'rxjs';
 import {map, startWith} from 'rxjs/operators';
 
@@ -24,7 +24,7 @@ export class ContentedNavCmp implements OnInit {
     @Input() loading: boolean;
     @Input() containers: Array<Container>
 
-    public containerFilter = new FormControl("");
+    public containerFilter = new UntypedFormControl("");
     public filteredContainers: Observable<Container[]>;
 
     constructor(public _contentedService: ContentedService) {

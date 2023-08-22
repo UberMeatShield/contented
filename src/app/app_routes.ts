@@ -8,7 +8,7 @@ import {APP_BASE_HREF} from '@angular/common';
 import {RouterModule, Routes} from '@angular/router';
 
 // Hmm, should have made this route have a saner extension
-const appRoutes = [
+const appRoutes: Routes = [
     {path: '', redirectTo: '/ui/browse/0/0', pathMatch: 'full'},
     {path: 'ui/browse/:idx/:rowIdx', component: ContentedCmp},
     {path: 'ui/content/:id', component: ContentViewCmp},

@@ -15,7 +15,7 @@ import {
 import {ContentedService} from './contented_service';
 import {Content} from './content';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
-import {FormBuilder, NgForm, FormControl, FormGroup} from '@angular/forms';
+import {UntypedFormBuilder, NgForm, UntypedFormControl, UntypedFormGroup} from '@angular/forms';
 
 import {PageEvent} from '@angular/material/paginator';
 import {MatDialog, MatDialogConfig, MAT_DIALOG_DATA} from '@angular/material/dialog';
@@ -33,9 +33,9 @@ export class SearchCmp implements OnInit{
     // Debounce the search
     @ViewChild('videoForm', { static: true }) searchControl;
     throttleSearch: Subscription;
-    searchText = new FormControl("");
-    options: FormGroup;
-    fb: FormBuilder;
+    searchText = new UntypedFormControl("");
+    options: UntypedFormGroup;
+    fb: UntypedFormBuilder;
 
     public content: Array<Content>;
 
@@ -52,7 +52,7 @@ export class SearchCmp implements OnInit{
         public route: ActivatedRoute,
         public router: Router,
         public dialog: MatDialog,
-        fb: FormBuilder,
+        fb: UntypedFormBuilder,
     ) {
         this.fb = fb;
     }

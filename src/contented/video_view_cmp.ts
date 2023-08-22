@@ -19,7 +19,7 @@ import {Container} from './container';
 import {Screen} from './screen';
 import {GlobalNavEvents, NavTypes} from './nav_events';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
-import {FormBuilder, NgForm, FormControl, FormGroup} from '@angular/forms';
+import {UntypedFormBuilder, NgForm, UntypedFormControl, UntypedFormGroup} from '@angular/forms';
 
 import {PageEvent} from '@angular/material/paginator';
 import {MatDialog, MatDialogConfig, MAT_DIALOG_DATA} from '@angular/material/dialog';
@@ -37,9 +37,9 @@ export class VideoViewCmp implements OnInit, OnDestroy {
     // Debounce the search
     @ViewChild('searchForm', { static: true }) searchControl;
     throttleSearch: Subscription;
-    videoText: FormControl = new FormControl("");
-    options: FormGroup;
-    fb: FormBuilder;
+    videoText: UntypedFormControl = new UntypedFormControl("");
+    options: UntypedFormGroup;
+    fb: UntypedFormBuilder;
 
     public selectedContent: Content; // For keeping track of where we are in the page
     public selectedContainer: Container;  // For filtering
@@ -62,7 +62,7 @@ export class VideoViewCmp implements OnInit, OnDestroy {
         public route: ActivatedRoute,
         public router: Router,
         public dialog: MatDialog,
-        fb: FormBuilder,
+        fb: UntypedFormBuilder,
     ) {
         this.fb = fb;
     }
