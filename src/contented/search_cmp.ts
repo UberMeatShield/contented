@@ -33,7 +33,7 @@ export class SearchCmp implements OnInit{
     // Debounce the search
     @ViewChild('videoForm', { static: true }) searchControl;
     throttleSearch: Subscription;
-    searchText: FormControl;
+    searchText = new FormControl("");
     options: FormGroup;
     fb: FormBuilder;
 
@@ -75,7 +75,6 @@ export class SearchCmp implements OnInit{
     }
 
     public resetForm(setupFilterEvents: boolean = false) {
-        this.searchText = new FormControl('');
         this.options = this.fb.group({
             searchText: this.searchText,
         });

@@ -37,7 +37,7 @@ export class VideoViewCmp implements OnInit, OnDestroy {
     // Debounce the search
     @ViewChild('searchForm', { static: true }) searchControl;
     throttleSearch: Subscription;
-    videoText: FormControl;
+    videoText: FormControl = new FormControl("");
     options: FormGroup;
     fb: FormBuilder;
 
@@ -187,7 +187,6 @@ export class VideoViewCmp implements OnInit, OnDestroy {
 
 
     public resetForm(setupFilterEvents: boolean = false) {
-        this.videoText = new FormControl('');
         this.options = this.fb.group({
             videoText: this.videoText,
         });
