@@ -5,7 +5,6 @@ locales/*
 migrations/schema.sql
 
 tmp/*
-public/build/*
 
 .grifter/
 .yarn/
@@ -16,3 +15,4 @@ mocks/content/*/container_previews/*
 mocks/content/dir2/.DS_Store
 mocks/content/dir2/*h256.mp4
 mocks/content/screens/screens_sub_dir/container_previews/
+public/build/**

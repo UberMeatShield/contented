@@ -35,9 +35,13 @@ install:
 	yarn install
 
 # Typically you want a different window doing your jsbuilds and golang stuff for sanity
-.PHONY: jsdev
-jsdev:
-	yarn run gulp typescript
+.PHONY: typescript
+typescript:
+	yarn run ng build contented --configuration=production --watch=false --base-href /public/build/
+
+.PHONY: tsdev
+tsdev:
+	yarn run ng build contented --configuration=dev --watch=true --base-href /public/build/
 
 # Angular is complaining about deploy urls but not using it doesn't work as well with a go dev server
 .PHONY: jsprod
