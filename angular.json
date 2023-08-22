@@ -25,6 +25,11 @@
               "src/scss/main.scss"
             ],
             "scripts": [],
+            "allowedCommonJsDependencies": [
+               "lodash",
+               "moment",
+               "d3"
+            ],
             "vendorChunk": true,
             "extractLicenses": false,
             "buildOptimizer": false,
