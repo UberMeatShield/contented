@@ -2,6 +2,8 @@
 $thumbWidth: 64px; 
 $thumbHeight:  64px;
 
+$color-pri: #2196f3;
+
 body {
     margin: 0;
 }
@@ -46,6 +48,10 @@ body {
     .mat-mdc-form-field-subscript-wrapper {
         height: 0px;
     }
+}
+
+.active {
+    background-color: $color-pri;
 }
 
 // Might want to make this different than the top level browse component

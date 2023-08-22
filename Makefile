@@ -35,7 +35,7 @@ gtest:
 	export DIR=`pwd`/mocks/content && buffalo test ./actions
 
 .PHONY: ngdev
-tsdev:
+ngdev:
 	yarn run ng build contented --configuration=dev --watch=true --base-href /public/build/
 
 .PHONY: ngtest
