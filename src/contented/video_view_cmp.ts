@@ -21,8 +21,8 @@ import {GlobalNavEvents, NavTypes} from './nav_events';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 import {FormBuilder, NgForm, FormControl, FormGroup} from '@angular/forms';
 
-import {LegacyPageEvent as PageEvent} from '@angular/material/legacy-paginator';
-import {MatLegacyDialog as MatDialog, MatLegacyDialogConfig as MatDialogConfig, MAT_LEGACY_DIALOG_DATA as MAT_DIALOG_DATA} from '@angular/material/legacy-dialog';
+import {PageEvent as PageEvent} from '@angular/material/paginator';
+import {MatDialog as MatDialog, MatDialogConfig as MatDialogConfig, MAT_DIALOG_DATA} from '@angular/material/dialog';
 import * as _ from 'lodash';
 
 
