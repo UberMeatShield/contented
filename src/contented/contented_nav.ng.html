@@ -64,11 +64,11 @@
   </div>
 
   <!-- A link to search here is a little odd -->
-  <a class="search-link" href="/ui/search">Search</a>
+  <a class="search-link" [routerLink]="['/ui/search']" href="/ui/search">Search</a>
   &nbsp;
-  <a class="search-link" href="/ui/video">Video</a>
+  <a class="search-link"[routerLink]="['/ui/video']"  href="/ui/video">Video</a>
   &nbsp;
-  <a class="search-link" href="/ui/browse/0/0/">Browse</a>
+  <a class="search-link" [routerLink]="['/ui/browse', '0', '0']" href="/ui/browse/0/0/">Browse</a>
 
   <!-- This pretty much just flickers, probably test it is working on larger content -->
   <div *ngIf="loading">

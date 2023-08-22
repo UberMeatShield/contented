@@ -2,6 +2,9 @@
 $thumbWidth: 64px; 
 $thumbHeight:  64px;
 
+body {
+    margin: 0;
+}
 .contented-cmp {
     height: 100%;
     width: 100%;
@@ -37,6 +40,12 @@ $thumbHeight:  64px;
   margin-bottom: 2rem;
   display: flex;
   flex-wrap: wrap;
+}
+
+.container-search-form {
+    .mat-mdc-form-field-subscript-wrapper {
+        height: 0px;
+    }
 }
 
 // Might want to make this different than the top level browse component

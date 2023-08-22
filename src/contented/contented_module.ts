@@ -1,6 +1,8 @@
 import {NgModule} from '@angular/core';
 import {BrowserModule} from '@angular/platform-browser';
 import {HttpClientModule} from '@angular/common/http';
+import { RouterModule } from '@angular/router';
+
 import {MatCardModule} from '@angular/material/card';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
@@ -36,6 +38,7 @@ import {ByteFormatterPipe} from './filters';
       HttpClientModule,
       FormsModule,
       ReactiveFormsModule,
+      RouterModule,
       MatProgressBarModule,
       MatCardModule,
       MatButtonModule,
