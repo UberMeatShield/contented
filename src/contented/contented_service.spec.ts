@@ -14,7 +14,7 @@ import {Container} from '../contented/container';
 import {ApiDef} from '../contented/api_def';
 
 import * as _ from 'lodash';
-import {MockData} from './mock/mock_data';
+import {MockData} from '../test/mock/mock_data';
 
 describe('TestingContentedService', () => {
     let fixture: ComponentFixture<ContentedCmp>;

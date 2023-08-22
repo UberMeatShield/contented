@@ -24,7 +24,7 @@ export class ContentedNavCmp implements OnInit {
     @Input() loading: boolean;
     @Input() containers: Array<Container>
 
-    public containerFilter = new FormControl();
+    public containerFilter = new FormControl<string>("");
     public filteredContainers: Observable<Container[]>;
 
     constructor(public _contentedService: ContentedService) {

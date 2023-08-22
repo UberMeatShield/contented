@@ -21,8 +21,8 @@ import {GlobalNavEvents, NavTypes} from './nav_events';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 import {FormBuilder, NgForm, FormControl, FormGroup} from '@angular/forms';
 
-import {PageEvent} from '@angular/material/paginator';
-import {MatDialog, MatDialogConfig, MAT_DIALOG_DATA} from '@angular/material/dialog';
+import {PageEvent as PageEvent} from '@angular/material/paginator';
+import {MatDialog as MatDialog, MatDialogConfig as MatDialogConfig, MAT_DIALOG_DATA} from '@angular/material/dialog';
 import * as _ from 'lodash';
 
 
@@ -37,7 +37,7 @@ export class VideoViewCmp implements OnInit, OnDestroy {
     // Debounce the search
     @ViewChild('searchForm', { static: true }) searchControl;
     throttleSearch: Subscription;
-    videoText: FormControl;
+    videoText = new FormControl<string>("");
     options: FormGroup;
     fb: FormBuilder;
 
@@ -187,7 +187,6 @@ export class VideoViewCmp implements OnInit, OnDestroy {
 
 
     public resetForm(setupFilterEvents: boolean = false) {
-        this.videoText = new FormControl('');
         this.options = this.fb.group({
             videoText: this.videoText,
         });

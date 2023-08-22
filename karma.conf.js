@@ -35,9 +35,10 @@ module.exports = function (config) {
         failFast: false              // test would finish with error when a first fail occurs.
     },
     port: 9876,
+    browserNoActivityTimeout: 4000000,
     colors: true,
     logLevel: config.LOG_DISABLE,
-    // logLevel: config.LOG_INFO,
+    //logLevel: config.LOG_INFO,
     autoWatch: true,
     browsers: ['ChromeHeadless'],
     singleRun: false

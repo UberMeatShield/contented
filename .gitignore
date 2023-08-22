@@ -1,18 +1,18 @@
-/.angular/cache
+.angular/cache
 node_modules/*
 bin/*
 locales/*
 migrations/schema.sql
 
 tmp/*
-public/build/*
-/mocks/content/*/container_previews/*
 
 .grifter/
 .yarn/
 .yarnrc.yml
 .DS_Store
 mocks/.DS_Store
+mocks/content/*/container_previews/*
 mocks/content/dir2/.DS_Store
 mocks/content/dir2/*h256.mp4
 mocks/content/screens/screens_sub_dir/container_previews/
+public/build/**

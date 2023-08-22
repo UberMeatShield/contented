@@ -17,7 +17,7 @@ import {ApiDef} from '../contented/api_def';
 import {GlobalNavEvents} from '../contented/nav_events';
 
 import * as _ from 'lodash';
-import {MockData} from './mock/mock_data';
+import {MockData} from '../test/mock/mock_data';
 
 declare var $;
 describe('TestingScreensCmp', () => {

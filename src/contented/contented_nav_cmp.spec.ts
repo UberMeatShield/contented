@@ -15,7 +15,7 @@ import {GlobalNavEvents, NavTypes} from '../contented/nav_events';
 
 import * as _ from 'lodash';
 import * as $ from 'jquery';
-import {MockData} from './mock/mock_data';
+import {MockData} from '../test/mock/mock_data';
 
 describe('TestingContentedNavCmp', () => {
     let fixture: ComponentFixture<ContentedNavCmp>;
