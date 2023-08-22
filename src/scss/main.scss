@@ -66,11 +66,11 @@ body {
       flex-shrink: 0;
       margin: 5px;
     }
+}
 
-    .search-field {
-        display: block;
-        width: 80%;
-    }
+.search-field {
+    display: block;
+    width: 100%;
 }
 
 // Navigation and 
@@ -103,42 +103,43 @@ body {
 // The toolbar also has a lot of wasted space
 .contented-nav-cmp {
     height: 42px;
-}
-
-.container-contents {
-    .mat-card-subtitle{
-        margin-bottom: 0px;
-    }
-    .mat-card {
-        padding: 0px;
-    }
-}
-
-.container-bar-info {
-    margin-top: 22px;
-    display: flex;
-    flex-wrap: wrap;
-}
-
-.container-meta {
-  padding: 0 !important;
-}
-
-.bar-spacer {
-  margin-left: 1.5rem;
-}
-
-.search-dialog {
-    min-height: calc(100vh - 100px);
-    width: 100%;
-}
-
-.current-item {
-  margin: 0 0 2rem 0;
-}
-
-.current-img {
-    background-color: #aaa;
+    border-bottom: 1px solid $color-pri; 
+}                                        
+                                         
+.container-contents {                    
+    .mat-card-subtitle{                 
+        margin-bottom: 0px;              
+    }                                    
+    .mat-card {                          
+        padding: 0px;                    
+    }                                   
+}                                        
+                                         
+.container-bar-info {                    
+    margin-top: 22px;                    
+    display: flex;                       
+    flex-wrap: wrap;                     
+}                                        
+                                         
+.container-meta {                        
+  padding: 0 !important;                 
+}                                        
+                                         
+.bar-spacer {                            
+  margin-left: 1.5rem;                   
+}                                        
+                                         
+.search-dialog {                        
+    min-height: calc(100vh - 100px);     
+    width: 100%;                         
+}                                        
+                                         
+.current-item {                          
+  margin: 0 0 2rem 0;                    
+}                                        
+                                         
+.current-img {                           
+    background-color: #aaa;              
     border: solid 1px black;
     border-radius: 2px;
 }
