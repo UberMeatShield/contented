@@ -16,7 +16,7 @@ const appRoutes: Routes = [
     {path: 'ui/video', component: VideoViewCmp},
 ];
 @NgModule({
-    imports: [RouterModule.forRoot(appRoutes, { relativeLinkResolution: 'legacy' })],
+    imports: [RouterModule.forRoot(appRoutes, {})],
     providers: [{provide: APP_BASE_HREF, useValue: ''}],
     exports: [RouterModule]
 })
