@@ -29,10 +29,13 @@
           }
         ],
         "@angular-eslint/component-class-suffix": [
-           "error",
-           {
-              "suffixes": ["", "Cmp"]
-           }
+          "error",
+          {
+            "suffixes": [
+              "",
+              "Cmp"
+            ]
+          }
         ],
         "@angular-eslint/directive-selector": [
           "error",
