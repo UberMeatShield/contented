@@ -39,6 +39,7 @@ tsdev:
 	yarn run ng build contented --configuration=dev --watch=true --base-href /public/build/
 
 .PHONY: ngtest
+ngtest:
 	yarn run ng test
 
 # Often a run with eslint --fix will actually handle just about everything
