@@ -7,7 +7,6 @@
   "license": "BSD",
   "description": "GoLang starter project with some @angular",
   "scripts": {
-    "tsc": "tsc",
     "lint": "ng lint"
   },
   "homepage": "",

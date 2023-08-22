@@ -1,10 +1,20 @@
 .DEFAULT_GOAL := build
 
 # You are going to need to have buffalo installed https://gobuffalo.io/documentation/getting_started/installation/
+.PHONY: install
+install:
+	go get contented
+	buffalo plugin install
+	yarn install
 
+# Need to fix the docker build, it is pretty old.
 .PHONY: build
 build:
 	docker build .
+
+.PHONY: dev
+dev:
+	export DIR=`pwd`/mocks/content && buffalo dev
 
 # I would rather use gotestsum, but buffalo does a bunch of DB setup that doesn't play
 # nice with go test or gotestsum. Or potentially my tests need some saner / better init
@@ -24,39 +34,20 @@ gtest:
 	export DIR=`pwd`/mocks/content && buffalo test ./managers
 	export DIR=`pwd`/mocks/content && buffalo test ./actions
 
-.PHONY: dev
-dev:
-	export DIR=`pwd`/mocks/content && buffalo dev
+.PHONY: ngdev
+tsdev:
+	yarn run ng build contented --configuration=dev --watch=true --base-href /public/build/
 
-.PHONY: install
-install:
-	go get contented
-	buffalo plugin install
-	yarn install
+.PHONY: ngtest
+	yarn run ng test
+
+# Often a run with eslint --fix will actually handle just about everything
+.PHONY: lint
+lint:
+	yarn run lint
 
 # Typically you want a different window doing your jsbuilds and golang stuff for sanity
 .PHONY: typescript
 typescript:
 	yarn run ng build contented --configuration=production --watch=false --base-href /public/build/
-
-.PHONY: tsdev
-tsdev:
-	yarn run ng build contented --configuration=dev --watch=true --base-href /public/build/
-
-# Angular is complaining about deploy urls but not using it doesn't work as well with a go dev server
-.PHONY: jsprod
-jsprod:
-	yarn run gulp typescriptProd
-
-# Often a run with eslint --fix will actually handle just about everything
-.PHONY: lint
-jslint:
-	yarn run lint
-
-# Running the basic lint
-.PHONY: jsci
-jsci:
-	yarn run typescriptTests
-	yarn run lint
-
 

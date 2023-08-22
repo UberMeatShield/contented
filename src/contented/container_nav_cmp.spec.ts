@@ -13,7 +13,7 @@ import {ContentedModule} from '../contented/contented_module';
 
 import * as _ from 'lodash';
 import * as $ from 'jquery';
-import {MockData} from './mock/mock_data';
+import {MockData} from '../test/mock/mock_data';
 
 describe('TestingContainerNavCmp', () => {
     let fixture: ComponentFixture<ContainerNavCmp>;
@@ -28,7 +28,8 @@ describe('TestingContainerNavCmp', () => {
             imports: [RouterTestingModule, ContentedModule, HttpClientTestingModule],
             providers: [
                 ContentedService
-            ]
+            ],
+            teardown: {destroyAfterEach: false},
         }).compileComponents();
 
         service = TestBed.inject(ContentedService);
