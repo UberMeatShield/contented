@@ -26,9 +26,9 @@
             ],
             "scripts": [],
             "allowedCommonJsDependencies": [
-               "lodash",
-               "moment",
-               "d3"
+              "lodash",
+              "moment",
+              "d3"
             ],
             "vendorChunk": true,
             "extractLicenses": false,
@@ -127,10 +127,18 @@
     },
     "@schematics/angular:directive": {
       "prefix": "app"
+    },
+    "@angular-eslint/schematics:application": {
+      "setParserOptionsProject": true
+    },
+    "@angular-eslint/schematics:library": {
+      "setParserOptionsProject": true
     }
   },
   "cli": {
     "analytics": false,
-    "defaultCollection": "@angular-eslint/schematics"
+    "schematicCollections": [
+      "@angular-eslint/schematics"
+    ]
   }
 }
