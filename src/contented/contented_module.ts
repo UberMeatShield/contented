@@ -33,28 +33,28 @@ import {Content} from './content';
 import {Screen} from './screen';
 import {ByteFormatterPipe} from './filters';
 
- import { MonacoEditorModule, NgxMonacoEditorConfig } from 'ngx-monaco-editor-v2';
- const monacoConfig: NgxMonacoEditorConfig = {
-   baseUrl: '/public/static/',
-   defaultOptions: {
-     wordWrap: "on",
-     minimap: {enabled: false},
-     scrollbar: {
-       alwaysConsumeMouseWheel: false,  // This prevents from intercepting the page scroll
-       handleMouseWheel: false,  // This prevents it from scrolling and hiding editing
-     },
-   },
-   onMonacoLoad: () => {
-     // Can just make this do a call to the system and pull back a file that
-     // is generated that has the tags.
-/*
-     let monaco = (<any>window).monaco;
-     let lang = monaco.languages;
-     lang.register({id: "snort"});
-     lang.setMonarchTokensProvider("snort", SNORT);
-*/
-   }
- };
+import { MonacoEditorModule, NgxMonacoEditorConfig } from 'ngx-monaco-editor-v2';
+import {TAGGING_SYNTAX} from './tagging_syntax';
+
+const monacoConfig: NgxMonacoEditorConfig = {
+  baseUrl: '/public/static/',
+  defaultOptions: {
+    wordWrap: "on",
+    minimap: {enabled: false},
+    scrollbar: {
+      alwaysConsumeMouseWheel: false,  // This prevents from intercepting the page scroll
+      handleMouseWheel: false,  // This prevents it from scrolling and hiding editing
+    },
+  },
+  onMonacoLoad: () => {
+    // Can just make this do a call to the system and pull back a file that is generated that has the tags.
+    console.log("Now here is where we register a new language for tags.");
+    let monaco = (<any>window).monaco;
+    let lang = monaco.languages;
+    lang.register({id: "tagging"});
+    lang.setMonarchTokensProvider("tagging", TAGGING_SYNTAX);
+  }
+};
 
 @NgModule({
   imports: [

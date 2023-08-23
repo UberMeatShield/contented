@@ -25,7 +25,8 @@ export class MediaEditorCmp implements OnInit {
   @Input() readOnly: boolean = false;
   @Input() editorOptions = {
     theme: 'vs-dark',
-    language: 'html',
+    //language: 'html',
+    language: 'tagging',
   };
 
   // These are values for the Monaco Editors, change events are passed down into
