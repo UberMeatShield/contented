@@ -27,10 +27,34 @@ import {ContentViewCmp} from './content_view_cmp';
 import {VideoViewCmp, ScreenDialog} from './video_view_cmp';
 import {ContentedService} from './contented_service';
 import {ScreensCmp} from './screens_cmp';
+import {MediaEditorCmp} from './media_editor.component';
 import {Container} from './container';
 import {Content} from './content';
 import {Screen} from './screen';
 import {ByteFormatterPipe} from './filters';
+
+ import { MonacoEditorModule, NgxMonacoEditorConfig } from 'ngx-monaco-editor-v2';
+ const monacoConfig: NgxMonacoEditorConfig = {
+   baseUrl: '/public/static/',
+   defaultOptions: {
+     wordWrap: "on",
+     minimap: {enabled: false},
+     scrollbar: {
+       alwaysConsumeMouseWheel: false,  // This prevents from intercepting the page scroll
+       handleMouseWheel: false,  // This prevents it from scrolling and hiding editing
+     },
+   },
+   onMonacoLoad: () => {
+     // Can just make this do a call to the system and pull back a file that
+     // is generated that has the tags.
+/*
+     let monaco = (<any>window).monaco;
+     let lang = monaco.languages;
+     lang.register({id: "snort"});
+     lang.setMonarchTokensProvider("snort", SNORT);
+*/
+   }
+ };
 
 @NgModule({
   imports: [
@@ -39,6 +63,7 @@ import {ByteFormatterPipe} from './filters';
       FormsModule,
       ReactiveFormsModule,
       RouterModule,
+      MonacoEditorModule.forRoot(monacoConfig),
       MatProgressBarModule,
       MatCardModule,
       MatButtonModule,
@@ -64,7 +89,8 @@ import {ByteFormatterPipe} from './filters';
       SearchCmp,
       SearchDialog,
       ScreensCmp,
-      ByteFormatterPipe
+      ByteFormatterPipe,
+      MediaEditorCmp,
   ],
   exports: [
       ContentedCmp,

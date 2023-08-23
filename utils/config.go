@@ -86,6 +86,7 @@ type DirConfigEntry struct {
         UseDatabase        bool   // Should it use the database or an in memory version
         CoreCount          int    // How many cores are likely available (used in creating multithread workers / previews)
         StaticResourcePath string // The location where compiled js and css is hosted (container vs dev server)
+        StaticLibraryPath  string // Library includes (monaco just doesn't want to build in)
         Initialized        bool   // Has the configuration actually be initialized properly
 
         // Config around creating preview images (used only by the task db:preview)
@@ -188,6 +189,7 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
         log.Printf("Setting up the content directory with %s", dir)
 
         staticDir := envy.Get("STATIC_RESOURCE_PATH", "./public/build")
+        libraryDir := envy.Get("STATIC_LIBRARY_PATH", "./public/static")
         limitCount, limErr := strconv.Atoi(envy.Get("LIMIT", strconv.Itoa(DefaultLimit)))
         previewCount, previewErr := strconv.Atoi(envy.Get("PREVIEW", strconv.Itoa(DefaultPreviewCount)))
         useDatabase, connErr := strconv.ParseBool(envy.Get("USE_DATABASE", strconv.FormatBool(DefaultUseDatabase)))
@@ -245,6 +247,7 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
         cfg.Dir = dir
         cfg.UseDatabase = useDatabase
         cfg.StaticResourcePath = staticDir
+        cfg.StaticLibraryPath = libraryDir
         cfg.Limit = limitCount
         cfg.CoreCount = coreCount
         cfg.PreviewCount = previewCount

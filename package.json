@@ -23,6 +23,7 @@
     "@angular/router": "^16.2.1",
     "jquery": "^3.4.1",
     "lodash-es": "^4.17.21",
+    "ngx-monaco-editor-v2": "16",
     "rxjs": "~7.5.0",
     "ts-node": "^9.0.0",
     "tslib": "^2.0.0",
