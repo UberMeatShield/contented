@@ -1,14 +1,15 @@
 <div class="search-cmp">
   <contented-nav [loading]="loading"></contented-nav>
-  <form #searchForm [formGroup]="options">
+  <form #searchForm [formGroup]="options" >
     <mat-form-field apperance="fill" floatLabel="true" class="search-field">
-      <mat-label>
-        Search Content
-      </mat-label>
       <input type="text" name="searchText"
+        aria-label="Search"
+        placeholder="Searches all content"
         [formControl]="searchText"
-        matInput placeholder=""
+        matInput
+        (keypress)="$event.stopPropagation()"
       >
+      <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>
 
     <!-- Search is too fast, might need to actually slow it down unless massive content searches
@@ -17,7 +18,6 @@
       [diameter]="32"
       [mode]="'indeterminate'">
     </mat-progress-spinner>
-    <a href="/ui/browse/0/0">Browse</a>
   </form>
 
   <div>

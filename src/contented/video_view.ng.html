@@ -6,13 +6,14 @@
   <form #videoForm [formGroup]="options" (keypress)="$event.stopPropagation()">
         
     <mat-form-field apperance="fill" floatLabel="true" class="search-field">
-      <mat-label>
-        Search Content
-      </mat-label>
       <input type="text" name="videoText"
         [formControl]="videoText"
-        matInput placeholder=""
+        matInput
+        aria-label="Video search"
+        placeholder="Searches within only video content and prioritize screens"
+        (keypress)="$event.stopPropagation()"
       >
+      <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>
     <span *ngIf="selectedContainer">
       Filtering inside: {{selectedContainer.name}}

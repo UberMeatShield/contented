@@ -17,8 +17,8 @@ import {Content} from './content';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 import {FormBuilder, NgForm, FormControl, FormGroup} from '@angular/forms';
 
-import {PageEvent as PageEvent} from '@angular/material/paginator';
-import {MatDialog as MatDialog, MatDialogConfig as MatDialogConfig, MAT_DIALOG_DATA as MAT_DIALOG_DATA} from '@angular/material/dialog';
+import {PageEvent} from '@angular/material/paginator';
+import {MatDialog, MatDialogConfig, MAT_DIALOG_DATA} from '@angular/material/dialog';
 import * as _ from 'lodash';
 
 
@@ -65,9 +65,7 @@ export class SearchCmp implements OnInit{
                 let text = st !== undefined ? st : '';
                 console.log("Search text from url", text, res);
                 this.searchText.setValue(text);
-                if (text !== '') {
-                    this.search(text); 
-                }
+                this.search(text); 
                 this.setupFilterEvts();
             }
         );
@@ -112,7 +110,6 @@ export class SearchCmp implements OnInit{
         let offset = evt.pageIndex * evt.pageSize;
         let limit = evt.pageSize;
         this.search(this.searchText.value, offset, limit);
-        // pageIndex, pageSize
     }
 
     public search(text: string, offset: number = 0, limit: number = 50) {

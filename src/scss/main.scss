@@ -2,6 +2,11 @@
 $thumbWidth: 64px; 
 $thumbHeight:  64px;
 
+$color-pri: #2196f3;
+
+body {
+    margin: 0;
+}
 .contented-cmp {
     height: 100%;
     width: 100%;
@@ -39,6 +44,21 @@ $thumbHeight:  64px;
   flex-wrap: wrap;
 }
 
+.container-search-form {
+    .mat-mdc-form-field-subscript-wrapper {
+        height: 0px;
+    }
+}
+
+.nav-route-selection {
+    margin-right: 2rem;
+}
+
+.active {
+    border: 1px solid $color-pri !important;
+    background-color: $color-pri !important;
+}
+
 // Might want to make this different than the top level browse component
 .search-cmp {
     height: 100%;
@@ -51,11 +71,11 @@ $thumbHeight:  64px;
       flex-shrink: 0;
       margin: 5px;
     }
+}
 
-    .search-field {
-        display: block;
-        width: 80%;
-    }
+.search-field {
+    display: block;
+    width: 100%;
 }
 
 // Navigation and 
@@ -87,44 +107,45 @@ $thumbHeight:  64px;
 
 // The toolbar also has a lot of wasted space
 .contented-nav-cmp {
-    height: 42px;
-}
-
-.container-contents {
-    .mat-card-subtitle{
-        margin-bottom: 0px;
-    }
-    .mat-card {
-        padding: 0px;
-    }
-}
-
-.container-bar-info {
-    margin-top: 22px;
-    display: flex;
-    flex-wrap: wrap;
-}
-
-.container-meta {
-  padding: 0 !important;
-}
-
-.bar-spacer {
-  margin-left: 1.5rem;
-}
-
-.search-dialog {
-    min-height: calc(100vh - 100px);
-    width: 100%;
-}
-
-.current-item {
-  margin: 0 0 2rem 0;
-}
-
-.current-img {
-    background-color: #aaa;
-    border: solid 1px black;
+    height: 38px;
+    border-bottom: 1px solid $color-pri; 
+}                                        
+                                         
+.container-contents {                    
+    .mat-card-subtitle{                 
+        margin-bottom: 0px;              
+    }                                    
+    .mat-card {                          
+        padding: 0px;                    
+    }                                   
+}                                        
+                                         
+.container-bar-info {                    
+    margin-top: 22px;                    
+    display: flex;                       
+    flex-wrap: wrap;                     
+}                                        
+                                         
+.container-meta {                        
+  padding: 0 !important;                 
+}                                        
+                                         
+.bar-spacer {                            
+  margin-left: 1.5rem;                   
+}                                        
+                                         
+.search-dialog {                        
+    min-height: calc(100vh - 100px);     
+    width: 100%;                         
+}                                        
+                                         
+.current-item {                          
+  margin: 0 0 2rem 0;                    
+}                                        
+                                         
+.current-img {                           
+    background-color: lighten($color-pri, 45%);
+    border: solid 1px $color-pri;
     border-radius: 2px;
 }
 

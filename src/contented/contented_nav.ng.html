@@ -1,4 +1,53 @@
 <mat-toolbar class="contented-nav-cmp">
+  <!-- A link to search here is a little odd -->
+  <div class="nav-route-selection">
+  <button class="nav-link"
+    mat-raised-button
+    [routerLink]="['/ui/search']" href="/ui/search"
+    [routerLinkActive]="['active']"
+  >
+    <mat-icon>search</mat-icon>Search
+  </button>
+
+  <button class="nav-link" href="/ui/video"
+    mat-raised-button
+    [routerLink]="['/ui/video']" 
+    [routerLinkActive]="['active']"
+  >
+    <mat-icon>videocam</mat-icon>Video
+  </button>
+  <button class="nav-link"
+   mat-raised-button
+   [routerLink]="['/ui/browse', '0', '0']"
+   [routerLinkActive]="['active']"
+   href="/ui/browse/0/0/"
+  >
+    <mat-icon>browse_gallery</mat-icon>
+    Browse
+  </button>
+  </div>
+
+  <form *ngIf="containers" class="container-search-form" (keypress)="$event.stopPropagation()">
+    <mat-form-field class="container-nav-search" appearance="outline">
+      <input type="text"
+        placeholder="Navigate to container"
+        aria-label="Navigation Help"
+        id="CONTENT_FILTER"
+        matInput
+        [formControl]="containerFilter"
+        [matAutocomplete]="auto"
+        (keyup.enter)="chooseFirstOption()"
+        >
+      <mat-autocomplete 
+          #auto="matAutocomplete" 
+          [displayWith]="displaySelection.bind(this)">
+        <mat-option *ngFor="let c of filteredContainers | async" 
+          (onSelectionChange)="selectedContainer(c)"
+          [value]="c.id"
+        >{{c.name}}</mat-option>
+      </mat-autocomplete>
+    </mat-form-field>
+  </form>
 
   <div matRipple [matRippleTrigger]="trigger" class="nav-options">
     <small>Hotkeys</small>
@@ -37,38 +86,9 @@
   </div>
 
 
-  <form *ngIf="containers" class="container-search-form" (keypress)="$event.stopPropagation()">
-    <mat-form-field class="container-nav-search" appearance="outline">
-      <input type="text"
-        placeholder="Navigate to container"
-        aria-label="Number"
-        id="CONTENT_FILTER"
-        matInput
-        [formControl]="containerFilter"
-        [matAutocomplete]="auto"
-        (keyup.enter)="chooseFirstOption()"
-        >
-      <mat-autocomplete 
-          #auto="matAutocomplete" 
-          [displayWith]="displaySelection.bind(this)">
-        <mat-option *ngFor="let c of filteredContainers | async" 
-          (onSelectionChange)="selectedContainer(c)"
-          [value]="c.id"
-        >{{c.name}}</mat-option>
-      </mat-autocomplete>
-    </mat-form-field>
-  </form>
-
   <div #trigger id="nav-contented-evts">
     <!-- Could use this to scroll in or other evts, but mainly lets us manually trigger on keypress-->
   </div>
-
-  <!-- A link to search here is a little odd -->
-  <a class="search-link" href="/ui/search">Search</a>
-  &nbsp;
-  <a class="search-link" href="/ui/video">Video</a>
-  &nbsp;
-  <a class="search-link" href="/ui/browse/0/0/">Browse</a>
 
   <!-- This pretty much just flickers, probably test it is working on larger content -->
   <div *ngIf="loading">
