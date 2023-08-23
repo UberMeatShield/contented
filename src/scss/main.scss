@@ -50,8 +50,13 @@ body {
     }
 }
 
+.nav-route-selection {
+    margin-right: 2rem;
+}
+
 .active {
-    background-color: $color-pri;
+    border: 1px solid $color-pri !important;
+    background-color: $color-pri !important;
 }
 
 // Might want to make this different than the top level browse component

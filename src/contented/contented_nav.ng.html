@@ -1,19 +1,31 @@
 <mat-toolbar class="contented-nav-cmp">
   <!-- A link to search here is a little odd -->
-  <a class="search-link" [routerLink]="['/ui/search']" href="/ui/search"
-     [routerLinkActive]="['active']"
-      >Search</a>
-  &nbsp;
-  <a class="search-link"[routerLink]="['/ui/video']"  href="/ui/video"
+  <div class="nav-route-selection">
+  <button class="nav-link"
+    mat-raised-button
+    [routerLink]="['/ui/search']" href="/ui/search"
+    [routerLinkActive]="['active']"
+  >
+    <mat-icon>search</mat-icon>Search
+  </button>
 
-     [routerLinkActive]="['active']"
-      >Video</a>
-  &nbsp;
-  <a class="search-link" [routerLink]="['/ui/browse', '0', '0']"
-     [routerLinkActive]="['active']"
-      href="/ui/browse/0/0/"
-  >Browse</a>
-  &nbsp;
+  <button class="nav-link" href="/ui/video"
+    mat-raised-button
+    [routerLink]="['/ui/video']" 
+    [routerLinkActive]="['active']"
+  >
+    <mat-icon>videocam</mat-icon>Video
+  </button>
+  <button class="nav-link"
+   mat-raised-button
+   [routerLink]="['/ui/browse', '0', '0']"
+   [routerLinkActive]="['active']"
+   href="/ui/browse/0/0/"
+  >
+    <mat-icon>browse_gallery</mat-icon>
+    Browse
+  </button>
+  </div>
 
   <form *ngIf="containers" class="container-search-form" (keypress)="$event.stopPropagation()">
     <mat-form-field class="container-nav-search" appearance="outline">
