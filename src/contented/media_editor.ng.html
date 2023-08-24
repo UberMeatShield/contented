@@ -1,0 +1,33 @@
+<div class="media-editor-cmp">
+
+  <div *ngIf="mc">
+    <video-preview-cmp [mc]="mc" *ngIf="mc.content_type.includes('video')"></video-preview-cmp>
+
+    <!-- TODO: Be smarter about the height -->
+    <contented-view
+      [forceHeight]="600"
+      [content]="mc"
+      [visible]="true"
+      *ngIf="mc.content_type.includes('image')"
+    ></contented-view>
+  </div>
+
+  <mat-card>
+    <mat-card-header>
+      Editing Controls:
+      <mat-icon>save</mat-icon>
+      <mat-icon>delete</mat-icon>
+    </mat-card-header>
+    <mat-card-content>
+      <div height="3em">
+        <ngx-monaco-editor #EDITOR
+          height="100%"
+          [options]="editorOptions"
+          [(ngModel)]="editorValue"
+          (onInit)="afterMonacoInit($event)"
+        ></ngx-monaco-editor>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
+

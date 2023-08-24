@@ -4625,6 +4625,7 @@ __metadata:
     karma-sourcemap-loader: ^0.3.8
     karma-spec-reporter: ^0.0.34
     lodash-es: ^4.17.21
+    ngx-monaco-editor-v2: 16
     rxjs: ~7.5.0
     ts-loader: ^6.0.4
     ts-node: ^9.0.0
@@ -10888,6 +10889,19 @@ __metadata:
   version: 1.1.0
   resolution: "next-tick@npm:1.1.0"
   checksum: 83b5cf36027a53ee6d8b7f9c0782f2ba87f4858d977342bfc3c20c21629290a2111f8374d13a81221179603ffc4364f38374b5655d17b6a8f8a8c77bdea4fe8b
+  languageName: node
+  linkType: hard
+
+"ngx-monaco-editor-v2@npm:16":
+  version: 16.0.1
+  resolution: "ngx-monaco-editor-v2@npm:16.0.1"
+  dependencies:
+    tslib: ^2.1.0
+  peerDependencies:
+    "@angular/common": ^16.0.4
+    "@angular/core": ^16.0.4
+    monaco-editor: ^0.41.0
+  checksum: 034d2e8413c0b4cc86036f8af0ef42d8ae01ff4d1a544f05bde3a3b3f06cab1249ffe3dd4a1c4d5939f66d882d05aa78062f1ed7b40dab6898fe28f6c883de14
   languageName: node
   linkType: hard
 

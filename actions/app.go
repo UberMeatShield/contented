@@ -49,11 +49,13 @@ func App(UseDatabase bool) *buffalo.App {
         app.GET("/ui/content/{id}", AngularIndex)
         app.GET("/ui/search", AngularIndex)
         app.GET("/ui/video", AngularIndex)
+        app.GET("/ui/media_editor/{id}", AngularIndex)
 
         // Need to make the file serving location smarter (serve the dir + serve static?)
         cfg := utils.GetCfg()
         app.ServeFiles("/public/build", http.Dir(cfg.StaticResourcePath))
         app.ServeFiles("/public/css", http.Dir(cfg.StaticResourcePath))
+        app.ServeFiles("/public/static", http.Dir("./public/static"))
 
         // The DIR env environment is then served under /static (see actions.SetupContented)
         cr := app.Resource("/containers", ContainersResource{})

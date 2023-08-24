@@ -4,6 +4,7 @@ import {ContentedCmp} from './../contented/contented_cmp';
 import {SearchCmp} from './../contented/search_cmp';
 import {VideoViewCmp} from './../contented/video_view_cmp';
 import {ContentViewCmp} from './../contented/content_view_cmp';
+import {MediaEditorCmp} from './../contented/media_editor.component';
 import {APP_BASE_HREF} from '@angular/common';
 import {RouterModule, Routes} from '@angular/router';
 
@@ -14,6 +15,7 @@ const appRoutes: Routes = [
     {path: 'ui/content/:id', component: ContentViewCmp},
     {path: 'ui/search', component: SearchCmp},
     {path: 'ui/video', component: VideoViewCmp},
+    {path: 'ui/media_editor/:id', component: MediaEditorCmp},
 ];
 @NgModule({
     imports: [RouterModule.forRoot(appRoutes, {})],

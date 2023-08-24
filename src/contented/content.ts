@@ -6,6 +6,7 @@ export class Content {
     public id: string;
     public src: string;
     public idx: number;
+    public description: string = "";
 
     // Awkward that buffalo makes the API use container_id like the DB
     // side of things and in url params by default.  So I guess mixed

@@ -1,10 +1,8 @@
 <div class="video-view-cmp">
-
   <!-- Add in the full list of containers and allow for selection events. -->
   <contented-nav [loading]="loading" [containers]="containers"></contented-nav>
 
   <form #videoForm [formGroup]="options" (keypress)="$event.stopPropagation()">
-        
     <mat-form-field apperance="fill" floatLabel="true" class="search-field">
       <input type="text" name="videoText"
         [formControl]="videoText"
@@ -32,44 +30,12 @@
       [mode]="'indeterminate'">
     </mat-progress-spinner>
   </form>
-
   <contented-view></contented-view>
 
-  <div class="video-results" *ngIf="!!content">
-    <mat-card id="view_content_{{mc.id}}" class="video-view-card" *ngFor="let mc of getVisibleSet()">
-      <mat-card-title class="video-details">
-        <a mat-raised-button href="/view/{{mc.id}}" title="Open in new tab" target="window">
-          New Fullscreen Tab
-          <mat-icon>tab</mat-icon>
-        </a>
-        <a mat-raised-button href="/download/{{mc.id}}" title="Downlaod">
-          {{mc.size | byteFormatter: 0}}
-          <mat-icon >download</mat-icon>
-        </a>
-        <span class="video-title">{{mc.src}}</span>
-      </mat-card-title>
-
-      <mat-card-content [class.selected-video]="selectedContent?.id === mc.id">
-        <div class="video-view">
-          <div class="preview-content video-result video-view"
-            [class.video-overlay]="mc?.content_type?.match('video')"
-            style="width:{{previewWidth}}px; height: {{previewHeight}}px;"
-            (click)="imgClicked(mc)"
-            >
-            <img class="preview-img" [src]="mc?.previewUrl" (load)="imgLoaded($event)">
-          </div>
-
-          <div class="video-view-screens">
-            <screens-cmp 
-              [contentId]="mc.id"
-              [screens]="mc.screens"
-              [containerWidth]="screenWidth"
-              [containerHeight]="2 * previewHeight"
-              (clickedItem)="screenEvt($event)"
-            ></screens-cmp>
-          </div>
-        </div>
-      </mat-card-content>
-    </mat-card>
-  </div>
+  <video-preview-cmp 
+    [selected]="selectedContent?.id === mc.id"
+    [maxVisible]="2"
+    [mc]="mc"
+    *ngFor="let mc of getVisibleSet()"
+  ></video-preview-cmp>
 </div>
