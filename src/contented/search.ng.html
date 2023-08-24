@@ -1,32 +1,31 @@
 <div class="search-cmp">
   <contented-nav [loading]="loading"></contented-nav>
-  <form #searchForm [formGroup]="options" >
-    <mat-form-field apperance="fill" floatLabel="true" class="search-field">
-      <input type="text" name="searchText"
-        aria-label="Search"
-        placeholder="Searches all content"
-        [formControl]="searchText"
-        matInput
-        (keypress)="$event.stopPropagation()"
-      >
-      <mat-icon matSuffix>search</mat-icon>
-    </mat-form-field>
 
-    <!-- Search is too fast, might need to actually slow it down unless massive content searches
-        actually make it worth something -->
-    <mat-progress-spinner *ngIf="loading"
-      [diameter]="32"
-      [mode]="'indeterminate'">
-    </mat-progress-spinner>
+  <form #searchForm [formGroup]="options" >
+    <div class="search-paginator">
+      <mat-form-field apperance="fill" floatLabel="true" class="search-field">
+        <input type="text" name="searchText"
+          aria-label="Search"
+          placeholder="Searches all content"
+          [formControl]="searchText"
+          matInput
+          (keypress)="$event.stopPropagation()"
+        >
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+
+      <mat-paginator
+        [length]="total"
+        [pageSize]="pageSize"
+        (page)="pageEvt($event)"
+      ></mat-paginator>
+    </div>
   </form>
 
-  <div>
-    <mat-paginator
-      [length]="total"
-      [pageSize]="pageSize"
-      (page)="pageEvt($event)"
-    ></mat-paginator>
-  </div>
+  <mat-progress-spinner *ngIf="loading"
+    [diameter]="32"
+    [mode]="'indeterminate'">
+  </mat-progress-spinner>
 
   <div class="search-results" *ngIf="!!content">
      <div class="preview-content search-result"
@@ -35,7 +34,6 @@
        *ngFor="let mc of getVisibleSet()"
        (click)="imgClicked(mc)"
        >
-
        <!-- Assume that every preview is actually going to be an image -->
        <img class="preview-img"
          [src]="mc?.previewUrl"
