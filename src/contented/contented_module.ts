@@ -24,7 +24,8 @@ import {ContainerCmp} from './container_cmp';
 import {ContainerNavCmp} from './container_nav_cmp';
 import {ContentedViewCmp} from './contented_view_cmp';
 import {ContentViewCmp} from './content_view_cmp';
-import {VideoViewCmp, ScreenDialog} from './video_view_cmp';
+import {VideoViewCmp} from './video_view_cmp';
+import {VideoPreviewCmp, ScreenDialog} from './video_preview.cmp';
 import {ContentedService} from './contented_service';
 import {ScreensCmp} from './screens_cmp';
 import {MediaEditorCmp} from './media_editor.component';
@@ -85,6 +86,7 @@ const monacoConfig: NgxMonacoEditorConfig = {
       ContainerNavCmp,
       ContentViewCmp,
       VideoViewCmp,
+      VideoPreviewCmp,
       ScreenDialog,
       SearchCmp,
       SearchDialog,

@@ -47,9 +47,6 @@ export class VideoViewCmp implements OnInit, OnDestroy {
     public containers: Array<Container>;
 
     // TODO: Make this a saner calculation
-    public previewWidth = 480;
-    public previewHeight = 480;
-    public screenWidth = 960;
     public maxVisible = 3; // How many results show vertically
     public total = 0;
     public offset = 0; // Tracking where we are in the position
@@ -85,7 +82,6 @@ export class VideoViewCmp implements OnInit, OnDestroy {
             }
         );
         this.setupEvtListener();
-        this.calculateDimensions();
     }
 
     ngOnDestroy() {
@@ -218,7 +214,7 @@ export class VideoViewCmp implements OnInit, OnDestroy {
           );
     }
 
-    public getValues() {
+    getValues() {
         return this.options.value;
     }
 
@@ -266,117 +262,7 @@ export class VideoViewCmp implements OnInit, OnDestroy {
         return this.content;
     }
 
-    // TODO: Being called abusively in the cntective rather than on page resize events
-    @HostListener('window:resize', ['$event'])
-    public calculateDimensions() {
-        let width = !window['jasmine'] ? window.innerWidth : 800;
-        let height = !window['jasmine'] ? window.innerHeight : 800;
-
-        this.previewWidth = width / 5;
-        this.previewHeight = (height / this.maxVisible) - 41;
-
-        // screenHeight is just calculated on the component previewHeight * 2
-        this.screenWidth = width - this.previewWidth - 200;  // Fudge factor
-    }
-
-    public fullView(mc: Content) {
-        let c = this.getContainer(mc.container_id);
-        console.log("Video Full handler", mc, c);
-        GlobalNavEvents.selectContent(mc, c);
-
-        // Just makes sure the selection event doesn't race condition the scroll
-        // into view event.  So the click triggers, scrolls and then we scroll to
-        // the fullscreen element.
-        _.delay(() => {
-            GlobalNavEvents.viewFullScreen(mc);
-        }, 100);
-    }
-
     public getContainer(cId: string) {
         return _.find(this.containers, {id: cId});
-    }
-
-    public screenEvt(evt) {
-        console.log("Screen Evt", evt);
-        const dialogRef = this.dialog.open(
-            ScreenDialog,
-            {
-                data: {screen: evt.screen, screens: evt.screens},
-                width: '90%',
-                height: '100%',
-                maxWidth: '100vw',
-                maxHeight: '100vh',
-            }
-        );
-        dialogRef.afterClosed().subscribe(result => {
-            console.log("Closing the view", result);
-        });
-    }
-
-    imgLoaded(evt) {
-        // Debugging / hooks but could also be a hook into a total loaded.
-    }
-
-    imgClicked(mc: Content) {
-        console.log("Click the image", mc);
-        this.fullView(mc);
-    }
-}
-
-// This just doesn't seem like a great approach :(
-@Component({
-    selector: 'screen-dialog',
-    templateUrl: 'screen_dialog.ng.html'
-})
-export class ScreenDialog implements AfterViewInit {
-
-    public screen: Screen;
-    public screens: Array<Screen>
-
-    public forceHeight: number;
-    public forceWidth: number;
-    public sizeCalculated: boolean = false;
-    @ViewChild('ScreensContent', { static: true }) screenContent;
-    
-    constructor(
-        @Inject(MAT_DIALOG_DATA) public data,
-        public _service: ContentedService) {
-
-        this.screen = data.screen;
-        this.screens = data.screens;
-    }
-
-    ngAfterViewInit() {
-        console.log("Search content is:", this.screenContent);
-        setTimeout(() => {
-            let el = this.screenContent.nativeElement;
-            if (el) {
-                console.log("Element", el, el.offsetWidth, el.offsetHeight);
-                this.forceHeight = el.offsetHeight - 100;
-                this.forceWidth = el.offsetWidth - 100;
-            }
-            this.sizeCalculated = true;
-        }, 100);
-    }
-
-    idx() {
-        if (this.screens && this.screen) {
-            return _.findIndex(this.screens, {id: this.screen.id});
-        }
-        return -1;
-    }
-
-    next() {
-        let i = this.idx();
-        if (i < this.screens.length - 1) {
-            this.screen = this.screens[i + 1];
-        }
-    }
-
-    prev() {
-        let i = this.idx();
-        if (i - 1 >=  0) {
-            this.screen = this.screens[i - 1];
-        }
     }
 }

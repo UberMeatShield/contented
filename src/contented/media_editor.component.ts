@@ -8,6 +8,8 @@ import {FormBuilder, NgForm, FormControl, FormGroup, Validators} from '@angular/
 import {finalize, debounceTime, distinctUntilChanged} from 'rxjs/operators';
 import {MatRipple} from '@angular/material/core';
 import {EditorComponent} from 'ngx-monaco-editor-v2';
+import {ContentedService} from './contented_service';
+import {Content} from './content';
 
 import * as _ from 'lodash-es';
 
@@ -28,6 +30,7 @@ export class MediaEditorCmp implements OnInit {
     //language: 'html',
     language: 'tagging',
   };
+  @Input() mc?: Content;
 
   // These are values for the Monaco Editors, change events are passed down into
   // the form event via the AfterInit and set the v7_definition & suricata_definition.
@@ -38,7 +41,7 @@ export class MediaEditorCmp implements OnInit {
   public monacoEditor?: any;
 
 
-  constructor(public fb: FormBuilder) {
+  constructor(public fb: FormBuilder, public route: ActivatedRoute, public _service: ContentedService) {
   }
 
   // Subscribe to options changes, if the definition changes make the call
@@ -48,6 +51,25 @@ export class MediaEditorCmp implements OnInit {
         "description": this.descriptionControl = (this.descriptionControl || new FormControl(this.editorValue || "")),
       });
     }
+    if (!this.mc) {
+        this.route.paramMap.pipe().subscribe(
+            (map: ParamMap) => {
+                this.loadContent(map.get('id'));
+            },
+            console.error
+        );
+    }
+  }
+
+  loadContent(id: string) {
+      this._service.getContent(id).subscribe(
+          (mc: Content) => {
+              console.log(mc);
+              this.mc = mc;
+              this.descriptionControl.setValue(mc.description);
+          },
+          console.error
+      )
   }
 
   setReadOnly(state: boolean) {

@@ -1,0 +1,39 @@
+<div class="video-preview-cmp">
+  <div class="video-results" *ngIf="mc">
+    <mat-card id="view_content_{{mc.id}}" class="video-view-card">
+      <mat-card-title class="video-details">
+        <a mat-raised-button href="/view/{{mc.id}}" title="Open in new tab" target="window">
+          New Fullscreen Tab
+          <mat-icon>tab</mat-icon>
+        </a>
+        <a mat-raised-button href="/download/{{mc.id}}" title="Downlaod">
+          {{mc.size | byteFormatter: 0}}
+          <mat-icon >download</mat-icon>
+        </a>
+        <span class="video-title">{{mc.src}}</span>
+      </mat-card-title>
+
+      <mat-card-content [class.selected-video]="selected">
+        <div class="video-view">
+          <div class="preview-content video-result video-view"
+            [class.video-overlay]="mc?.content_type?.match('video')"
+            style="width:{{previewWidth}}px; height: {{previewHeight}}px;"
+            (click)="imgClicked(mc)"
+            >
+            <img class="preview-img" [src]="mc?.previewUrl">
+          </div>
+
+          <div class="video-view-screens">
+            <screens-cmp 
+              [contentId]="mc.id"
+              [screens]="mc.screens"
+              [containerWidth]="screenWidth"
+              [containerHeight]="2 * previewHeight"
+              (clickedItem)="screenEvt($event)"
+            ></screens-cmp>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
