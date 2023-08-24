@@ -28,7 +28,7 @@ import {VideoBrowserCmp} from './video_browser.cmp';
 import {VideoPreviewCmp, ScreenDialog} from './video_preview.cmp';
 import {ContentedService} from './contented_service';
 import {ScreensCmp} from './screens.cmp';
-import {MediaEditorCmp} from './media_editor.component';
+import {EditorContentCmp} from './editor_content.cmp';
 import {Container} from './container';
 import {Content} from './content';
 import {Screen} from './screen';
@@ -92,7 +92,7 @@ const monacoConfig: NgxMonacoEditorConfig = {
       SearchDialog,
       ScreensCmp,
       ByteFormatterPipe,
-      MediaEditorCmp,
+      EditorContentCmp,
   ],
   exports: [
       ContentBrowserCmp,

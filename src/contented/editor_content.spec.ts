@@ -1,7 +1,7 @@
 import { TestBed, ComponentFixture, fakeAsync, tick} from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { RouterTestingModule } from '@angular/router/testing';
-import { MediaEditorCmp } from './media_editor.component';
+import { EditorContentCmp } from './editor_content.cmp';
 import { DebugElement } from '@angular/core';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import {FormControl} from '@angular/forms';
@@ -12,10 +12,10 @@ import {ApiDef} from './api_def';
 
 declare let $ : any;
 
-describe('MediaEditorCmp', () => {
+describe('EditorContentCmp', () => {
 
-  let fixture: ComponentFixture<MediaEditorCmp>;
-  let cmp: MediaEditorCmp;
+  let fixture: ComponentFixture<EditorContentCmp>;
+  let cmp: EditorContentCmp;
   let el: HTMLElement;
   let de: DebugElement;
   let httpMock: HttpTestingController;
@@ -30,12 +30,12 @@ describe('MediaEditorCmp', () => {
       providers: [
       ],
       declarations: [
-        MediaEditorCmp
+        EditorContentCmp
       ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(MediaEditorCmp);
-    de = fixture.debugElement.query(By.css('.media-editor-cmp'));
+    fixture = TestBed.createComponent(EditorContentCmp);
+    de = fixture.debugElement.query(By.css('.editor-content-cmp'));
     el = de.nativeElement;
     cmp = fixture.componentInstance;
     httpMock = TestBed.inject(HttpTestingController);
