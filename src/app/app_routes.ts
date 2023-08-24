@@ -2,7 +2,7 @@ import {NgModule} from '@angular/core';
 
 // Rename this to browse
 import {ContentBrowserCmp} from './../contented/content_browser.cmp';
-import {VideoViewCmp} from './../contented/video_view.cmp';
+import {VideoBrowserCmp} from './../contented/video_browser.cmp';
 import {SearchCmp} from './../contented/search.cmp';
 
 // Rename media to Content
@@ -18,7 +18,7 @@ const appRoutes: Routes = [
     {path: 'ui/browse/:idx/:rowIdx', component: ContentBrowserCmp},
     {path: 'ui/content/:id', component: ContentViewCmp},
     {path: 'ui/search', component: SearchCmp},
-    {path: 'ui/video', component: VideoViewCmp},
+    {path: 'ui/video', component: VideoBrowserCmp},
     {path: 'ui/media_editor/:id', component: MediaEditorCmp},
 ];
 @NgModule({

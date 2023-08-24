@@ -27,10 +27,10 @@ import * as _ from 'lodash';
 
 
 @Component({
-    selector: 'video-view-cmp',
-    templateUrl: './video_view.ng.html'
+    selector: 'video-browser-cmp',
+    templateUrl: './video_browser.ng.html'
 })
-export class VideoViewCmp implements OnInit, OnDestroy {
+export class VideoBrowserCmp implements OnInit, OnDestroy {
 
     // Route needs to exist
     // Take in the search text route param
