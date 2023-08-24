@@ -74,7 +74,11 @@ body {
 }
 
 .search-field {
-    display: block;
+    width: 60%;
+}
+
+.search-paginator {
+    display: flex;
     width: 100%;
 }
 
