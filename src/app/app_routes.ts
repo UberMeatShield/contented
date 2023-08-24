@@ -1,11 +1,9 @@
 import {NgModule} from '@angular/core';
 
-// Rename this to browse
 import {ContentBrowserCmp} from './../contented/content_browser.cmp';
 import {VideoBrowserCmp} from './../contented/video_browser.cmp';
 import {SearchCmp} from './../contented/search.cmp';
 
-// Rename media to Content
 import {EditorContentCmp} from './../contented/editor_content.cmp';
 import {ContentViewCmp} from './../contented/content_view.cmp';
 
