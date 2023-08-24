@@ -7,6 +7,8 @@ import { HttpClientTestingModule, HttpTestingController } from '@angular/common/
 import {FormControl} from '@angular/forms';
 import {MockData} from '../test/mock/mock_data';
 import {ContentedModule} from './contented_module';
+import {Content} from './content';
+import {ApiDef} from './api_def';
 
 declare let $ : any;
 
@@ -50,11 +52,15 @@ describe('MediaEditorCmp', () => {
 
   it("Should be able to render the monaco editor and get a reference", fakeAsync(() => {
     cmp.readOnly = true;
+    cmp.mc = new Content({id: 'A', content_type: 'video/mp4'});
     tick(1000);
     fixture.detectChanges();
     expect(cmp.editor).withContext("Monaco should init and have a reference").toBeDefined();
     cmp.setReadOnly(true);
     tick(1000);
+
+    let url = ApiDef.contented.contentScreens.replace("{mcID}", cmp.mc.id);
+    httpMock.expectOne(url).flush(MockData.getScreens());
     fixture.detectChanges();
   }));
 });
