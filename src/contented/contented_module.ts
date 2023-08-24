@@ -17,7 +17,7 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatAutocompleteModule as MatAutocompleteModule} from '@angular/material/autocomplete';
 import {MatIconModule} from '@angular/material/icon';
 
-import {ContentedCmp} from './contented.cmp';
+import {ContentBrowserCmp} from './content_browser.cmp';
 import {ContentedNavCmp} from './contented_nav.cmp';
 import {SearchCmp, SearchDialog} from './search.cmp';
 import {ContainerCmp} from './container.cmp';
@@ -27,7 +27,7 @@ import {ContentViewCmp} from './content_view.cmp';
 import {VideoViewCmp} from './video_view.cmp';
 import {VideoPreviewCmp, ScreenDialog} from './video_preview.cmp';
 import {ContentedService} from './contented_service';
-import {ScreensCmp} from './screens_cmp';
+import {ScreensCmp} from './screens.cmp';
 import {MediaEditorCmp} from './media_editor.component';
 import {Container} from './container';
 import {Content} from './content';
@@ -79,7 +79,7 @@ const monacoConfig: NgxMonacoEditorConfig = {
       MatToolbarModule,
   ],
   declarations: [
-      ContentedCmp,
+      ContentBrowserCmp,
       ContentedNavCmp,
       ContentedViewCmp,
       ContainerCmp,
@@ -95,7 +95,7 @@ const monacoConfig: NgxMonacoEditorConfig = {
       MediaEditorCmp,
   ],
   exports: [
-      ContentedCmp,
+      ContentBrowserCmp,
       ContentedNavCmp,
       ContentedViewCmp,
       ContainerCmp,

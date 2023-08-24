@@ -11,7 +11,7 @@ import { Router } from '@angular/router';
 import {ContentedService} from '../contented/contented_service';
 import {ContentedModule} from '../contented/contented_module';
 import {Screen} from '../contented/screen';
-import {ScreensCmp} from '../contented/screens_cmp';
+import {ScreensCmp} from '../contented/screens.cmp';
 import {Container} from '../contented/container';
 import {ApiDef} from '../contented/api_def';
 import {GlobalNavEvents} from '../contented/nav_events';

@@ -12,10 +12,10 @@ import * as _ from 'lodash';
 import * as $ from 'jquery';
 
 @Component({
-    selector: 'contented-main',
-    templateUrl: 'contented.ng.html'
+    selector: 'content-browser',
+    templateUrl: 'content_browser.ng.html'
 })
-export class ContentedCmp implements OnInit, OnDestroy {
+export class ContentBrowserCmp implements OnInit, OnDestroy {
 
     @Input() maxVisible: number = 2; // How many of the loaded containers should we be viewing
     @Input() rowIdx: number = 0; // Which row (content item) are we on

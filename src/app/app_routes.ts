@@ -1,7 +1,7 @@
 import {NgModule} from '@angular/core';
 
 // Rename this to browse
-import {ContentedCmp} from './../contented/contented.cmp';
+import {ContentBrowserCmp} from './../contented/content_browser.cmp';
 import {VideoViewCmp} from './../contented/video_view.cmp';
 import {SearchCmp} from './../contented/search.cmp';
 
@@ -15,7 +15,7 @@ import {RouterModule, Routes} from '@angular/router';
 // Hmm, should have made this route have a saner extension
 const appRoutes: Routes = [
     {path: '', redirectTo: '/ui/browse/0/0', pathMatch: 'full'},
-    {path: 'ui/browse/:idx/:rowIdx', component: ContentedCmp},
+    {path: 'ui/browse/:idx/:rowIdx', component: ContentBrowserCmp},
     {path: 'ui/content/:id', component: ContentViewCmp},
     {path: 'ui/search', component: SearchCmp},
     {path: 'ui/video', component: VideoViewCmp},
