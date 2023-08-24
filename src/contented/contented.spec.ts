@@ -9,7 +9,7 @@ import {NoopAnimationsModule} from '@angular/platform-browser/animations';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Router } from '@angular/router';
 
-import {ContentedCmp} from '../contented/contented_cmp';
+import {ContentedCmp} from '../contented/contented.cmp';
 import {ContentedService} from '../contented/contented_service';
 import {ContentedModule} from '../contented/contented_module';
 import {Container} from '../contented/container';

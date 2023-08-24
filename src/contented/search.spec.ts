@@ -11,7 +11,7 @@ import {FormsModule} from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Router } from '@angular/router';
 
-import {SearchCmp} from '../contented/search_cmp';
+import {SearchCmp} from '../contented/search.cmp';
 import {ContentedService} from '../contented/contented_service';
 import {ContentedModule} from '../contented/contented_module';
 import {Container} from '../contented/container';

@@ -11,7 +11,7 @@ import {FormsModule} from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Router } from '@angular/router';
 
-import {VideoViewCmp} from '../contented/video_view_cmp';
+import {VideoViewCmp} from '../contented/video_view.cmp';
 import {ContentedService} from '../contented/contented_service';
 import {ContentedModule} from '../contented/contented_module';
 import {Container} from '../contented/container';

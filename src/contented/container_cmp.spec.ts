@@ -4,7 +4,7 @@ import {HttpClientTestingModule} from '@angular/common/http/testing';
 import {DebugElement} from '@angular/core';
 
 import { RouterTestingModule } from '@angular/router/testing';
-import {ContainerCmp} from '../contented/container_cmp';
+import {ContainerCmp} from '../contented/container.cmp';
 import {Container} from '../contented/container';
 
 import {ContentedService} from '../contented/contented_service';

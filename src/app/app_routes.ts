@@ -1,10 +1,14 @@
 import {NgModule} from '@angular/core';
 
-import {ContentedCmp} from './../contented/contented_cmp';
-import {SearchCmp} from './../contented/search_cmp';
-import {VideoViewCmp} from './../contented/video_view_cmp';
-import {ContentViewCmp} from './../contented/content_view_cmp';
+// Rename this to browse
+import {ContentedCmp} from './../contented/contented.cmp';
+import {VideoViewCmp} from './../contented/video_view.cmp';
+import {SearchCmp} from './../contented/search.cmp';
+
+// Rename media to Content
 import {MediaEditorCmp} from './../contented/media_editor.component';
+import {ContentViewCmp} from './../contented/content_view.cmp';
+
 import {APP_BASE_HREF} from '@angular/common';
 import {RouterModule, Routes} from '@angular/router';
 
