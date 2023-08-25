@@ -9,7 +9,7 @@ import {NoopAnimationsModule} from '@angular/platform-browser/animations';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Router } from '@angular/router';
 
-import {ContentedCmp} from '../contented/contented_cmp';
+import {ContentBrowserCmp} from '../contented/content_browser.cmp';
 import {ContentedService} from '../contented/contented_service';
 import {ContentedModule} from '../contented/contented_module';
 import {Container} from '../contented/container';
@@ -20,10 +20,10 @@ import * as _ from 'lodash';
 import {MockData} from '../test/mock/mock_data';
 
 declare var $;
-describe('TestingContentedCmp', () => {
-    let fixture: ComponentFixture<ContentedCmp>;
+describe('TestingContentBrowserCmp', () => {
+    let fixture: ComponentFixture<ContentBrowserCmp>;
     let service: ContentedService;
-    let comp: ContentedCmp;
+    let comp: ContentBrowserCmp;
     let el: HTMLElement;
     let de: DebugElement;
     let router: Router;
@@ -34,7 +34,7 @@ describe('TestingContentedCmp', () => {
         TestBed.configureTestingModule({
             imports: [
                 RouterTestingModule.withRoutes(
-                    [{path: 'ui/browse/:idx/:rowIdx', component: ContentedCmp}]
+                    [{path: 'ui/browse/:idx/:rowIdx', component: ContentBrowserCmp}]
                 ),
                 FormsModule,
                 ContentedModule,
@@ -48,11 +48,11 @@ describe('TestingContentedCmp', () => {
         }).compileComponents();
 
         service = TestBed.get(ContentedService);
-        fixture = TestBed.createComponent(ContentedCmp);
+        fixture = TestBed.createComponent(ContentBrowserCmp);
         httpMock = TestBed.get(HttpTestingController);
         comp = fixture.componentInstance;
 
-        de = fixture.debugElement.query(By.css('.contented-cmp'));
+        de = fixture.debugElement.query(By.css('.content-browser-cmp'));
         el = de.nativeElement;
         router = TestBed.get(Router);
         router.initialNavigation();

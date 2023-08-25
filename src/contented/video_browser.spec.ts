@@ -11,7 +11,7 @@ import {FormsModule} from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Router } from '@angular/router';
 
-import {VideoViewCmp} from '../contented/video_view_cmp';
+import {VideoBrowserCmp} from '../contented/video_browser.cmp';
 import {ContentedService} from '../contented/contented_service';
 import {ContentedModule} from '../contented/contented_module';
 import {Container} from '../contented/container';
@@ -21,10 +21,10 @@ import * as _ from 'lodash';
 import {MockData} from '../test/mock/mock_data';
 
 declare var $;
-describe('TestingVideoViewCmp', () => {
-    let fixture: ComponentFixture<VideoViewCmp>;
+describe('TestingVideoBrowserCmp', () => {
+    let fixture: ComponentFixture<VideoBrowserCmp>;
     let service: ContentedService;
-    let comp: VideoViewCmp;
+    let comp: VideoBrowserCmp;
     let el: HTMLElement;
     let de: DebugElement;
     let router: Router;
@@ -36,7 +36,7 @@ describe('TestingVideoViewCmp', () => {
         TestBed.configureTestingModule({
             imports: [
                 RouterTestingModule.withRoutes(
-                    [{path: 'ui/video', component: VideoViewCmp}]
+                    [{path: 'ui/video', component: VideoBrowserCmp}]
                 ),
                 FormsModule,
                 ContentedModule,
@@ -50,12 +50,12 @@ describe('TestingVideoViewCmp', () => {
         }).compileComponents();
 
         service = TestBed.inject(ContentedService);
-        fixture = TestBed.createComponent(VideoViewCmp);
+        fixture = TestBed.createComponent(VideoBrowserCmp);
         httpMock = TestBed.inject(HttpTestingController);
         loc = TestBed.inject(Location);
         comp = fixture.componentInstance;
 
-        de = fixture.debugElement.query(By.css('.video-view-cmp'));
+        de = fixture.debugElement.query(By.css('.video-browser-cmp'));
         el = de.nativeElement;
         router = TestBed.get(Router);
         router.initialNavigation();

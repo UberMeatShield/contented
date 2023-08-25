@@ -5,7 +5,7 @@ import {HttpClientTestingModule, HttpTestingController} from '@angular/common/ht
 import {DebugElement} from '@angular/core';
 
 import {RouterTestingModule } from '@angular/router/testing';
-import {ContentedNavCmp} from '../contented/contented_nav_cmp';
+import {ContentedNavCmp} from '../contented/contented_nav.cmp';
 import {Container} from '../contented/container';
 
 import {ApiDef} from '../contented/api_def';

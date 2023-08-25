@@ -7,7 +7,6 @@ import {DebugElement} from '@angular/core';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Router } from '@angular/router';
 
-import {ContentedCmp} from '../contented/contented_cmp';
 import {ContentedService} from '../contented/contented_service';
 import {ContentedModule} from '../contented/contented_module';
 import {Container} from '../contented/container';
@@ -17,9 +16,7 @@ import * as _ from 'lodash';
 import {MockData} from '../test/mock/mock_data';
 
 describe('TestingContentedService', () => {
-    let fixture: ComponentFixture<ContentedCmp>;
     let service: ContentedService;
-    let comp: ContentedCmp;
     let el: HTMLElement;
     let de: DebugElement;
     let router: Router;

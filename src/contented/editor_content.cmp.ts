@@ -14,10 +14,10 @@ import {Content} from './content';
 import * as _ from 'lodash-es';
 
 @Component({
-  selector: 'media-editor-cmp',
-  templateUrl: './media_editor.ng.html',
+  selector: 'editor-media-cmp',
+  templateUrl: './editor_content.ng.html',
 })
-export class MediaEditorCmp implements OnInit {
+export class EditorContentCmp implements OnInit {
 
   @ViewChild('EDITOR') editor?: EditorComponent;
 

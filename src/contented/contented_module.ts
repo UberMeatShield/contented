@@ -17,18 +17,18 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatAutocompleteModule as MatAutocompleteModule} from '@angular/material/autocomplete';
 import {MatIconModule} from '@angular/material/icon';
 
-import {ContentedCmp} from './contented_cmp';
-import {ContentedNavCmp} from './contented_nav_cmp';
-import {SearchCmp, SearchDialog} from './search_cmp';
-import {ContainerCmp} from './container_cmp';
-import {ContainerNavCmp} from './container_nav_cmp';
+import {ContentBrowserCmp} from './content_browser.cmp';
+import {ContentedNavCmp} from './contented_nav.cmp';
+import {SearchCmp, SearchDialog} from './search.cmp';
+import {ContainerCmp} from './container.cmp';
+import {ContainerNavCmp} from './container_nav.cmp';
 import {ContentedViewCmp} from './contented_view_cmp';
-import {ContentViewCmp} from './content_view_cmp';
-import {VideoViewCmp} from './video_view_cmp';
+import {ContentViewCmp} from './content_view.cmp';
+import {VideoBrowserCmp} from './video_browser.cmp';
 import {VideoPreviewCmp, ScreenDialog} from './video_preview.cmp';
 import {ContentedService} from './contented_service';
-import {ScreensCmp} from './screens_cmp';
-import {MediaEditorCmp} from './media_editor.component';
+import {ScreensCmp} from './screens.cmp';
+import {EditorContentCmp} from './editor_content.cmp';
 import {Container} from './container';
 import {Content} from './content';
 import {Screen} from './screen';
@@ -79,29 +79,29 @@ const monacoConfig: NgxMonacoEditorConfig = {
       MatToolbarModule,
   ],
   declarations: [
-      ContentedCmp,
+      ContentBrowserCmp,
       ContentedNavCmp,
       ContentedViewCmp,
       ContainerCmp,
       ContainerNavCmp,
       ContentViewCmp,
-      VideoViewCmp,
+      VideoBrowserCmp,
       VideoPreviewCmp,
       ScreenDialog,
       SearchCmp,
       SearchDialog,
       ScreensCmp,
       ByteFormatterPipe,
-      MediaEditorCmp,
+      EditorContentCmp,
   ],
   exports: [
-      ContentedCmp,
+      ContentBrowserCmp,
       ContentedNavCmp,
       ContentedViewCmp,
       ContainerCmp,
       ContainerNavCmp,
       SearchCmp,
-      VideoViewCmp,
+      VideoBrowserCmp,
       ContentViewCmp,
       SearchDialog,
   ],
