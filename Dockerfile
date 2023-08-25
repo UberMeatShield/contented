@@ -1,6 +1,6 @@
 # This is a multi-stage Dockerfile and requires >= Docker 17.05
 # https://docs.docker.com/engine/userguide/eng-image/multistage-build/
-FROM gobuffalo/buffalo:v0.18.8 as builder
+FROM gobuffalo/buffalo:v1.0.1 as builder
 
 ENV GOPROXY http://proxy.golang.org
 
@@ -20,7 +20,7 @@ RUN buffalo build --static -o --skip-assets /bin/app
 #======================================================================================
 # Build out the angular and front end code
 #======================================================================================
-FROM node:16 as angular
+FROM node:18 as angular
 
 RUN mkdir /contented
 WORKDIR /contented
@@ -29,7 +29,7 @@ ADD . .
 # Clear out any Mac or other OS binaries from an external install
 RUN rm -rf public && rm -rf node_modules && mkdir -p public
 RUN yarn install
-RUN yarn run gulp buildDeploy
+RUN make typescript
 RUN ls -la /contented/public && ls -la /contented/public/build/index.html
 
 #======================================================================================
