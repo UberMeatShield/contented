@@ -78,7 +78,7 @@ describe('TestingContentBrowserCmp', () => {
         _.each(dirs, dir => {
             let url = ApiDef.contented.content.replace('{cId}', dir.id);
             let req = httpMock.expectOne(r => r.url === url);
-            req.flush(MockData.getContent(dir.dir, 2));
+            req.flush(MockData.getContent(dir.name, 2));
         });
     }
 

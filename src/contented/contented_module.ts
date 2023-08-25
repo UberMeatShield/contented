@@ -29,6 +29,7 @@ import {VideoPreviewCmp, ScreenDialog} from './video_preview.cmp';
 import {ContentedService} from './contented_service';
 import {ScreensCmp} from './screens.cmp';
 import {EditorContentCmp} from './editor_content.cmp';
+import {SplashCmp} from './splash.cmp';
 import {Container} from './container';
 import {Content} from './content';
 import {Screen} from './screen';
@@ -91,6 +92,7 @@ const monacoConfig: NgxMonacoEditorConfig = {
       SearchCmp,
       SearchDialog,
       ScreensCmp,
+      SplashCmp,
       ByteFormatterPipe,
       EditorContentCmp,
   ],

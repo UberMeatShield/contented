@@ -1,7 +1,6 @@
 /**
  * Provide the ability to edit the descriptions of content and containers.  Also provide the ability
- * to quickly manage tags.  TODO: This component should actually be broken into a pure wrapper around
- * the ngx-monaco intialization and handle just readonly and change emitting.
+ * to quickly manage tags.
  */
 import { Component, OnInit, AfterViewInit, Input, Output, EventEmitter, ViewChild} from '@angular/core';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
@@ -15,17 +14,17 @@ import {Content} from './content';
 import * as _ from 'lodash-es';
 
 @Component({
-  selector: 'editor-content-cmp',
-  templateUrl: './editor_content.ng.html',
+  selector: 'splash-cmp',
+  templateUrl: './splash.ng.html',
 })
-export class EditorContentCmp implements OnInit {
+export class SplashCmp implements OnInit {
 
   @ViewChild('EDITOR') editor?: EditorComponent;
 
   @Input() editForm?: FormGroup;
   @Input() editorValue: string = "";
   @Input() descriptionControl?: FormControl<string>;
-  @Input() readOnly: boolean = false;
+  @Input() readOnly: boolean = true;
   @Input() editorOptions = {
     theme: 'vs-dark',
     //language: 'html',
@@ -41,7 +40,6 @@ export class EditorContentCmp implements OnInit {
   // Reference to the raw Microsoft component, allows for
   public monacoEditor?: any;
 
-
   constructor(public fb: FormBuilder, public route: ActivatedRoute, public _service: ContentedService) {
   }
 
@@ -52,26 +50,15 @@ export class EditorContentCmp implements OnInit {
         "description": this.descriptionControl = (this.descriptionControl || new FormControl(this.editorValue || "")),
       });
     }
-    if (!this.mc) {
-        this.route.paramMap.pipe().subscribe(
-            (map: ParamMap) => {
-                this.loadContent(map.get('id'));
-            },
-            console.error
-        );
-    }
+    this.loadSplash();
   }
 
-  loadContent(id: string) {
-      this._service.getContent(id).subscribe(
-          (mc: Content) => {
-              console.log(mc);
-              this.mc = mc;
-              this.descriptionControl.setValue(mc.description);
-          },
-          console.error
-      )
+  // Load the splash page instead of a particular content id
+  loadSplash() {
+      this.loading = true;
+      console.log("Load splash");
   }
+
 
   setReadOnly(state: boolean) {
     this.readOnly = state;

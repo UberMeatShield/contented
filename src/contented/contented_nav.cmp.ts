@@ -62,7 +62,7 @@ export class ContentedNavCmp implements OnInit {
             // We want to use the container value setValue to ensure the autocomplete doesn't
             // explode.  Using the dom element itself breaks the dropdown a little bit.
             this.containerFilter.setValue("");
-        });
+        }, 10);
     }
 
     // A lot of this stuff is just black magic off stack overflow...

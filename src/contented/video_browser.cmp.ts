@@ -249,7 +249,8 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
                 this.total = total;
 
                 if (content && content.length > 0) {
-                    GlobalNavEvents.selectContent(content[0], new Container({id: content.container_id}));
+                    let mc = content[0];
+                    GlobalNavEvents.selectContent(mc, new Container({id: mc.container_id}));
                 }
             }, err => {
                 console.error("Failed to search for video content.", err);
