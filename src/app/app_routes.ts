@@ -6,6 +6,7 @@ import {SearchCmp} from './../contented/search.cmp';
 
 import {EditorContentCmp} from './../contented/editor_content.cmp';
 import {ContentViewCmp} from './../contented/content_view.cmp';
+import {SplashCmp} from './../contented/splash.cmp';
 
 import {APP_BASE_HREF} from '@angular/common';
 import {RouterModule, Routes} from '@angular/router';
@@ -18,6 +19,7 @@ const appRoutes: Routes = [
     {path: 'ui/search', component: SearchCmp},
     {path: 'ui/content/:id', component: ContentViewCmp},
     {path: 'ui/editor_content/:id', component: EditorContentCmp},
+    {path: 'ui/splash', component: SplashCmp},
 ];
 @NgModule({
     imports: [RouterModule.forRoot(appRoutes, {})],
