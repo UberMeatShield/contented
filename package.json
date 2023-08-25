@@ -21,6 +21,7 @@
     "@angular/platform-browser": "^16.2.1",
     "@angular/platform-browser-dynamic": "^16.2.1",
     "@angular/router": "^16.2.1",
+    "@babel/runtime": "^7.22.11",
     "jquery": "^3.7.0",
     "lodash-es": "^4.17.21",
     "ngx-monaco-editor-v2": "^16.0.1",
