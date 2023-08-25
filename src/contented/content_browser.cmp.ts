@@ -251,7 +251,7 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
     // Could probably move this into a saner location
     public selectedContent(content: Content, cnt: Container) {
         //console.log("Click event, change currently selected indexes, container etc", content, cnt);
-        let idx = _.findIndex(this.allCnts, {id: cnt ? cnt.id : -1});
+        let idx = _.findIndex(this.allCnts, {id: cnt ? cnt.id : '-1'});
         if (idx >= 0) {
             this.idx = idx;
             this.rowIdx = cnt.rowIdx;

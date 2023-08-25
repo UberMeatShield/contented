@@ -40,7 +40,7 @@ export class ScreensCmp implements OnInit {
         if (!_.isEmpty(this.screens)) {
             _.delay(() => {
                 this.calculateDimensions();
-            });
+            }, 10);
             return;
         }
 
