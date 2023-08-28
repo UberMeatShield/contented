@@ -2,6 +2,124 @@
  * Provide the ability to edit the descriptions of content and containers.  Also provide the ability
  * to quickly manage tags.
  */
+let resume = `
+Justin H. Carlson
+Senior Software Developer (Old Code Monkey)
+justinc4@gmail.com
+
+I work hard to ensure things are working well.
+========================================================================================
+    I am an experienced web services coder who has worked at both major corporations
+and smaller business.  Happily working on UI or backend services and have experience with
+both.  I try to be a contributor rather than a talker and powerpoint monkey.  When you
+need something designed out and implemented in a scalable fashion I can help.  I am honest
+about a system or implementation but polite enough to preserve feelings on it.
+
+I tend to be recognized for the work I do and how quickly I can get it done.  I am not as
+interested in using the newest hot thing when the system is already working and might just
+need a small tweak.
+
+I like: intense coding sessions, competent staff, and management that can get me a feature
+list not written by a lobotomized nepotistic rodent.
+
+I dislike: eternally cycling process meetings, precise accurate "estimates" or deathmarch
+scoping sessions about how a shirt size didn't match the task.
+
+Maybe I am right for you?
+
+# One of my more recent side projects with some code samples rough but useful learning.
+https://github.com/UberMeatShield/contented
+
+Technical Skills (Developer Env: MacOSX, vim, Brave, Docker):
+========================================================================================
+  Coding Languages (in order of current use):
+    Typescript, Python, GoLang, JavaScript, PHP, Ruby, Perl, Java.
+  Web Development: Linux and Open Source Platforms
+    Typescript/js My experience is mostly with Angular.io
+    Django, Nginx, Apache, Ruby on Rails, IIS
+    HTML, CSS (but defintely not a full designer)
+  Web Services:
+    Plenty of Performance tuning and environment setup and scaling.
+    Amazon Web Services mostly (Ec2, Elastic Search, RDS, SQS, S3, Route53).
+  Databases:
+    MySQL, Postgres.
+    Oracle & The Hell of Driver Management.
+  DevOps:
+    Ansible Playbooks, GitLab CI setups and the inevitable shell script.
+
+Experience.
+========================================================================================
+(2015, Curr) Senior Software Developer  # Secureworks
+  Managed the development of the main web interface into countermeasure lifecycle and creation.
+  Built out a web scraping platform that aids in scanning for software vulnerabilities.
+  Coded a workflow that provides rapid authoring of intelligence for our Analyst team.
+  Coded APIs and UI that displayed malware information to our researchers.
+  Upgraded and maintained where malware and virus countermeasures are authored.
+  Wrote Ansible playbooks to build out and deploy our services and tweaked Teraform.
+  * Typescript (Angular.io), Python, AWS, MySQL, Ansible, Docker, Gitlab CI, Azure
+
+(2013, 2015) Senior Software Engineer   # Learning Objects
+  Created question editors and student views for a serious of education platforms.
+  Created course-ware editing tools and display along with account management.
+  Process improvements like code review policies, testing requirements and PM guides.
+  Tested js code using Karma/Jasmine along with service testing with Ruby
+  * Javascript, Java
+
+(2012, 2013) Software Developer  # American Institute for Research
+  Created a complex equation editor for mathematical testing.
+  Designed widgets and tools for accessible tests for K-12 Education.
+  * Javascript, MS IIS
+
+(2010, 2012) Lead Software Developer  # Thermopylae Sciences and Technology
+  A core contributor for the iSpatial library.
+  Lead the development of many projects using our underlying iSpatial library.
+    Helped communicate deadlines and reasonable expectations to clients.
+  Implemented Javascript libraries around Google Earth and Google Maps.
+    Unified the display of data (your point, tracker, polygon to look similar
+    on maps or earth).
+  Provided tracking functionality for mobile devices and commercial trackers.
+  Mentored a host of young programmers and tried to clean up company web coding.
+  * Javascript, PHP, Postgres
+
+(2005, 2010) Software Development Engineer  # Amazon.com: CS Apps
+  Designed and launched improvements that cut page loads in half.
+  Lead the modernization of platform JavaScript libraries and design principles.
+    Reduced load times by doing less work up front and ajax loading content.
+  Ownership of the Concession & Audit libraries and management UI.
+    Experienced with SOX rules and regulations along with PCI compliance.
+  Implemented a distributed system handling mass processing of amazon issues.
+    Reduced contacts & help enable an entire team to be repurposed for other work.
+  Automated our builds and transferred ownership from SDEs to support teams.
+    Helped optimize a monthly release down to biweekly production releases.
+  * Perl, Javascript, Java
+
+(2004, 2005) Embedded Systems Engineer  # Boeing: Phantom Works Division
+   Developed an RSA crypto library for an embedded system & Math Lib
+   Awarded for technological demonstration at US Northcom.
+   * C
+
+(2003, 2004)  Software Test Engineer  # Microsoft: Sustained Engineering
+  Setup multiple root CA authorities and various different domain setups.
+  Helped run Crypto tests and setup certificate and signing networks.
+  Assisted in running the Active Directory test passes.
+  * C#, Active Directory setups
+
+(2002, 2003)  Software Dev Intern  # CHILL: National Weather Weather Facility
+  Site: http://www.chill.colostate.edu/w/CSU_CHILL
+  Dev Lead on project to develop a modern UI displaying Radar weather data.
+  Managed an engineering intern program at CSU and mentored several students.
+  * Javascript, Java
+
+(2001, 2002)  Software Dev Intern  # Los Alamos Advanced Computing Laboratory
+  Helped produce a distributed image cache for the LANL MPI program.
+  LANL MPI setup and development and assisted in project setups and testing.
+  * C
+
+Education
+========================================================================================
+B.S. in Computer Science from Colorado State University, Graduation 2003
+Minor in Mathematics
+`;
 import { Component, OnInit, AfterViewInit, Input, Output, EventEmitter, ViewChild} from '@angular/core';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 import {FormBuilder, NgForm, FormControl, FormGroup, Validators} from '@angular/forms';
@@ -22,11 +140,11 @@ export class SplashCmp implements OnInit {
   @ViewChild('EDITOR') editor?: EditorComponent;
 
   @Input() editForm?: FormGroup;
-  @Input() editorValue: string = "";
+  @Input() editorValue: string = resume;
   @Input() descriptionControl?: FormControl<string>;
   @Input() readOnly: boolean = true;
   @Input() editorOptions = {
-    theme: 'vs-dark',
+    //theme: 'vs-dark',
     //language: 'html',
     language: 'tagging',
   };
@@ -55,7 +173,7 @@ export class SplashCmp implements OnInit {
 
   // Load the splash page instead of a particular content id
   loadSplash() {
-      this.loading = true;
+      //this.loading = true;
       console.log("Load splash");
   }
 
@@ -93,7 +211,7 @@ export class SplashCmp implements OnInit {
       });
     }
     this.afterMonaco();
-    this.setReadOnly(this.readOnly);
+    //this.setReadOnly(this.readOnly);
   }
 
   public afterMonaco() {
@@ -116,5 +234,35 @@ export class SplashCmp implements OnInit {
       );
       this.editorValue = control.value;
     }
+    this.fitContent();
+  }
+
+  fitContent() {
+    console.log("Content fit");
+    const container = document.getElementById('SPLASH_FULL');
+    let width = container.offsetWidth;
+    //container.style.border = '1px solid #f00';
+    let ignoreEvent = false;
+
+    const updateHeight = () => {
+    	const contentHeight = Math.min(9000, this.monacoEditor.getContentHeight());
+    	container.style.width = `${width}px`;
+    	container.style.height = `${contentHeight}px`;
+
+      console.log("Container height", container.style.height);
+    	try {
+    		//ignoreEvent = true;
+        setTimeout(() => {
+
+    		  this.monacoEditor.layout({width, height: contentHeight });
+        }, 100);
+    	} finally {
+    		//ignoreEvent = false;
+    	}
+    };
+    // this.monacoEditor.onDidContentSizeChange(updateHeight);
+    setTimeout(() => {
+      updateHeight();
+    }, 100)
   }
 }

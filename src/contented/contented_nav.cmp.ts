@@ -77,9 +77,11 @@ export class ContentedNavCmp implements OnInit {
     // On the document keypress events, listen for them (probably need to set them only to component somehow)
     @HostListener('document:keypress', ['$event'])
     public keyPress(evt: KeyboardEvent) {
-
         // Adds a ripple effect on the buttons (probably should calculate the +32,+20 on element position
         // plus padding etc)  The x,y for a ripple is based on the viewport seemingly.
+        if (!/[a-z]/.test(evt.key)) {
+            return;
+        }
         let btn = $(`#BTN_${evt.key}`)
         let pos = btn.offset();
         if (pos) {

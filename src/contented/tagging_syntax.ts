@@ -1,3 +1,60 @@
+
+import * as _ from 'lodash-es';
+let languages = [
+    'python',
+    'typescript',
+    'javascript', 
+    'JavaScript', 
+    'ruby',
+    'perl',
+    'Go',
+    'GoLang',
+    'php',
+    'java',
+    'css', 
+    'html'
+];
+
+let technologies = [
+    'azure', 
+    'django',
+    'gobuffalo',
+    'flask',
+    'jira',
+    'aws',
+    'terraform',
+    'gitlab',
+    'ci',
+    'GitLab',
+    'ansible',
+    'postgres',
+    'mysql',
+    'MySQL',
+    'Oracle',
+    'apache',
+    'nginx',
+    'rails',
+    'iis',
+    'EC2',
+    'RDS',
+    'S3', 
+    'SQS',
+    'Route53',
+    'Open Search',
+    'angular.io'
+];
+
+let mailFormat = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
+
+let langs = languages.concat(
+  _.map(languages, lang => _.upperFirst(lang)),
+  _.map(languages, lang => lang.toUpperCase())
+ );
+let techs = technologies.concat(
+    _.map(technologies, tech => tech.toUpperCase()),
+    _.map(technologies, tech => _.upperFirst(tech))
+);
+
 // Mostly empty tagging support, dynamically load the tags and THEN register the language.
 // https://stackoverflow.com/questions/52700307/how-to-use-monaco-editor-for-syntax-highlighting
 export let TAGGING_SYNTAX = {
@@ -5,11 +62,8 @@ export let TAGGING_SYNTAX = {
   // defaultToken: 'invalid',
 
   // These should be loaded from the API
-  keywords: [
-      'python', 'typescript', 'javascript', 'django', 'Go', 'GoLang', 'GoBuffalo'
-  ],
-  typeKeywords: [],
-
+  keywords: langs,
+  typeKeywords: techs,
   operators: [
     '=', '>', '<', '!', '~', '?', ':', '==', '<=', '>=', '!=',
     '&&', '||', '++', '--', '+', '-', '*', '/', '&', '|', '^', '%',
@@ -27,10 +81,13 @@ export let TAGGING_SYNTAX = {
   tokenizer: {
     root: [
       // identifiers and keywords
-      [/[a-z_$][\w$]*/, { cases: { '@typeKeywords': 'keyword',
+      [/^[A-Z].*\./, 'type.identifier' ], 
+      [mailFormat, 'type.identifier'],
+      [/[a-zA-Z_$][\w$]*/, { cases: { '@typeKeywords': 'keyword',
                                    '@keywords': 'keyword',
-                                   '@default': 'identifier' } }],
-      [/[A-Z][\w\$]*/, 'type.identifier' ],  // to show class names nicely
+                                   } }],
+      // to show sections names nicely
+
 
       // whitespace
       { include: '@whitespace' },
@@ -68,7 +125,7 @@ export let TAGGING_SYNTAX = {
       [/[^\/*]+/, 'comment' ],
       [/\/\*/,    'comment', '@push' ],    // nested comment
       ["\\*/",    'comment', '@pop'  ],
-      [/[\/*]/,   'comment' ]
+      [/[\/*]/,   'comment' ],
     ],
 
     string: [
@@ -82,6 +139,7 @@ export let TAGGING_SYNTAX = {
       [/[ \t\r\n]+/, 'white'],
       [/\/\*/,       'comment', '@comment' ],
       [/\/\/.*$/,    'comment'],
+      [/(^#.*$)/, 'comment'],
     ],
   },
 };
