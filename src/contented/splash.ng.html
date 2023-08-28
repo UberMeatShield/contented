@@ -3,9 +3,7 @@
 
   <mat-card>
     <mat-card-header>
-      <mat-card-title>
-        Who is this guy?
-      </mat-card-title>
+      <mat-card-title>About</mat-card-title>
     </mat-card-header>
     <mat-card-content>
       <div *ngIf="mc">
@@ -20,9 +18,13 @@
 
   <mat-card>
     <mat-card-header>
-      <mat-card-title>  
-          Work History
-      </mat-card-title>
+      <mat-card-title>Work History</mat-card-title>
+      <mat-card-subtitle>
+          This is a custom Monaco editor using a set of syntax highlighting to show a 
+          pretty basic text resume.  None of the highlighs are custom CSS it is all just
+          Monarch token processing.  There is a little bit of a hack around C# though, turns
+          out you cannot just tokenize that and have your # comments render right!
+      </mat-card-subtitle>
     </mat-card-header>
     <mat-card-content>
       <div id="SPLASH_FULL">

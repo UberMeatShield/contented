@@ -43,8 +43,12 @@ let technologies = [
     'RDS',
     'S3', 
     'SQS',
+    'jquery',
+    'Google Earth',
+    'Google Maps',
+    'postgis',
     'Route53',
-    'Open Search',
+    'OpenSearch',
     'Angular'
 ];
 
