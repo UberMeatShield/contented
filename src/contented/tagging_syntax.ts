@@ -1,13 +1,14 @@
 
 import * as _ from 'lodash-es';
 let languages = [
+    'c#',   // A language that decides to use a common comment token.  Nice?
     'python',
     'typescript',
     'javascript', 
     'JavaScript', 
     'ruby',
     'perl',
-    'Go',
+    'Go',  // If you want to highlight too many things name a lang 'Go'
     'GoLang',
     'php',
     'java',
@@ -19,7 +20,10 @@ let technologies = [
     'azure', 
     'django',
     'gobuffalo',
+    'GoBuffalo',
     'flask',
+    'bootstrap',
+    'd3',
     'jira',
     'aws',
     'terraform',
@@ -41,10 +45,12 @@ let technologies = [
     'SQS',
     'Route53',
     'Open Search',
-    'angular.io'
+    'Angular'
 ];
 
-let mailFormat = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
+// Restrictive email format so the highlights do not fight with other elements (no UC)
+let mailFormat = /^[a-z0-9.!$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
+//let mailFormat = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
 
 let langs = languages.concat(
   _.map(languages, lang => _.upperFirst(lang)),
@@ -80,14 +86,15 @@ export let TAGGING_SYNTAX = {
   // Complex tokenizer example
   tokenizer: {
     root: [
-      // identifiers and keywords
-      [/^[A-Z].*\./, 'type.identifier' ], 
-      [mailFormat, 'type.identifier'],
-      [/[a-zA-Z_$][\w$]*/, { cases: { '@typeKeywords': 'keyword',
-                                   '@keywords': 'keyword',
-                                   } }],
       // to show sections names nicely
-
+      [mailFormat, 'type.identifier'],
+      [/^[A-Z].*\./, 'type.identifier'], 
+      [/C#|[a-zA-Z_$][\w$]*/, { 
+        cases: {
+         '@typeKeywords': 'keyword',
+         '@keywords': 'keyword',
+          } 
+       }],
 
       // whitespace
       { include: '@whitespace' },
@@ -95,13 +102,13 @@ export let TAGGING_SYNTAX = {
       // delimiters and operators
       [/[{}()\[\]]/, '@brackets'],
       [/[<>](?!@symbols)/, '@brackets'],
-      [/@symbols/, { cases: { '@operators': 'operator',
-                              '@default'  : '' } } ],
+      //[/@symbols/, { cases: { '@operators': 'operator',
+      //                        '@default'  : '' } } ],
 
       // @ annotations.
       // As an example, we emit a debugging log message on these tokens.
       // Note: message are supressed during the first load -- change some lines to see them.
-      [/@\s*[a-zA-Z_\$][\w\$]*/, { token: 'annotation', log: 'annotation token: $0' }],
+      [/  @\s*[a-zA-Z_\$][\w\$]*/, { token: 'annotation', log: 'annotation token: $0' }],
 
       // numbers
       [/\d*\.\d+([eE][\-+]?\d+)?/, 'number.float'],
@@ -139,7 +146,7 @@ export let TAGGING_SYNTAX = {
       [/[ \t\r\n]+/, 'white'],
       [/\/\*/,       'comment', '@comment' ],
       [/\/\/.*$/,    'comment'],
-      [/(^#.*$)/, 'comment'],
+      [/\s*(^#\s.*$)/, 'comment'],
     ],
   },
 };
