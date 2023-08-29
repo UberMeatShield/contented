@@ -151,6 +151,20 @@ func (cm ContentManagerDB) SearchContent(search string, page int, per_page int, 
     return &contentWithScreens, count, nil
 }
 
+func (cm ContentManagerDB) SearchContainers(search string, page int, per_page int) (*models.Containers, error) {
+    if search == "" || search == "*" {
+        return cm.ListContainers(page, per_page)
+    }
+    containers := &models.Containers{}
+    tx := cm.GetConnection()
+    q := tx.Paginate(page, per_page)
+    q = q.Where("name ilike ?", search)
+    if q_err := q.All(containers); q_err != nil {
+        return containers, q_err
+    }
+    return containers, nil
+}
+
 func (cm ContentManagerDB) LoadRelatedScreens(content *models.Contents) (models.ScreenCollection, error) {
     if content == nil || len(*content) == 0 {
         return nil, nil
@@ -306,7 +320,7 @@ func (cm ContentManagerDB) CreateScreen(screen *models.Screen) error {
 func (cm ContentManagerDB) CreateContent(mc *models.Content) error {
     tx := cm.GetConnection()
     err := tx.Create(mc)
-    log.Printf("What is the content %s", mc)
+    //log.Printf("What is the content %s", mc)
     return err
 }
 

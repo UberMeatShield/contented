@@ -40,6 +40,7 @@ func App(UseDatabase bool) *buffalo.App {
         app.GET("/view/{mcID}", FullHandler)
         app.GET("/download/{mcID}", DownloadHandler)
         app.GET("/search", SearchHandler)
+        app.GET("/splash", SplashHandler)
 
         // Host the index.html, also assume that all angular UI routes are going to be under contented
         // Cannot figure out how to just let AngularIndex handle EVERYTHING under ui/*/*

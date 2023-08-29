@@ -50,6 +50,7 @@ type ContentManager interface {
     ListAllContent(page int, per_page int) (*models.Contents, error)
     SearchContentContext() (*models.Contents, int, error)
     SearchContent(search string, page int, per_page int, cId string, contentType string) (*models.Contents, int, error)
+    SearchContainers(search string, page int, per_page int) (*models.Containers, error)
     UpdateContent(content *models.Content) error
     CreateContent(mc *models.Content) error
     GetPreviewForMC(mc *models.Content) (string, error)

@@ -138,6 +138,10 @@ func (as *ActionSuite) Test_MemoryManagerSearch() {
     as.NotNil(containers, "It should have containers")
     as.Equal(len(*containers), test_common.TOTAL_CONTAINERS, "Wrong number of containers found")
 
+    s_cnts, s_err := man.SearchContainers("dir2", 1, 2)
+    as.NoError(s_err, "Error searching memory containers")
+    as.Equal(1, len(*s_cnts), "It should only filter to one directory")
+
     mcs, total, err := man.SearchContent("Donut", 1, 20, "", "")
     as.NoError(err, "Can we search in the memory manager")
     as.Equal(len(*mcs), 1, "One donut should be found")
