@@ -10,6 +10,7 @@ import {MatRipple} from '@angular/material/core';
 import {EditorComponent} from 'ngx-monaco-editor-v2';
 import {ContentedService} from './contented_service';
 import {Content} from './content';
+import {Container} from './container';
 
 import * as _ from 'lodash-es';
 
@@ -33,6 +34,9 @@ export class SplashCmp implements OnInit {
     language: 'tagging',
   };
   @Input() mc?: Content;
+  @Input() c?: Container;
+  @Input() html: string = "";
+  @Input() rendererType: string = "";
 
   // These are values for the Monaco Editors, change events are passed down into
   // the form event via the AfterInit and set the v7_definition & suricata_definition.
@@ -52,7 +56,10 @@ export class SplashCmp implements OnInit {
         "description": this.descriptionControl = (this.descriptionControl || new FormControl(this.editorValue || "")),
       });
     }
-    this.loadSplash();
+
+    if (!this.mc && !this.c) {
+      this.loadSplash();
+    }
   }
 
   // Load the splash page instead of a particular content id
@@ -61,7 +68,10 @@ export class SplashCmp implements OnInit {
       console.log("Load splash media content");
       this._service.splash().subscribe(
         res => {
-          console.log(res);
+          this.c = res.container;
+          this.mc = res.content;
+          this.html = res.html || "";
+          this.rendererType = res.rendererType;
         },
          console.error
       );

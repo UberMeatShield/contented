@@ -1,18 +1,23 @@
 <contented-nav [loading]="loading"></contented-nav>
 <div class="splash-cmp">
 
-  <mat-card>
+  <div class="splash-html" *ngIf="html" [innerHTML]="html"></div>
+
+
+  <container-cmp [container]="c">
+  </container-cmp>
+
+
+  <mat-card *ngIf="mc">
     <mat-card-header>
-      <mat-card-title>About</mat-card-title>
+      <mat-card-title>{{mc.description}}</mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <div *ngIf="mc">
         <contented-view
           [forceHeight]="600"
           [content]="mc"
           [visible]="true"
         ></contented-view>
-      </div>
     </mat-card-content>
   </mat-card>
 

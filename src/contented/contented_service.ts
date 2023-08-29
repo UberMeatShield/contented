@@ -196,10 +196,11 @@ export class ContentedService {
         return observableFrom(Promise.reject(parsed));
     }
 
-    // TODO: Do I just make the spash type?
+    // This page allows server configuration of the home page display.
     splash() {
         return this.http.get(ApiDef.contented.splash).pipe(
             map((res: any) => {
+                // Worth an actual class type?
                 return {
                     container: _.get(res, 'container.id') ? new Container(res.container) : null,
                     content: _.get(res, 'content.id') ? new Content(res.content) : null,
