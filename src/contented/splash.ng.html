@@ -3,10 +3,14 @@
 
   <div class="splash-html" *ngIf="html" [innerHTML]="html"></div>
 
-
-  <container-cmp [container]="c">
-  </container-cmp>
-
+  <div *ngIf="rendererType === 'container'">
+    <container-cmp [container]="c">
+    </container-cmp>
+  </div>
+  <div *ngIf="rendererType === 'video'">
+    <video-preview-cmp [mc]="mc" *ngFor="let mc of getVideos()">
+    </video-preview-cmp>
+  </div>
 
   <mat-card *ngIf="mc">
     <mat-card-header>
@@ -21,6 +25,7 @@
     </mat-card-content>
   </mat-card>
 
+  <!-- Assign this as the MC and implement a text type? -->
   <mat-card>
     <mat-card-header>
       <mat-card-title>Work History</mat-card-title>

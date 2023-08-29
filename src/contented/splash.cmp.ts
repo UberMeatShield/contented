@@ -56,7 +56,6 @@ export class SplashCmp implements OnInit {
         "description": this.descriptionControl = (this.descriptionControl || new FormControl(this.editorValue || "")),
       });
     }
-
     if (!this.mc && !this.c) {
       this.loadSplash();
     }
@@ -75,6 +74,15 @@ export class SplashCmp implements OnInit {
         },
          console.error
       );
+  }
+
+  getVideos() {
+    if (!this.c) {
+      return []
+    }
+    return _.filter(this.c.contents, mc => {
+        return mc.content_type.includes("video");
+    });
   }
 
   setReadOnly(state: boolean) {
