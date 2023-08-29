@@ -59,9 +59,12 @@ export class SplashCmp implements OnInit {
   loadSplash() {
       //this.loading = true;
       console.log("Load splash media content");
-
-      // Create a golang endpoint that can load a media by name
-      // Load that content and render it into the page
+      this._service.splash().subscribe(
+        res => {
+          console.log(res);
+        },
+         console.error
+      );
   }
 
   setReadOnly(state: boolean) {
@@ -78,6 +81,7 @@ export class SplashCmp implements OnInit {
     }
   }
 
+  // The pure Monaco part is definitely worth an indepenent component (I think)
   afterMonacoInit(monaco: any) {
     console.log("Monaco Editor has been initialized");
     this.monacoEditor = monaco;
