@@ -91,8 +91,8 @@ export let TAGGING_SYNTAX = {
   tokenizer: {
     root: [
       // to show sections names nicely
-      [mailFormat, 'type.identifier'],
-      [/^[A-Z].*\./, 'type.identifier'], 
+      //[mailFormat, 'type.identifier'],
+      //[/^[A-Z].*\./, 'type.identifier'], 
       [/C#|[a-zA-Z_$][\w$]*/, { 
         cases: {
          '@typeKeywords': 'keyword',
@@ -132,6 +132,7 @@ export let TAGGING_SYNTAX = {
       [/'/, 'string.invalid']
     ],
 
+    // Whitespace comment is handling # comments
     comment: [
       [/[^\/*]+/, 'comment' ],
       [/\/\*/,    'comment', '@push' ],    // nested comment
@@ -148,9 +149,9 @@ export let TAGGING_SYNTAX = {
 
     whitespace: [
       [/[ \t\r\n]+/, 'white'],
-      [/\/\*/,       'comment', '@comment' ],
-      [/\/\/.*$/,    'comment'],
       [/\s*(^#\s.*$)/, 'comment'],
+      [/\/\*/,       'comment', '@comment' ],
+      //[/\/\/.*$/,    'comment'],  Highlights links
     ],
   },
 };

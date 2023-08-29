@@ -128,27 +128,20 @@ export class SplashCmp implements OnInit {
     const container = document.getElementById('SPLASH_FULL');
     let width = container.offsetWidth;
     //container.style.border = '1px solid #f00';
-    let ignoreEvent = false;
 
     const updateHeight = () => {
     	const contentHeight = Math.min(9000, this.monacoEditor.getContentHeight());
     	container.style.width = `${width}px`;
     	container.style.height = `${contentHeight}px`;
-
-      console.log("Container height", container.style.height);
-    	try {
-    		//ignoreEvent = true;
-        setTimeout(() => {
-
-    		  this.monacoEditor.layout({width, height: contentHeight });
-        }, 100);
-    	} finally {
-    		//ignoreEvent = false;
-    	}
+    	this.monacoEditor.layout({width, height: contentHeight });
     };
-    // this.monacoEditor.onDidContentSizeChange(updateHeight);
-    setTimeout(() => {
+
+    // Give other page elements a little bit of rendering time
+    _.delay(() => {
       updateHeight();
-    }, 100)
+    }, 100);
+
+    let changed = _.debounce(updateHeight, 250);
+    this.monacoEditor.onDidContentSizeChange(updateHeight);
   }
 }
