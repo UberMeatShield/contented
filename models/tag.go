@@ -2,17 +2,17 @@ package models
 
 import (
 	"encoding/json"
-	"github.com/gobuffalo/pop/v5"
-	"github.com/gobuffalo/validate/v3"
-	"github.com/gofrs/uuid"
 	"time"
+
+	"github.com/gobuffalo/pop/v6"
+	"github.com/gobuffalo/validate/v3"
 )
+
 // Tag is used by pop to map your taggings database table to your go code.
 type Tag struct {
-    ID uuid.UUID `json:"id" db:"id"`
-    Name string `json:"tag" db:"name"`
-    CreatedAt time.Time `json:"created_at" db:"created_at"`
-    UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	ID        string    `json:"id" db:"id"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 }
 
 // String is not required by pop and may be deleted
@@ -23,8 +23,8 @@ func (t Tag) String() string {
 
 // Tags is not required by pop and may be deleted
 type Tags []Tag
-type TagsMap map[uuid.UUID]Tag
-type TagsCollection map[uuid.UUID]Tags
+type TagsMap map[string]Tag
+type TagsCollection map[string]Tags
 
 // String is not required by pop and may be deleted
 func (t Tags) String() string {

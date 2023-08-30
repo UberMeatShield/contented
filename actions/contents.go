@@ -8,7 +8,7 @@ import (
     "contented/managers"
     "contented/models"
     "github.com/gobuffalo/buffalo"
-    // "github.com/gobuffalo/pop/v5"
+    // "github.com/gobuffalo/pop/v6"
     "github.com/gobuffalo/x/responder"
     "github.com/gofrs/uuid"
 )

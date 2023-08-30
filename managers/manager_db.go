@@ -366,7 +366,7 @@ func (cm ContentManagerDB) GetTag(tagID uuid.UUID) (*models.Tag, error) {
 
 func (cm ContentManagerDB) AssociateTag(t *models.Tag, mc *models.Content) error {
     mc.Tags = append(mc.Tags, *t)
-    print(fmt.Printf("Found %s with %s what the %s", mc.ID.String(), t.ID.String(), mc.Tags))
+    print(fmt.Printf("Found %s with %s what the %s", mc.ID.String(), t.ID, mc.Tags))
     tx := cm.GetConnection()
     tx.ValidateAndUpdate(mc)
     return nil

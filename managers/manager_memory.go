@@ -399,7 +399,7 @@ func (cm ContentManagerMemory) ListAllTags(page int, perPage int) (*models.Tags,
 	}
 
 	sort.SliceStable(t_arr, func(i, j int) bool {
-		return t_arr[i].Name < t_arr[j].Name
+		return t_arr[i].ID < t_arr[j].ID
 	})
 	offset, end := GetOffsetEnd(page, perPage, len(t_arr))
 	if end > 0 { // If it is empty a slice ending in 0 = boom
@@ -416,7 +416,6 @@ func (cm ContentManagerMemory) ListAllTagsContext() (*models.Tags, error) {
 
 func (cm ContentManagerMemory) CreateTag(tag *models.Tag) error {
 	if tag != nil {
-		tag.ID = AssignID(tag.ID)
 		cm.ValidTags[tag.ID] = *tag
 		return nil
 	}

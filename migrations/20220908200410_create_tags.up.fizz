@@ -1,12 +1,12 @@
 create_table("tags") {
-	t.Column("id", "uuid", {primary: true})
-	t.Column("name", "string", {unique: true})
+	t.Column("id", "string", {unique: true, primary: true})
+	t.Column("description", "string", {default: ""})
 	t.Timestamps()
 }
 
 create_table("contents_tags") {
     t.Column("content_id", "uuid", {})
     t.ForeignKey("content_id", {"contents": ["id"]}, {})
-    t.Column("tag_id", "uuid", {})
+    t.Column("tag_id", "string", {})
     t.ForeignKey("tag_id", {"tags": ["id"]}, {})
 }
