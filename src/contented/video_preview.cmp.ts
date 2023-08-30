@@ -37,6 +37,7 @@ export class VideoPreviewCmp implements OnInit {
     // Used to show that only a certain number are visible on the page at a given time
     // which is used to sort of set a height on the components.
     @Input() maxVisible = 2;
+    @Input() inlineView = false;
 
     // TODO: Make this a saner calculation
     public previewWidth = 480;
@@ -93,7 +94,6 @@ export class VideoPreviewCmp implements OnInit {
     }
 
     imgClicked(mc: Content) {
-        console.log("Click the image", mc);
         this.fullView(mc);
     }
 }

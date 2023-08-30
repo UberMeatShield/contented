@@ -8,7 +8,7 @@
     </container-cmp>
   </div>
   <div *ngIf="rendererType === 'video'">
-    <video-preview-cmp [mc]="mc" *ngFor="let mc of getVideos()">
+    <video-preview-cmp [mc]="mc" *ngFor="let mc of getVideos()" [inlineView]="true">
     </video-preview-cmp>
   </div>
 

@@ -15,6 +15,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
     @Input() forceWidth: number;
     @Input() forceHeight: number;
     @Input() visible: boolean = false;
+    @Input() showScreens = true;
 
     public maxWidth: number;
     public maxHeight: number;

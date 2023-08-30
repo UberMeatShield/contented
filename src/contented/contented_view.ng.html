@@ -28,7 +28,7 @@
     </span>
   </div>
 
-  <div *ngIf="content && content.isVideo()" class="content-video-screens">
+  <div *ngIf="content && content.isVideo() && showScreens" class="content-video-screens">
     <screens-cmp
       (clickedItem)="clickedScreen($event)"
       [contentId]="content.id"

@@ -75,13 +75,16 @@ export class ContentedNavCmp implements OnInit {
     }
 
     // On the document keypress events, listen for them (probably need to set them only to component somehow)
-    @HostListener('document:keypress', ['$event'])
+    @HostListener('document:keyup', ['$event'])
     public keyPress(evt: KeyboardEvent) {
         // Adds a ripple effect on the buttons (probably should calculate the +32,+20 on element position
         // plus padding etc)  The x,y for a ripple is based on the viewport seemingly.
-        if (!/[a-z]/.test(evt.key)) {
+        if (!/[a-z]/.test(evt.key) && evt.key !== "Escape") {
+            // We don't want to freak out and lookup #BTN_} etc.
             return;
         }
+        this.handleKey(evt.key);
+
         let btn = $(`#BTN_${evt.key}`)
         let pos = btn.offset();
         if (pos) {
@@ -96,7 +99,6 @@ export class ContentedNavCmp implements OnInit {
                 rippleRef.fadeOut();
             }, 250);
         }
-        this.handleKey(evt.key);
     }
 
     public handleKey(key: string) {
@@ -118,6 +120,10 @@ export class ContentedNavCmp implements OnInit {
                 GlobalNavEvents.viewFullScreen();
                 break;
             case 'q':
+                GlobalNavEvents.hideFullScreen();
+                break;
+            case 'Escape':
+                // I think it should potentially have a different action
                 GlobalNavEvents.hideFullScreen();
                 break;
             case 'f':
