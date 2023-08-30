@@ -4,6 +4,7 @@
 # DB reset and create
 # Make previews
 # ENV variable for the directory to use
+DIR ?= $(shell dirname `pwd`/mocks/content)
 
 # You are going to need to have buffalo installed https://gobuffalo.io/documentation/getting_started/installation/
 .PHONY: install
@@ -19,7 +20,7 @@ build:
 
 .PHONY: dev
 dev:
-	export DIR=`pwd`/mocks/content && buffalo dev
+	export DIR=$(DIR) && buffalo dev
 
 # I would rather use gotestsum, but buffalo does a bunch of DB setup that doesn't play
 # nice with go test or gotestsum. Or potentially my tests need some saner / better init
@@ -27,17 +28,17 @@ dev:
 # damn slow ffmpeg seek screen tests are on MacOSX.
 .PHONY: test
 test:
-	export DIR=`pwd`/mocks/content && buffalo test ./models ./utils ./managers ./actions
+	export DIR=$(DIR) && buffalo test ./models ./utils ./managers ./actions
 
 # This works with gotestsum, something about a DB reset is missing or magical Buffalo code.
 # The Database side of things doesn't get created with gotestsum yet
 # To run one test with gotestsum you can steal this line and pass --run <TestName>
 .PHONY: gotestsum
 gtest:
-	export DIR=`pwd`/mocks/content && gotestsum --format testname ./models
-	export DIR=`pwd`/mocks/content && gotestsum --format testname ./utils
-	export DIR=`pwd`/mocks/content && buffalo test ./managers
-	export DIR=`pwd`/mocks/content && buffalo test ./actions
+	export DIR=$(DIR) && gotestsum --format testname ./models
+	export DIR=$(DIR) && gotestsum --format testname ./utils
+	export DIR=$(DIR) && buffalo test ./managers
+	export DIR=$(DIR) && buffalo test ./actions
 
 .PHONY: ngdev
 ngdev:
@@ -68,13 +69,13 @@ reset-db:
 
 .PHONY: db-populate
 db-seed:
-	export DIR=`pwd`/mocks/content && buffalo task db:seed
+	export DIR=$(DIR) && buffalo task db:seed
 
 .PHONY: create-previews
 create-previews:
-	export DIR=`pwd`/mocks/content && buffalo task db:preview
+	export DIR=$(DIR) && buffalo task db:preview
 
 .PHONY: encode
 encode:
-	export DIR=`pwd`/mocks/content && buffalo task db:encode
+	export DIR=$(DIR) && buffalo task db:encode
 
