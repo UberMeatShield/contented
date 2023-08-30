@@ -4,6 +4,7 @@ let base = window.location.origin + '/';
 export let ApiDef = {
     base: base,
     contented: {
+        splash: base + 'splash/',
         view: base + 'view/',
         download: base + 'download/{mcID}',
         preview: base + 'preview/',

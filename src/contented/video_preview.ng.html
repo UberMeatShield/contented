@@ -33,6 +33,14 @@
             ></screens-cmp>
           </div>
         </div>
+
+      <!-- We already show screens and normally there is a top level viewer-->
+      <contented-view *ngIf="inlineView"
+        [forceHeight]="600"
+        [visible]="false"
+        [showScreens]="false" 
+      ></contented-view>
+
       </mat-card-content>
     </mat-card>
   </div>

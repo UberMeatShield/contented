@@ -78,7 +78,7 @@ describe('TestingContentedNavCmp', () => {
         });
     });
 
-    it("Should be able to handle a document keypress", fakeAsync(() => {
+    it("Should be able to handle a document keyup", fakeAsync(() => {
         fixture.detectChanges();
 
         let validate: NavTypes = null;
@@ -86,7 +86,7 @@ describe('TestingContentedNavCmp', () => {
             validate = evt.action;
         });
 
-        document.dispatchEvent(new KeyboardEvent("keypress", {key: "a"}));
+        document.dispatchEvent(new KeyboardEvent("keyup", {key: "a"}));
         fixture.detectChanges();
 
         fixture.whenStable().then(() => {

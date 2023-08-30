@@ -28,6 +28,10 @@ class MockLoader {
         return _.clone(require('./screens.json'));
     }
 
+    public splash() {
+        return _.clone(require('./splash.json'));
+    }
+
     public getContent(container_id = null, count = null) {
         let content = _.clone(require('./content.json'));
         if (container_id) {

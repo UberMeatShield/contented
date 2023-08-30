@@ -10,8 +10,11 @@ import {MatRipple} from '@angular/material/core';
 import {EditorComponent} from 'ngx-monaco-editor-v2';
 import {ContentedService} from './contented_service';
 import {Content} from './content';
+import {Container} from './container';
 
 import * as _ from 'lodash-es';
+
+import {RESUME} from './resume';
 
 @Component({
   selector: 'splash-cmp',
@@ -22,15 +25,18 @@ export class SplashCmp implements OnInit {
   @ViewChild('EDITOR') editor?: EditorComponent;
 
   @Input() editForm?: FormGroup;
-  @Input() editorValue: string = "";
+  @Input() editorValue: string = RESUME; // TODO: Save this as media
   @Input() descriptionControl?: FormControl<string>;
   @Input() readOnly: boolean = true;
   @Input() editorOptions = {
-    theme: 'vs-dark',
+    //theme: 'vs-dark',
     //language: 'html',
     language: 'tagging',
   };
   @Input() mc?: Content;
+  @Input() c?: Container;
+  @Input() html: string = "";
+  @Input() rendererType: string = "";
 
   // These are values for the Monaco Editors, change events are passed down into
   // the form event via the AfterInit and set the v7_definition & suricata_definition.
@@ -50,15 +56,34 @@ export class SplashCmp implements OnInit {
         "description": this.descriptionControl = (this.descriptionControl || new FormControl(this.editorValue || "")),
       });
     }
-    this.loadSplash();
+    if (!this.mc && !this.c) {
+      this.loadSplash();
+    }
   }
 
   // Load the splash page instead of a particular content id
   loadSplash() {
-      this.loading = true;
-      console.log("Load splash");
+      //this.loading = true;
+      console.log("Load splash media content");
+      this._service.splash().subscribe(
+        res => {
+          this.c = res.container;
+          this.mc = res.content;
+          this.html = res.html || "";
+          this.rendererType = res.rendererType;
+        },
+         console.error
+      );
   }
 
+  getVideos() {
+    if (!this.c) {
+      return []
+    }
+    return _.filter(this.c.contents, mc => {
+        return mc.content_type.includes("video");
+    });
+  }
 
   setReadOnly(state: boolean) {
     this.readOnly = state;
@@ -74,6 +99,7 @@ export class SplashCmp implements OnInit {
     }
   }
 
+  // The pure Monaco part is definitely worth an indepenent component (I think)
   afterMonacoInit(monaco: any) {
     console.log("Monaco Editor has been initialized");
     this.monacoEditor = monaco;
@@ -93,7 +119,7 @@ export class SplashCmp implements OnInit {
       });
     }
     this.afterMonaco();
-    this.setReadOnly(this.readOnly);
+    //this.setReadOnly(this.readOnly);
   }
 
   public afterMonaco() {
@@ -116,5 +142,28 @@ export class SplashCmp implements OnInit {
       );
       this.editorValue = control.value;
     }
+    this.fitContent();
+  }
+
+  fitContent() {
+    console.log("Content fit");
+    const container = document.getElementById('SPLASH_FULL');
+    let width = container.offsetWidth;
+    //container.style.border = '1px solid #f00';
+
+    const updateHeight = () => {
+    	const contentHeight = Math.min(9000, this.monacoEditor.getContentHeight());
+    	container.style.width = `${width}px`;
+    	container.style.height = `${contentHeight}px`;
+    	this.monacoEditor.layout({width, height: contentHeight });
+    };
+
+    // Give other page elements a little bit of rendering time
+    _.delay(() => {
+      updateHeight();
+    }, 100);
+
+    let changed = _.debounce(updateHeight, 250);
+    this.monacoEditor.onDidContentSizeChange(updateHeight);
   }
 }

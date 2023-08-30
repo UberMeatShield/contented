@@ -195,4 +195,19 @@ export class ContentedService {
         parsed['code'] = err.status;
         return observableFrom(Promise.reject(parsed));
     }
+
+    // This page allows server configuration of the home page display.
+    splash() {
+        return this.http.get(ApiDef.contented.splash).pipe(
+            map((res: any) => {
+                // Worth an actual class type?
+                return {
+                    container: _.get(res, 'container.id') ? new Container(res.container) : null,
+                    content: _.get(res, 'content.id') ? new Content(res.content) : null,
+                    html: res.html || "",
+                    rendererType: res.rendererType || "video",
+                };
+            })
+        );
+    }
 }

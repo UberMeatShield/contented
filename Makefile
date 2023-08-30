@@ -1,5 +1,10 @@
 .DEFAULT_GOAL := build
 
+# TODO: Flesh out more of the makefile 
+# DB reset and create
+# Make previews
+# ENV variable for the directory to use
+
 # You are going to need to have buffalo installed https://gobuffalo.io/documentation/getting_started/installation/
 .PHONY: install
 install:
