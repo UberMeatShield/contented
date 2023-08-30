@@ -164,6 +164,6 @@ export class SplashCmp implements OnInit {
     }, 100);
 
     let changed = _.debounce(updateHeight, 250);
-    this.monacoEditor.onDidContentSizeChange(updateHeight);
+    this.monacoEditor.onDidContentSizeChange(changed);
   }
 }
