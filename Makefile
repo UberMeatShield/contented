@@ -57,3 +57,24 @@ lint:
 typescript:
 	yarn run ng build contented --configuration=production --watch=false --base-href /public/build/
 
+.PHONY: db-create
+db-create:
+	buffalo db create
+
+.PHONY: reset-db
+reset-db:
+	buffalo db migrate
+	buffalo db reset
+
+.PHONY: db-populate
+db-seed:
+	export DIR=`pwd`/mocks/content && buffalo task db:seed
+
+.PHONY: create-previews
+create-previews:
+	export DIR=`pwd`/mocks/content && buffalo task db:preview
+
+.PHONY: encode
+encode:
+	export DIR=`pwd`/mocks/content && buffalo task db:encode
+
