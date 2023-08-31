@@ -7,7 +7,7 @@ import (
     "encoding/json"
     "github.com/gobuffalo/envy"
     "github.com/gobuffalo/nulls"
-    "github.com/gobuffalo/suite/v3"
+    "github.com/gobuffalo/suite/v4"
     "github.com/gofrs/uuid"
     "io/ioutil"
     "os"
