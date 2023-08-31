@@ -13,6 +13,7 @@ type Tag struct {
 	ID        string    `json:"id" db:"id"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	Contents  Contents  `json:"contents" many_to_many:"contents_tags"`
 }
 
 // String is not required by pop and may be deleted

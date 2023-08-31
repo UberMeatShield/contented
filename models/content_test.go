@@ -2,8 +2,6 @@ package models
 
 import (
 	"fmt"
-
-	"github.com/gobuffalo/pop/v6"
 )
 
 func (ms *ModelSuite) Test_Content() {
@@ -36,10 +34,10 @@ func (ms *ModelSuite) Test_Content() {
 	check := Content{}
 	q_err := ms.DB.Eager("Tags").Find(&check, mc.ID)
 
-	cols := []string{"*"}
-	popModel := &pop.Model{Value: Content{}}
-	sql, _ := ms.DB.Q().Eager("Tags").ToSQL(popModel, cols...)
-	fmt.Printf("SQL %s\n", sql)
+	//cols := []string{"*", "Content.Tags"}
+	//popModel := &pop.Model{Value: Content{}}
+	//sql, _ := ms.DB.Q().Eager("Tags").ToSQL(popModel, cols...)
+	//fmt.Printf("SQL %s\n", sql)
 
 	tags_check := Tags{}
 	t_err := ms.DB.All(&tags_check)

@@ -7,20 +7,19 @@ package internals
 import (
 	"contented/models"
 	"log"
+
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo-pop/v3/pop/popmw"
 
 	contenttype "github.com/gobuffalo/mw-contenttype"
 	paramlogger "github.com/gobuffalo/mw-paramlogger"
-	"github.com/gobuffalo/x/sessions"
 	"github.com/rs/cors"
 )
 
 // Create the basic app but without routes, useful for testing the managers but not routes
 func CreateBuffaloApp(UseDatabase bool, env string) *buffalo.App {
 	app := buffalo.New(buffalo.Options{
-		Env:          env,
-		SessionStore: sessions.Null{},
+		Env: env,
 		PreWares: []buffalo.PreWare{
 			cors.Default().Handler,
 		},
