@@ -29,7 +29,7 @@ func (ms *ModelSuite) Test_Content() {
 			ms.Fail(fmt.Sprintf("Not creating tag %s\n", t_err))
 		}
 	}
-	ms.DB.Eager().Create(&mc)
+	ms.DB.Eager().ValidateAndSave(&mc)
 	ms.NotZero(mc.ID)
 
 	// TODO: At least query the join table and see what comes back
