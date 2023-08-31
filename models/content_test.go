@@ -21,7 +21,6 @@ func (ms *ModelSuite) Test_Content() {
 		ContentType: "image/png",
 		Tags:        tags,
 	}
-
 	// Tags MUST be created or the association will not be made
 	for _, t := range tags {
 		t_err := ms.DB.Create(&t)
@@ -29,7 +28,14 @@ func (ms *ModelSuite) Test_Content() {
 			ms.Fail(fmt.Sprintf("Not creating tag %s\n", t_err))
 		}
 	}
-	ms.DB.Eager().ValidateAndSave(&mc)
+
+	verr, err := ms.DB.Eager().ValidateAndSave(&mc)
+	if err != nil {
+		ms.Fail(fmt.Sprintf("Error Creating Content %s\n", err))
+	}
+	if verr == nil {
+		ms.Fail(fmt.Sprintf("Error Validating %s\n", verr))
+	}
 	ms.NotZero(mc.ID)
 
 	// TODO: At least query the join table and see what comes back

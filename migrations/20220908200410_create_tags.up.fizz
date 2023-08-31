@@ -5,9 +5,10 @@ create_table("tags") {
 }
 
 create_table("contents_tags") {
+    t.Column("id", "string", {primary: true})
     t.Column("content_id", "uuid", {})
     t.ForeignKey("content_id", {"contents": ["id"]}, {})
     t.Column("tag_id", "string", {})
     t.ForeignKey("tag_id", {"tags": ["id"]}, {})
-    t.PrimaryKey("content_id", "tag_id")
+    t.Timestamps()
 }

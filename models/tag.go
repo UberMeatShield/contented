@@ -11,6 +11,7 @@ import (
 // Tag is used by pop to map your taggings database table to your go code.
 type Tag struct {
 	ID        string    `json:"id" db:"id"`
+	// Description?
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 	Contents  Contents  `json:"contents" many_to_many:"contents_tags"`
