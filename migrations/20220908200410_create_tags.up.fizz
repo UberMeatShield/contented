@@ -5,7 +5,7 @@ create_table("tags") {
 }
 
 create_table("contents_tags") {
-    t.Column("id", "string", {primary: true})
+    t.Column("id", "string", {primary: true, serial: true})
     t.Column("content_id", "uuid", {})
     t.ForeignKey("content_id", {"contents": ["id"]}, {})
     t.Column("tag_id", "string", {})

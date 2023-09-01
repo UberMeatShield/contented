@@ -7,7 +7,6 @@ import (
 	"contented/models"
 	"contented/utils"
 	"errors"
-	"fmt"
 	"log"
 	"net/url"
 	"strings"
@@ -355,7 +354,7 @@ func (cm ContentManagerDB) DeleteTag(tag *models.Tag) error {
 	return tx.Destroy(tag)
 }
 
-func (cm ContentManagerDB) GetTag(tagID uuid.UUID) (*models.Tag, error) {
+func (cm ContentManagerDB) GetTag(tagID string) (*models.Tag, error) {
 	log.Printf("DB Get a tag %s", tagID)
 	tx := cm.GetConnection()
 	t := &models.Tag{}
@@ -366,17 +365,27 @@ func (cm ContentManagerDB) GetTag(tagID uuid.UUID) (*models.Tag, error) {
 }
 
 func (cm ContentManagerDB) AssociateTag(t *models.Tag, mc *models.Content) error {
-	mc.Tags = append(mc.Tags, *t)
-	print(fmt.Printf("Found %s with %s what the %s", mc.ID.String(), t.ID, mc.Tags))
+	log.Printf("Found %s with %s what the %s", mc.ID.String(), t.ID, mc.Tags)
+
 	tx := cm.GetConnection()
-    verr, err := tx.ValidateAndUpdate(mc)
-    if verr != nil {
-        return verr
-    }
-	return err
+	tags := append(mc.Tags, *t)
+	err := tx.RawQuery("delete from contents_tags where content_id = ?", mc.ID).Exec()
+	if err != nil {
+		log.Printf("Could not associate tag %s", err)
+		return err
+	}
+	// hate
+	for _, t := range(tags) {
+		link_err := tx.RawQuery("insert into contents_tags (tag_id, content_id) values (?, ?)", t.ID, mc.ID).Exec()
+		if link_err != nil {
+			log.Printf("Failed to re-link %s", link_err)
+			return link_err
+		}
+	}
+	return nil
 }
 
-func (cm ContentManagerDB) AssociateTagByID(tagId uuid.UUID, mcID uuid.UUID) error {
+func (cm ContentManagerDB) AssociateTagByID(tagId string, mcID uuid.UUID) error {
 	mc, m_err := cm.GetContent(mcID)
 	t, t_err := cm.GetTag(tagId)
 	if m_err != nil || t_err != nil {

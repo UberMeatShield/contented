@@ -447,7 +447,7 @@ func (cm ContentManagerMemory) AssociateTag(t *models.Tag, mc *models.Content) e
 	return errors.New("ContentManagerMemory Update failed, not found.")
 }
 
-func (cm ContentManagerMemory) AssociateTagByID(tagId uuid.UUID, mcID uuid.UUID) error {
+func (cm ContentManagerMemory) AssociateTagByID(tagId string, mcID uuid.UUID) error {
 	return errors.New("ContentMangerMemory Not implemented")
 }
 
