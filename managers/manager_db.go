@@ -367,6 +367,7 @@ func (cm ContentManagerDB) GetTag(tagID string) (*models.Tag, error) {
 func (cm ContentManagerDB) AssociateTag(t *models.Tag, mc *models.Content) error {
 	log.Printf("Found %s with %s what the %s", mc.ID.String(), t.ID, mc.Tags)
 
+	// TODO: Could require [Tags] and not do the append with this function
 	tx := cm.GetConnection()
 	tags := append(mc.Tags, *t)
 	err := tx.RawQuery("delete from contents_tags where content_id = ?", mc.ID).Exec()
@@ -374,9 +375,13 @@ func (cm ContentManagerDB) AssociateTag(t *models.Tag, mc *models.Content) error
 		log.Printf("Could not associate tag %s", err)
 		return err
 	}
-	// hate
-	for _, t := range(tags) {
-		link_err := tx.RawQuery("insert into contents_tags (tag_id, content_id) values (?, ?)", t.ID, mc.ID).Exec()
+
+	// I really don't love this but Buffalo many_to_many associations do NOT handle updates.  In addition an integer
+	// as the join table ID also doesn't seem to do the link even on a create.
+	sql_str := "insert into contents_tags (id, tag_id, content_id, created_at, updated_at) values (?, ?, ?, current_timestamp, current_timestamp)"
+	for _, t := range tags {
+		linkID, _ := uuid.NewV4()
+		link_err := tx.RawQuery(sql_str, linkID, t.ID, mc.ID).Exec()
 		if link_err != nil {
 			log.Printf("Failed to re-link %s", link_err)
 			return link_err

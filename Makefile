@@ -63,7 +63,7 @@ db-create:
 	buffalo db create
 
 .PHONY: reset-db
-reset-db:
+db-reset:
 	buffalo db migrate
 	buffalo db reset
 
