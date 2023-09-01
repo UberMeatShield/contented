@@ -10,7 +10,7 @@ DIR ?= $(shell echo `pwd`/mocks/content/)
 .PHONY: install
 install:
 	go get contented
-	buffalo plugin install
+	buffalo plugins install
 	yarn install
 
 # Need to fix the docker build, it is pretty old.
