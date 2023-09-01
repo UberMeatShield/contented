@@ -4,7 +4,7 @@
 # DB reset and create
 # Make previews
 # ENV variable for the directory to use
-DIR ?= $(shell dirname `pwd`/mocks/content)
+DIR ?= $(shell echo `pwd`/mocks/content/)
 
 # You are going to need to have buffalo installed https://gobuffalo.io/documentation/getting_started/installation/
 .PHONY: install
