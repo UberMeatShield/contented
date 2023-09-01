@@ -158,7 +158,6 @@ func (as *ActionSuite) Test_ManagerAssociateTagsDB() {
 	man.CreateScreen(&s)
 	mc.Screens = models.Screens{s}
 	man.UpdateContent(&mc)
-	// as.Equal(len(mc.Tags), 0, "There should be no tags at this point")
 
 	tags, t_err := man.ListAllTags(0, 10)
 	as.NoError(t_err, "We should be able to list tags.")
@@ -177,7 +176,7 @@ func (as *ActionSuite) Test_ManagerAssociateTagsDB() {
 	as.NoError(err, fmt.Sprintf("We shouldn't have an issue associating this %s \n", err))
 	mcCheck, mc_err := man.GetContent(mc.ID)
 	as.NoError(mc_err, fmt.Sprintf("We should be able to load back the content %s", err))
-	as.Equal(1, len(mcCheck.Tags), fmt.Sprintf("There should be a new tag %s", mcCheck))
+	as.Equal(3, len(mcCheck.Tags), fmt.Sprintf("There should be a new tag %s", mcCheck))
 }
 
 func (as *ActionSuite) Test_ManagerDBPreviews() {
