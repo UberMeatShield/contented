@@ -7,7 +7,7 @@ import (
     "contented/utils"
     "github.com/gobuffalo/envy"
     "github.com/gobuffalo/pop/v6"
-    "github.com/gobuffalo/suite/v3"
+    "github.com/gobuffalo/suite/v4"
     "log"
     "net/url"
     "os"

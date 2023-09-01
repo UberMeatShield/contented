@@ -118,8 +118,8 @@ func (as *ActionSuite) Test_ManagerTagsDB() {
 	cfg := test_common.InitFakeApp(true)
 	man := GetManagerActionSuite(cfg, as)
 
-	as.NoError(man.CreateTag(&models.Tag{Name: "A"}), "couldn't create tag A")
-	as.NoError(man.CreateTag(&models.Tag{Name: "B"}), "couldn't create tag B")
+	as.NoError(man.CreateTag(&models.Tag{ID: "A"}), "couldn't create tag A")
+	as.NoError(man.CreateTag(&models.Tag{ID: "B"}), "couldn't create tag B")
 	tags, err := man.ListAllTags(0, 3)
 	as.NoError(err, "It should be able to list tags")
 	as.Equal(len(*tags), 2, "We should have two tags")
@@ -129,62 +129,56 @@ func (as *ActionSuite) Test_ManagerTagsDBCRUD() {
 	models.DB.TruncateAll()
 	cfg := test_common.InitFakeApp(true)
 	man := GetManagerActionSuite(cfg, as)
-	t := models.Tag{Name: "A"}
+	t := models.Tag{ID: "A"}
 	as.NoError(man.CreateTag(&t), "couldn't create tag A")
-	t.Name = "Changed"
-	as.NoError(man.UpdateTag(&t), "It should udpate")
 
 	tags, err := man.ListAllTags(0, 3)
 	as.NoError(err)
 	as.Equal(len(*tags), 1, "We should have one tag")
-	as.Equal((*tags)[0].Name, "Changed", "It should update")
 	man.DeleteTag(&t)
 	tags_gone, _ := man.ListAllTags(0, 3)
 	as.Equal(len(*tags_gone), 0, "No tags should be in the DB")
 }
 
-/*
 func (as *ActionSuite) Test_ManagerAssociateTagsDB() {
-    models.DB.TruncateAll()
-    cfg := test_common.InitFakeApp(true)
-    man := GetManagerActionSuite(cfg, as)
+	models.DB.TruncateAll()
+	cfg := test_common.InitFakeApp(true)
+	man := GetManagerActionSuite(cfg, as)
 
-    // hate
-    t1 := models.Tag{Name: "A",}
-    t2 := models.Tag{Name: "B",}
-    man.CreateTag(&t1)
-    man.CreateTag(&t2)
-    mc := models.Content{Src: "A", Preview: "p", ContentType: "video"}
-    mc.Tags = models.Tags{t1, t2,}
-    man.CreateContent(&mc)
+	// The Eager code just doesn't work in Buffalo?
+	t1 := models.Tag{ID: "A"}
+	t2 := models.Tag{ID: "B"}
+	man.CreateTag(&t1)
+	man.CreateTag(&t2)
+	mc := models.Content{Src: "A", Preview: "p", ContentType: "video"}
+	mc.Tags = models.Tags{t1, t2}
+	man.CreateContent(&mc)
 
-    s := models.Screen{Src: "screen1", ContentID: mc.ID}
-    man.CreateScreen(&s)
-    mc.Screens = models.Screens{s,}
-    man.UpdateContent(&mc)
-    // as.Equal(len(mc.Tags), 0, "There should be no tags at this point")
+	s := models.Screen{Src: "screen1", ContentID: mc.ID}
+	man.CreateScreen(&s)
+	mc.Screens = models.Screens{s}
+	man.UpdateContent(&mc)
+	// as.Equal(len(mc.Tags), 0, "There should be no tags at this point")
 
-    tags, t_err := man.ListAllTags(0, 10)
-    as.NoError(t_err, "We should be able to list tags.")
-    as.Equal(2, len(*tags), fmt.Sprintf("There should be two tags %s", mc))
+	tags, t_err := man.ListAllTags(0, 10)
+	as.NoError(t_err, "We should be able to list tags.")
+	as.Equal(2, len(*tags), fmt.Sprintf("There should be two tags %s", mc))
 
-    screens, s_err := man.ListScreens(mc.ID, 0, 10)
-    as.NoError(s_err, "Screens should list")
-    as.Equal(1, len(*screens), "We should have a screen associated")
+	screens, s_err := man.ListScreens(mc.ID, 0, 10)
+	as.NoError(s_err, "Screens should list")
+	as.Equal(1, len(*screens), "We should have a screen associated")
 
-    // TODO: list screens
-    //screens, s_err := man.(0, 10)
+	tCheck, _ := man.GetContent(mc.ID)
+	as.Equal(2, len(tCheck.Tags), fmt.Sprintf("It should eager load tags %s", tCheck))
 
-    // TODO: ok so the damn eager loading is just not working?
-    tCheck, _ := man.GetContent(mc.ID)
-    as.Equal(2, len(tCheck.Tags), fmt.Sprintf("Wat %s", tCheck))
-    err := man.AssociateTagByID(t1.ID, mc.ID)
-    as.NoError(err, "We shouldn't have an issue associating this")
-    mcCheck, mc_err := man.GetContent(mc.ID)
-    as.NoError(mc_err, "We should be able to load back the content")
-    as.Equal(1, len(mcCheck.Tags), fmt.Sprintf("There should be a new tag %s", mcCheck))
+	t3 := models.Tag{ID: "C"}
+	man.CreateTag(&t3)
+	err := man.AssociateTagByID(t3.ID, mc.ID)
+	as.NoError(err, fmt.Sprintf("We shouldn't have an issue associating this %s \n", err))
+	mcCheck, mc_err := man.GetContent(mc.ID)
+	as.NoError(mc_err, fmt.Sprintf("We should be able to load back the content %s", err))
+	as.Equal(1, len(mcCheck.Tags), fmt.Sprintf("There should be a new tag %s", mcCheck))
 }
-*/
 
 func (as *ActionSuite) Test_ManagerDBPreviews() {
 	models.DB.TruncateAll()

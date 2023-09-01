@@ -7,7 +7,7 @@ import (
     "encoding/json"
     "fmt"
     "github.com/gobuffalo/envy"
-    "github.com/gobuffalo/suite/v3"
+    "github.com/gobuffalo/suite/v4"
     "net/http"
     "os"
     "testing"

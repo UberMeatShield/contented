@@ -2,7 +2,7 @@ package models
 
 import (
     "testing"
-    "github.com/gobuffalo/suite/v3"
+    "github.com/gobuffalo/suite/v4"
 )
 
 type ModelSuite struct {
