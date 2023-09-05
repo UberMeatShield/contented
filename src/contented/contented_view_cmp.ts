@@ -16,6 +16,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
     @Input() forceHeight: number;
     @Input() visible: boolean = false;
     @Input() showScreens = true;
+    @Input() restrictContentId = "";
 
     public maxWidth: number;
     public maxHeight: number;
@@ -30,9 +31,14 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
         this.sub = GlobalNavEvents.navEvts.subscribe(evt => {
             switch(evt.action) {
                 case NavTypes.VIEW_FULLSCREEN:
-                    this.visible = true;
-                    this.content = evt.content || this.content;
+                    let content = evt.content || this.content;
+                    console.log(`Content is restricted to ${this.restrictContentId}`);
+                    if (this.restrictContentId && content && content.id !== this.restrictContentId) {
+                        return;
+                    }
                     console.log("Viewscreen show content", this.content);
+                    this.visible = true;
+                    this.content = content;
                     if (this.content) {
                         this.scrollContent(this.content);
                     }
