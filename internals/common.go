@@ -18,6 +18,7 @@ import (
 
 // Create the basic app but without routes, useful for testing the managers but not routes
 func CreateBuffaloApp(UseDatabase bool, env string) *buffalo.App {
+	log.Printf("Calling CreateBuffaloApp with environment %s", env)
 	app := buffalo.New(buffalo.Options{
 		Env: env,
 		PreWares: []buffalo.PreWare{
@@ -33,11 +34,9 @@ func CreateBuffaloApp(UseDatabase bool, env string) *buffalo.App {
 	if UseDatabase == true {
 		log.Printf("Connecting to the database\n")
 		app.Use(popmw.Transaction(models.DB))
-		//app.Use(models.DB.Q().Connection)
 	} else {
 		log.Printf("This code will attempt to use memory management \n")
 	}
-
 	// Set the request content type to JSON
 	app.Use(contenttype.Set("application/json"))
 	return app

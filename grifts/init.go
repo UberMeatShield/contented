@@ -1,12 +1,17 @@
 package grifts
 
 import (
-    "contented/actions"
-    "github.com/gobuffalo/buffalo"
+	"contented/internals"
+	"contented/utils"
+
+	"github.com/gobuffalo/buffalo"
+	"github.com/gobuffalo/envy"
 )
 
 // We do need a DB if you are going to run the grifts
 func init() {
-    UseDatabase := true
-    buffalo.Grifts(actions.App(UseDatabase))
+	cfg := utils.GetCfg()
+	env := envy.Get("GO_ENV", "development")
+	utils.InitConfigEnvy(cfg)
+	buffalo.Grifts(internals.CreateBuffaloApp(cfg.UseDatabase, env))
 }

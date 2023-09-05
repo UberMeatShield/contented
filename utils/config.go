@@ -170,10 +170,10 @@ func GetCfgDefaults() DirConfigEntry {
 		ExcContainer:           ExcludeContainerDefault,
 		ExcludeEmptyContainers: DefaultExcludeEmptyContainers,
 
-	        SplashContainerName: "",
-	        SplashContentID: "",
-	        SplashContentHTML: "",
-	        SplashRendererType: "",
+		SplashContainerName: "",
+		SplashContentID:     "",
+		SplashContentHTML:   "",
+		SplashRendererType:  "",
 	}
 }
 
@@ -201,10 +201,10 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
 	if !strings.HasSuffix(dir, "/") {
 		dir = dir + "/"
 	}
-	log.Printf("Setting up the content directory with %s", dir)
-
 	staticDir := envy.Get("STATIC_RESOURCE_PATH", "./public/build")
 	libraryDir := envy.Get("STATIC_LIBRARY_PATH", "./public/static")
+
+	log.Printf("Setting up the content directory with %s Static: %s Library %s", dir, staticDir, libraryDir)
 	limitCount, limErr := strconv.Atoi(envy.Get("LIMIT", strconv.Itoa(DefaultLimit)))
 	previewCount, previewErr := strconv.Atoi(envy.Get("PREVIEW", strconv.Itoa(DefaultPreviewCount)))
 	useDatabase, connErr := strconv.ParseBool(envy.Get("USE_DATABASE", strconv.FormatBool(DefaultUseDatabase)))
@@ -287,7 +287,7 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
 
 	cfg.SplashContainerName = envy.Get("SPLASH_CONTAINER_NAME", "")
 	cfg.SplashContentID = envy.Get("SPLASH_CONTENT_ID", "")
-	cfg.SplashContentHTML = envy.Get("SPLASH_CONTENT_HTML", "") 
+	cfg.SplashContentHTML = envy.Get("SPLASH_CONTENT_HTML", "")
 	cfg.SplashRendererType = envy.Get("SPLASH_RENDERER_TYPE", "")
 
 	SetupContentMatchers(
