@@ -1,0 +1,12 @@
+# Typically placed in systemd under /lib/systemd/system/
+[Unit]
+Description=Contented service as a resume host
+
+[Service]
+ExecStart=/usr/local/bin/contented
+User=ec2-user
+Group=ec2-user
+UMask=007
+
+[Install]
+WantedBy=multi-user.target
