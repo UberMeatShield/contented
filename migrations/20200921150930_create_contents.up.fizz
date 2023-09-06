@@ -12,5 +12,6 @@ create_table("contents") {
 	t.Column("size_bytes", "bigint", {"default": 0})
 	t.Column("encoding", "string", {"default": ""})
 	t.Column("description", "string", {"default": ""})
+	t.Column("hidden", "bool", {"default": false})
 	t.Timestamps()
 }

@@ -112,10 +112,10 @@ func (cm ContentManagerDB) SearchContentContext() (*models.Contents, int, error)
 	searchStr := StringDefault(params.Get("text"), "")
 	cId := StringDefault(params.Get("cId"), "")
 	contentType := StringDefault(params.Get("contentType"), "")
-	return cm.SearchContent(searchStr, page, per_page, cId, contentType)
+	return cm.SearchContent(searchStr, page, per_page, cId, contentType, false)
 }
 
-func (cm ContentManagerDB) SearchContent(search string, page int, per_page int, cId string, contentType string) (*models.Contents, int, error) {
+func (cm ContentManagerDB) SearchContent(search string, page int, per_page int, cId string, contentType string, includeHidden bool) (*models.Contents, int, error) {
 	contentContainers := &models.Contents{}
 	tx := cm.GetConnection()
 	q := tx.Paginate(page, per_page)
@@ -130,6 +130,12 @@ func (cm ContentManagerDB) SearchContent(search string, page int, per_page int, 
 	if cId != "" {
 		q = q.Where(`container_id = ?`, cId)
 	}
+
+	log.Printf("Include hidden %s", includeHidden)
+	if includeHidden == false {
+		q = q.Where(`hidden = ?`, false)
+	}
+
 	count, _ := q.Count(&models.Contents{})
 	log.Printf("Total count of search content %d using search (%s) and contentType (%s)", count, search, contentType)
 
@@ -151,7 +157,7 @@ func (cm ContentManagerDB) SearchContent(search string, page int, per_page int, 
 	return &contentWithScreens, count, nil
 }
 
-func (cm ContentManagerDB) SearchContainers(search string, page int, per_page int) (*models.Containers, error) {
+func (cm ContentManagerDB) SearchContainers(search string, page int, per_page int, includeHidden bool) (*models.Containers, error) {
 	if search == "" || search == "*" {
 		return cm.ListContainers(page, per_page)
 	}
@@ -159,6 +165,9 @@ func (cm ContentManagerDB) SearchContainers(search string, page int, per_page in
 	tx := cm.GetConnection()
 	q := tx.Paginate(page, per_page)
 	q = q.Where("name ilike ?", search)
+	if includeHidden == false {
+		q = q.Where(`hidden = ?`, false)
+	}
 	if q_err := q.All(containers); q_err != nil {
 		return containers, q_err
 	}

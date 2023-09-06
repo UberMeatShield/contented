@@ -106,10 +106,10 @@ func (cm ContentManagerMemory) SearchContentContext() (*models.Contents, int, er
 	searchStr := StringDefault(params.Get("text"), "")
 	cId := StringDefault(params.Get("cID"), "")
 	contentType := StringDefault(params.Get("contentType"), "")
-	return cm.SearchContent(searchStr, page, per_page, cId, contentType)
+	return cm.SearchContent(searchStr, page, per_page, cId, contentType, false)
 }
 
-func (cm ContentManagerMemory) SearchContent(search string, page int, per_page int, cID string, contentType string) (*models.Contents, int, error) {
+func (cm ContentManagerMemory) SearchContent(search string, page int, per_page int, cID string, contentType string, includeHidden bool) (*models.Contents, int, error) {
 	filteredContent, cErr := cm.getContentFiltered(cID, search, contentType)
 	if cErr != nil {
 		return nil, 0, cErr
@@ -133,6 +133,7 @@ func (cm ContentManagerMemory) getContentFiltered(containerID string, search str
 	// If a containerID is specified and is totally invalid raise an error, otherwise filter
 	var mcArr models.Contents
 	cidArr := models.Contents{}
+
 	if containerID != "" {
 		cID, cErr := uuid.FromString(containerID)
 		if cErr == nil {
@@ -183,7 +184,7 @@ func (cm ContentManagerMemory) getContentFiltered(containerID string, search str
 }
 
 // TODO: Make it page but right now this will only be used in splash (regex it?)
-func (cm ContentManagerMemory) SearchContainers(search string, page int, per_page int) (*models.Containers, error) {
+func (cm ContentManagerMemory) SearchContainers(search string, page int, per_page int, includeHidden bool) (*models.Containers, error) {
 	cArr := models.Containers{}
 	if search == "" || search == "*" {
 		return cm.ListContainers(page, per_page)
