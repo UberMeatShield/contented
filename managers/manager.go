@@ -40,6 +40,7 @@ type ContentManager interface {
 	// Container Management
 	GetContainer(cID uuid.UUID) (*models.Container, error)
 	ListContainers(page int, per_page int) (*models.Containers, error)
+	ListContainersFiltered(page int, per_page int, includeHidden bool) (*models.Containers, error)
 	ListContainersContext() (*models.Containers, error)
 	UpdateContainer(c *models.Container) error
 	CreateContainer(c *models.Container) error

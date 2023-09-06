@@ -130,8 +130,6 @@ func (cm ContentManagerDB) SearchContent(search string, page int, per_page int, 
 	if cId != "" {
 		q = q.Where(`container_id = ?`, cId)
 	}
-
-	log.Printf("Include hidden %s", includeHidden)
 	if includeHidden == false {
 		q = q.Where(`hidden = ?`, false)
 	}
@@ -213,11 +211,18 @@ func (cm ContentManagerDB) ListContainersContext() (*models.Containers, error) {
 	return cm.ListContainers(1, cm.cfg.Limit)
 }
 
-// TODO: Add in support for actually doing the query using the current buffalo.Context
 func (cm ContentManagerDB) ListContainers(page int, per_page int) (*models.Containers, error) {
+	return cm.ListContainersFiltered(page, per_page, false)
+}
+
+// TODO: Add in support for actually doing the query using the current buffalo.Context
+func (cm ContentManagerDB) ListContainersFiltered(page int, per_page int, includeHidden bool) (*models.Containers, error) {
 	log.Printf("DB List all containers")
 	tx := cm.GetConnection()
 	q := tx.Paginate(page, per_page)
+	if includeHidden == false {
+		q = q.Where("hidden = ?", false)
+	}
 
 	// Retrieve all Containers from the DB
 	containers := &models.Containers{}
