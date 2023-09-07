@@ -27,7 +27,7 @@ func CreateResource(src string, container_id nulls.UUID, as *ActionSuite) models
 	return resObj
 }
 
-func (as *ActionSuite) Test_ContentSubQuery() {
+func (as *ActionSuite) Test_ContentSubQuery_DB() {
 	// Create 2 containers
 	test_common.InitFakeApp(true)
 	c1 := &models.Container{
@@ -40,16 +40,30 @@ func (as *ActionSuite) Test_ContentSubQuery() {
 		Path:  "container/2/content",
 		Name:  "Trash2",
 	}
+	c3 := &models.Container{
+		Total:  1,
+		Path:   "/container/3/content",
+		Name:   "Hidden",
+		Hidden: true,
+	}
 	as.DB.Create(c1)
 	as.DB.Create(c2)
+	as.DB.Create(c3)
 	as.NotZero(c1.ID)
 	as.NotZero(c2.ID)
+	as.NotZero(c3.ID)
 
 	CreateResource("a", nulls.NewUUID(c1.ID), as)
 	CreateResource("b", nulls.NewUUID(c1.ID), as)
 	CreateResource("c", nulls.NewUUID(c2.ID), as)
 	CreateResource("donut", nulls.NewUUID(c2.ID), as)
 	CreateResource("e", nulls.NewUUID(c2.ID), as)
+
+	// Check that hidden resources stay hidden
+	up := CreateResource("donut_2_search_should_fail", nulls.NewUUID(c3.ID), as)
+	up.Hidden = true
+	upErr := as.DB.Update(&up)
+	as.NoError(upErr, fmt.Sprintf("It should have updated %s", upErr))
 
 	res1 := as.JSON("/containers/" + c1.ID.String() + "/content").Get()
 	res2 := as.JSON("/containers/" + c2.ID.String() + "/content").Get()
@@ -73,7 +87,7 @@ func (as *ActionSuite) Test_ContentSubQuery() {
 	as.Equal(http.StatusOK, res3.Code)
 	validate3 := SearchResult{}
 	json.NewDecoder(res3.Body).Decode(&validate3)
-	as.Equal(1, len(*validate3.Content), "We have one donut")
+	as.Equal(1, len(*validate3.Content), "We have one donut that is not hidden")
 }
 
 func (as *ActionSuite) Test_ManagerDB_Preview() {

@@ -78,10 +78,21 @@ func (cm ContentManagerMemory) ListContentContext(cID uuid.UUID) (*models.Conten
 	return cm.ListContent(cID, page, limit)
 }
 
+// Listing all content ignoring the containerID still should respect hidden content.
 func (cm ContentManagerMemory) ListAllContent(page int, per_page int) (*models.Contents, error) {
+	return cm.ListAllContentFiltered(page, per_page, false)
+}
+
+func (cm ContentManagerMemory) ListAllContentFiltered(page int, per_page int, includeHidden bool) (*models.Contents, error) {
 	m_arr := models.Contents{}
 	for _, m := range cm.ValidContent {
-		m_arr = append(m_arr, m)
+		if includeHidden == false {
+			if m.Hidden == false {
+				m_arr = append(m_arr, m)
+			}
+		} else {
+			m_arr = append(m_arr, m)
+		}
 	}
 	if len(m_arr) == 0 {
 		return &m_arr, nil
@@ -203,8 +214,10 @@ func (cm ContentManagerMemory) SearchContainers(search string, page int, per_pag
 	searcher := regexp.MustCompile("(?i)" + search)
 	for _, c := range cm.ValidContainers {
 		if searcher.MatchString(c.Name) {
-			if includeHidden == false && c.Hidden == false {
-				cArr = append(cArr, c)
+			if includeHidden == false {
+				if c.Hidden != true {
+					cArr = append(cArr, c)
+				}
 			} else {
 				cArr = append(cArr, c)
 			}
@@ -215,10 +228,20 @@ func (cm ContentManagerMemory) SearchContainers(search string, page int, per_pag
 
 // Awkard GoLang interface support is awkward
 func (cm ContentManagerMemory) ListContent(ContainerID uuid.UUID, page int, per_page int) (*models.Contents, error) {
+	return cm.ListContentFiltered(ContainerID, page, per_page, false)
+}
+
+func (cm ContentManagerMemory) ListContentFiltered(ContainerID uuid.UUID, page int, per_page int, includeHidden bool) (*models.Contents, error) {
 	m_arr := models.Contents{}
 	for _, m := range cm.ValidContent {
 		if m.ContainerID.Valid && m.ContainerID.UUID == ContainerID {
-			m_arr = append(m_arr, m)
+			if includeHidden == false {
+				if m.Hidden == false {
+					m_arr = append(m_arr, m)
+				}
+			} else {
+				m_arr = append(m_arr, m)
+			}
 		}
 	}
 	sort.SliceStable(m_arr, func(i, j int) bool {
@@ -231,6 +254,7 @@ func (cm ContentManagerMemory) ListContent(ContainerID uuid.UUID, page int, per_
 	}
 	log.Printf("Get a list of content offset(%d), end(%d) we should have some %d", offset, end, len(m_arr))
 	return &m_arr, nil
+
 }
 
 // Get a content element by the ID
@@ -285,8 +309,10 @@ func (cm ContentManagerMemory) ListContainersFiltered(page int, per_page int, in
 
 	c_arr := models.Containers{}
 	for _, c := range cm.ValidContainers {
-		if includeHidden == false && c.Hidden == false {
-			c_arr = append(c_arr, c)
+		if includeHidden == false {
+			if c.Hidden != true {
+				c_arr = append(c_arr, c)
+			}
 		} else {
 			c_arr = append(c_arr, c)
 		}
