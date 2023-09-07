@@ -23,6 +23,8 @@ export class ContentedNavCmp implements OnInit {
     @Input() navEvts;
     @Input() loading: boolean;
     @Input() containers: Array<Container>
+    @Input() noKeyPress = false;
+    @Input() title = '';
 
     public containerFilter = new FormControl<string>("");
     public filteredContainers: Observable<Container[]>;

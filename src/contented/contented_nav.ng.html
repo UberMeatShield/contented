@@ -37,6 +37,10 @@
 
   </div>
 
+  <span class="nav-title">{{title}}</span>
+  
+
+
   <form *ngIf="containers" class="container-search-form" (keypress)="$event.stopPropagation()">
     <mat-form-field class="container-nav-search" appearance="outline">
       <input type="text"
@@ -59,7 +63,7 @@
     </mat-form-field>
   </form>
 
-  <div matRipple [matRippleTrigger]="trigger" class="nav-options">
+  <div matRipple [matRippleTrigger]="trigger" class="nav-options" *ngIf="!noKeyPress">
     <small>Hotkeys</small>
     <button id="BTN_w" title="Move up a container"
       type="button" mat-button

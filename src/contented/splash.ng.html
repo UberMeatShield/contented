@@ -1,18 +1,29 @@
-<contented-nav [loading]="loading"></contented-nav>
+<contented-nav 
+  [loading]="loading"
+  [noKeyPress]="true"
+  [title]="'Overly Complex resume rendering examples by Justin Carlson!'"
+></contented-nav>
 <div class="splash-cmp">
 
-  <div class="splash-html" *ngIf="html" [innerHTML]="html"></div>
+
+  <mat-card *ngIf="splashTitle || splashContent" class="primary-card">
+    <mat-card-header>{{splashTitle}}</mat-card-header>
+    <mat-card-content>
+      <div class="splash-html" [innerHTML]="splashContent | safe:'html'"></div>
+    </mat-card-content>
+  </mat-card>
+
 
   <div *ngIf="rendererType === 'container'">
     <container-cmp [container]="c">
     </container-cmp>
   </div>
   <div *ngIf="rendererType === 'video'">
-    <video-preview-cmp [maxVisible]="3" [mc]="mc" *ngFor="let mc of getVideos()" [inlineView]="true">
+    <video-preview-cmp [maxVisible]="4" [mc]="mc" *ngFor="let mc of getVideos()" [inlineView]="true">
     </video-preview-cmp>
   </div>
 
-  <mat-card *ngIf="mc">
+  <mat-card *ngIf="mc" class="primary-card">
     <mat-card-header>
       <mat-card-title>{{mc.description}}</mat-card-title>
     </mat-card-header>
@@ -26,7 +37,7 @@
   </mat-card>
 
   <!-- Assign this as the MC and implement a text type? -->
-  <mat-card>
+  <mat-card class="primary-card">
     <mat-card-header>
       <mat-card-title>Work History</mat-card-title>
       <mat-card-subtitle>

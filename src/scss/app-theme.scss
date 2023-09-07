@@ -32,7 +32,7 @@ $content-theme: mat.define-light-theme((
     warn: $content-warn,
   ),
   typography: $smaller-fonts,
-  density: -1,
+  density: -2,
 ));
 @include mat.all-component-themes($content-theme);
 @include mat.form-field-density(-4);
