@@ -78,10 +78,21 @@ func (cm ContentManagerMemory) ListContentContext(cID uuid.UUID) (*models.Conten
 	return cm.ListContent(cID, page, limit)
 }
 
+// Listing all content ignoring the containerID still should respect hidden content.
 func (cm ContentManagerMemory) ListAllContent(page int, per_page int) (*models.Contents, error) {
+	return cm.ListAllContentFiltered(page, per_page, false)
+}
+
+func (cm ContentManagerMemory) ListAllContentFiltered(page int, per_page int, includeHidden bool) (*models.Contents, error) {
 	m_arr := models.Contents{}
 	for _, m := range cm.ValidContent {
-		m_arr = append(m_arr, m)
+		if includeHidden == false {
+			if m.Hidden == false {
+				m_arr = append(m_arr, m)
+			}
+		} else {
+			m_arr = append(m_arr, m)
+		}
 	}
 	if len(m_arr) == 0 {
 		return &m_arr, nil
@@ -106,11 +117,11 @@ func (cm ContentManagerMemory) SearchContentContext() (*models.Contents, int, er
 	searchStr := StringDefault(params.Get("text"), "")
 	cId := StringDefault(params.Get("cID"), "")
 	contentType := StringDefault(params.Get("contentType"), "")
-	return cm.SearchContent(searchStr, page, per_page, cId, contentType)
+	return cm.SearchContent(searchStr, page, per_page, cId, contentType, false)
 }
 
-func (cm ContentManagerMemory) SearchContent(search string, page int, per_page int, cID string, contentType string) (*models.Contents, int, error) {
-	filteredContent, cErr := cm.getContentFiltered(cID, search, contentType)
+func (cm ContentManagerMemory) SearchContent(search string, page int, per_page int, cID string, contentType string, includeHidden bool) (*models.Contents, int, error) {
+	filteredContent, cErr := cm.getContentFiltered(cID, search, contentType, includeHidden)
 	if cErr != nil {
 		return nil, 0, cErr
 	}
@@ -129,10 +140,11 @@ func (cm ContentManagerMemory) SearchContent(search string, page int, per_page i
 	return &mc_arr, count, nil
 }
 
-func (cm ContentManagerMemory) getContentFiltered(containerID string, search string, contentType string) (*models.Contents, error) {
+func (cm ContentManagerMemory) getContentFiltered(containerID string, search string, contentType string, includeHidden bool) (*models.Contents, error) {
 	// If a containerID is specified and is totally invalid raise an error, otherwise filter
 	var mcArr models.Contents
 	cidArr := models.Contents{}
+
 	if containerID != "" {
 		cID, cErr := uuid.FromString(containerID)
 		if cErr == nil {
@@ -175,6 +187,16 @@ func (cm ContentManagerMemory) getContentFiltered(containerID string, search str
 		mcArr = contentArr
 	}
 
+	if includeHidden == false {
+		visibleArr := models.Contents{}
+		for _, mc := range mcArr {
+			if mc.Hidden != true {
+				visibleArr = append(visibleArr, mc)
+			}
+		}
+		mcArr = visibleArr
+	}
+
 	// Finally sort any content that is matching so that pagination will work
 	sort.SliceStable(mcArr, func(i, j int) bool {
 		return mcArr[i].Idx < mcArr[j].Idx
@@ -183,15 +205,22 @@ func (cm ContentManagerMemory) getContentFiltered(containerID string, search str
 }
 
 // TODO: Make it page but right now this will only be used in splash (regex it?)
-func (cm ContentManagerMemory) SearchContainers(search string, page int, per_page int) (*models.Containers, error) {
+func (cm ContentManagerMemory) SearchContainers(search string, page int, per_page int, includeHidden bool) (*models.Containers, error) {
 	cArr := models.Containers{}
 	if search == "" || search == "*" {
-		return cm.ListContainers(page, per_page)
+		return cm.ListContainersFiltered(page, per_page, includeHidden)
 	}
+
 	searcher := regexp.MustCompile("(?i)" + search)
 	for _, c := range cm.ValidContainers {
 		if searcher.MatchString(c.Name) {
-			cArr = append(cArr, c)
+			if includeHidden == false {
+				if c.Hidden != true {
+					cArr = append(cArr, c)
+				}
+			} else {
+				cArr = append(cArr, c)
+			}
 		}
 	}
 	return &cArr, nil
@@ -199,10 +228,20 @@ func (cm ContentManagerMemory) SearchContainers(search string, page int, per_pag
 
 // Awkard GoLang interface support is awkward
 func (cm ContentManagerMemory) ListContent(ContainerID uuid.UUID, page int, per_page int) (*models.Contents, error) {
+	return cm.ListContentFiltered(ContainerID, page, per_page, false)
+}
+
+func (cm ContentManagerMemory) ListContentFiltered(ContainerID uuid.UUID, page int, per_page int, includeHidden bool) (*models.Contents, error) {
 	m_arr := models.Contents{}
 	for _, m := range cm.ValidContent {
 		if m.ContainerID.Valid && m.ContainerID.UUID == ContainerID {
-			m_arr = append(m_arr, m)
+			if includeHidden == false {
+				if m.Hidden == false {
+					m_arr = append(m_arr, m)
+				}
+			} else {
+				m_arr = append(m_arr, m)
+			}
 		}
 	}
 	sort.SliceStable(m_arr, func(i, j int) bool {
@@ -215,6 +254,7 @@ func (cm ContentManagerMemory) ListContent(ContainerID uuid.UUID, page int, per_
 	}
 	log.Printf("Get a list of content offset(%d), end(%d) we should have some %d", offset, end, len(m_arr))
 	return &m_arr, nil
+
 }
 
 // Get a content element by the ID
@@ -261,11 +301,21 @@ func (cm ContentManagerMemory) ListContainersContext() (*models.Containers, erro
 
 // Actually list containers using a page and per_page which is consistent with buffalo standard pagination
 func (cm ContentManagerMemory) ListContainers(page int, per_page int) (*models.Containers, error) {
+	return cm.ListContainersFiltered(page, per_page, false)
+}
+
+func (cm ContentManagerMemory) ListContainersFiltered(page int, per_page int, includeHidden bool) (*models.Containers, error) {
 	log.Printf("List Containers with page(%d) and per_page(%d)", page, per_page)
 
 	c_arr := models.Containers{}
 	for _, c := range cm.ValidContainers {
-		c_arr = append(c_arr, c)
+		if includeHidden == false {
+			if c.Hidden != true {
+				c_arr = append(c_arr, c)
+			}
+		} else {
+			c_arr = append(c_arr, c)
+		}
 	}
 	sort.SliceStable(c_arr, func(i, j int) bool {
 		return c_arr[i].Idx < c_arr[j].Idx
