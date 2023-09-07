@@ -204,7 +204,8 @@ export class ContentedService {
                 return {
                     container: _.get(res, 'container.id') ? new Container(res.container) : null,
                     content: _.get(res, 'content.id') ? new Content(res.content) : null,
-                    html: res.html || "",
+                    splashTitle: res.splashTitle || "",
+                    splashContent: res.splashContent || "",
                     rendererType: res.rendererType || "video",
                 };
             })

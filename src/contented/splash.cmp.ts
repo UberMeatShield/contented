@@ -35,7 +35,8 @@ export class SplashCmp implements OnInit {
   };
   @Input() mc?: Content;
   @Input() c?: Container;
-  @Input() html: string = "";
+  @Input() splashTitle: string = "";
+  @Input() splashContent: string = "";
   @Input() rendererType: string = "";
 
   // These are values for the Monaco Editors, change events are passed down into
@@ -69,7 +70,8 @@ export class SplashCmp implements OnInit {
         res => {
           this.c = res.container;
           this.mc = res.content;
-          this.html = res.html || "";
+          this.splashTitle = res.splashTitle || "";
+          this.splashContent = res.splashContent || "";
           this.rendererType = res.rendererType;
         },
          console.error

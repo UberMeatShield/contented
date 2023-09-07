@@ -68,10 +68,11 @@ func SearchHandler(c buffalo.Context) error {
 }
 
 type SplashResponse struct {
-	Html         string            `json:"html"`
-	RendererType string            `json:"rendererType"`
-	Content      *models.Content   `json:"content"`
-	Container    *models.Container `json:"container"`
+	SplashTitle   string            `json:"splashTitle"`
+	SplashContent string            `json:"splashContent"`
+	RendererType  string            `json:"rendererType"`
+	Content       *models.Content   `json:"content"`
+	Container     *models.Container `json:"container"`
 }
 
 func SplashHandler(c buffalo.Context) error {
@@ -105,7 +106,15 @@ func SplashHandler(c buffalo.Context) error {
 			sr.Content = mc
 		}
 	}
-	sr.Html = cfg.SplashContentHTML
+	if cfg.SplashHtmlFile != "" {
+		splash, f_err := os.ReadFile(cfg.SplashHtmlFile)
+		if f_err == nil {
+			sr.SplashContent = string(splash)
+		}
+	}
+	if cfg.SplashTitle != "" {
+		sr.SplashTitle = cfg.SplashTitle
+	}
 	sr.RendererType = cfg.SplashRendererType
 
 	return c.Render(200, r.JSON(sr))

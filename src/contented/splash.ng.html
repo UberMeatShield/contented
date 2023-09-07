@@ -5,7 +5,15 @@
 ></contented-nav>
 <div class="splash-cmp">
 
-  <div class="splash-html" *ngIf="html" [innerHTML]="html"></div>
+
+  <mat-card *ngIf="splashTitle || splashContent" class="primary-card">
+    <mat-card-header>{{splashTitle}}</mat-card-header>
+    <mat-card-content>
+      <div class="splash-html" [innerHTML]="splashContent | safe:'html'"></div>
+    </mat-card-content>
+  </mat-card>
+
+
   <div *ngIf="rendererType === 'container'">
     <container-cmp [container]="c">
     </container-cmp>

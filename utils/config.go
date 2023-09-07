@@ -121,8 +121,11 @@ type DirConfigEntry struct {
 	// Splash Endpoint configuration for the 'home' page
 	SplashContainerName string // A Container you would like to load and send back
 	SplashContentID     string // A Content ID you would like to load and send back
-	SplashContentHTML   string // Raw HTML you would like to render in
 	SplashRendererType  string // video view | container | content | editor ?
+
+	SplashTitle       string // The title string for the html file
+	SplashHtmlFile    string // A fq path to a splash file to render into the page
+	SplashContentHTML string // Raw HTML you would like to render in
 
 	// TODO: Implement
 	SplashContentFile string // A full file path on the host (raw HTML?)
@@ -174,6 +177,7 @@ func GetCfgDefaults() DirConfigEntry {
 		SplashContentID:     "",
 		SplashContentHTML:   "",
 		SplashRendererType:  "",
+		SplashHtmlFile:      "",
 	}
 }
 
@@ -287,8 +291,9 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
 
 	cfg.SplashContainerName = envy.Get("SPLASH_CONTAINER_NAME", "")
 	cfg.SplashContentID = envy.Get("SPLASH_CONTENT_ID", "")
-	cfg.SplashContentHTML = envy.Get("SPLASH_CONTENT_HTML", "")
 	cfg.SplashRendererType = envy.Get("SPLASH_RENDERER_TYPE", "")
+	cfg.SplashHtmlFile = envy.Get("SPLASH_HTML_FILE", "")
+	cfg.SplashTitle = envy.Get("SPLASH_TITLE", "")
 
 	SetupContentMatchers(
 		cfg,
