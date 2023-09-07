@@ -3,6 +3,7 @@ $thumbWidth: 64px;
 $thumbHeight:  64px;
 
 $color-pri: #2196f3;
+$color-sec: orange;
 
 body {
     margin: 0;
@@ -18,6 +19,17 @@ body {
     .preview-content {
       flex-shrink: 0;
       margin: 2px;
+    }
+}
+
+.primary-card {
+    margin: 1rem 0.25rem 0 0.25rem;
+    mat-card-header {
+        border-top: 2px solid $color-pri;
+        border-radius: 3px;
+        background-color: lighten($color-pri, 20%) !important;
+        margin-bottom: 0.25rem;
+        padding: 6px 4px 6px 4px;
     }
 }
 

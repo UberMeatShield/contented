@@ -1,17 +1,20 @@
 <div class="video-preview-cmp">
   <div class="video-results" *ngIf="mc">
-    <mat-card id="view_content_{{mc.id}}" class="video-view-card">
-      <mat-card-title class="video-details">
-        <a mat-raised-button href="/view/{{mc.id}}" title="Open in new tab" target="window">
-          New Fullscreen Tab
-          <mat-icon>tab</mat-icon>
-        </a>
-        <a mat-raised-button href="/download/{{mc.id}}" title="Downlaod">
-          {{mc.size | byteFormatter: 0}}
-          <mat-icon >download</mat-icon>
-        </a>
-        <span class="video-title">{{mc.src}}</span>
-      </mat-card-title>
+    <mat-card id="view_content_{{mc.id}}" class="video-view-card primary-card">
+      <mat-card-header>
+        <mat-card-title class="video-details">
+          <a mat-raised-button href="/view/{{mc.id}}" title="Open in new tab" target="window">
+            New Fullscreen Tab
+            <mat-icon>tab</mat-icon>
+          </a>
+          <a mat-raised-button href="/download/{{mc.id}}" title="Downlaod">
+            {{mc.size | byteFormatter: 0}}
+            <mat-icon >download</mat-icon>
+          </a>
+          <span class="video-title">{{mc.src}}</span>
+        </mat-card-title>
+        <mat-card-subtitle *ngIf="mc.description">{{mc.description}}</mat-card-subtitle>
+      </mat-card-header>
 
       <mat-card-content [class.selected-video]="selected">
         <div class="video-view">
@@ -19,6 +22,7 @@
             [class.video-overlay]="mc?.content_type?.match('video')"
             style="width:{{previewWidth}}px; height: {{previewHeight}}px;"
             (click)="imgClicked(mc)"
+            title="Click to play the video"
             >
             <img class="preview-img" [src]="mc?.previewUrl">
           </div>
