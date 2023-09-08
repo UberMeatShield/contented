@@ -85,7 +85,7 @@ describe('TestingContentedService', () => {
 
         service.fullLoadDir(dir, 5000);
 
-        let url = ApiDef.contented.content.replace('{cId}', dir.id);
+        let url = ApiDef.contented.containerContent.replace('{cId}', dir.id);
         let calls = httpMock.match((req: HttpRequest<any>) => {
             return req.url === url;
         });
@@ -147,7 +147,7 @@ describe('TestingContentedService', () => {
                 loaded = dir;
             }, err => { fail(err); }
         );
-        let url = ApiDef.contented.content.replace('{cId}', content.id);
+        let url = ApiDef.contented.containerContent.replace('{cId}', content.id);
         let calls = httpMock.match((req: HttpRequest<any>) => {
             return req.url === url;
         });

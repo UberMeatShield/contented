@@ -122,7 +122,7 @@ export class ContentedService {
     }
 
     public getFullContainer(cnt: string, offset: number = 0, limit: number = null) {
-        let url = ApiDef.contented.content.replace('{cId}', cnt);
+        let url = ApiDef.contented.containerContent.replace('{cId}', cnt);
         return this.http.get(url, {
             params: this.getPaginationParams(offset, limit),
             headers: this.options.headers
@@ -145,7 +145,7 @@ export class ContentedService {
         if (cnt.loadState === LoadStates.NotLoaded) {
             cnt.loadState = LoadStates.Loading;
 
-            let url = ApiDef.contented.content.replace('{cId}', cnt.id);
+            let url = ApiDef.contented.containerContent.replace('{cId}', cnt.id);
             return this.http.get(url, {
                 params: this.getPaginationParams(0, this.LIMIT),
                 headers: this.options.headers

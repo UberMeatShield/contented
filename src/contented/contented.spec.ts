@@ -76,7 +76,7 @@ describe('TestingContentBrowserCmp', () => {
 
     function handleContainerContentLoad(dirs: Array<Container>) {
         _.each(dirs, dir => {
-            let url = ApiDef.contented.content.replace('{cId}', dir.id);
+            let url = ApiDef.contented.containerContent.replace('{cId}', dir.id);
             let req = httpMock.expectOne(r => r.url === url);
             req.flush(MockData.getContent(dir.name, 2));
         });
@@ -155,7 +155,7 @@ describe('TestingContentBrowserCmp', () => {
         // now attempt to load data from the newly visible container
         let cnts = comp.getVisibleContainers()
         let nextContainer = cnts[1];
-        let url = ApiDef.contented.content.replace("{cId}", nextContainer.id);
+        let url = ApiDef.contented.containerContent.replace("{cId}", nextContainer.id);
         httpMock.expectOne(r => r.url == url);
         tick(1000);
     }));
@@ -200,7 +200,7 @@ describe('TestingContentBrowserCmp', () => {
 
         service.LIMIT = 1;
         comp.loadMore();
-        let url = ApiDef.contented.content.replace('{cId}', dir.id);
+        let url = ApiDef.contented.containerContent.replace('{cId}', dir.id);
         let loadReq = httpMock.expectOne(req => req.url === url);
         let checkParams: HttpParams = loadReq.request.params;
         expect(checkParams.get('per_page')).toBe('1', "We set a different limit");
