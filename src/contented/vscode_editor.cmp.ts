@@ -48,11 +48,13 @@ export class VSCodeEditorCmp implements OnInit {
   // Subscribe to options changes, if the definition changes make the call
   public ngOnInit() {
     this.editorOptions.language = this.language;
+
     if (!this.editForm) {
-      this.editForm = this.fb.group({
-        "description": this.descriptionControl = (this.descriptionControl || new FormControl(this.editorValue || "")),
-      });
+      this.editForm = this.fb.group({});
     }
+    let control = this.descriptionControl || this.editForm.get("description") || new FormControl(this.editorValue || "");
+    this.editForm.addControl("description", control);
+    this.editorValue = this.editorValue || control.value;
   }
 
   setReadOnly(state: boolean) {
@@ -77,7 +79,7 @@ export class VSCodeEditorCmp implements OnInit {
     if (this.editor) {
       this.changeEmitter.pipe(
         distinctUntilChanged(),
-        // debounceTime(50)
+        debounceTime(50)
       ).subscribe(
         (val: string) => {
             this.editForm.get("description").setValue(val);
@@ -138,7 +140,9 @@ export class VSCodeEditorCmp implements OnInit {
       editor.layout({width, height: contentHeight });
     };
 
-    updateHeight();
+    _.delay(() => {
+      updateHeight();
+    }, 100);
     let changed = _.debounce(updateHeight, 150);
     this.monacoEditor.onDidChangeModelDecorations(changed);
   }

@@ -122,10 +122,13 @@ func (v ContentsResource) Update(c buffalo.Context) error {
 		return c.Error(http.StatusNotFound, err)
 	}
 
-	// Bind Content to the html form elements (Nuke this)
+	// TODO: PREVENT SOURCE MANIPULATION or PATH changes
+
+	// Bind Content to the html form elements (Nuke this? or change to json)
 	if err := c.Bind(contentContainer); err != nil {
 		return err
 	}
+
 	verrs, err := tx.ValidateAndUpdate(contentContainer)
 	if err != nil {
 		return err
