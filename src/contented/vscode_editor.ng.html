@@ -1,0 +1,10 @@
+<div class="vscode-editor-cmp">
+    <div class="vs-container" #container>
+      <ngx-monaco-editor #vseditor
+        height="100%"
+        [options]="editorOptions"
+        [(ngModel)]="editorValue"
+        (onInit)="afterMonacoInit($event)"
+      ></ngx-monaco-editor>
+    </div>
+</div>

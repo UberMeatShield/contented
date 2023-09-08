@@ -10,6 +10,8 @@ export let ApiDef = {
         preview: base + 'preview/',
         containers: base + 'containers/',
         content: base + 'containers/{cId}/content',
+
+        contentUpdate: "/content/{id}",
         contentScreens: base + 'content/{mcID}/screens',
         screens: base + 'screens/',
         contentAll: base + 'content/',

@@ -34,9 +34,9 @@
   <contented-view></contented-view>
 
   <video-preview-cmp 
-    [selected]="selectedContent?.id === mc.id"
-    [maxVisible]="2"
-    [mc]="mc"
-    *ngFor="let mc of getVisibleSet()"
+    [selected]="selectedContent?.id === content.id"
+    [maxVisible]="3"
+    [content]="content"
+    *ngFor="let content of getVisibleSet()"
   ></video-preview-cmp>
 </div>

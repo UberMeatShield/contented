@@ -1,36 +1,36 @@
 <div class="video-preview-cmp">
-  <div class="video-results" *ngIf="mc">
-    <mat-card id="view_content_{{mc.id}}" class="video-view-card primary-card">
+  <div class="video-results" *ngIf="content">
+    <mat-card id="view_content_{{content.id}}" class="video-view-card primary-card">
       <mat-card-header>
         <mat-card-title class="video-details">
-          <a mat-raised-button href="/view/{{mc.id}}" title="Open in new tab" target="window">
+          <a mat-raised-button href="/view/{{content.id}}" title="Open in new tab" target="window">
             New Fullscreen Tab
             <mat-icon>tab</mat-icon>
           </a>
-          <a mat-raised-button href="/download/{{mc.id}}" title="Downlaod">
-            {{mc.size | byteFormatter: 0}}
+          <a mat-raised-button href="/download/{{content.id}}" title="Downlaod">
+            {{content.size | byteFormatter: 0}}
             <mat-icon >download</mat-icon>
           </a>
-          <span class="video-title">{{mc.src}}</span>
+          <span class="video-title">{{content.src}}</span>
         </mat-card-title>
-        <mat-card-subtitle *ngIf="mc.description">{{mc.description}}</mat-card-subtitle>
+        <mat-card-subtitle *ngIf="content.description">{{content.description}}</mat-card-subtitle>
       </mat-card-header>
 
       <mat-card-content [class.selected-video]="selected">
         <div class="video-view">
           <div class="preview-content video-result video-view"
-            [class.video-overlay]="mc?.content_type?.match('video')"
+            [class.video-overlay]="content?.content_type?.match('video')"
             style="width:{{previewWidth}}px; height: {{previewHeight}}px;"
-            (click)="imgClicked(mc)"
+            (click)="imgClicked(content)"
             title="Click to play the video (ESC to hide)"
             >
-            <img class="preview-img" [src]="mc?.previewUrl">
+            <img class="preview-img" [src]="content?.previewUrl">
           </div>
 
           <div class="video-view-screens">
             <screens-cmp 
-              [contentId]="mc.id"
-              [screens]="mc.screens"
+              [contentId]="content.id"
+              [screens]="content.screens"
               [containerWidth]="screenWidth"
               [containerHeight]="2 * previewHeight"
               (clickedItem)="screenEvt($event)"
@@ -43,7 +43,7 @@
         [forceHeight]="600"
         [visible]="false"
         [showScreens]="false" 
-        [restrictContentId]="mc.id"
+        [restrictContentId]="content.id"
       ></contented-view>
       </mat-card-content>
     </mat-card>

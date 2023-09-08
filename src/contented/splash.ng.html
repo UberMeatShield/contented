@@ -19,7 +19,7 @@
     </container-cmp>
   </div>
   <div *ngIf="rendererType === 'video'">
-    <video-preview-cmp [maxVisible]="4" [mc]="mc" *ngFor="let mc of getVideos()" [inlineView]="true">
+    <video-preview-cmp [maxVisible]="4" [content]="mc" *ngFor="let mc of getVideos()" [inlineView]="true">
     </video-preview-cmp>
   </div>
 
@@ -48,14 +48,7 @@
       </mat-card-subtitle>
     </mat-card-header>
     <mat-card-content>
-      <div id="SPLASH_FULL">
-        <ngx-monaco-editor #EDITOR
-          height="100%"
-          [options]="editorOptions"
-          [(ngModel)]="editorValue"
-          (onInit)="afterMonacoInit($event)"
-        ></ngx-monaco-editor>
-      </div>
+      <vscode-editor-cmp [editorValue]="editorValue"></vscode-editor-cmp>
     </mat-card-content>
   </mat-card>
 </div>

@@ -169,6 +169,11 @@ export class ContentedService {
         });
     }
 
+    public saveContent(content: Content) {
+        let url = ApiDef.contented.contentUpdate.replace("{id}", content.id)
+        return this.http.put(url, content).pipe(catchError(err => this.handleError(err)));
+    }
+
     public handleError(err: HttpErrorResponse) {
         console.error("Failed to handle API call error", err);
         let parsed = {};

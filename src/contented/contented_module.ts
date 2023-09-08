@@ -30,6 +30,7 @@ import {ContentedService} from './contented_service';
 import {ScreensCmp} from './screens.cmp';
 import {EditorContentCmp} from './editor_content.cmp';
 import {SplashCmp} from './splash.cmp';
+import {VSCodeEditorCmp} from './vscode_editor.cmp';
 import {Container} from './container';
 import {Content} from './content';
 import {Screen} from './screen';
@@ -97,6 +98,7 @@ const monacoConfig: NgxMonacoEditorConfig = {
       ByteFormatterPipe,
       SafePipe,
       EditorContentCmp,
+      VSCodeEditorCmp,
   ],
   exports: [
       ContentBrowserCmp,
@@ -108,6 +110,7 @@ const monacoConfig: NgxMonacoEditorConfig = {
       VideoBrowserCmp,
       ContentViewCmp,
       SearchDialog,
+      VSCodeEditorCmp,
   ],
   providers: [ContentedService]
 })

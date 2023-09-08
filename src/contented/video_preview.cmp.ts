@@ -32,7 +32,7 @@ export class VideoPreviewCmp implements OnInit {
 
     // Is this preview the selected one
     @Input() selected = false;
-    @Input() mc?: Content;
+    @Input() content?: Content;
 
     // Used to show that only a certain number are visible on the page at a given time
     // which is used to sort of set a height on the components.
