@@ -85,6 +85,12 @@ export class ContentedNavCmp implements OnInit {
             // We don't want to freak out and lookup #BTN_} etc.
             return;
         }
+
+        let nodeName = _.get(evt.target, 'nodeName');
+        let ignoreNodes = ["TEXTAREA", "INPUT", "SELECT"];
+        if (ignoreNodes.includes(nodeName)) {
+            return;
+        }
         this.handleKey(evt.key);
 
         let btn = $(`#BTN_${evt.key}`)

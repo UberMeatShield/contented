@@ -111,32 +111,27 @@ func (v ContentsResource) Create(c buffalo.Context) error {
 // Update changes a Content in the DB. This function is mapped to
 // the path PUT /contents/{content_id}
 func (v ContentsResource) Update(c buffalo.Context) error {
-	_, tx, err := managers.ManagerCanCUD(&c)
+	_, _, err := managers.ManagerCanCUD(&c)
 	if err != nil {
 		return err
 	}
 
-	// Allocate an empty Content
-	contentContainer := &models.Content{}
-	if err := tx.Find(contentContainer, c.Param("content_id")); err != nil {
+	man := managers.GetManager(&c)
+	id, _ := uuid.FromString(c.Param("content_id"))
+	exists, err := man.GetContent(id)
+	if err != nil || exists == nil {
 		return c.Error(http.StatusNotFound, err)
 	}
-
-	// TODO: PREVENT SOURCE MANIPULATION or PATH changes
-
 	// Bind Content to the html form elements (Nuke this? or change to json)
-	if err := c.Bind(contentContainer); err != nil {
+	content := *exists
+	if err := c.Bind(&content); err != nil {
 		return err
 	}
-
-	verrs, err := tx.ValidateAndUpdate(contentContainer)
-	if err != nil {
-		return err
+	upErr := man.UpdateContent(&content)
+	if upErr != nil {
+		return upErr
 	}
-	if verrs.HasAny() {
-		return c.Render(http.StatusUnprocessableEntity, r.JSON(verrs))
-	}
-	return c.Render(http.StatusOK, r.JSON(contentContainer))
+	return c.Render(http.StatusOK, r.JSON(content))
 }
 
 // Destroy deletes a Content from the DB. This function is mapped
