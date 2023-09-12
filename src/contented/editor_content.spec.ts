@@ -51,15 +51,14 @@ describe('EditorContentCmp', () => {
   });
 
   it("Should be able to render the monaco editor and get a reference", fakeAsync(() => {
-    cmp.readOnly = true;
-    cmp.mc = new Content({id: 'A', content_type: 'video/mp4'});
+    cmp.content = new Content({id: 'A', content_type: 'video/mp4'});
     tick(1000);
     fixture.detectChanges();
-    expect(cmp.editor).withContext("Monaco should init and have a reference").toBeDefined();
-    cmp.setReadOnly(true);
+    expect($(".vscode-editor-cmp").length).withContext("There should be an editor").toEqual(1);
+    tick(1000);
     tick(1000);
 
-    let url = ApiDef.contented.contentScreens.replace("{mcID}", cmp.mc.id);
+    let url = ApiDef.contented.contentScreens.replace("{mcID}", cmp.content.id);
     httpMock.expectOne(url).flush(MockData.getScreens());
     fixture.detectChanges();
   }));

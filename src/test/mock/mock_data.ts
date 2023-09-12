@@ -85,7 +85,7 @@ class MockLoader {
 
     public handleContainerContentLoad(httpMock, cnts: Array<Container>, count = 2) {
         _.each(cnts, cnt => {
-            let url = ApiDef.contented.content.replace('{cId}', cnt.id);
+            let url = ApiDef.contented.containerContent.replace('{cId}', cnt.id);
             let reqs = httpMock.match(r => r.url === url);
             _.each(reqs, req => {
                 req.flush(MockData.getContent(cnt.name, count));

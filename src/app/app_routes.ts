@@ -13,7 +13,7 @@ import {RouterModule, Routes} from '@angular/router';
 
 // Hmm, should have made this route have a saner extension
 const appRoutes: Routes = [
-    {path: '', redirectTo: '/ui/browse/0/0', pathMatch: 'full'},
+    {path: '', redirectTo: '/ui/splash', pathMatch: 'full'},
     {path: 'ui/browse/:idx/:rowIdx', component: ContentBrowserCmp},
     {path: 'ui/video', component: VideoBrowserCmp},
     {path: 'ui/search', component: SearchCmp},

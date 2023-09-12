@@ -13,5 +13,6 @@ create_table("contents") {
 	t.Column("encoding", "string", {"default": ""})
 	t.Column("description", "string", {"default": ""})
 	t.Column("hidden", "bool", {"default": false})
+	t.Column("no_file", "bool", {"default": false})
 	t.Timestamps()
 }
