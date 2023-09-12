@@ -129,6 +129,7 @@ func (v ContentsResource) Update(c buffalo.Context) error {
 	}
 	upErr := man.UpdateContent(&content)
 	if upErr != nil {
+		log.Printf("Failed to update resource %s", upErr)
 		return upErr
 	}
 	return c.Render(http.StatusOK, r.JSON(content))

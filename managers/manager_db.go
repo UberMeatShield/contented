@@ -76,11 +76,10 @@ func (cm ContentManagerDB) GetContent(mcID uuid.UUID) (*models.Content, error) {
 	if err := tx.Eager().Find(mc, mcID); err != nil {
 		return nil, err
 	}
-	//tx.Load(&mc, "Screens")
-	//wat := tx.Load(&mc.Tags, "Tags")
 	return mc, nil
 }
 
+// Update of the container should check utils.SubPath
 func (cm ContentManagerDB) UpdateContainer(c *models.Container) error {
 	tx := cm.GetConnection()
 	return tx.Update(c)
@@ -89,16 +88,19 @@ func (cm ContentManagerDB) UpdateContainer(c *models.Container) error {
 func (cm ContentManagerDB) UpdateContent(content *models.Content) error {
 	tx := cm.GetConnection()
 
-	cnt, cErr := cm.GetContainer(content.ContainerID.UUID)
-	if cErr != nil {
-		msg := fmt.Sprintf("Parent container %s not found", content.ContainerID.UUID.String())
-		return errors.New(msg)
-	}
 	// Check if file exists or allow content to be 'empty'?
-	exists, pErr := utils.HasContent(content.Src, cnt.GetFqPath())
-	if exists == false || pErr != nil {
-		log.Printf("Content not in container %s", pErr)
-		return errors.New(fmt.Sprintf("Invalid content src %s for container %s", content.Src, cnt.Name))
+	if content.NoFile == false {
+		cnt, cErr := cm.GetContainer(content.ContainerID.UUID)
+		if cErr != nil {
+			msg := fmt.Sprintf("Parent container %s not found", content.ContainerID.UUID.String())
+			return errors.New(msg)
+		}
+
+		exists, pErr := utils.HasContent(content.Src, cnt.GetFqPath())
+		if exists == false || pErr != nil {
+			log.Printf("Content not in container %s", pErr)
+			return errors.New(fmt.Sprintf("Invalid content src %s for container %s", content.Src, cnt.Name))
+		}
 	}
 	return tx.Eager().Update(content)
 }

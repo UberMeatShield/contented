@@ -18,6 +18,7 @@ func CreateResource(src string, container_id nulls.UUID, as *ActionSuite) models
 		ContentType: "test",
 		Preview:     "",
 		ContainerID: container_id,
+		NoFile:      true,
 	}
 	res := as.JSON("/content").Post(mc)
 	as.Equal(http.StatusCreated, res.Code)
@@ -157,11 +158,20 @@ func (as *ActionSuite) Test_ContentsResource_Create() {
 	as.NotZero(mc.ID)
 }
 
-func (as *ActionSuite) Test_ContentsResource_Update() {
+func (as *ActionSuite) Test_ContentsResource_Update_DB() {
+	test_common.InitFakeApp(true)
 	mc := CreateResource("test_update", nulls.UUID{}, as)
-	mc.ContentType = "Update Test"
+	mc.ContentType = "Update Test Memory"
 	up_res := as.JSON("/content/" + mc.ID.String()).Put(mc)
-	as.Equal(http.StatusOK, up_res.Code)
+	as.Equal(http.StatusOK, up_res.Code, fmt.Sprintf("Err %s", up_res.Body.String()))
+}
+
+func (as *ActionSuite) Test_ContentsResource_Update_Memory() {
+	test_common.InitFakeApp(false)
+	mc := CreateResource("test_update", nulls.UUID{}, as)
+	mc.ContentType = "Update Test Memory"
+	up_res := as.JSON("/content/" + mc.ID.String()).Put(mc)
+	as.Equal(http.StatusOK, up_res.Code, fmt.Sprintf("Err %s", up_res.Body.String()))
 }
 
 func (as *ActionSuite) Test_ContentsResource_Destroy() {

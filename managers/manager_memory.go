@@ -9,6 +9,7 @@ import (
 	"contented/models"
 	"contented/utils"
 	"errors"
+	"fmt"
 	"log"
 	"net/url"
 	"regexp"
@@ -277,9 +278,25 @@ func (cm ContentManagerMemory) UpdateContainer(c *models.Container) error {
 }
 
 // No updates should be allowed for memory management.
-func (cm ContentManagerMemory) UpdateContent(mc *models.Content) error {
-	if _, ok := cm.ValidContent[mc.ID]; ok {
-		cm.ValidContent[mc.ID] = *mc
+func (cm ContentManagerMemory) UpdateContent(content *models.Content) error {
+
+	// TODO: Should I be able to ignore being in a container if there is no file?
+	if content.NoFile == false {
+		cnt, cErr := cm.GetContainer(content.ContainerID.UUID)
+		if cErr != nil {
+			msg := fmt.Sprintf("Parent container %s not found", content.ContainerID.UUID.String())
+			log.Printf(msg)
+			return errors.New(msg)
+		}
+		// Check if file exists or allow content to be 'empty'?
+		exists, pErr := utils.HasContent(content.Src, cnt.GetFqPath())
+		if exists == false || pErr != nil {
+			log.Printf("Content not in container %s", pErr)
+			return errors.New(fmt.Sprintf("Invalid content src %s for container %s", content.Src, cnt.Name))
+		}
+	}
+	if _, ok := cm.ValidContent[content.ID]; ok {
+		cm.ValidContent[content.ID] = *content
 		return nil
 	}
 	return errors.New("Content was not found to update")

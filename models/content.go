@@ -25,7 +25,8 @@ type Content struct {
 	Corrupt     bool       `json:"corrupt" db:"corrupt"`
 	SizeBytes   int64      `json:"size" db:"size_bytes"`
 	Description string     `json:"description" db:"description"`
-	Hidden      bool       `json:"-" db:"hidden"`
+	NoFile      bool       `json:"no_file" db:"no_file"` // Actual file or just description etc
+	Hidden      bool       `json:"-" db:"hidden"`        // Should it be visible in basic list queries
 
 	// This is for information about the file content (video / image mostly stats, rez etc)
 	Meta string `json:"meta" db:"meta"`
