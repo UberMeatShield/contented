@@ -125,8 +125,7 @@ export class VSCodeEditorCmp implements OnInit {
       _.each(tokenArr, (line, lineIdx) => {
         _.each(line, token => {
           if (token.type == match) {
-            console.log(lineIdx + 1, token, m.getPositionAt(token.offset));
-
+            // console.log(lineIdx + 1, token, m.getPositionAt(token.offset));
             let position = m.getPositionAt(token.offset);
             position.lineNumber = lineIdx + 1;
 

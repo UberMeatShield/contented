@@ -9,6 +9,8 @@
     </div>
     <div class="vs-code-tagging" *ngIf="showTagging && initialized">
       Tags:
-      {{getTokens().join(", ")}}
+      <span class="content-tag" *ngFor="let tag of getTokens()">
+        {{tag}}
+      </span>
     </div>
 </div>

@@ -8,7 +8,8 @@ import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 import {FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms';
 import {finalize, debounceTime, distinctUntilChanged} from 'rxjs/operators';
 import {ContentedService} from './contented_service';
-import {Content} from './content';
+import {Tag, Content} from './content';
+import {VSCodeEditorCmp} from './vscode_editor.cmp';
 
 import * as _ from 'lodash-es';
 
@@ -17,6 +18,8 @@ import * as _ from 'lodash-es';
   templateUrl: './editor_content.ng.html',
 })
 export class EditorContentCmp implements OnInit {
+
+  @ViewChild('description') editor: VSCodeEditorCmp;
 
   @Input() content?: Content;
   @Input() editForm?: FormGroup;
@@ -59,6 +62,10 @@ export class EditorContentCmp implements OnInit {
     console.log("Save()", this.editForm.value);
     this.content.description = _.get(this.editForm.value, 'description');
     this.loading = true;
+
+    let tags = this.editor.getTokens();
+    console.log(tags);
+    this.content.tags = _.map(tags, tag => new Tag(tag));
     this._service.saveContent(this.content).pipe(finalize(() => this.loading = false)).subscribe(
       console.log,
       console.error

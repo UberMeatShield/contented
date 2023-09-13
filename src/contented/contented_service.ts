@@ -47,7 +47,7 @@ export class ContentedService {
     }
 
     public getContent(contentID: string) {
-        let url = `${ApiDef.contented.contentAll}/${contentID}`;
+        let url = ApiDef.contented.content.replace("{id}", contentID);
         return this.http.get(url, this.options)
             .pipe(
                 map(mc => {

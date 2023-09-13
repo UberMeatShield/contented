@@ -161,9 +161,22 @@ func (as *ActionSuite) Test_ContentsResource_Create() {
 func (as *ActionSuite) Test_ContentsResource_Update_DB() {
 	test_common.InitFakeApp(true)
 	mc := CreateResource("test_update", nulls.UUID{}, as)
+
+	tag := models.Tag{ID: "TAG"}
+	invalid := models.Tag{ID: "NOT IN DAB"}
+	as.NoError(as.DB.Create(&tag))
+	mc.Tags = models.Tags{tag, invalid}
+
 	mc.ContentType = "Update Test Memory"
 	up_res := as.JSON("/content/" + mc.ID.String()).Put(mc)
 	as.Equal(http.StatusOK, up_res.Code, fmt.Sprintf("Err %s", up_res.Body.String()))
+
+	validate := models.Content{}
+	json.NewDecoder(up_res.Body).Decode(&validate)
+	as.Equal(validate.ContentType, "Update Test Memory")
+	tags := validate.Tags
+	as.NotNil(tags)
+	as.Equal(len(tags), 1, "There should be 1 tag actually in the DB")
 }
 
 func (as *ActionSuite) Test_ContentsResource_Update_Memory() {

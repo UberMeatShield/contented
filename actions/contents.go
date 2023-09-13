@@ -85,27 +85,24 @@ func (v ContentsResource) Show(c buffalo.Context) error {
 // Create adds a Content to the DB. This function is mapped to the
 // path POST /contents
 func (v ContentsResource) Create(c buffalo.Context) error {
-	_, tx, err := managers.ManagerCanCUD(&c)
-	if err != nil {
-		return err
-	}
+	_, _, err := managers.ManagerCanCUD(&c)
 	// Allocate an empty Content
 	// Bind contentContainer to the html form elements (probably not required?)
 	contentContainer := &models.Content{}
 	if err := c.Bind(contentContainer); err != nil {
 		return err
 	}
-
-	// Validate the data from the html form
-	verrs, err := tx.ValidateAndCreate(contentContainer)
+	log.Printf("What the shit %s", contentContainer)
+	man := managers.GetManager(&c)
+	err = man.CreateContent(contentContainer)
 	if err != nil {
-		return err
+		return c.Render(http.StatusBadRequest, r.JSON(err))
 	}
-
-	if verrs.HasAny() {
-		return c.Render(http.StatusUnprocessableEntity, r.JSON(verrs))
+	content, checkErr := man.GetContent(contentContainer.ID)
+	if checkErr != nil {
+		return c.Render(http.StatusExpectationFailed, r.JSON(checkErr))
 	}
-	return c.Render(http.StatusCreated, r.JSON(contentContainer))
+	return c.Render(http.StatusCreated, r.JSON(content))
 }
 
 // Update changes a Content in the DB. This function is mapped to
@@ -132,7 +129,11 @@ func (v ContentsResource) Update(c buffalo.Context) error {
 		log.Printf("Failed to update resource %s", upErr)
 		return upErr
 	}
-	return c.Render(http.StatusOK, r.JSON(content))
+	checkContent, checkErr := man.GetContent(content.ID)
+	if checkErr != nil {
+		return c.Render(http.StatusExpectationFailed, r.JSON(checkErr))
+	}
+	return c.Render(http.StatusOK, r.JSON(checkContent))
 }
 
 // Destroy deletes a Content from the DB. This function is mapped

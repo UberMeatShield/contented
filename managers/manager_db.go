@@ -86,9 +86,8 @@ func (cm ContentManagerDB) UpdateContainer(c *models.Container) error {
 }
 
 func (cm ContentManagerDB) UpdateContent(content *models.Content) error {
-	tx := cm.GetConnection()
-
 	// Check if file exists or allow content to be 'empty'?
+	tx := cm.GetConnection()
 	if content.NoFile == false {
 		cnt, cErr := cm.GetContainer(content.ContainerID.UUID)
 		if cErr != nil {
@@ -102,7 +101,15 @@ func (cm ContentManagerDB) UpdateContent(content *models.Content) error {
 			return errors.New(fmt.Sprintf("Invalid content src %s for container %s", content.Src, cnt.Name))
 		}
 	}
-	return tx.Eager().Update(content)
+	err := tx.Eager().Update(content)
+	if err != nil {
+		return err
+	}
+	// Just trust we will associate all valid tags to the content.
+	if content.Tags != nil {
+		return cm.AssociateTag(nil, content)
+	}
+	return nil
 }
 
 func (cm ContentManagerDB) UpdateScreen(s *models.Screen) error {
@@ -347,10 +354,22 @@ func (cm ContentManagerDB) CreateScreen(screen *models.Screen) error {
 	return tx.Create(screen)
 }
 
-func (cm ContentManagerDB) CreateContent(mc *models.Content) error {
+func (cm ContentManagerDB) CreateContent(content *models.Content) error {
 	tx := cm.GetConnection()
-	err := tx.Create(mc)
-	//log.Printf("What is the content %s", mc)
+
+	// Eager doesn't actually create tags but should we create any old tag on
+	// submission?
+	validTags, t_err := cm.GetValidTags(&content.Tags)
+	if t_err != nil {
+		log.Printf("Could not determine valid tags %s", t_err)
+		return t_err
+	}
+	content.Tags = *validTags
+
+	_, err := tx.Eager().ValidateAndCreate(content)
+	if err != nil {
+		return err
+	}
 	return err
 }
 
@@ -394,12 +413,46 @@ func (cm ContentManagerDB) GetTag(tagID string) (*models.Tag, error) {
 	return t, nil
 }
 
-func (cm ContentManagerDB) AssociateTag(t *models.Tag, mc *models.Content) error {
-	log.Printf("Found %s with %s what the %s", mc.ID.String(), t.ID, mc.Tags)
+func (cm ContentManagerDB) GetValidTags(tags *models.Tags) (*models.Tags, error) {
+	tx := cm.GetConnection()
+	validTags := models.Tags{}
+	ids := []string{}
+	for _, tag := range *tags {
+		ids = append(ids, tag.ID)
+	}
+	if len(ids) == 0 {
+		return &validTags, nil
+	}
 
+	q := tx.Q().Where("id in (?)", ids)
+	q_err := q.All(&validTags)
+	if q_err != nil {
+		log.Printf("Error validating tags %s", q_err)
+		return nil, q_err
+	}
+	return &validTags, nil
+}
+
+// You can also use this with a content element with tags to actually associate them.
+func (cm ContentManagerDB) AssociateTag(t *models.Tag, mc *models.Content) error {
 	// TODO: Could require [Tags] and not do the append with this function
 	tx := cm.GetConnection()
-	tags := append(mc.Tags, *t)
+
+	tags := models.Tags{}
+	if mc.Tags != nil {
+		tags = mc.Tags
+	}
+	if t != nil {
+		tags = append(mc.Tags, *t)
+	}
+	// Filter these tags to only VALID tags already in the system since Eager is super
+	// busted on many to many relations.  hate
+	validTags, v_err := cm.GetValidTags(&tags)
+	if v_err != nil {
+		return v_err
+	}
+	tags = *validTags
+
 	err := tx.RawQuery("delete from contents_tags where content_id = ?", mc.ID).Exec()
 	if err != nil {
 		log.Printf("Could not associate tag %s", err)
