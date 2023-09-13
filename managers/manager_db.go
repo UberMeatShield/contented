@@ -446,7 +446,7 @@ func (cm ContentManagerDB) AssociateTag(t *models.Tag, mc *models.Content) error
 		tags = append(mc.Tags, *t)
 	}
 	// Filter these tags to only VALID tags already in the system since Eager is super
-	// busted on many to many relations.  hate
+	// busted on many to many relations.
 	validTags, v_err := cm.GetValidTags(&tags)
 	if v_err != nil {
 		return v_err

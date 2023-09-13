@@ -92,7 +92,6 @@ func (v ContentsResource) Create(c buffalo.Context) error {
 	if err := c.Bind(contentContainer); err != nil {
 		return err
 	}
-	log.Printf("What the shit %s", contentContainer)
 	man := managers.GetManager(&c)
 	err = man.CreateContent(contentContainer)
 	if err != nil {
