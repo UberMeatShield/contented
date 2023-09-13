@@ -27,6 +27,7 @@ export class VSCodeEditorCmp implements OnInit {
   @Input() editForm?: FormGroup;
   @Input() editorValue: string = "";
   @Input() descriptionControl?: FormControl<string>;
+  @Input() showTagging: boolean = false;
   @Input() readOnly: boolean = true;
   @Input() language: string = "tagging";
 
@@ -41,6 +42,7 @@ export class VSCodeEditorCmp implements OnInit {
 
   // Reference to the raw Microsoft component, allows for
   public monacoEditor?: any;
+  public initialized = false;
 
   constructor(public fb: FormBuilder, public route: ActivatedRoute, public _service: ContentedService) {
   }
@@ -55,6 +57,22 @@ export class VSCodeEditorCmp implements OnInit {
     let control = this.descriptionControl || this.editForm.get("description") || new FormControl(this.editorValue || "");
     this.editForm.addControl("description", control);
     this.editorValue = this.editorValue || control.value;
+    this.descriptionControl = (control as FormControl<string>);  // Sketchy...
+
+    this.monacoDigestHackery()
+  }
+
+  // The onInit from monaco pulls us OUT of a proper digest detection, so if I set initialized
+  // directly in the 'afterMonacoInit' it is not detected till an edit.  This gets us insight into
+  // if the monacoEditor is present and fixes any digest loop redraw errors...
+  monacoDigestHackery() {
+    _.delay(() => {
+      if (this.monacoEditor) {
+        this.initialized = true;
+      } else {
+        this.monacoDigestHackery();
+      }
+    }, 500);
   }
 
   setReadOnly(state: boolean) {
@@ -73,8 +91,8 @@ export class VSCodeEditorCmp implements OnInit {
 
   // The pure Monaco part is definitely worth an indepenent component (I think)
   afterMonacoInit(monaco: any) {
-    console.log("Monaco Editor has been initialized");
     this.monacoEditor = monaco;
+    (window as any).M = monaco;
       // This is a little awkward but we need to be able to change the form control
     if (this.editor) {
       this.changeEmitter.pipe(
@@ -94,7 +112,34 @@ export class VSCodeEditorCmp implements OnInit {
     //this.setReadOnly(this.readOnly);
   }
 
+  public getTokens(tokenType: string = "keyword", language = this.language) {
+    // Dynamically loaded
+    let monaco = (window as any).monaco;
+    let tags = [];
+    if (monaco && this.descriptionControl) {
+      let tokenArr = monaco.editor.tokenize(this.descriptionControl.value, language);
+
+      let m = this.monacoEditor.getModel();
+
+      let match = `${tokenType}.${language}`;
+      _.each(tokenArr, (line, lineIdx) => {
+        _.each(line, token => {
+          if (token.type == match) {
+            // console.log(lineIdx + 1, token, m.getPositionAt(token.offset));
+            let position = m.getPositionAt(token.offset);
+            position.lineNumber = lineIdx + 1;
+
+            let word = m.getWordAtPosition(position);
+            tags.push(word.word);
+          }
+        })
+      });
+    }
+    return _.uniq(_.compact(tags));
+  }
+
   public afterMonaco() {
+    console.log("After monaco");
     if (!this.editForm) {
       return;
     }
@@ -107,15 +152,14 @@ export class VSCodeEditorCmp implements OnInit {
         debounceTime(500)
       ).subscribe(
         (evt: any) => {
-          console.log("Control updated", evt);
           if (this.editForm) {
-            console.log("VS Code editor form updated", this.editForm.value);
+            // console.log("Control updated", evt);
+            // console.log("VS Code editor form updated", this.editForm.value);
           }
         }
       );
       this.editorValue = control.value;
     }
-
     _.delay(() => {
       this.fitContent();
     }, 500);
@@ -126,7 +170,6 @@ export class VSCodeEditorCmp implements OnInit {
     let width = el.offsetWidth;
 
     let updateHeight = () => {
-
       let editor = this.monacoEditor;
       const lineCount = Math.max(editor.getModel()?.getLineCount(), 8);
 

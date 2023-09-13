@@ -7,4 +7,10 @@
         (onInit)="afterMonacoInit($event)"
       ></ngx-monaco-editor>
     </div>
+    <div class="vs-code-tagging" *ngIf="showTagging && initialized">
+      Tags:
+      <span class="content-tag" *ngFor="let tag of getTokens()">
+        {{tag}}
+      </span>
+    </div>
 </div>

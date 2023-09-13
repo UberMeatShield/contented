@@ -2,6 +2,15 @@ import * as _ from 'lodash';
 import {ApiDef} from './api_def';
 import {Screen} from './screen';
 
+// Why does a TAG have an id?!?!  Because goBuffalo really likes the id field.
+export class Tag {
+    public id: string;
+
+    constructor(tagName: string) {
+        this.id = tagName;
+    }
+}
+
 export class Content {
     public id: string;
     public src: string;
@@ -18,6 +27,7 @@ export class Content {
     public previewUrl: string;
     public fullUrl: string;
     public screens: Array<Screen>;
+    public tags: Array<Tag>;
 
     constructor(obj: any = {}) {
         this.fromJson(obj);
