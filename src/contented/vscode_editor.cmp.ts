@@ -65,12 +65,12 @@ export class VSCodeEditorCmp implements OnInit {
   // The onInit from monaco pulls us OUT of a proper digest detection, so if I set initialized
   // directly in the 'afterMonacoInit' it is not detected till an edit.  This gets us insight into
   // if the monacoEditor is present and fixes any digest loop redraw errors...
-  monacoDigestHackery() {
+  monacoDigestHackery(count: number = 0) {
     _.delay(() => {
-      if (this.monacoEditor) {
-        this.initialized = true;
+      if (this.monacoEditor || count > 4) {
+        this.initialized = true;  // Eventually we want to give up.. probably the editor bailed.
       } else {
-        this.monacoDigestHackery();
+        this.monacoDigestHackery(count + 1);
       }
     }, 500);
   }
@@ -97,7 +97,7 @@ export class VSCodeEditorCmp implements OnInit {
     if (this.editor) {
       this.changeEmitter.pipe(
         distinctUntilChanged(),
-        debounceTime(50)
+        debounceTime(10)
       ).subscribe(
         (val: string) => {
             this.editForm.get("description").setValue(val);
@@ -109,7 +109,6 @@ export class VSCodeEditorCmp implements OnInit {
       });
     }
     this.afterMonaco();
-    //this.setReadOnly(this.readOnly);
   }
 
   public getTokens(tokenType: string = "keyword", language = this.language) {

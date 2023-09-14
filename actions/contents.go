@@ -143,7 +143,7 @@ func (v ContentsResource) Destroy(c buffalo.Context) error {
 		return err
 	}
 
-	// TODO: Manager should probably be the thing doing updates etc.
+	// TODO: Manager should ABSOLUTELY be the thing doing updates etc.
 	// Allocate an empty Content
 	contentContainer := &models.Content{}
 
