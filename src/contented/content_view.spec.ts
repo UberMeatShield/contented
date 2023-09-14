@@ -107,7 +107,7 @@ describe('TestingContentViewCmp', () => {
         fixture.detectChanges();
         expect($(".loading").length).toEqual(1, "Loading UI should be present");
 
-        let url = `${ApiDef.contented.contentAll}/${fakeID}`;
+        let url = ApiDef.contented.content.replace("{id}", fakeID);
         let req = httpMock.expectOne(url);
         req.flush(donutMock);
         fixture.detectChanges();

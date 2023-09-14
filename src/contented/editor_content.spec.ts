@@ -56,11 +56,13 @@ describe('EditorContentCmp', () => {
     fixture.detectChanges();
     expect($(".vscode-editor-cmp").length).withContext("There should be an editor").toEqual(1);
     tick(1000);
-    tick(1000);
 
     let url = ApiDef.contented.contentScreens.replace("{mcID}", cmp.content.id);
     httpMock.expectOne(url).flush(MockData.getScreens());
     fixture.detectChanges();
+    tick(1000);
+    fixture.detectChanges();
+    tick(1000);
   }));
 });
 
