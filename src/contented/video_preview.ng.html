@@ -25,9 +25,10 @@
             title="Click to play the video (ESC to hide)"
             >
 
+            <!-- TODO: no preview video should use a differnt icon (content|video browser)-->
             <img class="preview-img" [src]="content.previewUrl" *ngIf="!content.shouldUseTypedPreview()">
             <span *ngIf="content.shouldUseTypedPreview()">
-              <mat-icon>article</mat-icon>
+              <mat-icon>videocam</mat-icon>
               {{content.src}}
             </span>
           </div>
