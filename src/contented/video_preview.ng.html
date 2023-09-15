@@ -24,7 +24,9 @@
             (click)="imgClicked(content)"
             title="Click to play the video (ESC to hide)"
             >
-            <img class="preview-img" [src]="content?.previewUrl">
+
+            <mat-icon *ngIf="content.shouldUseTypedPreview()">{{content.shouldUseTypedPreview()}}</mat-icon>
+            <img class="preview-img" [src]="content.previewUrl" *ngIf="!content.shouldUseTypedPreview()">
           </div>
 
           <div class="video-view-screens">

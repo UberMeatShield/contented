@@ -19,6 +19,12 @@ body {
     .preview-content {
       flex-shrink: 0;
       margin: 2px;
+
+      &:hover {
+        border: 1px solid $color-pri;
+        border-radius: 3px;
+        background-color: lighten($color-pri, 20%);
+      }
     }
 }
 

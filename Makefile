@@ -71,8 +71,8 @@ db-reset:
 db-seed:
 	export DIR=$(DIR) && buffalo task db:seed
 
-.PHONY: create-previews
-create-previews:
+.PHONY: preview
+preview:
 	export DIR=$(DIR) && buffalo task db:preview
 
 .PHONY: encode

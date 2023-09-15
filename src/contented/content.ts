@@ -14,6 +14,7 @@ export class Tag {
 export class Content {
     public id: string;
     public src: string;
+    public preview: string; // Name of the preview, if not set we do not have one.
     public idx: number;
     public description: string = "";
 
@@ -28,6 +29,8 @@ export class Content {
     public fullUrl: string;
     public screens: Array<Screen>;
     public tags: Array<Tag>;
+
+    public fullText: string|undefined = undefined;
 
     constructor(obj: any = {}) {
         this.fromJson(obj);
@@ -47,6 +50,26 @@ export class Content {
 
     public isVideo() {
         return this.content_type ? !!(this.content_type.match("video")) : false;
+    }
+
+    public isText() {
+        return this.content_type ? !!(this.content_type.match("text")) : false;
+    }
+
+    // Images will just work as a preview source, but video (with no preview) and 
+    // text and zips etc should use a content_type based style preview.  This prevents
+    // broken image links when no previews are found for these types.
+    public shouldUseTypedPreview() {
+        if (_.isEmpty(this.preview)) {
+            if (this.isImage()) {
+                return "";
+            } else if (this.isVideo()) {
+                return "video";
+            } else if (this.isText()) {
+                return "text";
+            }
+        }
+        return "";
     }
 
     public links() {
