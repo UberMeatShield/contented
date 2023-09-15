@@ -133,8 +133,8 @@ func ShouldEncodeVideo(srcFile string, dstFile string) (string, error, bool) {
 			dstDuration := gjson.Get(dstInfo, "format.duration").Float()
 
 			// TODO: could also check we are in the actually requested codec as well.
-			if srcDuration == dstDuration { // Within minimal amount length?
-				existsMsg = fmt.Sprintf("Done %s exists and has source duration %f", dstFile, srcDuration)
+			if int(srcDuration) == int(dstDuration) { // Within minimal amount length?
+				existsMsg = fmt.Sprintf("Done %s exists and has source duration %d", dstFile, int(srcDuration))
 				log.Printf(existsMsg)
 				return existsMsg, nil, false
 			} else {

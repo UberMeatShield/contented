@@ -50,8 +50,14 @@ func EncodeVideos(cm ContentManager) error {
 	for _, res := range all_results {
 		if res.Err != nil {
 			// Might want get the full link to the original video but it should be in the error
-			msg := fmt.Sprintf("Failure encoding %s failure was %s", res.Err, res.MC_ID.String())
-			log.Print(msg)
+			content, miss_err := cm.GetContent(res.MC_ID)
+			if miss_err == nil {
+				msg := fmt.Sprintf("Failure encoding %s failure was %s id %s", res.Err, content.Src, content.ID)
+				log.Print(msg)
+			} else {
+				msg := fmt.Sprintf("Failure encoding %s failure was %s (deleted?)", res.Err, res.MC_ID.String())
+				log.Print(msg)
+			}
 			err_cnt++
 		}
 	}
