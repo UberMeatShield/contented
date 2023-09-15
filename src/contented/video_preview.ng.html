@@ -25,8 +25,11 @@
             title="Click to play the video (ESC to hide)"
             >
 
-            <mat-icon *ngIf="content.shouldUseTypedPreview()">{{content.shouldUseTypedPreview()}}</mat-icon>
             <img class="preview-img" [src]="content.previewUrl" *ngIf="!content.shouldUseTypedPreview()">
+            <span *ngIf="content.shouldUseTypedPreview()">
+              <mat-icon>article</mat-icon>
+              {{content.src}}
+            </span>
           </div>
 
           <div class="video-view-screens">

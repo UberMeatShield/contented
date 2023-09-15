@@ -211,7 +211,7 @@ body {
 }
 
 .video-overlay:hover {
-    background: black;
+    background: lighten($color-pri, 20%);
 }
 
 
@@ -249,7 +249,7 @@ body {
 }
 
 .current-content-item {
-    border: 1px solid black;
+    border: 1px solid $color-pri;
 }
 
 .content-tag {

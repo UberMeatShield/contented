@@ -42,15 +42,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
                     this.content = content;
                     if (this.content) {
                         this.scrollContent(this.content);
-                        if (this.content.isText()) {
-                            console.log("What have we here", content);
-                            this._service.getTextContent(content).subscribe(
-                                (text: string) => {
-                                    content.fullText = text;
-                                }, 
-                                console.error
-                            )
-                        }
+
                     }
                     break;
                 case NavTypes.HIDE_FULLSCREEN:
@@ -81,6 +73,20 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
 
     public ngOnDestroy() {
         this.sub.unsubscribe();
+    }
+
+    public handleTextContent(content: Content) {
+        // This would be better in a method but I would like another example type.
+        if (this.content.isText() && !this.content.fullText) {
+            this._service.getTextContent(content).subscribe(
+                (text: string) => {
+                    content.fullText = text;
+                    // TODO: _uxLoading
+                    // TODO: _uxLanguageGuess (file extention lookups)
+                }, 
+                console.error
+            )
+        }
     }
 
     @HostListener('window:resize', ['$event'])
