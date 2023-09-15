@@ -42,7 +42,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
                     this.content = content;
                     if (this.content) {
                         this.scrollContent(this.content);
-
+                        this.handleTextContent(this.content);
                     }
                     break;
                 case NavTypes.HIDE_FULLSCREEN:
