@@ -2,8 +2,8 @@
   <div *ngIf="container" class="cnt-contents" style="min-height: {{(previewHeight + 20) * 2}}px;">
     <div class="preview-content preview-is{{content.shouldUseTypedPreview()}}"
       [class.video-overlay]="content?.content_type?.match('video')"
-      [class.current-content]="active && (content === container.getCurrentContent())"
       style="width:{{previewWidth}}px; height: {{previewHeight}}px;"
+      [class.current-content]="active && (content === container.getCurrentContent())"
       *ngFor="let content of getVisibleSet()"
       (click)="clickContent(content)"
       >

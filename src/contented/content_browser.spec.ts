@@ -13,6 +13,7 @@ import {ContentBrowserCmp} from '../contented/content_browser.cmp';
 import {ContentedService} from '../contented/contented_service';
 import {ContentedModule} from '../contented/contented_module';
 import {Container} from '../contented/container';
+import {Content} from '../contented/content';
 import {ApiDef} from '../contented/api_def';
 import {GlobalNavEvents} from '../contented/nav_events';
 
@@ -143,8 +144,9 @@ describe('TestingContentBrowserCmp', () => {
         let toClick = $(imgs[3]).trigger('click');
         fixture.detectChanges();
 
-        let currLoc = $('.current-img');
+        let currLoc = $('img', $('.current-content'));
         let fullView = $('.full-view-img');
+
         expect(currLoc.length).toBe(1, "It should be selected still");
         expect(fullView.length).toBe(1, "It should now have a view");
         expect(currLoc.prop('src').replace("preview", "view")).toBe(
@@ -238,5 +240,40 @@ describe('TestingContentBrowserCmp', () => {
         fixture.detectChanges();
     }));
 
-});
+    it("Can handle rendering a text element into the page", fakeAsync(() => {
+        let containerId = "A";
+        let container = new Container({id: containerId, total: 1, count: 0, contents: null});
 
+        let contentId = "textId";
+        let content = {
+            id: contentId,
+            content_type: "text/plain; charset=utf-8",
+            container_id: containerId,
+            src: "/ab"
+        };
+        comp.allCnts = [container];
+
+        let checkContent = new Content(content);
+        expect(checkContent.shouldUseTypedPreview()).toEqual("article")
+        fixture.detectChanges();
+
+        let url = ApiDef.contented.containerContent.replace("{cId}", containerId);
+        httpMock.expectOne(r => r.url.includes(url)).flush([content]);
+        expect($(".contented-cnt").length).withContext("We should have a container").toEqual(1);
+        expect(comp.allCnts.length).toEqual(1);
+        fixture.detectChanges();
+
+        let contentDom = $(".preview-content");
+        expect(contentDom.length).withContext("We don't have some sort of item").toEqual(1);
+        contentDom.trigger("click");
+        tick(1000);
+
+        // Now prove the text is downloaded and added to the editor.
+        httpMock.expectOne(ApiDef.contented.download.replace("{mcID}", contentId)).flush("What");
+        fixture.detectChanges();
+        expect($(".preview-type").length).withContext("There should be a text editor").toEqual(1);
+        fixture.detectChanges();
+        expect($("vscode-editor-cmp").length).withContext("Text should load the editor").toEqual(1);
+        tick(10000);
+    }));
+});

@@ -72,7 +72,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
     }
 
     public ngOnDestroy() {
-        this.sub.unsubscribe();
+        this.sub && this.sub.unsubscribe();
     }
 
     public handleTextContent(content: Content) {
