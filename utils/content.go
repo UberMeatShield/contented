@@ -186,8 +186,8 @@ func getContent(id uuid.UUID, fileInfo os.FileInfo, path string) models.Content 
 	corrupt := false
 	srcFile := filepath.Join(path, fileInfo.Name())
 	if strings.Contains(contentType, "image") {
-		meta, corrupt = GetImageMeta(srcFile)
 		// TODO: Determine if we can use the image library to get some information about the file.
+		meta, corrupt = GetImageMeta(srcFile)
 	} else if strings.Contains(contentType, "video") {
 		vidInfo, probeErr := GetVideoInfo(srcFile)
 		if probeErr == nil {
@@ -217,19 +217,24 @@ func GetImageMeta(srcFile string) (string, bool) {
 
 	reader, err := os.Open(srcFile)
 	if err != nil {
-		return fmt.Sprintf("%s", err), true
+		return fmt.Sprintf("No access to source file %s err %s", srcFile, err), true
 	}
 	defer reader.Close()
 
-	m, _, i_err := image.Decode(reader)
+	// TODO: this is faster but we have a lot less indication of if it is config
+	// Potentially the preview generation woul dbe the way to go.
+	m, _, i_err := image.DecodeConfig(bufio.NewReader(reader))
 	if i_err != nil {
 		meta = "Couldn't Determine Image info"
 		corrupt = true
 	} else {
-		// TODO: What information is good?  Add it to meta
-		bounds := m.Bounds() // Do we want all the meta?
-		w := bounds.Dx()
-		h := bounds.Dy()
+		// A Full image Decode is way too slow so instead we are just looking at the config for now.
+		// m, _, i_err := image.Decode(bufio.NewReader(reader))
+		// bounds := m.Bounds() 
+		// w := bounds.Dx()
+		// h := bounds.Dy()
+		w := m.Width
+		h := m.Height
 		meta = fmt.Sprintf("{\"width\": %d, \"height\": %d}", w, h)
 	}
 	return meta, corrupt
@@ -237,7 +242,7 @@ func GetImageMeta(srcFile string) (string, bool) {
 
 // Write a recurse method for getting all the data up to depth N
 func CreateStructure(dir string, cfg *DirConfigEntry, results *ContentTree, depth int) (*ContentTree, error) {
-	//log.Printf("Looking in directory %s set have results %d depth %d", dir, len(*results), depth)
+        log.Printf("Looking in directory %s set have results %d depth %d", dir, len(*results), depth)
 	if depth > cfg.MaxSearchDepth {
 		return results, nil
 	}
