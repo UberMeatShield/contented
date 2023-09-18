@@ -20,7 +20,7 @@ import * as _ from 'lodash';
 import {MockData} from '../test/mock/mock_data';
 
 declare var $;
-fdescribe('TestingContentBrowserCmp', () => {
+describe('TestingContentBrowserCmp', () => {
     let fixture: ComponentFixture<ContentBrowserCmp>;
     let service: ContentedService;
     let comp: ContentBrowserCmp;
