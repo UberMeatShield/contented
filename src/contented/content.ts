@@ -62,11 +62,11 @@ export class Content {
     public shouldUseTypedPreview() {
         if (_.isEmpty(this.preview)) {
             if (this.isImage()) {
-                return "";
+                return "";          // image we can just display the image (maybe large)
             } else if (this.isVideo()) {
-                return "video";
+                return "videocam";  // material icon
             } else if (this.isText()) {
-                return "text";
+                return "article";  // material icon
             }
         }
         return "";

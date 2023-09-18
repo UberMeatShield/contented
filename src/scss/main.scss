@@ -214,6 +214,10 @@ body {
     background: lighten($color-pri, 20%);
 }
 
+.selected-video {
+    border: 1px solid $color-pri;
+    background-color: lighten($color-pri, 40%);
+}
 
 .full-view-img {
     object-fit: contain;
@@ -225,6 +229,23 @@ body {
     object-fit: contain;
     width: 100%;
     height: 100%;
+}
+
+.preview-type {
+    width: 100%;
+    height: 100%;
+    display: none;
+}
+
+// Based on content.shouldUseTypedPreview()
+.preview-isvideocam, .preview-isarticle {
+    border: 1px solid lighten($color-sec, 20%);
+    .preview-type {
+        display: block;
+    }
+    .preview-img {
+        display: none;
+    }
 }
 
 // Might need to change how it works in layout

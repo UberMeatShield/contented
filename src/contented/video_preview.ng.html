@@ -18,17 +18,16 @@
 
       <mat-card-content [class.selected-video]="selected">
         <div class="video-view">
-          <div class="preview-content video-result video-view"
+          <div class="preview-content video-result video-view preview-is{{content.shouldUseTypedPreview()}}"
             [class.video-overlay]="content?.content_type?.match('video')"
             style="width:{{previewWidth}}px; height: {{previewHeight}}px;"
             (click)="imgClicked(content)"
             title="Click to play the video (ESC to hide)"
             >
-
             <!-- TODO: no preview video should use a differnt icon (content|video browser)-->
             <img class="preview-img" [src]="content.previewUrl" *ngIf="!content.shouldUseTypedPreview()">
-            <span *ngIf="content.shouldUseTypedPreview()">
-              <mat-icon>videocam</mat-icon>
+            <span class="preview-type" title="No preview">
+              <mat-icon>{{content.shouldUseTypedPreview()}}</mat-icon>
               {{content.src}}
             </span>
           </div>
