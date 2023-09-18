@@ -3,6 +3,7 @@ import {Content} from './content';
 import {GlobalNavEvents, NavTypes} from './nav_events';
 import {Subscription} from 'rxjs';
 import {Screen} from './screen';
+import {ContentedService} from './contented_service';
 import * as _ from 'lodash';
 
 @Component({
@@ -24,7 +25,8 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
 
     // This calculation does _not_ work when using a dialog.  Fix?
     // Provide a custom width and height calculation option
-    constructor() {
+    constructor(public _service: ContentedService) {
+
     }
 
     public ngOnInit() {
@@ -32,7 +34,6 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
             switch(evt.action) {
                 case NavTypes.VIEW_FULLSCREEN:
                     let content = evt.content || this.content;
-                    console.log(`Content is restricted to ${this.restrictContentId}`);
                     if (this.restrictContentId && content && content.id !== this.restrictContentId) {
                         return;
                     }
@@ -41,6 +42,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
                     this.content = content;
                     if (this.content) {
                         this.scrollContent(this.content);
+                        this.handleTextContent(this.content);
                     }
                     break;
                 case NavTypes.HIDE_FULLSCREEN:
@@ -57,10 +59,34 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
             // console.log("Listen for the fullscreen");
         }) ;
         this.calculateDimensions();
+
+        // I don't like this hack but from a visibility standpoint it kinda works.
+        if (this.content && this.content.isText() && this.visible) {
+            this._service.getTextContent(this.content).subscribe(
+                text => {
+                    this.content.fullText = text;
+                },
+                console.error
+            );
+        }
     }
 
     public ngOnDestroy() {
-        this.sub.unsubscribe();
+        this.sub && this.sub.unsubscribe();
+    }
+
+    public handleTextContent(content: Content) {
+        // This would be better in a method but I would like another example type.
+        if (this.content.isText() && !this.content.fullText) {
+            this._service.getTextContent(content).subscribe(
+                (text: string) => {
+                    content.fullText = text;
+                    // TODO: _uxLoading
+                    // TODO: _uxLanguageGuess (file extention lookups)
+                }, 
+                console.error
+            )
+        }
     }
 
     @HostListener('window:resize', ['$event'])

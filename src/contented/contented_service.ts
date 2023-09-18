@@ -63,14 +63,19 @@ export class ContentedService {
     public download(cnt: Container, rowIdx: number) {
         console.log("Attempting to download", cnt, rowIdx);
 
-        let img: Content = cnt.contents[rowIdx];
+        let content: Content = cnt.contents[rowIdx];
         let filename = cnt && rowIdx >= 0 && rowIdx < cnt.contents.length ? cnt.contents[rowIdx].src : '';
         if (!filename) {
             console.log("No file specified at rowIdx", rowIdx);
         }
-        let downloadUrl = ApiDef.contented.download.replace('{mcID}', img.id);
+        let downloadUrl = ApiDef.contented.download.replace('{mcID}', content.id);
         console.log("DownloadURL", downloadUrl);
         window.open(downloadUrl);
+    }
+
+    public getTextContent(content: Content) {
+        let downloadUrl = ApiDef.contented.download.replace('{mcID}', content.id);
+        return this.http.get(downloadUrl, {responseType: "text"});
     }
 
     public fullLoadDir(cnt, limit = null) {

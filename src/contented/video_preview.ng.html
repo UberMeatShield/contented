@@ -16,22 +16,27 @@
         <mat-card-subtitle *ngIf="content.description">{{content.description}}</mat-card-subtitle>
       </mat-card-header>
 
-      <mat-card-content [class.selected-video]="selected">
+      <mat-card-content [class.current-content]="selected">
         <div class="video-view">
-          <div class="preview-content video-result video-view"
+          <div class="preview-content video-result preview-is{{content.shouldUseTypedPreview()}}"
             [class.video-overlay]="content?.content_type?.match('video')"
-            style="width:{{previewWidth}}px; height: {{previewHeight}}px;"
+            style="width: {{previewWidth}}px; height: {{previewHeight}}px;"
             (click)="imgClicked(content)"
-            title="Click to play the video (ESC to hide)"
-            >
-            <img class="preview-img" [src]="content?.previewUrl">
+            title="Click to play the video (ESC to hide)">
+            <!-- TODO: no preview video should use a differnt icon (content|video browser)-->
+            <img class="preview-img" [src]="content.previewUrl" />
+            <span class="preview-type" title="No preview">
+              <mat-icon>{{content.shouldUseTypedPreview()}}</mat-icon>
+              {{content.src}}
+            </span>
+            {{content.content_type}}
           </div>
 
           <div class="video-view-screens">
             <screens-cmp 
               [contentId]="content.id"
               [screens]="content.screens"
-              [containerWidth]="screenWidth"
+              [containerWidth]="screenWidth - previewWidth"
               [containerHeight]="2 * previewHeight"
               (clickedItem)="screenEvt($event)"
             ></screens-cmp>

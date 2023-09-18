@@ -48,7 +48,9 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
         );
         this.setupEvtListener();
         this.calculateDimensions();
-        this.loadDirs(); // Do this after the param map load potentially
+        if (_.isEmpty(this.allCnts)) {
+            this.loadContainers(); // Do this after the param map load potentially
+        } 
     }
 
     ngOnDestroy() {
@@ -93,7 +95,7 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
         this.rowIdx = rowIdx;
     }
 
-    public loadDirs() {
+    public loadContainers() {
         this.loading = true;
         this._contentedService.getContainers()
             .pipe(finalize(() => {this.loading = false; }))
@@ -238,6 +240,8 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
         }
         this.idx = idx;
         currDir.rowIdx = rowIdx;
+
+        console.log("LoadView", currDir, rowIdx, triggerSelect);
 
         // This handles the case where we need to fully load a container to reach the row
         if (rowIdx > currDir.count) {

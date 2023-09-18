@@ -20,6 +20,16 @@
           <source [src]="content.fullUrl" [type]="content.content_type">
         </video>
 
+
+        <div *ngIf="content.isText() && content.fullText">
+        <!-- Should make it so it just raw loads text info. -->
+          <vscode-editor-cmp 
+            *ngIf="content.isText()"
+            [editorValue]="content.fullText"
+            [readOnly]="true"
+          ></vscode-editor-cmp>
+        </div>
+
     <a *ngIf="content" class="max-full-url-path" href="{{content?.fullUrl}}">
       {{content.src}}({{content.content_type}})
     </a>

@@ -23,8 +23,10 @@ export class ScreensCmp implements OnInit {
     @Input() containerHeight: number = null;
 
     // TODO: These are not used
+    /*
     @Input() maxRendered: number = 8; // Default setting for how many should be visible at any given time
     @Input() maxPrevItems: number = 2; // When scrolling through a cnt, how many previous items should be visible
+    */
 
     @Output() clickedItem: EventEmitter<any> = new EventEmitter<any>();
     public loading: boolean = false;
@@ -64,6 +66,7 @@ export class ScreensCmp implements OnInit {
         this.clickedItem.emit({screen: screen, screens: this.screens});
     }
 
+    // Should grab the content dimensions
     @HostListener('window:resize', ['$event'])
     public calculateDimensions() {
         // TODO: Should this base the screen sizing on dom container vs the overall window?

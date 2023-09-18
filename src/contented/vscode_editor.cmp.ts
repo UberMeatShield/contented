@@ -164,6 +164,9 @@ export class VSCodeEditorCmp implements OnInit {
     }, 500);
   }
 
+
+  // TODO:  This also needs to handle a window resize event to actually check the content 
+  // and do a redraw.
   fitContent() {
     let el = this.container.nativeElement;
     let width = el.offsetWidth;

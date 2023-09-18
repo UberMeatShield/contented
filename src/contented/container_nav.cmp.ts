@@ -55,7 +55,9 @@ export class ContainerNavCmp implements OnInit, OnDestroy {
     }
 
     public ngOnDestroy() {
-        this.sub.unsubscribe();
+        if (this.sub) {
+            this.sub.unsubscribe();
+        }
     }
 
     fullLoadContainer(cnt: Container) {

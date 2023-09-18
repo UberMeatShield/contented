@@ -14,29 +14,43 @@
   </mat-card>
 
 
+
   <div *ngIf="rendererType === 'container'">
     <container-cmp [container]="c">
     </container-cmp>
+    <mat-card *ngIf="mc" class="primary-card">
+      <mat-card-header>
+        <mat-card-title>{{mc.description}}</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+          <contented-view
+            [forceHeight]="600"
+            [content]="mc"
+            [visible]="true"
+          ></contented-view>
+      </mat-card-content>
+    </mat-card>
   </div>
+
   <div *ngIf="rendererType === 'video'">
-    <video-preview-cmp [maxVisible]="4" [content]="mc" *ngFor="let mc of getVideos()" [inlineView]="true">
-    </video-preview-cmp>
+    <div *ngFor="let content of c.contents">
+      <video-preview-cmp [maxVisible]="4" [content]="content" *ngIf="content.isVideo()" [inlineView]="true">
+      </video-preview-cmp>
+
+      <mat-card *ngIf="content.isText() || content.isImage()" class="primary-card">
+        <mat-card-header>
+          <mat-card-title>{{content.src}}</mat-card-title>
+          <mat-card-subtitle>{{content.description}}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <contented-view [content]="content" [restrictContentId]="content.id" [visible]="true">
+          </contented-view>
+        </mat-card-content>
+      </mat-card>
+    </div>
   </div>
 
-  <mat-card *ngIf="mc" class="primary-card">
-    <mat-card-header>
-      <mat-card-title>{{mc.description}}</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-        <contented-view
-          [forceHeight]="600"
-          [content]="mc"
-          [visible]="true"
-        ></contented-view>
-    </mat-card-content>
-  </mat-card>
-
-  <!-- Assign this as the MC and implement a text type? -->
+  <!--
   <mat-card class="primary-card">
     <mat-card-header>
       <mat-card-title>Work History</mat-card-title>
@@ -51,5 +65,6 @@
       <vscode-editor-cmp [editorValue]="editorValue"></vscode-editor-cmp>
     </mat-card-content>
   </mat-card>
+  -->
 </div>
 
