@@ -44,6 +44,10 @@ func (cm ContentManagerDB) GetParams() *url.Values {
 }
 
 func (cm ContentManagerDB) CanEdit() bool {
+	cfg := utils.GetCfg()
+	if cfg.ReadOnly == true {
+		return false
+	}
 	return true
 }
 
@@ -80,9 +84,13 @@ func (cm ContentManagerDB) GetContent(mcID uuid.UUID) (*models.Content, error) {
 }
 
 // Update of the container should check utils.SubPath
-func (cm ContentManagerDB) UpdateContainer(c *models.Container) error {
+func (cm ContentManagerDB) UpdateContainer(c *models.Container) (*models.Container, error) {
 	tx := cm.GetConnection()
-	return tx.Update(c)
+	err := tx.Update(c)
+	if err != nil {
+		return c, err
+	}
+	return cm.GetContainer(c.ID)
 }
 
 func (cm ContentManagerDB) UpdateContent(content *models.Content) error {
@@ -371,6 +379,43 @@ func (cm ContentManagerDB) CreateContent(content *models.Content) error {
 		return err
 	}
 	return err
+}
+
+// Note we very intentionally are NOT destroying items on disk.
+func (cm ContentManagerDB) DestroyContent(id string) (*models.Content, error) {
+	tx := cm.GetConnection()
+	content := &models.Content{}
+	if err := tx.Find(content, id); err != nil {
+		return nil, errors.New(fmt.Sprintf("Could not find content with id %s", id))
+	}
+	if err := tx.Destroy(content); err != nil {
+		return content, err
+	}
+	return content, nil
+}
+
+func (cm ContentManagerDB) DestroyContainer(id string) (*models.Container, error) {
+	tx := cm.GetConnection()
+	cnt := &models.Container{}
+	if err := tx.Find(cnt, id); err != nil {
+		return nil, errors.New(fmt.Sprintf("Could not find container with id %s", id))
+	}
+	if err := tx.Destroy(cnt); err != nil {
+		return cnt, err
+	}
+	return cnt, nil
+}
+
+func (cm ContentManagerDB) DestroyScreen(id string) (*models.Screen, error) {
+	tx := cm.GetConnection()
+	screen := &models.Screen{}
+	if err := tx.Find(screen, id); err != nil {
+		return nil, errors.New(fmt.Sprintf("Could not find screen with id %s", id))
+	}
+	if err := tx.Destroy(screen); err != nil {
+		return screen, err
+	}
+	return screen, nil
 }
 
 func (cm ContentManagerDB) ListAllTags(page int, perPage int) (*models.Tags, error) {

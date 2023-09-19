@@ -3,10 +3,21 @@ package managers
 import (
 	"contented/models"
 	"contented/test_common"
+	"contented/utils"
 	"fmt"
 
 	"github.com/gobuffalo/pop/v6"
 )
+
+func (as *ActionSuite) Test_ReadOnly_Mode() {
+	cfg := test_common.InitFakeApp(true)
+	man := GetManagerActionSuite(cfg, as)
+	as.Equal(man.CanEdit(), true, "It should be able to edit")
+
+	cfg.ReadOnly = true
+	utils.SetCfg(*cfg)
+	as.Equal(man.CanEdit(), false, "We should not be able to edit now")
+}
 
 // A basic DB search (ilike matching)
 func (as *ActionSuite) Test_DbManagerSearch() {

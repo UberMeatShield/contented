@@ -88,6 +88,7 @@ type DirConfigEntry struct {
 	CoreCount          int    // How many cores are likely available (used in creating multithread workers / previews)
 	StaticResourcePath string // The location where compiled js and css is hosted (container vs dev server)
 	StaticLibraryPath  string // Library includes (monaco just doesn't want to build in)
+	ReadOnly           bool   // Can you edit content on this site
 	Initialized        bool   // Has the configuration actually be initialized properly
 
 	// Config around creating preview images (used only by the task db:preview)
@@ -227,6 +228,7 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
 
 	previewNumberOfScreens, totalScreenErr := strconv.Atoi(envy.Get("TOTAL_SCREENS", strconv.Itoa(DefeaultTotalScreens)))
 	previewFirstScreenOffset, offsetErr := strconv.Atoi(envy.Get("FIRST_SCREEN_OFFSET", strconv.Itoa(DefaultPreviewFirstScreenOffset)))
+	readOnly, rOnlyErr := strconv.ParseBool(envy.Get("READ_ONLY", "false"))
 
 	if err != nil {
 		panic(err)
@@ -256,6 +258,8 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
 		panic(totalScreenErr)
 	} else if (offsetErr) != nil {
 		panic(offsetErr)
+	} else if (rOnlyErr) != nil {
+		panic(rOnlyErr)
 	}
 
 	if !(previewType == "png" || previewType == "gif" || previewType == "screens") {
@@ -276,6 +280,7 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
 	cfg.PreviewNumberOfScreens = previewNumberOfScreens
 	cfg.PreviewFirstScreenOffset = previewFirstScreenOffset
 
+	cfg.ReadOnly = readOnly
 	cfg.IncludeOperator = envy.Get("INCLUDE_OPERATOR", "AND")
 	cfg.ExcludeOperator = envy.Get("EXCLUDE_OPERATOR", "AND")
 

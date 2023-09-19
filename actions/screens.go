@@ -86,81 +86,61 @@ func (v ScreensResource) Show(c buffalo.Context) error {
 // Create adds a Screen to the DB. This function is mapped to the
 // path POST /screens
 func (v ScreensResource) Create(c buffalo.Context) error {
-	_, tx, err := managers.ManagerCanCUD(&c)
+	_, _, err := managers.ManagerCanCUD(&c)
 	if err != nil {
 		return err
 	}
-	// Allocate an empty Screen
-	previewScreen := &models.Screen{}
-
 	// Bind previewScreen to the html form/JSON elements
-	if err := c.Bind(previewScreen); err != nil {
+	screen := &models.Screen{}
+	if err := c.Bind(screen); err != nil {
 		return err
 	}
-
-	// Validate the data from the html form
-	verrs, err := tx.ValidateAndCreate(previewScreen)
-	if err != nil {
-		return err
+	man := managers.GetManager(&c)
+	cErr := man.CreateScreen(screen)
+	if cErr != nil {
+		return c.Render(http.StatusUnprocessableEntity, r.JSON(cErr))
 	}
-
-	if verrs.HasAny() {
-		return c.Render(http.StatusUnprocessableEntity, r.JSON(verrs))
-	}
-	return c.Render(http.StatusCreated, r.JSON(previewScreen))
+	return c.Render(http.StatusCreated, r.JSON(screen))
 }
 
 // Update changes a Screen in the DB. This function is mapped to
 // the path PUT /screens/{screen_id}
 func (v ScreensResource) Update(c buffalo.Context) error {
 	// Get the DB connection from the context
-	_, tx, err := managers.ManagerCanCUD(&c)
+	_, _, err := managers.ManagerCanCUD(&c)
 	if err != nil {
 		return err
 	}
 
-	// Allocate an empty Screen
-	previewScreen := &models.Screen{}
-
-	if err := tx.Find(previewScreen, c.Param("screen_id")); err != nil {
+	man := managers.GetManager(&c)
+	id, idErr := uuid.FromString(c.Param("screen_id"))
+	if idErr != nil {
+		return c.Error(http.StatusBadRequest, idErr)
+	}
+	screen, notFoundErr := man.GetScreen(id)
+	if notFoundErr != nil {
 		return c.Error(http.StatusNotFound, err)
 	}
-
-	// Bind Screen to the html form elements
-	if err := c.Bind(previewScreen); err != nil {
-		return err
+	if err := c.Bind(screen); err != nil {
+		return c.Render(http.StatusUnprocessableEntity, r.JSON(err))
 	}
-
-	verrs, err := tx.ValidateAndUpdate(previewScreen)
-	if err != nil {
-		return err
-	}
-
-	if verrs.HasAny() {
-		return c.Render(http.StatusUnprocessableEntity, r.JSON(verrs))
-	}
-	return c.Render(http.StatusOK, r.JSON(previewScreen))
+	checkScreen, _ := man.GetScreen(id)
+	return c.Render(http.StatusOK, r.JSON(checkScreen))
 }
 
 // Destroy deletes a Screen from the DB. This function is mapped
 // to the path DELETE /screens/{screen_id}
 func (v ScreensResource) Destroy(c buffalo.Context) error {
 	// Get the DB connection from the context
-	_, tx, err := managers.ManagerCanCUD(&c)
+	_, _, err := managers.ManagerCanCUD(&c)
 	if err != nil {
 		return err
 	}
 
-	// Allocate an empty Screen
-	previewScreen := &models.Screen{}
-
-	// To find the Screen the parameter screen_id is used.
-	if err := tx.Find(previewScreen, c.Param("screen_id")); err != nil {
-		return c.Error(http.StatusNotFound, err)
+	man := managers.GetManager(&c)
+	screen, dErr := man.DestroyScreen(c.Param("screen_id"))
+	if dErr != nil {
+		return c.Render(http.StatusBadRequest, r.JSON(dErr))
 	}
-
-	if err := tx.Destroy(previewScreen); err != nil {
-		return err
-	}
-	return c.Render(http.StatusOK, r.JSON(previewScreen))
+	return c.Render(http.StatusOK, r.JSON(screen))
 }

@@ -268,13 +268,13 @@ func (cm ContentManagerMemory) GetContent(mcID uuid.UUID) (*models.Content, erro
 }
 
 // If you already updated the container in memory you are done
-func (cm ContentManagerMemory) UpdateContainer(c *models.Container) error {
+func (cm ContentManagerMemory) UpdateContainer(c *models.Container) (*models.Container, error) {
 	// TODO: Validate that this updates the actual reference in mem storage
 	if _, ok := cm.ValidContainers[c.ID]; ok {
 		cm.ValidContainers[c.ID] = *c
-		return nil
+		return c, nil
 	}
-	return errors.New("Container was not found to update")
+	return nil, errors.New("Container was not found to update")
 }
 
 // No updates should be allowed for memory management.
@@ -544,6 +544,18 @@ func (cm ContentManagerMemory) CreateContent(mc *models.Content) error {
 		return nil
 	}
 	return errors.New("ContentManagerMemory no contentinstance was passed in to CreateContent")
+}
+
+func (cm ContentManagerMemory) DestroyContent(id string) (*models.Content, error) {
+	return nil, errors.New("Not Implemented")
+}
+
+func (cm ContentManagerMemory) DestroyContainer(id string) (*models.Container, error) {
+	return nil, errors.New("Not Implemented")
+}
+
+func (cm ContentManagerMemory) DestroyScreen(id string) (*models.Screen, error) {
+	return nil, errors.New("Not Implemented")
 }
 
 // Note that we need to lock this down so that it cannot just access arbitrary files

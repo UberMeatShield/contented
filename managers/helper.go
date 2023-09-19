@@ -78,14 +78,17 @@ func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
 
 // Init a manager and pass it in or just do this via config value instead of a pass in
 func CreateAllPreviews(cm ContentManager) error {
-
     cnts, c_err := cm.ListContainers(0, 9001) // Might need to make this smarter :(
     if c_err != nil {
+        log.Printf("Failed to list all containers %s", c_err)
         return c_err
     }
     if len(*cnts) == 0 {
-        return errors.New("No Containers were found in the database")
+        msg := "No Containers were found in the manager"
+        log.Printf(msg)
+        return errors.New(msg)
     }
+    log.Printf("Found a number of containers %d", len(*cnts))
 
     err_msg := []string{}
     for _, cnt := range *cnts {
