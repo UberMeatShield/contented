@@ -42,8 +42,9 @@ type ContentManager interface {
 	ListContainers(page int, per_page int) (*models.Containers, error)
 	ListContainersFiltered(page int, per_page int, includeHidden bool) (*models.Containers, error)
 	ListContainersContext() (*models.Containers, error)
-	UpdateContainer(c *models.Container) error
+	UpdateContainer(c *models.Container) (*models.Container, error)
 	CreateContainer(c *models.Container) error
+	DestroyContainer(id string) (*models.Container, error)
 
 	// Content listing (why did I name it Content vs Media?)
 	GetContent(content_id uuid.UUID) (*models.Content, error)
@@ -54,6 +55,7 @@ type ContentManager interface {
 	SearchContent(search string, page int, per_page int, cId string, contentType string, includeHidden bool) (*models.Contents, int, error)
 	SearchContainers(search string, page int, per_page int, includeHidden bool) (*models.Containers, error)
 	UpdateContent(content *models.Content) error
+	DestroyContent(id string) (*models.Content, error)
 	CreateContent(mc *models.Content) error
 	GetPreviewForMC(mc *models.Content) (string, error)
 
@@ -65,6 +67,7 @@ type ContentManager interface {
 	GetScreen(psID uuid.UUID) (*models.Screen, error)
 	CreateScreen(s *models.Screen) error
 	UpdateScreen(s *models.Screen) error
+	DestroyScreen(id string) (*models.Screen, error)
 
 	// Tags listing
 	ListAllTags(page int, perPage int) (*models.Tags, error)

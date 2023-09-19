@@ -62,7 +62,7 @@ func (v ContainersResource) Show(c buffalo.Context) error {
 // path POST /containers
 func (v ContainersResource) Create(c buffalo.Context) error {
 	// Allocate an empty Container
-	_, tx, err := managers.ManagerCanCUD(&c)
+	_, _, err := managers.ManagerCanCUD(&c)
 	if err != nil {
 		return err
 	}
@@ -72,15 +72,10 @@ func (v ContainersResource) Create(c buffalo.Context) error {
 	if err := c.Bind(container); err != nil {
 		return err
 	}
-
-	verrs, err := tx.ValidateAndCreate(container)
-	if err != nil {
-		return err
-	}
-
-	// Is there a cleaner buffalo way of doing this as always respond?
-	if verrs.HasAny() {
-		return c.Render(http.StatusUnprocessableEntity, r.JSON(verrs))
+	man := managers.GetManager(&c)
+	c_err := man.CreateContainer(container)
+	if c_err != nil {
+		return c_err
 	}
 	return c.Render(http.StatusCreated, r.JSON(container))
 }
@@ -89,49 +84,49 @@ func (v ContainersResource) Create(c buffalo.Context) error {
 // the path PUT /containers/{container_id}
 func (v ContainersResource) Update(c buffalo.Context) error {
 	// Get the DB connection from the context
-	_, tx, err := managers.ManagerCanCUD(&c)
+	_, _, err := managers.ManagerCanCUD(&c)
 	if err != nil {
 		return err
 	}
 
 	// Allocate an empty Container
-	container := &models.Container{}
-	if err := tx.Find(container, c.Param("container_id")); err != nil {
-		return c.Error(http.StatusNotFound, err)
+	man := managers.GetManager(&c)
+	id, idErr := uuid.FromString(c.Param("container_id"))
+	if idErr != nil {
+		return idErr
 	}
-
-	// Bind Container to the html form elements
-	if err := c.Bind(container); err != nil {
+	// Bind Container to the html form elements (could toss the context into the manager)
+	cnt, notFoundErr := man.GetContainer(id)
+	if notFoundErr != nil {
+		return c.Error(http.StatusNotFound, notFoundErr)
+	}
+	if err := c.Bind(cnt); err != nil {
 		return err
 	}
-	verrs, err := tx.ValidateAndUpdate(container)
-	if err != nil {
-		return err
+	upCnt, upErr := man.UpdateContainer(cnt)
+	if upErr != nil {
+		return upErr
 	}
-
-	if verrs.HasAny() {
-		return c.Render(http.StatusUnprocessableEntity, r.JSON(verrs))
-	}
-	return c.Render(http.StatusOK, r.JSON(container))
+	return c.Render(http.StatusOK, r.JSON(upCnt))
 }
 
 // Destroy deletes a Container from the DB. This function is mapped
 // to the path DELETE /containers/{container_id}
 func (v ContainersResource) Destroy(c buffalo.Context) error {
 	// Get the DB connection from the context
-	_, tx, err := managers.ManagerCanCUD(&c)
+	_, _, err := managers.ManagerCanCUD(&c)
 	if err != nil {
 		return err
 	}
-
-	// Allocate an empty Container
-	// To find the Container the parameter container_id is used.
-	container := &models.Container{}
-	if err := tx.Find(container, c.Param("container_id")); err != nil {
-		return c.Error(http.StatusNotFound, err)
+	man := managers.GetManager(&c)
+	id := c.Param("container_id")
+	cnt, dErr := man.DestroyContainer(id)
+	if dErr != nil {
+		if cnt == nil {
+			return c.Error(http.StatusNotFound, dErr)
+		} else {
+			return c.Error(http.StatusUnprocessableEntity, dErr)
+		}
 	}
-	if err := tx.Destroy(container); err != nil {
-		return err
-	}
-	return c.Render(http.StatusOK, r.JSON(container))
+	return c.Render(http.StatusOK, r.JSON(cnt))
 }

@@ -138,21 +138,23 @@ func (v ContentsResource) Update(c buffalo.Context) error {
 // Destroy deletes a Content from the DB. This function is mapped
 // to the path DELETE /contents/{content_id}
 func (v ContentsResource) Destroy(c buffalo.Context) error {
-	_, tx, err := managers.ManagerCanCUD(&c)
+	_, _, err := managers.ManagerCanCUD(&c)
 	if err != nil {
 		return err
 	}
-
 	// TODO: Manager should ABSOLUTELY be the thing doing updates etc.
 	// Allocate an empty Content
 	contentContainer := &models.Content{}
 
-	// To find the Content the parameter content_id is used.
-	if err := tx.Find(contentContainer, c.Param("content_id")); err != nil {
-		return c.Error(http.StatusNotFound, err)
-	}
-	if err := tx.Destroy(contentContainer); err != nil {
-		return err
+	id := c.Param("content_id")
+	man := managers.GetManager(&c)
+	content, err := man.DestroyContent(id)
+	if err != nil {
+		if content == nil {
+			return c.Error(http.StatusNotFound, err)
+		} else {
+			return c.Error(http.StatusBadRequest, err)
+		}
 	}
 	return c.Render(http.StatusOK, r.JSON(contentContainer))
 }
