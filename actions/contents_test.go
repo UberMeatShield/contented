@@ -120,12 +120,12 @@ func (as *ActionSuite) Test_MemoryAPIBasics() {
 
 	validate := models.Contents{}
 	json.NewDecoder(res.Body).Decode(&validate)
-	as.Equal(test_common.TOTAL_MEDIA, len(validate), "It should have a known set of mock data")
+	as.Equal(len(validate), test_common.TOTAL_MEDIA, "It should have a known set of mock data")
 
 	validate_search := models.Contents{}
 	res_search := as.JSON("/search?text=Large").Get()
 	json.NewDecoder(res_search.Body).Decode(&validate_search)
-	as.Equal(test_common.TOTAL_MEDIA, len(validate), "In memory should have these")
+	as.Equal(len(validate_search), test_common.TOTAL_MEDIA, "In memory should have these")
 }
 
 func (as *ActionSuite) Test_ContentsResource_List() {
