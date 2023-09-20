@@ -78,6 +78,8 @@ func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
 	return nil
 }
 
+// For now this is fine but this could probably be better as something that
+// just takes an array of strings and creates the tags that way in the manager.
 func CreateTagsFromFile(cm ContentManager) (*models.Tags, error) {
 	cfg := utils.GetCfg()
 	tagFile := cfg.TagFile
@@ -101,7 +103,8 @@ func CreateTagsFromFile(cm ContentManager) (*models.Tags, error) {
 			if tagLine != "" {
 				name := strings.TrimSpace(tagLine)
 
-				// TODO: Need a get tag
+				// TODO: Need to be able to add a comment line to the tags file
+				// TODO: Need a get tag from the Manager
 				// cm.GetTag()
 				// Probably needs an up-sert
 				t := models.Tag{ID: name}
