@@ -3,9 +3,9 @@
     <mat-card id="view_content_{{content.id}}" class="video-view-card primary-card">
       <mat-card-header>
         <mat-card-title class="video-details">
-          <a mat-raised-button href="/view/{{content.id}}" title="Open in new tab" target="window">
-            New Fullscreen Tab
+          <a mat-raised-button href="/view/{{content.id}}" title="View fullscreen in a new tab" target="window">
             <mat-icon>tab</mat-icon>
+            New Tab
           </a>
           <a mat-raised-button href="/download/{{content.id}}" title="Downlaod">
             {{content.size | byteFormatter: 0}}
