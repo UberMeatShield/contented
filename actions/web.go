@@ -59,6 +59,7 @@ func SearchHandler(c buffalo.Context) error {
 		return c.Error(400, err)
 	}
 
+	// log.Printf("Search content returned %s", mcs)
 	// TODO: Hmmm, maybe it should always load the screens in a sane fashion?
 	sr := SearchResult{
 		Content: mcs,

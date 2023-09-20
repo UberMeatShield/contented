@@ -114,18 +114,22 @@ func (as *ActionSuite) Test_ManagerDB_Preview() {
 }
 
 func (as *ActionSuite) Test_MemoryAPIBasics() {
+	test_common.ResetConfig()
 	test_common.InitFakeApp(false)
 	res := as.JSON("/content").Get()
 	as.Equal(http.StatusOK, res.Code)
 
 	validate := models.Contents{}
 	json.NewDecoder(res.Body).Decode(&validate)
-	as.Equal(len(validate), test_common.TOTAL_MEDIA, "It should have a known set of mock data")
+	as.Equal(test_common.TOTAL_MEDIA, len(validate), "It should have a known set of mock data")
 
-	validate_search := models.Contents{}
-	res_search := as.JSON("/search?text=Large").Get()
+	// I feel like this should be failing?
+	res_search := as.JSON("/search/?text=Large").Get()
+	as.Equal(res_search.Code, http.StatusOK, "It should search")
+
+	validate_search := SearchResult{}
 	json.NewDecoder(res_search.Body).Decode(&validate_search)
-	as.Equal(len(validate_search), test_common.TOTAL_MEDIA, "In memory should have these")
+	as.Equal(5, len(*validate_search.Content), fmt.Sprintf("In memory should have these %s", res_search.Body.String()))
 }
 
 func (as *ActionSuite) Test_ContentsResource_List() {
