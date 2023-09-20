@@ -39,6 +39,10 @@ body {
     }
 }
 
+.hidden {
+    display: none !important;
+}
+
 .video-view {
     width: 100%;
     display: flex;
@@ -57,7 +61,7 @@ body {
 }
 
 .contented-view {
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
   display: flex;
   flex-wrap: wrap;
 }
@@ -237,6 +241,10 @@ body {
     }
 }
 
+.contented-view-controls {
+    display: block;
+    margin-bottom: 0.5rem;
+}
 // Might need to change how it works in layout
 .content-screens {
    display: flex; 

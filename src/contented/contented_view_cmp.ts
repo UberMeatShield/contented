@@ -71,6 +71,10 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
         }
     }
 
+    openWindow(content: Content) {
+        window.open(content?.fullUrl);
+    }
+
     public ngOnDestroy() {
         this.sub && this.sub.unsubscribe();
     }
