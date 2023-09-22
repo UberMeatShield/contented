@@ -170,6 +170,9 @@ func (as *ActionSuite) Test_CreateBaseTags() {
 	as.NotNil(tags, "There should be tags")
 	as.Equal(len(*tagsCheck), 4, "There should be 4 tags now")
 
+	tagsAgainn, retryError := CreateTagsFromFile(man)
+	as.NoError(retryError, "We should not have any DB error")
+	as.Equal(len(*tagsAgain), 4, "There should still be 4 tags")
 	// Add test to ensure we do not try and create the same tag over and over
 	// TODO: Need to do a test that actually checks memory
 }

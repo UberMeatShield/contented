@@ -5,6 +5,7 @@
 # Make previews
 # ENV variable for the directory to use
 DIR ?= $(shell echo `pwd`/mocks/content/)
+TAG_FILE ?= $(shell echo `pwd`/mocks/content/dir2/tags.txt)
 
 # You are going to need to have buffalo installed https://gobuffalo.io/documentation/getting_started/installation/
 .PHONY: install
@@ -12,6 +13,19 @@ install:
 	go get contented
 	buffalo plugins install
 	yarn install
+
+# Typically you will want to have created the db and ensured it is configured (make db-create)
+# And have the docker or postgres instance configured.  This take will reset the DB, import
+# your tags and then populate the db, finally it creates previews.  Doing this in order
+# will get the actual DB done.  When not in the DB just running make preview is typically enough.
+# Finally it starts the dev server so you can view content at http://localhost:3000
+.PHONY: setup
+setup:
+	make db-reset
+	make tags
+	make db-seed
+	make preview
+	make dev
 
 # Need to fix the docker build, it is pretty old.
 .PHONY: build
@@ -78,4 +92,9 @@ preview:
 .PHONY: encode
 encode:
 	export DIR=$(DIR) && buffalo task db:encode
+
+# Read from a tag file and import the tags to the DB
+.PHONY: tags
+tags:
+	export TAG_FILE=$(TAG_FILE) && buffalo task db:tags
 

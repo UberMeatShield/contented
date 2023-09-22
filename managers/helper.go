@@ -88,7 +88,6 @@ func CreateTagsFromFile(cm ContentManager) (*models.Tags, error) {
 		return &tags, nil
 	}
 	log.Printf("Processing Tags Attempting to read tags from %s", tagFile)
-
 	if _, err := os.Stat(tagFile); !os.IsNotExist(err) {
 		f, fErr := os.OpenFile(tagFile, os.O_RDONLY, os.ModePerm)
 		defer f.Close()
@@ -97,23 +96,33 @@ func CreateTagsFromFile(cm ContentManager) (*models.Tags, error) {
 			return nil, fErr
 		}
 
+		// I could also make this smarter and do a single IN query and then a single insert
 		sc := bufio.NewScanner(f)
 		for sc.Scan() {
 			tagLine := sc.Text()
 			if tagLine != "" {
 				name := strings.TrimSpace(tagLine)
 
-				// TODO: Need to be able to add a comment line to the tags file
-				// TODO: Need a get tag from the Manager
-				// cm.GetTag()
-				// Probably needs an up-sert
-				t := models.Tag{ID: name}
-				cErr := cm.CreateTag(&t)
-				if cErr != nil {
-					log.Printf("Failed to create a tag %s", tagLine)
-					return &tags, cErr
+				// TODO: Need to be able to add a comment line to the tags file?
+				// We should be able to comment on it I think.
+				if name != "" {
+					t, err := cm.GetTag(name)
+					if err != nil {
+						log.Printf("Tag was not found trying to load tag %s", name)
+					}
+					// If we do not have the tag it should create it
+					if t == nil {
+						t = &models.Tag{ID: name}
+						cErr := cm.CreateTag(t)
+						if cErr != nil {
+							log.Printf("Failed to create a tag bailing out %s err %s", tagLine, cErr)
+							return &tags, cErr
+						}
+					}
+					if t != nil {
+						tags = append(tags, *t)
+					}
 				}
-				tags = append(tags, t)
 			}
 		}
 	}

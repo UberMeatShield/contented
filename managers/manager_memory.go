@@ -476,6 +476,10 @@ func (cm ContentManagerMemory) ListAllTags(page int, perPage int) (*models.Tags,
 	return nil, errors.New("Not implemented")
 }
 
+func (cm ContentManagerMemory) GetTag(id string) (*models.Tag, error) {
+	return nil, nil
+}
+
 func (cm ContentManagerMemory) ListAllTagsContext() (*models.Tags, error) {
 	_, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
 	return cm.ListAllTags(page, limit)
