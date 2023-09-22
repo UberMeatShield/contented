@@ -146,7 +146,7 @@ func (as *ActionSuite) Test_ManagerTagsDBCRUD() {
 	tags, err := man.ListAllTags(0, 3)
 	as.NoError(err)
 	as.Equal(len(*tags), 1, "We should have one tag")
-	man.DeleteTag(&t)
+	man.DestroyTag(t.ID)
 	tags_gone, _ := man.ListAllTags(0, 3)
 	as.Equal(len(*tags_gone), 0, "No tags should be in the DB")
 }

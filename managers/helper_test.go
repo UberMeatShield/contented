@@ -70,7 +70,7 @@ func (as *ActionSuite) Test_CfgIncExcContent() {
 	dir, _ := envy.MustGet("DIR")
 	cfg := test_common.ResetConfig()
 	cfg.Dir = dir
-	nope := utils.CreateContentMatcher("DS_Store", "image", "OR")
+	nope := utils.CreateContentMatcher("DS_Store", "image|text", "OR")
 
 	as.True(nope(".DS_Store", "image/png"))
 	cfg.ExcContent = nope
@@ -163,16 +163,16 @@ func (as *ActionSuite) Test_CreateBaseTags() {
 	tags, createTagsErr := CreateTagsFromFile(man)
 	as.NoError(createTagsErr)
 	as.NotNil(tags)
-	as.Equal(len(*tags), 4, "It should keep track of what was created")
+	as.Equal(len(*tags), test_common.TOTAL_TAGS, "It should keep track of what was created")
 
 	tagsCheck, lErr := man.ListAllTags(0, 9000)
 	as.NoError(lErr, "It should not error out listing tags")
 	as.NotNil(tags, "There should be tags")
-	as.Equal(len(*tagsCheck), 4, "There should be 4 tags now")
+	as.Equal(len(*tagsCheck), test_common.TOTAL_TAGS, "There should be 4 tags now")
 
-	tagsAgainn, retryError := CreateTagsFromFile(man)
+	tagsAgain, retryError := CreateTagsFromFile(man)
 	as.NoError(retryError, "We should not have any DB error")
-	as.Equal(len(*tagsAgain), 4, "There should still be 4 tags")
+	as.Equal(len(*tagsAgain), test_common.TOTAL_TAGS, "There should still be 4 tags")
 	// Add test to ensure we do not try and create the same tag over and over
 	// TODO: Need to do a test that actually checks memory
 }

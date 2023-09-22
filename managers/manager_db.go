@@ -453,7 +453,7 @@ func (cm ContentManagerDB) DestroyTag(id string) (*models.Tag, error) {
 }
 
 func (cm ContentManagerDB) GetTag(tagID string) (*models.Tag, error) {
-	log.Printf("DB Get a tag %s", tagID)
+	// log.Printf("DB Get a tag %s", tagID)
 	tx := cm.GetConnection()
 	t := &models.Tag{}
 	if err := tx.Find(t, tagID); err != nil {

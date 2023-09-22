@@ -92,10 +92,12 @@ func CreateTagsFromFile(cm ContentManager) (*models.Tags, error) {
 	}
 
 	for _, tCheck := range *tags {
-		tag, err := cm.GetTag(tCheck.ID)
-		if err != nil {
-			log.Printf("Tag was not found trying to load tag %s", tCheck.ID)
-		}
+		tag, _ := cm.GetTag(tCheck.ID)
+		/*
+			if err != nil {
+				log.Printf("Tag was not found trying to load tag %s", tCheck.ID)
+			}
+		*/
 		// If we do not have the tag it should create it
 		if tag == nil {
 			tag = &tCheck

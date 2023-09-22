@@ -22,6 +22,7 @@ import (
 
 const TOTAL_CONTAINERS = 5
 const TOTAL_MEDIA = 32
+const TOTAL_TAGS = 46
 const VIDEO_FILENAME = "donut_[special( gunk.mp4"
 
 // Helper for a common block of video test code (duplicated in the utils test)
