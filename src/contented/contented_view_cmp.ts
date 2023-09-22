@@ -31,13 +31,14 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
 
     public ngOnInit() {
         this.sub = GlobalNavEvents.navEvts.subscribe(evt => {
+
+            // Restrict content ID might need to be a bit smarter
+            let content = evt.content || this.content;
             switch(evt.action) {
                 case NavTypes.VIEW_FULLSCREEN:
-                    let content = evt.content || this.content;
                     if (this.restrictContentId && content && content.id !== this.restrictContentId) {
                         return;
                     }
-                    console.log("Viewscreen show content", this.content);
                     this.visible = true;
                     this.content = content;
                     if (this.content) {
@@ -46,7 +47,9 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
                     }
                     break;
                 case NavTypes.HIDE_FULLSCREEN:
-                    console.log("Viewscreen hide content");
+                    if (this.restrictContentId && content && content.id !== this.restrictContentId) {
+                        return;
+                    }
                     if (this.visible && this.content) {
                         GlobalNavEvents.scrollContentView(this.content);          
                     }

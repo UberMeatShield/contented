@@ -70,6 +70,7 @@ type ContentManager interface {
 	DestroyScreen(id string) (*models.Screen, error)
 
 	// Tags listing
+	GetTag(id string) (*models.Tag, error)
 	ListAllTags(page int, perPage int) (*models.Tags, error)
 	ListAllTagsContext() (*models.Tags, error)
 	CreateTag(tag *models.Tag) error

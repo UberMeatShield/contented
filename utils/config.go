@@ -89,6 +89,7 @@ type DirConfigEntry struct {
 	StaticResourcePath string // The location where compiled js and css is hosted (container vs dev server)
 	StaticLibraryPath  string // Library includes (monaco just doesn't want to build in)
 	ReadOnly           bool   // Can you edit content on this site
+	TagFile            string // A file to use in populating tags
 	Initialized        bool   // Has the configuration actually be initialized properly
 
 	// Config around creating preview images (used only by the task db:preview)
@@ -229,6 +230,7 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
 	previewNumberOfScreens, totalScreenErr := strconv.Atoi(envy.Get("TOTAL_SCREENS", strconv.Itoa(DefeaultTotalScreens)))
 	previewFirstScreenOffset, offsetErr := strconv.Atoi(envy.Get("FIRST_SCREEN_OFFSET", strconv.Itoa(DefaultPreviewFirstScreenOffset)))
 	readOnly, rOnlyErr := strconv.ParseBool(envy.Get("READ_ONLY", "false"))
+	tagFile := envy.Get("TAG_FILE", "")
 
 	if err != nil {
 		panic(err)
@@ -270,6 +272,7 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
 	cfg.UseDatabase = useDatabase
 	cfg.StaticResourcePath = staticDir
 	cfg.StaticLibraryPath = libraryDir
+	cfg.TagFile = tagFile
 	cfg.Limit = limitCount
 	cfg.CoreCount = coreCount
 	cfg.PreviewCount = previewCount

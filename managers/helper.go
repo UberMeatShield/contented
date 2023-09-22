@@ -9,245 +9,298 @@ package managers
  */
 
 import (
-    "fmt"
-    "log"
-    "strings"
-    "contented/models"
-    "contented/utils"
-    "github.com/gobuffalo/nulls"
-    "github.com/gofrs/uuid"
-    "github.com/pkg/errors"
+	"bufio"
+	"contented/models"
+	"contented/utils"
+	"fmt"
+	"log"
+	"os"
+	"strings"
+
+	"github.com/gobuffalo/nulls"
+	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
 )
 
 // Process all the directories and get a valid setup into the DB
 // Probably should return a count of everything
 func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
 
-    contentTree, err := utils.CreateStructure(cfg.Dir, cfg, &utils.ContentTree{}, 0)
-    content := *contentTree
-    if len(content) == 0 {
-        return errors.New("No subdirectories found under path: " + cfg.Dir)
-    }
-    log.Printf("Found %d sub-directories.\n", len(content))
+	contentTree, err := utils.CreateStructure(cfg.Dir, cfg, &utils.ContentTree{}, 0)
+	content := *contentTree
+	if len(content) == 0 {
+		return errors.New("No subdirectories found under path: " + cfg.Dir)
+	}
+	log.Printf("Found %d sub-directories.\n", len(content))
 
-    // TODO: Optional?  Some sort of crazy merge for later?
-    db_err := models.DB.TruncateAll()
-    if db_err != nil {
-        return errors.WithStack(err)
-    }
+	// TODO: Optional?  Some sort of crazy merge for later?
+	db_err := models.DB.TruncateAll()
+	if db_err != nil {
+		return errors.WithStack(err)
+	}
 
-    // TODO: Need to do this in a single transaction vs partial
-    for idx, ct := range content {
-        if cfg.ExcludeEmptyContainers && len(ct.Content) == 0 {
-            log.Printf("Excluding %s/%s as it had no content found\n", ct.Cnt.Path, ct.Cnt.Name)
-            continue // SKIP empty container directories
-        }
+	// TODO: Need to do this in a single transaction vs partial
+	for idx, ct := range content {
+		if cfg.ExcludeEmptyContainers && len(ct.Content) == 0 {
+			log.Printf("Excluding %s/%s as it had no content found\n", ct.Cnt.Path, ct.Cnt.Name)
+			continue // SKIP empty container directories
+		}
 
-        // Prepare to at the container to the DB
-        c := ct.Cnt
-        c.Idx = idx
-        content := ct.Content
-        log.Printf("Adding Content to %s with total content %d \n", c.Name, len(content))
+		// Prepare to at the container to the DB
+		c := ct.Cnt
+		c.Idx = idx
+		content := ct.Content
+		log.Printf("Adding Content to %s with total content %d \n", c.Name, len(content))
 
-        // Use the database version of uuid generation (minimize the miniscule conflict)
-        unset_uuid, _ := uuid.FromString("00000000-0000-0000-0000-000000000000")
-        c.ID = unset_uuid
+		// Use the database version of uuid generation (minimize the miniscule conflict)
+		unset_uuid, _ := uuid.FromString("00000000-0000-0000-0000-000000000000")
+		c.ID = unset_uuid
 
-        // Assign a default preview (maybe move this into create Structure?)
-        if len(ct.Content) > 0 {
-            c.PreviewUrl = "/preview/" + ct.Content[0].ID.String()
-        }
+		// Assign a default preview (maybe move this into create Structure?)
+		if len(ct.Content) > 0 {
+			c.PreviewUrl = "/preview/" + ct.Content[0].ID.String()
+		}
 
-        // TODO: Port to using the manager somehow (note this is called from a grift)
-        models.DB.Create(&c)
-        log.Printf("Created %s with id %s\n", c.Name, c.ID)
+		// TODO: Port to using the manager somehow (note this is called from a grift)
+		models.DB.Create(&c)
+		log.Printf("Created %s with id %s\n", c.Name, c.ID)
 
-        // There MUST be a way to do this as a single commit
-        for _, mc := range content {
-            mc.ContainerID = nulls.NewUUID(c.ID)
-            c_err := models.DB.Create(&mc)
+		// There MUST be a way to do this as a single commit
+		for _, mc := range content {
+			mc.ContainerID = nulls.NewUUID(c.ID)
+			c_err := models.DB.Create(&mc)
+			// This is pretty damn fatal so we want it to die if the DB bails.
+			if c_err != nil {
+				log.Fatal(c_err)
+			}
+		}
+	}
+	return nil
+}
 
-            // This is pretty damn fatal so we want it to die if the DB bails.
-            if c_err != nil {
-                log.Fatal(c_err)
-            }
-        }
-    }
-    return nil
+// For now this is fine but this could probably be better as something that
+// just takes an array of strings and creates the tags that way in the manager.
+func CreateTagsFromFile(cm ContentManager) (*models.Tags, error) {
+	cfg := utils.GetCfg()
+	tagFile := cfg.TagFile
+	tags := models.Tags{}
+	if tagFile == "" {
+		return &tags, nil
+	}
+	log.Printf("Processing Tags Attempting to read tags from %s", tagFile)
+	if _, err := os.Stat(tagFile); !os.IsNotExist(err) {
+		f, fErr := os.OpenFile(tagFile, os.O_RDONLY, os.ModePerm)
+		defer f.Close()
+		if fErr != nil {
+			log.Printf("Processing Tags Error reading file %s", fErr)
+			return nil, fErr
+		}
+
+		// I could also make this smarter and do a single IN query and then a single insert
+		sc := bufio.NewScanner(f)
+		for sc.Scan() {
+			tagLine := sc.Text()
+			if tagLine != "" {
+				name := strings.TrimSpace(tagLine)
+
+				// TODO: Need to be able to add a comment line to the tags file?
+				// We should be able to comment on it I think.
+				if name != "" {
+					t, err := cm.GetTag(name)
+					if err != nil {
+						log.Printf("Tag was not found trying to load tag %s", name)
+					}
+					// If we do not have the tag it should create it
+					if t == nil {
+						t = &models.Tag{ID: name}
+						cErr := cm.CreateTag(t)
+						if cErr != nil {
+							log.Printf("Failed to create a tag bailing out %s err %s", tagLine, cErr)
+							return &tags, cErr
+						}
+					}
+					if t != nil {
+						tags = append(tags, *t)
+					}
+				}
+			}
+		}
+	}
+	return &tags, nil
 }
 
 // Init a manager and pass it in or just do this via config value instead of a pass in
 func CreateAllPreviews(cm ContentManager) error {
-    cnts, c_err := cm.ListContainers(0, 9001) // Might need to make this smarter :(
-    if c_err != nil {
-        log.Printf("Failed to list all containers %s", c_err)
-        return c_err
-    }
-    if len(*cnts) == 0 {
-        msg := "No Containers were found in the manager"
-        log.Printf(msg)
-        return errors.New(msg)
-    }
-    log.Printf("Found a number of containers %d", len(*cnts))
+	cnts, c_err := cm.ListContainers(0, 9001) // Might need to make this smarter :(
+	if c_err != nil {
+		log.Printf("Failed to list all containers %s", c_err)
+		return c_err
+	}
+	if len(*cnts) == 0 {
+		msg := "No Containers were found in the manager"
+		log.Printf(msg)
+		return errors.New(msg)
+	}
+	log.Printf("Found a number of containers %d", len(*cnts))
 
-    err_msg := []string{}
-    for _, cnt := range *cnts {
-        err := CreateContainerPreviews(&cnt, cm)
-        if err != nil {
-            msg := fmt.Sprintf("Error creating previews in cnt %s - %s err: %s\n", cnt.ID.String(), cnt.Name, err)
-            err_msg = append(err_msg, msg)
-        }
-    }
-    // TODO: Cut down how much spam is getting kicked out by this summary
-    if len(err_msg) > 0 {
-        return errors.New(strings.Join(err_msg, "\n"))
-    }
-    return nil
+	err_msg := []string{}
+	for _, cnt := range *cnts {
+		err := CreateContainerPreviews(&cnt, cm)
+		if err != nil {
+			msg := fmt.Sprintf("Error creating previews in cnt %s - %s err: %s\n", cnt.ID.String(), cnt.Name, err)
+			err_msg = append(err_msg, msg)
+		}
+	}
+	// TODO: Cut down how much spam is getting kicked out by this summary
+	if len(err_msg) > 0 {
+		return errors.New(strings.Join(err_msg, "\n"))
+	}
+	return nil
 }
 
 // TODO: Should this return a total of previews created or something?
 func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
-    log.Printf("About to try and create previews for %s:%s\n", c.Name, c.ID.String())
-    // Reset the preview directory, then create it fresh (update tests if this changes)
-    c_err := utils.ClearContainerPreviews(c)
-    if c_err == nil {
-        err := utils.MakePreviewPath(utils.GetContainerPreviewDst(c))
-        if err != nil { // This is pretty fatal if we don't have dest permission
-            log.Fatal(err)
-        }
-    }
+	log.Printf("About to try and create previews for %s:%s\n", c.Name, c.ID.String())
+	// Reset the preview directory, then create it fresh (update tests if this changes)
+	c_err := utils.ClearContainerPreviews(c)
+	if c_err == nil {
+		err := utils.MakePreviewPath(utils.GetContainerPreviewDst(c))
+		if err != nil { // This is pretty fatal if we don't have dest permission
+			log.Fatal(err)
+		}
+	}
 
-    // TODO: It should fix up the total count there (-1 for unlimited?)
-    content, q_err := cm.ListContent(c.ID, 0, 90000)
-    if q_err != nil {
-        log.Fatal(q_err) // Also fatal if we can no longer list content
-    }
+	// TODO: It should fix up the total count there (-1 for unlimited?)
+	content, q_err := cm.ListContent(c.ID, 0, 90000)
+	if q_err != nil {
+		log.Fatal(q_err) // Also fatal if we can no longer list content
+	}
 
-    // It would be nice to maybe abstract this into a better place?
-    log.Printf("Found a set of content to make previews for %d", len(*content))
-    if content != nil && len(*content) > 0 {
-        mcs := *content
-        c.PreviewUrl = "/preview/" + mcs[0].ID.String()
-        cm.UpdateContainer(c)
-    }
+	// It would be nice to maybe abstract this into a better place?
+	log.Printf("Found a set of content to make previews for %d", len(*content))
+	if content != nil && len(*content) > 0 {
+		mcs := *content
+		c.PreviewUrl = "/preview/" + mcs[0].ID.String()
+		cm.UpdateContainer(c)
+	}
 
-    update_list, err := CreateContentPreviews(c, *content)
-    if err != nil {
-        log.Printf("Summary of Errors while creating content previews %s", err)
-    }
-    log.Printf("Finished creating previews, now updating the database count(%d)", len(update_list))
-    maybeScreens, _ := utils.GetPotentialScreens(c)
-    for _, mc := range update_list {
-        if mc.Preview != "" {
-            log.Printf("Created a preview %s for mc %s", mc.Preview, mc.ID.String())
-            screens := utils.AssignScreensFromSet(c, &mc, maybeScreens)
-            if screens != nil {
-                log.Printf("Found new screens we should create %d", len(*screens))
-                for _, s := range *screens {
-                    cm.CreateScreen(&s)
-                }
-            }
+	update_list, err := CreateContentPreviews(c, *content)
+	if err != nil {
+		log.Printf("Summary of Errors while creating content previews %s", err)
+	}
+	log.Printf("Finished creating previews, now updating the database count(%d)", len(update_list))
+	maybeScreens, _ := utils.GetPotentialScreens(c)
+	for _, mc := range update_list {
+		if mc.Preview != "" {
+			log.Printf("Created a preview %s for mc %s", mc.Preview, mc.ID.String())
+			screens := utils.AssignScreensFromSet(c, &mc, maybeScreens)
+			if screens != nil {
+				log.Printf("Found new screens we should create %d", len(*screens))
+				for _, s := range *screens {
+					cm.CreateScreen(&s)
+				}
+			}
 
-            // Note that UpdateContent and create screen don't really work for in memory
-            // Though it actually wouldn't be that bad to update the MemStorage...
-            cm.UpdateContent(&mc)
+			// Note that UpdateContent and create screen don't really work for in memory
+			// Though it actually wouldn't be that bad to update the MemStorage...
+			cm.UpdateContent(&mc)
 
-            // TODO: Add in a search for getting screens based on the container and content
-        } else if mc.Corrupt {
-            cm.UpdateContent(&mc)
-        }
-    }
-    return err
+			// TODO: Add in a search for getting screens based on the container and content
+		} else if mc.Corrupt {
+			cm.UpdateContent(&mc)
+		}
+	}
+	return err
 }
 
 // TODO: This maybe could be ported to just a ContentTree Element or something
 // This is complicated but a way to do many previews at once
 func CreateContentPreviews(c *models.Container, content models.Contents) (models.Contents, error) {
-    if len(content) == 0 {
-        return models.Contents{}, nil
-    }
-    cfg := utils.GetCfg()
-    processors := cfg.CoreCount
-    if processors <= 0 {
-        processors = 1 // Without at least one processor this will hang forever
-    }
-    log.Printf("Creating %d listeners for processing previews", processors)
+	if len(content) == 0 {
+		return models.Contents{}, nil
+	}
+	cfg := utils.GetCfg()
+	processors := cfg.CoreCount
+	if processors <= 0 {
+		processors = 1 // Without at least one processor this will hang forever
+	}
+	log.Printf("Creating %d listeners for processing previews", processors)
 
-    // We expect a result for every message so can create the channels in a way that they have a length
-    expected_total := len(content)
-    reply := make(chan utils.PreviewResult, expected_total)
-    input := make(chan utils.PreviewRequest, expected_total)
+	// We expect a result for every message so can create the channels in a way that they have a length
+	expected_total := len(content)
+	reply := make(chan utils.PreviewResult, expected_total)
+	input := make(chan utils.PreviewRequest, expected_total)
 
-    // Starts the workers
-    for i := 0; i < processors; i++ {
-        pw := utils.PreviewWorker{Id: i, In: input}
-        go StartWorker(pw)
-    }
+	// Starts the workers
+	for i := 0; i < processors; i++ {
+		pw := utils.PreviewWorker{Id: i, In: input}
+		go StartWorker(pw)
+	}
 
-    // Queue up a bunch of preview work
-    contentMap := models.ContentMap{}
-    for _, mc := range content {
-        contentMap[mc.ID] = mc
-        ref_mc := mc
-        input <- utils.PreviewRequest{
-            C:   c,
-            Mc:  &ref_mc,
-            Out: reply,
-        }
-    }
+	// Queue up a bunch of preview work
+	contentMap := models.ContentMap{}
+	for _, mc := range content {
+		contentMap[mc.ID] = mc
+		ref_mc := mc
+		input <- utils.PreviewRequest{
+			C:   c,
+			Mc:  &ref_mc,
+			Out: reply,
+		}
+	}
 
-    // Exception handling should close the input and output probably
-    total := 0
-    previews := models.Contents{}
+	// Exception handling should close the input and output probably
+	total := 0
+	previews := models.Contents{}
 
-    error_list := ""
-    for result := range reply {
-        total++
-        if total == expected_total {
-            close(input) // Do I close this on error or on potential timeout (it seems like there should be a way)
-            close(reply)
-        }
+	error_list := ""
+	for result := range reply {
+		total++
+		if total == expected_total {
+			close(input) // Do I close this on error or on potential timeout (it seems like there should be a way)
+			close(reply)
+		}
 
-        // Get a list of just the preview items?  Or just update by reference?
-        log.Printf("Found a result for %s\n", result.MC_ID.String())
-        if mc_update, ok := contentMap[result.MC_ID]; ok {
-            if result.Preview != "" {
-                log.Printf("We found a reply around this %s id was %s \n", result.Preview, result.MC_ID)
-                mc_update.Preview = result.Preview
-                previews = append(previews, mc_update)
-            } else if result.Err != nil {
-                log.Printf("ERROR: Failed to create a preview %s for %s \n", result.Err, mc_update.Src)
-                error_list += "" + result.Err.Error()
-                mc_update.Preview = ""
-                mc_update.Corrupt = true
-                previews = append(previews, mc_update)
-            } else {
-                log.Printf("No preview was needed for content %s", result.MC_ID)
-            }
-        } else {
-            log.Printf("Missing Response ID, something went really wrong %s\n", result.MC_ID)
-        }
-    }
-    if error_list != "" {
-        return previews, errors.New(error_list)
-    }
-    return previews, nil
+		// Get a list of just the preview items?  Or just update by reference?
+		log.Printf("Found a result for %s\n", result.MC_ID.String())
+		if mc_update, ok := contentMap[result.MC_ID]; ok {
+			if result.Preview != "" {
+				log.Printf("We found a reply around this %s id was %s \n", result.Preview, result.MC_ID)
+				mc_update.Preview = result.Preview
+				previews = append(previews, mc_update)
+			} else if result.Err != nil {
+				log.Printf("ERROR: Failed to create a preview %s for %s \n", result.Err, mc_update.Src)
+				error_list += "" + result.Err.Error()
+				mc_update.Preview = ""
+				mc_update.Corrupt = true
+				previews = append(previews, mc_update)
+			} else {
+				log.Printf("No preview was needed for content %s", result.MC_ID)
+			}
+		} else {
+			log.Printf("Missing Response ID, something went really wrong %s\n", result.MC_ID)
+		}
+	}
+	if error_list != "" {
+		return previews, errors.New(error_list)
+	}
+	return previews, nil
 }
 
 func StartWorker(w utils.PreviewWorker) {
-    // sleepTime := time.Duration(w.Id) * time.Millisecond
-    // log.Printf("Worker %d with sleep %d\n", w.Id, sleepTime)
-    // Sleep before kicking off?  Kinda don't need to
-    for pr := range w.In {
-        c := pr.C
-        mc := pr.Mc
-        log.Printf("Worker %d Doing a preview for %s\n", w.Id, mc.ID.String())
-        preview, err := utils.CreateContentPreview(c, mc)
-        pr.Out <- utils.PreviewResult{
-            C_ID:    c.ID,
-            MC_ID:   mc.ID,
-            Preview: preview,
-            Err:     err,
-        }
-    }
+	// sleepTime := time.Duration(w.Id) * time.Millisecond
+	// log.Printf("Worker %d with sleep %d\n", w.Id, sleepTime)
+	// Sleep before kicking off?  Kinda don't need to
+	for pr := range w.In {
+		c := pr.C
+		mc := pr.Mc
+		log.Printf("Worker %d Doing a preview for %s\n", w.Id, mc.ID.String())
+		preview, err := utils.CreateContentPreview(c, mc)
+		pr.Out <- utils.PreviewResult{
+			C_ID:    c.ID,
+			MC_ID:   mc.ID,
+			Preview: preview,
+			Err:     err,
+		}
+	}
 }
