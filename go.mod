@@ -15,6 +15,7 @@ require (
 	github.com/gobuffalo/pop/v6 v6.1.1
 	github.com/gobuffalo/suite/v4 v4.0.4
 	github.com/gobuffalo/validate/v3 v3.3.3
+	github.com/gobuffalo/x v0.1.0
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/lib/pq v1.10.9
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646

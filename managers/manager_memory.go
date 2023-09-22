@@ -503,12 +503,12 @@ func (cm ContentManagerMemory) UpdateTag(t *models.Tag) error {
 	return errors.New("ContentManagerMemory Update failed, not found.")
 }
 
-func (cm ContentManagerMemory) DeleteTag(t *models.Tag) error {
-	if _, ok := cm.ValidTags[t.ID]; ok {
+func (cm ContentManagerMemory) DestroyTag(id string) (*models.Tag, error) {
+	if t, ok := cm.ValidTags[id]; ok {
 		delete(cm.ValidTags, t.ID)
-		return nil
+		return &t, nil
 	}
-	return errors.New("ContentManagerMemory Update failed, not found.")
+	return nil, errors.New("ContentManagerMemory Update failed, not found.")
 }
 
 func (cm ContentManagerMemory) AssociateTag(t *models.Tag, mc *models.Content) error {

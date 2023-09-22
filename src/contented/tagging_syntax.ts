@@ -172,17 +172,25 @@ export class TagLang {
   // Create something that will 
 
   loadLanguage(monaco: any, languageName: string) {
+
     $.ajax(ApiDef.contented.tags, {
       success: res => {
         let lang = monaco.languages;
+        console.log("Tag results", res);
+        // Do a mapped lookup based on the 'type' of the tag probably.
+        // I should also change the color of the type and the keyword.
+        TAGGING_SYNTAX.keywords = res;
+        TAGGING_SYNTAX.typeKeywords = [];
+
         lang.register({id: languageName});
         lang.setMonarchTokensProvider(languageName, TAGGING_SYNTAX);
       }, error: err => {
-        console.error("Failed to load up tags for the system");    
+
+        // If you do not define the lanugage then nothing renders on an error
+        // and it would be better to show text with no highlights.
         let lang = monaco.languages;
         lang.register({id: languageName});
         lang.setMonarchTokensProvider(languageName, TAGGING_SYNTAX);
-
         // Have to add the Tags resource endpoint (does not exist)
       }
     });
