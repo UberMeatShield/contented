@@ -77,7 +77,7 @@ func ResetConfig() *utils.DirConfigEntry {
 	cfg.Dir = dir
 	utils.InitConfig(dir, &cfg)
 	utils.SetupContainerMatchers(&cfg, "", "DS_Store|container_previews")
-	utils.SetupContentMatchers(&cfg, "", "image|video", "DS_Store", "")
+	utils.SetupContentMatchers(&cfg, "", "image|video|text", "DS_Store", "")
 	utils.SetCfg(cfg)
 	return utils.GetCfg()
 }

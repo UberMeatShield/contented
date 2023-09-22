@@ -120,10 +120,10 @@ var _ = grift.Namespace("db", func() {
 		} else {
 			get_connection := no_connection
 			man := managers.CreateManager(cfg, get_connection, get_params)
-			fmt.Printf("Memory Manager Starting to tag")
+			fmt.Printf("Memory Manager looking for tags.\n")
 			tags, err := managers.CreateTagsFromFile(man)
 			if tags != nil {
-				fmt.Printf("Created a set of tags %d", len(*tags))
+				fmt.Printf("Created a set of tags %d\n", len(*tags))
 			}
 			return err
 		}

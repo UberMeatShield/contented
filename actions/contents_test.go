@@ -119,6 +119,7 @@ func (as *ActionSuite) Test_MemoryAPIBasics() {
 	res := as.JSON("/content").Get()
 	as.Equal(http.StatusOK, res.Code)
 
+	// Also validates that hidden content doesn't come back from the main listing API
 	validate := models.Contents{}
 	json.NewDecoder(res.Body).Decode(&validate)
 	as.Equal(test_common.TOTAL_MEDIA, len(validate), "It should have a known set of mock data")

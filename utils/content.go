@@ -230,7 +230,7 @@ func GetImageMeta(srcFile string) (string, bool) {
 	} else {
 		// A Full image Decode is way too slow so instead we are just looking at the config for now.
 		// m, _, i_err := image.Decode(bufio.NewReader(reader))
-		// bounds := m.Bounds() 
+		// bounds := m.Bounds()
 		// w := bounds.Dx()
 		// h := bounds.Dy()
 		w := m.Width
@@ -242,7 +242,7 @@ func GetImageMeta(srcFile string) (string, bool) {
 
 // Write a recurse method for getting all the data up to depth N
 func CreateStructure(dir string, cfg *DirConfigEntry, results *ContentTree, depth int) (*ContentTree, error) {
-        log.Printf("Looking in directory %s set have results %d depth %d", dir, len(*results), depth)
+	log.Printf("Looking in directory %s set have results %d depth %d", dir, len(*results), depth)
 	if depth > cfg.MaxSearchDepth {
 		return results, nil
 	}
@@ -296,4 +296,37 @@ func HasContent(src string, path string) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func ReadTagsFromFile(tagFile string) (*models.Tags, error) {
+	tags := models.Tags{}
+	if tagFile == "" {
+		return &tags, nil
+
+	}
+	log.Printf("Processing Tags Attempting to read tags from %s", tagFile)
+	if _, err := os.Stat(tagFile); !os.IsNotExist(err) {
+		f, fErr := os.OpenFile(tagFile, os.O_RDONLY, os.ModePerm)
+		defer f.Close()
+		if fErr != nil {
+			log.Printf("Processing Tags Error reading file %s", fErr)
+			return nil, fErr
+		}
+
+		// I could also make this smarter and do a single IN query and then a single insert
+		sc := bufio.NewScanner(f)
+		for sc.Scan() {
+			tagLine := sc.Text()
+
+			// TODO: Make tags under their sections
+			if tagLine != "" {
+				name := strings.TrimSpace(tagLine)
+				t := models.Tag{ID: name}
+				tags = append(tags, t)
+			}
+		}
+	} else {
+		log.Printf("No tagfile found at %s", tagFile)
+	}
+	return &tags, nil
 }
