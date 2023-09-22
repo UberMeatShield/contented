@@ -88,7 +88,7 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.ContentMap
 		c.Idx = idx
 		containers[c.ID] = c
 	}
-
+	log.Printf("LOADING TAGS %s", cfg.TagFile)
 	// Only will work if TAG_FILE is actually set to something
 	tags, tErr := ReadTagsFromFile(cfg.TagFile)
 	tagsMap := models.TagsMap{}

@@ -179,7 +179,8 @@ export class TagLang {
         console.log("Tag results", res);
         // Do a mapped lookup based on the 'type' of the tag probably.
         // I should also change the color of the type and the keyword.
-        TAGGING_SYNTAX.keywords = res;
+        console.log(_.map(res, 'id'));
+        TAGGING_SYNTAX.keywords = _.map(res, 'id');
         TAGGING_SYNTAX.typeKeywords = [];
 
         lang.register({id: languageName});
