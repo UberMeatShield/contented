@@ -1,5 +1,11 @@
+import {ApiDef} from './api_def';
+import {Injectable} from '@angular/core';
+import {ContentedService} from './contented_service';
 
+
+import * as $ from 'jquery';
 import * as _ from 'lodash-es';
+
 let languages = [
     'c#',   // A language that decides to use a common comment token.  Nice?
     'python',
@@ -56,6 +62,7 @@ let technologies = [
 let mailFormat = /^[a-z0-9.!$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
 //let mailFormat = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
 
+// TODO: This will need to work a bit better
 let langs = languages.concat(
   _.map(languages, lang => _.upperFirst(lang)),
   _.map(languages, lang => lang.toUpperCase())
@@ -155,3 +162,31 @@ export let TAGGING_SYNTAX = {
     ],
   },
 };
+
+@Injectable()
+export class TagLang {
+
+  constructor() {
+  }
+
+  // Create something that will 
+
+  loadLanguage(monaco: any, languageName: string) {
+    $.ajax(ApiDef.contented.tags, {
+      success: res => {
+        let lang = monaco.languages;
+        lang.register({id: languageName});
+        lang.setMonarchTokensProvider(languageName, TAGGING_SYNTAX);
+      }, error: err => {
+        console.error("Failed to load up tags for the system");    
+        let lang = monaco.languages;
+        lang.register({id: languageName});
+        lang.setMonarchTokensProvider(languageName, TAGGING_SYNTAX);
+
+        // Have to add the Tags resource endpoint (does not exist)
+      }
+    });
+    //console.log("Now here is where we register a new language for tags.");
+    //let monaco = (<any>window).monaco;
+  }
+}

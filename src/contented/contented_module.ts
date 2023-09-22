@@ -38,8 +38,11 @@ import {ByteFormatterPipe} from './filters';
 import {SafePipe} from './safe.pipe';
 
 import { MonacoEditorModule, NgxMonacoEditorConfig } from 'ngx-monaco-editor-v2';
-import {TAGGING_SYNTAX} from './tagging_syntax';
+import {TagLang} from './tagging_syntax';
 
+import * as $ from 'jquery';
+
+// Kinda annoying this has to be configured like this but I suppose it ok.
 const monacoConfig: NgxMonacoEditorConfig = {
   baseUrl: '/public/static/',
   defaultOptions: {
@@ -52,11 +55,15 @@ const monacoConfig: NgxMonacoEditorConfig = {
   },
   onMonacoLoad: () => {
     // Can just make this do a call to the system and pull back a file that is generated that has the tags.
+    /*
     console.log("Now here is where we register a new language for tags.");
     let monaco = (<any>window).monaco;
     let lang = monaco.languages;
     lang.register({id: "tagging"});
     lang.setMonarchTokensProvider("tagging", TAGGING_SYNTAX);
+    */
+    let tl = new TagLang();
+    tl.loadLanguage((<any>window).monaco, 'tagging');
   }
 };
 

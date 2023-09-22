@@ -15,5 +15,7 @@ export let ApiDef = {
         screens: base + 'screens/',
         contentAll: base + 'content/',
         search: base + "search",
+
+        tags: base + "tags/",
     }
 };
