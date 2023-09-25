@@ -50,6 +50,7 @@ export class ContainerNavCmp implements OnInit, OnDestroy {
         });
 
         this.sub = GlobalNavEvents.navEvts.subscribe(evt => {
+            // console.log("Select Media", evt, evt.cnt == this.cnt, evt.action, evt.content);
             if (evt.action == NavTypes.SELECT_MEDIA && evt.cnt == this.cnt && evt.content) {
                 //console.log("Container Nav found select content", evt, evt.cnt.name);
                 this.currentContent = evt.content;
@@ -67,7 +68,6 @@ export class ContainerNavCmp implements OnInit, OnDestroy {
                 if (idx != this.cnt.rowIdx) {
                     let content = this.cnt.getContent(idx);
                     if (content) {
-                        console.log("Index changed via input", idx);
                         this.cnt.rowIdx = idx;  // TODO: do this in the nav event?
                         GlobalNavEvents.selectContent(content, this.cnt);
                     }

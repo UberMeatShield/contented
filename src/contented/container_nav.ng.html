@@ -13,21 +13,21 @@
       </div>
       <div class="container-bar-info">
           <div class="container-bar-controls" *ngIf="!!navForm">
-            <button type="button" mat-icon-button (click)="prevContainer()" title="Next Container">
+            <button type="button" mat-icon-button (click)="prevContainer()" class="nav-cnt-previous" title="Next Container">
               <mat-icon>skip_previous</mat-icon>
             </button>
-            <button type="button" mat-icon-button (click)="prev()" title="Previous Content">
+            <button type="button" mat-icon-button (click)="prev()" class="nav-content-previous" title="Previous Content">
               <mat-icon>navigate_before</mat-icon>
             </button>
             <form #navFormIndexing [formGroup]="navForm">
               <mat-form-field floatLabel="true">
-                <input matInput [formControl]="idxControl" name="rowIdx" type="number" min="0" max="{{cnt.total}}">
+                <input class="cnt-row-idx" matInput [formControl]="idxControl" name="rowIdx" type="number" min="0" max="{{cnt.total}}">
               </mat-form-field>
             </form>
-            <button type="button" mat-icon-button (click)="next()" title="Next Content">
+            <button type="button" mat-icon-button (click)="next()" class="nav-content-next" title="Next Content">
               <mat-icon>navigate_next</mat-icon>
             </button>
-            <button type="button" mat-icon-button (click)="nextContainer()" title="Next Container">
+            <button type="button" mat-icon-button (click)="nextContainer()" class="nav-cnt-next" title="Next Container">
               <mat-icon>skip_next</mat-icon>
             </button>
           </div>

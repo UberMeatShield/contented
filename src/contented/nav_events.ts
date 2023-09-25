@@ -105,4 +105,4 @@ export class NavEvents {
     }
 }
 
-export const GlobalNavEvents = new NavEvents;
+export const GlobalNavEvents = new NavEvents();
