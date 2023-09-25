@@ -360,3 +360,28 @@ func (as *ActionSuite) Test_ManagerMemoryCRU() {
 	as.NoError(scErr, "Failed to get the screen back")
 	as.Equal(s1Check.Path, "C")
 }
+
+func (as *ActionSuite) Test_MemoryManagerTags() {
+	test_common.InitFakeApp(false)
+	ctx := test_common.GetContext(as.App)
+	man := GetManager(&ctx)
+
+	aTag := models.Tag{ID: "A"}
+	bTag := models.Tag{ID: "B"}
+	as.NoError(man.CreateTag(&aTag))
+	as.NoError(man.CreateTag(&bTag))
+
+	content := models.Content{Src: "SomethingSomethingDarkside", NoFile: true}
+	as.NoError(man.CreateContent(&content))
+
+	as.NoError(man.AssociateTagByID(aTag.ID, content.ID))
+	as.NoError(man.AssociateTagByID(bTag.ID, content.ID))
+	checkContent, err := man.GetContent(content.ID)
+	as.NoError(err)
+	as.NotEmpty(checkContent.Tags, "We should have tags")
+	as.Equal(len(checkContent.Tags), 2, "There should be two tags")
+
+	// Not in the DB so should not associate
+	notExistsTag := models.Tag{ID: "NOPE"}
+	as.Error(man.AssociateTagByID(notExistsTag.ID, content.ID))
+}

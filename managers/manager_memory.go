@@ -477,7 +477,10 @@ func (cm ContentManagerMemory) ListAllTags(page int, perPage int) (*models.Tags,
 }
 
 func (cm ContentManagerMemory) GetTag(id string) (*models.Tag, error) {
-	return nil, nil
+	if tag, ok := cm.ValidTags[id]; ok {
+		return &tag, nil
+	}
+	return nil, errors.New(fmt.Sprintf("Tag not found %s", id))
 }
 
 func (cm ContentManagerMemory) ListAllTagsContext() (*models.Tags, error) {
@@ -488,6 +491,7 @@ func (cm ContentManagerMemory) ListAllTagsContext() (*models.Tags, error) {
 func (cm ContentManagerMemory) CreateTag(tag *models.Tag) error {
 	if tag != nil {
 		cm.ValidTags[tag.ID] = *tag
+		log.Printf("Created tag %s", tag)
 		return nil
 	}
 	return errors.New("ContentManagerMemory no tag provided.")
@@ -508,18 +512,45 @@ func (cm ContentManagerMemory) DestroyTag(id string) (*models.Tag, error) {
 		delete(cm.ValidTags, t.ID)
 		return &t, nil
 	}
-	return nil, errors.New("ContentManagerMemory Update failed, not found.")
+	return nil, errors.New("ContentManagerMemory Destroy failed, not tag found.")
 }
 
 func (cm ContentManagerMemory) AssociateTag(t *models.Tag, mc *models.Content) error {
-	if _, ok := cm.ValidTags[t.ID]; ok {
-		return errors.New("Not implemented")
+	if t == nil || mc == nil {
+		return errors.New(fmt.Sprintf("Cannot associate missing tag %s or content %s", t, mc))
 	}
-	return errors.New("ContentManagerMemory Update failed, not found.")
+	if tag, ok := cm.ValidTags[t.ID]; ok {
+		tags := mc.Tags
+		if tags == nil {
+			tags = models.Tags{}
+		}
+		found := false
+		for _, check := range tags {
+			if check.ID == t.ID {
+				found = true
+			}
+		}
+		if found == false {
+			tags = append(tags, tag)
+		}
+		mc.Tags = tags
+		return cm.UpdateContent(mc)
+	}
+	return errors.New(fmt.Sprintf("Tag %s not in the list of valid tags", t))
 }
 
 func (cm ContentManagerMemory) AssociateTagByID(tagId string, mcID uuid.UUID) error {
-	return errors.New("ContentMangerMemory Not implemented")
+	t, err := cm.GetTag(tagId)
+	if err == nil && t != nil {
+		content, cErr := cm.GetContent(mcID)
+		if cErr == nil {
+			return cm.AssociateTag(t, content)
+		}
+		return errors.New(fmt.Sprintf("Did not find content %s or err %s", content, cErr))
+	}
+	msg := fmt.Sprintf("Failed to find either the tag %s or error %s", t, err)
+	log.Printf(msg)
+	return errors.New(msg)
 }
 
 func AssignID(id uuid.UUID) uuid.UUID {
@@ -541,13 +572,14 @@ func (cm ContentManagerMemory) CreateScreen(screen *models.Screen) error {
 	return errors.New("ContentManagerMemory no screen instance was passed in to CreateScreen")
 }
 
+// TODO: Requires security checks like the DB version.
 func (cm ContentManagerMemory) CreateContent(mc *models.Content) error {
 	if mc != nil {
 		mc.ID = AssignID(mc.ID)
 		cm.ValidContent[mc.ID] = *mc
 		return nil
 	}
-	return errors.New("ContentManagerMemory no contentinstance was passed in to CreateContent")
+	return errors.New("ContentManagerMemory no Instance was passed in to CreateContent")
 }
 
 func (cm ContentManagerMemory) DestroyContent(id string) (*models.Content, error) {

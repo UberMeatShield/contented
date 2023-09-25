@@ -486,7 +486,6 @@ func (cm ContentManagerDB) GetValidTags(tags *models.Tags) (*models.Tags, error)
 func (cm ContentManagerDB) AssociateTag(t *models.Tag, mc *models.Content) error {
 	// TODO: Could require [Tags] and not do the append with this function
 	tx := cm.GetConnection()
-
 	tags := models.Tags{}
 	if mc.Tags != nil {
 		tags = mc.Tags
