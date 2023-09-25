@@ -508,18 +508,39 @@ func (cm ContentManagerMemory) DestroyTag(id string) (*models.Tag, error) {
 		delete(cm.ValidTags, t.ID)
 		return &t, nil
 	}
-	return nil, errors.New("ContentManagerMemory Update failed, not found.")
+	return nil, errors.New("ContentManagerMemory Destroy failed, not tag found.")
 }
 
 func (cm ContentManagerMemory) AssociateTag(t *models.Tag, mc *models.Content) error {
-	if _, ok := cm.ValidTags[t.ID]; ok {
-		return errors.New("Not implemented")
+	if tag, ok := cm.ValidTags[t.ID]; ok && mc != nil {
+		tags := mc.Tags
+		if tags == nil {
+			tags = models.Tags{}
+		}
+		found := false
+		for _, check := range tags {
+			if check.ID == t.ID {
+				found = true
+			}
+		}
+		if found == false {
+			tags = append(tags, tag)
+		}
+		mc.Tags = tags
+		return nil
 	}
-	return errors.New("ContentManagerMemory Update failed, not found.")
+	return errors.New(fmt.Sprintf("Tag %s not in the list of valid tags", t))
 }
 
 func (cm ContentManagerMemory) AssociateTagByID(tagId string, mcID uuid.UUID) error {
-	return errors.New("ContentMangerMemory Not implemented")
+	t, err := cm.GetTag(tagId)
+	content, cErr := cm.GetContent(mcID)
+	if err == nil && cErr == nil {
+		return cm.AssociateTag(t, content)
+	}
+	msg := fmt.Sprintf("Failed to find either the tag %s or content %s", t, content)
+	log.Printf(msg)
+	return errors.New(msg)
 }
 
 func AssignID(id uuid.UUID) uuid.UUID {
