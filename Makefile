@@ -34,7 +34,7 @@ build:
 
 .PHONY: dev
 dev:
-	export DIR=$(DIR) && buffalo dev
+	export DIR=$(DIR) TAG_FILE=$(TAG_FILE) && buffalo dev
 
 # I would rather use gotestsum, but buffalo does a bunch of DB setup that doesn't play
 # nice with go test or gotestsum. Or potentially my tests need some saner / better init
@@ -96,5 +96,6 @@ encode:
 # Read from a tag file and import the tags to the DB
 .PHONY: tags
 tags:
+	echo "Looking for tagfile a" $TAG_FILE
 	export TAG_FILE=$(TAG_FILE) && buffalo task db:tags
 

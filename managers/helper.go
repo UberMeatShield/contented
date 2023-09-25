@@ -9,12 +9,10 @@ package managers
  */
 
 import (
-	"bufio"
 	"contented/models"
 	"contented/utils"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 
 	"github.com/gobuffalo/nulls"
@@ -83,50 +81,34 @@ func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
 func CreateTagsFromFile(cm ContentManager) (*models.Tags, error) {
 	cfg := utils.GetCfg()
 	tagFile := cfg.TagFile
-	tags := models.Tags{}
 	if tagFile == "" {
-		return &tags, nil
+		log.Printf("No tag file so nothing to create")
+		return &models.Tags{}, nil
 	}
-	log.Printf("Processing Tags Attempting to read tags from %s", tagFile)
-	if _, err := os.Stat(tagFile); !os.IsNotExist(err) {
-		f, fErr := os.OpenFile(tagFile, os.O_RDONLY, os.ModePerm)
-		defer f.Close()
-		if fErr != nil {
-			log.Printf("Processing Tags Error reading file %s", fErr)
-			return nil, fErr
-		}
+	tags, err := utils.ReadTagsFromFile(tagFile)
+	if err != nil || tags == nil {
+		log.Printf("Error reading tagfile %s", err)
+		return nil, err
+	}
 
-		// I could also make this smarter and do a single IN query and then a single insert
-		sc := bufio.NewScanner(f)
-		for sc.Scan() {
-			tagLine := sc.Text()
-			if tagLine != "" {
-				name := strings.TrimSpace(tagLine)
-
-				// TODO: Need to be able to add a comment line to the tags file?
-				// We should be able to comment on it I think.
-				if name != "" {
-					t, err := cm.GetTag(name)
-					if err != nil {
-						log.Printf("Tag was not found trying to load tag %s", name)
-					}
-					// If we do not have the tag it should create it
-					if t == nil {
-						t = &models.Tag{ID: name}
-						cErr := cm.CreateTag(t)
-						if cErr != nil {
-							log.Printf("Failed to create a tag bailing out %s err %s", tagLine, cErr)
-							return &tags, cErr
-						}
-					}
-					if t != nil {
-						tags = append(tags, *t)
-					}
-				}
+	for _, tCheck := range *tags {
+		tag, _ := cm.GetTag(tCheck.ID)
+		/*
+			if err != nil {
+				log.Printf("Tag was not found trying to load tag %s", tCheck.ID)
+			}
+		*/
+		// If we do not have the tag it should create it
+		if tag == nil {
+			tag = &tCheck
+			cErr := cm.CreateTag(tag)
+			if cErr != nil {
+				log.Printf("Failed to create a tag bailing out %s err %s", tag.ID, cErr)
+				return tags, cErr
 			}
 		}
 	}
-	return &tags, nil
+	return tags, nil
 }
 
 // Init a manager and pass it in or just do this via config value instead of a pass in

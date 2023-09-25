@@ -97,7 +97,7 @@ func (as *ActionSuite) Test_MemoryManagerPaginate() {
 	l_cnts, _ := man.ListContainers(4, 1)
 	as.Equal(1, len(*l_cnts), "It should still return only as we are on the last page")
 	l_cnt := (*l_cnts)[0]
-	as.Equal(expect_len[l_cnt.Name], l_cnt.Total, "There are 3 entries in the ordered test data last container")
+	as.Equal(test_common.EXPECT_CNT_COUNT[l_cnt.Name], l_cnt.Total, "There are 3 entries in the ordered test data last container")
 }
 
 func (as *ActionSuite) Test_ManagerInitialize() {
@@ -122,7 +122,7 @@ func (as *ActionSuite) Test_ManagerInitialize() {
 		content_len := len(*content)
 		// fmt.Printf("Content length was %d\n", content_len)
 		as.Greater(content_len, 0, "There should be a number of content")
-		as.Equal(expect_len[c.Name], content_len, "It should have this many instances: "+c.Name)
+		as.Equal(test_common.EXPECT_CNT_COUNT[c.Name], content_len, "It should have this many instances: "+c.Name)
 		as.Greater(c.Total, 0, "All of them should have a total assigned")
 	}
 }
@@ -242,7 +242,7 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
 	f.Sync()
 
 	// Checks that if a preview exists
-	cnts, content, _ := utils.PopulateMemoryView(cfg.Dir)
+	cnts, content, _, _ := utils.PopulateMemoryView(cfg.Dir)
 	as.Equal(1, len(cnts), "We should only pull in containers that have content")
 	as.Equal(len(content), 1, "But there is only one video by mime type")
 	for _, mc := range content {
@@ -251,7 +251,7 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
 	}
 
 	cfg.ExcludeEmptyContainers = false
-	all_cnts, one_content, _ := utils.PopulateMemoryView(cfg.Dir)
+	all_cnts, one_content, _, _ := utils.PopulateMemoryView(cfg.Dir)
 	as.Equal(1, len(one_content), "But there is only one video by mime type")
 
 	as.Equal(test_common.TOTAL_CONTAINERS, len(all_cnts), "Allow it to pull in all containers")
@@ -278,7 +278,7 @@ func (as *ActionSuite) Test_MangerTagsMemoryCRUD() {
 	tags, err := man.ListAllTags(0, 3)
 	as.NoError(err)
 	as.Equal(len(*tags), 1, "We should have one tag")
-	man.DeleteTag(&t)
+	man.DestroyTag(t.ID)
 	tags_gone, _ := man.ListAllTags(0, 3)
 	as.Equal(len(*tags_gone), 0, "Now there should be no tags")
 }

@@ -443,13 +443,17 @@ func (cm ContentManagerDB) UpdateTag(tag *models.Tag) error {
 	return tx.Update(tag)
 }
 
-func (cm ContentManagerDB) DeleteTag(tag *models.Tag) error {
+func (cm ContentManagerDB) DestroyTag(id string) (*models.Tag, error) {
+	tag, err := cm.GetTag(id)
+	if err != nil {
+		return nil, err
+	}
 	tx := cm.GetConnection()
-	return tx.Destroy(tag)
+	return tag, tx.Destroy(tag)
 }
 
 func (cm ContentManagerDB) GetTag(tagID string) (*models.Tag, error) {
-	log.Printf("DB Get a tag %s", tagID)
+	// log.Printf("DB Get a tag %s", tagID)
 	tx := cm.GetConnection()
 	t := &models.Tag{}
 	if err := tx.Find(t, tagID); err != nil {

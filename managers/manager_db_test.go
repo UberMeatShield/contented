@@ -136,7 +136,7 @@ func (as *ActionSuite) Test_ManagerTagsDB() {
 	as.Equal(len(*tags), 2, "We should have two tags")
 }
 
-func (as *ActionSuite) Test_ManagerTagsDBCRUD() {
+func (as *ActionSuite) Test_ManagerTagsDB_CRUD() {
 	models.DB.TruncateAll()
 	cfg := test_common.InitFakeApp(true)
 	man := GetManagerActionSuite(cfg, as)
@@ -146,7 +146,7 @@ func (as *ActionSuite) Test_ManagerTagsDBCRUD() {
 	tags, err := man.ListAllTags(0, 3)
 	as.NoError(err)
 	as.Equal(len(*tags), 1, "We should have one tag")
-	man.DeleteTag(&t)
+	man.DestroyTag(t.ID)
 	tags_gone, _ := man.ListAllTags(0, 3)
 	as.Equal(len(*tags_gone), 0, "No tags should be in the DB")
 }

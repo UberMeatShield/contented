@@ -64,6 +64,8 @@ func App(UseDatabase bool) *buffalo.App {
 		mc_r.Resource("/screens", ScreensResource{})
 		app.Resource("/screens", ScreensResource{})
 
+		app.Resource("/tags", TagsResource{})
+
 		// Need to make the file serving location smarter (serve the dir + serve static?)
 		cfg := utils.GetCfg()
 		app.ServeFiles("/public/build", http.Dir(cfg.StaticResourcePath))

@@ -75,7 +75,7 @@ type ContentManager interface {
 	ListAllTagsContext() (*models.Tags, error)
 	CreateTag(tag *models.Tag) error
 	UpdateTag(tag *models.Tag) error
-	DeleteTag(tag *models.Tag) error
+	DestroyTag(id string) (*models.Tag, error)
 	AssociateTag(tag *models.Tag, c *models.Content) error
 	AssociateTagByID(tagID string, mcID uuid.UUID) error
 }

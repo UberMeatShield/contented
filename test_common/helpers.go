@@ -22,7 +22,16 @@ import (
 
 const TOTAL_CONTAINERS = 5
 const TOTAL_MEDIA = 32
+const TOTAL_TAGS = 46
 const VIDEO_FILENAME = "donut_[special( gunk.mp4"
+
+var EXPECT_CNT_COUNT = map[string]int{
+	"dir1":            12,
+	"dir2":            4,
+	"dir3":            10,
+	"screens":         4,
+	"screens_sub_dir": 2,
+}
 
 // Helper for a common block of video test code (duplicated in the utils test)
 func Get_VideoAndSetupPaths() (string, string, string) {
@@ -58,12 +67,13 @@ func GetContextParams(app *buffalo.App, url string, page string, per_page string
 // TODO validate octet/stream
 func IsValidContentType(content_type string) error {
 	valid := map[string]bool{
-		"image/png":                true,
-		"image/jpeg":               true,
-		"image/gif":                true,
-		"image/webp":               true,
-		"application/octet-stream": true,
-		"video/mp4":                true,
+		"image/png":                 true,
+		"image/jpeg":                true,
+		"image/gif":                 true,
+		"image/webp":                true,
+		"application/octet-stream":  true,
+		"video/mp4":                 true,
+		"text/plain; charset=utf-8": true,
 	}
 	if valid[content_type] {
 		return nil
@@ -77,7 +87,7 @@ func ResetConfig() *utils.DirConfigEntry {
 	cfg.Dir = dir
 	utils.InitConfig(dir, &cfg)
 	utils.SetupContainerMatchers(&cfg, "", "DS_Store|container_previews")
-	utils.SetupContentMatchers(&cfg, "", "image|video", "DS_Store", "")
+	utils.SetupContentMatchers(&cfg, "", "image|video|text", "DS_Store", "")
 	utils.SetCfg(cfg)
 	return utils.GetCfg()
 }

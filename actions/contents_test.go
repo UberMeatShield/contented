@@ -99,7 +99,7 @@ func (as *ActionSuite) Test_ManagerDB_Preview() {
 	cnt, content := test_common.GetContentByDirName("dir2")
 
 	as.Equal("dir2", cnt.Name, "It should have loaded the right item")
-	as.Equal(3, len(content), fmt.Sprintf("Dir2 should have 3 items %s", content))
+	as.Equal(test_common.EXPECT_CNT_COUNT["dir2"], len(content), fmt.Sprintf("Dir2 should have 3 items %s", content))
 
 	as.DB.Create(cnt)
 	as.NotZero(cnt.ID, "We should have an ID now for the container")
@@ -119,6 +119,7 @@ func (as *ActionSuite) Test_MemoryAPIBasics() {
 	res := as.JSON("/content").Get()
 	as.Equal(http.StatusOK, res.Code)
 
+	// Also validates that hidden content doesn't come back from the main listing API
 	validate := models.Contents{}
 	json.NewDecoder(res.Body).Decode(&validate)
 	as.Equal(test_common.TOTAL_MEDIA, len(validate), "It should have a known set of mock data")
