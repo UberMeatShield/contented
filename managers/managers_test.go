@@ -15,14 +15,6 @@ import (
 	"github.com/gobuffalo/suite/v4"
 )
 
-var expect_len = map[string]int{
-	"dir1":            12,
-	"dir2":            4,
-	"dir3":            10,
-	"screens":         4,
-	"screens_sub_dir": 2,
-}
-
 func GetManagerActionSuite(cfg *utils.DirConfigEntry, as *ActionSuite) ContentManager {
 	ctx := test_common.GetContext(as.App)
 	get_params := func() *url.Values {

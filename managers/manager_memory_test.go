@@ -97,7 +97,7 @@ func (as *ActionSuite) Test_MemoryManagerPaginate() {
 	l_cnts, _ := man.ListContainers(4, 1)
 	as.Equal(1, len(*l_cnts), "It should still return only as we are on the last page")
 	l_cnt := (*l_cnts)[0]
-	as.Equal(expect_len[l_cnt.Name], l_cnt.Total, "There are 3 entries in the ordered test data last container")
+	as.Equal(test_common.EXPECT_CNT_COUNT[l_cnt.Name], l_cnt.Total, "There are 3 entries in the ordered test data last container")
 }
 
 func (as *ActionSuite) Test_ManagerInitialize() {
@@ -122,7 +122,7 @@ func (as *ActionSuite) Test_ManagerInitialize() {
 		content_len := len(*content)
 		// fmt.Printf("Content length was %d\n", content_len)
 		as.Greater(content_len, 0, "There should be a number of content")
-		as.Equal(expect_len[c.Name], content_len, "It should have this many instances: "+c.Name)
+		as.Equal(test_common.EXPECT_CNT_COUNT[c.Name], content_len, "It should have this many instances: "+c.Name)
 		as.Greater(c.Total, 0, "All of them should have a total assigned")
 	}
 }
