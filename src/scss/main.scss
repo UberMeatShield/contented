@@ -23,7 +23,6 @@ body {
       &:hover {
         border: 1px solid $color-pri;
         border-radius: 3px;
-        background-color: lighten($color-pri, 20%);
       }
     }
 }
@@ -88,7 +87,6 @@ body {
        display: flex;
        flex-wrap: wrap;
     }
-
     .preview-content {
       // flex-shrink: 0;
       margin: 5px;
@@ -104,10 +102,31 @@ body {
     width: 100%;
 }
 
+.container-contents {
+    .mat-mdc-card-content {
+        padding: 0 3px;
+    }
+}
+
 // Navigation and 
 .container-bar {
     display: flex;
     flex-wrap: wrap;
+    margin: 0 0 5px 0;
+    padding: 0px !important;
+    border: 1px solid #aaa;
+    border-radius: 3px;
+
+    .mat-mdc-form-field-hint-wrapper {
+        padding: 0px;
+        display: none;
+    }
+    .mat-mdc-form-field-subscript-wrapper {
+        display: none;
+    }
+    .container-bar-controls {
+        display: flex;
+    }
 
     .container-preview-loc {
         width: $thumbWidth;
@@ -119,6 +138,13 @@ body {
         height: 100%;
     }
 }
+
+.container-bar-info {                    
+    margin-top: 10px;
+    display: flex;                       
+    flex-wrap: wrap;                     
+}                                        
+                                         
 
 .container-search-form {
     font-size: 10px;
@@ -144,12 +170,6 @@ body {
     .mat-card {                          
         padding: 0px;                    
     }                                   
-}                                        
-                                         
-.container-bar-info {                    
-    margin-top: 22px;                    
-    display: flex;                       
-    flex-wrap: wrap;                     
 }                                        
                                          
 .container-meta {                        
@@ -263,12 +283,11 @@ body {
 
 .current-content-cnt {
   margin: 0 0 0.5rem 0;
-  border: 1px solid #aaa;
 }
 
 .current-content {                           
-    background-color: lighten($color-pri, 45%);
     border: solid 1px $color-pri;
+    background-color: lighten($color-pri, 20%);
     border-radius: 2px;
 }
 
