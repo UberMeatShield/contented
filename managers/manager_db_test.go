@@ -136,7 +136,7 @@ func (as *ActionSuite) Test_ManagerTagsDB() {
 	as.Equal(len(*tags), 2, "We should have two tags")
 }
 
-func (as *ActionSuite) Test_ManagerTagsDBCRUD() {
+func (as *ActionSuite) Test_ManagerTagsDB_CRUD() {
 	models.DB.TruncateAll()
 	cfg := test_common.InitFakeApp(true)
 	man := GetManagerActionSuite(cfg, as)

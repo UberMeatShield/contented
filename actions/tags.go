@@ -94,6 +94,10 @@ func (v TagsResource) Update(c buffalo.Context) error {
 	if err := c.Bind(tag); err != nil {
 		return c.Render(http.StatusUnprocessableEntity, r.JSON(err))
 	}
+	upErr := man.UpdateTag(tag)
+	if upErr != nil {
+		return c.Render(http.StatusUnprocessableEntity, r.JSON(upErr))
+	}
 	checkTag, _ := man.GetTag(id)
 	return c.Render(http.StatusOK, r.JSON(checkTag))
 }
