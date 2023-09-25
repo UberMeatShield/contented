@@ -87,7 +87,7 @@ describe('TestingContainerNavCmp', () => {
         let req = httpMock.expectOne(r => r.url === url);
     }));
 
-    fit("Should be able to navigate by button clicks", fakeAsync(() => {
+    it("Should be able to navigate by button clicks", fakeAsync(() => {
         cnt.total = 10;
         comp.cnt = cnt;
         fixture.detectChanges();
