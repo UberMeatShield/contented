@@ -23,13 +23,12 @@ body {
       &:hover {
         border: 1px solid $color-pri;
         border-radius: 3px;
-        background-color: lighten($color-pri, 20%);
       }
     }
 }
 
 .primary-card {
-    margin: 1rem 0.25rem 0 0.25rem;
+    margin: 0.1rem 0.25rem 0 0.25rem;
     mat-card-header {
         border-top: 2px solid $color-pri;
         border-radius: 3px;
@@ -88,7 +87,6 @@ body {
        display: flex;
        flex-wrap: wrap;
     }
-
     .preview-content {
       // flex-shrink: 0;
       margin: 5px;
@@ -102,12 +100,36 @@ body {
 .search-paginator {
     display: flex;
     width: 100%;
+    .mat-mdc-form-field-subscript-wrapper {
+        height: 0px;
+    }
+}
+
+.container-contents {
+    .mat-mdc-card-content {
+        padding: 0 3px;
+    }
 }
 
 // Navigation and 
 .container-bar {
     display: flex;
     flex-wrap: wrap;
+    margin: 0 0 5px 0;
+    padding: 0px !important;
+    border: 1px solid #aaa;
+    border-radius: 3px;
+
+    .mat-mdc-form-field-hint-wrapper {
+        padding: 0px;
+        display: none;
+    }
+    .mat-mdc-form-field-subscript-wrapper {
+        display: none;
+    }
+    .container-bar-controls {
+        display: flex;
+    }
 
     .container-preview-loc {
         width: $thumbWidth;
@@ -119,6 +141,13 @@ body {
         height: 100%;
     }
 }
+
+.container-bar-info {                    
+    margin-top: 10px;
+    display: flex;                       
+    flex-wrap: wrap;                     
+}                                        
+                                         
 
 .container-search-form {
     font-size: 10px;
@@ -144,12 +173,6 @@ body {
     .mat-card {                          
         padding: 0px;                    
     }                                   
-}                                        
-                                         
-.container-bar-info {                    
-    margin-top: 22px;                    
-    display: flex;                       
-    flex-wrap: wrap;                     
 }                                        
                                          
 .container-meta {                        
@@ -262,13 +285,12 @@ body {
 }
 
 .current-content-cnt {
-  margin: 0 0 0.5rem 0;
-  border: 1px solid #aaa;
+  margin: 0 0 0.1rem 0;
 }
 
 .current-content {                           
-    background-color: lighten($color-pri, 45%);
     border: solid 1px $color-pri;
+    background-color: lighten($color-pri, 35%);
     border-radius: 2px;
 }
 

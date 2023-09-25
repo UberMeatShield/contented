@@ -6,11 +6,32 @@
       [bufferValue]="cnt?.total"
       [mode]="cnt.count === cnt.total ? 'determinate' : 'buffer'"
     ></mat-progress-bar>
-    <div class="container-bar">
+
+    <div class="container-bar primary">
       <div class="container-preview-loc">
         <img class="container-preview-img" [src]="cnt?.previewUrl">
       </div>
       <div class="container-bar-info">
+          <div class="container-bar-controls" *ngIf="!!navForm">
+            <button type="button" mat-icon-button (click)="prevContainer()" class="nav-cnt-previous" title="Next Container">
+              <mat-icon>skip_previous</mat-icon>
+            </button>
+            <button type="button" mat-icon-button (click)="prev()" class="nav-content-previous" title="Previous Content">
+              <mat-icon>navigate_before</mat-icon>
+            </button>
+            <form #navFormIndexing [formGroup]="navForm">
+              <mat-form-field floatLabel="true">
+                <input class="cnt-row-idx" matInput [formControl]="idxControl" name="rowIdx" type="number" min="0" max="{{cnt.total}}">
+              </mat-form-field>
+            </form>
+            <button type="button" mat-icon-button (click)="next()" class="nav-content-next" title="Next Content">
+              <mat-icon>navigate_next</mat-icon>
+            </button>
+            <button type="button" mat-icon-button (click)="nextContainer()" class="nav-cnt-next" title="Next Container">
+              <mat-icon>skip_next</mat-icon>
+            </button>
+          </div>
+
         <span class="bar-spacer">
           {{idx + 1}} of {{totalContainers}} Containers.
         </span>
@@ -25,7 +46,6 @@
 
         <!-- Event emit for the rowIdx for this component -->
         <form class="container-meta-text bar-spacer">
-          Current Index: <input name="rowIdx" type="number" [(ngModel)]="cnt.rowIdx">
           Loaded: <span class="cnt-max-count"> {{cnt?.contents?.length}}</span>
           of <span class="cnt-total">{{cnt?.total}}</span> content
           <span *ngIf="cnt?.contents?.length < cnt.total">
@@ -48,7 +68,9 @@
               <span class="content-content-type"> {{currentContent?.content_type}}</span>
           </span>
           </span>
-        </div>
-    </div> <!-- End Container bar info -->
+
+
+          </div>
+      </div> <!-- End Container bar info -->
   </div> <!-- End cnt -->
 </div> <!-- End Component -->

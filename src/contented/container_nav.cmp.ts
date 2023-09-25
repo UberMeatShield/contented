@@ -7,6 +7,7 @@ import {finalize, switchMap} from 'rxjs/operators';
 
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 import {GlobalNavEvents, NavTypes} from './nav_events';
+import {FormGroup, FormBuilder, FormControl, Validators} from '@angular/forms';
 
 import * as _ from 'lodash';
 
@@ -36,15 +37,24 @@ export class ContainerNavCmp implements OnInit, OnDestroy {
 
     private sub: Subscription;
 
-    constructor(public _contentedService: ContentedService) {
+    public navForm: FormGroup;
+    public idxControl: FormControl<number>;
 
+    constructor(public fb: FormBuilder, public _contentedService: ContentedService) {
     }
 
     public ngOnInit() {
+        this.idxControl = new FormControl(this.idx || this.cnt.rowIdx || 0, Validators.required);
+        this.navForm = this.fb.group({
+            idxControl: this.idxControl
+        });
+
         this.sub = GlobalNavEvents.navEvts.subscribe(evt => {
+            // console.log("Select Media", evt, evt.cnt == this.cnt, evt.action, evt.content);
             if (evt.action == NavTypes.SELECT_MEDIA && evt.cnt == this.cnt && evt.content) {
                 //console.log("Container Nav found select content", evt, evt.cnt.name);
                 this.currentContent = evt.content;
+                this.idxControl.setValue(this.cnt.rowIdx);
             }
         });
         // The select event can trigger BEFORE a render loop so on a new render
@@ -52,6 +62,18 @@ export class ContainerNavCmp implements OnInit, OnDestroy {
         if (this.cnt) {
             this.currentContent = this.cnt.getContent();
         }
+
+        this.navForm.get("idxControl").valueChanges.subscribe(
+            idx => {
+                if (idx != this.cnt.rowIdx) {
+                    let content = this.cnt.getContent(idx);
+                    if (content) {
+                        this.cnt.rowIdx = idx;  // TODO: do this in the nav event?
+                        GlobalNavEvents.selectContent(content, this.cnt);
+                    }
+                }
+            }
+        );
     }
 
     public ngOnDestroy() {
@@ -66,8 +88,26 @@ export class ContainerNavCmp implements OnInit, OnDestroy {
             (loadedDir: Container) => {
                 console.log("Fully loaded up the container", loadedDir);
             },
-            err => {console.error("Failed to load", err); }
+            err => {
+                console.error("Failed to load", err);
+             }
         );
+    }
+
+    next() {
+        GlobalNavEvents.nextContent(this.cnt);
+    }
+
+    nextContainer() {
+        GlobalNavEvents.nextContainer();
+    }
+
+    prev() {
+        GlobalNavEvents.prevContent(this.cnt);
+    }
+
+    prevContainer() {
+        GlobalNavEvents.prevContainer();
     }
 }
 
