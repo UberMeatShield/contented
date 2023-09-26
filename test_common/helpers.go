@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 
 	"github.com/gobuffalo/buffalo"
@@ -175,4 +176,36 @@ func GetContentByDirName(test_dir_name string) (*models.Container, models.Conten
 	content := utils.FindContentMatcher(*cnt, 42, 0, cfg.IncContent, cfg.ExcContent)
 	cnt.Total = len(content)
 	return cnt, content
+}
+
+// Cleanup paths that will be created by CreateContainerPath, note we IGNORE
+// the c.Path because it will be reset and assigned in actions tests.
+func CleanupContainer(c *models.Container) error {
+	cfg := utils.GetCfg()
+	fqPath := filepath.Join(cfg.Dir, c.Name)
+	fmt.Printf("CleanupContent() Test trying to cleanup %s", fqPath)
+	if f, err := os.Stat(fqPath); !os.IsNotExist(err) {
+		if f.IsDir() == true {
+			err := os.Remove(fqPath)
+			if err != nil {
+				fmt.Printf("CleanupContent() Failed to cleanup test %s", err)
+			}
+			return err
+		}
+	}
+	return nil
+}
+
+// Note that is ONLY for test purposes but could be used if we allow containers to
+// 'create' their own directory (for uploads eventually.)
+func CreateContainerPath(c *models.Container) (string, error) {
+	cfg := utils.GetCfg()
+	fqPath := ""
+	if cfg.Dir != "" && cfg.Dir != "~" {
+		fqPath = c.GetFqPath()
+		if _, err := os.Stat(fqPath); os.IsNotExist(err) {
+			return fqPath, os.Mkdir(fqPath, 0644)
+		}
+	}
+	return fqPath, nil
 }

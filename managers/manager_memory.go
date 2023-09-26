@@ -41,14 +41,12 @@ func (cm ContentManagerMemory) CanEdit() bool {
 // Provide the ability to set the configuration for a memory manager.
 func (cm *ContentManagerMemory) SetCfg(cfg *utils.DirConfigEntry) {
 	cm.cfg = cfg
-	log.Printf("It should have a preview %s\n", cm.cfg.Dir)
-	log.Printf("Using memory manager %s\n", cm.validate)
+	log.Printf("Memory Manager SetCfg() validate: %s\n", cm.validate)
 }
 
 // Get the currently configuration for this manager.
 func (cm ContentManagerMemory) GetCfg() *utils.DirConfigEntry {
-	log.Printf("Get the Config validate val %s\n", cm.validate)
-	log.Printf("Config is using path %s", cm.cfg.Dir)
+	// log.Printf("Memory Config is using path %s", cm.cfg.Dir)
 	return cm.cfg
 }
 
@@ -268,18 +266,23 @@ func (cm ContentManagerMemory) GetContent(mcID uuid.UUID) (*models.Content, erro
 }
 
 // If you already updated the container in memory you are done
-func (cm ContentManagerMemory) UpdateContainer(c *models.Container) (*models.Container, error) {
+func (cm ContentManagerMemory) UpdateContainer(cnt *models.Container) (*models.Container, error) {
 	// TODO: Validate that this updates the actual reference in mem storage
-	if _, ok := cm.ValidContainers[c.ID]; ok {
-		cm.ValidContainers[c.ID] = *c
-		return c, nil
+	cfg := cm.GetCfg()
+	pathOk, err := utils.PathIsOk(cnt.Path, cnt.Name, cfg.Dir)
+	if err != nil {
+		log.Printf("Path does not exist on disk under the config directory err %s", err)
+		return nil, err
 	}
-	return nil, errors.New("Container was not found to update")
+	if _, ok := cm.ValidContainers[cnt.ID]; ok && pathOk {
+		cm.ValidContainers[cnt.ID] = *cnt
+		return cnt, nil
+	}
+	return nil, errors.New("Container was not found to update or path illegal")
 }
 
 // No updates should be allowed for memory management.
 func (cm ContentManagerMemory) UpdateContent(content *models.Content) error {
-
 	// TODO: Should I be able to ignore being in a container if there is no file?
 	if content.NoFile == false {
 		cnt, cErr := cm.GetContainer(content.ContainerID.UUID)
@@ -350,13 +353,6 @@ func (cm ContentManagerMemory) GetContainer(cID uuid.UUID) (*models.Container, e
 		return &c, nil
 	}
 	return nil, errors.New("Memory manager did not find this container id: " + cID.String())
-}
-
-func (cm ContentManagerMemory) FindFileRef(mcID uuid.UUID) (*models.Content, error) {
-	if mc, ok := cm.ValidContent[mcID]; ok {
-		return &mc, nil
-	}
-	return nil, errors.New("File was not found in the current list of files")
 }
 
 func (cm ContentManagerMemory) GetPreviewForMC(mc *models.Content) (string, error) {
@@ -596,10 +592,20 @@ func (cm ContentManagerMemory) DestroyScreen(id string) (*models.Screen, error) 
 
 // Note that we need to lock this down so that it cannot just access arbitrary files
 func (cm ContentManagerMemory) CreateContainer(c *models.Container) error {
-	if c != nil {
+	if c == nil {
+		return errors.New("ContentManagerMemory no container was passed in to CreateContainer")
+	}
+	cfg := cm.GetCfg()
+	ok, err := utils.PathIsOk(c.Path, c.Name, cfg.Dir)
+	if err != nil {
+		log.Printf("Path does not exist on disk under the config directory err %s", err)
+		return err
+	}
+	if ok == true {
 		c.ID = AssignID(c.ID)
 		cm.ValidContainers[c.ID] = *c
 		return nil
 	}
-	return errors.New("ContentManagerMemory no container was passed in to CreateContainer")
+	msg := fmt.Sprintf("The directory was not under the config path %s", c.Name)
+	return errors.New(msg)
 }

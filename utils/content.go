@@ -242,7 +242,7 @@ func GetImageMeta(srcFile string) (string, bool) {
 
 // Write a recurse method for getting all the data up to depth N
 func CreateStructure(dir string, cfg *DirConfigEntry, results *ContentTree, depth int) (*ContentTree, error) {
-	log.Printf("Looking in directory %s set have results %d depth %d", dir, len(*results), depth)
+	// log.Printf("Looking in directory %s set have results %d depth %d", dir, len(*results), depth)
 	if depth > cfg.MaxSearchDepth {
 		return results, nil
 	}
@@ -272,7 +272,7 @@ func CreateStructure(dir string, cfg *DirConfigEntry, results *ContentTree, dept
 }
 
 // From StackOverflow Ensure that something is UNDER the content directory
-func SubPath(parent, sub string) (bool, error) {
+func SubPath(parent string, sub string) (bool, error) {
 	up := ".." + string(os.PathSeparator)
 
 	// path-comparisons using filepath.Abs don't work reliably according to docs (no unique representation).
@@ -288,7 +288,7 @@ func SubPath(parent, sub string) (bool, error) {
 
 func HasContent(src string, path string) (bool, error) {
 	up := ".." + string(os.PathSeparator)
-	if strings.Contains(src, up) {
+	if strings.Contains(src, up) || strings.Contains(src, "~") {
 		return false, errors.New("Filename includes possible up directory access, denied")
 	}
 	_, err := GetFilePathInContainer(src, path)
@@ -296,6 +296,32 @@ func HasContent(src string, path string) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func PathIsOk(path string, name string, ensureUnder string) (bool, error) {
+	up := ".." + string(os.PathSeparator)
+	dest := filepath.Join(path, name)
+
+	if strings.Contains(dest, up) || strings.Contains(dest, "~") {
+		return false, errors.New("Path includes possible up directory access, denied")
+	}
+
+	// Optional, ensure the path is under some configured root.
+	if ensureUnder != "" && path != ensureUnder {
+		ok, nope := SubPath(ensureUnder, path)
+		if ok == false || nope != nil {
+			return ok, nope
+		}
+	}
+	// Now check it is a directory
+	f, err := os.Stat(dest)
+	if err != nil {
+		return false, err // No access potentially
+	}
+	if f.IsDir() == true {
+		return true, nil
+	}
+	return false, errors.New(fmt.Sprintf("%s is not a directory under the path", name))
 }
 
 func ReadTagsFromFile(tagFile string) (*models.Tags, error) {

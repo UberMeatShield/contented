@@ -3,126 +3,146 @@ package actions
 // These tests are DB based tests, vs in memory manager test_common.InitFakeApp(true)
 
 import (
-    "contented/test_common"
-    "contented/managers"
-    "contented/models"
-    "encoding/json"
-    "net/http"
+	"contented/managers"
+	"contented/models"
+	"contented/test_common"
+	"contented/utils"
+	"encoding/json"
+	"fmt"
+	"net/http"
 )
 
 func (as *ActionSuite) Test_ContainersResource_List() {
-    res := as.JSON("/containers").Get()
-    as.Equal(http.StatusOK, res.Code)
+	res := as.JSON("/containers").Get()
+	as.Equal(http.StatusOK, res.Code)
 }
 
 func CreateContainer(name string, as *ActionSuite) models.Container {
-    c := &models.Container{
-        Total: 1,
-        Name:  name,
-        Path:  "test/thing",
-    }
-    res := as.JSON("/containers").Post(c)
-
-    resObj := models.Container{}
-    json.NewDecoder(res.Body).Decode(&resObj)
-    return resObj
+	cfg := utils.GetCfg()
+	c := &models.Container{
+		Total: 1,
+		Name:  name,
+		Path:  cfg.Dir,
+	}
+	fqPath, err := test_common.CreateContainerPath(c)
+	if err != nil {
+		fmt.Printf("Failed to create path %s with err %s", fqPath, err)
+		panic(err)
+	}
+	res := as.JSON("/containers").Post(c)
+	resObj := models.Container{}
+	json.NewDecoder(res.Body).Decode(&resObj)
+	return resObj
 }
 
 func (as *ActionSuite) Test_ContainersResource_Show() {
-    test_common.InitFakeApp(true)
-    name := "Show Test"
-    s := CreateContainer(name, as)
-    as.NotZero(s.ID)
+	test_common.InitFakeApp(true)
+	name := "ShowTest"
+	cnt := CreateContainer(name, as)
+	defer test_common.CleanupContainer(&cnt)
+	as.NotZero(cnt.ID)
 
-    validate := as.JSON("/containers/" + s.ID.String()).Get()
-    as.Equal(http.StatusOK, validate.Code)
+	validate := as.JSON("/containers/" + cnt.ID.String()).Get()
+	as.Equal(http.StatusOK, validate.Code)
 
-    resObj := models.Container{}
-    json.NewDecoder(validate.Body).Decode(&resObj)
-    as.Equal(resObj.Name, name)
+	resObj := models.Container{}
+	json.NewDecoder(validate.Body).Decode(&resObj)
+	as.Equal(resObj.Name, name)
 }
 
 func (as *ActionSuite) Test_ContainersResource_Create() {
-    test_common.InitFakeApp(true)
-    c := &models.Container{
-        Total: 1,
-        Name:  "Derp",
-        Path:  "test/thing",
-    }
-    res := as.JSON("/containers").Post(c)
-    as.Equal(http.StatusCreated, res.Code, "It should be able to create")
+	cfg := test_common.InitFakeApp(true)
+	cnt := &models.Container{
+		Total: 1,
+		Name:  "dir3",
+		Path:  "ShouldGetReset",
+	}
+	res := as.JSON("/containers").Post(cnt)
+	as.Equal(http.StatusCreated, res.Code, "It should be able to create")
+	defer test_common.CleanupContainer(cnt)
 
-    resObj := models.Container{}
-    json.NewDecoder(res.Body).Decode(&resObj)
+	resObj := models.Container{}
+	json.NewDecoder(res.Body).Decode(&resObj)
+	as.Equal(resObj.Name, cnt.Name)
+	as.NotZero(resObj.ID)
+	as.Equal(http.StatusCreated, res.Code)
 
-    as.Equal(resObj.Name, c.Name)
-    as.NotZero(resObj.ID)
-    as.Equal(http.StatusCreated, res.Code)
+	// Path does not come back from the API (hidden), check it updated.
+	check := models.Container{}
+	as.NoError(as.DB.Find(&check, resObj.ID))
+	as.Equal(check.Path, cfg.Dir, "It should reset our path")
 }
 
 func (as *ActionSuite) Test_ContainersResource_Update() {
-    test_common.InitFakeApp(true)
-    s := CreateContainer("Initial Title", as)
-    as.NotZero(s.ID)
+	test_common.InitFakeApp(true)
+	cnt := CreateContainer("Initial", as)
+	test_common.CleanupContainer(&cnt)
+	as.NotZero(cnt.ID)
 
-    name := "Update test"
-    s.Name = name
-    res := as.JSON("/containers/" + s.ID.String()).Put(s)
-    as.Equal(http.StatusOK, res.Code)
+	name := "UpdateTest"
+	cnt.Name = name
+	test_common.CreateContainerPath(&cnt)
+	res := as.JSON("/containers/" + cnt.ID.String()).Put(cnt)
+	defer test_common.CleanupContainer(&cnt)
+	as.Equal(http.StatusOK, res.Code)
+
+	check := models.Container{}
+	json.NewDecoder(res.Body).Decode(&check)
+	as.Equal(check.Name, name, "It should update the name")
 }
 
 func (as *ActionSuite) Test_ContainersResource_Destroy() {
-    test_common.InitFakeApp(true)
-    s := CreateContainer("Initial Title", as)
-    as.NotZero(s.ID)
+	test_common.InitFakeApp(true)
+	cnt := CreateContainer("Nuke", as)
+	defer test_common.CleanupContainer(&cnt)
+	as.NotZero(cnt.ID)
 
-    res := as.JSON("/containers/" + s.ID.String()).Delete()
-    as.Equal(http.StatusOK, res.Code)
+	res := as.JSON("/containers/" + cnt.ID.String()).Delete()
+	as.Equal(http.StatusOK, res.Code)
 
-    notFoundRes := as.JSON("/containers/" + s.ID.String()).Get()
-    as.Equal(http.StatusNotFound, notFoundRes.Code)
+	notFoundRes := as.JSON("/containers/" + cnt.ID.String()).Get()
+	as.Equal(http.StatusNotFound, notFoundRes.Code)
 }
 
 func (as *ActionSuite) Test_ContainerList() {
-    test_common.InitFakeApp(true)
+	test_common.InitFakeApp(true)
 
-    cnt1, _ := test_common.GetContentByDirName("dir1")
-    cnt2, _ := test_common.GetContentByDirName("dir2")
-    models.DB.Create(cnt1)
-    models.DB.Create(cnt2)
-    res := as.JSON("/containers").Get()
-    as.Equal(http.StatusOK, res.Code)
+	cnt1, _ := test_common.GetContentByDirName("dir1")
+	cnt2, _ := test_common.GetContentByDirName("dir2")
+	models.DB.Create(cnt1)
+	models.DB.Create(cnt2)
+	res := as.JSON("/containers").Get()
+	as.Equal(http.StatusOK, res.Code)
 
-    containers := models.Containers{}
-    json.NewDecoder(res.Body).Decode(&containers)
+	containers := models.Containers{}
+	json.NewDecoder(res.Body).Decode(&containers)
 
-    as.Equal(2, len(containers), "It should have loaded two fixtures")
-    var found *models.Container
-    for _, c := range containers {
-        if c.Name == "dir2" {
-            found = &c
-        }
-    }
-    as.NotNil(found, "If it had the fixture loaded we should have this name")
+	as.Equal(2, len(containers), "It should have loaded two fixtures")
+	var found *models.Container
+	for _, c := range containers {
+		if c.Name == "dir2" {
+			found = &c
+		}
+	}
+	as.NotNil(found, "If it had the fixture loaded we should have this name")
 
-    contentRes := as.JSON("/containers/" + found.ID.String() + "/content").Get()
-    as.Equal(http.StatusOK, contentRes.Code)
+	contentRes := as.JSON("/containers/" + found.ID.String() + "/content").Get()
+	as.Equal(http.StatusOK, contentRes.Code)
 }
 
 func (as *ActionSuite) Test_MemoryDenyEdit() {
-    cfg := test_common.InitFakeApp(false)
-    cfg.UseDatabase = false
-    ctx := test_common.GetContext(as.App)
-    man := managers.GetManager(&ctx)
+	test_common.InitFakeApp(false)
+	ctx := test_common.GetContext(as.App)
+	man := managers.GetManager(&ctx)
 
-    containers, err := man.ListContainersContext()
-    as.NoError(err, "It should list containers")
+	containers, err := man.ListContainersContext()
+	as.NoError(err, "It should list containers")
 
-    as.Greater(len(*containers), 0, "There should be containers")
+	as.Greater(len(*containers), 0, "There should be containers")
 
-    for _, c := range *containers {
-        c.Name = "Update Should fail"
-        res := as.JSON("/containers/" + c.ID.String()).Put(&c)
-        as.Equal(http.StatusNotImplemented, res.Code)
-    }
+	for _, c := range *containers {
+		c.Name = "Update Should fail"
+		res := as.JSON("/containers/" + c.ID.String()).Put(&c)
+		as.Equal(http.StatusNotImplemented, res.Code)
+	}
 }

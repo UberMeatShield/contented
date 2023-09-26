@@ -37,9 +37,9 @@ func (as *ActionSuite) Test_ManagerContent() {
 	as.NoError(err)
 
 	for _, mc := range *mcs {
-		cm, err := man.FindFileRef(mc.ID)
+		cm, err := man.GetContent(mc.ID)
 		if err != nil {
-			as.Fail("It should not have an issue finding valid containers")
+			as.Fail("It should not have an issue finding valid content")
 		}
 		as.Equal(cm.ID, mc.ID)
 	}
@@ -323,14 +323,19 @@ func (as *ActionSuite) Test_ManagerMemoryScreens() {
 }
 
 func (as *ActionSuite) Test_ManagerMemoryCRU() {
-	test_common.InitFakeApp(false)
+	cfg := test_common.InitFakeApp(false)
 	ctx := test_common.GetContext(as.App)
 	man := GetManager(&ctx)
 
-	// TODO: It should probably validate path exists and access
-	c := models.Container{Path: "/a/b"}
+	// Only valid paths now allow for creation even in tests.
+	c := models.Container{Path: cfg.Dir, Name: "A"}
+	c2 := models.Container{Path: cfg.Dir, Name: "B"}
+	test_common.CreateContainerPath(&c)
+	test_common.CreateContainerPath(&c2)
+	defer test_common.CleanupContainer(&c)
+	defer test_common.CleanupContainer(&c2)
+
 	as.NoError(man.CreateContainer(&c), "Did not create container")
-	c2 := models.Container{Path: "/a/c"}
 	as.NoError(man.CreateContainer(&c2), "Did not create container")
 	c_check, c_err := man.GetContainer(c.ID)
 	as.NoError(c_err, "We should be able to get back the container")
@@ -384,4 +389,27 @@ func (as *ActionSuite) Test_MemoryManagerTags() {
 	// Not in the DB so should not associate
 	notExistsTag := models.Tag{ID: "NOPE"}
 	as.Error(man.AssociateTagByID(notExistsTag.ID, content.ID))
+}
+
+func (as *ActionSuite) Test_MemoryManager_IllegalContainers() {
+	cfg := test_common.ResetConfig()
+	test_common.InitFakeApp(false)
+	ctx := test_common.GetContext(as.App)
+	man := GetManager(&ctx)
+
+	notUnderDir := models.Container{Name: "ssl", Path: "/etc"}
+	as.Error(man.CreateContainer(&notUnderDir), "Not under the configured directory, rejected")
+
+	upAccess := models.Container{Name: "../../.ssh/", Path: cfg.Dir}
+	as.Error(man.CreateContainer(&upAccess), "No up access allowed in names")
+
+	// Ensure that a container can create, but an invalid update is prevented.
+	knownDirOk := models.Container{Name: "dir2", Path: cfg.Dir}
+	as.NoError(man.CreateContainer(&knownDirOk), "This directory should be ok")
+	knownDirOk.Name = "INVALID"
+	_, err := man.UpdateContainer(&knownDirOk)
+	as.Error(err, "The Path is illegal")
+
+	multiLevelDownOk := models.Container{Name: "screens/screens_sub_dir", Path: cfg.Dir}
+	as.NoError(man.CreateContainer(&multiLevelDownOk), "This should exist in the mock data")
 }
