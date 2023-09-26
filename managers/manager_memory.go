@@ -41,14 +41,12 @@ func (cm ContentManagerMemory) CanEdit() bool {
 // Provide the ability to set the configuration for a memory manager.
 func (cm *ContentManagerMemory) SetCfg(cfg *utils.DirConfigEntry) {
 	cm.cfg = cfg
-	log.Printf("It should have a preview %s\n", cm.cfg.Dir)
-	log.Printf("Using memory manager %s\n", cm.validate)
+	log.Printf("Memory Manager SetCfg() validate: %s\n", cm.validate)
 }
 
 // Get the currently configuration for this manager.
 func (cm ContentManagerMemory) GetCfg() *utils.DirConfigEntry {
-	log.Printf("Get the Config validate val %s\n", cm.validate)
-	log.Printf("Config is using path %s", cm.cfg.Dir)
+	// log.Printf("Memory Config is using path %s", cm.cfg.Dir)
 	return cm.cfg
 }
 
@@ -352,13 +350,6 @@ func (cm ContentManagerMemory) GetContainer(cID uuid.UUID) (*models.Container, e
 	return nil, errors.New("Memory manager did not find this container id: " + cID.String())
 }
 
-func (cm ContentManagerMemory) FindFileRef(mcID uuid.UUID) (*models.Content, error) {
-	if mc, ok := cm.ValidContent[mcID]; ok {
-		return &mc, nil
-	}
-	return nil, errors.New("File was not found in the current list of files")
-}
-
 func (cm ContentManagerMemory) GetPreviewForMC(mc *models.Content) (string, error) {
 	cnt, err := cm.GetContainer(mc.ContainerID.UUID)
 	if err != nil {
@@ -596,10 +587,20 @@ func (cm ContentManagerMemory) DestroyScreen(id string) (*models.Screen, error) 
 
 // Note that we need to lock this down so that it cannot just access arbitrary files
 func (cm ContentManagerMemory) CreateContainer(c *models.Container) error {
-	if c != nil {
+	if c == nil {
+		return errors.New("ContentManagerMemory no container was passed in to CreateContainer")
+	}
+	cfg := cm.GetCfg()
+	ok, err := utils.PathIsOk(c.Path, c.Name, cfg.Dir)
+	if err != nil {
+		log.Printf("Path does not exist on disk under the config directory err %s", err)
+		return err
+	}
+	if ok == true {
 		c.ID = AssignID(c.ID)
 		cm.ValidContainers[c.ID] = *c
 		return nil
 	}
-	return errors.New("ContentManagerMemory no container was passed in to CreateContainer")
+	msg := fmt.Sprintf("The directory was not under the config path %s", c.Name)
+	return errors.New(msg)
 }

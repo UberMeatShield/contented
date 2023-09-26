@@ -37,9 +37,9 @@ func (as *ActionSuite) Test_ManagerContent() {
 	as.NoError(err)
 
 	for _, mc := range *mcs {
-		cm, err := man.FindFileRef(mc.ID)
+		cm, err := man.GetContent(mc.ID)
 		if err != nil {
-			as.Fail("It should not have an issue finding valid containers")
+			as.Fail("It should not have an issue finding valid content")
 		}
 		as.Equal(cm.ID, mc.ID)
 	}
@@ -384,4 +384,23 @@ func (as *ActionSuite) Test_MemoryManagerTags() {
 	// Not in the DB so should not associate
 	notExistsTag := models.Tag{ID: "NOPE"}
 	as.Error(man.AssociateTagByID(notExistsTag.ID, content.ID))
+}
+
+func (as *ActionSuite) Test_MemoryManager_IllegalContainers() {
+	cfg := test_common.ResetConfig()
+	test_common.InitFakeApp(false)
+	ctx := test_common.GetContext(as.App)
+	man := GetManager(&ctx)
+
+	notUnderDir := models.Container{Name: "ssl", Path: "/etc"}
+	as.Error(man.CreateContainer(&notUnderDir), "Not under the configured directory, rejected")
+
+	upAccess := models.Container{Name: "../../.ssh/", Path: cfg.Dir}
+	as.Error(man.CreateContainer(&upAccess), "No up access allowed in names")
+
+	knownDirOk := models.Container{Name: "dir2", Path: cfg.Dir}
+	as.NoError(man.CreateContainer(&knownDirOk), "This directory should be ok")
+
+	multiLevelDownOk := models.Container{Name: "screens/screens_sub_dir", Path: cfg.Dir}
+	as.NoError(man.CreateContainer(&multiLevelDownOk), "This should exist in the mock data")
 }

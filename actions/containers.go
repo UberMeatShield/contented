@@ -72,7 +72,10 @@ func (v ContainersResource) Create(c buffalo.Context) error {
 	if err := c.Bind(container); err != nil {
 		return err
 	}
+
 	man := managers.GetManager(&c)
+	cfg := man.GetCfg()
+	container.Path = cfg.Dir
 	c_err := man.CreateContainer(container)
 	if c_err != nil {
 		return c_err

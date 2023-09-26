@@ -35,7 +35,6 @@ type ContentManager interface {
 	// Utility
 	GetParams() *url.Values
 	FindActualFile(mc *models.Content) (string, error)
-	FindFileRef(mcID uuid.UUID) (*models.Content, error)
 
 	// Container Management
 	GetContainer(cID uuid.UUID) (*models.Container, error)

@@ -38,7 +38,7 @@ func FullHandler(c buffalo.Context) error {
 		return c.Error(400, bad_uuid)
 	}
 	man := managers.GetManager(&c)
-	mc, err := man.FindFileRef(mcID)
+	mc, err := man.GetContent(mcID)
 	if err != nil {
 		return c.Error(404, err)
 	}
@@ -129,7 +129,7 @@ func PreviewHandler(c buffalo.Context) error {
 	}
 
 	man := managers.GetManager(&c)
-	mc, err := man.FindFileRef(mcID)
+	mc, err := man.GetContent(mcID)
 	if err != nil {
 		return c.Error(404, err)
 	}
@@ -151,9 +151,13 @@ func DownloadHandler(c buffalo.Context) error {
 		return c.Error(400, bad_uuid)
 	}
 	man := managers.GetManager(&c)
-	mc, err := man.FindFileRef(mcID)
+	mc, err := man.GetContent(mcID)
 	if err != nil {
 		return c.Error(404, err)
+	}
+	// Some content is not actually real
+	if mc.NoFile == true {
+		return c.Render(200, r.JSON(mc))
 	}
 	fq_path, fq_err := man.FindActualFile(mc)
 	if fq_err != nil {

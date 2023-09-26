@@ -281,15 +281,6 @@ func (cm *ContentManagerDB) Initialize() {
 	log.Printf("Make a DB connection here")
 }
 
-func (cm ContentManagerDB) FindFileRef(mcID uuid.UUID) (*models.Content, error) {
-	mc_db := models.Content{}
-	err := models.DB.Find(&mc_db, mcID)
-	if err == nil {
-		return &mc_db, nil
-	}
-	return nil, err
-}
-
 func (cm ContentManagerDB) GetPreviewForMC(mc *models.Content) (string, error) {
 	cnt, err := cm.GetContainer(mc.ContainerID.UUID)
 	if err != nil {
@@ -365,8 +356,6 @@ func (cm ContentManagerDB) CreateScreen(screen *models.Screen) error {
 func (cm ContentManagerDB) CreateContent(content *models.Content) error {
 	tx := cm.GetConnection()
 
-	// Eager doesn't actually create tags but should we create any old tag on
-	// submission?
 	validTags, t_err := cm.GetValidTags(&content.Tags)
 	if t_err != nil {
 		log.Printf("Could not determine valid tags %s", t_err)
@@ -531,8 +520,24 @@ func (cm ContentManagerDB) AssociateTagByID(tagId string, mcID uuid.UUID) error 
 }
 
 // TODO: Security vuln need to ensure that you can only create UNDER the directory
-// specified by the initial load.
+// specified by the initial load.  The same thing must happen on update.
+// TODO: Should we be able to CREATE actual directory information under the
+// parent container if it does not exist?
 func (cm ContentManagerDB) CreateContainer(c *models.Container) error {
+	// Prevent some containers unless they are under the Dir path.
 	tx := cm.GetConnection()
-	return tx.Create(c)
+	cfg := cm.GetCfg()
+
+	// TODO: Config value for restrict to under root dir?
+	ok, err := utils.PathIsOk(c.Path, c.Name, cfg.Dir)
+	if err != nil {
+		log.Printf("Path does not exist on disk under the config directory err %s", err)
+		return err
+	}
+	if ok == true {
+		return tx.Create(c)
+	}
+	msg := fmt.Sprintf("The directory was not under the config path %s", c.Name)
+	return errors.New(msg)
+
 }

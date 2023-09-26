@@ -94,13 +94,23 @@ func (as *ActionSuite) Test_ContentDirDownload() {
 	as.NoError(err)
 	as.Equal(2, len(*mcs), "It should have only two results")
 
-	// Hate
 	for _, mc := range *mcs {
 		res := as.HTML("/download/" + mc.ID.String()).Get()
 		as.Equal(http.StatusOK, res.Code)
 		header := res.Header()
 		as.NoError(test_common.IsValidContentType(header.Get("Content-Type")))
 	}
+
+	// Prevent evil check
+	content := models.Content{NoFile: true, Description: "not a real boy", Src: "~/.ssh/id_rsa"}
+	as.NoError(man.CreateContent(&content))
+
+	noFileRes := as.JSON(fmt.Sprintf("/download/%s", content.ID.String())).Get()
+	as.Equal(http.StatusOK, noFileRes.Code)
+
+	checkNoFile := models.Content{}
+	json.NewDecoder(noFileRes.Body).Decode(&checkNoFile)
+	as.Equal(content.Description, checkNoFile.Description)
 }
 
 // Test if we can get the actual file using just a file ID
@@ -117,7 +127,7 @@ func (as *ActionSuite) Test_FindAndLoadFile() {
 	// TODO: Should make the hidden file actually a file somehow
 	for _, mc := range *mcs {
 		if mc.Hidden == false {
-			mc_ref, fc_err := man.FindFileRef(mc.ID)
+			mc_ref, fc_err := man.GetContent(mc.ID)
 			as.NoError(fc_err, "And an initialized app should index correctly")
 
 			fq_path, err := man.FindActualFile(mc_ref)
