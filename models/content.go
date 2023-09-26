@@ -20,16 +20,16 @@ type Content struct {
 	ContentType string     `json:"content_type" db:"content_type"`
 	Preview     string     `json:"preview" db:"preview"`
 	ContainerID nulls.UUID `json:"container_id" db:"container_id"`
-	Idx         int        `json:"idx" db:"idx"`
-	Active      bool       `json:"active" db:"active"`
-	Corrupt     bool       `json:"corrupt" db:"corrupt"`
-	SizeBytes   int64      `json:"size" db:"size_bytes"`
-	Description string     `json:"description" db:"description"`
-	NoFile      bool       `json:"no_file" db:"no_file"` // Actual file or just description etc
-	Hidden      bool       `json:"-" db:"hidden"`        // Should it be visible in basic list queries
+	Idx         int        `json:"idx" db:"idx" default:"0"`
+	Active      bool       `json:"active" db:"active" default:"true"`
+	Corrupt     bool       `json:"corrupt" db:"corrupt" default:"false"`
+	SizeBytes   int64      `json:"size" db:"size_bytes" default:"0"`
+	Description string     `json:"description" db:"description" default:""`
+	NoFile      bool       `json:"no_file" db:"no_file" default:"false"` // Actual file or just description etc
+	Hidden      bool       `json:"-" db:"hidden" default:"false"`        // Should it be visible in basic list queries
 
 	// This is for information about the file content (video / image mostly stats, rez etc)
-	Meta string `json:"meta" db:"meta"`
+	Meta string `json:"meta" db:"meta" default:""`
 
 	// Joins (Eager loading is not working?)
 	Screens Screens `json:"screens" has_many:"preview_screens"`

@@ -111,16 +111,14 @@ func (cm ContentManagerMemory) ListAllContentFiltered(page int, per_page int, in
 
 // It should probably be able to search the container too?
 func (cm ContentManagerMemory) SearchContentContext() (*models.Contents, int, error) {
-	params := cm.Params()
-	_, per_page, page := GetPagination(params, cm.cfg.Limit)
-	searchStr := StringDefault(params.Get("text"), "")
-	cId := StringDefault(params.Get("cID"), "")
-	contentType := StringDefault(params.Get("contentType"), "")
-	return cm.SearchContent(searchStr, page, per_page, cId, contentType, false)
+	sr := ContextToSearchRequest(cm.Params(), cm.GetCfg())
+	return cm.SearchContent(sr)
 }
 
-func (cm ContentManagerMemory) SearchContent(search string, page int, per_page int, cID string, contentType string, includeHidden bool) (*models.Contents, int, error) {
-	filteredContent, cErr := cm.getContentFiltered(cID, search, contentType, includeHidden)
+// Memory version is going to be extra annoying to tag search more than one tag on an or, or AND...
+func (cm ContentManagerMemory) SearchContent(sr SearchRequest) (*models.Contents, int, error) {
+	log.Printf("MemoryManager About to search given %s", sr)
+	filteredContent, cErr := cm.getContentFiltered(sr.ContainerID, sr.Text, sr.ContentType, sr.Hidden)
 	if cErr != nil {
 		return nil, 0, cErr
 	}
@@ -131,7 +129,7 @@ func (cm ContentManagerMemory) SearchContent(search string, page int, per_page i
 
 	mc_arr := *filteredContent
 	count := len(mc_arr)
-	offset, end := GetOffsetEnd(page, per_page, count)
+	offset, end := GetOffsetEnd(sr.Page, sr.PerPage, count)
 	if end > 0 { // If it is empty a slice ending in 0 = boom
 		mc_arr = mc_arr[offset:end]
 		return &mc_arr, count, nil

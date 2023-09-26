@@ -13,15 +13,15 @@ import (
 // Container is used by pop to map your containers database table to your go code.
 type Container struct {
 	ID        uuid.UUID `json:"id" db:"id"`
-	Total     int       `json:"total" db:"total"`
+	Total     int       `json:"total" db:"total" default:"0"`
 	Path      string    `json:"-" db:"path"`
 	Name      string    `json:"name" db:"name"`
 	CreatedAt time.Time `json:"created" db:"created_at"`
 	UpdatedAt time.Time `json:"updated" db:"updated_at"`
-	Active    bool      `json:"active" db:"active"`
-	Idx       int       `json:"idx" db:"idx"`
+	Active    bool      `json:"active" db:"active" default:"true"`
+	Idx       int       `json:"idx" db:"idx" default:"0"`
 	Contents  Contents  `json:"contents" has_many:"contents" db:"-"`
-	Hidden    bool      `json:"-" db:"hidden"`
+	Hidden    bool      `json:"-" db:"hidden" default:"true"`
 
 	// This is expected to be a URL where often a configured /preview/{mcID} is going
 	// to be assigned by default.  However you should be able to use any link but it is

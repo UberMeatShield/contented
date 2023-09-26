@@ -82,9 +82,10 @@ func (as *ActionSuite) Test_ContainersResource_Update() {
 	name := "UpdateTest"
 	cnt.Name = name
 	test_common.CreateContainerPath(&cnt)
+
 	res := as.JSON("/containers/" + cnt.ID.String()).Put(cnt)
 	defer test_common.CleanupContainer(&cnt)
-	as.Equal(http.StatusOK, res.Code)
+	as.Equal(http.StatusOK, res.Code, fmt.Sprintf("Error %s", res.Body.String()))
 
 	check := models.Container{}
 	json.NewDecoder(res.Body).Decode(&check)

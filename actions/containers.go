@@ -95,14 +95,14 @@ func (v ContainersResource) Update(c buffalo.Context) error {
 	// Get the DB connection from the context
 	_, _, err := managers.ManagerCanCUD(&c)
 	if err != nil {
-		return err
+		return c.Error(http.StatusNotImplemented, err)
 	}
 
 	// Allocate an empty Container
 	man := managers.GetManager(&c)
 	id, idErr := uuid.FromString(c.Param("container_id"))
 	if idErr != nil {
-		return idErr
+		return c.Error(http.StatusBadRequest, idErr)
 	}
 	// Bind Container to the html form elements (could toss the context into the manager)
 	cnt, notFoundErr := man.GetContainer(id)
@@ -110,11 +110,11 @@ func (v ContainersResource) Update(c buffalo.Context) error {
 		return c.Error(http.StatusNotFound, notFoundErr)
 	}
 	if err := c.Bind(cnt); err != nil {
-		return err
+		return c.Error(http.StatusBadRequest, err)
 	}
 	upCnt, upErr := man.UpdateContainer(cnt)
 	if upErr != nil {
-		return upErr
+		return c.Error(http.StatusInternalServerError, upErr)
 	}
 	return c.Render(http.StatusOK, r.JSON(upCnt))
 }
