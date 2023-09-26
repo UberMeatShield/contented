@@ -75,12 +75,18 @@ func (v ContainersResource) Create(c buffalo.Context) error {
 
 	man := managers.GetManager(&c)
 	cfg := man.GetCfg()
+	// IS-327 Reset the path for now
 	container.Path = cfg.Dir
+
 	c_err := man.CreateContainer(container)
 	if c_err != nil {
 		return c_err
 	}
-	return c.Render(http.StatusCreated, r.JSON(container))
+	validate, vErr := man.GetContainer(container.ID)
+	if vErr != nil {
+		return vErr
+	}
+	return c.Render(http.StatusCreated, r.JSON(validate))
 }
 
 // Update changes a Container in the DB. This function is mapped to

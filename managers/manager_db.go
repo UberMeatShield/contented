@@ -84,13 +84,23 @@ func (cm ContentManagerDB) GetContent(mcID uuid.UUID) (*models.Content, error) {
 }
 
 // Update of the container should check utils.SubPath
-func (cm ContentManagerDB) UpdateContainer(c *models.Container) (*models.Container, error) {
-	tx := cm.GetConnection()
-	err := tx.Update(c)
-	if err != nil {
-		return c, err
+func (cm ContentManagerDB) UpdateContainer(cnt *models.Container) (*models.Container, error) {
+	cfg := cm.GetCfg()
+	pathOk, pErr := utils.PathIsOk(cnt.Path, cnt.Name, cfg.Dir)
+	if pErr != nil {
+		log.Printf("Path does not exist on disk under the config directory err %s", pErr)
+		return nil, pErr
 	}
-	return cm.GetContainer(c.ID)
+	if pathOk == false {
+		msg := fmt.Sprintf("The path was not under a valid container %s", pErr)
+		return nil, errors.New(msg)
+	}
+	tx := cm.GetConnection()
+	err := tx.Update(cnt)
+	if err != nil {
+		return cnt, err
+	}
+	return cm.GetContainer(cnt.ID)
 }
 
 func (cm ContentManagerDB) UpdateContent(content *models.Content) error {

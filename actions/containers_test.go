@@ -6,7 +6,9 @@ import (
 	"contented/managers"
 	"contented/models"
 	"contented/test_common"
+	"contented/utils"
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -16,13 +18,18 @@ func (as *ActionSuite) Test_ContainersResource_List() {
 }
 
 func CreateContainer(name string, as *ActionSuite) models.Container {
+	cfg := utils.GetCfg()
 	c := &models.Container{
 		Total: 1,
 		Name:  name,
-		Path:  "test/thing",
+		Path:  cfg.Dir,
+	}
+	fqPath, err := test_common.CreateContainerPath(c)
+	if err != nil {
+		fmt.Printf("Failed to create path %s with err %s", fqPath, err)
+		panic(err)
 	}
 	res := as.JSON("/containers").Post(c)
-
 	resObj := models.Container{}
 	json.NewDecoder(res.Body).Decode(&resObj)
 	return resObj
@@ -30,11 +37,12 @@ func CreateContainer(name string, as *ActionSuite) models.Container {
 
 func (as *ActionSuite) Test_ContainersResource_Show() {
 	test_common.InitFakeApp(true)
-	name := "Show Test"
-	s := CreateContainer(name, as)
-	as.NotZero(s.ID)
+	name := "ShowTest"
+	cnt := CreateContainer(name, as)
+	defer test_common.CleanupContainer(&cnt)
+	as.NotZero(cnt.ID)
 
-	validate := as.JSON("/containers/" + s.ID.String()).Get()
+	validate := as.JSON("/containers/" + cnt.ID.String()).Get()
 	as.Equal(http.StatusOK, validate.Code)
 
 	resObj := models.Container{}
@@ -43,43 +51,56 @@ func (as *ActionSuite) Test_ContainersResource_Show() {
 }
 
 func (as *ActionSuite) Test_ContainersResource_Create() {
-	test_common.InitFakeApp(true)
-	c := &models.Container{
+	cfg := test_common.InitFakeApp(true)
+	cnt := &models.Container{
 		Total: 1,
 		Name:  "dir3",
 		Path:  "ShouldGetReset",
 	}
-	res := as.JSON("/containers").Post(c)
+	res := as.JSON("/containers").Post(cnt)
 	as.Equal(http.StatusCreated, res.Code, "It should be able to create")
+	defer test_common.CleanupContainer(cnt)
 
 	resObj := models.Container{}
 	json.NewDecoder(res.Body).Decode(&resObj)
-
-	as.Equal(resObj.Name, c.Name)
+	as.Equal(resObj.Name, cnt.Name)
 	as.NotZero(resObj.ID)
 	as.Equal(http.StatusCreated, res.Code)
+
+	// Path does not come back from the API (hidden), check it updated.
+	check := models.Container{}
+	as.NoError(as.DB.Find(&check, resObj.ID))
+	as.Equal(check.Path, cfg.Dir, "It should reset our path")
 }
 
 func (as *ActionSuite) Test_ContainersResource_Update() {
 	test_common.InitFakeApp(true)
-	s := CreateContainer("Initial Title", as)
-	as.NotZero(s.ID)
+	cnt := CreateContainer("Initial", as)
+	test_common.CleanupContainer(&cnt)
+	as.NotZero(cnt.ID)
 
-	name := "Update test"
-	s.Name = name
-	res := as.JSON("/containers/" + s.ID.String()).Put(s)
+	name := "UpdateTest"
+	cnt.Name = name
+	test_common.CreateContainerPath(&cnt)
+	res := as.JSON("/containers/" + cnt.ID.String()).Put(cnt)
+	defer test_common.CleanupContainer(&cnt)
 	as.Equal(http.StatusOK, res.Code)
+
+	check := models.Container{}
+	json.NewDecoder(res.Body).Decode(&check)
+	as.Equal(check.Name, name, "It should update the name")
 }
 
 func (as *ActionSuite) Test_ContainersResource_Destroy() {
 	test_common.InitFakeApp(true)
-	s := CreateContainer("Initial Title", as)
-	as.NotZero(s.ID)
+	cnt := CreateContainer("Nuke", as)
+	defer test_common.CleanupContainer(&cnt)
+	as.NotZero(cnt.ID)
 
-	res := as.JSON("/containers/" + s.ID.String()).Delete()
+	res := as.JSON("/containers/" + cnt.ID.String()).Delete()
 	as.Equal(http.StatusOK, res.Code)
 
-	notFoundRes := as.JSON("/containers/" + s.ID.String()).Get()
+	notFoundRes := as.JSON("/containers/" + cnt.ID.String()).Get()
 	as.Equal(http.StatusNotFound, notFoundRes.Code)
 }
 
@@ -110,8 +131,7 @@ func (as *ActionSuite) Test_ContainerList() {
 }
 
 func (as *ActionSuite) Test_MemoryDenyEdit() {
-	cfg := test_common.InitFakeApp(false)
-	cfg.UseDatabase = false
+	test_common.InitFakeApp(false)
 	ctx := test_common.GetContext(as.App)
 	man := managers.GetManager(&ctx)
 

@@ -276,3 +276,31 @@ func (as *ActionSuite) Test_ManagerDBSearchScreens() {
 	as.NoError(s2_err, "It shouldn't error out")
 	as.Equal(1, len(screens_2), "It should load all the screens for mc2 but EXCLUDE mc4")
 }
+
+func (as *ActionSuite) Test_DBManager_IllegalContainers() {
+	cfg := test_common.ResetConfig()
+	test_common.InitFakeApp(true)
+	ctx := test_common.GetContext(as.App)
+	man := GetManager(&ctx)
+
+	notUnderDir := models.Container{Name: "ssl", Path: "/etc"}
+	as.Error(man.CreateContainer(&notUnderDir), "Not under the configured directory, rejected")
+
+	upAccess := models.Container{Name: "../../.ssh/", Path: cfg.Dir}
+	as.Error(man.CreateContainer(&upAccess), "No up access allowed in names")
+
+	multiLevelDownOk := models.Container{Name: "screens/screens_sub_dir", Path: cfg.Dir}
+	as.NoError(man.CreateContainer(&multiLevelDownOk), "This should exist in the mock data")
+
+	knownDirOk := models.Container{Name: "dir2", Path: cfg.Dir}
+	as.NoError(man.CreateContainer(&knownDirOk), "This directory should be ok")
+	knownDirOk.Name = "NowInvalid"
+	_, err := man.UpdateContainer(&knownDirOk)
+	as.Error(err, "It should not allow this invalid directory")
+
+	test_common.CreateContainerPath(&knownDirOk)
+	defer test_common.CleanupContainer(&knownDirOk)
+	up, upErr := man.UpdateContainer(&knownDirOk)
+	as.NoError(upErr, "Now it should be ok as the directory exists")
+	as.Equal(up.Name, knownDirOk.Name, "And it returns a fresh load to prove it is updated.")
+}

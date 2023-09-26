@@ -266,18 +266,23 @@ func (cm ContentManagerMemory) GetContent(mcID uuid.UUID) (*models.Content, erro
 }
 
 // If you already updated the container in memory you are done
-func (cm ContentManagerMemory) UpdateContainer(c *models.Container) (*models.Container, error) {
+func (cm ContentManagerMemory) UpdateContainer(cnt *models.Container) (*models.Container, error) {
 	// TODO: Validate that this updates the actual reference in mem storage
-	if _, ok := cm.ValidContainers[c.ID]; ok {
-		cm.ValidContainers[c.ID] = *c
-		return c, nil
+	cfg := cm.GetCfg()
+	pathOk, err := utils.PathIsOk(cnt.Path, cnt.Name, cfg.Dir)
+	if err != nil {
+		log.Printf("Path does not exist on disk under the config directory err %s", err)
+		return nil, err
 	}
-	return nil, errors.New("Container was not found to update")
+	if _, ok := cm.ValidContainers[cnt.ID]; ok && pathOk {
+		cm.ValidContainers[cnt.ID] = *cnt
+		return cnt, nil
+	}
+	return nil, errors.New("Container was not found to update or path illegal")
 }
 
 // No updates should be allowed for memory management.
 func (cm ContentManagerMemory) UpdateContent(content *models.Content) error {
-
 	// TODO: Should I be able to ignore being in a container if there is no file?
 	if content.NoFile == false {
 		cnt, cErr := cm.GetContainer(content.ContainerID.UUID)
