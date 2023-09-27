@@ -82,9 +82,10 @@ func (as *ActionSuite) Test_ContainersResource_Update() {
 	name := "UpdateTest"
 	cnt.Name = name
 	test_common.CreateContainerPath(&cnt)
+
 	res := as.JSON("/containers/" + cnt.ID.String()).Put(cnt)
 	defer test_common.CleanupContainer(&cnt)
-	as.Equal(http.StatusOK, res.Code)
+	as.Equal(http.StatusOK, res.Code, fmt.Sprintf("Error %s", res.Body.String()))
 
 	check := models.Container{}
 	json.NewDecoder(res.Body).Decode(&check)
@@ -130,14 +131,14 @@ func (as *ActionSuite) Test_ContainerList() {
 	as.Equal(http.StatusOK, contentRes.Code)
 }
 
-func (as *ActionSuite) Test_MemoryDenyEdit() {
-	test_common.InitFakeApp(false)
+func (as *ActionSuite) Test_Memory_ReadOnlyDenyEdit() {
+	cfg := test_common.InitFakeApp(false)
+	cfg.ReadOnly = true
 	ctx := test_common.GetContext(as.App)
 	man := managers.GetManager(&ctx)
 
 	containers, err := man.ListContainersContext()
 	as.NoError(err, "It should list containers")
-
 	as.Greater(len(*containers), 0, "There should be containers")
 
 	for _, c := range *containers {

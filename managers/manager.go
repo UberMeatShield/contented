@@ -12,12 +12,14 @@ package managers
 import (
 	"contented/models"
 	"contented/utils"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/pop/v6"
@@ -26,6 +28,21 @@ import (
 
 type GetConnType func() *pop.Connection
 type GetParamsType func() *url.Values
+
+type SearchRequest struct {
+	Text        string   `json:"text" default:""`
+	Page        int      `json:"page" default:"1"`
+	PerPage     int      `json:"per_page" default:"10"`
+	ContainerID string   `json:"container_id" default:""`
+	ContentType string   `json:"content_type" default:""`
+	Hidden      bool     `json:"hidden" default:"false"`
+	Tags        []string `json:"tags" default:"[]"`
+}
+
+func (sr SearchRequest) String() string {
+	s, _ := json.MarshalIndent(sr, "", "  ")
+	return string(s)
+}
 
 // This is the primary interface used by the Buffalo actions.
 type ContentManager interface {
@@ -51,7 +68,7 @@ type ContentManager interface {
 	ListContentContext(ContainerID uuid.UUID) (*models.Contents, error)
 	ListAllContent(page int, per_page int) (*models.Contents, error)
 	SearchContentContext() (*models.Contents, int, error)
-	SearchContent(search string, page int, per_page int, cId string, contentType string, includeHidden bool) (*models.Contents, int, error)
+	SearchContent(sr SearchRequest) (*models.Contents, int, error)
 	SearchContainers(search string, page int, per_page int, includeHidden bool) (*models.Containers, error)
 	UpdateContent(content *models.Content) error
 	DestroyContent(id string) (*models.Content, error)
@@ -192,4 +209,23 @@ func GetPagination(params pop.PaginationParams, DefaultLimit int) (int, int, int
 	}
 	offset := (page - 1) * limit
 	return offset, limit, page
+}
+
+// TODO: Fill in tags if they are provided.
+func ContextToSearchRequest(params pop.PaginationParams, cfg *utils.DirConfigEntry) SearchRequest {
+	_, per_page, page := GetPagination(params, cfg.Limit)
+	sReq := SearchRequest{
+		Text:        StringDefault(params.Get("text"), ""),
+		ContainerID: StringDefault(params.Get("cId"), ""),
+		ContentType: StringDefault(params.Get("contentType"), ""),
+		PerPage:     per_page,
+		Page:        page,
+		Hidden:      false,
+	}
+
+	tagStr := StringDefault(params.Get("tags"), "")
+	if tagStr != "" {
+		sReq.Tags = strings.Split(tagStr, ",")
+	}
+	return sReq
 }

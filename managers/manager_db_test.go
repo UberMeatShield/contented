@@ -47,23 +47,28 @@ func (as *ActionSuite) Test_DbManagerSearch() {
 			man.CreateScreen(&models.Screen{ContentID: mc.ID, Src: "screen2"})
 		}
 	}
-	mcs, _, err := man.SearchContent("Large", 1, 20, "", "", false)
+
+	sr := SearchRequest{Text: "Large", Page: 1, PerPage: 20}
+	mcs, _, err := man.SearchContent(sr)
 	as.NoError(err, "It should be able to search")
 	as.NotNil(mcs, "It should be")
 	as.Equal(3, len(*mcs), fmt.Sprintf("We should have 3 large images with an ilike %s", mcs))
 
-	mcs_d, vsTotal, vErr := man.SearchContent("donut", 1, 10, "", "", false)
+	sr = SearchRequest{Text: "donut", Page: 1, PerPage: 10}
+	mcs_d, vsTotal, vErr := man.SearchContent(sr)
 	as.NoError(vErr, "Video error by name search failed")
 	as.Equal(1, vsTotal, "We should be able to find donut.mp4 with an ilike")
 	mc_donut := (*mcs_d)[0]
 	as.Equal(2, len(mc_donut.Screens), fmt.Sprintf("It should load two screens %s", mc_donut.Screens))
 
-	vids, vidTotal, dbErr := man.SearchContent("", 1, 40, "", "video", false)
+	sr = SearchRequest{Page: 1, PerPage: 40, ContentType: "video"}
+	vids, vidTotal, dbErr := man.SearchContent(sr)
 	as.NoError(dbErr, "Should search content type")
 	as.Equal(1, vidTotal, "The total count for videos is 1")
 	as.Equal(1, len(*vids), "We should have one result")
 
-	all_mcs, total, err := man.SearchContent("", 1, 10, cnt1.ID.String(), "", false)
+	sr = SearchRequest{Page: 1, PerPage: 10, ContainerID: cnt1.ID.String()}
+	all_mcs, total, err := man.SearchContent(sr)
 	as.NoError(err, "It should be able to empty search")
 	as.Equal(12, total, "The total count for this dir is 12")
 	as.Equal(10, len(*all_mcs), "But we limited the pagination")
@@ -86,16 +91,19 @@ func (as *ActionSuite) Test_DbManagerMultiSearch() {
 	as.NoError(err2)
 	as.Greater(len(content2), 1)
 
-	found, count, err := man.SearchContent(content1[1].Src, 0, 10, cnt1.ID.String(), "", false)
+	sr := SearchRequest{Text: content1[1].Src, PerPage: 10, ContainerID: cnt1.ID.String()}
+	found, count, err := man.SearchContent(sr)
 	as.Equal(len(*found), 1, "We should have found our item")
 	as.Equal(count, 1)
 	as.NoError(err)
 
-	_, n_count, n_err := man.SearchContent("blah", 0, 10, cnt1.ID.String(), "", false)
+	sr = SearchRequest{Text: "blah", ContainerID: cnt1.ID.String()}
+	_, n_count, n_err := man.SearchContent(sr)
 	as.Equal(n_count, 0, "It should not find this the content name is invalid")
 	as.NoError(n_err)
+	sr = SearchRequest{Text: content1[1].Src, ContainerID: cnt2.ID.String()}
 
-	_, not_in_cnt_count, not_err := man.SearchContent(content1[1].Src, 0, 10, cnt2.ID.String(), "", false)
+	_, not_in_cnt_count, not_err := man.SearchContent(sr)
 	as.Equal(not_in_cnt_count, 0, "It should not find this valid content as it is not in the container")
 	as.NoError(not_err)
 }
@@ -151,7 +159,7 @@ func (as *ActionSuite) Test_ManagerTagsDB_CRUD() {
 	as.Equal(len(*tags_gone), 0, "No tags should be in the DB")
 }
 
-func (as *ActionSuite) Test_ManagerAssociateTagsDB() {
+func (as *ActionSuite) Test_DbManager_AssociateTags() {
 	models.DB.TruncateAll()
 	cfg := test_common.InitFakeApp(true)
 	man := GetManagerActionSuite(cfg, as)
@@ -188,6 +196,16 @@ func (as *ActionSuite) Test_ManagerAssociateTagsDB() {
 	mcCheck, mc_err := man.GetContent(mc.ID)
 	as.NoError(mc_err, fmt.Sprintf("We should be able to load back the content %s", err))
 	as.Equal(3, len(mcCheck.Tags), fmt.Sprintf("There should be a new tag %s", mcCheck))
+}
+
+// A Lot more of these could be a test in manager that passes in the manager
+// TODO: Remove copy pasta and make it almost identical.
+func (as *ActionSuite) Test_DbManager_TagSearch() {
+	models.DB.TruncateAll()
+	cfg := test_common.InitFakeApp(true)
+
+	man := GetManagerActionSuite(cfg, as)
+	ManagersTagSearchValidation(as, man)
 }
 
 func (as *ActionSuite) Test_ManagerDBPreviews() {

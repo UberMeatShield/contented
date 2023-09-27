@@ -148,35 +148,36 @@ func (cm ContentManagerDB) ListAllContent(page int, per_page int) (*models.Conte
 
 // It should probably be able to search the container too?
 func (cm ContentManagerDB) SearchContentContext() (*models.Contents, int, error) {
-	params := cm.Params()
-	_, per_page, page := GetPagination(params, cm.cfg.Limit)
-	searchStr := StringDefault(params.Get("text"), "")
-	cId := StringDefault(params.Get("cId"), "")
-	contentType := StringDefault(params.Get("contentType"), "")
-	return cm.SearchContent(searchStr, page, per_page, cId, contentType, false)
+	sr := ContextToSearchRequest(cm.Params(), cm.GetCfg())
+	return cm.SearchContent(sr)
 }
 
-func (cm ContentManagerDB) SearchContent(search string, page int, per_page int, cId string, contentType string, includeHidden bool) (*models.Contents, int, error) {
+func (cm ContentManagerDB) SearchContent(sr SearchRequest) (*models.Contents, int, error) {
 	contentContainers := &models.Contents{}
 	tx := cm.GetConnection()
-	q := tx.Paginate(page, per_page)
-	if search != "*" && search != "" {
-		search = ("%" + search + "%")
+	q := tx.Paginate(sr.Page, sr.PerPage)
+
+	if len(sr.Tags) > 0 {
+		q = q.Join("contents_tags as ct", "ct.content_id = contents.id").Where("ct.tag_id IN (?)", sr.Tags)
+	}
+	// Could also search description
+	if sr.Text != "*" && sr.Text != "" {
+		search := ("%" + sr.Text + "%")
 		q = q.Where(`src like ?`, search)
 	}
-	if contentType != "" {
-		contentType = ("%" + contentType + "%")
+	if sr.ContentType != "" {
+		contentType := ("%" + sr.ContentType + "%")
 		q = q.Where(`content_type ilike ?`, contentType)
 	}
-	if cId != "" {
-		q = q.Where(`container_id = ?`, cId)
+	if sr.ContainerID != "" {
+		q = q.Where(`container_id = ?`, sr.ContainerID)
 	}
-	if includeHidden == false {
+	if sr.Hidden == false {
 		q = q.Where(`hidden = ?`, false)
 	}
 
 	count, _ := q.Count(&models.Contents{})
-	log.Printf("Total count of search content %d using search (%s) and contentType (%s)", count, search, contentType)
+	log.Printf("Total count of search content %d using search (%s) and contentType (%s)", count, sr.Text, sr.ContentType)
 
 	if q_err := q.All(contentContainers); q_err != nil {
 		return contentContainers, count, q_err
@@ -529,8 +530,6 @@ func (cm ContentManagerDB) AssociateTagByID(tagId string, mcID uuid.UUID) error 
 	return cm.AssociateTag(t, mc)
 }
 
-// TODO: Security vuln need to ensure that you can only create UNDER the directory
-// specified by the initial load.  The same thing must happen on update.
 // TODO: Should we be able to CREATE actual directory information under the
 // parent container if it does not exist?
 func (cm ContentManagerDB) CreateContainer(c *models.Container) error {

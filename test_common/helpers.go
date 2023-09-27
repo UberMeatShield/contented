@@ -140,6 +140,17 @@ func InitFakeApp(use_db bool) *utils.DirConfigEntry {
 	return cfg
 }
 
+// For loading up the memory app but not searching directories checking content etc.
+func InitMemoryFakeAppEmpty() *utils.DirConfigEntry {
+	dir, _ := envy.MustGet("DIR")
+	fmt.Printf("Using directory %s\n", dir)
+	cfg := ResetConfig()
+	cfg.UseDatabase = false
+	cfg.StaticResourcePath = "./public/build"
+	utils.InitializeEmptyMemory()
+	return cfg
+}
+
 func CreateContentByDirName(test_dir_name string) (*models.Container, models.Contents, error) {
 	cnt, content := GetContentByDirName(test_dir_name)
 
@@ -202,7 +213,9 @@ func CreateContainerPath(c *models.Container) (string, error) {
 	cfg := utils.GetCfg()
 	fqPath := ""
 	if cfg.Dir != "" && cfg.Dir != "~" {
-		fqPath = c.GetFqPath()
+		c.Path = cfg.Dir
+		fqPath = c.GetFqPath() // Currently just ignore any path specified in the Container
+		// fmt.Printf("It should be trying to create %s\n", fqPath)
 		if _, err := os.Stat(fqPath); os.IsNotExist(err) {
 			return fqPath, os.Mkdir(fqPath, 0644)
 		}
