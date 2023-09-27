@@ -131,14 +131,14 @@ func (as *ActionSuite) Test_ContainerList() {
 	as.Equal(http.StatusOK, contentRes.Code)
 }
 
-func (as *ActionSuite) Test_MemoryDenyEdit() {
-	test_common.InitFakeApp(false)
+func (as *ActionSuite) Test_Memory_ReadOnlyDenyEdit() {
+	cfg := test_common.InitFakeApp(false)
+	cfg.ReadOnly = true
 	ctx := test_common.GetContext(as.App)
 	man := managers.GetManager(&ctx)
 
 	containers, err := man.ListContainersContext()
 	as.NoError(err, "It should list containers")
-
 	as.Greater(len(*containers), 0, "There should be containers")
 
 	for _, c := range *containers {

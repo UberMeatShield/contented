@@ -72,6 +72,7 @@ func (as *ActionSuite) Test_AssignManager() {
 func (as *ActionSuite) Test_MemoryManagerPaginate() {
 	cfg := test_common.InitFakeApp(false)
 	cfg.UseDatabase = false
+	cfg.ReadOnly = true
 
 	ctx := test_common.GetContextParams(as.App, "/containers", "1", "2")
 	man := GetManager(&ctx)
@@ -163,12 +164,13 @@ func (as *ActionSuite) Test_MemoryManagerSearch() {
 func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
 	// Test that a search restricting containerID works
 	// Test that search restricting container and text works
-	test_common.InitFakeApp(false)
+	cfg := test_common.InitFakeApp(false)
+	cfg.ReadOnly = false
 	ctx := test_common.GetContext(as.App)
 	man := GetManager(&ctx)
 
 	// Ensure we initialized with a known search
-	as.Equal(man.CanEdit(), false)
+	as.Equal(man.CanEdit(), true)
 	sr := SearchRequest{Text: "donut"}
 	mcs, total, err := man.SearchContent(sr)
 	as.NoError(err, "Can we search in the memory manager")
@@ -268,13 +270,21 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
 }
 
 func (as *ActionSuite) Test_ManagerTagsMemory() {
-	cfg := test_common.InitFakeApp(false)
+	cfg := test_common.InitMemoryFakeAppEmpty()
 	man := GetManagerActionSuite(cfg, as)
 	as.NoError(man.CreateTag(&models.Tag{ID: "A"}), "couldn't create tag A")
 	as.NoError(man.CreateTag(&models.Tag{ID: "B"}), "couldn't create tag B")
 	tags, err := man.ListAllTags(0, 3)
 	as.NoError(err, "It should be able to list tags")
 	as.Equal(len(*tags), 2, "We should have two tags")
+}
+
+// A Lot more of these could be a test in manager that passes in the manager
+// TODO: Remove copy pasta and make it almost identical.
+func (as *ActionSuite) Test_MemoryManager_TagSearch() {
+	cfg := test_common.InitMemoryFakeAppEmpty()
+	man := GetManagerActionSuite(cfg, as)
+	ManagersTagSearchValidation(as, man)
 }
 
 func (as *ActionSuite) Test_MangerTagsMemoryCRUD() {

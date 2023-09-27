@@ -159,6 +159,7 @@ func (as *ActionSuite) Test_ContentsResource_Show() {
 }
 
 func (as *ActionSuite) Test_ContentsResource_Create() {
+	test_common.InitFakeApp(true)
 	mc := CreateResource("test_create", nulls.UUID{}, as)
 	as.NotZero(mc.ID)
 }
@@ -197,4 +198,50 @@ func (as *ActionSuite) Test_ContentsResource_Destroy() {
 	mc := CreateResource("Nuke Test", nulls.UUID{}, as)
 	del_res := as.JSON("/content/" + mc.ID.String()).Delete()
 	as.Equal(http.StatusOK, del_res.Code)
+}
+
+// Also a good bit of testing the creation logic.
+func (as *ActionSuite) Test_ActionsMemory_TagSearch() {
+	cfg := test_common.InitMemoryFakeAppEmpty()
+	as.Equal(cfg.ReadOnly, false)
+	ActionsTagSearchValidation(as)
+}
+
+func (as *ActionSuite) Test_ActionsDb_TagSearch() {
+	cfg := test_common.InitFakeApp(true)
+	as.Equal(cfg.ReadOnly, false)
+	ActionsTagSearchValidation(as)
+}
+
+func ActionsTagSearchValidation(as *ActionSuite) {
+	cnt := models.Container{Name: "Tagged"}
+	test_common.CreateContainerPath(&cnt)
+	defer test_common.CleanupContainer(&cnt)
+
+	cRes := as.JSON("/containers/").Post(&cnt)
+	as.Equal(http.StatusCreated, cRes.Code, fmt.Sprintf("Failed to create container %s", cRes.Body.String()))
+	cntCheck := models.Container{}
+	json.NewDecoder(cRes.Body).Decode(&cntCheck)
+
+	t := models.Tag{ID: "Zug"}
+	tRes := as.JSON("/tags/").Post(&t)
+	as.Equal(http.StatusCreated, tRes.Code, fmt.Sprintf("Tags Failed %s", tRes.Body.String()))
+
+	a := models.Content{ContainerID: nulls.NewUUID(cntCheck.ID), Src: "AFile"}
+	b := models.Content{ContainerID: nulls.NewUUID(cntCheck.ID), Src: "BFile"}
+	b.Tags = models.Tags{t}
+
+	aRes := as.JSON("/content/").Post(&a)
+	as.Equal(http.StatusCreated, aRes.Code)
+	bRes := as.JSON("/content/").Post(&b)
+	as.Equal(http.StatusCreated, bRes.Code)
+
+	params := url.Values{}
+	params.Add("tags", "Zug")
+	res := as.JSON("/search?%s", params.Encode()).Get()
+	as.Equal(http.StatusOK, res.Code, fmt.Sprintf("Search failed %s", res.Body.String()))
+
+	validate := SearchResult{}
+	json.NewDecoder(res.Body).Decode(&validate)
+	as.Equal(1, len(*validate.Content), fmt.Sprintf("Searching tags return content"))
 }

@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/pop/v6"
@@ -39,7 +40,7 @@ type SearchRequest struct {
 }
 
 func (sr SearchRequest) String() string {
-	s, _ := json.MarshalIndent(sr, "SearchRequest", "  ")
+	s, _ := json.MarshalIndent(sr, "", "  ")
 	return string(s)
 }
 
@@ -220,6 +221,11 @@ func ContextToSearchRequest(params pop.PaginationParams, cfg *utils.DirConfigEnt
 		PerPage:     per_page,
 		Page:        page,
 		Hidden:      false,
+	}
+
+	tagStr := StringDefault(params.Get("tags"), "")
+	if tagStr != "" {
+		sReq.Tags = strings.Split(tagStr, ",")
 	}
 	return sReq
 }

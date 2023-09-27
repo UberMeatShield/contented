@@ -73,3 +73,18 @@ func (m *Content) ValidateCreate(tx *pop.Connection) (*validate.Errors, error) {
 func (m *Content) ValidateUpdate(tx *pop.Connection) (*validate.Errors, error) {
 	return validate.NewErrors(), nil
 }
+
+// This is a little risky as the tags might not be loaded on the object and there isn't
+// a great way to tell 'loaded' vs just doesn't have tags
+func (m *Content) HasTag(tag string) bool {
+	tags := m.Tags
+	if tags == nil || len(tags) == 0 {
+		return false
+	}
+	for _, t := range tags {
+		if t.ID == tag {
+			return true
+		}
+	}
+	return false
+}

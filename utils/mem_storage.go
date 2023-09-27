@@ -34,7 +34,15 @@ func InitializeMemory(dir_root string) *MemoryStorage {
 	memStorage.ValidContent = files
 	memStorage.ValidScreens = screens
 	memStorage.ValidTags = tags
+	return &memStorage
+}
 
+func InitializeEmptyMemory() *MemoryStorage {
+	memStorage.Initialized = true
+	memStorage.ValidContainers = models.ContainerMap{}
+	memStorage.ValidContent = models.ContentMap{}
+	memStorage.ValidScreens = models.ScreenMap{}
+	memStorage.ValidTags = models.TagsMap{}
 	return &memStorage
 }
 
