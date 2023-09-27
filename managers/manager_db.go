@@ -156,6 +156,11 @@ func (cm ContentManagerDB) SearchContent(sr SearchRequest) (*models.Contents, in
 	contentContainers := &models.Contents{}
 	tx := cm.GetConnection()
 	q := tx.Paginate(sr.Page, sr.PerPage)
+
+	if len(sr.Tags) > 0 {
+		q = q.Join("contents_tags as ct", "ct.content_id = contents.id").Where("ct.tag_id IN (?)", sr.Tags)
+	}
+	// Could also search description
 	if sr.Text != "*" && sr.Text != "" {
 		search := ("%" + sr.Text + "%")
 		q = q.Where(`src like ?`, search)
@@ -525,8 +530,6 @@ func (cm ContentManagerDB) AssociateTagByID(tagId string, mcID uuid.UUID) error 
 	return cm.AssociateTag(t, mc)
 }
 
-// TODO: Security vuln need to ensure that you can only create UNDER the directory
-// specified by the initial load.  The same thing must happen on update.
 // TODO: Should we be able to CREATE actual directory information under the
 // parent container if it does not exist?
 func (cm ContentManagerDB) CreateContainer(c *models.Container) error {

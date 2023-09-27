@@ -159,7 +159,7 @@ func (as *ActionSuite) Test_ManagerTagsDB_CRUD() {
 	as.Equal(len(*tags_gone), 0, "No tags should be in the DB")
 }
 
-func (as *ActionSuite) Test_ManagerAssociateTagsDB() {
+func (as *ActionSuite) Test_DbManager_AssociateTags() {
 	models.DB.TruncateAll()
 	cfg := test_common.InitFakeApp(true)
 	man := GetManagerActionSuite(cfg, as)
@@ -196,6 +196,43 @@ func (as *ActionSuite) Test_ManagerAssociateTagsDB() {
 	mcCheck, mc_err := man.GetContent(mc.ID)
 	as.NoError(mc_err, fmt.Sprintf("We should be able to load back the content %s", err))
 	as.Equal(3, len(mcCheck.Tags), fmt.Sprintf("There should be a new tag %s", mcCheck))
+}
+
+// A Lot more of these could be a test in manager that passes in the manager
+// TODO: Remove copy pasta and make it almost identical.
+func (as *ActionSuite) Test_DbManager_TagSearch() {
+	models.DB.TruncateAll()
+	cfg := test_common.InitFakeApp(true)
+
+	man := GetManagerActionSuite(cfg, as)
+	as.NoError(man.CreateTag(&models.Tag{ID: "A"}))
+	as.NoError(man.CreateTag(&models.Tag{ID: "B"}))
+	as.NoError(man.CreateTag(&models.Tag{ID: "OR"}))
+
+	a := &models.Content{NoFile: true, Src: "AFile"}
+	b := &models.Content{NoFile: true, Src: "BFile"}
+	as.NoError(man.CreateContent(a))
+	as.NoError(man.CreateContent(b))
+
+	as.NoError(man.AssociateTagByID("A", a.ID))
+	as.NoError(man.AssociateTagByID("B", b.ID))
+	as.NoError(man.AssociateTagByID("OR", b.ID))
+
+	_, count, err := man.SearchContent(SearchRequest{})
+	as.NoError(err, "It should search empty content")
+	as.Equal(count, 2, "And return all the contents")
+
+	_, tCount, tErr := man.SearchContent(SearchRequest{Tags: []string{"A"}, Text: "File"})
+	as.NoError(tErr, "A tag join shouldn't explode")
+	as.Equal(tCount, 1, "And it should only get A Back")
+
+	_, orCount, orErr := man.SearchContent(SearchRequest{Tags: []string{"OR", "A"}})
+	as.NoError(orErr, "A tag join shouldn't explode")
+	as.Equal(orCount, 2, "And it should get both objects Back")
+
+	_, noCount, noErr := man.SearchContent(SearchRequest{Tags: []string{"A"}, Text: "YAAARG"})
+	as.NoError(noErr, "It should not error")
+	as.Equal(noCount, 0, "But it shouldn't match the text")
 }
 
 func (as *ActionSuite) Test_ManagerDBPreviews() {
