@@ -3,6 +3,7 @@ package actions
 import (
 	"contented/managers"
 	"contented/models"
+	"log"
 
 	"net/http"
 
@@ -86,6 +87,7 @@ func (v ContainersResource) Create(c buffalo.Context) error {
 	if vErr != nil {
 		return vErr
 	}
+	log.Printf("What is going on %s", validate)
 	return c.Render(http.StatusCreated, r.JSON(validate))
 }
 

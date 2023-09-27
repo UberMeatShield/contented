@@ -34,12 +34,17 @@ var EXPECT_CNT_COUNT = map[string]int{
 	"screens_sub_dir": 2,
 }
 
-// Helper for a common block of video test code (duplicated in the utils test)
-func Get_VideoAndSetupPaths() (string, string, string) {
+// Helper for a common block of video test code (duplicated in internals)
+func Get_VideoAndSetupPaths(cfg *utils.DirConfigEntry) (string, string, string) {
+	// The video we use is only 10.08 seconds long.
+	cfg.PreviewFirstScreenOffset = 2
+	cfg.PreviewNumberOfScreens = 4
+	utils.SetCfg(*cfg)
+
 	var testDir, _ = envy.MustGet("DIR")
 	srcDir := filepath.Join(testDir, "dir2")
 	dstDir := utils.GetPreviewDst(srcDir)
-	testFile := "donut.mp4"
+	testFile := "donut_[special( gunk.mp4"
 
 	// Ensure that the preview destination directory is clean
 	utils.ResetPreviewDir(dstDir)

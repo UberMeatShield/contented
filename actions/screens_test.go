@@ -8,6 +8,7 @@ import (
 	//    "net/url"
 	"contented/models"
 	"contented/test_common"
+	"contented/utils"
 	"encoding/json"
 	"path/filepath"
 
@@ -32,7 +33,8 @@ func CreatePreview(src string, contentID uuid.UUID, as *ActionSuite) models.Scre
 
 // Kind of a pain in the ass to create all the way down to a valid preview screen
 func CreateTestContainerWithContent(as *ActionSuite) (*models.Container, *models.Content, string) {
-	srcDir, dstDir, testFile := test_common.Get_VideoAndSetupPaths()
+	cfg := utils.GetCfg()
+	srcDir, dstDir, testFile := test_common.Get_VideoAndSetupPaths(cfg)
 	c := &models.Container{
 		Total: 4,
 		Path:  filepath.Dir(srcDir),

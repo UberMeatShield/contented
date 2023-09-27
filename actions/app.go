@@ -47,7 +47,7 @@ func App(UseDatabase bool) *buffalo.App {
 
 		// Allow for manipulation of content already on the server
 		app.PUT("/editing_queue/{mcID}/screen/{timeSeconds}", TaskScreenHandler)
-		// app.PUT("/editing_queue/{mcID}/screens", TaskScreensHandler)
+		app.PUT("/editing_queue/{mcID}/screens/", TaskScreensHandler)
 		// app.POST("/editing_queue/{mcID}/encoding", TaskEncodingHandler)
 		// app.DELETE("/editing_queue/{taskID}/", TaskDeleteHandler)
 
