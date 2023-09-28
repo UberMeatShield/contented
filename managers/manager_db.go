@@ -551,6 +551,19 @@ func (cm ContentManagerDB) CreateContainer(c *models.Container) error {
 
 }
 
-func (cm ContentManagerDB) AddTask(t *models.TaskRequest) error {
-	return errors.New("Not implemented")
+func (cm ContentManagerDB) CreateTask(t *models.TaskRequest) (*models.TaskRequest, error) {
+	return nil, errors.New("Not implemented")
+}
+
+func (cm ContentManagerDB) UpdateTask(t *models.TaskRequest) (*models.TaskRequest, error) {
+	return nil, errors.New("Not implemented")
+}
+
+func (cm ContentManagerDB) GetTask(id uuid.UUID) (*models.TaskRequest, error) {
+	return nil, errors.New("Not implemented")
+}
+
+// Get the next task for processing (not super thread safe but enough for mem manager)
+func (cm ContentManagerDB) NextTask() (*models.TaskRequest, error) {
+	return nil, errors.New("Not implmented")
 }

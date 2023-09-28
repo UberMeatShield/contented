@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"regexp"
 	"sort"
+	"time"
 
 	"github.com/gofrs/uuid"
 )
@@ -27,6 +28,7 @@ type ContentManagerMemory struct {
 	ValidContainers models.ContainerMap
 	ValidScreens    models.ScreenMap
 	ValidTags       models.TagsMap
+	ValidTasks      models.TaskRequests
 	validate        string
 
 	params *url.Values
@@ -63,6 +65,7 @@ func (cm *ContentManagerMemory) Initialize() {
 	cm.ValidContent = memStorage.ValidContent
 	cm.ValidScreens = memStorage.ValidScreens
 	cm.ValidTags = memStorage.ValidTags
+	cm.ValidTasks = memStorage.ValidTasks
 	log.Printf("Found %d directories with %d content elements \n", len(cm.ValidContainers), len(cm.ValidContent))
 }
 
@@ -627,6 +630,53 @@ func (cm ContentManagerMemory) CreateContainer(c *models.Container) error {
 	return errors.New(msg)
 }
 
-func (cm ContentManagerMemory) AddTask(t *models.TaskRequest) error {
-	return errors.New("Not implemented")
+func (cm ContentManagerMemory) CreateTask(t *models.TaskRequest) (*models.TaskRequest, error) {
+	if t == nil {
+		return nil, errors.New("Requires a valid task")
+	}
+	t.ID = AssignID(t.ID)
+	t.CreatedAt = time.Now()
+	t.UpdatedAt = time.Now()
+	cm.ValidTasks = append(cm.ValidTasks, *t)
+	return cm.GetTask(t.ID)
+}
+
+func (cm ContentManagerMemory) UpdateTask(t *models.TaskRequest) (*models.TaskRequest, error) {
+	updated := false
+	for idx, task := range cm.ValidTasks {
+		if task.ID == t.ID {
+			t.UpdatedAt = time.Now()
+			cm.ValidTasks[idx] = *t
+			updated = true
+			break
+		}
+	}
+	if updated == false {
+		return nil, errors.New("Could not find task to update")
+	}
+	return cm.GetTask(t.ID)
+}
+
+func (cm ContentManagerMemory) GetTask(id uuid.UUID) (*models.TaskRequest, error) {
+	for _, task := range cm.ValidTasks {
+		if task.ID == id {
+			return &task, nil
+		}
+	}
+	return nil, errors.New("Task not found")
+}
+
+// Get the next task for processing (not super thread safe but enough for mem manager)
+func (cm ContentManagerMemory) NextTask() (*models.TaskRequest, error) {
+	for _, task := range cm.ValidTasks {
+		if task.Status == models.TaskStatus.NEW {
+			task.Status = models.TaskStatus.PENDING
+			updated, err := cm.UpdateTask(&task)
+			if err != nil {
+				return nil, err
+			}
+			return updated, nil
+		}
+	}
+	return nil, errors.New("Not implmented")
 }

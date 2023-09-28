@@ -95,7 +95,11 @@ type ContentManager interface {
 	AssociateTag(tag *models.Tag, c *models.Content) error
 	AssociateTagByID(tagID string, mcID uuid.UUID) error
 
-	AddTask(task *models.TaskRequest) error
+	// For processing encoding requests
+	CreateTask(task *models.TaskRequest) (*models.TaskRequest, error)
+	GetTask(id uuid.UUID) (*models.TaskRequest, error)
+	UpdateTask(task *models.TaskRequest) (*models.TaskRequest, error)
+	NextTask() (*models.TaskRequest, error)
 }
 
 // Dealing with buffalo.Context vs grift.Context is kinda annoying, this handles the

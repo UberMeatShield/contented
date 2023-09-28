@@ -41,9 +41,9 @@ func (as *ActionSuite) Test_EditingQueueScreenHandler() {
 	as.Equal(cfg.ReadOnly, false)
 	_, content := CreateVideoContainer(as)
 	timeSeconds := 3
-	url := fmt.Sprintf("/editing_queue/%s/screen/%d", content.ID.String(), timeSeconds)
-	res := as.JSON(url).Put(&content)
-	as.Equal(http.StatusOK, res.Code, fmt.Sprintf("Should be able to grab a screen %s", res.Body.String()))
+	url := fmt.Sprintf("/editing_queue/%s/screens/%d/%d", content.ID.String(), 1, timeSeconds)
+	res := as.JSON(url).Post(&content)
+	as.Equal(http.StatusCreated, res.Code, fmt.Sprintf("Should be able to grab a screen %s", res.Body.String()))
 }
 
 // Do the screen grab in db but every N seconds (different action probably same backing)
@@ -52,9 +52,9 @@ func (as *ActionSuite) Test_EditingQueueScreensHandler() {
 	as.Equal(cfg.ReadOnly, false)
 	_, content := CreateVideoContainer(as)
 	timeSeconds := 2
-	url := fmt.Sprintf("/editing_queue/%s/screens/%d", content.ID.String(), timeSeconds)
-	res := as.JSON(url).Put(&content)
-	as.Equal(http.StatusOK, res.Code, fmt.Sprintf("Editing Queue Failed %s", res.Body.String()))
+	url := fmt.Sprintf("/editing_queue/%s/screens/%d/%d", content.ID.String(), 1, timeSeconds)
+	res := as.JSON(url).Post(&content)
+	as.Equal(http.StatusCreated, res.Code, fmt.Sprintf("Editing Queue Failed %s", res.Body.String()))
 }
 
 // Validate it created some actual output.

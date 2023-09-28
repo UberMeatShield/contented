@@ -17,6 +17,7 @@ type MemoryStorage struct {
 	ValidContainers models.ContainerMap
 	ValidScreens    models.ScreenMap
 	ValidTags       models.TagsMap
+	ValidTasks      models.TaskRequests // Not a Map as we want the order to matter
 }
 
 var memStorage MemoryStorage = MemoryStorage{Initialized: false}
@@ -34,6 +35,7 @@ func InitializeMemory(dir_root string) *MemoryStorage {
 	memStorage.ValidContent = files
 	memStorage.ValidScreens = screens
 	memStorage.ValidTags = tags
+	memStorage.ValidTasks = models.TaskRequests{}
 	return &memStorage
 }
 
@@ -43,6 +45,7 @@ func InitializeEmptyMemory() *MemoryStorage {
 	memStorage.ValidContent = models.ContentMap{}
 	memStorage.ValidScreens = models.ScreenMap{}
 	memStorage.ValidTags = models.TagsMap{}
+	memStorage.ValidTasks = models.TaskRequests{}
 	return &memStorage
 }
 

@@ -46,8 +46,7 @@ func App(UseDatabase bool) *buffalo.App {
 		app.GET("/splash", SplashHandler)
 
 		// Allow for manipulation of content already on the server
-		app.PUT("/editing_queue/{mcID}/screen/{timeSeconds}", TaskScreenHandler)
-		app.PUT("/editing_queue/{mcID}/screens/", TaskScreensHandler)
+		app.POST("/editing_queue/{contentID}/screens/{count}/{startTimeSeconds}", TaskScreensHandler)
 		// app.POST("/editing_queue/{mcID}/encoding", TaskEncodingHandler)
 		// app.DELETE("/editing_queue/{taskID}/", TaskDeleteHandler)
 

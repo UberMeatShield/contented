@@ -2,9 +2,9 @@ package actions
 
 import (
 	"contented/managers"
+	"contented/models"
 	"contented/utils"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -15,36 +15,38 @@ import (
 
 // Should deny quickly if the media content type is incorrect for the action
 func TaskScreensHandler(c buffalo.Context) error {
-	mcID, bad_uuid := uuid.FromString(c.Param("mcID"))
-	numberOfScreens, countErr := strconv.Atoi(c.Param("numberOfScreens"))
-	log.Printf("Attempting to request a screens be built out")
+	cfg := utils.GetCfg()
+	contentID, bad_uuid := uuid.FromString(c.Param("contentID"))
 	if bad_uuid != nil {
 		return c.Error(400, bad_uuid)
 	}
-	cfg := utils.GetCfg()
+	startTimeSeconds, startErr := strconv.Atoi(c.Param("startTimeSeconds"))
+	if startErr != nil || startTimeSeconds < 0 {
+		startTimeSeconds = cfg.PreviewFirstScreenOffset
+	}
+	numberOfScreens, countErr := strconv.Atoi(c.Param("count"))
 	if countErr != nil {
 		numberOfScreens = cfg.PreviewCount
 	}
+	if numberOfScreens <= 0 || numberOfScreens > 50 {
+		return c.Error(http.StatusBadRequest, errors.New("Too many or few screens requested"))
+	}
+
 	man := managers.GetManager(&c)
-	content, err := man.GetContent(mcID)
+	content, err := man.GetContent(contentID)
 	if err != nil {
 		return c.Error(404, err)
 	}
-	log.Printf("Not implemented mcID %s with number of screens %d", content.ID.String(), numberOfScreens)
-	return c.Render(http.StatusBadRequest, r.JSON(content))
-}
-
-func TaskScreenHandler(c buffalo.Context) error {
-	mcID, bad_uuid := uuid.FromString(c.Param("mcID"))
-	timeForScreen, timeErr := strconv.Atoi(c.Param("timeSeconds"))
-	log.Printf("Attempting to request a screen at a particular time")
-	if bad_uuid != nil {
-		return c.Error(400, bad_uuid)
+	log.Printf("Requesting screens be built out %s(%s) start %d count %d", content.String(), content.Src, startTimeSeconds, numberOfScreens)
+	tr := models.TaskRequest{
+		ContentID:        content.ID,
+		Operation:        models.TaskOperation.SCREENS,
+		NumberOfScreens:  numberOfScreens,
+		StartTimeSeconds: startTimeSeconds,
 	}
-	if timeErr != nil {
-		msg := fmt.Sprintf("Bad timestamp %s", c.Param("timeSeconds"))
-		return c.Error(400, errors.New(msg))
+	createdTR, tErr := man.CreateTask(&tr)
+	if tErr != nil {
+		c.Error(http.StatusInternalServerError, tErr)
 	}
-	log.Printf("Media id %s with time %d", mcID, timeForScreen)
-	return c.Error(400, errors.New("Not implemented"))
+	return c.Render(http.StatusCreated, r.JSON(createdTR))
 }
