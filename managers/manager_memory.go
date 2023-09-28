@@ -642,10 +642,12 @@ func (cm ContentManagerMemory) CreateTask(t *models.TaskRequest) (*models.TaskRe
 	return cm.GetTask(t.ID)
 }
 
-func (cm ContentManagerMemory) UpdateTask(t *models.TaskRequest) (*models.TaskRequest, error) {
+func (cm ContentManagerMemory) UpdateTask(t *models.TaskRequest, currentState models.TaskStatusType) (*models.TaskRequest, error) {
 	updated := false
 	for idx, task := range cm.ValidTasks {
-		if task.ID == t.ID {
+		// Check to ensure the state is known before the updated which should
+		// prevent MOST update errors in the memory view.
+		if task.ID == t.ID && currentState == task.Status {
 			t.UpdatedAt = time.Now()
 			cm.ValidTasks[idx] = *t
 			updated = true
@@ -668,16 +670,17 @@ func (cm ContentManagerMemory) GetTask(id uuid.UUID) (*models.TaskRequest, error
 }
 
 // Get the next task for processing (not super thread safe but enough for mem manager)
+// Where we will ensure only 1 reader.
 func (cm ContentManagerMemory) NextTask() (*models.TaskRequest, error) {
 	for _, task := range cm.ValidTasks {
 		if task.Status == models.TaskStatus.NEW {
 			task.Status = models.TaskStatus.PENDING
-			updated, err := cm.UpdateTask(&task)
+			updated, err := cm.UpdateTask(&task, task.Status)
 			if err != nil {
 				return nil, err
 			}
 			return updated, nil
 		}
 	}
-	return nil, errors.New("Not implmented")
+	return nil, nil
 }

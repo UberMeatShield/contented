@@ -98,7 +98,7 @@ type ContentManager interface {
 	// For processing encoding requests
 	CreateTask(task *models.TaskRequest) (*models.TaskRequest, error)
 	GetTask(id uuid.UUID) (*models.TaskRequest, error)
-	UpdateTask(task *models.TaskRequest) (*models.TaskRequest, error)
+	UpdateTask(task *models.TaskRequest, currentStatus models.TaskStatusType) (*models.TaskRequest, error)
 	NextTask() (*models.TaskRequest, error)
 }
 

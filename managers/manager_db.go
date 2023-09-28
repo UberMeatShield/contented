@@ -555,7 +555,7 @@ func (cm ContentManagerDB) CreateTask(t *models.TaskRequest) (*models.TaskReques
 	return nil, errors.New("Not implemented")
 }
 
-func (cm ContentManagerDB) UpdateTask(t *models.TaskRequest) (*models.TaskRequest, error) {
+func (cm ContentManagerDB) UpdateTask(t *models.TaskRequest, currentState models.TaskStatusType) (*models.TaskRequest, error) {
 	return nil, errors.New("Not implemented")
 }
 
