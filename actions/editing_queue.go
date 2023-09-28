@@ -3,36 +3,15 @@ package actions
 import (
 	"contented/managers"
 	"contented/utils"
-	"fmt"
-
-	//    "contented/models"
 	"errors"
+	"fmt"
 	"log"
+	"net/http"
 	"strconv"
-	"time"
-
-	//"net/http"
 
 	"github.com/gobuffalo/buffalo"
 	"github.com/gofrs/uuid"
 )
-
-// https://stackoverflow.com/questions/14426366/what-is-an-idiomatic-way-of-representing-enums-in-go
-type TaskRequestStatus struct {
-	State string
-}
-
-// What are we doing here
-type TaskRequest struct {
-	contentID uuid.UUID
-	status    TaskRequestStatus
-
-	CreatedAt time.Time
-	UpdatedAt time.Time
-
-	Message string
-	ErrMsg  string
-}
 
 // Should deny quickly if the media content type is incorrect for the action
 func TaskScreensHandler(c buffalo.Context) error {
@@ -52,7 +31,7 @@ func TaskScreensHandler(c buffalo.Context) error {
 		return c.Error(404, err)
 	}
 	log.Printf("Not implemented mcID %s with number of screens %d", content.ID.String(), numberOfScreens)
-	return c.Render(400, r.JSON(content))
+	return c.Render(http.StatusBadRequest, r.JSON(content))
 }
 
 func TaskScreenHandler(c buffalo.Context) error {

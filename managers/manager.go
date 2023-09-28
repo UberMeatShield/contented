@@ -94,6 +94,8 @@ type ContentManager interface {
 	DestroyTag(id string) (*models.Tag, error)
 	AssociateTag(tag *models.Tag, c *models.Content) error
 	AssociateTagByID(tagID string, mcID uuid.UUID) error
+
+	AddTask(task *models.TaskRequest) error
 }
 
 // Dealing with buffalo.Context vs grift.Context is kinda annoying, this handles the

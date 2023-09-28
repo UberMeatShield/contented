@@ -626,3 +626,7 @@ func (cm ContentManagerMemory) CreateContainer(c *models.Container) error {
 	msg := fmt.Sprintf("The directory was not under the config path %s", c.Name)
 	return errors.New(msg)
 }
+
+func (cm ContentManagerMemory) AddTask(t *models.TaskRequest) error {
+	return errors.New("Not implemented")
+}

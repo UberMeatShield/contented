@@ -550,3 +550,7 @@ func (cm ContentManagerDB) CreateContainer(c *models.Container) error {
 	return errors.New(msg)
 
 }
+
+func (cm ContentManagerDB) AddTask(t *models.TaskRequest) error {
+	return errors.New("Not implemented")
+}
