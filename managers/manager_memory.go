@@ -93,7 +93,8 @@ func (cm ContentManagerMemory) ListAllContent(page int, per_page int) (*models.C
 
 func (cm ContentManagerMemory) ListAllContentFiltered(page int, per_page int, includeHidden bool) (*models.Contents, error) {
 	m_arr := models.Contents{}
-	for _, m := range cm.ValidContent {
+	mem := cm.GetStore()
+	for _, m := range mem.ValidContent {
 		if includeHidden == false {
 			if m.Hidden == false {
 				m_arr = append(m_arr, m)
@@ -479,7 +480,8 @@ func (cm ContentManagerMemory) GetScreen(psID uuid.UUID) (*models.Screen, error)
 func (cm ContentManagerMemory) ListAllTags(page int, perPage int) (*models.Tags, error) {
 	log.Printf("Using memory manager for tag page %d perPage %d \n", page, perPage)
 	t_arr := models.Tags{}
-	for _, t := range cm.ValidTags {
+	mem := cm.GetStore()
+	for _, t := range mem.ValidTags {
 		t_arr = append(t_arr, t)
 	}
 	if len(t_arr) == 0 {
