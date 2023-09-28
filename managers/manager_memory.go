@@ -16,6 +16,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/gobuffalo/buffalo/worker"
 	"github.com/gofrs/uuid"
 )
 
@@ -33,6 +34,7 @@ type ContentManagerMemory struct {
 
 	params *url.Values
 	Params GetParamsType
+	Worker GetAppWorker
 }
 
 // We do not allow editing in a memory manager
@@ -59,6 +61,7 @@ func (cm *ContentManagerMemory) Initialize() {
 	// TODO: Should we allow for a timeout or rescan option?
 	memStorage := utils.GetMemStorage()
 	if memStorage.Initialized == false {
+		log.Printf("Re-Initializing memory")
 		memStorage = utils.InitializeMemory(cm.cfg.Dir)
 	}
 	cm.ValidContainers = memStorage.ValidContainers
@@ -638,24 +641,34 @@ func (cm ContentManagerMemory) CreateTask(t *models.TaskRequest) (*models.TaskRe
 	t.CreatedAt = time.Now()
 	t.UpdatedAt = time.Now()
 	t.Status = models.TaskStatus.PENDING
+
+	// VERY UGLY
 	cm.ValidTasks = append(cm.ValidTasks, *t)
+	mem := utils.GetMemStorage()
+	mem.ValidTasks = append(mem.ValidTasks, *t)
+
+	// Odd... very odd
+	job := worker.Job{
+		Queue:   "default",
+		Handler: t.Operation.String(),
+		Args: worker.Args{
+			"id": t.ID.String(),
+		},
+	}
+	log.Printf("Valid tasks are now %s", cm.ValidTasks)
+	cm.Worker().Perform(job)
 	return cm.GetTask(t.ID)
 }
 
+// Updates and creates will need to actually fully refresh things for background
+// tasks to actually work
 func (cm ContentManagerMemory) UpdateTask(t *models.TaskRequest, currentState models.TaskStatusType) (*models.TaskRequest, error) {
-	updated := false
-	for idx, task := range cm.ValidTasks {
-		// Check to ensure the state is known before the updated which should
-		// prevent MOST update errors in the memory view.
-		if task.ID == t.ID && currentState == task.Status {
-			t.UpdatedAt = time.Now()
-			cm.ValidTasks[idx] = *t
-			updated = true
-			break
-		}
-	}
-	if updated == false {
-		return nil, errors.New("Could not find task to update")
+	// Probably does NOT properly update the memStorage
+	mem := utils.GetMemStorage()
+	tasks, err := mem.UpdateTask(t, t.Status)
+	cm.ValidTasks = *tasks
+	if err != nil {
+		return nil, err
 	}
 	return cm.GetTask(t.ID)
 }
@@ -666,7 +679,7 @@ func (cm ContentManagerMemory) GetTask(id uuid.UUID) (*models.TaskRequest, error
 			return &task, nil
 		}
 	}
-	return nil, errors.New("Task not found")
+	return nil, errors.New(fmt.Sprintf("Task not found %s", cm.ValidTasks))
 }
 
 // Get the next task for processing (not super thread safe but enough for mem manager)

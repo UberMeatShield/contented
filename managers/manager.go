@@ -22,12 +22,14 @@ import (
 	"strings"
 
 	"github.com/gobuffalo/buffalo"
+	"github.com/gobuffalo/buffalo/worker"
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 )
 
 type GetConnType func() *pop.Connection
 type GetParamsType func() *url.Values
+type GetAppWorker func() worker.Worker
 
 type SearchRequest struct {
 	Text        string   `json:"text" default:""`
@@ -134,7 +136,16 @@ func GetManager(c *buffalo.Context) ContentManager {
 		params := ctx.Params().(url.Values)
 		return &params
 	}
-	return CreateManager(cfg, get_connection, get_params)
+
+	// Should it return the app?
+	getWorker := func() worker.Worker {
+		app, ok := ctx.Value("app").(*buffalo.App)
+		if !ok || app.Worker == nil {
+			log.Fatalf("No Worker found")
+		}
+		return app.Worker
+	}
+	return CreateManager(cfg, get_connection, get_params, getWorker)
 }
 
 // can this manager create, update or destroy
@@ -156,7 +167,7 @@ func ManagerCanCUD(c *buffalo.Context) (*ContentManager, *pop.Connection, error)
 
 // Provides the ability to pass a connection function and get params function to the manager so we can handle
 // a request.  We set this up so that the interface can still use the buffalo connection and param management.
-func CreateManager(cfg *utils.DirConfigEntry, get_conn GetConnType, get_params GetParamsType) ContentManager {
+func CreateManager(cfg *utils.DirConfigEntry, get_conn GetConnType, get_params GetParamsType, get_worker GetAppWorker) ContentManager {
 	if cfg.UseDatabase {
 		// Not really important for a DB manager, just need to look at it
 		log.Printf("Setting up the DB Manager")
@@ -169,6 +180,7 @@ func CreateManager(cfg *utils.DirConfigEntry, get_conn GetConnType, get_params G
 		log.Printf("Setting up the memory Manager")
 		mem_man := ContentManagerMemory{cfg: cfg}
 		mem_man.Params = get_params
+		mem_man.Worker = get_worker
 		mem_man.Initialize() // Break this into a sensible initialization
 		return mem_man
 	}

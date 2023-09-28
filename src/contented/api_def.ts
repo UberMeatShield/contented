@@ -13,6 +13,7 @@ export let ApiDef = {
         content: "/content/{id}/",
         contentScreens: base + 'content/{mcID}/screens',
         screens: base + 'screens/',
+        requestScreens: "/editing_queue/{id}/screens/{count}/{startTimeSeconds}",
         contentAll: base + 'content/',
         search: base + "search",
 

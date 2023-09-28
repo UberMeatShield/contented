@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/gobuffalo/buffalo/worker"
 	"github.com/gobuffalo/envy"
 	"github.com/gobuffalo/grift/grift"
 	"github.com/gobuffalo/pop/v6"
@@ -46,6 +47,9 @@ var _ = grift.Namespace("db", func() {
 	no_connection := func() *pop.Connection {
 		return nil // Do not do anything with the DB
 	}
+	get_worker := func() worker.Worker {
+		return nil
+	}
 
 	grift.Add("preview", func(c *grift.Context) error {
 		cfg := utils.GetCfg()
@@ -60,13 +64,13 @@ var _ = grift.Namespace("db", func() {
 				get_connection := func() *pop.Connection {
 					return tx
 				}
-				man := managers.CreateManager(cfg, get_connection, get_params)
+				man := managers.CreateManager(cfg, get_connection, get_params, get_worker)
 				fmt.Printf("Creating previews images %t with db manager", man.CanEdit())
 				return managers.CreateAllPreviews(man)
 			})
 		} else {
 			get_connection := no_connection
-			man := managers.CreateManager(cfg, get_connection, get_params)
+			man := managers.CreateManager(cfg, get_connection, get_params, get_worker)
 			fmt.Printf("Use memory manager %t for preview images", man.CanEdit())
 			return managers.CreateAllPreviews(man)
 		}
@@ -85,13 +89,13 @@ var _ = grift.Namespace("db", func() {
 				get_connection := func() *pop.Connection {
 					return tx
 				}
-				man := managers.CreateManager(cfg, get_connection, get_params)
+				man := managers.CreateManager(cfg, get_connection, get_params, get_worker)
 				fmt.Printf("Starting to encode %t TODO: Summary of config", man.CanEdit())
 				return managers.EncodeVideos(man)
 			})
 		} else {
 			get_connection := no_connection
-			man := managers.CreateManager(cfg, get_connection, get_params)
+			man := managers.CreateManager(cfg, get_connection, get_params, get_worker)
 			fmt.Printf("Use memory manager %t for video encoding lookups", man.CanEdit())
 			return managers.EncodeVideos(man)
 		}
@@ -110,7 +114,7 @@ var _ = grift.Namespace("db", func() {
 				get_connection := func() *pop.Connection {
 					return tx
 				}
-				man := managers.CreateManager(cfg, get_connection, get_params)
+				man := managers.CreateManager(cfg, get_connection, get_params, get_worker)
 				tags, err := managers.CreateTagsFromFile(man)
 				if tags != nil {
 					fmt.Printf("Created a set of tags %d", len(*tags))
@@ -119,7 +123,7 @@ var _ = grift.Namespace("db", func() {
 			})
 		} else {
 			get_connection := no_connection
-			man := managers.CreateManager(cfg, get_connection, get_params)
+			man := managers.CreateManager(cfg, get_connection, get_params, get_worker)
 			fmt.Printf("Memory Manager looking for tags.\n")
 			tags, err := managers.CreateTagsFromFile(man)
 			if tags != nil {

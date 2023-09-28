@@ -37,6 +37,9 @@ func CreateVideoContainer(as *ActionSuite) (*models.Container, *models.Content) 
 
 // Do the screen grab in memory
 func (as *ActionSuite) Test_EditingQueueScreenHandler() {
+
+	as.Equal(models.TaskOperation.SCREENS.String(), "screen_capture")
+
 	cfg := test_common.InitMemoryFakeAppEmpty()
 	as.Equal(cfg.ReadOnly, false)
 	_, content := CreateVideoContainer(as)
@@ -49,6 +52,7 @@ func (as *ActionSuite) Test_EditingQueueScreenHandler() {
 	json.NewDecoder(res.Body).Decode(&tr)
 	as.NotZero(tr.ID)
 	as.Equal(models.TaskStatus.PENDING, tr.Status, fmt.Sprintf("Task invalid %s", tr))
+	as.Fail("No idea how to test background task")
 }
 
 // Validate it created some actual output.

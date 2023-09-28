@@ -7,7 +7,9 @@ package utils
  */
 import (
 	"contented/models"
+	"errors"
 	"log"
+	"time"
 )
 
 // GoLang is just making this awkward
@@ -47,6 +49,24 @@ func InitializeEmptyMemory() *MemoryStorage {
 	memStorage.ValidTags = models.TagsMap{}
 	memStorage.ValidTasks = models.TaskRequests{}
 	return &memStorage
+}
+
+func (ms MemoryStorage) UpdateTask(t *models.TaskRequest, currentState models.TaskStatusType) (*models.TaskRequests, error) {
+	updated := false
+	for idx, task := range ms.ValidTasks {
+		// Check to ensure the state is known before the updated which should
+		// prevent MOST update errors in the memory view.
+		if task.ID == t.ID && currentState == task.Status {
+			t.UpdatedAt = time.Now()
+			ms.ValidTasks[idx] = *t
+			updated = true
+			break
+		}
+	}
+	if updated == false {
+		return nil, errors.New("Could not find Task to update")
+	}
+	return &ms.ValidTasks, nil
 }
 
 /**

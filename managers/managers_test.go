@@ -10,6 +10,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/gobuffalo/buffalo/worker"
 	"github.com/gobuffalo/envy"
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gobuffalo/suite/v4"
@@ -25,7 +26,10 @@ func GetManagerActionSuite(cfg *utils.DirConfigEntry, as *ActionSuite) ContentMa
 		// as.DB should work, but it is of a type pop.v5.Connection instead of pop.Connection
 		return models.DB
 	}
-	return CreateManager(cfg, get_conn, get_params)
+	get_worker := func() worker.Worker {
+		return as.App.Worker
+	}
+	return CreateManager(cfg, get_conn, get_params, get_worker)
 }
 
 func TestMain(m *testing.M) {

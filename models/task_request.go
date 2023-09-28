@@ -41,6 +41,16 @@ var TaskOperation = struct {
 	SCREENS:  "screen_capture",
 }
 
+func (to TaskOperationType) String() string {
+	switch to {
+	case TaskOperation.ENCODING:
+		return "video_encoding"
+	case TaskOperation.SCREENS:
+		return "screen_capture"
+	}
+	return "unknown"
+}
+
 // TaskRequest is used by pop to map your task_requests database table to your go code.
 type TaskRequest struct {
 	ID        uuid.UUID `json:"id" db:"id"`
