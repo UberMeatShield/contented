@@ -8,8 +8,11 @@ package utils
 import (
 	"contented/models"
 	"errors"
+	"fmt"
 	"log"
 	"time"
+
+	"github.com/gofrs/uuid"
 )
 
 // GoLang is just making this awkward
@@ -51,7 +54,92 @@ func InitializeEmptyMemory() *MemoryStorage {
 	return &memStorage
 }
 
-func (ms MemoryStorage) UpdateTask(t *models.TaskRequest, currentState models.TaskStatusType) (*models.TaskRequests, error) {
+func AssignID(id uuid.UUID) uuid.UUID {
+	emptyID, _ := uuid.FromString("00000000-0000-0000-0000-000000000000")
+	if id == emptyID {
+		newID, _ := uuid.NewV4()
+		return newID
+	}
+	return id
+}
+
+func (ms MemoryStorage) CreateScreen(screen *models.Screen) (*models.Screen, error) {
+	screen.ID = AssignID(screen.ID)
+	screen.CreatedAt = time.Now()
+	screen.UpdatedAt = time.Now()
+	ms.ValidScreens[screen.ID] = *screen
+	return screen, nil
+}
+
+func (ms MemoryStorage) UpdateScreen(s *models.Screen) (*models.Screen, error) {
+	if _, ok := ms.ValidScreens[s.ID]; ok {
+		s.UpdatedAt = time.Now()
+		ms.ValidScreens[s.ID] = *s
+		return s, nil
+	}
+	return nil, errors.New(fmt.Sprintf("Screen not found with %s", s))
+}
+
+func (ms MemoryStorage) CreateContent(content *models.Content) (*models.Content, error) {
+	content.ID = AssignID(content.ID)
+	content.CreatedAt = time.Now()
+	content.UpdatedAt = time.Now()
+	ms.ValidContent[content.ID] = *content
+	return content, nil
+}
+
+// Reload the contents with the ID?
+func (ms MemoryStorage) UpdateContent(content *models.Content) (*models.Content, error) {
+	if _, ok := ms.ValidContent[content.ID]; ok {
+		content.UpdatedAt = time.Now()
+		ms.ValidContent[content.ID] = *content
+		return content, nil
+	}
+	return nil, errors.New("Content was not found")
+}
+
+func (ms MemoryStorage) CreateContainer(c *models.Container) (*models.Container, error) {
+	c.ID = AssignID(c.ID)
+	c.CreatedAt = time.Now()
+	c.UpdatedAt = time.Now()
+	ms.ValidContainers[c.ID] = *c
+	return c, nil
+}
+
+func (ms MemoryStorage) UpdateContainer(cnt *models.Container) (*models.Container, error) {
+	if _, ok := ms.ValidContainers[cnt.ID]; ok {
+		cnt.UpdatedAt = time.Now()
+		ms.ValidContainers[cnt.ID] = *cnt
+		return cnt, nil
+	}
+	return nil, errors.New(fmt.Sprintf("Container was not found with ID %s", cnt))
+}
+
+func (ms MemoryStorage) CreateTask(t *models.TaskRequest) (*models.TaskRequest, error) {
+	t.ID = AssignID(t.ID)
+	t.CreatedAt = time.Now()
+	t.UpdatedAt = time.Now()
+	t.Status = models.TaskStatus.PENDING
+	ms.ValidTasks = append(ms.ValidTasks, *t)
+	return t, nil
+}
+
+func (ms MemoryStorage) CreateTag(tag *models.Tag) (*models.Tag, error) {
+	tag.UpdatedAt = time.Now()
+	ms.ValidTags[tag.ID] = *tag
+	return tag, nil
+}
+
+func (ms MemoryStorage) UpdateTag(tag *models.Tag) (*models.Tag, error) {
+	if _, ok := ms.ValidTags[tag.ID]; ok {
+		tag.UpdatedAt = time.Now()
+		ms.ValidTags[tag.ID] = *tag
+		return tag, nil
+	}
+	return nil, errors.New(fmt.Sprintf("Tag was not found %s", tag))
+}
+
+func (ms MemoryStorage) UpdateTask(t *models.TaskRequest, currentState models.TaskStatusType) (*models.TaskRequest, error) {
 	updated := false
 	for idx, task := range ms.ValidTasks {
 		// Check to ensure the state is known before the updated which should
@@ -66,7 +154,7 @@ func (ms MemoryStorage) UpdateTask(t *models.TaskRequest, currentState models.Ta
 	if updated == false {
 		return nil, errors.New("Could not find Task to update")
 	}
-	return &ms.ValidTasks, nil
+	return t, nil
 }
 
 /**

@@ -14,7 +14,6 @@ import (
 	"net/url"
 	"regexp"
 	"sort"
-	"time"
 
 	"github.com/gobuffalo/buffalo/worker"
 	"github.com/gofrs/uuid"
@@ -57,19 +56,23 @@ func (cm ContentManagerMemory) GetCfg() *utils.DirConfigEntry {
 // On a first time load / use we will pull back content information from dist and from
 // then on continue to use already loaded information.
 func (cm *ContentManagerMemory) Initialize() {
-
 	// TODO: Should we allow for a timeout or rescan option?
-	memStorage := utils.GetMemStorage()
+	memStorage := cm.GetStore()
 	if memStorage.Initialized == false {
 		log.Printf("Re-Initializing memory")
 		memStorage = utils.InitializeMemory(cm.cfg.Dir)
 	}
+	// Remove this extra reference
 	cm.ValidContainers = memStorage.ValidContainers
 	cm.ValidContent = memStorage.ValidContent
 	cm.ValidScreens = memStorage.ValidScreens
 	cm.ValidTags = memStorage.ValidTags
 	cm.ValidTasks = memStorage.ValidTasks
 	log.Printf("Found %d directories with %d content elements \n", len(cm.ValidContainers), len(cm.ValidContent))
+}
+
+func (cm ContentManagerMemory) GetStore() *utils.MemoryStorage {
+	return utils.GetMemStorage()
 }
 
 // Kinda strange but it seems hard to assign the type into an interface
@@ -166,11 +169,12 @@ func (cm ContentManagerMemory) getContentFiltered(containerID string, search str
 	// If a containerID is specified and is totally invalid raise an error, otherwise filter
 	var mcArr models.Contents
 	cidArr := models.Contents{}
+	mem := cm.GetStore()
 
 	if containerID != "" {
 		cID, cErr := uuid.FromString(containerID)
 		if cErr == nil {
-			for _, mc := range cm.ValidContent {
+			for _, mc := range mem.ValidContent {
 				if mc.ContainerID.Valid && mc.ContainerID.UUID == cID {
 					cidArr = append(cidArr, mc)
 				}
@@ -181,7 +185,7 @@ func (cm ContentManagerMemory) getContentFiltered(containerID string, search str
 		}
 	} else {
 		// Empty string for containerID is considered match all content
-		for _, mc := range cm.ValidContent {
+		for _, mc := range mem.ValidContent {
 			cidArr = append(cidArr, mc)
 		}
 		mcArr = cidArr
@@ -234,7 +238,8 @@ func (cm ContentManagerMemory) SearchContainers(search string, page int, per_pag
 	}
 
 	searcher := regexp.MustCompile("(?i)" + search)
-	for _, c := range cm.ValidContainers {
+	mem := cm.GetStore()
+	for _, c := range mem.ValidContainers {
 		if searcher.MatchString(c.Name) {
 			if includeHidden == false {
 				if c.Hidden != true {
@@ -255,7 +260,8 @@ func (cm ContentManagerMemory) ListContent(ContainerID uuid.UUID, page int, per_
 
 func (cm ContentManagerMemory) ListContentFiltered(ContainerID uuid.UUID, page int, per_page int, includeHidden bool) (*models.Contents, error) {
 	m_arr := models.Contents{}
-	for _, m := range cm.ValidContent {
+	mem := cm.GetStore()
+	for _, m := range mem.ValidContent {
 		if m.ContainerID.Valid && m.ContainerID.UUID == ContainerID {
 			if includeHidden == false {
 				if m.Hidden == false {
@@ -282,7 +288,8 @@ func (cm ContentManagerMemory) ListContentFiltered(ContainerID uuid.UUID, page i
 // Get a content element by the ID
 func (cm ContentManagerMemory) GetContent(mcID uuid.UUID) (*models.Content, error) {
 	// log.Printf("Memory Get a single content %s", mcID)
-	if mc, ok := cm.ValidContent[mcID]; ok {
+	mem := cm.GetStore()
+	if mc, ok := mem.ValidContent[mcID]; ok {
 		return &mc, nil
 	}
 	return nil, errors.New("Content was not found in memory")
@@ -293,15 +300,12 @@ func (cm ContentManagerMemory) UpdateContainer(cnt *models.Container) (*models.C
 	// TODO: Validate that this updates the actual reference in mem storage
 	cfg := cm.GetCfg()
 	pathOk, err := utils.PathIsOk(cnt.Path, cnt.Name, cfg.Dir)
-	if err != nil {
+	if err != nil || pathOk == false {
 		log.Printf("Path does not exist on disk under the config directory err %s", err)
 		return nil, err
 	}
-	if _, ok := cm.ValidContainers[cnt.ID]; ok && pathOk {
-		cm.ValidContainers[cnt.ID] = *cnt
-		return cnt, nil
-	}
-	return nil, errors.New("Container was not found to update or path illegal")
+	container, err := cm.GetStore().UpdateContainer(cnt)
+	return container, err
 }
 
 // No updates should be allowed for memory management.
@@ -321,19 +325,14 @@ func (cm ContentManagerMemory) UpdateContent(content *models.Content) error {
 			return errors.New(fmt.Sprintf("Invalid content src %s for container %s", content.Src, cnt.Name))
 		}
 	}
-	if _, ok := cm.ValidContent[content.ID]; ok {
-		cm.ValidContent[content.ID] = *content
-		return nil
-	}
-	return errors.New("Content was not found to update")
+	_, err := cm.GetStore().UpdateContent(content)
+	return err
 }
 
+// Could use some extra validation (ensure there is content for the screen?)
 func (cm ContentManagerMemory) UpdateScreen(s *models.Screen) error {
-	if _, ok := cm.ValidScreens[s.ID]; ok {
-		cm.ValidScreens[s.ID] = *s
-		return nil
-	}
-	return errors.New("Content was not found to update")
+	_, err := cm.GetStore().UpdateScreen(s)
+	return err
 }
 
 // Given the current parameters in the buffalo context return a list of matching containers.
@@ -351,7 +350,8 @@ func (cm ContentManagerMemory) ListContainersFiltered(page int, per_page int, in
 	log.Printf("List Containers with page(%d) and per_page(%d)", page, per_page)
 
 	c_arr := models.Containers{}
-	for _, c := range cm.ValidContainers {
+	mem := cm.GetStore()
+	for _, c := range mem.ValidContainers {
 		if includeHidden == false {
 			if c.Hidden != true {
 				c_arr = append(c_arr, c)
@@ -372,7 +372,8 @@ func (cm ContentManagerMemory) ListContainersFiltered(page int, per_page int, in
 // Get a single container given the primary key
 func (cm ContentManagerMemory) GetContainer(cID uuid.UUID) (*models.Container, error) {
 	log.Printf("Get a single container %s", cID)
-	if c, ok := cm.ValidContainers[cID]; ok {
+	mem := cm.GetStore()
+	if c, ok := mem.ValidContainers[cID]; ok {
 		return &c, nil
 	}
 	return nil, errors.New("Memory manager did not find this container id: " + cID.String())
@@ -424,7 +425,8 @@ func (cm ContentManagerMemory) ListScreens(mcID uuid.UUID, page int, per_page in
 
 	// Did I create this just to sort by Idx across all content?  Kinda strange
 	s_arr := models.Screens{}
-	for _, s := range cm.ValidScreens {
+	mem := cm.GetStore()
+	for _, s := range mem.ValidScreens {
 		if s.ContentID == mcID {
 			s_arr = append(s_arr, s)
 		}
@@ -446,11 +448,11 @@ func (cm ContentManagerMemory) ListAllScreensContext() (*models.Screens, error) 
 }
 
 func (cm ContentManagerMemory) ListAllScreens(page int, per_page int) (*models.Screens, error) {
-
 	log.Printf("Using memory manager for screen page %d per_page %d \n", page, per_page)
 	// Did I create this just to sort by Idx across all content?  Kinda strange
 	s_arr := models.Screens{}
-	for _, s := range cm.ValidScreens {
+	mem := cm.GetStore()
+	for _, s := range mem.ValidScreens {
 		s_arr = append(s_arr, s)
 	}
 	sort.SliceStable(s_arr, func(i, j int) bool {
@@ -466,8 +468,8 @@ func (cm ContentManagerMemory) ListAllScreens(page int, per_page int) (*models.S
 
 func (cm ContentManagerMemory) GetScreen(psID uuid.UUID) (*models.Screen, error) {
 	// Need to build out a memory setup and look the damn thing up :(
-	memStorage := utils.GetMemStorage()
-	if screen, ok := memStorage.ValidScreens[psID]; ok {
+	mem := cm.GetStore()
+	if screen, ok := mem.ValidScreens[psID]; ok {
 		return &screen, nil
 	}
 	return nil, errors.New("Screen not found")
@@ -496,7 +498,8 @@ func (cm ContentManagerMemory) ListAllTags(page int, perPage int) (*models.Tags,
 }
 
 func (cm ContentManagerMemory) GetTag(id string) (*models.Tag, error) {
-	if tag, ok := cm.ValidTags[id]; ok {
+	mem := cm.GetStore()
+	if tag, ok := mem.ValidTags[id]; ok {
 		return &tag, nil
 	}
 	return nil, errors.New(fmt.Sprintf("Tag not found %s", id))
@@ -509,9 +512,8 @@ func (cm ContentManagerMemory) ListAllTagsContext() (*models.Tags, error) {
 
 func (cm ContentManagerMemory) CreateTag(tag *models.Tag) error {
 	if tag != nil {
-		cm.ValidTags[tag.ID] = *tag
-		log.Printf("Created tag %s", tag)
-		return nil
+		_, err := cm.GetStore().CreateTag(tag)
+		return err
 	}
 	return errors.New("ContentManagerMemory no tag provided.")
 }
@@ -519,26 +521,30 @@ func (cm ContentManagerMemory) CreateTag(tag *models.Tag) error {
 // If you already updated the container in memory you are done
 func (cm ContentManagerMemory) UpdateTag(t *models.Tag) error {
 	// TODO: Validate that this updates the actual reference in mem storage
-	if _, ok := cm.ValidTags[t.ID]; ok {
-		cm.ValidTags[t.ID] = *t
-		return nil
+	if t != nil {
+		_, err := cm.GetStore().UpdateTag(t)
+		return err
 	}
-	return errors.New("ContentManagerMemory Update failed, not found.")
+	return errors.New("ContentManagerMemory Update failed tag not provided")
 }
 
 func (cm ContentManagerMemory) DestroyTag(id string) (*models.Tag, error) {
-	if t, ok := cm.ValidTags[id]; ok {
-		delete(cm.ValidTags, t.ID)
+	mem := cm.GetStore()
+	if t, ok := mem.ValidTags[id]; ok {
+		delete(mem.ValidTags, t.ID)
 		return &t, nil
 	}
-	return nil, errors.New("ContentManagerMemory Destroy failed, not tag found.")
+	return nil, errors.New("ContentManagerMemory Destroy failed, no tag found.")
 }
 
 func (cm ContentManagerMemory) AssociateTag(t *models.Tag, mc *models.Content) error {
 	if t == nil || mc == nil {
 		return errors.New(fmt.Sprintf("Cannot associate missing tag %s or content %s", t, mc))
 	}
-	if tag, ok := cm.ValidTags[t.ID]; ok {
+	tag, err := cm.GetTag(t.ID)
+	content, cErr := cm.GetContent(mc.ID)
+
+	if err == nil && tag != nil && cErr == nil && content != nil {
 		tags := mc.Tags
 		if tags == nil {
 			tags = models.Tags{}
@@ -550,10 +556,10 @@ func (cm ContentManagerMemory) AssociateTag(t *models.Tag, mc *models.Content) e
 			}
 		}
 		if found == false {
-			tags = append(tags, tag)
+			tags = append(tags, *tag)
 		}
-		mc.Tags = tags
-		return cm.UpdateContent(mc)
+		content.Tags = tags
+		return cm.UpdateContent(content)
 	}
 	return errors.New(fmt.Sprintf("Tag %s not in the list of valid tags", t))
 }
@@ -583,24 +589,26 @@ func AssignID(id uuid.UUID) uuid.UUID {
 
 // TODO: Fix this so that the screen must be under the
 func (cm ContentManagerMemory) CreateScreen(screen *models.Screen) error {
+	// Validate that the content exists for the screen?
 	if screen != nil {
-		screen.ID = AssignID(screen.ID)
-		cm.ValidScreens[screen.ID] = *screen
-		return nil
+		_, err := cm.GetStore().CreateScreen(screen)
+		return err
 	}
 	return errors.New("ContentManagerMemory no screen instance was passed in to CreateScreen")
 }
 
 // TODO: Requires security checks like the DB version.
-func (cm ContentManagerMemory) CreateContent(mc *models.Content) error {
-	if mc != nil {
-		mc.ID = AssignID(mc.ID)
-		cm.ValidContent[mc.ID] = *mc
-		return nil
+func (cm ContentManagerMemory) CreateContent(content *models.Content) error {
+	if content != nil {
+		_, err := cm.GetStore().CreateContent(content)
+		return err
 	}
 	return errors.New("ContentManagerMemory no Instance was passed in to CreateContent")
 }
 
+/**
+* Not a thing in the memory manager
+ */
 func (cm ContentManagerMemory) DestroyContent(id string) (*models.Content, error) {
 	return nil, errors.New("Not Implemented")
 }
@@ -625,9 +633,8 @@ func (cm ContentManagerMemory) CreateContainer(c *models.Container) error {
 		return err
 	}
 	if ok == true {
-		c.ID = AssignID(c.ID)
-		cm.ValidContainers[c.ID] = *c
-		return nil
+		_, err := cm.GetStore().CreateContainer(c)
+		return err
 	}
 	msg := fmt.Sprintf("The directory was not under the config path %s", c.Name)
 	return errors.New(msg)
@@ -637,17 +644,12 @@ func (cm ContentManagerMemory) CreateTask(t *models.TaskRequest) (*models.TaskRe
 	if t == nil {
 		return nil, errors.New("Requires a valid task")
 	}
-	t.ID = AssignID(t.ID)
-	t.CreatedAt = time.Now()
-	t.UpdatedAt = time.Now()
-	t.Status = models.TaskStatus.PENDING
-
-	// VERY UGLY
-	cm.ValidTasks = append(cm.ValidTasks, *t)
-	mem := utils.GetMemStorage()
-	mem.ValidTasks = append(mem.ValidTasks, *t)
-
-	// Odd... very odd
+	mem := cm.GetStore()
+	_, err := mem.CreateTask(t)
+	if err != nil {
+		return nil, err
+	}
+	// Odd... very odd (it would be nice to have this global)
 	job := worker.Job{
 		Queue:   "default",
 		Handler: t.Operation.String(),
@@ -655,7 +657,6 @@ func (cm ContentManagerMemory) CreateTask(t *models.TaskRequest) (*models.TaskRe
 			"id": t.ID.String(),
 		},
 	}
-	log.Printf("Valid tasks are now %s", cm.ValidTasks)
 	cm.Worker().Perform(job)
 	return cm.GetTask(t.ID)
 }
@@ -664,9 +665,8 @@ func (cm ContentManagerMemory) CreateTask(t *models.TaskRequest) (*models.TaskRe
 // tasks to actually work
 func (cm ContentManagerMemory) UpdateTask(t *models.TaskRequest, currentState models.TaskStatusType) (*models.TaskRequest, error) {
 	// Probably does NOT properly update the memStorage
-	mem := utils.GetMemStorage()
-	tasks, err := mem.UpdateTask(t, t.Status)
-	cm.ValidTasks = *tasks
+	mem := cm.GetStore()
+	_, err := mem.UpdateTask(t, t.Status)
 	if err != nil {
 		return nil, err
 	}
@@ -674,18 +674,20 @@ func (cm ContentManagerMemory) UpdateTask(t *models.TaskRequest, currentState mo
 }
 
 func (cm ContentManagerMemory) GetTask(id uuid.UUID) (*models.TaskRequest, error) {
-	for _, task := range cm.ValidTasks {
+	mem := cm.GetStore()
+	for _, task := range mem.ValidTasks {
 		if task.ID == id {
 			return &task, nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("Task not found %s", cm.ValidTasks))
+	return nil, errors.New(fmt.Sprintf("Task not found %s", mem.ValidTasks))
 }
 
 // Get the next task for processing (not super thread safe but enough for mem manager)
 // Where we will ensure only 1 reader.
 func (cm ContentManagerMemory) NextTask() (*models.TaskRequest, error) {
-	for _, task := range cm.ValidTasks {
+	mem := cm.GetStore()
+	for _, task := range mem.ValidTasks {
 		if task.Status == models.TaskStatus.NEW {
 			task.Status = models.TaskStatus.PENDING
 			updated, err := cm.UpdateTask(&task, task.Status)
