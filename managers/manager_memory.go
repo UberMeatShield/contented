@@ -637,6 +637,7 @@ func (cm ContentManagerMemory) CreateTask(t *models.TaskRequest) (*models.TaskRe
 	t.ID = AssignID(t.ID)
 	t.CreatedAt = time.Now()
 	t.UpdatedAt = time.Now()
+	t.Status = models.TaskStatus.PENDING
 	cm.ValidTasks = append(cm.ValidTasks, *t)
 	return cm.GetTask(t.ID)
 }

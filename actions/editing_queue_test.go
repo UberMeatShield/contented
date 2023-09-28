@@ -44,17 +44,11 @@ func (as *ActionSuite) Test_EditingQueueScreenHandler() {
 	url := fmt.Sprintf("/editing_queue/%s/screens/%d/%d", content.ID.String(), 1, timeSeconds)
 	res := as.JSON(url).Post(&content)
 	as.Equal(http.StatusCreated, res.Code, fmt.Sprintf("Should be able to grab a screen %s", res.Body.String()))
-}
 
-// Do the screen grab in db but every N seconds (different action probably same backing)
-func (as *ActionSuite) Test_EditingQueueScreensHandler() {
-	cfg := test_common.InitMemoryFakeAppEmpty()
-	as.Equal(cfg.ReadOnly, false)
-	_, content := CreateVideoContainer(as)
-	timeSeconds := 2
-	url := fmt.Sprintf("/editing_queue/%s/screens/%d/%d", content.ID.String(), 1, timeSeconds)
-	res := as.JSON(url).Post(&content)
-	as.Equal(http.StatusCreated, res.Code, fmt.Sprintf("Editing Queue Failed %s", res.Body.String()))
+	tr := models.TaskRequest{}
+	json.NewDecoder(res.Body).Decode(&tr)
+	as.NotZero(tr.ID)
+	as.Equal(models.TaskStatus.PENDING, tr.Status, fmt.Sprintf("Task invalid %s", tr))
 }
 
 // Validate it created some actual output.
