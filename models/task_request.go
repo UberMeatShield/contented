@@ -41,56 +41,59 @@ var TaskOperation = struct {
 	SCREENS:  "screen_capture",
 }
 
-// GoLang makes this a little annoying to have random metadata
+// TaskRequest is used by pop to map your task_requests database table to your go code.
 type TaskRequest struct {
-	ID        int               `json:"ID"`
-	ContentID uuid.UUID         `json:"content_id"`
-	Status    TaskStatusType    `json:"status" default:"new"`
-	Operation TaskOperationType `json:"operation"`
+	ID        uuid.UUID `json:"id" db:"id"`
+	ContentID uuid.UUID `json:"content_id" db:"content_id"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+
+	Status    TaskStatusType    `json:"status" default:"new" db:"status"`
+	Operation TaskOperationType `json:"operation" db:"operation"`
 
 	// Initial default time would be nice
-	CreatedAt time.Time `json:"created_at" default:"time.Now()"`
-	UpdatedAt time.Time `json:"updated_at" default:"time.Now()"`
-	Message   string    `json:"message" default:""`
-	ErrMsg    string    `json:"err_msg" default:""`
+	Message string `json:"message" default:"" db:"message"`
+	ErrMsg  string `json:"err_msg" default:"" db:"err_message"`
 
 	// Is it worth having two different queues for this?  Probably not, both use ffmpeg resource
-	NumberOfScreens int    `json:"number_of_screens" default:"12"`
-	StartTime       int    `json:"start_time" default:"0"`
-	Codec           string `json:"codec" default:"libx265"`
-	Width           int    `json:"width" default:"-1"`
-	Height          int    `json:"height" default:"-1"`
+	// Add once I have the basic processor in place
+	NumberOfScreens  int    `json:"number_of_screens" default:"12" db:"number_of_screens"`
+	StartTimeSeconds int    `json:"start_time_seconds" default:"0" db:"start_time_seconds"`
+	Codec            string `json:"codec" default:"libx265" db:"codec"`
+	Width            int    `json:"width" default:"-1" db:"width"`
+	Height           int    `json:"height" default:"-1" db:"height"`
 }
 
 // String is not required by pop and may be deleted
-func (m TaskRequest) String() string {
-	jm, _ := json.Marshal(m)
-	return string(jm)
+func (t TaskRequest) String() string {
+	jt, _ := json.Marshal(t)
+	return string(jt)
 }
 
-// Probably this interface will work and be less complex / anoying than having two types in the DB
+// TaskRequests is not required by pop and may be deleted
 type TaskRequests []TaskRequest
+type TaskRequestMap map[uuid.UUID]TaskRequest
 
 // String is not required by pop and may be deleted
-func (m TaskRequests) String() string {
-	jm, _ := json.Marshal(m)
-	return string(jm)
+func (t TaskRequests) String() string {
+	jt, _ := json.Marshal(t)
+	return string(jt)
 }
 
 // Validate gets run every time you call a "pop.Validate*" (pop.ValidateAndSave, pop.ValidateAndCreate, pop.ValidateAndUpdate) method.
 // This method is not required and may be deleted.
-func (m *TaskRequest) Validate(tx *pop.Connection) (*validate.Errors, error) {
+func (t *TaskRequest) Validate(tx *pop.Connection) (*validate.Errors, error) {
 	return validate.NewErrors(), nil
 }
 
 // ValidateCreate gets run every time you call "pop.ValidateAndCreate" method.
 // This method is not required and may be deleted.
-func (m *TaskRequest) ValidateCreate(tx *pop.Connection) (*validate.Errors, error) {
+func (t *TaskRequest) ValidateCreate(tx *pop.Connection) (*validate.Errors, error) {
 	return validate.NewErrors(), nil
 }
 
 // ValidateUpdate gets run every time you call "pop.ValidateAndUpdate" method.
 // This method is not required and may be deleted.
-func (m *TaskRequest) ValidateUpdate(tx *pop.Connection) (*validate.Errors, error) {
+func (t *TaskRequest) ValidateUpdate(tx *pop.Connection) (*validate.Errors, error) {
 	return validate.NewErrors(), nil
 }
