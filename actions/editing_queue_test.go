@@ -3,6 +3,7 @@ package actions
 import (
 	"contented/models"
 	"contented/test_common"
+	"contented/utils"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -35,13 +36,27 @@ func CreateVideoContainer(as *ActionSuite) (*models.Container, *models.Content) 
 	return &cnt, &content
 }
 
-// Do the screen grab in memory
-func (as *ActionSuite) Test_EditingQueueScreenHandler() {
-
+func (as *ActionSuite) Test_TaskRelatedObjects() {
 	as.Equal(models.TaskOperation.SCREENS.String(), "screen_capture")
+	as.Equal(models.TaskOperation.ENCODING.String(), "video_encoding")
+}
 
-	cfg := test_common.InitMemoryFakeAppEmpty()
+// Do the screen grab in memory
+func (as *ActionSuite) Test_MemoryEditingQueueScreenHandler() {
+	cfg := test_common.ResetConfig()
+	cfg.UseDatabase = false
+	utils.SetCfg(*cfg)
+	test_common.InitMemoryFakeAppEmpty()
 	as.Equal(cfg.ReadOnly, false)
+	ValidateEditingQueue(as)
+}
+
+func (as *ActionSuite) Test_DbEditingQueueScreenHandler() {
+	test_common.InitFakeApp(true)
+	ValidateEditingQueue(as)
+}
+
+func ValidateEditingQueue(as *ActionSuite) {
 	_, content := CreateVideoContainer(as)
 	timeSeconds := 3
 	url := fmt.Sprintf("/editing_queue/%s/screens/%d/%d", content.ID.String(), 1, timeSeconds)
@@ -51,9 +66,6 @@ func (as *ActionSuite) Test_EditingQueueScreenHandler() {
 	// Huh... ODD
 	tr := models.TaskRequest{}
 	json.NewDecoder(res.Body).Decode(&tr)
-	as.NotZero(tr.ID, fmt.Sprintf("Ugh ogh %s", res.Body.String()))
-	as.Equal(models.TaskStatus.PENDING, tr.Status, fmt.Sprintf("Task invalid %s", tr))
-	as.Fail("No idea how to test background task")
+	as.NotZero(tr.ID, fmt.Sprintf("Did not create a Task %s", res.Body.String()))
+	as.Equal(models.TaskStatus.NEW, tr.Status, fmt.Sprintf("Task invalid %s", tr))
 }
-
-// Validate it created some actual output.

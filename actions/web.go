@@ -10,8 +10,6 @@ import (
 	"os"
 
 	"github.com/gobuffalo/buffalo"
-	"github.com/gobuffalo/buffalo/worker"
-	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 )
 
@@ -40,42 +38,7 @@ func SetupContented(app *buffalo.App, contentDir string, numToPreview int, limit
 func SetupWorkers(app *buffalo.App) {
 	// Might need to try and set this on the manager as well
 	w := app.Worker
-
-	w.Register("screen_capture", func(args worker.Args) error {
-		taskId := ""
-		for k, v := range args {
-			if k == "id" {
-				taskId = v.(string)
-			}
-		}
-		id, err := uuid.FromString(taskId)
-		if err != nil {
-			log.Printf("Failed to load task bad id %s", err)
-			return err
-		}
-		//taskID := args.String()
-		log.Printf("Async Task being called %s have to figure out a DB connection %s", args, taskId)
-
-		getConnection := func() *pop.Connection {
-			return nil
-		}
-		getParams := func() *url.Values {
-			return &url.Values{}
-		}
-		getWorker := func() worker.Worker {
-			return nil
-		}
-		cfg := utils.GetCfg()
-		man := managers.CreateManager(cfg, getConnection, getParams, getWorker)
-		task, tErr := man.GetTask(id)
-		if tErr != nil {
-			log.Printf("Could not look up the task successfully %s", tErr)
-			return tErr
-		}
-		log.Printf("Found the correct task %s", task)
-		// managers.GetManager()
-		return nil
-	})
+	w.Register("screen_capture", ScreenCapture)
 }
 
 func FullHandler(c buffalo.Context) error {

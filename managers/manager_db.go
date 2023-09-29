@@ -534,7 +534,6 @@ func (cm ContentManagerDB) AssociateTagByID(tagId string, mcID uuid.UUID) error 
 // parent container if it does not exist?
 func (cm ContentManagerDB) CreateContainer(c *models.Container) error {
 	// Prevent some containers unless they are under the Dir path.
-	tx := cm.GetConnection()
 	cfg := cm.GetCfg()
 
 	// TODO: Config value for restrict to under root dir?
@@ -543,6 +542,7 @@ func (cm ContentManagerDB) CreateContainer(c *models.Container) error {
 		log.Printf("Path does not exist on disk under the config directory err %s", err)
 		return err
 	}
+	tx := cm.GetConnection()
 	if ok == true {
 		return tx.Create(c)
 	}
@@ -552,18 +552,59 @@ func (cm ContentManagerDB) CreateContainer(c *models.Container) error {
 }
 
 func (cm ContentManagerDB) CreateTask(t *models.TaskRequest) (*models.TaskRequest, error) {
-	return nil, errors.New("Not implemented")
+	if t == nil {
+		return nil, errors.New("Requires a valid task")
+	}
+	tx := cm.GetConnection()
+	t.Status = models.TaskStatus.NEW // The defaults do not seem to work right...
+	err := tx.Create(t)
+	return t, err
 }
 
 func (cm ContentManagerDB) UpdateTask(t *models.TaskRequest, currentState models.TaskStatusType) (*models.TaskRequest, error) {
-	return nil, errors.New("Not implemented")
+	if t == nil {
+		return t, errors.New("No task to update")
+	}
+	checkStatus, cErr := cm.GetTask(t.ID)
+	if cErr != nil {
+		return nil, cErr
+	}
+	// I would like to do this in the Update query but then I have to do a raw query for the full
+	// update (there isn't a conditional add into the sql for some reason)
+	if checkStatus.Status == currentState {
+		tx := cm.GetConnection()
+		upErr := tx.Update(t)
+		if upErr != nil {
+			return nil, upErr
+		}
+	} else {
+		msg := fmt.Sprintf("The current DB status %s != exec status %s", checkStatus.Status, currentState)
+		log.Printf(msg)
+		return nil, errors.New(msg)
+	}
+	return cm.GetTask(t.ID)
 }
 
 func (cm ContentManagerDB) GetTask(id uuid.UUID) (*models.TaskRequest, error) {
-	return nil, errors.New("Not implemented")
+	task := models.TaskRequest{}
+	tx := cm.GetConnection()
+	err := tx.Find(&task, id)
+	return &task, err
 }
 
 // Get the next task for processing (not super thread safe but enough for mem manager)
 func (cm ContentManagerDB) NextTask() (*models.TaskRequest, error) {
-	return nil, errors.New("Not implmented")
+	tasks := models.TaskRequests{}
+	tx := cm.GetConnection()
+	q := tx.Paginate(1, 1)
+	err := q.Where("status = ?", models.TaskStatus.NEW).All(&tasks)
+	if err != nil {
+		return nil, err
+	}
+	if len(tasks) == 1 {
+		task := tasks[0]
+		task.Status = models.TaskStatus.PENDING
+		return cm.UpdateTask(&task, models.TaskStatus.NEW)
+	}
+	return nil, errors.New("No Tasks to pull off the queue")
 }

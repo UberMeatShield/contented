@@ -58,7 +58,7 @@ type TaskRequest struct {
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 
-	Status    TaskStatusType    `json:"status" default:"new" db:"status"`
+	Status    TaskStatusType    `json:"status" db:"status" default:"new" `
 	Operation TaskOperationType `json:"operation" db:"operation"`
 
 	// Initial default time would be nice

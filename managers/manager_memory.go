@@ -15,6 +15,7 @@ import (
 	"regexp"
 	"sort"
 
+	"github.com/gobuffalo/buffalo/worker"
 	"github.com/gofrs/uuid"
 )
 
@@ -369,7 +370,7 @@ func (cm ContentManagerMemory) ListContainersFiltered(page int, per_page int, in
 
 // Get a single container given the primary key
 func (cm ContentManagerMemory) GetContainer(cID uuid.UUID) (*models.Container, error) {
-	log.Printf("Get a single container %s", cID)
+	// log.Printf("Get a single container %s", cID)
 	mem := cm.GetStore()
 	if c, ok := mem.ValidContainers[cID]; ok {
 		return &c, nil
@@ -648,20 +649,16 @@ func (cm ContentManagerMemory) CreateTask(t *models.TaskRequest) (*models.TaskRe
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("Memory Manager: What is going on here %s", task.ID)
-	return cm.GetTask(task.ID)
 	// Odd... very odd (it would be nice to have this global)
-	/*
-		job := worker.Job{
-			Queue:   "default",
-			Handler: t.Operation.String(),
-			Args: worker.Args{
-				"id": t.ID.String(),
-			},
-		}
-		log.Printf("What is up with the task id %s", task.ID)
-		cm.Worker().Perform(job)
-	*/
+	job := worker.Job{
+		Queue:   "default",
+		Handler: t.Operation.String(),
+		Args: worker.Args{
+			"id": t.ID.String(),
+		},
+	}
+	cm.Worker().Perform(job)
+	return cm.GetTask(task.ID)
 }
 
 // Updates and creates will need to actually fully refresh things for background

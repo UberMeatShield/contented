@@ -119,7 +119,7 @@ func (ms MemoryStorage) CreateTask(tr *models.TaskRequest) (*models.TaskRequest,
 	tr.ID = AssignID(tr.ID)
 	tr.CreatedAt = time.Now()
 	tr.UpdatedAt = time.Now()
-	tr.Status = models.TaskStatus.PENDING
+	tr.Status = models.TaskStatus.NEW
 	memStorage.ValidTasks = append(memStorage.ValidTasks, *tr)
 	return tr, nil
 }

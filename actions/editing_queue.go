@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/gobuffalo/buffalo"
+	"github.com/gobuffalo/buffalo/worker"
 	"github.com/gofrs/uuid"
 )
 
@@ -49,4 +50,31 @@ func TaskScreensHandler(c buffalo.Context) error {
 		c.Error(http.StatusInternalServerError, tErr)
 	}
 	return c.Render(http.StatusCreated, r.JSON(createdTR))
+}
+
+func ScreenCapture(args worker.Args) error {
+	cfg := utils.GetCfg()
+	app := App(cfg.UseDatabase)
+	taskId := ""
+	for k, v := range args {
+		if k == "id" {
+			taskId = v.(string)
+		}
+	}
+	id, err := uuid.FromString(taskId)
+	if err != nil {
+		log.Printf("Failed to load task bad id %s", err)
+		return err
+	}
+	log.Printf("Async Task being called %s have to figure out a DB connection %s", args, taskId)
+
+	man := managers.GetAppManager(app)
+	task, tErr := man.GetTask(id)
+	if tErr != nil {
+		log.Printf("Could not look up the task successfully %s", tErr)
+		return tErr
+	}
+	log.Printf("Found the correct task %s", task)
+	// managers.GetManager()
+	return nil
 }

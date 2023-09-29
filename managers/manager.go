@@ -148,6 +148,32 @@ func GetManager(c *buffalo.Context) ContentManager {
 	return CreateManager(cfg, get_connection, get_params, getWorker)
 }
 
+func GetAppManager(app *buffalo.App) ContentManager {
+	cfg := utils.GetCfg()
+	var get_connection GetConnType
+	if cfg.UseDatabase {
+		get_connection = func() *pop.Connection {
+			newTx, cErr := models.DB.NewTransaction()
+			log.Fatal(fmt.Sprintf("App Connection was not created %s", cErr))
+			return newTx
+		}
+	} else {
+		// Just required for the memory version create statement
+		get_connection = func() *pop.Connection {
+			return nil
+		}
+	}
+	// Could set the values in the args
+	getParams := func() *url.Values {
+		return &url.Values{}
+	}
+	// Should it return the app?
+	getWorker := func() worker.Worker {
+		return app.Worker
+	}
+	return CreateManager(cfg, get_connection, getParams, getWorker)
+}
+
 // can this manager create, update or destroy
 func ManagerCanCUD(c *buffalo.Context) (*ContentManager, *pop.Connection, error) {
 	man := GetManager(c)
