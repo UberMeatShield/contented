@@ -37,7 +37,7 @@ func TaskScreensHandler(c buffalo.Context) error {
 	if err != nil {
 		return c.Error(404, err)
 	}
-	log.Printf("Requesting screens be built out %s(%s) start %d count %d", content.String(), content.Src, startTimeSeconds, numberOfScreens)
+	log.Printf("Requesting screens be built out %s start %d count %d", content.Src, startTimeSeconds, numberOfScreens)
 	tr := models.TaskRequest{
 		ContentID:        content.ID,
 		Operation:        models.TaskOperation.SCREENS,

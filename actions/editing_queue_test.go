@@ -48,9 +48,10 @@ func (as *ActionSuite) Test_EditingQueueScreenHandler() {
 	res := as.JSON(url).Post(&content)
 	as.Equal(http.StatusCreated, res.Code, fmt.Sprintf("Should be able to grab a screen %s", res.Body.String()))
 
+	// Huh... ODD
 	tr := models.TaskRequest{}
 	json.NewDecoder(res.Body).Decode(&tr)
-	as.NotZero(tr.ID)
+	as.NotZero(tr.ID, fmt.Sprintf("Ugh ogh %s", res.Body.String()))
 	as.Equal(models.TaskStatus.PENDING, tr.Status, fmt.Sprintf("Task invalid %s", tr))
 	as.Fail("No idea how to test background task")
 }

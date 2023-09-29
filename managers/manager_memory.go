@@ -15,7 +15,6 @@ import (
 	"regexp"
 	"sort"
 
-	"github.com/gobuffalo/buffalo/worker"
 	"github.com/gofrs/uuid"
 )
 
@@ -59,7 +58,6 @@ func (cm *ContentManagerMemory) Initialize() {
 	// TODO: Should we allow for a timeout or rescan option?
 	memStorage := cm.GetStore()
 	if memStorage.Initialized == false {
-		log.Printf("Re-Initializing memory")
 		memStorage = utils.InitializeMemory(cm.cfg.Dir)
 	}
 	// Remove this extra reference
@@ -68,7 +66,6 @@ func (cm *ContentManagerMemory) Initialize() {
 	cm.ValidScreens = memStorage.ValidScreens
 	cm.ValidTags = memStorage.ValidTags
 	cm.ValidTasks = memStorage.ValidTasks
-	log.Printf("Found %d directories with %d content elements \n", len(cm.ValidContainers), len(cm.ValidContent))
 }
 
 func (cm ContentManagerMemory) GetStore() *utils.MemoryStorage {
@@ -647,20 +644,24 @@ func (cm ContentManagerMemory) CreateTask(t *models.TaskRequest) (*models.TaskRe
 		return nil, errors.New("Requires a valid task")
 	}
 	mem := cm.GetStore()
-	_, err := mem.CreateTask(t)
+	task, err := mem.CreateTask(t)
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("Memory Manager: What is going on here %s", task.ID)
+	return cm.GetTask(task.ID)
 	// Odd... very odd (it would be nice to have this global)
-	job := worker.Job{
-		Queue:   "default",
-		Handler: t.Operation.String(),
-		Args: worker.Args{
-			"id": t.ID.String(),
-		},
-	}
-	cm.Worker().Perform(job)
-	return cm.GetTask(t.ID)
+	/*
+		job := worker.Job{
+			Queue:   "default",
+			Handler: t.Operation.String(),
+			Args: worker.Args{
+				"id": t.ID.String(),
+			},
+		}
+		log.Printf("What is up with the task id %s", task.ID)
+		cm.Worker().Perform(job)
+	*/
 }
 
 // Updates and creates will need to actually fully refresh things for background
@@ -677,12 +678,12 @@ func (cm ContentManagerMemory) UpdateTask(t *models.TaskRequest, currentState mo
 
 func (cm ContentManagerMemory) GetTask(id uuid.UUID) (*models.TaskRequest, error) {
 	mem := cm.GetStore()
-	for _, task := range mem.ValidTasks {
+	for idx, task := range mem.ValidTasks {
 		if task.ID == id {
-			return &task, nil
+			return &mem.ValidTasks[idx], nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("Task not found %s", mem.ValidTasks))
+	return nil, errors.New(fmt.Sprintf("Task not found %s", id))
 }
 
 // Get the next task for processing (not super thread safe but enough for mem manager)

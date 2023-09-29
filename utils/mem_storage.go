@@ -67,14 +67,14 @@ func (ms MemoryStorage) CreateScreen(screen *models.Screen) (*models.Screen, err
 	screen.ID = AssignID(screen.ID)
 	screen.CreatedAt = time.Now()
 	screen.UpdatedAt = time.Now()
-	ms.ValidScreens[screen.ID] = *screen
+	memStorage.ValidScreens[screen.ID] = *screen
 	return screen, nil
 }
 
 func (ms MemoryStorage) UpdateScreen(s *models.Screen) (*models.Screen, error) {
-	if _, ok := ms.ValidScreens[s.ID]; ok {
+	if _, ok := memStorage.ValidScreens[s.ID]; ok {
 		s.UpdatedAt = time.Now()
-		ms.ValidScreens[s.ID] = *s
+		memStorage.ValidScreens[s.ID] = *s
 		return s, nil
 	}
 	return nil, errors.New(fmt.Sprintf("Screen not found with %s", s))
@@ -84,15 +84,15 @@ func (ms MemoryStorage) CreateContent(content *models.Content) (*models.Content,
 	content.ID = AssignID(content.ID)
 	content.CreatedAt = time.Now()
 	content.UpdatedAt = time.Now()
-	ms.ValidContent[content.ID] = *content
+	memStorage.ValidContent[content.ID] = *content
 	return content, nil
 }
 
 // Reload the contents with the ID?
 func (ms MemoryStorage) UpdateContent(content *models.Content) (*models.Content, error) {
-	if _, ok := ms.ValidContent[content.ID]; ok {
+	if _, ok := memStorage.ValidContent[content.ID]; ok {
 		content.UpdatedAt = time.Now()
-		ms.ValidContent[content.ID] = *content
+		memStorage.ValidContent[content.ID] = *content
 		return content, nil
 	}
 	return nil, errors.New("Content was not found")
@@ -102,38 +102,38 @@ func (ms MemoryStorage) CreateContainer(c *models.Container) (*models.Container,
 	c.ID = AssignID(c.ID)
 	c.CreatedAt = time.Now()
 	c.UpdatedAt = time.Now()
-	ms.ValidContainers[c.ID] = *c
+	memStorage.ValidContainers[c.ID] = *c
 	return c, nil
 }
 
 func (ms MemoryStorage) UpdateContainer(cnt *models.Container) (*models.Container, error) {
-	if _, ok := ms.ValidContainers[cnt.ID]; ok {
+	if _, ok := memStorage.ValidContainers[cnt.ID]; ok {
 		cnt.UpdatedAt = time.Now()
-		ms.ValidContainers[cnt.ID] = *cnt
+		memStorage.ValidContainers[cnt.ID] = *cnt
 		return cnt, nil
 	}
 	return nil, errors.New(fmt.Sprintf("Container was not found with ID %s", cnt))
 }
 
-func (ms MemoryStorage) CreateTask(t *models.TaskRequest) (*models.TaskRequest, error) {
-	t.ID = AssignID(t.ID)
-	t.CreatedAt = time.Now()
-	t.UpdatedAt = time.Now()
-	t.Status = models.TaskStatus.PENDING
-	ms.ValidTasks = append(ms.ValidTasks, *t)
-	return t, nil
+func (ms MemoryStorage) CreateTask(tr *models.TaskRequest) (*models.TaskRequest, error) {
+	tr.ID = AssignID(tr.ID)
+	tr.CreatedAt = time.Now()
+	tr.UpdatedAt = time.Now()
+	tr.Status = models.TaskStatus.PENDING
+	memStorage.ValidTasks = append(memStorage.ValidTasks, *tr)
+	return tr, nil
 }
 
 func (ms MemoryStorage) CreateTag(tag *models.Tag) (*models.Tag, error) {
 	tag.UpdatedAt = time.Now()
-	ms.ValidTags[tag.ID] = *tag
+	memStorage.ValidTags[tag.ID] = *tag
 	return tag, nil
 }
 
 func (ms MemoryStorage) UpdateTag(tag *models.Tag) (*models.Tag, error) {
-	if _, ok := ms.ValidTags[tag.ID]; ok {
+	if _, ok := memStorage.ValidTags[tag.ID]; ok {
 		tag.UpdatedAt = time.Now()
-		ms.ValidTags[tag.ID] = *tag
+		memStorage.ValidTags[tag.ID] = *tag
 		return tag, nil
 	}
 	return nil, errors.New(fmt.Sprintf("Tag was not found %s", tag))
@@ -141,12 +141,12 @@ func (ms MemoryStorage) UpdateTag(tag *models.Tag) (*models.Tag, error) {
 
 func (ms MemoryStorage) UpdateTask(t *models.TaskRequest, currentState models.TaskStatusType) (*models.TaskRequest, error) {
 	updated := false
-	for idx, task := range ms.ValidTasks {
+	for idx, task := range memStorage.ValidTasks {
 		// Check to ensure the state is known before the updated which should
 		// prevent MOST update errors in the memory view.
 		if task.ID == t.ID && currentState == task.Status {
 			t.UpdatedAt = time.Now()
-			ms.ValidTasks[idx] = *t
+			memStorage.ValidTasks[idx] = *t
 			updated = true
 			break
 		}
