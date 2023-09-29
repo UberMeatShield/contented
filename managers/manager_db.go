@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/gobuffalo/buffalo"
+	"github.com/gobuffalo/buffalo/worker"
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 	"github.com/lib/pq"
@@ -29,6 +30,7 @@ type ContentManagerDB struct {
 
 	GetConnection GetConnType   // Returns .conn or context.Value(tx)
 	Params        GetParamsType // returns .params or context.Params()
+	Worker        GetAppWorker
 }
 
 // This is a little sketchy that the two are not directly linked
@@ -558,6 +560,18 @@ func (cm ContentManagerDB) CreateTask(t *models.TaskRequest) (*models.TaskReques
 	tx := cm.GetConnection()
 	t.Status = models.TaskStatus.NEW // The defaults do not seem to work right...
 	err := tx.Create(t)
+	if err != nil {
+		return nil, err
+	}
+
+	job := worker.Job{
+		Queue:   "default",
+		Handler: t.Operation.String(),
+		Args: worker.Args{
+			"id": t.ID.String(),
+		},
+	}
+	cm.Worker().Perform(job)
 	return t, err
 }
 

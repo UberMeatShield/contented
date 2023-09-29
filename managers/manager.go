@@ -152,10 +152,16 @@ func GetAppManager(app *buffalo.App) ContentManager {
 	cfg := utils.GetCfg()
 	var get_connection GetConnType
 	if cfg.UseDatabase {
+		var conn *pop.Connection
 		get_connection = func() *pop.Connection {
-			newTx, cErr := models.DB.NewTransaction()
-			log.Fatal(fmt.Sprintf("App Connection was not created %s", cErr))
-			return newTx
+			if conn == nil {
+				newConn, cErr := models.DB.NewTransaction()
+				if cErr != nil {
+					log.Fatal(fmt.Sprintf("App Connection was not created %s", cErr))
+				}
+				conn = newConn
+			}
+			return conn
 		}
 	} else {
 		// Just required for the memory version create statement
@@ -200,6 +206,7 @@ func CreateManager(cfg *utils.DirConfigEntry, get_conn GetConnType, get_params G
 		db_man := ContentManagerDB{cfg: cfg}
 		db_man.GetConnection = get_conn
 		db_man.Params = get_params
+		db_man.Worker = get_worker
 		return db_man
 	} else {
 		// This should now be used to build the filesystem into memory one time.

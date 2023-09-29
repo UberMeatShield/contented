@@ -661,8 +661,7 @@ func (cm ContentManagerMemory) CreateTask(t *models.TaskRequest) (*models.TaskRe
 	return cm.GetTask(task.ID)
 }
 
-// Updates and creates will need to actually fully refresh things for background
-// tasks to actually work
+// Updates and creates will need to actually fully refresh things for background tasks to actually work
 func (cm ContentManagerMemory) UpdateTask(t *models.TaskRequest, currentState models.TaskStatusType) (*models.TaskRequest, error) {
 	// Probably does NOT properly update the memStorage
 	mem := cm.GetStore()
