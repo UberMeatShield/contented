@@ -51,10 +51,6 @@ func (cm ContentManagerDB) CanEdit() bool {
 	return true
 }
 
-func (cm ContentManagerDB) Connect() *pop.Connection {
-	return cm.GetConnection()
-}
-
 func (cm ContentManagerDB) ListContentContext(cID uuid.UUID) (*models.Contents, error) {
 	// Could add the context here correctly
 	_, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)

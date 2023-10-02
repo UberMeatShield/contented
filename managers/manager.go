@@ -100,11 +100,14 @@ type ContentManager interface {
 
 	// For processing encoding requests
 	CreateTask(task *models.TaskRequest) (*models.TaskRequest, error)
-	GetTask(id uuid.UUID) (*models.TaskRequest, error)
 	UpdateTask(task *models.TaskRequest, currentStatus models.TaskStatusType) (*models.TaskRequest, error)
 	NextTask() (*models.TaskRequest, error)
 
-	Connect() *pop.Connection
+	// Make it so the task API is a GET only operation (probably)
+	GetTask(id uuid.UUID) (*models.TaskRequest, error)
+	// Get the tasks so we can see a work queue somewhere
+	// ListAllTasks(page int, perPage int)
+	// ListTasks(contentID uuid.UUD, page int, perPage int)
 }
 
 // Dealing with buffalo.Context vs grift.Context is kinda annoying, this handles the

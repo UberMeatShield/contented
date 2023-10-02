@@ -15,7 +15,6 @@ import (
 	"regexp"
 	"sort"
 
-	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 )
 
@@ -50,10 +49,6 @@ func (cm *ContentManagerMemory) SetCfg(cfg *utils.DirConfigEntry) {
 func (cm ContentManagerMemory) GetCfg() *utils.DirConfigEntry {
 	// log.Printf("Memory Config is using path %s", cm.cfg.Dir)
 	return cm.cfg
-}
-
-func (cm ContentManagerMemory) Connect() *pop.Connection {
-	return nil
 }
 
 // On a first time load / use we will pull back content information from dist and from

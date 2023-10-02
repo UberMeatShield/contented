@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gobuffalo/buffalo/worker"
 	"github.com/gobuffalo/nulls"
 )
 
@@ -59,7 +60,8 @@ func (as *ActionSuite) Test_DbEditingQueueScreenHandler() {
 func ValidateEditingQueue(as *ActionSuite) {
 	_, content := CreateVideoContainer(as)
 	timeSeconds := 3
-	url := fmt.Sprintf("/editing_queue/%s/screens/%d/%d", content.ID.String(), 1, timeSeconds)
+	screenCount := 1
+	url := fmt.Sprintf("/editing_queue/%s/screens/%d/%d", content.ID.String(), screenCount, timeSeconds)
 	res := as.JSON(url).Post(&content)
 	as.Equal(http.StatusCreated, res.Code, fmt.Sprintf("Should be able to grab a screen %s", res.Body.String()))
 
@@ -69,5 +71,21 @@ func ValidateEditingQueue(as *ActionSuite) {
 	as.NotZero(tr.ID, fmt.Sprintf("Did not create a Task %s", res.Body.String()))
 	as.Equal(models.TaskStatus.NEW, tr.Status, fmt.Sprintf("Task invalid %s", tr))
 
-	// workder.Args{"TaskID"}
+	args := worker.Args{"id": tr.ID.String()}
+	err := ScreenCaptureWrapper(args)
+	as.NoError(err, fmt.Sprintf("Failed to get screens %s", err))
+
+	screenUrl := fmt.Sprintf("/content/%s/screens", content.ID.String())
+	screensRes := as.JSON(screenUrl).Get()
+	as.Equal(http.StatusOK, screensRes.Code, fmt.Sprintf("Error loading screens %s", screensRes.Body.String()))
+
+	screens := models.Screens{}
+	json.NewDecoder(screensRes.Body).Decode(&screens)
+	as.Equal(screenCount, len(screens), fmt.Sprintf("We should have a set number of screens %s", screens))
+
+	/*  TODO: Validate that the manager updated
+	checkTr, tErr := man.GetTask(tr.ID)
+	as.NoError(tErr)
+	as.Equal(models.TaskStatus.DONE, checkTr.Status, "And the task should be done")
+	*/
 }
