@@ -13,6 +13,7 @@ import (
 
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/worker"
+	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 )
 
@@ -57,13 +58,40 @@ func TaskScreensHandler(c buffalo.Context) error {
 	return c.Render(http.StatusCreated, r.JSON(createdTR))
 }
 
+/*
+ * For all the transaction middleware to play nice you have to ensure that everything
+ * is wrapped by a transaction
+ */
+func ScreenCaptureWrapper(args worker.Args) error {
+	cfg := utils.GetCfg()
+	getConnection := func() *pop.Connection {
+		return nil
+	}
+	app := App(cfg.UseDatabase)
+
+	// Note this is extra complicated by the fact it SHOULD be able to run with NO connections
+	// or DB sessions made.
+	if cfg.UseDatabase == true {
+		// There has to be a good way to have all transaction middleware commit and work
+		// without exploding and being fully wrapping the scope.
+		return models.DB.Transaction(func(tx *pop.Connection) error {
+			getConnection = func() *pop.Connection {
+				return tx
+			}
+			man := managers.GetAppManager(app, getConnection)
+			return ScreenCapture(man, args)
+		})
+	}
+	// Memory manager version
+	man := managers.GetAppManager(app, getConnection)
+	return ScreenCapture(man, args)
+}
+
 /**
  * Awkward to test.
  */
-func ScreenCapture(args worker.Args) error {
-	cfg := utils.GetCfg()
-	app := App(cfg.UseDatabase)
-	log.Printf("Trying to do a screen Capture %s", args)
+func ScreenCapture(man managers.ContentManager, args worker.Args) error {
+	log.Printf("Trying to do a screen Capture but failing DB connections %s", args)
 	taskId := ""
 	for k, v := range args {
 		if k == "id" {
@@ -77,7 +105,6 @@ func ScreenCapture(args worker.Args) error {
 	}
 	log.Printf("Async Task being called %s have to figure out a DB connection %s", args, taskId)
 
-	man := managers.GetAppManager(app)
 	task, tErr := man.GetTask(id)
 	if tErr != nil {
 		log.Printf("Could not look up the task successfully %s", tErr)

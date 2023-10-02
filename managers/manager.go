@@ -103,6 +103,8 @@ type ContentManager interface {
 	GetTask(id uuid.UUID) (*models.TaskRequest, error)
 	UpdateTask(task *models.TaskRequest, currentStatus models.TaskStatusType) (*models.TaskRequest, error)
 	NextTask() (*models.TaskRequest, error)
+
+	Connect() *pop.Connection
 }
 
 // Dealing with buffalo.Context vs grift.Context is kinda annoying, this handles the
@@ -149,27 +151,8 @@ func GetManager(c *buffalo.Context) ContentManager {
 	return CreateManager(cfg, get_connection, get_params, getWorker)
 }
 
-func GetAppManager(app *buffalo.App) ContentManager {
+func GetAppManager(app *buffalo.App, getConnection GetConnType) ContentManager {
 	cfg := utils.GetCfg()
-	var get_connection GetConnType
-	if cfg.UseDatabase {
-		var conn *pop.Connection
-		get_connection = func() *pop.Connection {
-			if conn == nil {
-				newConn, cErr := models.DB.NewTransaction()
-				if cErr != nil {
-					log.Fatal(fmt.Sprintf("App Connection was not created %s", cErr))
-				}
-				conn = newConn
-			}
-			return conn
-		}
-	} else {
-		// Just required for the memory version create statement
-		get_connection = func() *pop.Connection {
-			return nil
-		}
-	}
 	// Could set the values in the args
 	getParams := func() *url.Values {
 		return &url.Values{}
@@ -178,7 +161,7 @@ func GetAppManager(app *buffalo.App) ContentManager {
 	getWorker := func() worker.Worker {
 		return app.Worker
 	}
-	return CreateManager(cfg, get_connection, getParams, getWorker)
+	return CreateManager(cfg, getConnection, getParams, getWorker)
 }
 
 // can this manager create, update or destroy
@@ -301,12 +284,31 @@ func CreateScreensForContent(cm ContentManager, contentID uuid.UUID, count int, 
 	if err != nil {
 		return nil, err, ""
 	}
-
 	path := cnt.GetFqPath()
 	srcFile := filepath.Join(path, content.Src)
 	dstPath := utils.GetPreviewDst(path)
 	dstFile := utils.GetPreviewPathDestination(content.Src, dstPath, "video")
-	log.Printf("Src File %s and Destination %s", srcFile, dstFile)
+
+	log.Printf("Src file %s and Destination %s", srcFile, dstFile)
 	utils.MakePreviewPath(dstPath)
-	return utils.CreateSeekScreens(srcFile, dstFile, count, offset)
+	screens, err, ptrn := utils.CreateSeekScreens(srcFile, dstFile, count, offset)
+
+	for idx, sFile := range screens {
+		log.Printf("What is the SCREEN %s", sFile)
+		src := strings.ReplaceAll(sFile, dstPath, "")
+		s := models.Screen{
+			Src:       src,
+			Path:      dstPath,
+			Idx:       idx,
+			ContentID: contentID,
+			SizeBytes: 0,
+		}
+		sErr := cm.CreateScreen(&s)
+		if sErr != nil {
+			log.Printf("Failed to create a screen %s", sErr)
+		} else {
+			log.Printf("Screen not actually in the DB? %s", s)
+		}
+	}
+	return screens, err, ptrn
 }
