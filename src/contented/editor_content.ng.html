@@ -6,7 +6,7 @@
       [content]="content"
       [visible]="content.content_type.includes('image')"
     ></contented-view>
-    <video-preview-cmp [content]="content" *ngIf="content.content_type.includes('video')"></video-preview-cmp>
+    <video-preview-cmp [content]="content" *ngIf="content.isVideo()"></video-preview-cmp>
   </div>
 
   <mat-card *ngIf="!!content">
@@ -17,9 +17,6 @@
           <mat-icon>save</mat-icon>
         </button>
 
-        <button mat-raised-button (click)="screen(content)">
-          SCREEN
-        </button>
 
       </mat-card-title>
       <!-- <mat-icon>delete</mat-icon> -->
@@ -27,6 +24,35 @@
     <mat-card-content>
       <!-- TODO: Dynamically select language based on content type ?-->
       <vscode-editor-cmp #description [editForm]="editForm" [showTagging]="true"></vscode-editor-cmp>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card *ngIf="content?.isVideo()">
+    <mat-card-header>
+      Take Screenshots
+    </mat-card-header>
+    <mat-card-content>
+
+
+
+      <form>
+        Set a number of screen max
+        <input type="number" min="1" max="100"/>
+
+        Determine the total duration of the video from the meta data
+        <input type="number" min="1" max="30">
+      </form>
+      <button type="button" mat-raised-button (click)="incrementalScreens(content)">
+        Take Incremental Screens
+      </button>
+
+      <div>
+      Display the current video running time if it is present?  Though how I am going to get that
+      With this setup is kinda annoying.
+      <button type="button" mat-raised-button (click)="screen(content)">
+        Take Screen at Current Time
+      </button>
+      </div>
     </mat-card-content>
   </mat-card>
 </div>

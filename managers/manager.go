@@ -164,11 +164,14 @@ func ManagerCanCUD(c *buffalo.Context) (*ContentManager, *pop.Connection, error)
 			errors.New("Edit not supported by this manager"),
 		)
 	}
-	tx, ok := ctx.Value("tx").(*pop.Connection)
-	if !ok {
-		return &man, nil, fmt.Errorf("No transaction found")
-	}
-	return &man, tx, nil
+    if man.GetCfg().UseDatabase {
+        tx, ok := ctx.Value("tx").(*pop.Connection)
+        if !ok {
+            return &man, nil, fmt.Errorf("No transaction found")
+        }
+	    return &man, tx, nil
+    }
+    return &man, nil, nil
 }
 
 // Provides the ability to pass a connection function and get params function to the manager so we can handle

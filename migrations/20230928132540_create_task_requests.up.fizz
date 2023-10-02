@@ -4,8 +4,8 @@ create_table("task_requests") {
 	t.ForeignKey("content_id", {"contents": ["id"]}, {"on_delete": "cascade"})
 	t.Column("status", "string", {"default": "new"})
 	t.Column("operation", "string", {"default": ""})
-	t.Column("message", "string", {"null": true, "default": ""})
-	t.Column("err_message", "string", {"null": true})
+	t.Column("message", "text", {"null": true, "default": ""})
+	t.Column("err_message", "text", {"null": true})
 
     t.Column("number_of_screens", "integer", {"default": "12"})
     t.Column("start_time_seconds", "integer", {"default": "0"})

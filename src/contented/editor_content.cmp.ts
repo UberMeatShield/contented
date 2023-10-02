@@ -28,6 +28,7 @@ export class EditorContentCmp implements OnInit {
   // These are values for the Monaco Editors, change events are passed down into
   // the form event via the AfterInit and set the v7_definition & suricata_definition.
   public loading: boolean = false;
+  public taskLoading: boolean = false;
 
 
   constructor(public fb: FormBuilder, public route: ActivatedRoute, public _service: ContentedService) {
@@ -72,9 +73,24 @@ export class EditorContentCmp implements OnInit {
     );
   }
 
+  // Kinda just need the ability to get the task info from the server
   screen(content: Content) {
-    this._service.requestScreens(content).subscribe(
-      console.log, console.error
+
+    // Determine how to get the current video index, if not defined then just use the default
+    this.taskLoading = true;
+    this._service.requestScreens(content).pipe(finalize(() => this.taskLoading = false)).subscribe(
+      console.log,
+      console.error
+    )
+  }
+
+  // Generate incremental screens
+  incrementalScreens(content) {
+    // console.log(screenForm.value);
+    this.content.getVideoInfo()
+    this._service.requestScreens(content, 3, 2).pipe(finalize(() => this.taskLoading = false)).subscribe(
+      console.log,
+      console.error
     )
   }
 }

@@ -29,6 +29,7 @@ export class Content {
     public fullUrl: string;
     public screens: Array<Screen>;
     public tags: Array<Tag>;
+    public meta: string;
 
     public fullText: string|undefined = undefined;
 
@@ -54,6 +55,14 @@ export class Content {
 
     public isText() {
         return this.content_type ? !!(this.content_type.match("text")) : false;
+    }
+
+    getVideoInfo() {
+        if (this.isVideo() && this.meta) {
+            let videoInfo = JSON.parse(this.meta);
+            console.log("Video info", videoInfo)
+        } 
+        return undefined
     }
 
     // Images will just work as a preview source, but video (with no preview) and 
