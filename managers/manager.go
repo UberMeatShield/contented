@@ -139,29 +139,16 @@ func GetManager(c *buffalo.Context) ContentManager {
 		params := ctx.Params().(url.Values)
 		return &params
 	}
-
-	// Should it return the app?
-	getWorker := func() worker.Worker {
-		app, ok := ctx.Value("app").(*buffalo.App)
-		if !ok || app.Worker == nil {
-			log.Fatalf("No Worker found")
-		}
-		return app.Worker
-	}
-	return CreateManager(cfg, get_connection, get_params, getWorker)
+	return CreateManager(cfg, get_connection, get_params)
 }
 
+// this is sketchy because of the connection scope closing on us
 func GetAppManager(app *buffalo.App, getConnection GetConnType) ContentManager {
 	cfg := utils.GetCfg()
-	// Could set the values in the args
 	getParams := func() *url.Values {
 		return &url.Values{}
 	}
-	// Should it return the app?
-	getWorker := func() worker.Worker {
-		return app.Worker
-	}
-	return CreateManager(cfg, getConnection, getParams, getWorker)
+	return CreateManager(cfg, getConnection, getParams)
 }
 
 // can this manager create, update or destroy
@@ -183,21 +170,19 @@ func ManagerCanCUD(c *buffalo.Context) (*ContentManager, *pop.Connection, error)
 
 // Provides the ability to pass a connection function and get params function to the manager so we can handle
 // a request.  We set this up so that the interface can still use the buffalo connection and param management.
-func CreateManager(cfg *utils.DirConfigEntry, get_conn GetConnType, get_params GetParamsType, get_worker GetAppWorker) ContentManager {
+func CreateManager(cfg *utils.DirConfigEntry, get_conn GetConnType, get_params GetParamsType) ContentManager {
 	if cfg.UseDatabase {
 		// Not really important for a DB manager, just need to look at it
 		log.Printf("Setting up the DB Manager")
 		db_man := ContentManagerDB{cfg: cfg}
 		db_man.GetConnection = get_conn
 		db_man.Params = get_params
-		db_man.Worker = get_worker
 		return db_man
 	} else {
 		// This should now be used to build the filesystem into memory one time.
 		log.Printf("Setting up the memory Manager")
 		mem_man := ContentManagerMemory{cfg: cfg}
 		mem_man.Params = get_params
-		mem_man.Worker = get_worker
 		mem_man.Initialize() // Break this into a sensible initialization
 		return mem_man
 	}
@@ -311,4 +296,55 @@ func CreateScreensForContent(cm ContentManager, contentID uuid.UUID, count int, 
 		}
 	}
 	return screens, err, ptrn
+}
+
+/**
+ * Awkward to test.
+ */
+func ScreenCapture(man ContentManager, id uuid.UUID) error {
+	log.Printf("Managers Screen Capture for taskID %s", id)
+	task, tErr := man.GetTask(id)
+	if tErr != nil {
+		log.Printf("Could not look up the task successfully %s", tErr)
+		return tErr
+	}
+	upTask, _ := ChangeTaskState(man, task, models.TaskStatus.PENDING, "Starting to execute task")
+	task = upTask
+	content, cErr := man.GetContent(task.ContentID)
+	if cErr != nil {
+		FailTask(man, task, fmt.Sprintf("Content not found %s %s", task.ContentID, cErr))
+		return cErr
+	}
+
+	task, upErr := ChangeTaskState(man, task, models.TaskStatus.IN_PROGRESS, fmt.Sprintf("Content was found %s", content.Src))
+	if upErr != nil {
+		log.Printf("Failed to update task state to in progress %s", upErr)
+		FailTask(man, task, fmt.Sprintf("Failed task intentionally %s", upErr))
+		return upErr
+	}
+
+	screens, sErr, pattern := CreateScreensForContent(man, task.ContentID, task.NumberOfScreens, task.StartTimeSeconds)
+	if sErr != nil {
+		failMsg := fmt.Sprintf("Failing to create screen %s", sErr)
+		FailTask(man, task, failMsg)
+	}
+	ChangeTaskState(man, task, models.TaskStatus.DONE, fmt.Sprintf("Successfully created screens %s", screens))
+	log.Printf("Screens %s and the pattern %s", screens, pattern)
+	return sErr
+}
+
+func ChangeTaskState(man ContentManager, task *models.TaskRequest, newStatus models.TaskStatusType, msg string) (*models.TaskRequest, error) {
+	status := task.Status
+	task.Status = newStatus
+	task.Message = msg
+	log.Printf("Changing Task State %s", task)
+	return man.UpdateTask(task, status)
+}
+
+func FailTask(man ContentManager, task *models.TaskRequest, errMsg string) (*models.TaskRequest, error) {
+	status := task.Status
+	task.Status = models.TaskStatus.ERROR
+	task.ErrMsg = errMsg
+	log.Printf("Failing task becasue %s", task)
+	return man.UpdateTask(task, status)
 }

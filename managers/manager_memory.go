@@ -15,7 +15,6 @@ import (
 	"regexp"
 	"sort"
 
-	"github.com/gobuffalo/buffalo/worker"
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 )
@@ -34,7 +33,6 @@ type ContentManagerMemory struct {
 
 	params *url.Values
 	Params GetParamsType
-	Worker GetAppWorker
 }
 
 // We do not allow editing in a memory manager
@@ -654,15 +652,6 @@ func (cm ContentManagerMemory) CreateTask(t *models.TaskRequest) (*models.TaskRe
 	if err != nil {
 		return nil, err
 	}
-	// Odd... very odd (it would be nice to have this global)
-	job := worker.Job{
-		Queue:   "default",
-		Handler: t.Operation.String(),
-		Args: worker.Args{
-			"id": t.ID.String(),
-		},
-	}
-	cm.Worker().Perform(job)
 	return cm.GetTask(task.ID)
 }
 

@@ -5,7 +5,6 @@ import (
 	"contented/models"
 	"contented/utils"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -55,6 +54,16 @@ func TaskScreensHandler(c buffalo.Context) error {
 	if tErr != nil {
 		c.Error(http.StatusInternalServerError, tErr)
 	}
+
+	// It should probably not kick off the job task inside the manager
+	job := worker.Job{
+		Queue:   "default",
+		Handler: tr.Operation.String(),
+		Args: worker.Args{
+			"id": tr.ID.String(),
+		},
+	}
+	App(cfg.UseDatabase).Worker.Perform(job)
 	return c.Render(http.StatusCreated, r.JSON(createdTR))
 }
 
@@ -63,35 +72,12 @@ func TaskScreensHandler(c buffalo.Context) error {
  * is wrapped by a transaction
  */
 func ScreenCaptureWrapper(args worker.Args) error {
+	log.Printf("ScreenCaptureWrapper() Starting Task args %s", args)
 	cfg := utils.GetCfg()
 	getConnection := func() *pop.Connection {
 		return nil
 	}
 	app := App(cfg.UseDatabase)
-
-	// Note this is extra complicated by the fact it SHOULD be able to run with NO connections
-	// or DB sessions made.
-	if cfg.UseDatabase == true {
-		// There has to be a good way to have all transaction middleware commit and work
-		// without exploding and being fully wrapping the scope.
-		return models.DB.Transaction(func(tx *pop.Connection) error {
-			getConnection = func() *pop.Connection {
-				return tx
-			}
-			man := managers.GetAppManager(app, getConnection)
-			return ScreenCapture(man, args)
-		})
-	}
-	// Memory manager version
-	man := managers.GetAppManager(app, getConnection)
-	return ScreenCapture(man, args)
-}
-
-/**
- * Awkward to test.
- */
-func ScreenCapture(man managers.ContentManager, args worker.Args) error {
-	log.Printf("Trying to do a screen Capture but failing DB connections %s", args)
 	taskId := ""
 	for k, v := range args {
 		if k == "id" {
@@ -103,50 +89,21 @@ func ScreenCapture(man managers.ContentManager, args worker.Args) error {
 		log.Printf("Failed to load task bad id %s", err)
 		return err
 	}
-	log.Printf("Async Task being called %s have to figure out a DB connection %s", args, taskId)
 
-	task, tErr := man.GetTask(id)
-	if tErr != nil {
-		log.Printf("Could not look up the task successfully %s", tErr)
-		return tErr
+	// Note this is extra complicated by the fact it SHOULD be able to run with NO connections
+	// or DB sessions made.
+	if cfg.UseDatabase == true {
+		// There has to be a good way to have all transaction middleware commit and work
+		// without exploding and being fully wrapping the scope.
+		return models.DB.Transaction(func(tx *pop.Connection) error {
+			getConnection = func() *pop.Connection {
+				return tx
+			}
+			man := managers.GetAppManager(app, getConnection)
+			return managers.ScreenCapture(man, id)
+		})
 	}
-	upTask, _ := ChangeTaskState(man, task, models.TaskStatus.PENDING, "Starting to execute task")
-	task = upTask
-	content, cErr := man.GetContent(task.ContentID)
-	if cErr != nil {
-		FailTask(man, task, fmt.Sprintf("Content not found %s %s", task.ContentID, cErr))
-		return cErr
-	}
-
-	task, upErr := ChangeTaskState(man, task, models.TaskStatus.IN_PROGRESS, fmt.Sprintf("Content was found %s", content.Src))
-	if upErr != nil {
-		log.Printf("Failed to update task state to in progress %s", upErr)
-		FailTask(man, task, fmt.Sprintf("Failed task intentionally %s", upErr))
-		return upErr
-	}
-
-	screens, sErr, pattern := managers.CreateScreensForContent(man, task.ContentID, task.NumberOfScreens, task.StartTimeSeconds)
-	if sErr != nil {
-		failMsg := fmt.Sprintf("Failing to create screen %s", sErr)
-		FailTask(man, task, failMsg)
-	}
-	ChangeTaskState(man, task, models.TaskStatus.DONE, fmt.Sprintf("Successfully created screens %s", screens))
-	log.Printf("Screens %s and the pattern %s", screens, pattern)
-	return sErr
-}
-
-func ChangeTaskState(man managers.ContentManager, task *models.TaskRequest, newStatus models.TaskStatusType, msg string) (*models.TaskRequest, error) {
-	status := task.Status
-	task.Status = newStatus
-	task.Message = msg
-	log.Printf("Changing Task State %s", task)
-	return man.UpdateTask(task, status)
-}
-
-func FailTask(man managers.ContentManager, task *models.TaskRequest, errMsg string) (*models.TaskRequest, error) {
-	status := task.Status
-	task.Status = models.TaskStatus.ERROR
-	task.ErrMsg = errMsg
-	log.Printf("Failing task becasue %s", task)
-	return man.UpdateTask(task, status)
+	// Memory manager version
+	man := managers.GetAppManager(app, getConnection)
+	return managers.ScreenCapture(man, id)
 }

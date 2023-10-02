@@ -68,4 +68,6 @@ func ValidateEditingQueue(as *ActionSuite) {
 	json.NewDecoder(res.Body).Decode(&tr)
 	as.NotZero(tr.ID, fmt.Sprintf("Did not create a Task %s", res.Body.String()))
 	as.Equal(models.TaskStatus.NEW, tr.Status, fmt.Sprintf("Task invalid %s", tr))
+
+	// workder.Args{"TaskID"}
 }
