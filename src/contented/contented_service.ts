@@ -221,4 +221,9 @@ export class ContentedService {
             })
         );
     }
+
+    requestScreens(content: Content, count: number = 1, startTime: number = 2) {
+        let url = ApiDef.contented.requestScreens.replace("{id}", content.id).replace("{count}", "" + count).replace("{startTimeSeconds}", '' + startTime);
+        return this.http.post(url, {});
+    }
 }

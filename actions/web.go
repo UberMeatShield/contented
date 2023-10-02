@@ -30,6 +30,15 @@ func SetupContented(app *buffalo.App, contentDir string, numToPreview int, limit
 	// TODO: Check DIR exists
 	// TODO: Somehow need to move the dir into App, but first we want to validate the dir...
 	app.ServeFiles("/static", http.Dir(cfg.Dir))
+
+	// TODO: When should this get setup
+	SetupWorkers(app)
+}
+
+func SetupWorkers(app *buffalo.App) {
+	// Might need to try and set this on the manager as well
+	w := app.Worker
+	w.Register("screen_capture", ScreenCaptureWrapper)
 }
 
 func FullHandler(c buffalo.Context) error {

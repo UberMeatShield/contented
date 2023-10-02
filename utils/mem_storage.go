@@ -7,7 +7,12 @@ package utils
  */
 import (
 	"contented/models"
+	"errors"
+	"fmt"
 	"log"
+	"time"
+
+	"github.com/gofrs/uuid"
 )
 
 // GoLang is just making this awkward
@@ -17,6 +22,7 @@ type MemoryStorage struct {
 	ValidContainers models.ContainerMap
 	ValidScreens    models.ScreenMap
 	ValidTags       models.TagsMap
+	ValidTasks      models.TaskRequests // Not a Map as we want the order to matter
 }
 
 var memStorage MemoryStorage = MemoryStorage{Initialized: false}
@@ -34,6 +40,7 @@ func InitializeMemory(dir_root string) *MemoryStorage {
 	memStorage.ValidContent = files
 	memStorage.ValidScreens = screens
 	memStorage.ValidTags = tags
+	memStorage.ValidTasks = models.TaskRequests{}
 	return &memStorage
 }
 
@@ -43,7 +50,111 @@ func InitializeEmptyMemory() *MemoryStorage {
 	memStorage.ValidContent = models.ContentMap{}
 	memStorage.ValidScreens = models.ScreenMap{}
 	memStorage.ValidTags = models.TagsMap{}
+	memStorage.ValidTasks = models.TaskRequests{}
 	return &memStorage
+}
+
+func AssignID(id uuid.UUID) uuid.UUID {
+	emptyID, _ := uuid.FromString("00000000-0000-0000-0000-000000000000")
+	if id == emptyID {
+		newID, _ := uuid.NewV4()
+		return newID
+	}
+	return id
+}
+
+func (ms MemoryStorage) CreateScreen(screen *models.Screen) (*models.Screen, error) {
+	screen.ID = AssignID(screen.ID)
+	screen.CreatedAt = time.Now()
+	screen.UpdatedAt = time.Now()
+	memStorage.ValidScreens[screen.ID] = *screen
+	return screen, nil
+}
+
+func (ms MemoryStorage) UpdateScreen(s *models.Screen) (*models.Screen, error) {
+	if _, ok := memStorage.ValidScreens[s.ID]; ok {
+		s.UpdatedAt = time.Now()
+		memStorage.ValidScreens[s.ID] = *s
+		return s, nil
+	}
+	return nil, errors.New(fmt.Sprintf("Screen not found with %s", s))
+}
+
+func (ms MemoryStorage) CreateContent(content *models.Content) (*models.Content, error) {
+	content.ID = AssignID(content.ID)
+	content.CreatedAt = time.Now()
+	content.UpdatedAt = time.Now()
+	memStorage.ValidContent[content.ID] = *content
+	return content, nil
+}
+
+// Reload the contents with the ID?
+func (ms MemoryStorage) UpdateContent(content *models.Content) (*models.Content, error) {
+	if _, ok := memStorage.ValidContent[content.ID]; ok {
+		content.UpdatedAt = time.Now()
+		memStorage.ValidContent[content.ID] = *content
+		return content, nil
+	}
+	return nil, errors.New("Content was not found")
+}
+
+func (ms MemoryStorage) CreateContainer(c *models.Container) (*models.Container, error) {
+	c.ID = AssignID(c.ID)
+	c.CreatedAt = time.Now()
+	c.UpdatedAt = time.Now()
+	memStorage.ValidContainers[c.ID] = *c
+	return c, nil
+}
+
+func (ms MemoryStorage) UpdateContainer(cnt *models.Container) (*models.Container, error) {
+	if _, ok := memStorage.ValidContainers[cnt.ID]; ok {
+		cnt.UpdatedAt = time.Now()
+		memStorage.ValidContainers[cnt.ID] = *cnt
+		return cnt, nil
+	}
+	return nil, errors.New(fmt.Sprintf("Container was not found with ID %s", cnt))
+}
+
+func (ms MemoryStorage) CreateTask(tr *models.TaskRequest) (*models.TaskRequest, error) {
+	tr.ID = AssignID(tr.ID)
+	tr.CreatedAt = time.Now()
+	tr.UpdatedAt = time.Now()
+	tr.Status = models.TaskStatus.NEW
+	memStorage.ValidTasks = append(memStorage.ValidTasks, *tr)
+	return tr, nil
+}
+
+func (ms MemoryStorage) CreateTag(tag *models.Tag) (*models.Tag, error) {
+	tag.UpdatedAt = time.Now()
+	memStorage.ValidTags[tag.ID] = *tag
+	return tag, nil
+}
+
+func (ms MemoryStorage) UpdateTag(tag *models.Tag) (*models.Tag, error) {
+	if _, ok := memStorage.ValidTags[tag.ID]; ok {
+		tag.UpdatedAt = time.Now()
+		memStorage.ValidTags[tag.ID] = *tag
+		return tag, nil
+	}
+	return nil, errors.New(fmt.Sprintf("Tag was not found %s", tag))
+}
+
+func (ms MemoryStorage) UpdateTask(t *models.TaskRequest, currentState models.TaskStatusType) (*models.TaskRequest, error) {
+	updated := false
+	for idx, task := range memStorage.ValidTasks {
+		// Check to ensure the state is known before the updated which should
+		// prevent MOST update errors in the memory view.
+		if task.ID == t.ID && currentState == task.Status {
+			t.UpdatedAt = time.Now()
+			memStorage.ValidTasks[idx] = *t
+			updated = true
+			break
+		}
+	}
+	if updated == false {
+		return nil, errors.New("Could not find Task to update")
+	}
+	return t, nil
 }
 
 /**

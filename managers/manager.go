@@ -18,16 +18,19 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"strconv"
 	"strings"
 
 	"github.com/gobuffalo/buffalo"
+	"github.com/gobuffalo/buffalo/worker"
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 )
 
 type GetConnType func() *pop.Connection
 type GetParamsType func() *url.Values
+type GetAppWorker func() worker.Worker
 
 type SearchRequest struct {
 	Text        string   `json:"text" default:""`
@@ -94,6 +97,17 @@ type ContentManager interface {
 	DestroyTag(id string) (*models.Tag, error)
 	AssociateTag(tag *models.Tag, c *models.Content) error
 	AssociateTagByID(tagID string, mcID uuid.UUID) error
+
+	// For processing encoding requests
+	CreateTask(task *models.TaskRequest) (*models.TaskRequest, error)
+	UpdateTask(task *models.TaskRequest, currentStatus models.TaskStatusType) (*models.TaskRequest, error)
+	NextTask() (*models.TaskRequest, error)
+
+	// Make it so the task API is a GET only operation (probably)
+	GetTask(id uuid.UUID) (*models.TaskRequest, error)
+	// Get the tasks so we can see a work queue somewhere
+	// ListAllTasks(page int, perPage int)
+	// ListTasks(contentID uuid.UUD, page int, perPage int)
 }
 
 // Dealing with buffalo.Context vs grift.Context is kinda annoying, this handles the
@@ -129,6 +143,15 @@ func GetManager(c *buffalo.Context) ContentManager {
 		return &params
 	}
 	return CreateManager(cfg, get_connection, get_params)
+}
+
+// this is sketchy because of the connection scope closing on us
+func GetAppManager(app *buffalo.App, getConnection GetConnType) ContentManager {
+	cfg := utils.GetCfg()
+	getParams := func() *url.Values {
+		return &url.Values{}
+	}
+	return CreateManager(cfg, getConnection, getParams)
 }
 
 // can this manager create, update or destroy
@@ -228,4 +251,103 @@ func ContextToSearchRequest(params pop.PaginationParams, cfg *utils.DirConfigEnt
 		sReq.Tags = strings.Split(tagStr, ",")
 	}
 	return sReq
+}
+
+func GetContentAndContainer(cm ContentManager, contentID uuid.UUID) (*models.Content, *models.Container, error) {
+	content, cErr := cm.GetContent(contentID)
+	if cErr != nil {
+		return nil, nil, cErr
+	}
+	cnt, cntErr := cm.GetContainer(content.ContainerID.UUID)
+	if cntErr != nil {
+		return nil, nil, cntErr
+	}
+	return content, cnt, nil
+}
+
+func CreateScreensForContent(cm ContentManager, contentID uuid.UUID, count int, offset int) ([]string, error, string) {
+	// It would be good to have the screens element take a few more params and have a wrapper on the
+	// Content manager level.
+	content, cnt, err := GetContentAndContainer(cm, contentID)
+	if err != nil {
+		return nil, err, ""
+	}
+	path := cnt.GetFqPath()
+	srcFile := filepath.Join(path, content.Src)
+	dstPath := utils.GetPreviewDst(path)
+	dstFile := utils.GetPreviewPathDestination(content.Src, dstPath, "video")
+
+	log.Printf("Src file %s and Destination %s", srcFile, dstFile)
+	utils.MakePreviewPath(dstPath)
+	screens, err, ptrn := utils.CreateSeekScreens(srcFile, dstFile, count, offset)
+
+	for idx, sFile := range screens {
+		log.Printf("What is the SCREEN %s", sFile)
+		src := strings.ReplaceAll(sFile, dstPath, "")
+		s := models.Screen{
+			Src:       src,
+			Path:      dstPath,
+			Idx:       idx,
+			ContentID: contentID,
+			SizeBytes: 0,
+		}
+		sErr := cm.CreateScreen(&s)
+		if sErr != nil {
+			log.Printf("Failed to create a screen %s", sErr)
+		} else {
+			log.Printf("Screen not actually in the DB? %s", s)
+		}
+	}
+	return screens, err, ptrn
+}
+
+/**
+ * Awkward to test.
+ */
+func ScreenCapture(man ContentManager, id uuid.UUID) error {
+	log.Printf("Managers Screen Capture for taskID %s", id)
+	task, tErr := man.GetTask(id)
+	if tErr != nil {
+		log.Printf("Could not look up the task successfully %s", tErr)
+		return tErr
+	}
+	upTask, _ := ChangeTaskState(man, task, models.TaskStatus.PENDING, "Starting to execute task")
+	task = upTask
+	content, cErr := man.GetContent(task.ContentID)
+	if cErr != nil {
+		FailTask(man, task, fmt.Sprintf("Content not found %s %s", task.ContentID, cErr))
+		return cErr
+	}
+
+	task, upErr := ChangeTaskState(man, task, models.TaskStatus.IN_PROGRESS, fmt.Sprintf("Content was found %s", content.Src))
+	if upErr != nil {
+		log.Printf("Failed to update task state to in progress %s", upErr)
+		FailTask(man, task, fmt.Sprintf("Failed task intentionally %s", upErr))
+		return upErr
+	}
+
+	screens, sErr, pattern := CreateScreensForContent(man, task.ContentID, task.NumberOfScreens, task.StartTimeSeconds)
+	if sErr != nil {
+		failMsg := fmt.Sprintf("Failing to create screen %s", sErr)
+		FailTask(man, task, failMsg)
+	}
+	ChangeTaskState(man, task, models.TaskStatus.DONE, fmt.Sprintf("Successfully created screens %s", screens))
+	log.Printf("Screens %s and the pattern %s", screens, pattern)
+	return sErr
+}
+
+func ChangeTaskState(man ContentManager, task *models.TaskRequest, newStatus models.TaskStatusType, msg string) (*models.TaskRequest, error) {
+	status := task.Status
+	task.Status = newStatus
+	task.Message = msg
+	log.Printf("Changing Task State %s", task)
+	return man.UpdateTask(task, status)
+}
+
+func FailTask(man ContentManager, task *models.TaskRequest, errMsg string) (*models.TaskRequest, error) {
+	status := task.Status
+	task.Status = models.TaskStatus.ERROR
+	task.ErrMsg = errMsg
+	log.Printf("Failing task becasue %s", task)
+	return man.UpdateTask(task, status)
 }

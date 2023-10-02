@@ -45,6 +45,25 @@ func App(UseDatabase bool) *buffalo.App {
 		app.GET("/search", SearchHandler)
 		app.GET("/splash", SplashHandler)
 
+		// Allow for manipulation of content already on the server
+		app.POST("/editing_queue/{contentID}/screens/{count}/{startTimeSeconds}", TaskScreensHandler)
+		// app.POST("/editing_queue/{mcID}/encoding", TaskEncodingHandler)
+		// app.DELETE("/editing_queue/{taskID}/", TaskDeleteHandler)
+
+		// Allow for the creation of new content
+		// app.POST("/uploading/contents/", TaskContentUploadHandler)
+		// app.POST("/uploading/previews/{mcID}", TaskPreviewUploadHandler)
+		// app.POST("/uploading/screen/{mcID}", TaskScreenUploadHandler)
+
+		// The DIR env environment is then served under /static (see actions.SetupContented)
+		cr := app.Resource("/containers", ContainersResource{})
+		cr.Resource("/content", ContentsResource{})
+
+		mc_r := app.Resource("/content", ContentsResource{})
+		mc_r.Resource("/screens", ScreensResource{})
+		app.Resource("/screens", ScreensResource{})
+		app.Resource("/tags", TagsResource{})
+
 		// Host the index.html, also assume that all angular UI routes are going to be under contented
 		// Cannot figure out how to just let AngularIndex handle EVERYTHING under ui/*/*
 		app.GET("/", AngularIndex)
@@ -55,16 +74,6 @@ func App(UseDatabase bool) *buffalo.App {
 		app.GET("/ui/search", AngularIndex)
 		app.GET("/ui/video", AngularIndex)
 		app.GET("/ui/splash", AngularIndex)
-
-		// The DIR env environment is then served under /static (see actions.SetupContented)
-		cr := app.Resource("/containers", ContainersResource{})
-		cr.Resource("/content", ContentsResource{})
-
-		mc_r := app.Resource("/content", ContentsResource{})
-		mc_r.Resource("/screens", ScreensResource{})
-		app.Resource("/screens", ScreensResource{})
-
-		app.Resource("/tags", TagsResource{})
 
 		// Need to make the file serving location smarter (serve the dir + serve static?)
 		cfg := utils.GetCfg()

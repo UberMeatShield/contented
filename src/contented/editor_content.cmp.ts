@@ -71,4 +71,10 @@ export class EditorContentCmp implements OnInit {
       console.error
     );
   }
+
+  screen(content: Content) {
+    this._service.requestScreens(content).subscribe(
+      console.log, console.error
+    )
+  }
 }

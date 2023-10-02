@@ -88,20 +88,20 @@ func (v ContentsResource) Create(c buffalo.Context) error {
 	_, _, err := managers.ManagerCanCUD(&c)
 	// Allocate an empty Content
 	// Bind contentContainer to the html form elements (probably not required?)
-	contentContainer := &models.Content{}
-	if err := c.Bind(contentContainer); err != nil {
+	content := &models.Content{}
+	if err := c.Bind(content); err != nil {
 		return err
 	}
 	man := managers.GetManager(&c)
-	err = man.CreateContent(contentContainer)
+	err = man.CreateContent(content)
 	if err != nil {
 		return c.Render(http.StatusBadRequest, r.JSON(err))
 	}
-	content, checkErr := man.GetContent(contentContainer.ID)
+	validate, checkErr := man.GetContent(content.ID)
 	if checkErr != nil {
 		return c.Render(http.StatusExpectationFailed, r.JSON(checkErr))
 	}
-	return c.Render(http.StatusCreated, r.JSON(content))
+	return c.Render(http.StatusCreated, r.JSON(validate))
 }
 
 // Update changes a Content in the DB. This function is mapped to
