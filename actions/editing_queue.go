@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -58,11 +57,13 @@ func TaskScreensHandler(c buffalo.Context) error {
 	return c.Render(http.StatusCreated, r.JSON(createdTR))
 }
 
+/**
+ * Awkward to test.
+ */
 func ScreenCapture(args worker.Args) error {
 	cfg := utils.GetCfg()
 	app := App(cfg.UseDatabase)
 	log.Printf("Trying to do a screen Capture %s", args)
-
 	taskId := ""
 	for k, v := range args {
 		if k == "id" {
@@ -86,37 +87,25 @@ func ScreenCapture(args worker.Args) error {
 	task = upTask
 	content, cErr := man.GetContent(task.ContentID)
 	if cErr != nil {
-		FailTask(man, task, fmt.Sprintf("Failed to load content %s %s", task.ContentID, cErr))
+		FailTask(man, task, fmt.Sprintf("Content not found %s %s", task.ContentID, cErr))
 		return cErr
 	}
-	cnt, cntErr := man.GetContainer(content.ContainerID.UUID)
-	if cntErr != nil {
-		FailTask(man, task, fmt.Sprintf("Failed to load container %s %s", task.ContentID, cntErr))
-		return cntErr
-	}
+
 	task, upErr := ChangeTaskState(man, task, models.TaskStatus.IN_PROGRESS, fmt.Sprintf("Content was found %s", content.Src))
 	if upErr != nil {
-		log.Printf("Couldn't update task state %s", upErr)
+		log.Printf("Failed to update task state to in progress %s", upErr)
+		FailTask(man, task, fmt.Sprintf("Failed task intentionally %s", upErr))
 		return upErr
 	}
 
-	path := cnt.GetFqPath()
-	srcFile := filepath.Join(path, content.Src)
-	dstPath := utils.GetPreviewDst(path)
-	log.Printf("What is going on %s dst %s\n", srcFile, dstPath)
-
-	filename := utils.GetPreviewPathDestination(content.Src, dstPath, "video")
-	log.Printf("Src File %s and Destination %s", srcFile, filename)
-	utils.MakePreviewPath(dstPath)
-	fn := utils.GetScreensOutputPattern(filename)
-	log.Printf("Final name %s", fn)
-	/*
-		dstFile := filepath.Join(dstDir, content.Src)
-		dstFile := utils.GetScreensOutputPattern()
-	*/
-
-	// Now attempt to get a screen
-	return nil
+	screens, sErr, pattern := managers.CreateScreensForContent(man, task.ContentID, task.NumberOfScreens, task.StartTimeSeconds)
+	if sErr != nil {
+		failMsg := fmt.Sprintf("Failing to create screen %s", sErr)
+		FailTask(man, task, failMsg)
+	}
+	ChangeTaskState(man, task, models.TaskStatus.DONE, fmt.Sprintf("Successfully created screens %s", screens))
+	log.Printf("Screens %s and the pattern %s", screens, pattern)
+	return sErr
 }
 
 func ChangeTaskState(man managers.ContentManager, task *models.TaskRequest, newStatus models.TaskStatusType, msg string) (*models.TaskRequest, error) {
@@ -131,6 +120,6 @@ func FailTask(man managers.ContentManager, task *models.TaskRequest, errMsg stri
 	status := task.Status
 	task.Status = models.TaskStatus.ERROR
 	task.ErrMsg = errMsg
-	log.Printf("Failing task %s", task)
+	log.Printf("Failing task becasue %s", task)
 	return man.UpdateTask(task, status)
 }

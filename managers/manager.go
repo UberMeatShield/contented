@@ -18,6 +18,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -279,4 +280,33 @@ func ContextToSearchRequest(params pop.PaginationParams, cfg *utils.DirConfigEnt
 		sReq.Tags = strings.Split(tagStr, ",")
 	}
 	return sReq
+}
+
+func GetContentAndContainer(cm ContentManager, contentID uuid.UUID) (*models.Content, *models.Container, error) {
+	content, cErr := cm.GetContent(contentID)
+	if cErr != nil {
+		return nil, nil, cErr
+	}
+	cnt, cntErr := cm.GetContainer(content.ContainerID.UUID)
+	if cntErr != nil {
+		return nil, nil, cntErr
+	}
+	return content, cnt, nil
+}
+
+func CreateScreensForContent(cm ContentManager, contentID uuid.UUID, count int, offset int) ([]string, error, string) {
+	// It would be good to have the screens element take a few more params and have a wrapper on the
+	// Content manager level.
+	content, cnt, err := GetContentAndContainer(cm, contentID)
+	if err != nil {
+		return nil, err, ""
+	}
+
+	path := cnt.GetFqPath()
+	srcFile := filepath.Join(path, content.Src)
+	dstPath := utils.GetPreviewDst(path)
+	dstFile := utils.GetPreviewPathDestination(content.Src, dstPath, "video")
+	log.Printf("Src File %s and Destination %s", srcFile, dstFile)
+	utils.MakePreviewPath(dstPath)
+	return utils.CreateSeekScreens(srcFile, dstFile, count, offset)
 }

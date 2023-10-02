@@ -306,7 +306,10 @@ func CreateScreensFromVideoSized(srcFile string, dstFile string, previewScreensO
 		log.Printf("File size is large for %s using SEEK screen", srcFile)
 
 		// Currently I get a list of screens but don't do anything with it.
-		_, err, screenFmt := CreateSeekScreens(srcFile, dstFile)
+		cfg := GetCfg()
+		totalScreens := cfg.PreviewNumberOfScreens
+		frameOffset := cfg.PreviewFirstScreenOffset
+		_, err, screenFmt := CreateSeekScreens(srcFile, dstFile, totalScreens, frameOffset)
 		return screenFmt, err
 	} else {
 		log.Printf("File size is small %s using SELECT filter", srcFile)
@@ -351,7 +354,8 @@ func CreateSelectFilterScreens(srcFile string, dstFile string) (string, error) {
 }
 
 // Need to do timing test with this then a timing test with a much bigger file.
-func CreateSeekScreens(srcFile string, dstFile string) ([]string, error, string) {
+// IMPORTANT if this is > 4 it will break ffmpeg finding the screens.
+func CreateSeekScreens(srcFile string, dstFile string, totalScreens int, frameOffset int) ([]string, error, string) {
 	totalTime, fps, err := GetTotalVideoLength(srcFile)
 	if err != nil {
 		log.Printf("Error creating screens for %s err: %s", srcFile, err)
@@ -366,9 +370,6 @@ func CreateSeekScreens(srcFile string, dstFile string) ([]string, error, string)
 	// surprising numbers of problems.
 	// For a very short video (testing we don't want to skip or take a lot of screens)
 	// or even do a frame skip, so reassign to something more sensible.
-	cfg := GetCfg()
-	totalScreens := cfg.PreviewNumberOfScreens
-	frameOffset := cfg.PreviewFirstScreenOffset // IMPORTANT if this is > 4 it will break ffmpeg finding the screens.
 	totalScreenTime := int(totalTime) - frameOffset
 	if totalScreenTime <= totalScreens {
 		totalScreens = int(totalTime) / 2

@@ -353,8 +353,10 @@ func Test_VideoCreateSeekScreens(t *testing.T) {
 		t.Errorf("Screen seek failed %s", err)
 	}
 
+	count := cfg.PreviewNumberOfScreens
+	offset := cfg.PreviewFirstScreenOffset
 	startMulti := time.Now()
-	screens, multiErr, screenPtrn := CreateSeekScreens(srcFile, previewName)
+	screens, multiErr, screenPtrn := CreateSeekScreens(srcFile, previewName, count, offset)
 	if multiErr != nil {
 		t.Errorf("Failed creating multiple screens %s", multiErr)
 	}
