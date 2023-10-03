@@ -45,13 +45,12 @@ import * as $ from 'jquery';
 let MONACO_LOADED = false;
 let GIVE_UP = 0;
 function monacoPoller(resolve, reject) {
-  console.log("Monaco Poller is called");
   if (MONACO_LOADED) {
-    console.log("MONACO IS LOADED!  HUZZAH");
+    console.log("Monaco loaded");
     return resolve((window as any).monaco);
   } else {
     if (GIVE_UP > 4) {
-      reject("Not loaded");
+      reject("Monaco was not loaded within the required timeframe")
     }
     GIVE_UP++;
     setTimeout(() => {
@@ -66,7 +65,7 @@ export let MonacoLoaded = new Promise((resolve, reject) => {
 
 export async function WaitForMonacoLoad() {
   return await MonacoLoaded.then(() => {
-    console.log("Monaco Resolved");
+    console.log("Monaco Resolved this is used in test Cases");
   })
 }
 
