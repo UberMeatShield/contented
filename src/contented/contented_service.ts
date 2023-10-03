@@ -223,7 +223,9 @@ export class ContentedService {
     }
 
     requestScreens(content: Content, count: number = 1, startTime: number = 2) {
-        let url = ApiDef.contented.requestScreens.replace("{id}", content.id).replace("{count}", "" + count).replace("{startTimeSeconds}", '' + startTime);
+        let url = ApiDef.contented.requestScreens.replace("{id}", content.id)
+        url = url.replace("{count}", "" + count)
+        url = url.replace("{startTimeSeconds}", '' + Math.floor(startTime));
         return this.http.post(url, {});
     }
 }

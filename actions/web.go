@@ -36,7 +36,6 @@ func SetupContented(app *buffalo.App, contentDir string, numToPreview int, limit
 }
 
 func SetupWorkers(app *buffalo.App) {
-	// Might need to try and set this on the manager as well
 	w := app.Worker
 	w.Register("screen_capture", ScreenCaptureWrapper)
 }

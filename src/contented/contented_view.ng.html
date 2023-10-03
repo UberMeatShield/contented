@@ -11,7 +11,7 @@
         >
 
         <!-- TODO: should the fullscreen for a video should be totally different? -->
-        <video *ngIf="content.isVideo()" 
+        <video #VIDEOELEMENT *ngIf="content.isVideo()" 
           id="VIDEO_{{content.id}}"
           class="content-video"
           [width]="maxWidth"
@@ -44,6 +44,17 @@
         [routerLink]="['/ui/editor_content/', content.id]">
         <mat-icon>edit</mat-icon> 
       </button>
+
+      <button *ngIf="content?.isVideo()" type="button" class="screencap hidden" 
+        title="Take a screen at the current video time"
+        [disabled]="taskLoading"
+        (click)="screenshot(content)"
+        mat-icon-button 
+        [routerLinkActive]="['show']"
+        [routerLink]="['/ui/editor_content/', content.id]">
+        <mat-icon>screenshot_frame</mat-icon> 
+      </button>
+
       {{content.src}} - ({{content.content_type}})
     </div>
     <span *ngIf="!content">
