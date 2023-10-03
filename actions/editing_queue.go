@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/worker"
@@ -31,7 +32,7 @@ func TaskScreensHandler(c buffalo.Context) error {
 	if countErr != nil {
 		numberOfScreens = cfg.PreviewCount
 	}
-	if numberOfScreens <= 0 || numberOfScreens > 50 {
+	if numberOfScreens <= 0 || numberOfScreens > 200 {
 		return c.Error(http.StatusBadRequest, errors.New("Too many or few screens requested"))
 	}
 
@@ -55,6 +56,7 @@ func TaskScreensHandler(c buffalo.Context) error {
 		c.Error(http.StatusInternalServerError, tErr)
 	}
 
+	// This needs to delay a little before it starts
 	// It should probably not kick off the job task inside the manager
 	job := worker.Job{
 		Queue:   "default",
@@ -63,7 +65,7 @@ func TaskScreensHandler(c buffalo.Context) error {
 			"id": tr.ID.String(),
 		},
 	}
-	App(cfg.UseDatabase).Worker.Perform(job)
+	App(cfg.UseDatabase).Worker.PerformIn(job, 2*time.Second)
 	return c.Render(http.StatusCreated, r.JSON(createdTR))
 }
 

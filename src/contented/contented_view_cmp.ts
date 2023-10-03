@@ -1,7 +1,8 @@
-import {OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
+import {OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener, ViewChild} from '@angular/core';
 import {Content} from './content';
 import {GlobalNavEvents, NavTypes} from './nav_events';
 import {Subscription} from 'rxjs';
+import {finalize} from 'rxjs/operators';
 import {Screen} from './screen';
 import {ContentedService} from './contented_service';
 import * as _ from 'lodash';
@@ -18,10 +19,13 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
     @Input() visible: boolean = false;
     @Input() showScreens = true;
     @Input() restrictContentId = "";
+    @ViewChild("VIDEOELEMENT") video;
 
     public maxWidth: number;
     public maxHeight: number;
     public sub: Subscription;
+    public taskLoading = false;
+
 
     // This calculation does _not_ work when using a dialog.  Fix?
     // Provide a custom width and height calculation option
@@ -132,5 +136,19 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
         let seconds = evt.screen.parseSecondsFromScreen();
         let videoEl = <HTMLVideoElement> document.getElementById(`VIDEO_${this.content.id}`);
         videoEl.currentTime = seconds;
+    }
+
+    // Kinda just need the ability to get the task info from the server
+    screenshot(content: Content) {
+      // Determine how to get the current video index, if not defined then just use the default
+
+      
+      console.log(this.video.nativeElement.currentTime);
+      let ss = this.video.nativeElement.currentTime;
+      this.taskLoading = true;
+      this._service.requestScreens(content, 1, ss).pipe(finalize(() => this.taskLoading = false)).subscribe(
+        console.log,
+        console.error
+      )
     }
 }

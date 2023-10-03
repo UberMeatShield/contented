@@ -59,8 +59,7 @@ export class Content {
 
     getVideoInfo() {
         if (this.isVideo() && this.meta) {
-            let videoInfo = JSON.parse(this.meta);
-            console.log("Video info", videoInfo)
+            return JSON.parse(this.meta);
         } 
         return undefined
     }
