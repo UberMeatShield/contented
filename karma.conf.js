@@ -1,11 +1,25 @@
 // Karma configuration file, see link for more information
 // https://karma-runner.github.io/1.0/config/configuration-file.html
+var path = require('path');
+
 
 module.exports = function (config) {
+
+  var tagPath = path.resolve("src/test/mock/tags").replace(new RegExp("/$"), ".json");
+
   config.set({
     basePath: '',
     frameworks: ['jasmine', '@angular-devkit/build-angular'],
-    files: ['node_modules/jquery/dist/jquery.min.js'],
+    files: [
+      'node_modules/jquery/dist/jquery.min.js',
+      { pattern: 'public/static/monaco/**/*.js', watched: false, included: false, served: true },
+      { pattern: 'public/static/monaco/**/*.css', watched: false, included: false, served: true },
+      { pattern: 'src/test/mock/tags.json', watched: false, included: false, served: true },
+    ],
+    proxies: {
+        '/public/static/monaco/': path.resolve("public/static/monaco/"),
+        '/tags/': tagPath,
+    },
     plugins: [
       require('karma-jasmine'),
       require('karma-chrome-launcher'),
@@ -38,7 +52,7 @@ module.exports = function (config) {
     browserNoActivityTimeout: 4000000,
     colors: true,
     logLevel: config.LOG_DISABLE,
-    //logLevel: config.LOG_INFO,
+    // logLevel: config.LOG_INFO,
     autoWatch: true,
     browsers: ['ChromeHeadless'],
     singleRun: false
