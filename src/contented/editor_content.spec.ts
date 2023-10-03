@@ -4,6 +4,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { EditorContentCmp } from './editor_content.cmp';
 import { DebugElement } from '@angular/core';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import {NoopAnimationsModule} from '@angular/platform-browser/animations';
 import {FormControl} from '@angular/forms';
 import {MockData} from '../test/mock/mock_data';
 import {ContentedModule} from './contented_module';
@@ -26,6 +27,7 @@ describe('EditorContentCmp', () => {
         RouterTestingModule,
         HttpClientTestingModule,
         ContentedModule,
+        NoopAnimationsModule,
       ],
       providers: [
       ],
@@ -63,6 +65,8 @@ describe('EditorContentCmp', () => {
     tick(1000);
     fixture.detectChanges();
     tick(1000);
+
+    expect($(".screens-form").length).withContext("Video should have the ability to take screens").toEqual(1);
   }));
 });
 

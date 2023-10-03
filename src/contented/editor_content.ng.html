@@ -9,7 +9,7 @@
     ></contented-view>
     <video-preview-cmp [content]="content" *ngIf="content.isVideo()"></video-preview-cmp>
 
-  <mat-card *ngIf="content?.isVideo()">
+  <mat-card class="screens-form" *ngIf="content?.isVideo()">
     <mat-card-header>
       Take Screenshots
     </mat-card-header>
