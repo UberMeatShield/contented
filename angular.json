@@ -104,7 +104,11 @@
             "tsConfig": "src/tsconfig.spec.json",
             "scripts": [],
             "styles": [],
-            "assets": []
+            "assets": [{
+                "glob": "**/*",
+                "input": "public/static/monaco",
+                "output": "assets/monaco-editor/"
+            }]
           }
         },
         "lint": {

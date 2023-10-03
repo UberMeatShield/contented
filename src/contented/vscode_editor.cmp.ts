@@ -114,28 +114,55 @@ export class VSCodeEditorCmp implements OnInit {
   public getTokens(tokenType: string = "keyword", language = this.language) {
     // Dynamically loaded
     let monaco = (window as any).monaco;
-    let tags = [];
+    let tags = new Set<string>()
     if (monaco && this.descriptionControl) {
       let tokenArr = monaco.editor.tokenize(this.descriptionControl.value, language);
-
       let m = this.monacoEditor.getModel();
 
-      let match = `${tokenType}.${language}`;
-      _.each(tokenArr, (line, lineIdx) => {
-        _.each(line, token => {
-          if (token.type == match) {
-            // console.log(lineIdx + 1, token, m.getPositionAt(token.offset));
-            let position = m.getPositionAt(token.offset);
-            position.lineNumber = lineIdx + 1;
+      // Custom tag matching per line I guess where we remove the matched tags from the loop but it might
+      // actually be faster to just do a contains against the entire string.
+      // The word offset boundry is all messed up...
+      let currentLang = _.find(monaco.languages.getLanguages(), {id: language});
+      console.log("currentLanguage", currentLang, monaco.languages.getLanguages());
 
-            let word = m.getWordAtPosition(position);
-            tags.push(word.word);
+      let match = `${tokenType}.${language}`;
+
+      _.each(tokenArr, (tokens, lineIdx) => {
+        let line = m.getLineContent(lineIdx + 1)
+        _.each(tokens, token => {
+          if (token.type == match) {
+            // This should work, but doesn't because of crazy word boundry monaco stuff?
+            // let position = m.getPositionAt(token.offset + 1);
+            // position.lineNumber = lineIdx + 1;
+            // let word = m.getWordAtPosition(position);
+
+            // The highlights work but the word positions are all jacked up
+            let word = this.readToken(line, token.offset)
+            tags.add(word);
           }
         })
       });
     }
-    return _.uniq(_.compact(tags));
+    return Array.from(tags);
   }
+
+  // Additional keys for token matching?
+  readToken(str: string, offset: number) {
+    let code, j;
+    let len = str.length;
+    if (offset > len) {
+      return "";
+    }
+    for (j = offset; j < len; ++j) {
+      code = str.charCodeAt(j);
+      if (!(code > 47 && code < 58) && // numeric (0-9)
+          !(code > 64 && code < 91) && // upper alpha (A-Z)
+          !(code > 96 && code < 123)) { // lower alpha (a-z)
+            break;
+      }
+    }
+    return str.slice(offset, j)
+  };
 
   public afterMonaco() {
     console.log("After monaco");

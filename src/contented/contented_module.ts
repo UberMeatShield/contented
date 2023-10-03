@@ -42,9 +42,38 @@ import {TagLang} from './tagging_syntax';
 
 import * as $ from 'jquery';
 
+let MONACO_LOADED = false;
+let GIVE_UP = 0;
+function monacoPoller(resolve, reject) {
+  console.log("Monaco Poller is called");
+  if (MONACO_LOADED) {
+    console.log("MONACO IS LOADED!  HUZZAH");
+    return resolve((window as any).monaco);
+  } else {
+    if (GIVE_UP > 4) {
+      reject("Not loaded");
+    }
+    GIVE_UP++;
+    setTimeout(() => {
+      monacoPoller(resolve, reject);
+    }, GIVE_UP * 500);
+  }
+}
+
+export let MonacoLoaded = new Promise((resolve, reject) => {
+    return monacoPoller(resolve, reject)
+});
+
+export async function WaitForMonacoLoad() {
+  return await MonacoLoaded.then(() => {
+    console.log("Monaco Resolved");
+  })
+}
+
+
 // Kinda annoying this has to be configured like this but I suppose it ok.
 const monacoConfig: NgxMonacoEditorConfig = {
-  baseUrl: '/public/static/',
+  baseUrl: '/public/static',
   defaultOptions: {
     wordWrap: "on",
     minimap: {enabled: false},
@@ -62,6 +91,8 @@ const monacoConfig: NgxMonacoEditorConfig = {
     lang.register({id: "tagging"});
     lang.setMonarchTokensProvider("tagging", TAGGING_SYNTAX);
     */
+   console.log("Monaco LOAD")
+   MONACO_LOADED = true;
     let tl = new TagLang();
     tl.loadLanguage((<any>window).monaco, 'tagging');
   }

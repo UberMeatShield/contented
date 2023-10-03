@@ -82,6 +82,7 @@ export let TAGGING_SYNTAX = {
       [/(')(@escapes)(')/, ['string','string.escape','string']],
       [/'/, 'string.invalid']
     ],
+    //wordPattern: /'?\w[\w'-.]*[?!,;:"]*/,
 
     // Whitespace comment is handling # comments
     comment: [
@@ -107,46 +108,43 @@ export let TAGGING_SYNTAX = {
   },
 };
 
+
+export function setMonacoLanguage(languageName: string, keywords: Array<string>, typeKeywords: Array<string>) {
+  let lang = (window as any).monaco.languages;
+  let syntax = _.clone(TAGGING_SYNTAX);
+  syntax.keywords = keywords || []
+  syntax.typeKeywords = typeKeywords || [];
+  lang.register({id: languageName, configuration: syntax})
+  lang.setMonarchTokensProvider(languageName, syntax);
+
+  // Doesn't exactly work, there needs to be a unity between type keyword matching?
+  // The same word pattern does NOT make the wordAtPosition API play nice with the token offset
+  lang.setLanguageConfiguration(languageName, {
+    //wordPattern: /'?\w[\w'-.]*[?!,;:"]*/
+    wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\#\%\^\&\*\(\)\-\=\+\{\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
+  });
+}
+
 @Injectable()
 export class TagLang {
 
   constructor() {
+
   }
 
-  // Create something that will 
-
   loadLanguage(monaco: any, languageName: string) {
-
     $.ajax(ApiDef.contented.tags, {
       success: res => {
-        let lang = monaco.languages;
-        console.log("Tag results", res);
-        // Do a mapped lookup based on the 'type' of the tag probably.
         // I should also change the color of the type and the keyword.
-        let languages = _.map(res, 'id');
-        let langs = languages.concat(
+        let tags = _.map(res, 'id');
+        let keywords = tags.concat(
           _.map(languages, lang => _.upperFirst(lang)),
           _.map(languages, lang => lang.toUpperCase())
         );
-        console.log("Registering these tags", langs);
-        /*
-        let techs = technologies.concat(
-          _.map(technologies, tech => tech.toUpperCase()),
-          _.map(technologies, tech => _.upperFirst(tech))
-        );
-        */
-
-        TAGGING_SYNTAX.keywords = langs;
-        TAGGING_SYNTAX.typeKeywords = [];
-        lang.register({id: languageName});
-        lang.setMonarchTokensProvider(languageName, TAGGING_SYNTAX);
+        setMonacoLanguage("tagging", keywords, []);
       }, error: err => {
-        // If you do not define the lanugage then nothing renders on an error
-        // and it would be better to show text with no highlights.
-        let lang = monaco.languages;
-        lang.register({id: languageName});
-        lang.setMonarchTokensProvider(languageName, TAGGING_SYNTAX);
-        // Have to add the Tags resource endpoint (does not exist)
+        setMonacoLanguage("tagging", [], []);
+        console.error("Failed to load tags", err)
       }
     });
     //console.log("Now here is where we register a new language for tags.");
