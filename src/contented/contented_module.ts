@@ -90,7 +90,6 @@ const monacoConfig: NgxMonacoEditorConfig = {
     lang.register({id: "tagging"});
     lang.setMonarchTokensProvider("tagging", TAGGING_SYNTAX);
     */
-   console.log("Monaco LOAD")
    MONACO_LOADED = true;
     let tl = new TagLang();
     tl.loadLanguage((<any>window).monaco, 'tagging');
