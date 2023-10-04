@@ -33,27 +33,34 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
 
     }
 
+    public shouldIgnoreEvt(content: Content) {
+        if (this.restrictContentId) { 
+            if (!content || content.id !== this.restrictContentId)  {
+                return null;
+            }
+        }
+        return content || this.content;
+    }
+
     public ngOnInit() {
         this.sub = GlobalNavEvents.navEvts.subscribe(evt => {
 
             // Restrict content ID might need to be a bit smarter
-            let content = evt.content || this.content;
+            let content = this.shouldIgnoreEvt(evt.content);
+            if (!content) {
+                return;
+            }
             switch(evt.action) {
                 case NavTypes.VIEW_FULLSCREEN:
-                    if (this.restrictContentId && content && content.id !== this.restrictContentId) {
-                        return;
-                    }
-                    this.visible = true;
+
                     this.content = content;
+                    this.visible = true;
                     if (this.content) {
                         this.scrollContent(this.content);
                         this.handleTextContent(this.content);
                     }
                     break;
                 case NavTypes.HIDE_FULLSCREEN:
-                    if (this.restrictContentId && content && content.id !== this.restrictContentId) {
-                        return;
-                    }
                     if (this.visible && this.content) {
                         GlobalNavEvents.scrollContentView(this.content);          
                     }
