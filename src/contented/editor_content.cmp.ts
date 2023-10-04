@@ -43,7 +43,7 @@ export class EditorContentCmp implements OnInit {
       description: this.descriptionControl
     });
 
-    this.offsetControl = new FormControl(1, Validators.required)
+    this.offsetControl = new FormControl(undefined, Validators.required)
     this.countControl = new FormControl(12, Validators.required)
     this.screensForm = this.fb.group({
       offset: this.offsetControl,

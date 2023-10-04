@@ -15,14 +15,14 @@
       </mat-card-header>
       <mat-card-content>
         <form [formGroup]="screensForm">
-          <mat-form-field>
+          <mat-form-field class="input-third">
             <input matInput [formControl]="countControl" type="number"
              min="1"
-             max="100"
+             max="200"
              placeholder="The number of screens to take"/>
              <label>Screen Count</label>
           </mat-form-field>
-          <mat-form-field>
+          <mat-form-field class="input-third">
             <input matInput [formControl]="offsetControl" type="number" 
               min="0" 
               [max]="vidInfo?.format?.duration"
