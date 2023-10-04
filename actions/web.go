@@ -37,7 +37,8 @@ func SetupContented(app *buffalo.App, contentDir string, numToPreview int, limit
 
 func SetupWorkers(app *buffalo.App) {
 	w := app.Worker
-	w.Register("screen_capture", ScreenCaptureWrapper)
+	w.Register(models.TaskOperation.SCREENS.String(), ScreenCaptureWrapper)
+	w.Register(models.TaskOperation.ENCODING.String(), VideoEncodingWrapper)
 }
 
 func FullHandler(c buffalo.Context) error {

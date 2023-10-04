@@ -33,6 +33,8 @@ export class Content {
 
     public fullText: string|undefined = undefined;
 
+    public videoInfo?: VideoCodecInfo;
+
     constructor(obj: any = {}) {
         this.fromJson(obj);
     }
@@ -58,10 +60,13 @@ export class Content {
     }
 
     getVideoInfo() {
-        if (this.isVideo() && this.meta) {
-            return JSON.parse(this.meta);
-        } 
-        return undefined
+        if (!this.videoInfo) {
+            if (this.isVideo() && this.meta) {
+                let ffmpegProbe = JSON.parse(this.meta);
+                this.videoInfo = new VideoCodecInfo(ffmpegProbe);
+            } 
+        }
+        return this.videoInfo
     }
 
     // Images will just work as a preview source, but video (with no preview) and 
@@ -83,5 +88,67 @@ export class Content {
     public links() {
         this.previewUrl = `${ApiDef.contented.preview}${this.id}`;
         this.fullUrl = `${ApiDef.contented.view}${this.id}`;
+    }
+}
+
+
+class VideoFormat {
+    bit_rate: number;
+    duration: number;
+    filename: string;
+    format_long_name: string;
+    format_name: string;
+    nb_programs: number;
+    nb_streams: number;
+    probe_score: number;
+    size: number;
+    start_time: number;
+
+    constructor(obj: any) {
+        Object.assign(this, obj); // Lazy start...
+    }
+}
+
+class VideoStream {
+    avg_frame_rate: string;
+    bit_rate: number;
+    bits_per_raw_sample: number;
+    chroma_location: string;
+    closed_captions: number;
+    codec_long_name: string;
+    codec_name: string;
+    codec_tag: string;
+    codec_tag_string: string;
+    codec_type: string;
+    coded_height: number;
+    coded_width: number;
+
+    constructor(obj: any) {
+        Object.assign(this, obj); // lazy
+    }
+}
+
+// Represents some of the encoding that comes back from ffmpeg probe
+export class VideoCodecInfo {
+    format: VideoFormat;
+    streams: Array<VideoStream>;
+
+    public CanEncode: boolean = false;
+
+    constructor(obj: any) {
+        this.format = new VideoFormat(_.get(obj, "format"));
+        this.streams = _.map(_.get(obj, "streams"), s => new VideoStream(s));
+
+        this.CanEncode = this.getVideoCodecName() !== "hevc";
+    }
+
+    getVideoCodecName() {
+        let streams = this.streams || [];
+        for (let j = 0; j < streams.length; ++j) {
+            let stream = streams[j];
+            if (stream.codec_type == "video") {
+                return stream.codec_name;  
+            }
+        }
     }
 }

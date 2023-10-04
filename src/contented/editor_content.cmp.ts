@@ -8,7 +8,7 @@ import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 import {FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms';
 import {finalize, debounceTime, distinctUntilChanged} from 'rxjs/operators';
 import {ContentedService} from './contented_service';
-import {Tag, Content} from './content';
+import {Tag, Content, VideoCodecInfo} from './content';
 import {VSCodeEditorCmp} from './vscode_editor.cmp';
 
 import * as _ from 'lodash-es';
@@ -36,14 +36,14 @@ export class EditorContentCmp implements OnInit {
   public taskLoading: boolean = false;
 
   // Mostly we use format.duration
-  public vidInfo: any;
+  public vidInfo: VideoCodecInfo;
 
   constructor(public fb: FormBuilder, public route: ActivatedRoute, public _service: ContentedService) {
     this.editForm = this.fb.group({
       description: this.descriptionControl
     });
 
-    this.offsetControl = new FormControl(1, Validators.required)
+    this.offsetControl = new FormControl(undefined, Validators.required)
     this.countControl = new FormControl(12, Validators.required)
     this.screensForm = this.fb.group({
       offset: this.offsetControl,
@@ -68,7 +68,6 @@ export class EditorContentCmp implements OnInit {
           (content: Content) => {
               this.content = content;
               this.descriptionControl.setValue(content.description);
-
               if (content.isVideo()) {
                 this.vidInfo = content.getVideoInfo();
               }
@@ -91,21 +90,27 @@ export class EditorContentCmp implements OnInit {
     );
   }
 
-  // Kinda just need the ability to get the task info from the server
-  screen(content: Content) {
-    // Determine how to get the current video index, if not defined then just use the default
-    this.taskLoading = true;
-    this._service.requestScreens(content).pipe(finalize(() => this.taskLoading = false)).subscribe(
-      console.log,
-      console.error
-    )
-  }
-
   // Generate incremental screens and then check the request
   incrementalScreens(content) {
     let req = this.screensForm.value;
     this.taskLoading = true;
     this._service.requestScreens(content, req.count, req.offset).pipe(finalize(() => this.taskLoading = false)).subscribe(
+      console.log,
+      console.error
+    )
+  }
+
+  canReEncode(content: Content) {
+    if (!this.taskLoading && content && content.isVideo()) {
+      let info = content.getVideoInfo()
+      return info ? info.CanEncode : false;
+    }
+    return false
+  }
+
+  encodeVideoContent(content: Content) {
+    this.taskLoading = true; 
+    this._service.encodeVideoContent(content).pipe(finalize(() => this.taskLoading = false)).subscribe(
       console.log,
       console.error
     )

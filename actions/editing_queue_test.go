@@ -89,3 +89,36 @@ func ValidateEditingQueue(as *ActionSuite) {
 	as.Equal(models.TaskStatus.DONE, checkTr.Status, "And the task should be done")
 	*/
 }
+
+func (as *ActionSuite) Test_MemoryEncodingQueueHandler() {
+	// Should add a config value to completely nuke the encoded video
+	cfg := test_common.ResetConfig()
+	cfg.UseDatabase = false
+	utils.SetCfg(*cfg)
+	test_common.InitMemoryFakeAppEmpty()
+	ValidateVideoEncodingQueue(as)
+}
+
+func (as *ActionSuite) Test_DBEncodingQueueHandler() {
+	// Should add a config value to completely nuke the encoded video
+	test_common.InitFakeApp(true)
+	ValidateVideoEncodingQueue(as)
+}
+
+func ValidateVideoEncodingQueue(as *ActionSuite) {
+	_, content := CreateVideoContainer(as)
+	url := fmt.Sprintf("/editing_queue/%s/encoding", content.ID.String())
+	res := as.JSON(url).Post(&content)
+	as.Equal(http.StatusCreated, res.Code, fmt.Sprintf("Failed to queue encoding task %s", res.Body.String()))
+
+	tr := models.TaskRequest{}
+	json.NewDecoder(res.Body).Decode(&tr)
+	as.NotZero(tr.ID, fmt.Sprintf("Did not create a Task %s", res.Body.String()))
+	as.Equal(models.TaskStatus.NEW, tr.Status, fmt.Sprintf("Task invalid %s", tr))
+
+	args := worker.Args{"id": tr.ID.String()}
+	err := VideoEncodingWrapper(args)
+	as.NoError(err, fmt.Sprintf("Failed to encode video %s", err))
+
+	// Validate the video was created
+}

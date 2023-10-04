@@ -123,10 +123,9 @@ export class VSCodeEditorCmp implements OnInit {
       // actually be faster to just do a contains against the entire string.
       // The word offset boundry is all messed up...
       let currentLang = _.find(monaco.languages.getLanguages(), {id: language});
-      console.log("currentLanguage", currentLang, monaco.languages.getLanguages());
+      // console.log("currentLanguage", currentLang, monaco.languages.getLanguages());
 
       let match = `${tokenType}.${language}`;
-
       _.each(tokenArr, (tokens, lineIdx) => {
         let line = m.getLineContent(lineIdx + 1)
         _.each(tokens, token => {

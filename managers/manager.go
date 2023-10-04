@@ -164,14 +164,14 @@ func ManagerCanCUD(c *buffalo.Context) (*ContentManager, *pop.Connection, error)
 			errors.New("Edit not supported by this manager"),
 		)
 	}
-    if man.GetCfg().UseDatabase {
-        tx, ok := ctx.Value("tx").(*pop.Connection)
-        if !ok {
-            return &man, nil, fmt.Errorf("No transaction found")
-        }
-	    return &man, tx, nil
-    }
-    return &man, nil, nil
+	if man.GetCfg().UseDatabase {
+		tx, ok := ctx.Value("tx").(*pop.Connection)
+		if !ok {
+			return &man, nil, fmt.Errorf("No transaction found")
+		}
+		return &man, tx, nil
+	}
+	return &man, nil, nil
 }
 
 // Provides the ability to pass a connection function and get params function to the manager so we can handle
@@ -285,7 +285,6 @@ func CreateScreensForContent(cm ContentManager, contentID uuid.UUID, count int, 
 	screens, err, ptrn := utils.CreateSeekScreens(srcFile, dstFile, count, offset)
 
 	for idx, sFile := range screens {
-		log.Printf("What is the SCREEN %s", sFile)
 		src := strings.ReplaceAll(sFile, dstPath, "")
 		s := models.Screen{
 			Src:       src,
@@ -305,9 +304,9 @@ func CreateScreensForContent(cm ContentManager, contentID uuid.UUID, count int, 
 }
 
 /**
- * Awkward to test.
+ * Capture a set of screens given a task
  */
-func ScreenCapture(man ContentManager, id uuid.UUID) error {
+func ScreenCaptureTask(man ContentManager, id uuid.UUID) error {
 	log.Printf("Managers Screen Capture for taskID %s", id)
 	task, tErr := man.GetTask(id)
 	if tErr != nil {
@@ -333,10 +332,60 @@ func ScreenCapture(man ContentManager, id uuid.UUID) error {
 	if sErr != nil {
 		failMsg := fmt.Sprintf("Failing to create screen %s", sErr)
 		FailTask(man, task, failMsg)
+		return sErr
 	}
-	ChangeTaskState(man, task, models.TaskStatus.DONE, fmt.Sprintf("Successfully created screens %s", screens))
+	ChangeTaskState(man, task, models.TaskStatus.DONE, fmt.Sprintf("Successfully created screens %s", pattern))
 	log.Printf("Screens %s and the pattern %s", screens, pattern)
 	return sErr
+}
+
+/**
+ * Could definitely make this a method assuming the next task uses the same logic.
+ */
+func EncodingVideoTask(man ContentManager, id uuid.UUID) error {
+	log.Printf("Managers Encoding taskID %s", id)
+	task, tErr := man.GetTask(id)
+	if tErr != nil {
+		log.Printf("Could not look up the task successfully %s", tErr)
+		return tErr
+	}
+	upTask, _ := ChangeTaskState(man, task, models.TaskStatus.PENDING, "Starting to execute task")
+	task = upTask
+	content, cErr := man.GetContent(task.ContentID)
+	if cErr != nil {
+		FailTask(man, task, fmt.Sprintf("Content not found %s %s", task.ContentID, cErr))
+		return cErr
+	}
+
+	task, upErr := ChangeTaskState(man, task, models.TaskStatus.IN_PROGRESS, fmt.Sprintf("Content was found %s", content.Src))
+	if upErr != nil {
+		log.Printf("Failed to update task state to in progress %s", upErr)
+		FailTask(man, task, fmt.Sprintf("Failed task intentionally %s", upErr))
+		return upErr
+	}
+
+	msg, encodeErr, shouldEncode := EncodeVideoContent(man, content, task.Codec)
+	log.Printf("Video Encode video %s %s %t", msg, encodeErr, shouldEncode)
+	if encodeErr != nil {
+		failMsg := fmt.Sprintf("Failing to create screen %s", encodeErr)
+		FailTask(man, task, failMsg)
+		return encodeErr
+	}
+	taskMsg := fmt.Sprintf("Completed video encoding %s and had to encode %t", msg, shouldEncode)
+	_, doneErr := ChangeTaskState(man, task, models.TaskStatus.DONE, taskMsg)
+	return doneErr
+}
+
+// Should get a bunch of crap here
+func EncodeVideoContent(man ContentManager, content *models.Content, codec string) (string, error, bool) {
+	content, cnt, err := GetContentAndContainer(man, content.ID)
+	if err != nil {
+		return "No content to encode", err, false
+	}
+	path := cnt.GetFqPath()
+	srcFile := filepath.Join(path, content.Src)
+	dstFile := utils.GetVideoConversionName(srcFile)
+	return utils.ConvertVideoToH256(srcFile, dstFile)
 }
 
 func ChangeTaskState(man ContentManager, task *models.TaskRequest, newStatus models.TaskStatusType, msg string) (*models.TaskRequest, error) {
