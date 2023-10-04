@@ -9,37 +9,49 @@
     ></contented-view>
     <video-preview-cmp [content]="content" *ngIf="content.isVideo()"></video-preview-cmp>
 
-  <mat-card class="screens-form" *ngIf="content?.isVideo()">
-    <mat-card-header>
-      Take Screenshots
-    </mat-card-header>
-    <mat-card-content>
-      <form [formGroup]="screensForm">
-        <mat-form-field>
-          <input matInput [formControl]="countControl" type="number"
-           min="1"
-           max="100"
-           placeholder="The number of screens to take"/>
-           <label>Screen Count</label>
-        </mat-form-field>
-        <mat-form-field>
-          <input matInput [formControl]="offsetControl" type="number" 
-            min="0" 
-            [max]="vidInfo?.format?.duration"
-            placeholder="Offset to start screens" />
-            <label>
-            ({{vidInfo?.format?.duration}}) seconds in video
-            </label>
-        </mat-form-field>
-        <button type="button" mat-raised-button 
-          (click)="incrementalScreens(content)" 
-          [disabled]="taskLoading">
-          <mat-icon>screenshot_keyboard</mat-icon>
-          Take Incremental Screens
+    <mat-card class="screens-form" *ngIf="content?.isVideo()">
+      <mat-card-header>
+        Take Screenshots
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="screensForm">
+          <mat-form-field>
+            <input matInput [formControl]="countControl" type="number"
+             min="1"
+             max="100"
+             placeholder="The number of screens to take"/>
+             <label>Screen Count</label>
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput [formControl]="offsetControl" type="number" 
+              min="0" 
+              [max]="vidInfo?.format?.duration"
+              placeholder="Offset to start screens" />
+              <label>
+              ({{vidInfo?.format?.duration}}) seconds in video
+              </label>
+          </mat-form-field>
+          <button type="button" mat-raised-button 
+            (click)="incrementalScreens(content)" 
+            [disabled]="taskLoading">
+            <mat-icon>screenshot_keyboard</mat-icon>
+            Take Incremental Screens
+          </button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="video-encoding-form" *ngIf="content?.isVideo()">
+      <mat-card-header>
+        Re-Encode Video Content to H265
+      </mat-card-header>
+      <mat-card-content>
+        <button type="button" mat-raised-button (click)="encodeVideoContent(content)"
+          [disabled]="!canReEncode(content)">
+          Encode
         </button>
-      </form>
-    </mat-card-content>
-  </mat-card>
+      </mat-card-content>
+    </mat-card>
   </div>
 
   <mat-card *ngIf="!!content">
@@ -49,9 +61,7 @@
         <button mat-icon-button (click)="save()" title="Save the description" [disabled]="loading">
           <mat-icon>save</mat-icon>
         </button>
-
       </mat-card-title>
-      <!-- <mat-icon>delete</mat-icon> -->
     </mat-card-header>
     <mat-card-content>
       <!-- TODO: Dynamically select language based on content type ?-->

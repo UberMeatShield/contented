@@ -14,6 +14,7 @@ export let ApiDef = {
         contentScreens: base + 'content/{mcID}/screens',
         screens: base + 'screens/',
         requestScreens: "/editing_queue/{id}/screens/{count}/{startTimeSeconds}",
+        encodeVideoContent: "/editing_queue/{id}/encoding",
         contentAll: base + 'content/',
         search: base + "search",
 

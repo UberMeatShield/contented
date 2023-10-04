@@ -228,4 +228,11 @@ export class ContentedService {
         url = url.replace("{startTimeSeconds}", '' + Math.floor(startTime));
         return this.http.post(url, {});
     }
+
+    encodeVideoContent(content: Content, codec: string = "") {
+        let params = new HttpParams()
+        params = params.set("codec", codec)
+        let url = ApiDef.contented.encodeVideoContent.replace("{id}", content.id)
+        return this.http.post(url, {params: params});
+    }
 }

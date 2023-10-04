@@ -91,6 +91,16 @@ func ValidateEditingQueue(as *ActionSuite) {
 }
 
 func (as *ActionSuite) Test_MemoryEncodingQueueHandler() {
+	// Should add a config value to completely nuke the encoded video
+	cfg := test_common.ResetConfig()
+	cfg.UseDatabase = false
+	utils.SetCfg(*cfg)
+	test_common.InitMemoryFakeAppEmpty()
+	ValidateVideoEncodingQueue(as)
+}
+
+func (as *ActionSuite) Test_DBEncodingQueueHandler() {
+	// Should add a config value to completely nuke the encoded video
 	test_common.InitFakeApp(true)
 	ValidateVideoEncodingQueue(as)
 }
