@@ -112,12 +112,12 @@ func ScreenCaptureWrapper(args worker.Args) error {
 				return tx
 			}
 			man := managers.GetAppManager(app, getConnection)
-			return managers.ScreenCapture(man, taskId)
+			return managers.ScreenCaptureTask(man, taskId)
 		})
 	}
 	// Memory manager version
 	man := managers.GetAppManager(app, getConnection)
-	return managers.ScreenCapture(man, taskId)
+	return managers.ScreenCaptureTask(man, taskId)
 }
 
 func GetTaskId(args worker.Args) (uuid.UUID, error) {
