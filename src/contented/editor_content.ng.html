@@ -46,7 +46,7 @@
         Re-Encode Video Content to H265
       </mat-card-header>
       <mat-card-content>
-        <button type="button" mat-raised-button (click)="encodeVideoContent(content)"
+        <button class="video-encoding-btn" type="button" mat-raised-button (click)="encodeVideoContent(content)"
           [disabled]="!canReEncode(content)">
           Encode
         </button>

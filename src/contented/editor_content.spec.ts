@@ -68,5 +68,26 @@ describe('EditorContentCmp', () => {
 
     expect($(".screens-form").length).withContext("Video should have the ability to take screens").toEqual(1);
   }));
+
+  it("Should be able to determine if the content can be video encoded", fakeAsync(() => {
+    let content = new Content(MockData.videoContent());
+    let vidInfo = content.getVideoInfo();
+    let codec = vidInfo.getVideoCodecName();
+    expect(codec).toEqual("h264")
+
+    cmp.content = content;
+    fixture.detectChanges();
+
+    let url = ApiDef.contented.contentScreens.replace("{mcID}", cmp.content.id);
+    httpMock.expectOne(url).flush(MockData.getScreens());
+    fixture.detectChanges();
+    tick(10000);
+
+    expect($(".video-encoding-form").length).withContext("It should be a video").toEqual(1);
+
+    let btn = $(".video-encoding-btn");
+    expect(btn.length).withContext("We should have an encoding button").toEqual(1);
+    expect(btn.attr("disabled")).toEqual(undefined);
+  }));
 });
 
