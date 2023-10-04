@@ -5,6 +5,7 @@ import (
 	"contented/models"
 	"contented/utils"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -51,22 +52,38 @@ func TaskScreensHandler(c buffalo.Context) error {
 		NumberOfScreens:  numberOfScreens,
 		StartTimeSeconds: startTimeSeconds,
 	}
-	createdTR, tErr := man.CreateTask(&tr)
-	if tErr != nil {
-		c.Error(http.StatusInternalServerError, tErr)
-	}
+	return QueueTaskRequest(c, man, &tr)
+}
 
-	// This needs to delay a little before it starts
-	// It should probably not kick off the job task inside the manager
-	job := worker.Job{
-		Queue:   "default",
-		Handler: tr.Operation.String(),
-		Args: worker.Args{
-			"id": tr.ID.String(),
-		},
+/**
+ * Execute the task within the transaction middleware scope.
+ * TODO: Can this work in a full unit test?
+ */
+func VideoEncodingWrapper(args worker.Args) error {
+	log.Printf("VideoEncodingWrapper () Starting Task args %s", args)
+	cfg := utils.GetCfg()
+	getConnection := func() *pop.Connection {
+		return nil
 	}
-	App(cfg.UseDatabase).Worker.PerformIn(job, 2*time.Second)
-	return c.Render(http.StatusCreated, r.JSON(createdTR))
+	app := App(cfg.UseDatabase)
+	taskId, err := GetTaskId(args)
+	if err != nil {
+		return err
+	}
+	// Note this is extra complicated by the fact it SHOULD be able to run with NO connections
+	// or DB sessions made.
+	if cfg.UseDatabase == true {
+		return models.DB.Transaction(func(tx *pop.Connection) error {
+			getConnection = func() *pop.Connection {
+				return tx
+			}
+			man := managers.GetAppManager(app, getConnection)
+			return managers.EncodingVideoTask(man, taskId)
+		})
+	}
+	// Memory manager version
+	man := managers.GetAppManager(app, getConnection)
+	return managers.EncodingVideoTask(man, taskId)
 }
 
 /*
@@ -80,15 +97,8 @@ func ScreenCaptureWrapper(args worker.Args) error {
 		return nil
 	}
 	app := App(cfg.UseDatabase)
-	taskId := ""
-	for k, v := range args {
-		if k == "id" {
-			taskId = v.(string)
-		}
-	}
-	id, err := uuid.FromString(taskId)
+	taskId, err := GetTaskId(args)
 	if err != nil {
-		log.Printf("Failed to load task bad id %s", err)
 		return err
 	}
 
@@ -102,10 +112,77 @@ func ScreenCaptureWrapper(args worker.Args) error {
 				return tx
 			}
 			man := managers.GetAppManager(app, getConnection)
-			return managers.ScreenCapture(man, id)
+			return managers.ScreenCapture(man, taskId)
 		})
 	}
 	// Memory manager version
 	man := managers.GetAppManager(app, getConnection)
-	return managers.ScreenCapture(man, id)
+	return managers.ScreenCapture(man, taskId)
+}
+
+func GetTaskId(args worker.Args) (uuid.UUID, error) {
+	taskId := ""
+	for k, v := range args {
+		if k == "id" {
+			taskId = v.(string)
+		}
+	}
+	id, err := uuid.FromString(taskId)
+	if err != nil {
+		log.Printf("Failed to load task bad id %s", err)
+		bad, _ := uuid.NewV4()
+		return bad, err
+	}
+	return id, err
+}
+
+// Should deny quickly if the media content type is incorrect for the action
+func VideoEncodingHandler(c buffalo.Context) error {
+	cfg := utils.GetCfg()
+	contentID, bad_uuid := uuid.FromString(c.Param("contentID"))
+	if bad_uuid != nil {
+		return c.Error(http.StatusBadRequest, bad_uuid)
+	}
+	man := managers.GetManager(&c)
+	content, err := man.GetContent(contentID)
+	if err != nil {
+		return c.Error(http.StatusNotFound, err)
+	}
+	if !strings.Contains(content.ContentType, "video") && content.NoFile == false {
+		return c.Error(http.StatusBadRequest, errors.New("Content was not a video %s"))
+	}
+	codec := managers.StringDefault(c.Param("codec"), cfg.CodecForConversion)
+	log.Printf("Requesting a re-encode %s with codec %s for contentID %s", content.Src, codec, content.ID.String())
+	tr := models.TaskRequest{
+		ContentID:        content.ID,
+		Operation:        models.TaskOperation.ENCODING,
+		NumberOfScreens:  0,
+		StartTimeSeconds: 0,
+		Codec:            codec,
+	}
+	return QueueTaskRequest(c, man, &tr)
+}
+
+func QueueTaskRequest(c buffalo.Context, man managers.ContentManager, tr *models.TaskRequest) error {
+	createdTR, tErr := man.CreateTask(tr)
+	if tErr != nil {
+		c.Error(http.StatusInternalServerError, tErr)
+	}
+	cfg := man.GetCfg()
+	// This needs to delay a little before it starts
+	// It should probably not kick off the job task inside the manager
+	job := worker.Job{
+		Queue:   "default",
+		Handler: tr.Operation.String(),
+		Args: worker.Args{
+			"id": tr.ID.String(),
+		},
+	}
+	err := App(cfg.UseDatabase).Worker.PerformIn(job, 2*time.Second)
+	if err != nil {
+		msg := fmt.Sprintf("Failed to enqueue task in the work queue %s", err)
+		log.Printf(msg)
+		return c.Error(http.StatusInternalServerError, errors.New(msg))
+	}
+	return c.Render(http.StatusCreated, r.JSON(createdTR))
 }

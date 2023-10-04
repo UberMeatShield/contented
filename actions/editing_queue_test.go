@@ -89,3 +89,15 @@ func ValidateEditingQueue(as *ActionSuite) {
 	as.Equal(models.TaskStatus.DONE, checkTr.Status, "And the task should be done")
 	*/
 }
+
+func (as *ActionSuite) Test_MemoryEncodingQueueHandler() {
+	test_common.InitFakeApp(true)
+	ValidateVideoEncodingQueue(as)
+}
+
+func ValidateVideoEncodingQueue(as *ActionSuite) {
+	_, content := CreateVideoContainer(as)
+	url := fmt.Sprintf("/editing_queue/%s/encoding", content.ID.String())
+	res := as.JSON(url).Post(&content)
+	as.Equal(http.StatusCreated, res.Code, fmt.Sprintf("Failed to queue encoding task %s", res.Body.String()))
+}
