@@ -235,4 +235,12 @@ export class ContentedService {
         let url = ApiDef.contented.encodeVideoContent.replace("{id}", content.id)
         return this.http.post(url, {params: params});
     }
+
+    getTasks(id: string, page: number = 1, perPage: number = 100) {
+        let params = new HttpParams();
+        params = params.set("page", "" + page);
+        params = params.set("per_page", "" + perPage);
+        params = params.set("content_id", id || "");
+        return this.http.get(ApiDef.tasks.list, {params: params});
+    }
 }
