@@ -144,7 +144,8 @@ func (ms MemoryStorage) UpdateTask(t *models.TaskRequest, currentState models.Ta
 	for idx, task := range memStorage.ValidTasks {
 		// Check to ensure the state is known before the updated which should
 		// prevent MOST update errors in the memory view.
-		if task.ID == t.ID && currentState == task.Status {
+		log.Printf("Looking at %s trying to find id(%s) in state %s", task, t.ID.String(), currentState)
+		if task.ID == t.ID && (currentState == task.Status || task.Status == t.Status) {
 			t.UpdatedAt = time.Now()
 			memStorage.ValidTasks[idx] = *t
 			updated = true

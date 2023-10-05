@@ -319,8 +319,11 @@ func ScreenCaptureTask(man ContentManager, id uuid.UUID) error {
 		log.Printf("Could not look up the task successfully %s", tErr)
 		return tErr
 	}
-	upTask, _ := ChangeTaskState(man, task, models.TaskStatus.PENDING, "Starting to execute task")
-	task = upTask
+	task, pErr := ChangeTaskState(man, task, models.TaskStatus.PENDING, "Starting to execute task")
+	if pErr != nil {
+		log.Printf(fmt.Sprintf("Screens Couldn't change task status to pending %s", pErr))
+		return pErr
+	}
 	content, cErr := man.GetContent(task.ContentID)
 	if cErr != nil {
 		FailTask(man, task, fmt.Sprintf("Content not found %s %s", task.ContentID, cErr))
@@ -355,8 +358,11 @@ func EncodingVideoTask(man ContentManager, id uuid.UUID) error {
 		log.Printf("Could not look up the task successfully %s", tErr)
 		return tErr
 	}
-	upTask, _ := ChangeTaskState(man, task, models.TaskStatus.PENDING, "Starting to execute task")
-	task = upTask
+	task, pErr := ChangeTaskState(man, task, models.TaskStatus.PENDING, "Starting to execute task")
+	if pErr != nil {
+		log.Printf("Video Couldn't move task into pending %s", pErr)
+		return pErr
+	}
 	content, cErr := man.GetContent(task.ContentID)
 	if cErr != nil {
 		FailTask(man, task, fmt.Sprintf("Content not found %s %s", task.ContentID, cErr))
@@ -395,15 +401,21 @@ func EncodeVideoContent(man ContentManager, content *models.Content, codec strin
 }
 
 func ChangeTaskState(man ContentManager, task *models.TaskRequest, newStatus models.TaskStatusType, msg string) (*models.TaskRequest, error) {
-	status := task.Status
+	log.Printf("Changing Task State %s to %s", task, newStatus)
+	status := task.Status.Copy()
+	if status == newStatus {
+		return nil, errors.New(fmt.Sprintf("Task %s Already in state %s", task, newStatus))
+	}
 	task.Status = newStatus
 	task.Message = msg
-	log.Printf("Changing Task State %s", task)
 	return man.UpdateTask(task, status)
 }
 
 func FailTask(man ContentManager, task *models.TaskRequest, errMsg string) (*models.TaskRequest, error) {
-	status := task.Status
+	status := task.Status.Copy()
+	if status == models.TaskStatus.ERROR {
+		return nil, errors.New(fmt.Sprintf("Task %s Already in state %s", task, models.TaskStatus.ERROR))
+	}
 	task.Status = models.TaskStatus.ERROR
 	task.ErrMsg = errMsg
 	log.Printf("Failing task becasue %s", task)

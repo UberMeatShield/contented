@@ -23,12 +23,14 @@ type ContentManagerMemory struct {
 	cfg *utils.DirConfigEntry
 
 	// Hmmm, this should use the memory manager probably
-	ValidContent    models.ContentMap
-	ValidContainers models.ContainerMap
-	ValidScreens    models.ScreenMap
-	ValidTags       models.TagsMap
-	ValidTasks      models.TaskRequests
-	validate        string
+	/*
+		ValidContent    models.ContentMap
+		ValidContainers models.ContainerMap
+		ValidScreens    models.ScreenMap
+		ValidTags       models.TagsMap
+		ValidTasks      models.TaskRequests
+	*/
+	validate string
 
 	params *url.Values
 	Params GetParamsType
@@ -60,11 +62,13 @@ func (cm *ContentManagerMemory) Initialize() {
 		memStorage = utils.InitializeMemory(cm.cfg.Dir)
 	}
 	// Remove this extra reference
-	cm.ValidContainers = memStorage.ValidContainers
-	cm.ValidContent = memStorage.ValidContent
-	cm.ValidScreens = memStorage.ValidScreens
-	cm.ValidTags = memStorage.ValidTags
-	cm.ValidTasks = memStorage.ValidTasks
+	/*
+		cm.ValidContainers = memStorage.ValidContainers
+		cm.ValidContent = memStorage.ValidContent
+		cm.ValidScreens = memStorage.ValidScreens
+		cm.ValidTags = memStorage.ValidTags
+		cm.ValidTasks = memStorage.ValidTasks
+	*/
 }
 
 func (cm ContentManagerMemory) GetStore() *utils.MemoryStorage {
@@ -654,8 +658,9 @@ func (cm ContentManagerMemory) CreateTask(t *models.TaskRequest) (*models.TaskRe
 func (cm ContentManagerMemory) UpdateTask(t *models.TaskRequest, currentState models.TaskStatusType) (*models.TaskRequest, error) {
 	// Probably does NOT properly update the memStorage
 	mem := cm.GetStore()
-	_, err := mem.UpdateTask(t, t.Status)
+	_, err := mem.UpdateTask(t, currentState)
 	if err != nil {
+		log.Printf("Couldn't find task to update %s", err)
 		return nil, err
 	}
 	return cm.GetTask(t.ID)

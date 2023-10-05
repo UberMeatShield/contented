@@ -156,6 +156,7 @@ func InitMemoryFakeAppEmpty() *utils.DirConfigEntry {
 	return cfg
 }
 
+// Note this is DB only, init fake app creates the content for memory by default
 func CreateContentByDirName(test_dir_name string) (*models.Container, models.Contents, error) {
 	cnt, content := GetContentByDirName(test_dir_name)
 

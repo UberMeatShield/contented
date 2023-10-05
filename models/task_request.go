@@ -49,6 +49,25 @@ func (ts TaskStatusType) String() string {
 	return "unknown"
 }
 
+func (ts TaskStatusType) Copy() TaskStatusType {
+	str := ts.String()
+	switch str {
+	case "new":
+		return TaskStatus.NEW
+	case "pending":
+		return TaskStatus.PENDING
+	case "in_progress":
+		return TaskStatus.IN_PROGRESS
+	case "canceled":
+		return TaskStatus.CANCELED
+	case "error":
+		return TaskStatus.ERROR
+	case "done":
+		return TaskStatus.DONE
+	}
+	return TaskStatus.NEW
+}
+
 type TaskOperationType string
 
 var TaskOperation = struct {
