@@ -687,3 +687,51 @@ func (cm ContentManagerMemory) NextTask() (*models.TaskRequest, error) {
 	}
 	return nil, nil
 }
+
+/*
+*
+ */
+func (cm ContentManagerMemory) ListTasksContext() (*models.TaskRequests, error) {
+	params := cm.Params()
+	_, limit, page := GetPagination(params, cm.GetCfg().Limit)
+	query := TaskQuery{
+		Page:      page,
+		PerPage:   limit,
+		ContentID: StringDefault(params.Get("content_id"), ""),
+		Status:    StringDefault(params.Get("status"), ""),
+	}
+	return cm.ListTasks(query)
+}
+
+func (cm ContentManagerMemory) ListTasks(query TaskQuery) (*models.TaskRequests, error) {
+	mem := cm.GetStore()
+	task_arr := mem.ValidTasks
+	if query.ContentID != "" {
+		contentID, err := uuid.FromString(query.ContentID)
+		filtered_tasks := models.TaskRequests{}
+		if err != nil {
+			return nil, err
+		}
+		for _, task := range task_arr {
+			if task.ContentID == contentID {
+				filtered_tasks = append(filtered_tasks, task)
+			}
+		}
+		task_arr = filtered_tasks
+	}
+	if query.Status != "" {
+		filtered_tasks := models.TaskRequests{}
+		for _, task := range task_arr {
+			if task.Status.String() == query.Status {
+				filtered_tasks = append(filtered_tasks, task)
+			}
+		}
+		task_arr = filtered_tasks
+	}
+	offset, end := GetOffsetEnd(query.Page, query.PerPage, len(task_arr))
+	if end > 0 { // If it is empty a slice ending in 0 = boom
+		task_arr = task_arr[offset:end]
+		return &task_arr, nil
+	}
+	return &task_arr, nil
+}

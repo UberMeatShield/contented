@@ -42,6 +42,13 @@ type SearchRequest struct {
 	Tags        []string `json:"tags" default:"[]"`
 }
 
+type TaskQuery struct {
+	Page      int    `json:"page" default:"1"`
+	PerPage   int    `json:"per_page" default:"100"`
+	ContentID string `json:"content_id" default:""`
+	Status    string `json:"status" default:""`
+}
+
 func (sr SearchRequest) String() string {
 	s, _ := json.MarshalIndent(sr, "", "  ")
 	return string(s)
@@ -101,13 +108,12 @@ type ContentManager interface {
 	// For processing encoding requests
 	CreateTask(task *models.TaskRequest) (*models.TaskRequest, error)
 	UpdateTask(task *models.TaskRequest, currentStatus models.TaskStatusType) (*models.TaskRequest, error)
-	NextTask() (*models.TaskRequest, error)
+	NextTask() (*models.TaskRequest, error) // Assigns it (not really required yet)
 
-	// Make it so the task API is a GET only operation (probably)
+	// For the API exposed
+	ListTasksContext() (*models.TaskRequests, error)
+	ListTasks(query TaskQuery) (*models.TaskRequests, error)
 	GetTask(id uuid.UUID) (*models.TaskRequest, error)
-	// Get the tasks so we can see a work queue somewhere
-	// ListAllTasks(page int, perPage int)
-	// ListTasks(contentID uuid.UUD, page int, perPage int)
 }
 
 // Dealing with buffalo.Context vs grift.Context is kinda annoying, this handles the

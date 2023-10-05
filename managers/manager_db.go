@@ -611,3 +611,32 @@ func (cm ContentManagerDB) NextTask() (*models.TaskRequest, error) {
 	}
 	return nil, errors.New("No Tasks to pull off the queue")
 }
+
+func (cm ContentManagerDB) ListTasksContext() (*models.TaskRequests, error) {
+	params := cm.Params()
+	_, limit, page := GetPagination(params, cm.GetCfg().Limit)
+	query := TaskQuery{
+		Page:      page,
+		PerPage:   limit,
+		ContentID: StringDefault(params.Get("content_id"), ""),
+		Status:    StringDefault(params.Get("status"), ""), // Check it is in the Status values?
+	}
+	return cm.ListTasks(query)
+}
+
+func (cm ContentManagerDB) ListTasks(query TaskQuery) (*models.TaskRequests, error) {
+	tasks := models.TaskRequests{}
+	tx := cm.GetConnection()
+	q := tx.Paginate(query.Page, query.PerPage)
+	if query.Status != "" {
+		q = q.Where("status = ?", query.Status)
+	}
+	if query.ContentID != "" {
+		q = q.Where("content_id = ?", query.ContentID)
+	}
+	err := q.All(&tasks)
+	if err != nil {
+		return nil, err
+	}
+	return &tasks, nil
+}
