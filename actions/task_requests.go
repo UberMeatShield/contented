@@ -56,73 +56,17 @@ func (v TaskRequestResource) Show(c buffalo.Context) error {
 	return c.Render(http.StatusOK, r.JSON(task))
 }
 
-// Create adds a TaskRequest to the DB. This function is mapped to the
-// path POST /task_request
+// Currently this is a private setup not accessible from the UI
 func (v TaskRequestResource) Create(c buffalo.Context) error {
 	return c.Error(http.StatusNotImplemented, errors.New("Not implemented"))
-	/*
-		_, _, err := managers.ManagerCanCUD(&c)
-		if err != nil {
-			return err
-		}
-		// Bind previewTaskRequest to the html form/JSON elements
-		screen := &models.TaskRequest{}
-		if err := c.Bind(screen); err != nil {
-			return err
-		}
-		man := managers.GetManager(&c)
-		cErr := man.CreateTaskRequest(screen)
-		if cErr != nil {
-			return c.Render(http.StatusUnprocessableEntity, r.JSON(cErr))
-		}
-		return c.Render(http.StatusCreated, r.JSON(screen))
-	*/
 }
 
-// Update changes a TaskRequest in the DB. This function is mapped to
-// the path PUT /task_request/{screen_id}
+// Another private method, might be opened to just canceling a task (if possible)
 func (v TaskRequestResource) Update(c buffalo.Context) error {
 	return c.Error(http.StatusNotImplemented, errors.New("Not implemented"))
-	// Get the DB connection from the context
-	/*
-		_, _, err := managers.ManagerCanCUD(&c)
-		if err != nil {
-			return err
-		}
-
-		man := managers.GetManager(&c)
-		id, idErr := uuid.FromString(c.Param("screen_id"))
-		if idErr != nil {
-			return c.Error(http.StatusBadRequest, idErr)
-		}
-		screen, notFoundErr := man.GetTaskRequest(id)
-		if notFoundErr != nil {
-			return c.Error(http.StatusNotFound, err)
-		}
-		if err := c.Bind(screen); err != nil {
-			return c.Render(http.StatusUnprocessableEntity, r.JSON(err))
-		}
-		checkTaskRequest, _ := man.GetTaskRequest(id)
-		return c.Render(http.StatusOK, r.JSON(checkTaskRequest))
-	*/
 }
 
-// Destroy deletes a TaskRequest from the DB. This function is mapped
-// to the path DELETE /task_request/{screen_id}
+// Also a private setup, it is saner to not have somebody messing with the task queue.
 func (v TaskRequestResource) Destroy(c buffalo.Context) error {
 	return c.Error(http.StatusNotImplemented, errors.New("Not implemented"))
-	/*
-		// Get the DB connection from the context
-		_, _, err := managers.ManagerCanCUD(&c)
-		if err != nil {
-			return err
-		}
-
-		man := managers.GetManager(&c)
-		screen, dErr := man.DestroyTaskRequest(c.Param("screen_id"))
-		if dErr != nil {
-			return c.Render(http.StatusBadRequest, r.JSON(dErr))
-		}
-		return c.Render(http.StatusOK, r.JSON(screen))
-	*/
 }
