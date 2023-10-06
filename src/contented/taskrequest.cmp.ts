@@ -10,13 +10,15 @@ import {TaskRequest} from './task_request';
 export class TaskRequestCmp implements OnInit {
 
     @Input() contentID: string = "";
-    @Input() reloadEvt: EventEmitter<any>;
     @Input() pageSize = 25;
+    @Input() reloadEvt: EventEmitter<any>; // Do you want to reload the task queue
+    @Output() taskUpdated: EventEmitter<TaskRequest> = new EventEmitter<TaskRequest>;
 
     public loading = false;
     public tasks: Array<TaskRequest>;
 
     constructor(public _service: ContentedService) {
+
     }
 
     ngOnInit() {
@@ -36,6 +38,6 @@ export class TaskRequestCmp implements OnInit {
         },
         console.error
       );
-
     }
+    // Enable a polling method that will check for when a task is done (in editor or here?)
 }
