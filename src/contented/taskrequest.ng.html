@@ -1,0 +1,11 @@
+<div class="task-request-cmp">
+    Task Requests (Convert to Material Table)
+    <div *ngIf="tasks">
+        <div *ngFor="let task of tasks">
+           {{task.id}} {{task.created_at}} {{task.message}} {{task.status}}
+        </div>
+    </div>
+    <div *ngIf="!loading && tasks && tasks.length === 0">
+        No associated tasks
+    </div>
+</div>

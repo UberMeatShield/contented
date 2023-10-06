@@ -19,5 +19,9 @@ export let ApiDef = {
         search: base + "search",
 
         tags: base + "tags/",
+    },
+    tasks: {
+        get: "/task_requests/{id}",
+        list: "/task_requests/",
     }
 };

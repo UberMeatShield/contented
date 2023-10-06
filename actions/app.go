@@ -63,6 +63,7 @@ func App(UseDatabase bool) *buffalo.App {
 		mc_r.Resource("/screens", ScreensResource{})
 		app.Resource("/screens", ScreensResource{})
 		app.Resource("/tags", TagsResource{})
+		app.Resource("/task_requests", TaskRequestResource{})
 
 		// Host the index.html, also assume that all angular UI routes are going to be under contented
 		// Cannot figure out how to just let AngularIndex handle EVERYTHING under ui/*/*

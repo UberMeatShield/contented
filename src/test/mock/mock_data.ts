@@ -40,6 +40,17 @@ class MockLoader {
         return _.clone(require('./video_content.json'));
     }
 
+    public taskRequest(taskId: string) {
+        let tasks = _.clone(require('./task_requests.json'));
+        let task = tasks[0];
+        task.id = taskId;
+        return task
+    }
+
+    public taskRequests() {
+        return _.clone(require('./task_requests.json'));
+    }
+
     public getContent(container_id = null, count = null) {
         let content = _.clone(require('./content.json'));
         if (container_id) {

@@ -120,5 +120,10 @@ func ValidateVideoEncodingQueue(as *ActionSuite) {
 	err := VideoEncodingWrapper(args)
 	as.NoError(err, fmt.Sprintf("Failed to encode video %s", err))
 
-	// Validate the video was created
+	checkR := as.JSON(fmt.Sprintf("/task_requests/%s", tr.ID.String())).Get()
+	as.Equal(http.StatusOK, checkR.Code)
+
+	checkTask := models.TaskRequest{}
+	json.NewDecoder(checkR.Body).Decode(&checkTask)
+	as.Equal(checkTask.Status, models.TaskStatus.DONE, fmt.Sprintf("It should be done %s", checkTask))
 }

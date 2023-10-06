@@ -23,12 +23,14 @@ type ContentManagerMemory struct {
 	cfg *utils.DirConfigEntry
 
 	// Hmmm, this should use the memory manager probably
-	ValidContent    models.ContentMap
-	ValidContainers models.ContainerMap
-	ValidScreens    models.ScreenMap
-	ValidTags       models.TagsMap
-	ValidTasks      models.TaskRequests
-	validate        string
+	/*
+		ValidContent    models.ContentMap
+		ValidContainers models.ContainerMap
+		ValidScreens    models.ScreenMap
+		ValidTags       models.TagsMap
+		ValidTasks      models.TaskRequests
+	*/
+	validate string
 
 	params *url.Values
 	Params GetParamsType
@@ -60,11 +62,13 @@ func (cm *ContentManagerMemory) Initialize() {
 		memStorage = utils.InitializeMemory(cm.cfg.Dir)
 	}
 	// Remove this extra reference
-	cm.ValidContainers = memStorage.ValidContainers
-	cm.ValidContent = memStorage.ValidContent
-	cm.ValidScreens = memStorage.ValidScreens
-	cm.ValidTags = memStorage.ValidTags
-	cm.ValidTasks = memStorage.ValidTasks
+	/*
+		cm.ValidContainers = memStorage.ValidContainers
+		cm.ValidContent = memStorage.ValidContent
+		cm.ValidScreens = memStorage.ValidScreens
+		cm.ValidTags = memStorage.ValidTags
+		cm.ValidTasks = memStorage.ValidTasks
+	*/
 }
 
 func (cm ContentManagerMemory) GetStore() *utils.MemoryStorage {
@@ -654,8 +658,9 @@ func (cm ContentManagerMemory) CreateTask(t *models.TaskRequest) (*models.TaskRe
 func (cm ContentManagerMemory) UpdateTask(t *models.TaskRequest, currentState models.TaskStatusType) (*models.TaskRequest, error) {
 	// Probably does NOT properly update the memStorage
 	mem := cm.GetStore()
-	_, err := mem.UpdateTask(t, t.Status)
+	_, err := mem.UpdateTask(t, currentState)
 	if err != nil {
+		log.Printf("Couldn't find task to update %s", err)
 		return nil, err
 	}
 	return cm.GetTask(t.ID)
@@ -686,4 +691,52 @@ func (cm ContentManagerMemory) NextTask() (*models.TaskRequest, error) {
 		}
 	}
 	return nil, nil
+}
+
+/*
+*
+ */
+func (cm ContentManagerMemory) ListTasksContext() (*models.TaskRequests, error) {
+	params := cm.Params()
+	_, limit, page := GetPagination(params, cm.GetCfg().Limit)
+	query := TaskQuery{
+		Page:      page,
+		PerPage:   limit,
+		ContentID: StringDefault(params.Get("content_id"), ""),
+		Status:    StringDefault(params.Get("status"), ""),
+	}
+	return cm.ListTasks(query)
+}
+
+func (cm ContentManagerMemory) ListTasks(query TaskQuery) (*models.TaskRequests, error) {
+	mem := cm.GetStore()
+	task_arr := mem.ValidTasks
+	if query.ContentID != "" {
+		contentID, err := uuid.FromString(query.ContentID)
+		filtered_tasks := models.TaskRequests{}
+		if err != nil {
+			return nil, err
+		}
+		for _, task := range task_arr {
+			if task.ContentID == contentID {
+				filtered_tasks = append(filtered_tasks, task)
+			}
+		}
+		task_arr = filtered_tasks
+	}
+	if query.Status != "" {
+		filtered_tasks := models.TaskRequests{}
+		for _, task := range task_arr {
+			if task.Status.String() == query.Status {
+				filtered_tasks = append(filtered_tasks, task)
+			}
+		}
+		task_arr = filtered_tasks
+	}
+	offset, end := GetOffsetEnd(query.Page, query.PerPage, len(task_arr))
+	if end > 0 { // If it is empty a slice ending in 0 = boom
+		task_arr = task_arr[offset:end]
+		return &task_arr, nil
+	}
+	return &task_arr, nil
 }
