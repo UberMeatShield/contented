@@ -53,19 +53,23 @@ describe('EditorContentCmp', () => {
   });
 
   it("Should be able to render the monaco editor and get a reference", fakeAsync(() => {
-    cmp.content = new Content({id: 'A', content_type: 'video/mp4'});
+
+    let id = "A";
+    cmp.content = new Content({id: id, content_type: 'video/mp4'});
     tick(1000);
     fixture.detectChanges();
     expect($(".vscode-editor-cmp").length).withContext("There should be an editor").toEqual(1);
     tick(1000);
 
-    let url = ApiDef.contented.contentScreens.replace("{mcID}", cmp.content.id);
+    let url = ApiDef.contented.contentScreens.replace("{mcID}", id);
     httpMock.expectOne(url).flush(MockData.getScreens());
     fixture.detectChanges();
     tick(1000);
     fixture.detectChanges();
     tick(1000);
 
+    let taskUrl = `${ApiDef.tasks.list}?page=1&per_page=25&content_id=${id}`;
+    httpMock.expectOne(taskUrl).flush(MockData.taskRequests());
     expect($(".screens-form").length).withContext("Video should have the ability to take screens").toEqual(1);
   }));
 
@@ -88,6 +92,10 @@ describe('EditorContentCmp', () => {
     let btn = $(".video-encoding-btn");
     expect(btn.length).withContext("We should have an encoding button").toEqual(1);
     expect(btn.attr("disabled")).toEqual(undefined);
+
+
+    let taskUrl = `${ApiDef.tasks.list}?page=1&per_page=25&content_id=${content.id}`;
+    httpMock.expectOne(taskUrl).flush(MockData.taskRequests());
   }));
 });
 

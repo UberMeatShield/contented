@@ -3,6 +3,7 @@ import {HttpClient, HttpHeaders, HttpParams, HttpErrorResponse} from '@angular/c
 import {Container, LoadStates} from './container';
 import {Content} from './content';
 import {Screen} from './screen';
+import {TaskRequest} from './task_request';
 import {ApiDef} from './api_def';
 
 // The manner in which RxJS does this is really stupid, saving 50K for hours of dev time is fail
@@ -241,6 +242,10 @@ export class ContentedService {
         params = params.set("page", "" + page);
         params = params.set("per_page", "" + perPage);
         params = params.set("content_id", id || "");
-        return this.http.get(ApiDef.tasks.list, {params: params});
+        return this.http.get(ApiDef.tasks.list, {params: params}).pipe(
+            map(res => {
+                return _.map(res, r => new TaskRequest(r))
+            })
+        );
     }
 }
