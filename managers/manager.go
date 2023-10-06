@@ -309,85 +309,6 @@ func CreateScreensForContent(cm ContentManager, contentID uuid.UUID, count int, 
 	return screens, err, ptrn
 }
 
-/**
- * Capture a set of screens given a task
- */
-func ScreenCaptureTask(man ContentManager, id uuid.UUID) error {
-	log.Printf("Managers Screen Capture for taskID %s", id)
-	task, tErr := man.GetTask(id)
-	if tErr != nil {
-		log.Printf("Could not look up the task successfully %s", tErr)
-		return tErr
-	}
-	task, pErr := ChangeTaskState(man, task, models.TaskStatus.PENDING, "Starting to execute task")
-	if pErr != nil {
-		log.Printf(fmt.Sprintf("Screens Couldn't change task status to pending %s", pErr))
-		return pErr
-	}
-	content, cErr := man.GetContent(task.ContentID)
-	if cErr != nil {
-		FailTask(man, task, fmt.Sprintf("Content not found %s %s", task.ContentID, cErr))
-		return cErr
-	}
-
-	task, upErr := ChangeTaskState(man, task, models.TaskStatus.IN_PROGRESS, fmt.Sprintf("Content was found %s", content.Src))
-	if upErr != nil {
-		log.Printf("Failed to update task state to in progress %s", upErr)
-		FailTask(man, task, fmt.Sprintf("Failed task intentionally %s", upErr))
-		return upErr
-	}
-
-	screens, sErr, pattern := CreateScreensForContent(man, task.ContentID, task.NumberOfScreens, task.StartTimeSeconds)
-	if sErr != nil {
-		failMsg := fmt.Sprintf("Failing to create screen %s", sErr)
-		FailTask(man, task, failMsg)
-		return sErr
-	}
-	ChangeTaskState(man, task, models.TaskStatus.DONE, fmt.Sprintf("Successfully created screens %s", pattern))
-	log.Printf("Screens %s and the pattern %s", screens, pattern)
-	return sErr
-}
-
-/**
- * Could definitely make this a method assuming the next task uses the same logic.
- */
-func EncodingVideoTask(man ContentManager, id uuid.UUID) error {
-	log.Printf("Managers Encoding taskID %s", id)
-	task, tErr := man.GetTask(id)
-	if tErr != nil {
-		log.Printf("Could not look up the task successfully %s", tErr)
-		return tErr
-	}
-	task, pErr := ChangeTaskState(man, task, models.TaskStatus.PENDING, "Starting to execute task")
-	if pErr != nil {
-		log.Printf("Video Couldn't move task into pending %s", pErr)
-		return pErr
-	}
-	content, cErr := man.GetContent(task.ContentID)
-	if cErr != nil {
-		FailTask(man, task, fmt.Sprintf("Content not found %s %s", task.ContentID, cErr))
-		return cErr
-	}
-
-	task, upErr := ChangeTaskState(man, task, models.TaskStatus.IN_PROGRESS, fmt.Sprintf("Content was found %s", content.Src))
-	if upErr != nil {
-		log.Printf("Failed to update task state to in progress %s", upErr)
-		FailTask(man, task, fmt.Sprintf("Failed task intentionally %s", upErr))
-		return upErr
-	}
-
-	msg, encodeErr, shouldEncode := EncodeVideoContent(man, content, task.Codec)
-	log.Printf("Video Encode video %s %s %t", msg, encodeErr, shouldEncode)
-	if encodeErr != nil {
-		failMsg := fmt.Sprintf("Failing to create screen %s", encodeErr)
-		FailTask(man, task, failMsg)
-		return encodeErr
-	}
-	taskMsg := fmt.Sprintf("Completed video encoding %s and had to encode %t", msg, shouldEncode)
-	_, doneErr := ChangeTaskState(man, task, models.TaskStatus.DONE, taskMsg)
-	return doneErr
-}
-
 // Should get a bunch of crap here
 func EncodeVideoContent(man ContentManager, content *models.Content, codec string) (string, error, bool) {
 	content, cnt, err := GetContentAndContainer(man, content.ID)
@@ -400,6 +321,130 @@ func EncodeVideoContent(man ContentManager, content *models.Content, codec strin
 	return utils.ConvertVideoToH256(srcFile, dstFile)
 }
 
+/**
+ * Capture a set of screens given a task
+ */
+func ScreenCaptureTask(man ContentManager, id uuid.UUID) error {
+	log.Printf("Managers Screen Tasks taskID attempting to start %s", id)
+	task, _, err := TakeContentTask(man, id, "Screenshots")
+	if err != nil {
+		return err
+	}
+	screens, sErr, pattern := CreateScreensForContent(man, task.ContentID, task.NumberOfScreens, task.StartTimeSeconds)
+	if sErr != nil {
+		failMsg := fmt.Sprintf("Failing to create screen %s", sErr)
+		FailTask(man, task, failMsg)
+		return sErr
+	}
+	// Should strip the path information out of the task state
+	ChangeTaskState(man, task, models.TaskStatus.DONE, fmt.Sprintf("Successfully created screens %s", pattern))
+	log.Printf("Screens %s and the pattern %s", screens, pattern)
+	return sErr
+}
+
+/**
+ * Capture a set of screens given a task
+ */
+func WebpFromScreensTask(man ContentManager, id uuid.UUID) error {
+	log.Printf("Managers WebP taskID attempting to start %s", id)
+	task, content, err := TakeContentTask(man, id, "WebpFromScreensTask")
+	if err != nil {
+		return err
+	}
+
+	webp, err := WebpFromContent(man, content)
+	if err != nil {
+		failMsg := fmt.Sprintf("Failing to create screen %s", err)
+		FailTask(man, task, failMsg)
+		return err
+	}
+	//
+	// Should strip the path information out of the task state
+	ChangeTaskState(man, task, models.TaskStatus.DONE, fmt.Sprintf("Successfully created webp %s", webp))
+	return err
+}
+
+// HMMMM, should this be smarter?
+func WebpFromContent(man ContentManager, content *models.Content) (string, error) {
+	screens, err := man.ListScreens(content.ID, 1, 9000)
+	if err != nil {
+		return "", err
+	}
+
+	// Good test case... hmmm
+	if screens == nil || len(*screens) == 0 {
+		return "", errors.New("Not enough screens to create a preview")
+	}
+
+	_, cnt, err := GetContentAndContainer(man, content.ID)
+	if err != nil {
+		return "No content to encode", err
+	}
+
+	path := cnt.GetFqPath()
+	//srcFile := filepath.Join(path, content.Src)
+	dstPath := utils.GetPreviewDst(path)
+	dstFile := utils.GetPreviewPathDestination(content.Src, dstPath, "video")
+
+	// This is the part that is wrong hate
+	//dstFile := utils.GetPreviewPathDestination(content.Src, dstPath, "video")
+
+	// Might need to do another method where I list out all the files
+	// and pass that (for randomly assigned screens for later)
+	globMatch := utils.GetScreensOutputGlob(dstFile)
+
+	return utils.CreateWebpFromScreens(globMatch, dstFile)
+}
+
+/**
+ * Could definitely make this a method assuming the next task uses the same logic.
+ */
+func EncodingVideoTask(man ContentManager, id uuid.UUID) error {
+	log.Printf("Managers Video encoding taskID attempting to start %s", id)
+	task, content, err := TakeContentTask(man, id, "VideoEncoding")
+	if err != nil {
+		return err
+	}
+	msg, encodeErr, shouldEncode := EncodeVideoContent(man, content, task.Codec)
+	log.Printf("Video Encode video %s %s %t", msg, encodeErr, shouldEncode)
+	if encodeErr != nil {
+		failMsg := fmt.Sprintf("Failing to create screen %s", encodeErr)
+		FailTask(man, task, failMsg)
+		return encodeErr
+	}
+	taskMsg := fmt.Sprintf("Completed video encoding %s and had to encode %t", msg, shouldEncode)
+	_, doneErr := ChangeTaskState(man, task, models.TaskStatus.DONE, taskMsg)
+	return doneErr
+}
+
+func TakeContentTask(man ContentManager, id uuid.UUID, operation string) (*models.TaskRequest, *models.Content, error) {
+	task, tErr := man.GetTask(id)
+	if tErr != nil {
+		log.Printf("%s Could not look up the task successfully %s", operation, tErr)
+		return task, nil, tErr
+	}
+	task, pErr := ChangeTaskState(man, task, models.TaskStatus.PENDING, "Starting to execute task")
+	if pErr != nil {
+		msg := fmt.Sprintf("%s Couldn't move task into pending %s", operation, pErr)
+		FailTask(man, task, msg)
+		return task, nil, pErr
+	}
+	content, cErr := man.GetContent(task.ContentID)
+	if cErr != nil {
+		msg := fmt.Sprintf("%s Content not found %s %s", operation, task.ContentID, cErr)
+		FailTask(man, task, msg)
+		return task, content, cErr
+	}
+	task, upErr := ChangeTaskState(man, task, models.TaskStatus.IN_PROGRESS, fmt.Sprintf("Content was found %s", content.Src))
+	if upErr != nil {
+		msg := fmt.Sprintf("%s Failed to update task state to in progress %s", operation, upErr)
+		FailTask(man, task, msg)
+		return task, content, upErr
+	}
+	return task, content, nil
+}
+
+// This is a little sketchy because the memory version already does a lookup on status
 func ChangeTaskState(man ContentManager, task *models.TaskRequest, newStatus models.TaskStatusType, msg string) (*models.TaskRequest, error) {
 	log.Printf("Changing Task State %s to %s", task, newStatus)
 	status := task.Status.Copy()
@@ -412,12 +457,13 @@ func ChangeTaskState(man ContentManager, task *models.TaskRequest, newStatus mod
 }
 
 func FailTask(man ContentManager, task *models.TaskRequest, errMsg string) (*models.TaskRequest, error) {
+	log.Printf(errMsg)
+
 	status := task.Status.Copy()
 	if status == models.TaskStatus.ERROR {
 		return nil, errors.New(fmt.Sprintf("Task %s Already in state %s", task, models.TaskStatus.ERROR))
 	}
 	task.Status = models.TaskStatus.ERROR
 	task.ErrMsg = errMsg
-	log.Printf("Failing task becasue %s", task)
 	return man.UpdateTask(task, status)
 }

@@ -48,6 +48,7 @@ func App(UseDatabase bool) *buffalo.App {
 		// Allow for manipulation of content already on the server
 		app.POST("/editing_queue/{contentID}/screens/{count}/{startTimeSeconds}", TaskScreensHandler)
 		app.POST("/editing_queue/{contentID}/encoding", VideoEncodingHandler)
+		app.POST("/editing_queue/{contentID}/webp", WebpFromScreensHandler)
 		// app.DELETE("/editing_queue/{taskID}/", TaskDeleteHandler)
 
 		// Allow for the creation of new content

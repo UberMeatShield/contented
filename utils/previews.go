@@ -377,7 +377,7 @@ func CreateSeekScreens(srcFile string, dstFile string, totalScreens int, frameOf
 		frameOffset = 0
 	}
 	timeSkip := int(totalScreenTime) / totalScreens
-	log.Printf("Setting up screens (%d) with timeSkip (%d)", totalScreens, timeSkip)
+	log.Printf("Setting up screens (%d) with timeSkip (%d) dstFile (%s)", totalScreens, timeSkip, dstFile)
 
 	screenFiles := []string{}
 	screenFmt := GetScreensOutputPattern(dstFile)
