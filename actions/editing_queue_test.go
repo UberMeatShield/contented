@@ -136,18 +136,28 @@ func ValidateVideoEncodingQueue(as *ActionSuite) {
 
 func (as *ActionSuite) Test_DBWebpHandler() {
 	models.DB.TruncateAll()
-	cfg := test_common.InitFakeApp(true)
+	cfg := test_common.InitFakeApp(true)    // Probably should do the truncate in the InitFakeApp?
+	test_common.Get_VideoAndSetupPaths(cfg) // Resets the screens
 	cfg.ScreensOverSize = 1
 	cfg.PreviewVideoType = "screens"
 	utils.SetCfg(*cfg)
 	_, content := CreateVideoContainer(as)
 	ValidateWebpCode(as, content)
 	// Create some screens and then encode it?
+}
 
+func (as *ActionSuite) Test_MemoryWebpHandler() {
+	cfg := test_common.InitFakeApp(false)
+	test_common.Get_VideoAndSetupPaths(cfg) // Resets the screens
+
+	cfg.ScreensOverSize = 1
+	cfg.PreviewVideoType = "screens"
+	utils.SetCfg(*cfg)
+	_, content := CreateVideoContainer(as)
+	ValidateWebpCode(as, content)
 }
 
 func ValidateWebpCode(as *ActionSuite, content *models.Content) {
-
 	ctx := test_common.GetContext(as.App)
 	man := managers.GetManager(&ctx)
 	_, screenErr, _ := managers.CreateScreensForContent(man, content.ID, 10, 1)

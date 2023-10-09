@@ -375,24 +375,17 @@ func WebpFromContent(man ContentManager, content *models.Content) (string, error
 	if screens == nil || len(*screens) == 0 {
 		return "", errors.New("Not enough screens to create a preview")
 	}
-
 	_, cnt, err := GetContentAndContainer(man, content.ID)
 	if err != nil {
 		return "No content to encode", err
 	}
 
+	// It would be nice if the screens path could actually be a list of files
+	// but I never managed to get that working.
 	path := cnt.GetFqPath()
-	//srcFile := filepath.Join(path, content.Src)
 	dstPath := utils.GetPreviewDst(path)
 	dstFile := utils.GetPreviewPathDestination(content.Src, dstPath, "video")
-
-	// This is the part that is wrong hate
-	//dstFile := utils.GetPreviewPathDestination(content.Src, dstPath, "video")
-
-	// Might need to do another method where I list out all the files
-	// and pass that (for randomly assigned screens for later)
 	globMatch := utils.GetScreensOutputGlob(dstFile)
-
 	return utils.CreateWebpFromScreens(globMatch, dstFile)
 }
 
