@@ -15,6 +15,7 @@ export let ApiDef = {
         screens: base + 'screens/',
         requestScreens: "/editing_queue/{id}/screens/{count}/{startTimeSeconds}",
         encodeVideoContent: "/editing_queue/{id}/encoding",
+        createPreviewFromScreens: "/editing_queue/{id}/webp",
         contentAll: base + 'content/',
         search: base + "search",
 

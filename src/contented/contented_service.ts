@@ -237,6 +237,16 @@ export class ContentedService {
         return this.http.post(url, {params: params});
     }
 
+    // Determine what kinds of args we can provide
+    createPreviewFromScreens(content: Content) {
+        let url = ApiDef.contented.createPreviewFromScreens.replace("{id}", content.id);
+        return this.http.post(url, {}).pipe(
+            map(res => {
+                return _.map(res, r => new TaskRequest(r))
+            })
+        );
+    }
+
     getTasks(id: string, page: number = 1, perPage: number = 100) {
         let params = new HttpParams();
         params = params.set("page", "" + page);

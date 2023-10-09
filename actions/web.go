@@ -35,10 +35,12 @@ func SetupContented(app *buffalo.App, contentDir string, numToPreview int, limit
 	SetupWorkers(app)
 }
 
+// TODO: Determine if these should be registered by config (don't use normal workers basically)
 func SetupWorkers(app *buffalo.App) {
 	w := app.Worker
 	w.Register(models.TaskOperation.SCREENS.String(), ScreenCaptureWrapper)
 	w.Register(models.TaskOperation.ENCODING.String(), VideoEncodingWrapper)
+	w.Register(models.TaskOperation.WEBP.String(), WebpFromScreensWrapper)
 }
 
 func FullHandler(c buffalo.Context) error {

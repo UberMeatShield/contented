@@ -115,4 +115,20 @@ export class EditorContentCmp implements OnInit {
       console.error
     )
   }
+
+  createPreviewFromScreens(content: Content) {
+    console.log("Create a preview")
+    this.taskLoading = true;
+    this._service.createPreviewFromScreens(content).pipe(finalize(() => this.taskLoading = false)).subscribe(
+      console.log,
+      console.error
+    );
+  }
+
+  canCreatePreview(content: Content) {
+    if (!this.taskLoading && content && content.screens && content.screens.length > 0) {
+      return true;
+    }
+    return false;
+  }
 }
