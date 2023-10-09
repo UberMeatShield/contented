@@ -460,7 +460,20 @@ func CreateWebpFromScreens(screensSrc string, dstFile string) (string, error) {
 		"filter_complex": filter,
 		"loop":           0,
 	}).OverWriteOutput().Run()
-	return dstFile, screenErr
+
+	if screenErr != nil {
+		return dstFile, screenErr
+	}
+
+	// Probably want to strip the paths but for now this is ok
+	if f, err := os.Stat(dstFile); err == nil {
+		if f.Size() > 0 {
+			return dstFile, nil
+		}
+		return dstFile, errors.New(fmt.Sprintf("File %s exists on disk but was too small", dstFile))
+	} else {
+		return dstFile, errors.New(fmt.Sprintf("%s doesn't seem to exist err %s", dstFile, err))
+	}
 }
 
 func CreatePngFromVideo(srcFile string, dstFile string) (string, error) {

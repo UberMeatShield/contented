@@ -358,7 +358,9 @@ func WebpFromScreensTask(man ContentManager, id uuid.UUID) error {
 		FailTask(man, task, failMsg)
 		return err
 	}
-	//
+
+	// Assign it to the content (probably)
+
 	// Should strip the path information out of the task state
 	ChangeTaskState(man, task, models.TaskStatus.DONE, fmt.Sprintf("Successfully created webp %s", webp))
 	return err
@@ -386,7 +388,16 @@ func WebpFromContent(man ContentManager, content *models.Content) (string, error
 	dstPath := utils.GetPreviewDst(path)
 	dstFile := utils.GetPreviewPathDestination(content.Src, dstPath, "video")
 	globMatch := utils.GetScreensOutputGlob(dstFile)
-	return utils.CreateWebpFromScreens(globMatch, dstFile)
+
+	webp, err := utils.CreateWebpFromScreens(globMatch, dstFile)
+	if err != nil {
+		return webp, err
+	}
+	// log.Printf("What is the webp? %s", webp)
+	content.Preview = utils.GetRelativePreviewPath(webp, cnt.GetFqPath())
+	upErr := man.UpdateContent(content)
+	log.Printf("What is the webp preview? %s", content.Preview)
+	return webp, upErr
 }
 
 /**

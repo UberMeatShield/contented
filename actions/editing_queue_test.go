@@ -158,6 +158,7 @@ func (as *ActionSuite) Test_MemoryWebpHandler() {
 }
 
 func ValidateWebpCode(as *ActionSuite, content *models.Content) {
+	as.Equal(content.Preview, "", "It should not have a preview already")
 	ctx := test_common.GetContext(as.App)
 	man := managers.GetManager(&ctx)
 	_, screenErr, _ := managers.CreateScreensForContent(man, content.ID, 10, 1)
@@ -176,4 +177,11 @@ func ValidateWebpCode(as *ActionSuite, content *models.Content) {
 	args := worker.Args{"id": tr.ID.String()}
 	err := WebpFromScreensWrapper(args)
 	as.NoError(err, fmt.Sprintf("Failed to create webp for task %s", err))
+
+	check := as.JSON(fmt.Sprintf("/content/%s", content.ID.String())).Get()
+	as.Equal(http.StatusOK, check.Code, fmt.Sprintf("Error loading %s", check.Body.String()))
+	// Get the content, check for a preview
+	checkContent := models.Content{}
+	json.NewDecoder(check.Body).Decode(&checkContent)
+	as.Equal("/container_previews/donut_[special( gunk.mp4.webp", checkContent.Preview)
 }
