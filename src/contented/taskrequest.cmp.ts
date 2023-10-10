@@ -2,6 +2,8 @@ import { Component, OnInit, AfterViewInit, Input, Output, EventEmitter, ViewChil
 import {finalize} from 'rxjs/operators';
 import {ContentedService} from './contented_service';
 import {TaskRequest} from './task_request';
+import { MatTableDataSource} from '@angular/material/table';
+import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 
 @Component({
   selector: 'task-request-cmp',
@@ -17,11 +19,21 @@ export class TaskRequestCmp implements OnInit {
     public loading = false;
     public tasks: Array<TaskRequest>;
 
-    constructor(public _service: ContentedService) {
+    displayedColumns: string[] = ['operation', 'status', 'created_at', 'updated_at', 'message', 'created_id', 'error'];
+    dataSource = new MatTableDataSource<TaskRequest>([]);
+
+    constructor(public _service: ContentedService, public route: ActivatedRoute) {
 
     }
 
     ngOnInit() {
+      this.route.paramMap.pipe().subscribe(
+        evt => {
+          // Currently it will reload because content ID information is updated in the editor pane.
+           console.log("Route event", evt); 
+        }
+      )
+
       this.loadTasks(this.contentID);
       if (this.reloadEvt) {
         this.reloadEvt.subscribe(() => {
@@ -35,6 +47,7 @@ export class TaskRequestCmp implements OnInit {
       this._service.getTasks(this.contentID, 1, this.pageSize).pipe(finalize(() => this.loading = false)).subscribe(
         (tasks) => {
           this.tasks = tasks;
+          this.dataSource = new MatTableDataSource<TaskRequest>(tasks || [])
         },
         console.error
       );

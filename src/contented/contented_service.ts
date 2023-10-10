@@ -227,14 +227,22 @@ export class ContentedService {
         let url = ApiDef.contented.requestScreens.replace("{id}", content.id)
         url = url.replace("{count}", "" + count)
         url = url.replace("{startTimeSeconds}", '' + Math.floor(startTime));
-        return this.http.post(url, {});
+        return this.http.post(url, {}).pipe(
+            map(res => {
+                return new TaskRequest(res);
+            })
+        );
     }
 
     encodeVideoContent(content: Content, codec: string = "") {
         let params = new HttpParams()
         params = params.set("codec", codec)
         let url = ApiDef.contented.encodeVideoContent.replace("{id}", content.id)
-        return this.http.post(url, {params: params});
+        return this.http.post(url, {params: params}).pipe(
+            map(res => {
+                return new TaskRequest(res);
+            })
+        );
     }
 
     // Determine what kinds of args we can provide
@@ -242,7 +250,7 @@ export class ContentedService {
         let url = ApiDef.contented.createPreviewFromScreens.replace("{id}", content.id);
         return this.http.post(url, {}).pipe(
             map(res => {
-                return _.map(res, r => new TaskRequest(r))
+                return new TaskRequest(res);
             })
         );
     }

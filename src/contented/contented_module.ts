@@ -16,6 +16,7 @@ import {MatToolbarModule} from '@angular/material/toolbar';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatAutocompleteModule as MatAutocompleteModule} from '@angular/material/autocomplete';
 import {MatIconModule} from '@angular/material/icon';
+import {MatTableModule} from '@angular/material/table';
 
 import {ContentBrowserCmp} from './content_browser.cmp';
 import {ContentedNavCmp} from './contented_nav.cmp';
@@ -117,6 +118,7 @@ const monacoConfig: NgxMonacoEditorConfig = {
       MatProgressSpinnerModule,
       MatAutocompleteModule,
       MatToolbarModule,
+      MatTableModule,
   ],
   declarations: [
       ContentBrowserCmp,
