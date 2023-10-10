@@ -53,7 +53,6 @@ describe('EditorContentCmp', () => {
   });
 
   it("Should be able to render the monaco editor and get a reference", fakeAsync(() => {
-
     let id = "A";
     cmp.content = new Content({id: id, content_type: 'video/mp4'});
     cmp.checkStates = false;
