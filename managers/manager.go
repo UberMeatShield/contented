@@ -420,21 +420,25 @@ func EncodingVideoTask(man ContentManager, id uuid.UUID) error {
 		return encodeErr
 	}
 
-	path := filepath.Dir(newFile)
-	if f, ok := os.Stat(newFile); ok == nil {
-		newId, _ := uuid.NewV4()
-		newContent := utils.GetContent(newId, f, path)
-		newContent.Description = content.Description
-		newContent.Tags = content.Tags
-		newContent.ContainerID = content.ContainerID
-		createErr := man.CreateContent(&newContent)
-		if createErr != nil {
-			log.Printf("Failed to create a newly encoded piece of content. %s", createErr)
-			return createErr
+	// Don't keep creating content if it already existed.
+	if shouldEncode == true {
+		path := filepath.Dir(newFile)
+		if f, ok := os.Stat(newFile); ok == nil {
+			newId, _ := uuid.NewV4()
+			newContent := utils.GetContent(newId, f, path)
+			newContent.Description = content.Description
+			newContent.Tags = content.Tags
+			newContent.ContainerID = content.ContainerID
+			createErr := man.CreateContent(&newContent)
+			if createErr != nil {
+				log.Printf("Failed to create a newly encoded piece of content. %s", createErr)
+				return createErr
+			}
+			log.Printf("Created a new content element after encoding %s", newContent)
+			task.CreatedID = nulls.NewUUID(newContent.ID)
 		}
-		log.Printf("Created a new content element after encoding %s", newContent)
-		task.CreatedID = nulls.NewUUID(newContent.ID)
 	}
+	// TODO: Could do a search for newFile and return that content ID in the task?
 
 	taskMsg := fmt.Sprintf("Completed video encoding %s and had to encode %t", msg, shouldEncode)
 	_, doneErr := ChangeTaskState(man, task, models.TaskStatus.DONE, taskMsg)
@@ -476,7 +480,7 @@ func ChangeTaskState(man ContentManager, task *models.TaskRequest, newStatus mod
 		return nil, errors.New(fmt.Sprintf("Task %s Already in state %s", task, newStatus))
 	}
 	task.Status = newStatus
-	task.Message = msg
+	task.Message = strings.ReplaceAll(msg, man.GetCfg().Dir, "")
 	return man.UpdateTask(task, status)
 }
 
@@ -488,6 +492,6 @@ func FailTask(man ContentManager, task *models.TaskRequest, errMsg string) (*mod
 		return nil, errors.New(fmt.Sprintf("Task %s Already in state %s", task, models.TaskStatus.ERROR))
 	}
 	task.Status = models.TaskStatus.ERROR
-	task.ErrMsg = errMsg
+	task.ErrMsg = strings.ReplaceAll(errMsg, man.GetCfg().Dir, "")
 	return man.UpdateTask(task, status)
 }
