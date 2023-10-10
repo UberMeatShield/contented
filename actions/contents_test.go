@@ -12,7 +12,6 @@ import (
 )
 
 func CreateResource(src string, container_id nulls.UUID, as *ActionSuite) models.Content {
-	test_common.InitFakeApp(true)
 	mc := &models.Content{
 		Src:         src,
 		ContentType: "test",
@@ -21,7 +20,7 @@ func CreateResource(src string, container_id nulls.UUID, as *ActionSuite) models
 		NoFile:      true,
 	}
 	res := as.JSON("/content").Post(mc)
-	as.Equal(http.StatusCreated, res.Code)
+	as.Equal(http.StatusCreated, res.Code, fmt.Sprintf("Error creating %s", res.Body.String()))
 
 	resObj := models.Content{}
 	json.NewDecoder(res.Body).Decode(&resObj)

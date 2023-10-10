@@ -141,6 +141,8 @@ func InitFakeApp(use_db bool) *utils.DirConfigEntry {
 		}
 		memStorage.ValidContainers[hiddenContainer.ID] = hiddenContainer
 		memStorage.ValidContent[hiddenContent.ID] = hiddenContent
+	} else {
+		models.DB.TruncateAll()
 	}
 	return cfg
 }

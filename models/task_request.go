@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/gobuffalo/nulls"
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gobuffalo/validate/v3"
 	"github.com/gofrs/uuid"
@@ -73,9 +74,11 @@ type TaskOperationType string
 var TaskOperation = struct {
 	ENCODING TaskOperationType
 	SCREENS  TaskOperationType
+	WEBP     TaskOperationType
 }{
 	ENCODING: "video_encoding",
 	SCREENS:  "screen_capture",
+	WEBP:     "webp_from_screens",
 }
 
 func (to TaskOperationType) String() string {
@@ -84,6 +87,8 @@ func (to TaskOperationType) String() string {
 		return "video_encoding"
 	case TaskOperation.SCREENS:
 		return "screen_capture"
+	case TaskOperation.WEBP:
+		return "webp_from_screens"
 	}
 	return "unknown"
 }
@@ -97,6 +102,7 @@ type TaskRequest struct {
 
 	Status    TaskStatusType    `json:"status" db:"status" default:"new" `
 	Operation TaskOperationType `json:"operation" db:"operation"`
+	CreatedID nulls.UUID        `json:"created_id" db:"created_id"`
 
 	// Initial default time would be nice
 	Message string `json:"message" default:"" db:"message"`

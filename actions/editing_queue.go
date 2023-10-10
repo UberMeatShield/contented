@@ -120,6 +120,33 @@ func ScreenCaptureWrapper(args worker.Args) error {
 	return managers.ScreenCaptureTask(man, taskId)
 }
 
+func WebpFromScreensWrapper(args worker.Args) error {
+	log.Printf("Web From Screens () Starting Task args %s", args)
+	cfg := utils.GetCfg()
+	getConnection := func() *pop.Connection {
+		return nil
+	}
+	app := App(cfg.UseDatabase)
+	taskId, err := GetTaskId(args)
+	if err != nil {
+		return err
+	}
+	// Note this is extra complicated by the fact it SHOULD be able to run with NO connections
+	// or DB sessions made.
+	if cfg.UseDatabase == true {
+		return models.DB.Transaction(func(tx *pop.Connection) error {
+			getConnection = func() *pop.Connection {
+				return tx
+			}
+			man := managers.GetAppManager(app, getConnection)
+			return managers.WebpFromScreensTask(man, taskId)
+		})
+	}
+	// Memory manager version
+	man := managers.GetAppManager(app, getConnection)
+	return managers.WebpFromScreensTask(man, taskId)
+}
+
 func GetTaskId(args worker.Args) (uuid.UUID, error) {
 	taskId := ""
 	for k, v := range args {
@@ -136,9 +163,26 @@ func GetTaskId(args worker.Args) (uuid.UUID, error) {
 	return id, err
 }
 
+func WebpFromScreensHandler(c buffalo.Context) error {
+	//cfg := utils.GetCfg()
+	contentID, bad_uuid := uuid.FromString(c.Param("contentID"))
+	if bad_uuid != nil {
+		return c.Error(http.StatusBadRequest, bad_uuid)
+	}
+	man := managers.GetManager(&c)
+	content, err := man.GetContent(contentID)
+	if err != nil {
+		return nil
+	}
+	tr := models.TaskRequest{
+		ContentID: content.ID,
+		Operation: models.TaskOperation.WEBP,
+	}
+	return QueueTaskRequest(c, man, &tr)
+}
+
 // Should deny quickly if the media content type is incorrect for the action
 func VideoEncodingHandler(c buffalo.Context) error {
-	cfg := utils.GetCfg()
 	contentID, bad_uuid := uuid.FromString(c.Param("contentID"))
 	if bad_uuid != nil {
 		return c.Error(http.StatusBadRequest, bad_uuid)
@@ -151,6 +195,8 @@ func VideoEncodingHandler(c buffalo.Context) error {
 	if !strings.Contains(content.ContentType, "video") && content.NoFile == false {
 		return c.Error(http.StatusBadRequest, errors.New("Content was not a video %s"))
 	}
+	// Probably should at least sanity check the codecs
+	cfg := utils.GetCfg()
 	codec := managers.StringDefault(c.Param("codec"), cfg.CodecForConversion)
 	log.Printf("Requesting a re-encode %s with codec %s for contentID %s", content.Src, codec, content.ID.String())
 	tr := models.TaskRequest{

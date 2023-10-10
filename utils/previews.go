@@ -377,7 +377,7 @@ func CreateSeekScreens(srcFile string, dstFile string, totalScreens int, frameOf
 		frameOffset = 0
 	}
 	timeSkip := int(totalScreenTime) / totalScreens
-	log.Printf("Setting up screens (%d) with timeSkip (%d)", totalScreens, timeSkip)
+	log.Printf("Setting up screens (%d) with timeSkip (%d) dstFile (%s)", totalScreens, timeSkip, dstFile)
 
 	screenFiles := []string{}
 	screenFmt := GetScreensOutputPattern(dstFile)
@@ -460,7 +460,20 @@ func CreateWebpFromScreens(screensSrc string, dstFile string) (string, error) {
 		"filter_complex": filter,
 		"loop":           0,
 	}).OverWriteOutput().Run()
-	return dstFile, screenErr
+
+	if screenErr != nil {
+		return dstFile, screenErr
+	}
+
+	// Probably want to strip the paths but for now this is ok
+	if f, err := os.Stat(dstFile); err == nil {
+		if f.Size() > 0 {
+			return dstFile, nil
+		}
+		return dstFile, errors.New(fmt.Sprintf("File %s exists on disk but was too small", dstFile))
+	} else {
+		return dstFile, errors.New(fmt.Sprintf("%s doesn't seem to exist err %s", dstFile, err))
+	}
 }
 
 func CreatePngFromVideo(srcFile string, dstFile string) (string, error) {

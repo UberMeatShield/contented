@@ -41,6 +41,22 @@
       </mat-card-content>
     </mat-card>
 
+    <mat-card class="preview-form" *ngIf="content?.isVideo()">
+      <mat-card-header>
+        <mat-card-title>Make a Preview from Screens</mat-card-title>
+        <mat-card-subtitle>Take the existing screens and make them into a webp and assign it to the content
+          as a preview
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <button type="button" mat-raised-button 
+          (click)="createPreviewFromScreens(content)"
+          [disabled]="!canCreatePreview(content)">
+          Preview
+        </button>
+      </mat-card-content>
+    </mat-card>
+
     <mat-card class="video-encoding-form" *ngIf="content?.isVideo()">
       <mat-card-header>
         Re-Encode Video Content to H265

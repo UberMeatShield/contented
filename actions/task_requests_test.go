@@ -32,6 +32,7 @@ func (as *ActionSuite) Test_MemoryTaskRequestApi() {
 func (as *ActionSuite) Test_DatabaseTaskRequestApi() {
 	useDB := true
 	test_common.InitFakeApp(useDB)
+	test_common.CreateContentByDirName("dir1")
 	ValidateTaskRequestListApi(as)
 }
 
