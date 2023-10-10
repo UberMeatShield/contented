@@ -30,6 +30,7 @@ export class EditorContentCmp implements OnInit {
   @Input() screensForm?: FormGroup;
   @Input() offsetControl: FormControl<number>; 
   @Input() countControl: FormControl<number>;
+  @Input() checkStates = true;
 
   public taskCreated: EventEmitter<any> = new EventEmitter<any>();
   // These are values for the Monaco Editors, change events are passed down into
@@ -59,7 +60,7 @@ export class EditorContentCmp implements OnInit {
         this.route.paramMap.pipe().subscribe(
             (map: ParamMap) => {
                 console.log("Reloading content")
-                this.content = null;
+                this.content = null;  // Changing the 
                 this.loadContent(map.get('id'));
             },
             console.error
@@ -145,6 +146,7 @@ export class EditorContentCmp implements OnInit {
     return false;
   }
 
+  // Start watching the task queue
   watchTask(task: TaskRequest) {
     this.taskCreated.emit(task);
   }

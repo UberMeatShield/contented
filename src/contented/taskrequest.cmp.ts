@@ -17,6 +17,7 @@ export class TaskRequestCmp implements OnInit {
     @Input() pageSize = 25;
     @Input() reloadEvt: EventEmitter<any>; // Do you want to reload the task queue
     @Output() taskUpdated: EventEmitter<TaskRequest> = new EventEmitter<TaskRequest>;
+    @Input() checkStates = false;
 
     public loading = false;
     public tasks: Array<TaskRequest>;
@@ -24,28 +25,29 @@ export class TaskRequestCmp implements OnInit {
     displayedColumns: string[] = ['operation', 'status', 'created_at', 'updated_at', 'message', 'created_id', 'error'];
     dataSource = new MatTableDataSource<TaskRequest>([]);
 
-    constructor(public _service: ContentedService, public route: ActivatedRoute) {
-
+    //constructor(public _service: ContentedService, public route: ActivatedRoute) {
+    constructor(public _service: ContentedService) {
     }
 
     ngOnInit() {
-      this.route.paramMap.pipe().subscribe(
-        evt => {
-          // Currently it will reload because content ID information is updated in the editor pane.
-           console.log("Route event", evt); 
-        }
-      )
-
       this.loadTasks(this.contentID);
+
+
       if (this.reloadEvt) {
         this.reloadEvt.subscribe(() => {
           // Reload and consider we should have a watcher
-          this.loadTasks(this.contentID);
+
+          _.delay(() => {
+            this.loadTasks(this.contentID);
+          }, 2000);
         }, console.error)
+      }
+      if (this.checkStates) {
+        this.pollStart();
       }
     }
 
-    loadTasks(contentID: string) {
+    loadTasks(contentID: string, watching: Array<TaskRequest> = []) {
       this.loading = true;
       this._service.getTasks(this.contentID, 1, this.pageSize).pipe(finalize(() => this.loading = false)).subscribe(
         (tasks) => {
@@ -56,10 +58,27 @@ export class TaskRequestCmp implements OnInit {
       );
     }
 
-    pollTasks() {
-      _.polling(() => {
-
-      }, 1000);
+    checkComplete(tasks: Array<TaskRequest>, watching: Array<TaskRequest> = []) {
+      let check = _.keyBy(watching, 'id');
+      (tasks || []).forEach(task => {
+        if (check[task.id] && task.isComplete()) {
+          console.log("Watching tasks")
+          this.taskUpdated.emit(task);
+        }
+      });
     }
-    // Enable a polling method that will check for when a task is done (in editor or here?)
+
+    pollStart() {
+      this.pollTasks();
+      _.delay(() => {
+        this.pollStart()
+      }, 1000 * 10);
+    }
+
+    pollTasks() {
+      let notComplete: Array<TaskRequest> = _.filter(this.tasks, task => {
+        return task.isComplete();
+      }) || [];
+      this.loadTasks(this.contentID, notComplete);
+    }
 }
