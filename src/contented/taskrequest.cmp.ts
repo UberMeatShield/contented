@@ -5,6 +5,8 @@ import {TaskRequest} from './task_request';
 import { MatTableDataSource} from '@angular/material/table';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 
+import * as _ from 'lodash-es';
+
 @Component({
   selector: 'task-request-cmp',
   templateUrl: './taskrequest.ng.html',
@@ -37,6 +39,7 @@ export class TaskRequestCmp implements OnInit {
       this.loadTasks(this.contentID);
       if (this.reloadEvt) {
         this.reloadEvt.subscribe(() => {
+          // Reload and consider we should have a watcher
           this.loadTasks(this.contentID);
         }, console.error)
       }
@@ -51,6 +54,12 @@ export class TaskRequestCmp implements OnInit {
         },
         console.error
       );
+    }
+
+    pollTasks() {
+      _.polling(() => {
+
+      }, 1000);
     }
     // Enable a polling method that will check for when a task is done (in editor or here?)
 }

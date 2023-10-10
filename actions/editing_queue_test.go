@@ -30,7 +30,7 @@ func CreateVideoContainer(as *ActionSuite) (*models.Container, *models.Content) 
 	for _, contentToCreate := range contents {
 		if strings.Contains(contentToCreate.Src, "donut") {
 			contentToCreate.ContainerID = nulls.NewUUID(cnt.ID)
-			contentRes := as.JSON("/content").Post(&contentToCreate)
+			contentRes := as.JSON("/contents").Post(&contentToCreate)
 			as.Equal(http.StatusCreated, contentRes.Code, fmt.Sprintf("Error %s", contentRes.Body.String()))
 			json.NewDecoder(contentRes.Body).Decode(&content)
 			break
@@ -80,7 +80,7 @@ func ValidateEditingQueue(as *ActionSuite) {
 	err := ScreenCaptureWrapper(args)
 	as.NoError(err, fmt.Sprintf("Failed to get screens %s", err))
 
-	screenUrl := fmt.Sprintf("/content/%s/screens", content.ID.String())
+	screenUrl := fmt.Sprintf("/contents/%s/screens", content.ID.String())
 	screensRes := as.JSON(screenUrl).Get()
 	as.Equal(http.StatusOK, screensRes.Code, fmt.Sprintf("Error loading screens %s", screensRes.Body.String()))
 
@@ -137,7 +137,7 @@ func ValidateVideoEncodingQueue(as *ActionSuite) {
 
 	createdID := checkTask.CreatedID.UUID
 	as.NotZero(createdID, "It should create a new piece of content")
-	check := as.JSON(fmt.Sprintf("/content/%s", createdID.String())).Get()
+	check := as.JSON(fmt.Sprintf("/contents/%s", createdID.String())).Get()
 	as.Equal(http.StatusOK, check.Code, fmt.Sprintf("Error loading %s", check.Body.String()))
 	checkContent := models.Content{}
 	json.NewDecoder(check.Body).Decode(&checkContent)
@@ -203,7 +203,7 @@ func ValidateWebpCode(as *ActionSuite, content *models.Content) {
 	err := WebpFromScreensWrapper(args)
 	as.NoError(err, fmt.Sprintf("Failed to create webp for task %s", err))
 
-	check := as.JSON(fmt.Sprintf("/content/%s", content.ID.String())).Get()
+	check := as.JSON(fmt.Sprintf("/contents/%s", content.ID.String())).Get()
 	as.Equal(http.StatusOK, check.Code, fmt.Sprintf("Error loading %s", check.Body.String()))
 	// Get the content, check for a preview
 	checkContent := models.Content{}

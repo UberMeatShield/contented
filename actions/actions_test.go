@@ -29,6 +29,8 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+// Is there an AFTER all test option?  Just hard code the delete
+
 func (as *ActionSuite) Test_ContentList() {
 	test_common.InitFakeApp(false)
 
@@ -49,7 +51,7 @@ func (as *ActionSuite) Test_ContentDirLoad() {
 	as.Equal(test_common.TOTAL_CONTAINERS, len(cnts), "We should have this many dirs present")
 
 	for _, c := range cnts {
-		res := as.JSON("/containers/" + c.ID.String() + "/content").Get()
+		res := as.JSON("/containers/" + c.ID.String() + "/contents").Get()
 		as.Equal(http.StatusOK, res.Code)
 
 		resObj := []models.Containers{}
