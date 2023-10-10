@@ -95,6 +95,7 @@ func (v ContentsResource) Create(c buffalo.Context) error {
 	man := managers.GetManager(&c)
 	err = man.CreateContent(content)
 	if err != nil {
+		log.Printf("Failed to create content with error %s container ID %s", err, content)
 		return c.Render(http.StatusBadRequest, r.JSON(err))
 	}
 	validate, checkErr := man.GetContent(content.ID)

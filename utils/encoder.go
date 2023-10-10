@@ -115,7 +115,7 @@ func ShouldEncodeVideo(srcFile string, dstFile string) (string, error, bool) {
 		return ignoreMsg, nil, false
 	}
 
-	// This is where I need to fix the probe check. // hate
+	// Now checks that the video is ACTUALLY proper or at least the same time
 	_, statErr := os.Stat(dstFile)
 	if !os.IsNotExist(statErr) {
 		dstInfo, err := GetVideoInfo(dstFile)

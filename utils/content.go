@@ -99,7 +99,7 @@ func FindContentMatcher(cnt models.Container, limit int, start_offset int, yup C
 		if !img.IsDir() {
 			if len(arr) < limit && idx >= start_offset {
 				id, _ := uuid.NewV4()
-				content := getContent(id, img, fqDirPath)
+				content := GetContent(id, img, fqDirPath)
 				content.ContainerID = nulls.NewUUID(cnt.ID)
 				content.Idx = idx
 
@@ -171,7 +171,7 @@ func SniffFileType(content *os.File) (string, error) {
 	return ctype, nil
 }
 
-func getContent(id uuid.UUID, fileInfo os.FileInfo, path string) models.Content {
+func GetContent(id uuid.UUID, fileInfo os.FileInfo, path string) models.Content {
 	// https://golangcode.com/get-the-content-type-of-file/
 	contentType, err := GetMimeType(path, fileInfo.Name())
 	if err != nil {

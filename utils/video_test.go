@@ -23,12 +23,12 @@ func Test_VideoMeta(t *testing.T) {
 	srcDir, _, testFile := Get_VideoAndSetupPaths()
 	srcFile := filepath.Join(srcDir, testFile)
 
-	id, _ := uuid.NewV4() //   hate
+	id, _ := uuid.NewV4()
 	finfo, err := os.Stat(srcFile)
 	if err != nil {
 		t.Errorf("Failed to stat %s err: %s", srcFile, err)
 	}
-	c := getContent(id, finfo, srcDir)
+	c := GetContent(id, finfo, srcDir)
 	if c.Corrupt {
 		t.Errorf("Failure, file is corrupt %s", c.Meta)
 	}

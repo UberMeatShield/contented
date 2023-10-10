@@ -18,12 +18,14 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/worker"
+	"github.com/gobuffalo/nulls"
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 )
@@ -310,15 +312,16 @@ func CreateScreensForContent(cm ContentManager, contentID uuid.UUID, count int, 
 }
 
 // Should get a bunch of crap here
-func EncodeVideoContent(man ContentManager, content *models.Content, codec string) (string, error, bool) {
+func EncodeVideoContent(man ContentManager, content *models.Content, codec string) (string, error, bool, string) {
 	content, cnt, err := GetContentAndContainer(man, content.ID)
 	if err != nil {
-		return "No content to encode", err, false
+		return "No content to encode", err, false, ""
 	}
 	path := cnt.GetFqPath()
 	srcFile := filepath.Join(path, content.Src)
 	dstFile := utils.GetVideoConversionName(srcFile)
-	return utils.ConvertVideoToH256(srcFile, dstFile)
+	msg, eErr, shouldEncode := utils.ConvertVideoToH256(srcFile, dstFile)
+	return msg, eErr, shouldEncode, dstFile
 }
 
 /**
@@ -409,13 +412,30 @@ func EncodingVideoTask(man ContentManager, id uuid.UUID) error {
 	if err != nil {
 		return err
 	}
-	msg, encodeErr, shouldEncode := EncodeVideoContent(man, content, task.Codec)
+	msg, encodeErr, shouldEncode, newFile := EncodeVideoContent(man, content, task.Codec)
 	log.Printf("Video Encode video %s %s %t", msg, encodeErr, shouldEncode)
 	if encodeErr != nil {
 		failMsg := fmt.Sprintf("Failing to create screen %s", encodeErr)
 		FailTask(man, task, failMsg)
 		return encodeErr
 	}
+
+	path := filepath.Dir(newFile)
+	if f, ok := os.Stat(newFile); ok == nil {
+		newId, _ := uuid.NewV4()
+		newContent := utils.GetContent(newId, f, path)
+		newContent.Description = content.Description
+		newContent.Tags = content.Tags
+		newContent.ContainerID = content.ContainerID
+		createErr := man.CreateContent(&newContent)
+		if createErr != nil {
+			log.Printf("Failed to create a newly encoded piece of content. %s", createErr)
+			return createErr
+		}
+		log.Printf("Created a new content element after encoding %s", newContent)
+		task.CreatedID = nulls.NewUUID(newContent.ID)
+	}
+
 	taskMsg := fmt.Sprintf("Completed video encoding %s and had to encode %t", msg, shouldEncode)
 	_, doneErr := ChangeTaskState(man, task, models.TaskStatus.DONE, taskMsg)
 	return doneErr

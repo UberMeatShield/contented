@@ -19,7 +19,7 @@ type Content struct {
 	Src         string     `json:"src" db:"src"`
 	ContentType string     `json:"content_type" db:"content_type"`
 	Preview     string     `json:"preview" db:"preview"`
-	ContainerID nulls.UUID `json:"container_id" db:"container_id"`
+	ContainerID nulls.UUID `json:"container_id" db:"container_id" default:"nil"`
 	Idx         int        `json:"idx" db:"idx" default:"0"`
 	Active      bool       `json:"active" db:"active" default:"true"`
 	Corrupt     bool       `json:"corrupt" db:"corrupt" default:"false"`

@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/gobuffalo/buffalo/worker"
@@ -41,7 +43,7 @@ func CreateVideoContainer(as *ActionSuite) (*models.Container, *models.Content) 
 func (as *ActionSuite) Test_TaskRelatedObjects() {
 	as.Equal(models.TaskOperation.SCREENS.String(), "screen_capture")
 	as.Equal(models.TaskOperation.ENCODING.String(), "video_encoding")
-	as.Equal(models.TaskOperation.WEBP.String(), "web_from_screens")
+	as.Equal(models.TaskOperation.WEBP.String(), "webp_from_screens")
 }
 
 // Do the screen grab in memory
@@ -111,7 +113,7 @@ func (as *ActionSuite) Test_DBEncodingQueueHandler() {
 }
 
 func ValidateVideoEncodingQueue(as *ActionSuite) {
-	_, content := CreateVideoContainer(as)
+	cnt, content := CreateVideoContainer(as)
 	url := fmt.Sprintf("/editing_queue/%s/encoding", content.ID.String())
 	res := as.JSON(url).Post(&content)
 	as.Equal(http.StatusCreated, res.Code, fmt.Sprintf("Failed to queue encoding task %s", res.Body.String()))
@@ -132,6 +134,29 @@ func ValidateVideoEncodingQueue(as *ActionSuite) {
 	checkTask := models.TaskRequest{}
 	json.NewDecoder(checkR.Body).Decode(&checkTask)
 	as.Equal(checkTask.Status, models.TaskStatus.DONE, fmt.Sprintf("It should be done %s", checkTask))
+
+	createdID := checkTask.CreatedID.UUID
+	as.NotZero(createdID, "It should create a new piece of content")
+	check := as.JSON(fmt.Sprintf("/content/%s", createdID.String())).Get()
+	as.Equal(http.StatusOK, check.Code, fmt.Sprintf("Error loading %s", check.Body.String()))
+	checkContent := models.Content{}
+	json.NewDecoder(check.Body).Decode(&checkContent)
+
+	as.Equal(checkContent.ContainerID.UUID, cnt.ID)
+	as.Contains(checkContent.Src, "h256")
+
+	// The container path is hidden in the API
+	ctx := test_common.GetContext(as.App)
+	man := managers.GetManager(&ctx)
+	cntActual, pathErr := man.GetContainer(cnt.ID)
+	as.NoError(pathErr)
+
+	dstFile := filepath.Join(cntActual.GetFqPath(), checkContent.Src)
+	if _, err := os.Stat(dstFile); !os.IsNotExist(err) {
+		os.Remove(dstFile)
+	} else {
+		as.Fail("It did NOT remove the destination file %s", dstFile)
+	}
 }
 
 func (as *ActionSuite) Test_DBWebpHandler() {
