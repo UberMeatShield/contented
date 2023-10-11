@@ -144,18 +144,18 @@ func (as *ActionSuite) Test_MemoryManagerSearch() {
 	as.NoError(s_err, "Error searching memory containers")
 	as.Equal(1, len(*s_cnts), "It should only filter to one directory")
 
-	sr := SearchRequest{Text: "Donut", PerPage: 20}
+	sr := SearchQuery{Text: "Donut", PerPage: 20}
 	mcs, total, err := man.SearchContent(sr)
 	as.NoError(err, "Can we search in the memory manager")
 	as.Equal(len(*mcs), 1, "One donut should be found")
 	as.Equal(total, len(*mcs), "It should get the total right")
 
-	sr = SearchRequest{Text: "Large", PerPage: 6}
+	sr = SearchQuery{Text: "Large", PerPage: 6}
 	mcs_1, _, err_1 := man.SearchContent(sr)
 	as.NoError(err_1, "Can we search in the memory manager")
 	as.Equal(5, len(*mcs_1), "There are 5 images with 'large' in them ignoring case")
 
-	sr = SearchRequest{PerPage: 9001}
+	sr = SearchQuery{PerPage: 9001}
 	all_mc, _, err_all := man.SearchContent(sr)
 	as.NoError(err_all, "Can in search everything")
 	as.Equal(len(*all_mc), test_common.TOTAL_MEDIA, "The Kitchen sink")
@@ -171,7 +171,7 @@ func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
 
 	// Ensure we initialized with a known search
 	as.Equal(man.CanEdit(), true)
-	sr := SearchRequest{Text: "donut"}
+	sr := SearchQuery{Text: "donut"}
 	mcs, total, err := man.SearchContent(sr)
 	as.NoError(err, "Can we search in the memory manager")
 	as.Equal(len(*mcs), 1, "One donut should be found")
@@ -185,12 +185,12 @@ func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
 	as.Greater(len(*allContent), 0, "We should have content")
 	as.NoError(errAll)
 
-	sr = SearchRequest{Text: "", PerPage: 40}
+	sr = SearchQuery{Text: "", PerPage: 40}
 	all_content, wild_total, _ := man.SearchContent(sr)
 	as.Greater(wild_total, 0)
 	as.Equal(len(*all_content), wild_total)
 
-	sr = SearchRequest{ContentType: "video"}
+	sr = SearchQuery{ContentType: "video"}
 	video_content, vid_total, _ := man.SearchContent(sr)
 	as.Equal(vid_total, 1)
 	as.Equal(len(*video_content), vid_total)
@@ -199,13 +199,13 @@ func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
 
 	for _, cnt := range *cnts {
 		if cnt.Name == "dir1" {
-			sr = SearchRequest{Text: "donut", ContainerID: cnt.ID.String()}
+			sr = SearchQuery{Text: "donut", ContainerID: cnt.ID.String()}
 			_, no_total, n_err := man.SearchContent(sr)
 			as.NoError(n_err)
 			as.Equal(no_total, 0, "It should not be in this directory")
 		}
 		if cnt.Name == "dir2" {
-			sr = SearchRequest{Text: "donut", ContainerID: cnt.ID.String()}
+			sr = SearchQuery{Text: "donut", ContainerID: cnt.ID.String()}
 			yes_match, y_total, r_err := man.SearchContent(sr)
 			as.NoError(r_err)
 			as.Equal(y_total, 1, "We did not find the expected content")
@@ -213,12 +213,12 @@ func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
 			movie := (*yes_match)[0]
 			as.Equal(movie.Src, test_common.VIDEO_FILENAME)
 
-			sr = SearchRequest{ContainerID: cnt.ID.String(), ContentType: "image"}
+			sr = SearchQuery{ContainerID: cnt.ID.String(), ContentType: "image"}
 			_, imgCount, _ := man.SearchContent(sr)
 			as.Equal(imgCount, 2, "It should filter out the donut this time")
 		}
 		if cnt.Name == "dir3" {
-			sr = SearchRequest{ContainerID: cnt.ID.String(), PerPage: 1}
+			sr = SearchQuery{ContainerID: cnt.ID.String(), PerPage: 1}
 			has_content, _, err := man.SearchContent(sr)
 			as.NoError(err, "We should have content")
 			as.Greater(len(*has_content), 0)

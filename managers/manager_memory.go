@@ -121,12 +121,12 @@ func (cm ContentManagerMemory) ListAllContentFiltered(page int, per_page int, in
 
 // It should probably be able to search the container too?
 func (cm ContentManagerMemory) SearchContentContext() (*models.Contents, int, error) {
-	sr := ContextToSearchRequest(cm.Params(), cm.GetCfg())
+	sr := ContextToSearchQuery(cm.Params(), cm.GetCfg())
 	return cm.SearchContent(sr)
 }
 
 // Memory version is going to be extra annoying to tag search more than one tag on an or, or AND...
-func (cm ContentManagerMemory) SearchContent(sr SearchRequest) (*models.Contents, int, error) {
+func (cm ContentManagerMemory) SearchContent(sr SearchQuery) (*models.Contents, int, error) {
 	filteredContent, cErr := cm.getContentFiltered(sr.ContainerID, sr.Text, sr.ContentType, sr.Hidden)
 	if cErr != nil {
 		return nil, 0, cErr

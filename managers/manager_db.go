@@ -148,11 +148,11 @@ func (cm ContentManagerDB) ListAllContent(page int, per_page int) (*models.Conte
 
 // It should probably be able to search the container too?
 func (cm ContentManagerDB) SearchContentContext() (*models.Contents, int, error) {
-	sr := ContextToSearchRequest(cm.Params(), cm.GetCfg())
+	sr := ContextToSearchQuery(cm.Params(), cm.GetCfg())
 	return cm.SearchContent(sr)
 }
 
-func (cm ContentManagerDB) SearchContent(sr SearchRequest) (*models.Contents, int, error) {
+func (cm ContentManagerDB) SearchContent(sr SearchQuery) (*models.Contents, int, error) {
 	contentContainers := &models.Contents{}
 	tx := cm.GetConnection()
 	q := tx.Paginate(sr.Page, sr.PerPage)
