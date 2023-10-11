@@ -54,13 +54,11 @@ func (as *ActionSuite) Test_ContentDirLoad() {
 		res := as.JSON("/containers/" + c.ID.String() + "/contents").Get()
 		as.Equal(http.StatusOK, res.Code)
 
-		resObj := []models.Containers{}
+		resObj := ContentsResponse{}
 		json.NewDecoder(res.Body).Decode(&resObj)
-
-		fmt.Printf("What was the result %s\n", resObj)
-
 		if c.Name == "dir1" {
-			as.Equal(len(resObj), 12, "It should have a known number of images")
+			as.Equal(12, len(resObj.Contents), fmt.Sprintf("Known content sizes %s", res.Body.String()))
+			as.Equal(12, resObj.Count, "The count should be correct")
 		}
 	}
 }

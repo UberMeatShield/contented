@@ -95,7 +95,7 @@ describe('TestingContentedService', () => {
         _.each(calls, req => {
             const limit = parseInt(req.request.params.get('per_page'), 10);
             const page = parseInt(req.request.params.get('page'), 10);
-            expect(page).toBeLessThan(12, "There should only be 9 page requests, we already loaded 2");
+            expect(page).withContext( "There should only be 9 page requests, we already loaded 2").toBeLessThan(12)
             const offset = (page - 1) * limit;
 
             expect(limit).toEqual(5000, 'The limit should be adjusted');
@@ -107,7 +107,7 @@ describe('TestingContentedService', () => {
 
             let resN = MockData.getMockDir(toCreate, 'i-', offset, total);
             expect(resN.contents.length).toEqual(toCreate, "It should create N entries");
-            req.flush(resN.contents);
+            req.flush({contents: resN.contents, count: total});
         });
         tick(100000);
         expect(dir.contents.length).toEqual(total, 'It should load all content');

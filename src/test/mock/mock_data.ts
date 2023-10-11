@@ -52,15 +52,18 @@ class MockLoader {
     }
 
     public getContent(container_id = null, count = null) {
-        let content = _.clone(require('./content.json'));
+        let res = _.clone(require('./content.json'));
         if (container_id) {
-            _.each(content, m => {
-                m.id = m.id + container_id;
-                m.container_id = container_id;
+            _.each(res.contents, content => {
+                content.id = content.id + container_id;
+                content.container_id = container_id;
             });
         }
         // TODO: Create fake content / id info if given a count
-        return content.slice(0, count);
+        return {
+            contents: res.contents.slice(0, count),
+            count: count,
+        };
     }
 
     public getFullContainer() {
@@ -88,7 +91,6 @@ class MockLoader {
 
     public handleCmpDefaultLoad(httpMock, fixture = null) {
         let containers = this.handleContainerLoad(httpMock)
-
         if (fixture) {
             fixture.detectChanges();
             this.handleContainerContentLoad(httpMock, containers);
@@ -105,17 +107,18 @@ class MockLoader {
     public handleContainerContentLoad(httpMock, cnts: Array<Container>, count = 2) {
         _.each(cnts, cnt => {
             let url = ApiDef.contented.containerContent.replace('{cId}', cnt.id);
-            let reqs = httpMock.match(r => r.url === url);
+            let reqs = httpMock.match(r => r.url.includes(url));
             _.each(reqs, req => {
-                req.flush(MockData.getContent(cnt.name, count));
+                req.flush(this.getContent(cnt.name, count));
             });
         });
     }
 
+    // hate
     public getImg() {
-        let img = new Content();
-        img.fromJson(this.getContent("10", 1)[0]);
-        return img;
+        let res = this.getContent("10", 1);
+        let actualContent = res.contents[0];
+        return new Content(actualContent);
     }
 }
 export let MockData = new MockLoader();

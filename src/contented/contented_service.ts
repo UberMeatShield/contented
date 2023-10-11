@@ -97,7 +97,8 @@ export class ContentedService {
                 let delayP = new Promise((yupResolve, nopeReject) => {
                     this.getFullContainer(cnt.id, offset, limit).subscribe(res => {
                         _.delay(() => {
-                            cnt.addContents(cnt.buildImgs(res));
+                            // Hmmm, buildImgs is strange
+                            cnt.addContents(cnt.buildImgs(res.contents));
                             yupResolve(cnt);
                         }, idx * 500);
                     }, err => {
@@ -135,7 +136,15 @@ export class ContentedService {
         return this.http.get(url, {
             params: this.getPaginationParams(offset, limit),
             headers: this.options.headers
-        }).pipe(catchError(err => this.handleError(err)));
+        }).pipe(
+            map((res: any) => {
+                return {
+                    count: res.count,
+                    contents: _.map(res.contents, c => new Content(c)),
+                }
+            }),
+            catchError(err => this.handleError(err))
+        );
     }
 
     public getPaginationParams(offset: number = 0, limit: number = 0) {
@@ -158,8 +167,8 @@ export class ContentedService {
             return this.http.get(url, {
                 params: this.getPaginationParams(0, this.LIMIT),
                 headers: this.options.headers
-            }).pipe(map((imgData: Array<any>) => {
-                return cnt.addContents(cnt.buildImgs(imgData));
+            }).pipe(map((res: any) => {
+                return cnt.addContents(cnt.buildImgs(res.contents));
             }));
         }
     }

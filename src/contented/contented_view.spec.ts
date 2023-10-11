@@ -100,15 +100,19 @@ describe('TestingContentedViewCmp', () => {
         fixture.detectChanges();
         expect($('.content-full-view').length).toBe(0, "Nothing in the view");
 
-        let initialSel = new Content({id: 'A'})
+        let initialSel = new Content({id: 'A', content_type: "image/png"})
         GlobalNavEvents.selectContent(initialSel, new Container({id: '1'}));
         fixture.detectChanges();
         expect(comp.content).toEqual(initialSel);
 
         let content = MockData.getImg();
+        expect(content.content_type).toEqual("image/png")
         GlobalNavEvents.viewFullScreen(content);
         fixture.detectChanges();
         expect($('.content-full-view').length).toBe(1, "It should now be visible");
+
+        expect(comp.content).toEqual(content)
+        expect(comp.visible).toBeTrue();
         expect($('.full-view-img').length).toBe(1, "And it is an image");
         expect(comp.content).toEqual(content, "A view event with a content item should change it");
 

@@ -46,7 +46,9 @@ describe('TestingContainerNavCmp', () => {
         de = fixture.debugElement.query(By.css('.container-nav-cmp'));
         el = de.nativeElement;
         cnt = new Container(MockData.getPreview()[0]);
-        let contents = _.map(MockData.getContent(cnt.id, 5), c => new Content(c))
+
+        let res = MockData.getContent(cnt.id, 5);
+        let contents = _.map(res.contents, c => new Content(c))
         cnt.addContents(contents);
 
         listener = GlobalNavEvents.navEvts.subscribe(

@@ -25,6 +25,11 @@ import (
 // Path: Plural (/contents)
 // View Template Folder: Plural (/templates/contents/)
 
+type ContentsResponse struct {
+	Count    int             `json:"count"`
+	Contents models.Contents `json:"contents"`
+}
+
 // ContentsResource is the resource for the Content model
 type ContentsResource struct {
 	buffalo.Resource
@@ -33,10 +38,6 @@ type ContentsResource struct {
 // List gets all Contents. This function is mapped to the path
 // GET /contents
 func (v ContentsResource) List(c buffalo.Context) error {
-	// Get the DB connection from the context
-
-	man := managers.GetManager(&c)
-
 	// Optional params suuuuck in GoLang
 	cIDStr := c.Param("container_id")
 	if cIDStr != "" {
@@ -45,13 +46,17 @@ func (v ContentsResource) List(c buffalo.Context) error {
 			return c.Error(http.StatusBadRequest, err)
 		}
 	}
+	man := managers.GetManager(&c)
 	contents, count, cErr := man.ListContentContext()
 	if cErr != nil {
 		return c.Error(http.StatusInternalServerError, cErr)
 	}
 	log.Printf("Contents loaded found %d elements", count)
-
-	return c.Render(200, r.JSON(contents))
+	if contents == nil {
+		contents = &models.Contents{}
+	}
+	cr := ContentsResponse{Count: count, Contents: *contents}
+	return c.Render(200, r.JSON(cr))
 }
 
 // Show gets the data for one Content. This function is mapped to

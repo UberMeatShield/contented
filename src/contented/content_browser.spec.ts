@@ -258,7 +258,7 @@ describe('TestingContentBrowserCmp', () => {
         fixture.detectChanges();
 
         let url = ApiDef.contented.containerContent.replace("{cId}", containerId);
-        httpMock.expectOne(r => r.url.includes(url)).flush([content]);
+        httpMock.expectOne(r => r.url.includes(url)).flush({contents: [content]});
         expect($(".contented-cnt").length).withContext("We should have a container").toEqual(1);
         expect(comp.allCnts.length).toEqual(1);
         fixture.detectChanges();
