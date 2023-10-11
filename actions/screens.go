@@ -33,27 +33,21 @@ type ScreensResource struct {
 // GET /screens
 func (v ScreensResource) List(c buffalo.Context) error {
 	// Get the DB connection from the context
-	var previewScreens *models.Screens
-	var err error
-
-	mcStrID := c.Param("content_id")
+	mcStrID := managers.StringDefault(c.Param("content_id"), "")
 	log.Printf("Content ID specified %s", mcStrID)
-
-	man := managers.GetManager(&c)
 	if mcStrID != "" {
-		mcID, err := uuid.FromString(mcStrID)
-		if err != nil {
-			return c.Error(http.StatusBadRequest, err)
-		}
-		previewScreens, err = man.ListScreensContext(mcID)
-
-	} else {
-		previewScreens, err = man.ListAllScreensContext()
+		_, err := uuid.FromString(mcStrID)
 		if err != nil {
 			return c.Error(http.StatusBadRequest, err)
 		}
 	}
-	return c.Render(200, r.JSON(previewScreens))
+	// TODO: Screens Response (total count provided)
+	man := managers.GetManager(&c)
+	screens, _, err := man.ListScreensContext()
+	if err != nil {
+		return c.Error(http.StatusBadRequest, err)
+	}
+	return c.Render(200, r.JSON(screens))
 }
 
 // Show gets the data for one Screen. This function is mapped to

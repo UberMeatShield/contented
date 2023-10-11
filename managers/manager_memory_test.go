@@ -326,10 +326,11 @@ func (as *ActionSuite) Test_ManagerMemoryScreens() {
 	mem.ValidScreens[s1.ID] = s1
 	mem.ValidScreens[s2.ID] = s2
 
-	screens, err := man.ListScreens(mc.ID, 1, 10)
+	screens, count, err := man.ListScreens(ScreensQuery{ContentID: mc.ID.String()})
 	as.NoError(err)
 	as.NotNil(screens)
-	as.Equal(2, len(*screens))
+	as.Equal(2, len(*screens), "We should have two screens")
+	as.Equal(2, count, "And the count should be right")
 	// Check that our single lookup hash is also populated
 	for _, screen := range *screens {
 		obj, mia := man.GetScreen(screen.ID)
@@ -337,9 +338,10 @@ func (as *ActionSuite) Test_ManagerMemoryScreens() {
 		as.Equal(obj.ID, screen.ID)
 	}
 
-	allScreens, all_err := man.ListAllScreens(0, 10)
+	allScreens, all_count, all_err := man.ListScreens(ScreensQuery{})
 	as.NoError(all_err, "It should work out ok")
 	as.Equal(2, len(*allScreens), "We should have 2 screens")
+	as.Equal(2, all_count, "We should have 2 screens")
 }
 
 func (as *ActionSuite) Test_ManagerMemoryCRU() {
@@ -375,9 +377,10 @@ func (as *ActionSuite) Test_ManagerMemoryCRU() {
 	as.NoError(man.CreateScreen(&s1), "Did not associate screen correctly")
 	as.NoError(man.CreateScreen(&s2), "Did not associate screen correctly")
 
-	sCheck, sErr := man.ListScreens(mc.ID, 1, 10)
+	sCheck, count, sErr := man.ListScreens(ScreensQuery{ContentID: mc.ID.String()})
 	as.NoError(sErr, "Failed to list screens")
 	as.Equal(len(*sCheck), 1, "It should properly filter screens.")
+	as.Equal(count, 1, "Count should be correct")
 
 	s1Update := models.Screen{ID: s1.ID, Path: "C", ContentID: mc.ID}
 	as.NoError(man.UpdateScreen(&s1Update))

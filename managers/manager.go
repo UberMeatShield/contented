@@ -51,6 +51,13 @@ type TaskQuery struct {
 	Status    string `json:"status" default:""`
 }
 
+type ScreensQuery struct {
+	Text      string `json:"text" default:""`
+	Page      int    `json:"page" default:"1"`
+	PerPage   int    `json:"per_page" default:"100"`
+	ContentID string `json:"content_id" default:""`
+}
+
 func (sr SearchRequest) String() string {
 	s, _ := json.MarshalIndent(sr, "", "  ")
 	return string(s)
@@ -88,10 +95,9 @@ type ContentManager interface {
 	GetPreviewForMC(mc *models.Content) (string, error)
 
 	// Functions that help with viewing movie screens if found.
-	ListAllScreens(page int, per_page int) (*models.Screens, error)
-	ListAllScreensContext() (*models.Screens, error)
-	ListScreensContext(mcID uuid.UUID) (*models.Screens, error)
-	ListScreens(mcID uuid.UUID, page int, per_page int) (*models.Screens, error)
+	ListScreensContext() (*models.Screens, int, error)
+	ListScreens(sr ScreensQuery) (*models.Screens, int, error)
+
 	GetScreen(psID uuid.UUID) (*models.Screen, error)
 	CreateScreen(s *models.Screen) error
 	UpdateScreen(s *models.Screen) error
@@ -371,13 +377,13 @@ func WebpFromScreensTask(man ContentManager, id uuid.UUID) error {
 
 // HMMMM, should this be smarter?
 func WebpFromContent(man ContentManager, content *models.Content) (string, error) {
-	screens, err := man.ListScreens(content.ID, 1, 9000)
+	sr := ScreensQuery{ContentID: content.ID.String()}
+	screens, count, err := man.ListScreens(sr)
 	if err != nil {
 		return "", err
 	}
 
-	// Good test case... hmmm
-	if screens == nil || len(*screens) == 0 {
+	if screens == nil || count <= 0 {
 		return "", errors.New("Not enough screens to create a preview")
 	}
 	_, cnt, err := GetContentAndContainer(man, content.ID)

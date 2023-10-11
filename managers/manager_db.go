@@ -314,37 +314,31 @@ func (cm ContentManagerDB) FindActualFile(mc *models.Content) (string, error) {
 	return utils.GetFilePathInContainer(mc.Src, cnt.GetFqPath())
 }
 
-func (cm ContentManagerDB) ListAllScreensContext() (*models.Screens, error) {
-	_, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
-	return cm.ListAllScreens(page, limit)
-}
-
-func (cm ContentManagerDB) ListAllScreens(page int, per_page int) (*models.Screens, error) {
-	previews := &models.Screens{}
-	tx := cm.GetConnection()
-	q := tx.Paginate(page, per_page)
-	if err := q.All(previews); err != nil {
-		return nil, err
-	}
-	return previews, nil
-}
-
-func (cm ContentManagerDB) ListScreensContext(mcID uuid.UUID) (*models.Screens, error) {
+func (cm ContentManagerDB) ListScreensContext() (*models.Screens, int, error) {
 	// Could add the context here correctly
-	_, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
-	return cm.ListScreens(mcID, page, limit)
+	params := cm.Params()
+	_, limit, page := GetPagination(params, cm.cfg.Limit)
+	sr := ScreensQuery{
+		Page:      page,
+		PerPage:   limit,
+		ContentID: params.Get("content_id"),
+	}
+	return cm.ListScreens(sr)
 }
 
 // TODO: Re-Assign the preview based on screen information
-func (cm ContentManagerDB) ListScreens(mcID uuid.UUID, page int, per_page int) (*models.Screens, error) {
+func (cm ContentManagerDB) ListScreens(sr ScreensQuery) (*models.Screens, int, error) {
 	tx := cm.GetConnection()
 	previews := &models.Screens{}
-	q := tx.Paginate(page, per_page)
-	q_conn := q.Where("content_id = ?", mcID)
-	if q_err := q_conn.All(previews); q_err != nil {
-		return nil, q_err
+	q := tx.Paginate(sr.Page, sr.PerPage)
+	if sr.ContentID != "" {
+		q = q.Where("content_id = ?", sr.ContentID)
 	}
-	return previews, nil
+	if q_err := q.All(previews); q_err != nil {
+		return nil, -1, q_err
+	}
+	count, _ := q.Count(&models.Screens{})
+	return previews, count, nil
 }
 
 // Need to make it use the manager and just show the file itself

@@ -416,57 +416,52 @@ func (cm ContentManagerMemory) SetPreviewIfExists(mc *models.Content) (string, e
 	return pFile, nil
 }
 
-func (cm ContentManagerMemory) ListScreensContext(mcID uuid.UUID) (*models.Screens, error) {
+func (cm ContentManagerMemory) ListScreensContext() (*models.Screens, int, error) {
 	// Could add the context here correctly
-	_, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
-	return cm.ListScreens(mcID, page, limit)
+	params := cm.Params()
+	_, limit, page := GetPagination(params, cm.cfg.Limit)
+	sr := ScreensQuery{
+		Page:      page,
+		PerPage:   limit,
+		ContentID: params.Get("content_id"),
+	}
+	return cm.ListScreens(sr)
 }
 
 // TODO: Get a pattern for each MC, look at a preview Destination, then match against the pattern
 // And build out a set of screens.
-func (cm ContentManagerMemory) ListScreens(mcID uuid.UUID, page int, per_page int) (*models.Screens, error) {
+func (cm ContentManagerMemory) ListScreens(sr ScreensQuery) (*models.Screens, int, error) {
 
 	// Did I create this just to sort by Idx across all content?  Kinda strange
-	s_arr := models.Screens{}
 	mem := cm.GetStore()
-	for _, s := range mem.ValidScreens {
-		if s.ContentID == mcID {
+	s_arr := models.Screens{}
+	if sr.ContentID != "" {
+		contentID, idErr := uuid.FromString(sr.ContentID)
+		if idErr != nil {
+			return nil, -1, idErr
+		}
+		for _, s := range mem.ValidScreens {
+			if s.ContentID == contentID {
+				s_arr = append(s_arr, s)
+			}
+		}
+	} else {
+		for _, s := range mem.ValidScreens {
 			s_arr = append(s_arr, s)
 		}
 	}
+	// Potentially text search the screens
+
 	sort.SliceStable(s_arr, func(i, j int) bool {
 		return s_arr[i].Idx < s_arr[j].Idx
 	})
-	offset, end := GetOffsetEnd(page, per_page, len(s_arr))
+	count := len(s_arr)
+	offset, end := GetOffsetEnd(sr.Page, sr.PerPage, len(s_arr))
 	if end > 0 { // If it is empty a slice ending in 0 = boom
 		s_arr = s_arr[offset:end]
-		return &s_arr, nil
+		return &s_arr, count, nil
 	}
-	return &s_arr, nil
-}
-
-func (cm ContentManagerMemory) ListAllScreensContext() (*models.Screens, error) {
-	_, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
-	return cm.ListAllScreens(page, limit)
-}
-
-func (cm ContentManagerMemory) ListAllScreens(page int, per_page int) (*models.Screens, error) {
-	log.Printf("Using memory manager for screen page %d per_page %d \n", page, per_page)
-	// Did I create this just to sort by Idx across all content?  Kinda strange
-	s_arr := models.Screens{}
-	mem := cm.GetStore()
-	for _, s := range mem.ValidScreens {
-		s_arr = append(s_arr, s)
-	}
-	sort.SliceStable(s_arr, func(i, j int) bool {
-		return s_arr[i].Idx < s_arr[j].Idx
-	})
-	offset, end := GetOffsetEnd(page, per_page, len(s_arr))
-	if end > 0 { // If it is empty a slice ending in 0 = boom
-		s_arr = s_arr[offset:end]
-		return &s_arr, nil
-	}
-	return &s_arr, nil
+	return &s_arr, count, nil
 }
 
 func (cm ContentManagerMemory) GetScreen(psID uuid.UUID) (*models.Screen, error) {

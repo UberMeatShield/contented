@@ -182,9 +182,10 @@ func (as *ActionSuite) Test_DbManager_AssociateTags() {
 	as.NoError(t_err, "We should be able to list tags.")
 	as.Equal(2, len(*tags), fmt.Sprintf("There should be two tags %s", mc))
 
-	screens, s_err := man.ListScreens(mc.ID, 0, 10)
+	screens, count, s_err := man.ListScreens(ScreensQuery{ContentID: mc.ID.String()})
 	as.NoError(s_err, "Screens should list")
 	as.Equal(1, len(*screens), "We should have a screen associated")
+	as.Equal(1, count, "We should have a proper screen count")
 
 	tCheck, _ := man.GetContent(mc.ID)
 	as.Equal(2, len(tCheck.Tags), fmt.Sprintf("It should eager load tags %s", tCheck))
@@ -229,13 +230,15 @@ func (as *ActionSuite) Test_ManagerDBPreviews() {
 	man.CreateScreen(&p2)
 	man.CreateScreen(&p3)
 
-	previewList, err := man.ListScreens(mc1.ID, 1, 10)
+	previewList, count1, err := man.ListScreens(ScreensQuery{ContentID: mc1.ID.String()})
 	as.NoError(err)
 	as.Equal(len(*previewList), 2, "We should have two previews")
+	as.Equal(count1, 2, "We should have two previews")
 
-	previewOne, p_err := man.ListScreens(mc2.ID, 1, 10)
+	previewOne, count2, p_err := man.ListScreens(ScreensQuery{ContentID: mc2.ID.String()})
 	as.NoError(p_err)
 	as.Equal(len(*previewOne), 1, "Now there should be 1")
+	as.Equal(count2, 1, "Now there should be 1")
 
 	p4 := models.Screen{Src: "fake4.png", Idx: 1, ContentID: mc2.ID}
 	c_err := man.CreateScreen(&p4)
