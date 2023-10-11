@@ -77,16 +77,18 @@ describe('TestingScreensCmp', () => {
 
         let url = ApiDef.contented.contentScreens.replace("{mcID}", contentId);
         let req = httpMock.expectOne(req => req.url == url);
-        let screens = MockData.getScreens();
-        expect(screens.length).toBeGreaterThan(0, "We should have screens in the mock data");
-        req.flush(screens);
+        let sRes = MockData.getScreens();
+        
+        expect(sRes.screens.length).withContext("We should have screens in the mock data").toBeGreaterThan(0);
+        req.flush(sRes);
         tick(1000);
 
         fixture.detectChanges();
+        let expectCount = sRes.screens.length;
         expect(comp.loading).toBeFalse(); // It should no longer be loading
-        expect(comp.screens.length).toEqual(screens.length, "We should have assigned screens");
-        expect($(".screen-img", el).length).toEqual(screens.length, "There should be screens rendered");
-        expect($(".screen", el).length).toEqual(screens.length, "There should be screens rendered");
+        expect(comp.screens.length).withContext("We should have assigned screens").toEqual(expectCount);
+        expect($(".screen-img", el).length).withContext("There should be screens rendered").toEqual(expectCount);
+        expect($(".screen", el).length).withContext("There should be screens rendered").toEqual(expectCount)
     }));
 
     it("Can parse out a screen time", () => {

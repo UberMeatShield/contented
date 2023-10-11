@@ -40,8 +40,11 @@ export class ContentedService {
         let url = ApiDef.contented.contentScreens.replace("{mcID}", contentID);
         return this.http.get(url, this.options)
             .pipe(
-                map(res => {
-                    return _.map(res, s => new Screen(s));
+                map((res: any) => {
+                    return {
+                        count: res.count,
+                        screens:  _.map(res.screens, s => new Screen(s))
+                    };
                 }),
                 catchError(err => this.handleError(err))
             );

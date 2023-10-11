@@ -119,9 +119,10 @@ describe('TestingContentViewCmp', () => {
         screenReq.flush(screens);
         fixture.detectChanges();
 
-        expect($('.screen-img').length).toEqual(screens.length, "We should have screens visible");
-        expect($(".error").length).toEqual(0, "No errors should be present");
-        expect($(".loading").length).toEqual(0, "Nothing is loading anymore");
+        let count = screens.count;
+        expect($('.screen-img').length).withContext("We should have screens visible").toEqual(count);
+        expect($(".error").length).withContext( "No errors should be present").toEqual(0);
+        expect($(".loading").length).withContext("Nothing is loading anymore").toEqual(0);
     });
 });
 

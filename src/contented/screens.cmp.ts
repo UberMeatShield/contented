@@ -51,8 +51,8 @@ export class ScreensCmp implements OnInit {
             this._contentedService.getScreens(this.contentId).pipe(
                 finalize(() => { this.loading = false; })
             ).subscribe(
-                (screens: Array<Screen>) => {
-                    this.screens = screens;
+                (res) => {
+                    this.screens = res.screens;
                     this.calculateDimensions();
                 }, err => {
                     console.error(err);
