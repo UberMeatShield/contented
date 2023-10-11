@@ -124,12 +124,14 @@ func (as *ActionSuite) Test_ManagerDB() {
 	}
 
 	man := GetManagerActionSuite(cfg, as)
-	q_content, err := man.ListAllContent(0, 14)
+	q_content, count, err := man.ListContent(ContentQuery{PerPage: 14})
 	as.NoError(err, "We should be able to list")
 	as.Equal(len(*q_content), 12, "there should be 12 results")
+	as.Equal(count, 12, "Count should be the same")
 
-	lim_content, _ := man.ListAllContent(0, 3)
+	lim_content, count, _ := man.ListContent(ContentQuery{PerPage: 3})
 	as.Equal(3, len(*lim_content), "The DB should be setup with 10 items")
+	as.Equal(12, count, "The count does not care about the page")
 }
 
 func (as *ActionSuite) Test_ManagerTagsDB() {

@@ -51,25 +51,34 @@ func (cm ContentManagerDB) CanEdit() bool {
 	return true
 }
 
-func (cm ContentManagerDB) ListContentContext(cID uuid.UUID) (*models.Contents, error) {
+func (cm ContentManagerDB) ListContentContext() (*models.Contents, int, error) {
 	// Could add the context here correctly
-	_, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
-	return cm.ListContent(cID, page, limit)
+	params := cm.Params()
+	_, limit, page := GetPagination(params, cm.cfg.Limit)
+	cs := ContentQuery{
+		ContainerID: StringDefault(params.Get("container_id"), ""),
+		Page:        page,
+		PerPage:     limit,
+	}
+	return cm.ListContent(cs)
 }
 
 // Awkard GoLang interface support is awkward
-func (cm ContentManagerDB) ListContent(cID uuid.UUID, page int, per_page int) (*models.Contents, error) {
-	log.Printf("Get a list of content from DB, we should have some %s", cID.String())
+func (cm ContentManagerDB) ListContent(cs ContentQuery) (*models.Contents, int, error) {
+	log.Printf("Get a list of content from DB, we should have some %s", cs.ContainerID)
 	tx := cm.GetConnection()
 	contentContainers := &models.Contents{}
 
 	// Paginate results. Params "page" and "per_page" control pagination.
-	q := tx.Paginate(page, per_page)
-	q_conn := q.Where("container_id = ?", cID)
-	if q_err := q_conn.All(contentContainers); q_err != nil {
-		return nil, q_err
+	q := tx.Paginate(cs.Page, cs.PerPage)
+	if cs.ContainerID != "" {
+		q = q.Where("container_id = ?", cs.ContainerID)
 	}
-	return contentContainers, nil
+	if q_err := q.All(contentContainers); q_err != nil {
+		return nil, -1, q_err
+	}
+	count, _ := q.Count(&models.Contents{})
+	return contentContainers, count, nil
 }
 
 // Note this DOES allow for loading hidden content

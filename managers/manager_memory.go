@@ -81,9 +81,16 @@ func (cm ContentManagerMemory) GetParams() *url.Values {
 	return cm.Params()
 }
 
-func (cm ContentManagerMemory) ListContentContext(cID uuid.UUID) (*models.Contents, error) {
-	_, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
-	return cm.ListContent(cID, page, limit)
+func (cm ContentManagerMemory) ListContentContext() (*models.Contents, int, error) {
+	params := cm.Params()
+	_, limit, page := GetPagination(params, cm.cfg.Limit)
+	cs := ContentQuery{
+		Text:        StringDefault(params.Get("text"), ""),
+		ContainerID: StringDefault(params.Get("container_id"), ""),
+		Page:        page,
+		PerPage:     limit,
+	}
+	return cm.ListContent(cs)
 }
 
 // Listing all content ignoring the containerID still should respect hidden content.
@@ -257,34 +264,52 @@ func (cm ContentManagerMemory) SearchContainers(search string, page int, per_pag
 }
 
 // Awkard GoLang interface support is awkward
-func (cm ContentManagerMemory) ListContent(ContainerID uuid.UUID, page int, per_page int) (*models.Contents, error) {
-	return cm.ListContentFiltered(ContainerID, page, per_page, false)
+func (cm ContentManagerMemory) ListContent(cs ContentQuery) (*models.Contents, int, error) {
+	cs.IncludeHidden = false
+	return cm.ListContentFiltered(cs)
 }
 
-func (cm ContentManagerMemory) ListContentFiltered(ContainerID uuid.UUID, page int, per_page int, includeHidden bool) (*models.Contents, error) {
+func (cm ContentManagerMemory) ListContentFiltered(cs ContentQuery) (*models.Contents, int, error) {
 	m_arr := models.Contents{}
 	mem := cm.GetStore()
-	for _, m := range mem.ValidContent {
-		if m.ContainerID.Valid && m.ContainerID.UUID == ContainerID {
-			if includeHidden == false {
-				if m.Hidden == false {
-					m_arr = append(m_arr, m)
-				}
-			} else {
-				m_arr = append(m_arr, m)
+
+	// Need to test invalid / empty ""
+	containerID, invalid := uuid.FromString(cs.ContainerID)
+	if invalid == nil {
+		for _, content := range mem.ValidContent {
+			if content.ContainerID.Valid && content.ContainerID.UUID == containerID {
+				m_arr = append(m_arr, content)
 			}
 		}
+	} else {
+		for _, content := range mem.ValidContent {
+			m_arr = append(m_arr, content)
+		}
 	}
+
+	h_arr := models.Contents{}
+	for _, m := range m_arr {
+		if cs.IncludeHidden == false {
+			if m.Hidden == false {
+				h_arr = append(h_arr, m)
+			}
+		} else {
+			h_arr = append(h_arr, m)
+		}
+	}
+	m_arr = h_arr
 	sort.SliceStable(m_arr, func(i, j int) bool {
 		return m_arr[i].Idx < m_arr[j].Idx
 	})
-	offset, end := GetOffsetEnd(page, per_page, len(m_arr))
+
+	count := len(m_arr)
+	offset, end := GetOffsetEnd(cs.Page, cs.PerPage, len(m_arr))
 	if end > 0 { // If it is empty a slice ending in 0 = boom
 		m_arr = m_arr[offset:end]
-		return &m_arr, nil
+		return &m_arr, count, nil
 	}
 	log.Printf("Get a list of content offset(%d), end(%d) we should have some %d", offset, end, len(m_arr))
-	return &m_arr, nil
+	return &m_arr, count, nil
 
 }
 

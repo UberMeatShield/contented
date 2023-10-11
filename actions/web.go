@@ -101,12 +101,11 @@ func SplashHandler(c buffalo.Context) error {
 
 				// Limit the amount loaded for splash, could make it search based on render
 				// type but that is pretty over optimized.
-				contents, load_err := man.ListContent(cnt.ID, 1, 10)
+				contents, _, load_err := man.ListContent(managers.ContentQuery{ContainerID: cnt.ID.String(), PerPage: 100})
 				if load_err == nil {
 					cnt.Contents = *contents
 				}
 				sr.Container = &cnt
-
 			}
 		}
 	}

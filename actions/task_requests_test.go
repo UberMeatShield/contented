@@ -40,9 +40,10 @@ func ValidateTaskRequestListApi(as *ActionSuite) {
 	ctx := test_common.GetContext(as.App)
 	man := managers.GetManager(&ctx)
 
-	contents, err := man.ListAllContent(1, 5)
+	contents, count, err := man.ListContent(managers.ContentQuery{PerPage: 5})
 	as.NoError(err)
 	as.Greater(len(*contents), 0)
+	as.Greater(count, 0)
 	for _, content := range *contents {
 		CreateTask(content.ID, as, man)
 	}

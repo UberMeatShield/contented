@@ -72,9 +72,10 @@ func (as *ActionSuite) Test_ViewRef() {
 	app := as.App
 	ctx := test_common.GetContext(app)
 	man := managers.GetManager(&ctx)
-	mcs, err := man.ListAllContent(2, 2)
+	mcs, count, err := man.ListContent(managers.ContentQuery{Page: 2, PerPage: 2})
 	as.NoError(err)
 	as.Equal(2, len(*mcs), "It should have only two results")
+	as.Greater(count, 2, "But the count should be the total")
 
 	// TODO: Make it better about the type checking
 	// TODO: Make it always pass in the file ID
@@ -92,9 +93,10 @@ func (as *ActionSuite) Test_ContentDirDownload() {
 
 	ctx := test_common.GetContext(as.App)
 	man := managers.GetManager(&ctx)
-	mcs, err := man.ListAllContent(2, 2)
+	mcs, count, err := man.ListContent(managers.ContentQuery{Page: 2, PerPage: 2})
 	as.NoError(err)
 	as.Equal(2, len(*mcs), "It should have only two results")
+	as.Greater(count, 2, "It should have more content")
 
 	for _, mc := range *mcs {
 		res := as.HTML("/download/" + mc.ID.String()).Get()
@@ -123,7 +125,7 @@ func (as *ActionSuite) Test_FindAndLoadFile() {
 
 	ctx := test_common.GetContext(as.App)
 	man := managers.GetManager(&ctx)
-	mcs, err := man.ListAllContent(1, 200)
+	mcs, _, err := man.ListContent(managers.ContentQuery{})
 	as.NoError(err)
 
 	// TODO: Should make the hidden file actually a file somehow
@@ -146,7 +148,7 @@ func (as *ActionSuite) Test_PreviewFile() {
 	test_common.InitFakeApp(false)
 	ctx := test_common.GetContext(as.App)
 	man := managers.GetManager(&ctx)
-	mcs, err := man.ListAllContent(1, 200)
+	mcs, _, err := man.ListContent(managers.ContentQuery{})
 	as.NoError(err)
 
 	for _, mc := range *mcs {
@@ -162,7 +164,7 @@ func (as *ActionSuite) Test_FullFile() {
 	test_common.InitFakeApp(false)
 	ctx := test_common.GetContext(as.App)
 	man := managers.GetManager(&ctx)
-	mcs, err := man.ListAllContent(1, 200)
+	mcs, _, err := man.ListContent(managers.ContentQuery{})
 	as.NoError(err)
 
 	for _, mc := range *mcs {
@@ -181,7 +183,7 @@ func (as *ActionSuite) Test_PreviewWorking() {
 	test_common.InitFakeApp(false)
 	ctx := test_common.GetContext(as.App)
 	man := managers.GetManager(&ctx)
-	mcs, err := man.ListAllContent(1, 200)
+	mcs, _, err := man.ListContent(managers.ContentQuery{})
 	as.NoError(err)
 
 	for _, mc := range *mcs {

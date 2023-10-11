@@ -137,7 +137,7 @@ func (as *ActionSuite) Test_ContentsResource_List() {
 	src := "test_list"
 	CreateResource(src, nulls.UUID{}, as)
 	res := as.JSON("/contents").Get()
-	as.Equal(http.StatusOK, res.Code)
+	as.Equal(http.StatusOK, res.Code, fmt.Sprintf("Failed %s", res.Body.String()))
 
 	validate := models.Contents{}
 	json.NewDecoder(res.Body).Decode(&validate)

@@ -68,7 +68,7 @@ func EncodeVideos(cm ContentManager) error {
 }
 
 func EncodeContainer(c *models.Container, cm ContentManager) (*utils.EncodingResults, error) {
-	content, q_err := cm.ListContent(c.ID, 0, 90000)
+	content, _, q_err := cm.ListContent(ContentQuery{ContainerID: c.ID.String(), PerPage: 90000})
 	if q_err != nil {
 		log.Fatal(q_err) // Also fatal if we can no longer list content (empty is just [])
 	}

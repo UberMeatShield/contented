@@ -33,15 +33,16 @@ func (as *ActionSuite) Test_ManagerContent() {
 	test_common.InitFakeApp(false)
 	ctx := test_common.GetContext(as.App)
 	man := GetManager(&ctx)
-	mcs, err := man.ListAllContent(1, 9001)
+	contents, count, err := man.ListContent(ContentQuery{})
 	as.NoError(err)
+	as.Greater(count, 0, "It should have contents")
 
-	for _, mc := range *mcs {
-		cm, err := man.GetContent(mc.ID)
+	for _, content := range *contents {
+		cm, err := man.GetContent(content.ID)
 		if err != nil {
 			as.Fail("It should not have an issue finding valid content")
 		}
-		as.Equal(cm.ID, mc.ID)
+		as.Equal(cm.ID, content.ID)
 	}
 }
 
@@ -57,14 +58,14 @@ func (as *ActionSuite) Test_AssignManager() {
 
 	memCfg := mem.GetCfg()
 	as.NotNil(memCfg, "It should be defined")
-	mcs, err := mem.ListAllContent(1, 9001)
+	mcs, _, err := mem.ListContent(ContentQuery{})
 	as.NoError(err)
 	as.Greater(len(*mcs), 0, "It should have valid files in the manager")
 
 	cfg.UseDatabase = false
 	ctx := test_common.GetContext(as.App)
 	man := GetManager(&ctx) // New Reference but should have the same count of content
-	mcs_2, _ := man.ListAllContent(1, 9000)
+	mcs_2, _, _ := man.ListContent(ContentQuery{})
 
 	as.Equal(len(*mcs), len(*mcs_2), "A new instance should use the same storage")
 }
@@ -87,10 +88,11 @@ func (as *ActionSuite) Test_MemoryManagerPaginate() {
 	as.Equal(cnt.Total, 12, "There should be 12 test images in the first ORDERED containers")
 	as.NoError(err)
 	as.NotEqual("", cnt.PreviewUrl, "The previewUrl should be set")
-	content_page_1, _ := man.ListContent(cnt.ID, 1, 4)
+	content_page_1, count, _ := man.ListContent(ContentQuery{ContainerID: cnt.ID.String(), PerPage: 4})
 	as.Equal(len(*content_page_1), 4, "It should respect page size")
+	as.Equal(count, 12, "It should respect page size but get the total count")
 
-	content_page_3, _ := man.ListContent(cnt.ID, 3, 4)
+	content_page_3, count, _ := man.ListContent(ContentQuery{ContainerID: cnt.ID.String(), Page: 3, PerPage: 4})
 	as.Equal(len(*content_page_3), 4, "It should respect page size and get the last page")
 	as.NotEqual((*content_page_3)[3].ID, (*content_page_1)[3].ID, "Ensure it actually paged")
 
@@ -116,7 +118,7 @@ func (as *ActionSuite) Test_ManagerInitialize() {
 	// Memory test working
 	for _, c := range *containers {
 		// fmt.Printf("Searching for this container %s with name %s\n", c.ID, c.Name)
-		content, err := man.ListContentContext(c.ID)
+		content, _, err := man.ListContent(ContentQuery{ContainerID: c.ID.String()})
 		as.NoError(err)
 		as.NotNil(content)
 
@@ -181,8 +183,9 @@ func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
 	as.NoError(eep, "It should have 4 containers")
 	as.Greater(len(*cnts), 1, "We should have containers")
 
-	allContent, errAll := man.ListAllContent(0, 50)
+	allContent, count, errAll := man.ListContent(ContentQuery{PerPage: 50})
 	as.Greater(len(*allContent), 0, "We should have content")
+	as.Greater(count, 0, "We should have content")
 	as.NoError(errAll)
 
 	sr = SearchQuery{Text: "", PerPage: 40}
@@ -307,9 +310,10 @@ func (as *ActionSuite) Test_ManagerMemoryScreens() {
 	cfg := test_common.InitFakeApp(false)
 
 	man := GetManagerActionSuite(cfg, as)
-	content, err := man.ListAllContent(1, 100)
+	content, count, err := man.ListContent(ContentQuery{PerPage: 100})
 	as.NoError(err)
 	as.Greater(len(*content), 0, "It should have content setup")
+	as.Greater(count, 0, "It should have content counted")
 
 	contentArr := *content
 	mc := contentArr[0]

@@ -36,32 +36,22 @@ func (v ContentsResource) List(c buffalo.Context) error {
 	// Get the DB connection from the context
 
 	man := managers.GetManager(&c)
-	var contentContainers *models.Contents
 
 	// Optional params suuuuck in GoLang
-	cID_str := c.Param("container_id")
-	if cID_str != "" {
-		log.Printf("Attempting to get content using %s", cID_str)
-		cID, err := uuid.FromString(cID_str)
+	cIDStr := c.Param("container_id")
+	if cIDStr != "" {
+		_, err := uuid.FromString(cIDStr)
 		if err != nil {
 			return c.Error(http.StatusBadRequest, err)
 		}
-		mcs, q_err := man.ListContentContext(cID)
-		if q_err != nil {
-			return c.Error(http.StatusBadRequest, err)
-		}
-		contentContainers = mcs
-	} else {
-		log.Printf("List all Content No Restriction on the container ID")
-		// TODO: Fix the lack of page support and TEST IT
-		_, per_page, page := managers.GetPagination(c.Params(), man.GetCfg().Limit)
-		mcs, err := man.ListAllContent(page, per_page)
-		if err != nil {
-			return c.Error(http.StatusBadRequest, err)
-		}
-		contentContainers = mcs
 	}
-	return c.Render(200, r.JSON(contentContainers))
+	contents, count, cErr := man.ListContentContext()
+	if cErr != nil {
+		return c.Error(http.StatusInternalServerError, cErr)
+	}
+	log.Printf("Contents loaded found %d elements", count)
+
+	return c.Render(200, r.JSON(contents))
 }
 
 // Show gets the data for one Content. This function is mapped to

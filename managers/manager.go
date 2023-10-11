@@ -58,6 +58,14 @@ type ScreensQuery struct {
 	ContentID string `json:"content_id" default:""`
 }
 
+type ContentQuery struct {
+	Text          string `json:"text" default:""`
+	Page          int    `json:"page" default:"1"`
+	PerPage       int    `json:"per_page" default:"1000"`
+	ContainerID   string `json:"container_id" default:""`
+	IncludeHidden bool   `json:"hidden" default:"false"`
+}
+
 func (sr SearchQuery) String() string {
 	s, _ := json.MarshalIndent(sr, "", "  ")
 	return string(s)
@@ -83,12 +91,13 @@ type ContentManager interface {
 
 	// Content listing (why did I name it Content vs Media?)
 	GetContent(content_id uuid.UUID) (*models.Content, error)
-	ListContent(ContainerID uuid.UUID, page int, per_page int) (*models.Contents, error)
-	ListContentContext(ContainerID uuid.UUID) (*models.Contents, error)
-	ListAllContent(page int, per_page int) (*models.Contents, error)
+	ListContent(cs ContentQuery) (*models.Contents, int, error)
+	ListContentContext() (*models.Contents, int, error)
+
 	SearchContentContext() (*models.Contents, int, error)
 	SearchContent(sr SearchQuery) (*models.Contents, int, error)
 	SearchContainers(search string, page int, per_page int, includeHidden bool) (*models.Containers, error)
+
 	UpdateContent(content *models.Content) error
 	DestroyContent(id string) (*models.Content, error)
 	CreateContent(mc *models.Content) error
