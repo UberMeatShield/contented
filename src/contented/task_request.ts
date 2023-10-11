@@ -3,6 +3,20 @@
  */ 
 import * as _ from 'lodash-es';
 
+export const TASK_STATES = {
+    NEW: "new",
+    PENDING: "pending",
+    IN_PROGRESS: "in_progress",
+    CANCELED: "canceled",
+    ERROR: "error",
+    DONE: "done",
+}
+export const COMPLETE_TASKS = [
+    TASK_STATES.CANCELED,
+    TASK_STATES.ERROR,
+    TASK_STATES.DONE,
+];
+
 export class TaskRequest {
     id: string;
     content_id: string;
@@ -25,5 +39,9 @@ export class TaskRequest {
 
         this.created_at = obj.created_at ? new Date(obj.created_at) : undefined;
         this.updated_at = obj.created_at ? new Date(obj.updated_at) : undefined;
+    }
+
+    isComplete() {
+        return COMPLETE_TASKS.includes(this.status);
     }
 }

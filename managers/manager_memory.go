@@ -166,6 +166,7 @@ func (cm ContentManagerMemory) tagSearch(contents *models.Contents, tags []strin
 	return &filteredContents
 }
 
+// Search Request may still make more sense.
 func (cm ContentManagerMemory) getContentFiltered(containerID string, search string, contentType string, includeHidden bool) (*models.Contents, error) {
 	// If a containerID is specified and is totally invalid raise an error, otherwise filter
 	var mcArr models.Contents
@@ -193,7 +194,8 @@ func (cm ContentManagerMemory) getContentFiltered(containerID string, search str
 	}
 
 	if search != "" && search != "*" {
-		searcher := regexp.MustCompile("(?i)" + search)
+		searchStr := regexp.QuoteMeta(search)
+		searcher := regexp.MustCompile("(?i)" + searchStr)
 		searchArr := models.Contents{}
 		for _, mc := range mcArr {
 			if searcher.MatchString(mc.Src) {

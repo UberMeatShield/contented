@@ -94,7 +94,7 @@ func (as *ActionSuite) Test_ScreensResource_ListMC() {
 
 	_, mc1, _ := CreateScreen(as)
 	CreatePreview("A", mc1.ID, as)
-	res := as.JSON(fmt.Sprintf("/content/%s/screens", mc1.ID.String())).Get()
+	res := as.JSON(fmt.Sprintf("/contents/%s/screens", mc1.ID.String())).Get()
 	as.Equal(http.StatusOK, res.Code)
 
 	validate := models.Screens{}

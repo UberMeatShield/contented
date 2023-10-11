@@ -19,7 +19,7 @@ func CreateResource(src string, container_id nulls.UUID, as *ActionSuite) models
 		ContainerID: container_id,
 		NoFile:      true,
 	}
-	res := as.JSON("/content").Post(mc)
+	res := as.JSON("/contents").Post(mc)
 	as.Equal(http.StatusCreated, res.Code, fmt.Sprintf("Error creating %s", res.Body.String()))
 
 	resObj := models.Content{}
@@ -32,17 +32,17 @@ func (as *ActionSuite) Test_ContentSubQuery_DB() {
 	test_common.InitFakeApp(true)
 	c1 := &models.Container{
 		Total: 2,
-		Path:  "container/1/content",
+		Path:  "container/1/contents",
 		Name:  "Trash1",
 	}
 	c2 := &models.Container{
 		Total: 2,
-		Path:  "container/2/content",
+		Path:  "container/2/contents",
 		Name:  "Trash2",
 	}
 	c3 := &models.Container{
 		Total:  1,
-		Path:   "/container/3/content",
+		Path:   "/container/3/contents",
 		Name:   "Hidden",
 		Hidden: true,
 	}
@@ -65,8 +65,8 @@ func (as *ActionSuite) Test_ContentSubQuery_DB() {
 	upErr := as.DB.Update(&up)
 	as.NoError(upErr, fmt.Sprintf("It should have updated %s", upErr))
 
-	res1 := as.JSON("/containers/" + c1.ID.String() + "/content").Get()
-	res2 := as.JSON("/containers/" + c2.ID.String() + "/content").Get()
+	res1 := as.JSON("/containers/" + c1.ID.String() + "/contents").Get()
+	res2 := as.JSON("/containers/" + c2.ID.String() + "/contents").Get()
 
 	as.Equal(http.StatusOK, res1.Code)
 	as.Equal(http.StatusOK, res2.Code)
@@ -115,7 +115,7 @@ func (as *ActionSuite) Test_ManagerDB_Preview() {
 func (as *ActionSuite) Test_MemoryAPIBasics() {
 	test_common.ResetConfig()
 	test_common.InitFakeApp(false)
-	res := as.JSON("/content").Get()
+	res := as.JSON("/contents").Get()
 	as.Equal(http.StatusOK, res.Code)
 
 	// Also validates that hidden content doesn't come back from the main listing API
@@ -136,7 +136,7 @@ func (as *ActionSuite) Test_ContentsResource_List() {
 	test_common.InitFakeApp(true)
 	src := "test_list"
 	CreateResource(src, nulls.UUID{}, as)
-	res := as.JSON("/content").Get()
+	res := as.JSON("/contents").Get()
 	as.Equal(http.StatusOK, res.Code)
 
 	validate := models.Contents{}
@@ -149,7 +149,7 @@ func (as *ActionSuite) Test_ContentsResource_Show() {
 	test_common.InitFakeApp(true)
 	src := "test_query"
 	mc := CreateResource(src, nulls.UUID{}, as)
-	check := as.JSON("/content/" + mc.ID.String()).Get()
+	check := as.JSON("/contents/" + mc.ID.String()).Get()
 	as.Equal(http.StatusOK, check.Code)
 
 	validate := models.Content{}
@@ -173,7 +173,7 @@ func (as *ActionSuite) Test_ContentsResource_Update_DB() {
 	mc.Tags = models.Tags{tag, invalid}
 
 	mc.ContentType = "Update Test Memory"
-	up_res := as.JSON("/content/" + mc.ID.String()).Put(mc)
+	up_res := as.JSON("/contents/" + mc.ID.String()).Put(mc)
 	as.Equal(http.StatusOK, up_res.Code, fmt.Sprintf("Err %s", up_res.Body.String()))
 
 	validate := models.Content{}
@@ -188,14 +188,14 @@ func (as *ActionSuite) Test_ContentsResource_Update_Memory() {
 	test_common.InitFakeApp(false)
 	mc := CreateResource("test_update", nulls.UUID{}, as)
 	mc.ContentType = "Update Test Memory"
-	up_res := as.JSON("/content/" + mc.ID.String()).Put(mc)
+	up_res := as.JSON("/contents/" + mc.ID.String()).Put(mc)
 	as.Equal(http.StatusOK, up_res.Code, fmt.Sprintf("Err %s", up_res.Body.String()))
 }
 
 func (as *ActionSuite) Test_ContentsResource_Destroy() {
 	test_common.InitFakeApp(true)
 	mc := CreateResource("Nuke Test", nulls.UUID{}, as)
-	del_res := as.JSON("/content/" + mc.ID.String()).Delete()
+	del_res := as.JSON("/contents/" + mc.ID.String()).Delete()
 	as.Equal(http.StatusOK, del_res.Code)
 }
 
@@ -230,9 +230,9 @@ func ActionsTagSearchValidation(as *ActionSuite) {
 	b := models.Content{ContainerID: nulls.NewUUID(cntCheck.ID), Src: "BFile"}
 	b.Tags = models.Tags{t}
 
-	aRes := as.JSON("/content/").Post(&a)
+	aRes := as.JSON("/contents/").Post(&a)
 	as.Equal(http.StatusCreated, aRes.Code)
-	bRes := as.JSON("/content/").Post(&b)
+	bRes := as.JSON("/contents/").Post(&b)
 	as.Equal(http.StatusCreated, bRes.Code)
 
 	params := url.Values{}

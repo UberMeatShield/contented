@@ -10,6 +10,7 @@ import {finalize, debounceTime, distinctUntilChanged} from 'rxjs/operators';
 import {ContentedService} from './contented_service';
 import {Tag, Content, VideoCodecInfo} from './content';
 import {VSCodeEditorCmp} from './vscode_editor.cmp';
+import {TaskRequest} from './task_request';
 
 import * as _ from 'lodash-es';
 
@@ -29,7 +30,9 @@ export class EditorContentCmp implements OnInit {
   @Input() screensForm?: FormGroup;
   @Input() offsetControl: FormControl<number>; 
   @Input() countControl: FormControl<number>;
+  @Input() checkStates = true;
 
+  public taskCreated: EventEmitter<any> = new EventEmitter<any>();
   // These are values for the Monaco Editors, change events are passed down into
   // the form event via the AfterInit and set the v7_definition & suricata_definition.
   public loading: boolean = false;
@@ -56,6 +59,8 @@ export class EditorContentCmp implements OnInit {
     if (!this.content) {
         this.route.paramMap.pipe().subscribe(
             (map: ParamMap) => {
+                console.log("Reloading content")
+                this.content = null;  // Changing the 
                 this.loadContent(map.get('id'));
             },
             console.error
@@ -95,7 +100,10 @@ export class EditorContentCmp implements OnInit {
     let req = this.screensForm.value;
     this.taskLoading = true;
     this._service.requestScreens(content, req.count, req.offset).pipe(finalize(() => this.taskLoading = false)).subscribe(
-      console.log,
+      (task) => {
+        console.log("Request new Screens Task");
+        this.watchTask(task);
+      },
       console.error
     )
   }
@@ -111,7 +119,10 @@ export class EditorContentCmp implements OnInit {
   encodeVideoContent(content: Content) {
     this.taskLoading = true; 
     this._service.encodeVideoContent(content).pipe(finalize(() => this.taskLoading = false)).subscribe(
-      console.log,
+      (task) => {
+        console.log("Watch encoding video task");
+        this.watchTask(task);
+      },
       console.error
     )
   }
@@ -120,7 +131,10 @@ export class EditorContentCmp implements OnInit {
     console.log("Create a preview")
     this.taskLoading = true;
     this._service.createPreviewFromScreens(content).pipe(finalize(() => this.taskLoading = false)).subscribe(
-      console.log,
+      (task) => {
+        console.log("Watch preview task");
+        this.watchTask(task);
+      },
       console.error
     );
   }
@@ -130,5 +144,10 @@ export class EditorContentCmp implements OnInit {
       return true;
     }
     return false;
+  }
+
+  // Start watching the task queue
+  watchTask(task: TaskRequest) {
+    this.taskCreated.emit(task);
   }
 }

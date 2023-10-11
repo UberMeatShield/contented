@@ -126,8 +126,7 @@ func (as *ActionSuite) Test_ContainerList() {
 		}
 	}
 	as.NotNil(found, "If it had the fixture loaded we should have this name")
-
-	contentRes := as.JSON("/containers/" + found.ID.String() + "/content").Get()
+	contentRes := as.JSON("/containers/" + found.ID.String() + "/contents").Get()
 	as.Equal(http.StatusOK, contentRes.Code)
 }
 
