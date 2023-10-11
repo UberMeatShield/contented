@@ -80,9 +80,9 @@ func (as *ActionSuite) Test_ScreensResource_List() {
 	res := as.JSON("/screens/").Get()
 	as.Equal(http.StatusOK, res.Code)
 
-	validate := models.Screens{}
+	validate := ScreensResponse{}
 	json.NewDecoder(res.Body).Decode(&validate)
-	as.Equal(len(validate), 2, "There should be two preview screens")
+	as.Equal(len(validate.Screens), 2, "There should be two preview screens")
 }
 
 func (as *ActionSuite) Test_ScreensResource_ListMC() {
@@ -97,10 +97,11 @@ func (as *ActionSuite) Test_ScreensResource_ListMC() {
 	res := as.JSON(fmt.Sprintf("/contents/%s/screens", mc1.ID.String())).Get()
 	as.Equal(http.StatusOK, res.Code)
 
-	validate := models.Screens{}
+	validate := ScreensResponse{}
 	json.NewDecoder(res.Body).Decode(&validate)
-	as.Equal(len(validate), 2, "Note we should have only two screens")
-	for _, ps := range validate {
+	as.Equal(len(validate.Screens), 2, "Note we should have only two screens")
+	as.Equal(validate.Count, 2, "Count should be correct")
+	for _, ps := range validate.Screens {
 		as.Equal(ps.ContentID, mc1.ID)
 		as.Equal(ps.Path, "") // Path should not be visible in the API
 	}

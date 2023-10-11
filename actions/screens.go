@@ -23,6 +23,10 @@ import (
 // Resource: Plural (Screens)
 // Path: Plural (/screens)
 // View Template Folder: Plural (/templates/screens/)
+type ScreensResponse struct {
+	Count   int            `json:"count" default:"0"`
+	Screens models.Screens `json:"screens" default:"[]"`
+}
 
 // ScreensResource is the resource for the Screen model
 type ScreensResource struct {
@@ -43,11 +47,18 @@ func (v ScreensResource) List(c buffalo.Context) error {
 	}
 	// TODO: Screens Response (total count provided)
 	man := managers.GetManager(&c)
-	screens, _, err := man.ListScreensContext()
+	screens, count, err := man.ListScreensContext()
 	if err != nil {
 		return c.Error(http.StatusBadRequest, err)
 	}
-	return c.Render(200, r.JSON(screens))
+	if screens == nil {
+		screens = &models.Screens{}
+	}
+	res := ScreensResponse{
+		Count:   count,
+		Screens: *screens,
+	}
+	return c.Render(200, r.JSON(res))
 }
 
 // Show gets the data for one Screen. This function is mapped to
