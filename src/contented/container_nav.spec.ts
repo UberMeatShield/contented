@@ -48,7 +48,7 @@ describe('TestingContainerNavCmp', () => {
         cnt = new Container(MockData.getPreview()[0]);
 
         let res = MockData.getContent(cnt.id, 5);
-        let contents = _.map(res.contents, c => new Content(c))
+        let contents = _.map(res.results, c => new Content(c))
         cnt.addContents(contents);
 
         listener = GlobalNavEvents.navEvts.subscribe(

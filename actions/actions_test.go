@@ -57,8 +57,8 @@ func (as *ActionSuite) Test_ContentDirLoad() {
 		cntRes := ContentsResponse{}
 		json.NewDecoder(res.Body).Decode(&cntRes)
 		if c.Name == "dir1" {
-			as.Equal(12, len(cntRes.Contents), fmt.Sprintf("Known content sizes %s", res.Body.String()))
-			as.Equal(12, cntRes.Count, "The count should be correct")
+			as.Equal(12, len(cntRes.Results), fmt.Sprintf("Known content sizes %s", res.Body.String()))
+			as.Equal(12, cntRes.Total, "The count should be correct")
 		}
 	}
 }

@@ -26,8 +26,8 @@ import (
 // View Template Folder: Plural (/templates/contents/)
 
 type ContentsResponse struct {
-	Count    int             `json:"count"`
-	Contents models.Contents `json:"contents"`
+	Total   int             `json:"total"`
+	Results models.Contents `json:"results"`
 }
 
 // ContentsResource is the resource for the Content model
@@ -47,15 +47,15 @@ func (v ContentsResource) List(c buffalo.Context) error {
 		}
 	}
 	man := managers.GetManager(&c)
-	contents, count, cErr := man.ListContentContext()
+	contents, total, cErr := man.ListContentContext()
 	if cErr != nil {
 		return c.Error(http.StatusInternalServerError, cErr)
 	}
-	log.Printf("Contents loaded found %d elements", count)
+	log.Printf("Contents loaded found %d elements", total)
 	if contents == nil {
 		contents = &models.Contents{}
 	}
-	cr := ContentsResponse{Count: count, Contents: *contents}
+	cr := ContentsResponse{Total: total, Results: *contents}
 	return c.Render(200, r.JSON(cr))
 }
 

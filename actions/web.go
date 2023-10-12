@@ -20,7 +20,7 @@ type HttpError struct {
 
 type SearchResult struct {
 	Total   int              `json:"total"`
-	Content *models.Contents `json:"content"`
+	Results *models.Contents `json:"results"`
 }
 
 // Builds out information given the application and the content directory
@@ -73,7 +73,7 @@ func SearchHandler(c buffalo.Context) error {
 	// log.Printf("Search content returned %s", mcs)
 	// TODO: Hmmm, maybe it should always load the screens in a sane fashion?
 	sr := SearchResult{
-		Content: mcs,
+		Results: mcs,
 		Total:   count,
 	}
 	return c.Render(200, r.JSON(sr))

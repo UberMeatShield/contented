@@ -93,39 +93,6 @@ func (cm ContentManagerMemory) ListContentContext() (*models.Contents, int, erro
 	return cm.ListContent(cs)
 }
 
-// Listing all content ignoring the containerID still should respect hidden content.
-func (cm ContentManagerMemory) ListAllContent(page int, per_page int) (*models.Contents, error) {
-	return cm.ListAllContentFiltered(page, per_page, false)
-}
-
-func (cm ContentManagerMemory) ListAllContentFiltered(page int, per_page int, includeHidden bool) (*models.Contents, error) {
-	m_arr := models.Contents{}
-	mem := cm.GetStore()
-	for _, m := range mem.ValidContent {
-		if includeHidden == false {
-			if m.Hidden == false {
-				m_arr = append(m_arr, m)
-			}
-		} else {
-			m_arr = append(m_arr, m)
-		}
-	}
-	if len(m_arr) == 0 {
-		return &m_arr, nil
-	}
-
-	// Did I create this just to sort by Idx across all content?  Kinda strange but required.
-	sort.SliceStable(m_arr, func(i, j int) bool {
-		return m_arr[i].Idx < m_arr[j].Idx
-	})
-	offset, end := GetOffsetEnd(page, per_page, len(m_arr))
-	if end > 0 { // If it is empty a slice ending in 0 = boom
-		m_arr = m_arr[offset:end]
-		return &m_arr, nil
-	}
-	return &m_arr, nil
-}
-
 // It should probably be able to search the container too?
 func (cm ContentManagerMemory) SearchContentContext() (*models.Contents, int, error) {
 	sr := ContextToSearchQuery(cm.Params(), cm.GetCfg())
@@ -242,6 +209,8 @@ func (cm ContentManagerMemory) getContentFiltered(containerID string, search str
 
 // TODO: Make it page but right now this will only be used in splash (regex it?)
 func (cm ContentManagerMemory) SearchContainers(cs ContainerQuery) (*models.Containers, int, error) {
+	limit := cs.PerPage
+	cs.PerPage = 90000 // Search everything in the filtered section
 	cnts, _, cErr := cm.ListContainersFiltered(cs)
 	if cErr != nil {
 		return nil, -1, cErr
@@ -256,7 +225,17 @@ func (cm ContentManagerMemory) SearchContainers(cs ContainerQuery) (*models.Cont
 			cArr = append(cArr, c)
 		}
 	}
-	return &cArr, len(cArr), nil
+
+	offset, end := GetOffsetEnd(cs.Page, limit, len(cArr))
+	sort.SliceStable(cArr, func(i, j int) bool {
+		return cArr[i].Idx < cArr[j].Idx
+	})
+	count := len(cArr)
+	if end > 0 { // If it is empty a slice ending in 0 = boom
+		cArr = cArr[offset:end]
+		return &cArr, count, nil
+	}
+	return &cArr, count, nil
 }
 
 // Awkard GoLang interface support is awkward
@@ -392,7 +371,6 @@ func (cm ContentManagerMemory) ListContainersFiltered(cs ContainerQuery) (*model
 		return c_arr[i].Idx < c_arr[j].Idx
 	})
 	count := len(c_arr)
-
 	offset, end := GetOffsetEnd(cs.Page, cs.PerPage, len(c_arr))
 	c_arr = c_arr[offset:end]
 	return &c_arr, count, nil

@@ -80,38 +80,37 @@ describe('TestingVideoBrowserCmp', () => {
         expect(vals['videoText']).toBe(st, "It should default via route params");
 
         MockData.handleContainerLoad(httpMock);
-
         let req = httpMock.expectOne(req => req.url === ApiDef.contented.search);
         let sr = MockData.getVideos()
 
-        expect(sr['content'].length).toBeGreaterThan(0, "We need some search results.");
+        expect(sr.results.length).withContext("We need some search results.").toBeGreaterThan(0);
         req.flush(sr);
         fixture.detectChanges();
-        expect($('.video-view-card').length).toEqual(sr['content'].length);
+        expect($('.video-view-card').length).toEqual(sr.results.length);
         tick(100);
     }));
 
     it("Will load up screens if they are not provided", fakeAsync(() => {
         let vRes = MockData.getVideos()
-        _.each(vRes.content, v => {
+        _.each(vRes.results, v => {
             v.screens = null;
         });
-
         fixture.detectChanges();
         MockData.handleContainerLoad(httpMock);
+
         let req = httpMock.expectOne(req => req.url === ApiDef.contented.search);
         req.flush(vRes);
         fixture.detectChanges();
-        tick(100);
+        tick(1000);
 
-        _.each(vRes.content, mc => {
-            let screenUrl = ApiDef.contented.contentScreens.replace("{mcID}", mc.id);
-            let screenReq = httpMock.expectOne(req => req.url == screenUrl);
+        _.each(vRes.results, content => {
+            let screenUrl = ApiDef.contented.contentScreens.replace("{mcID}", content.id);
+            let screenReq = httpMock.expectOne(req => req.url.includes(screenUrl));
             screenReq.flush(MockData.getScreens());
         });
         tick(1000);
         fixture.detectChanges();
-        expect($(".video-details").length).toEqual(4, "Should show 4 details sections");
+        expect($(".video-details").length).withContext("Should show 4 details sections").toEqual(4);
     }));
 });
 

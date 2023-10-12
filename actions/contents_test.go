@@ -77,8 +77,8 @@ func (as *ActionSuite) Test_ContentSubQuery_DB() {
 	json.NewDecoder(res1.Body).Decode(&validate1)
 	json.NewDecoder(res2.Body).Decode(&validate2)
 
-	as.Equal(2, len(validate1.Contents), "There should be 2 content containers found")
-	as.Equal(3, len(validate2.Contents), "There should be 3 in this one")
+	as.Equal(2, len(validate1.Results), "There should be 2 content containers found")
+	as.Equal(3, len(validate2.Results), "There should be 3 in this one")
 
 	// Add in a test that uses the search interface via the actions via DB
 	params := url.Values{}
@@ -87,7 +87,7 @@ func (as *ActionSuite) Test_ContentSubQuery_DB() {
 	as.Equal(http.StatusOK, res3.Code)
 	validate3 := SearchResult{}
 	json.NewDecoder(res3.Body).Decode(&validate3)
-	as.Equal(1, len(*validate3.Content), "We have one donut that is not hidden")
+	as.Equal(1, len(*validate3.Results), "We have one donut that is not hidden")
 }
 
 func (as *ActionSuite) Test_ManagerDB_Preview() {
@@ -121,7 +121,7 @@ func (as *ActionSuite) Test_MemoryAPIBasics() {
 	// Also validates that hidden content doesn't come back from the main listing API
 	validate := ContentsResponse{}
 	json.NewDecoder(res.Body).Decode(&validate)
-	as.Equal(test_common.TOTAL_MEDIA, len(validate.Contents), "It should have a known set of mock data")
+	as.Equal(test_common.TOTAL_MEDIA, len(validate.Results), "It should have a known set of mock data")
 
 	// I feel like this should be failing?
 	res_search := as.JSON("/search/?text=Large").Get()
@@ -129,7 +129,7 @@ func (as *ActionSuite) Test_MemoryAPIBasics() {
 
 	validate_search := SearchResult{}
 	json.NewDecoder(res_search.Body).Decode(&validate_search)
-	as.Equal(5, len(*validate_search.Content), fmt.Sprintf("In memory should have these %s", res_search.Body.String()))
+	as.Equal(5, len(*validate_search.Results), fmt.Sprintf("In memory should have these %s", res_search.Body.String()))
 }
 
 func (as *ActionSuite) Test_ContentsResource_List() {
@@ -141,8 +141,8 @@ func (as *ActionSuite) Test_ContentsResource_List() {
 
 	validate := ContentsResponse{}
 	json.NewDecoder(res.Body).Decode(&validate)
-	as.Equal(src, validate.Contents[0].Src)
-	as.Equal(1, len(validate.Contents), "One item should be in the DB")
+	as.Equal(src, validate.Results[0].Src)
+	as.Equal(1, len(validate.Results), "One item should be in the DB")
 }
 
 func (as *ActionSuite) Test_ContentsResource_Show() {
@@ -242,5 +242,5 @@ func ActionsTagSearchValidation(as *ActionSuite) {
 
 	validate := SearchResult{}
 	json.NewDecoder(res.Body).Decode(&validate)
-	as.Equal(1, len(*validate.Content), fmt.Sprintf("Searching tags return content"))
+	as.Equal(1, len(*validate.Results), fmt.Sprintf("Searching tags return content"))
 }

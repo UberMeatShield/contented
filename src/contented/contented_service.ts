@@ -87,6 +87,7 @@ export class ContentedService {
 
     public fullLoadDir(cnt, limit = null) {
         if (cnt.count === cnt.total) {
+            console.log("Count = total, ignoring", cnt)
             return observableFrom(Promise.resolve(cnt));
         }
 
@@ -100,8 +101,8 @@ export class ContentedService {
                 let delayP = new Promise((yupResolve, nopeReject) => {
                     this.getFullContainer(cnt.id, offset, limit).subscribe(res => {
                         _.delay(() => {
-                            // Hmmm, buildImgs is strange
-                            cnt.addContents(cnt.buildImgs(res.contents));
+                            // Hmmm, buildImgs is strange and should be fixed up
+                            cnt.addContents(cnt.buildImgs(res.results));
                             yupResolve(cnt);
                         }, idx * 500);
                     }, err => {
@@ -142,8 +143,8 @@ export class ContentedService {
         }).pipe(
             map((res: any) => {
                 return {
-                    count: res.count,
-                    contents: _.map(res.contents, c => new Content(c)),
+                    total: res.total,
+                    results: _.map(res.results, c => new Content(c)),
                 }
             }),
             catchError(err => this.handleError(err))
@@ -171,7 +172,7 @@ export class ContentedService {
                 params: this.getPaginationParams(0, this.LIMIT),
                 headers: this.options.headers
             }).pipe(map((res: any) => {
-                return cnt.addContents(cnt.buildImgs(res.contents));
+                return cnt.addContents(cnt.buildImgs(res.results));
             }));
         }
     }
@@ -187,7 +188,14 @@ export class ContentedService {
         }
         return this.http.get(ApiDef.contented.search, {
             params: params
-        });
+        }).pipe(
+            map((res: any) => {
+                return {
+                    total: res.total,
+                    results: _.map(res.results, r => new Content(r)),
+                }
+            })
+        );
     }
 
     public saveContent(content: Content) {

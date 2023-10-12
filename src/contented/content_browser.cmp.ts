@@ -157,8 +157,10 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
 
     public selectContainer(cnt: Container) {
         let idx = _.findIndex(this.allCnts, {id: cnt.id})
+        console.log("Selected container", cnt.id, idx);
         if (idx >= 0) {
             this.idx = idx;
+            console.log("This idx", this.idx)
             this.selectionEvt();
         }
     }
@@ -167,6 +169,9 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
     // what has been selected.
     public selectionEvt() {
         let cnt = this.getCurrentContainer();
+        console.log(
+            "Selected container ID", cnt.id
+        )
         GlobalNavEvents.selectContent(cnt.getContent(), cnt);
         this.updateRoute();
     }
@@ -225,10 +230,9 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
     }
 
     public fullLoadDir(cnt: Container) {
-        console.log("Full load directory");
         this._contentedService.fullLoadDir(cnt).subscribe(
             (loadedCnt: Container) => {
-                console.log("Fully loaded up the container", loadedCnt);
+                console.log("Fully loaded up the container", loadedCnt.id);
                 GlobalNavEvents.selectContent(loadedCnt.getContent(), loadedCnt);
             },
             err => {console.error("Failed to load", err); }
@@ -244,9 +248,8 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
         currDir.rowIdx = rowIdx;
 
         console.log("LoadView", currDir, rowIdx, triggerSelect);
-
         // This handles the case where we need to fully load a container to reach the row
-        if (rowIdx > currDir.count) {
+        if (rowIdx >= currDir.count) {
             this.fullLoadDir(currDir);
         } else if (triggerSelect) {
             let cnt = this.getCurrentContainer();

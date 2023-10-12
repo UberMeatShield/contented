@@ -40,6 +40,10 @@ class MockLoader {
         return _.clone(require('./video_content.json'));
     }
 
+    public getFullContainer() {
+        return _.clone(require('./full.json'));
+    }
+
     public taskRequest(taskId: string) {
         let tasks = _.clone(require('./task_requests.json'));
         let task = tasks[0];
@@ -51,23 +55,24 @@ class MockLoader {
         return _.clone(require('./task_requests.json'));
     }
 
-    public getContent(container_id = null, count = null) {
+    public getContent(container_id = null, total = null) {
         let res = _.clone(require('./content.json'));
         if (container_id) {
-            _.each(res.contents, content => {
+            _.each(res.results, content => {
                 content.id = content.id + container_id;
                 content.container_id = container_id;
             });
         }
         // TODO: Create fake content / id info if given a count
         return {
-            contents: res.contents.slice(0, count),
-            count: count,
+            results: res.results.slice(0, total),
+            total: total,
         };
     }
 
-    public getFullContainer() {
-        return require('./full.json');
+    public getContentArr(container_id = null, total = null) {
+        let cRes = this.getContent(container_id, total);
+        return _.map(cRes.results, r => new Content(r));
     }
 
     public getMockDir(count: number, itemPrefix: string = 'item-', offset: number = 0, total = 20) {
@@ -87,6 +92,14 @@ class MockLoader {
             contents: contents  // Note the API does not currently return contents
         };
         return fakeDirResponse;
+    }
+
+    public getContentsResponse(count: number, itemPrefix: string = "item-", offset: number = 0, total = 20) {
+        let cnt = this.getMockDir(count, itemPrefix, offset, total);
+        return {
+            total: total,
+            results: cnt.contents,
+        }
     }
 
     public handleCmpDefaultLoad(httpMock, fixture = null) {
@@ -109,17 +122,15 @@ class MockLoader {
             let url = ApiDef.contented.containerContent.replace('{cId}', cnt.id);
             let reqs = httpMock.match(r => r.url.includes(url));
             _.each(reqs, req => {
-                let res = this.getContent(cnt.name, count);
+                let res = this.getContent(cnt.name, cnt.count)
                 req.flush(res);
             });
-            // reqs = httpMock.match(r => r.url.includes("content"));
         });
     }
 
-    // hate
     public getImg() {
         let res = this.getContent("10", 1);
-        let actualContent = res.contents[0];
+        let actualContent = res.results[0];
         return new Content(actualContent);
     }
 }

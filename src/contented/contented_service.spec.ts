@@ -87,9 +87,7 @@ describe('TestingContentedService', () => {
         service.fullLoadDir(dir, 5000);
 
         let url = ApiDef.contented.containerContent.replace('{cId}', dir.id);
-        let calls = httpMock.match((req: HttpRequest<any>) => {
-            return req.url === url;
-        });
+        let calls = httpMock.match(r => r.url.includes(url));
         expect(calls.length).toEqual(9, 'It should make a lot of calls');
 
         let expectedMaxFound = false;
@@ -106,9 +104,9 @@ describe('TestingContentedService', () => {
             }
             const toCreate = (offset + limit) < total ? limit : (total - offset);
 
-            let resN = MockData.getMockDir(toCreate, 'i-', offset, total);
-            expect(resN.contents.length).toEqual(toCreate, "It should create N entries");
-            req.flush({contents: resN.contents, count: total});
+            let resN = MockData.getContentsResponse(toCreate, 'i-', offset, total);
+            expect(resN.results.length).toEqual(toCreate, "It should create N entries");
+            req.flush(resN)
         });
         tick(100000);
         expect(dir.contents.length).toEqual(total, 'It should load all content');

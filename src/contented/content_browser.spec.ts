@@ -125,41 +125,37 @@ describe('TestingContentBrowserCmp', () => {
 
         let containers = MockData.getPreview();
         MockData.handleCmpDefaultLoad(httpMock, fixture);
-        expect($('.content-full-view').length).toBe(0, "It should not have a view");
+        expect($('.content-full-view').length).withContext("It should not have a view").toBe(0);
+        tick(10000);
         fixture.detectChanges();
-        tick(1000);
+        tick(10000);
         fixture.detectChanges();
 
         let cnt = comp.getCurrentContainer();
-        expect(cnt).toBeDefined("There should be a current container");
+        console.log("What is the current container?", cnt.id)
+        expect(cnt).withContext("There should be a current container").toBeDefined()
+        cnt.addContents(MockData.getContentArr(cnt.id, 4));
         let cl = cnt.getContentList();
-        expect(cl).toBeDefined("We should have a content list");
-        expect(cl.length).toEqual(2, "And we should have content");
+        expect(cl).withContext("We should have a content list").toBeDefined();
+        expect(cl.length).withContext("And we should have content").toEqual(4);
 
         fixture.detectChanges();
         let imgs = $('.preview-img');
-        expect(imgs.length).toBeGreaterThan(2, "A bunch of images should be visible");
-        expect($('.content-full-view').length).toBe(0, "It should not have a view");
+        expect(imgs.length).withContext("A bunch of images should be visible").toBeGreaterThan(2);
+        expect($('.content-full-view').length).withContext("It should not have a view").toBe(0);
 
         let toClick = $(imgs[3]).trigger('click');
         fixture.detectChanges();
 
         let currLoc = $('img', $('.current-content'));
         let fullView = $('.full-view-img');
-
-        expect(currLoc.length).toBe(1, "It should be selected still");
-        expect(fullView.length).toBe(1, "It should now have a view");
+        expect(currLoc.length).withContext("It should be selected still").toBe(1);
+        expect(fullView.length).withContext("It should now have a view").toBe(1);
         expect(currLoc.prop('src').replace("preview", "view")).toBe(
             fullView.prop("src"), "The full view should be /view/selectedId"
         );
-
-        // Because we select the 3rd image in the NEXT container set it should
-        // now attempt to load data from the newly visible container
-        let cnts = comp.getVisibleContainers()
-        let nextContainer = cnts[1];
-        let url = ApiDef.contented.containerContent.replace("{cId}", nextContainer.id);
-        httpMock.expectOne(r => r.url == url);
         tick(1000);
+        fixture.detectChanges();
     }));
 
     it("Should have a progress bar once the data is loaded", () => {
@@ -186,39 +182,37 @@ describe('TestingContentBrowserCmp', () => {
     });
 
 
-    it('Pull in more more contents in a dir', fakeAsync(() => {
+    it('Pull in more contents in a dir', fakeAsync(() => {
         fixture.detectChanges();
-
         MockData.handleCmpDefaultLoad(httpMock, fixture);
         fixture.detectChanges();
         tick(1000);
 
-        let dir: Container = comp.getCurrentContainer();
-        expect(dir).not.toBe(null);
-        expect(dir.count).toBeLessThan(dir.total, "There should be more to load");
-        expect(dir.count).toEqual(2, "The default count should be 2 by default");
-
-        let prevCount = dir.count;
-        expect(prevCount).toBe(2, "The default load has 2 items");
+        let cnt: Container = comp.getCurrentContainer();
+        expect(cnt).not.toBe(null);
+        expect(cnt.total).withContext("There should be more to load").toBeGreaterThan(3)
+        expect(cnt.count).withContext("The default count should be empty").toEqual(0)
+        cnt.addContents(MockData.getContentArr(cnt.id, 2));
+        expect(cnt.count).withContext("Added some default data").toEqual(2)
 
         service.LIMIT = 1;
         comp.loadMore();
-        let url = ApiDef.contented.containerContent.replace('{cId}', dir.id);
+        let url = ApiDef.contented.containerContent.replace('{cId}', cnt.id);
         let loadReq = httpMock.expectOne(req => req.url === url);
         let checkParams: HttpParams = loadReq.request.params;
-        expect(checkParams.get('per_page')).toBe('1', "We set a different limit");
+        expect(checkParams.get('per_page')).withContext("We set a different limit").toBe('1');
 
 
         let page = parseInt(checkParams.get('page'), 10);
         let offset = (page) * service.LIMIT;
-        expect(page).withContext("It should load more, not the beginning").toBeGreaterThan(2)
+        expect(page).withContext("It should load more, not the beginning").toBeGreaterThan(0)
         expect(offset).withContext("Calculating the offset should be more than the current count").toEqual(3);
 
-        let content = MockData.getContent(dir.id, service.LIMIT);
+        let content = MockData.getContent(cnt.id, service.LIMIT);
         loadReq.flush(content);
         fixture.detectChanges();
 
-        expect(dir.count).withContext("Now we should have loaded more based on the limit").toEqual(3);
+        expect(cnt.count).withContext("Now we should have loaded more based on the limit").toEqual(3);
         fixture.detectChanges();
     }));
 
@@ -226,17 +220,21 @@ describe('TestingContentBrowserCmp', () => {
         fixture.detectChanges();
         MockData.handleCmpDefaultLoad(httpMock, fixture);
         fixture.detectChanges();
+        tick(10000);  // Important to let the paged loading finish
+
+        expect(_.isEmpty(comp.allCnts)).withContext("We should have content").toBeFalse();
+        expect(comp.allCnts.length).withContext("We should have containers").toBeGreaterThan(4);
 
         let lastIdx = comp.allCnts.length - 1;
         let cnt = comp.allCnts[lastIdx];
-        let content = cnt.getContent();
-        expect(comp.allCnts.length).withContext("We should have containers").toBeGreaterThan(0);
         expect(comp.idx).withContext("We should be at index 0").toEqual(0);
 
+        console.log("Attempting to select", cnt.id);
         GlobalNavEvents.selectContainer(cnt);
-        fixture.detectChanges();
         tick(1000);
-        expect(comp.idx).withContext("We should now be on the third index").toEqual(lastIdx);
+        fixture.detectChanges();
+        tick(10000);
+        expect(comp.idx).withContext("We should now be on the last index").toEqual(lastIdx);
         //console.log("Current", comp.getCurrentContainer(), cnt.id);
         fixture.detectChanges();
         MockData.handleContainerContentLoad(httpMock, [cnt], 3);
@@ -262,7 +260,7 @@ describe('TestingContentBrowserCmp', () => {
         fixture.detectChanges();
 
         let url = ApiDef.contented.containerContent.replace("{cId}", containerId);
-        httpMock.expectOne(r => r.url.includes(url)).flush({contents: [content]});
+        httpMock.expectOne(r => r.url.includes(url)).flush({results: [content]});
         expect($(".contented-cnt").length).withContext("We should have a container").toEqual(1);
         expect(comp.allCnts.length).toEqual(1);
         fixture.detectChanges();

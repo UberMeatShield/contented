@@ -2,6 +2,17 @@
   "total": 5,
   "results": [
     {
+      "id": "09986d65-3d93-49fa-879c-bbd4788f9815",
+      "total": 4,
+      "name": "dir2",
+      "created": "2023-10-11T09:32:32.783466Z",
+      "updated": "2023-10-12T09:47:14.763649Z",
+      "active": true,
+      "idx": 1,
+      "contents": null,
+      "previewUrl": "/preview/8d16b293-578c-4019-9627-5dda177a2375"
+    },
+    {
       "id": "fc0deb63-2bc0-4543-bf68-6d3cb160be39",
       "total": 12,
       "name": "dir1",
@@ -13,15 +24,15 @@
       "previewUrl": "/preview/0d9f7102-9238-4e90-9bd9-f7d8970ddff2"
     },
     {
-      "id": "09986d65-3d93-49fa-879c-bbd4788f9815",
-      "total": 4,
-      "name": "dir2",
-      "created": "2023-10-11T09:32:32.783466Z",
-      "updated": "2023-10-12T09:47:14.763649Z",
+      "id": "e7540203-280c-4fb9-bc62-6fda5a716453",
+      "total": 2,
+      "name": "screens_sub_dir",
+      "created": "2023-10-11T09:32:32.808355Z",
+      "updated": "2023-10-12T09:47:20.766627Z",
       "active": true,
-      "idx": 1,
+      "idx": 4,
       "contents": null,
-      "previewUrl": "/preview/8d16b293-578c-4019-9627-5dda177a2375"
+      "previewUrl": "/preview/afeac250-abe4-48e6-a503-4887b4a5b9f7"
     },
     {
       "id": "6118b9fa-874b-4da9-a01e-5e378d95537c",
@@ -44,17 +55,6 @@
       "idx": 3,
       "contents": null,
       "previewUrl": "/preview/d7ed2c17-dbe5-4389-8c3a-198699c40a3b"
-    },
-    {
-      "id": "e7540203-280c-4fb9-bc62-6fda5a716453",
-      "total": 2,
-      "name": "screens_sub_dir",
-      "created": "2023-10-11T09:32:32.808355Z",
-      "updated": "2023-10-12T09:47:20.766627Z",
-      "active": true,
-      "idx": 4,
-      "contents": null,
-      "previewUrl": "/preview/afeac250-abe4-48e6-a503-4887b4a5b9f7"
     }
   ]
 }
