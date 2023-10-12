@@ -113,12 +113,12 @@ func CreateTagsFromFile(cm ContentManager) (*models.Tags, error) {
 
 // Init a manager and pass it in or just do this via config value instead of a pass in
 func CreateAllPreviews(cm ContentManager) error {
-	cnts, c_err := cm.ListContainers(0, 9001) // Might need to make this smarter :(
+	cnts, _, c_err := cm.ListContainers(ContainerQuery{PerPage: 9001}) // Might need to make this smarter :(
 	if c_err != nil {
 		log.Printf("Failed to list all containers %s", c_err)
 		return c_err
 	}
-	if len(*cnts) == 0 {
+	if cnts == nil {
 		msg := "No Containers were found in the manager"
 		log.Printf(msg)
 		return errors.New(msg)
@@ -153,7 +153,7 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
 	}
 
 	// TODO: It should fix up the total count there (-1 for unlimited?)
-	content, q_err := cm.ListContent(c.ID, 0, 90000)
+	content, _, q_err := cm.ListContent(ContentQuery{ContainerID: c.ID.String(), PerPage: 90000})
 	if q_err != nil {
 		log.Fatal(q_err) // Also fatal if we can no longer list content
 	}

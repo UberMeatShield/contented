@@ -20,7 +20,7 @@ type HttpError struct {
 
 type SearchResult struct {
 	Total   int              `json:"total"`
-	Content *models.Contents `json:"content"`
+	Results *models.Contents `json:"results"`
 }
 
 // Builds out information given the application and the content directory
@@ -73,7 +73,7 @@ func SearchHandler(c buffalo.Context) error {
 	// log.Printf("Search content returned %s", mcs)
 	// TODO: Hmmm, maybe it should always load the screens in a sane fashion?
 	sr := SearchResult{
-		Content: mcs,
+		Results: mcs,
 		Total:   count,
 	}
 	return c.Render(200, r.JSON(sr))
@@ -93,20 +93,19 @@ func SplashHandler(c buffalo.Context) error {
 
 	sr := SplashResponse{}
 	if cfg.SplashContainerName != "" {
-		log.Printf("It should look up %s", cfg.SplashContainerName)
-		if cnts, err := man.SearchContainers(cfg.SplashContainerName, 1, 1, true); err == nil {
+		cs := managers.ContainerQuery{Search: cfg.SplashContainerName, PerPage: 1, Page: 1, IncludeHidden: true}
+		if cnts, _, err := man.SearchContainers(cs); err == nil {
 			if cnts != nil && len(*cnts) == 1 {
 				refs := *cnts // Ok, seriously why is the de-ref so annoying
 				cnt := refs[0]
 
 				// Limit the amount loaded for splash, could make it search based on render
 				// type but that is pretty over optimized.
-				contents, load_err := man.ListContent(cnt.ID, 1, 10)
+				contents, _, load_err := man.ListContent(managers.ContentQuery{ContainerID: cnt.ID.String(), PerPage: 100})
 				if load_err == nil {
 					cnt.Contents = *contents
 				}
 				sr.Container = &cnt
-
 			}
 		}
 	}

@@ -47,13 +47,14 @@ describe('TestingContentedService', () => {
 
         let preview = MockData.getPreview();
         service.getContainers().subscribe(
-            (dirs: Array<Container>) => {
-                expect(dirs.length).toEqual(preview.length, "It should kick back data");
+            (res) => {
+                expect(res.total).withContext("It should have a count").toEqual(preview.results.length);
 
-                _.each(dirs, dir => {
-                    expect(dir.name).toBeDefined("It should have a name");
-                    expect(dir.total).toBeGreaterThan(0, "There should be a total");
-                    expect(dir.count).toBe(0, "We have not loaded data at this point");
+                let cnts = res.results;
+                _.each(cnts, cnt => {
+                    expect(cnt.name).withContext("They should have names").toBeDefined();
+                    expect(cnt.total).withContext("A Total should exist").toBeGreaterThan(0);
+                    expect(cnt.count).withContext("And data should be loaded").toBe(0);
                 });
                 reallyRan = true;
             },
@@ -86,16 +87,14 @@ describe('TestingContentedService', () => {
         service.fullLoadDir(dir, 5000);
 
         let url = ApiDef.contented.containerContent.replace('{cId}', dir.id);
-        let calls = httpMock.match((req: HttpRequest<any>) => {
-            return req.url === url;
-        });
+        let calls = httpMock.match(r => r.url.includes(url));
         expect(calls.length).toEqual(9, 'It should make a lot of calls');
 
         let expectedMaxFound = false;
         _.each(calls, req => {
             const limit = parseInt(req.request.params.get('per_page'), 10);
             const page = parseInt(req.request.params.get('page'), 10);
-            expect(page).toBeLessThan(12, "There should only be 9 page requests, we already loaded 2");
+            expect(page).withContext( "There should only be 9 page requests, we already loaded 2").toBeLessThan(12)
             const offset = (page - 1) * limit;
 
             expect(limit).toEqual(5000, 'The limit should be adjusted');
@@ -105,9 +104,9 @@ describe('TestingContentedService', () => {
             }
             const toCreate = (offset + limit) < total ? limit : (total - offset);
 
-            let resN = MockData.getMockDir(toCreate, 'i-', offset, total);
-            expect(resN.contents.length).toEqual(toCreate, "It should create N entries");
-            req.flush(resN.contents);
+            let resN = MockData.getContentsResponse(toCreate, 'i-', offset, total);
+            expect(resN.results.length).toEqual(toCreate, "It should create N entries");
+            req.flush(resN)
         });
         tick(100000);
         expect(dir.contents.length).toEqual(total, 'It should load all content');
@@ -117,27 +116,27 @@ describe('TestingContentedService', () => {
     }));
 
     it('Can load the entire container', fakeAsync(() => {
-        let dirs: Array<Container> = null;
+        let cnts: Array<Container> = null;
         service.getContainers().subscribe(
-            (previewDirs: Array<Container>) => {
-                dirs = previewDirs;
+            (res) => {
+                cnts = res.results;
             },
             err => {
                 fail(err);
             }
         );
-        let preview = _.clone(MockData.getPreview());
+        let cntRes = _.clone(MockData.getPreview());
 
         let total = 30;
-        preview[0].total = total;
+        cntRes.results[0].total = total;
         let previewReq = httpMock.expectOne(req => req.url === ApiDef.contented.containers);
         let params: HttpParams = previewReq.request.params;
-        previewReq.flush(preview);
+        previewReq.flush(cntRes);
 
-        expect(dirs.length).toBeGreaterThan(1, "Should have containers");
-        expect(dirs[0].total).toEqual(total);
+        expect(cnts.length).toBeGreaterThan(1, "Should have containers");
+        expect(cnts[0].total).toEqual(total);
 
-        let content = dirs[0];
+        let content = cnts[0];
         expect(content.count).toBeLessThan(content.total, "We should not be loaded");
 
         let loaded: Container;

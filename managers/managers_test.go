@@ -61,19 +61,19 @@ func ManagersTagSearchValidation(as *ActionSuite, man ContentManager) {
 	as.NoError(man.AssociateTagByID("B", b.ID))
 	as.NoError(man.AssociateTagByID("OR", b.ID))
 
-	_, count, err := man.SearchContent(SearchRequest{})
+	_, count, err := man.SearchContent(SearchQuery{})
 	as.NoError(err, "It should search empty content")
 	as.Equal(count, 2, "And return all the contents")
 
-	_, tCount, tErr := man.SearchContent(SearchRequest{Tags: []string{"A"}, Text: "File"})
+	_, tCount, tErr := man.SearchContent(SearchQuery{Tags: []string{"A"}, Text: "File"})
 	as.NoError(tErr, "A tag join shouldn't explode")
 	as.Equal(tCount, 1, "And it should only get A Back")
 
-	_, orCount, orErr := man.SearchContent(SearchRequest{Tags: []string{"OR", "A"}})
+	_, orCount, orErr := man.SearchContent(SearchQuery{Tags: []string{"OR", "A"}})
 	as.NoError(orErr, "A tag join shouldn't explode")
 	as.Equal(orCount, 2, "And it should get both objects Back")
 
-	_, noCount, noErr := man.SearchContent(SearchRequest{Tags: []string{"A"}, Text: "YAAARG"})
+	_, noCount, noErr := man.SearchContent(SearchQuery{Tags: []string{"A"}, Text: "YAAARG"})
 	as.NoError(noErr, "It should not error")
 	as.Equal(noCount, 0, "But it shouldn't match the text")
 }

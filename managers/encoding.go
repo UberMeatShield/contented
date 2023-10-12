@@ -15,11 +15,11 @@ import (
 
 // Init a manager and pass it in or just do this via config value instead of a pass in
 func EncodeVideos(cm ContentManager) error {
-	cnts, c_err := cm.ListContainers(0, 9001) // Might need to make this smarter (obviously)
+	cnts, _, c_err := cm.ListContainers(ContainerQuery{PerPage: 9001})
 	if c_err != nil {
 		return c_err
 	}
-	if len(*cnts) == 0 {
+	if cnts == nil {
 		return errors.New("No Containers were found in the database")
 	}
 
@@ -68,7 +68,7 @@ func EncodeVideos(cm ContentManager) error {
 }
 
 func EncodeContainer(c *models.Container, cm ContentManager) (*utils.EncodingResults, error) {
-	content, q_err := cm.ListContent(c.ID, 0, 90000)
+	content, _, q_err := cm.ListContent(ContentQuery{ContainerID: c.ID.String(), PerPage: 90000})
 	if q_err != nil {
 		log.Fatal(q_err) // Also fatal if we can no longer list content (empty is just [])
 	}

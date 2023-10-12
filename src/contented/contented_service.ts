@@ -29,8 +29,11 @@ export class ContentedService {
     public getContainers() {
         return this.http.get(ApiDef.contented.containers, this.options)
             .pipe(
-                map(res => {
-                    return _.map(res, cnt => new Container(cnt));
+                map((res: any) => {
+                    return {
+                        total: res.total,
+                        results: _.map(res.results, cnt => new Container(cnt)),
+                    };
                 }),
                 catchError(err => this.handleError(err))
             );
@@ -40,8 +43,11 @@ export class ContentedService {
         let url = ApiDef.contented.contentScreens.replace("{mcID}", contentID);
         return this.http.get(url, this.options)
             .pipe(
-                map(res => {
-                    return _.map(res, s => new Screen(s));
+                map((res: any) => {
+                    return {
+                        count: res.count,
+                        results:  _.map(res.results, s => new Screen(s))
+                    };
                 }),
                 catchError(err => this.handleError(err))
             );
@@ -81,6 +87,7 @@ export class ContentedService {
 
     public fullLoadDir(cnt, limit = null) {
         if (cnt.count === cnt.total) {
+            console.log("Count = total, ignoring", cnt)
             return observableFrom(Promise.resolve(cnt));
         }
 
@@ -94,7 +101,8 @@ export class ContentedService {
                 let delayP = new Promise((yupResolve, nopeReject) => {
                     this.getFullContainer(cnt.id, offset, limit).subscribe(res => {
                         _.delay(() => {
-                            cnt.addContents(cnt.buildImgs(res));
+                            // Hmmm, buildImgs is strange and should be fixed up
+                            cnt.addContents(cnt.buildImgs(res.results));
                             yupResolve(cnt);
                         }, idx * 500);
                     }, err => {
@@ -132,7 +140,15 @@ export class ContentedService {
         return this.http.get(url, {
             params: this.getPaginationParams(offset, limit),
             headers: this.options.headers
-        }).pipe(catchError(err => this.handleError(err)));
+        }).pipe(
+            map((res: any) => {
+                return {
+                    total: res.total,
+                    results: _.map(res.results, c => new Content(c)),
+                }
+            }),
+            catchError(err => this.handleError(err))
+        );
     }
 
     public getPaginationParams(offset: number = 0, limit: number = 0) {
@@ -155,8 +171,8 @@ export class ContentedService {
             return this.http.get(url, {
                 params: this.getPaginationParams(0, this.LIMIT),
                 headers: this.options.headers
-            }).pipe(map((imgData: Array<any>) => {
-                return cnt.addContents(cnt.buildImgs(imgData));
+            }).pipe(map((res: any) => {
+                return cnt.addContents(cnt.buildImgs(res.results));
             }));
         }
     }
@@ -172,7 +188,14 @@ export class ContentedService {
         }
         return this.http.get(ApiDef.contented.search, {
             params: params
-        });
+        }).pipe(
+            map((res: any) => {
+                return {
+                    total: res.total,
+                    results: _.map(res.results, r => new Content(r)),
+                }
+            })
+        );
     }
 
     public saveContent(content: Content) {

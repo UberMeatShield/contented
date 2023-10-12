@@ -33,9 +33,10 @@ func (as *ActionSuite) Test_DbManagerSearch() {
 	c2_err := man.CreateContainer(cnt2)
 	as.NoError(c2_err)
 
-	cnts, s_err := man.SearchContainers("dir1", 1, 2, false)
+	cnts, count, s_err := man.SearchContainers(ContainerQuery{Search: "dir1", Page: 1, PerPage: 2})
 	as.NoError(s_err, "Searching for dir1 caused an error")
 	as.Equal(1, len(*cnts), "We should only get one container back")
+	as.Equal(1, count, "It should get the count right")
 
 	for _, mc := range content1 {
 		man.CreateContent(&mc)
@@ -48,26 +49,26 @@ func (as *ActionSuite) Test_DbManagerSearch() {
 		}
 	}
 
-	sr := SearchRequest{Text: "Large", Page: 1, PerPage: 20}
+	sr := SearchQuery{Text: "Large", Page: 1, PerPage: 20}
 	mcs, _, err := man.SearchContent(sr)
 	as.NoError(err, "It should be able to search")
 	as.NotNil(mcs, "It should be")
 	as.Equal(3, len(*mcs), fmt.Sprintf("We should have 3 large images with an ilike %s", mcs))
 
-	sr = SearchRequest{Text: "donut", Page: 1, PerPage: 10}
+	sr = SearchQuery{Text: "donut", Page: 1, PerPage: 10}
 	mcs_d, vsTotal, vErr := man.SearchContent(sr)
 	as.NoError(vErr, "Video error by name search failed")
 	as.Equal(1, vsTotal, "We should be able to find donut.mp4 with an ilike")
 	mc_donut := (*mcs_d)[0]
 	as.Equal(2, len(mc_donut.Screens), fmt.Sprintf("It should load two screens %s", mc_donut.Screens))
 
-	sr = SearchRequest{Page: 1, PerPage: 40, ContentType: "video"}
+	sr = SearchQuery{Page: 1, PerPage: 40, ContentType: "video"}
 	vids, vidTotal, dbErr := man.SearchContent(sr)
 	as.NoError(dbErr, "Should search content type")
 	as.Equal(1, vidTotal, "The total count for videos is 1")
 	as.Equal(1, len(*vids), "We should have one result")
 
-	sr = SearchRequest{Page: 1, PerPage: 10, ContainerID: cnt1.ID.String()}
+	sr = SearchQuery{Page: 1, PerPage: 10, ContainerID: cnt1.ID.String()}
 	all_mcs, total, err := man.SearchContent(sr)
 	as.NoError(err, "It should be able to empty search")
 	as.Equal(12, total, "The total count for this dir is 12")
@@ -91,17 +92,17 @@ func (as *ActionSuite) Test_DbManagerMultiSearch() {
 	as.NoError(err2)
 	as.Greater(len(content2), 1)
 
-	sr := SearchRequest{Text: content1[1].Src, PerPage: 10, ContainerID: cnt1.ID.String()}
+	sr := SearchQuery{Text: content1[1].Src, PerPage: 10, ContainerID: cnt1.ID.String()}
 	found, count, err := man.SearchContent(sr)
 	as.Equal(len(*found), 1, "We should have found our item")
 	as.Equal(count, 1)
 	as.NoError(err)
 
-	sr = SearchRequest{Text: "blah", ContainerID: cnt1.ID.String()}
+	sr = SearchQuery{Text: "blah", ContainerID: cnt1.ID.String()}
 	_, n_count, n_err := man.SearchContent(sr)
 	as.Equal(n_count, 0, "It should not find this the content name is invalid")
 	as.NoError(n_err)
-	sr = SearchRequest{Text: content1[1].Src, ContainerID: cnt2.ID.String()}
+	sr = SearchQuery{Text: content1[1].Src, ContainerID: cnt2.ID.String()}
 
 	_, not_in_cnt_count, not_err := man.SearchContent(sr)
 	as.Equal(not_in_cnt_count, 0, "It should not find this valid content as it is not in the container")
@@ -124,12 +125,14 @@ func (as *ActionSuite) Test_ManagerDB() {
 	}
 
 	man := GetManagerActionSuite(cfg, as)
-	q_content, err := man.ListAllContent(0, 14)
+	q_content, count, err := man.ListContent(ContentQuery{PerPage: 14})
 	as.NoError(err, "We should be able to list")
 	as.Equal(len(*q_content), 12, "there should be 12 results")
+	as.Equal(count, 12, "Count should be the same")
 
-	lim_content, _ := man.ListAllContent(0, 3)
+	lim_content, count, _ := man.ListContent(ContentQuery{PerPage: 3})
 	as.Equal(3, len(*lim_content), "The DB should be setup with 10 items")
+	as.Equal(12, count, "The count does not care about the page")
 }
 
 func (as *ActionSuite) Test_ManagerTagsDB() {
@@ -182,9 +185,10 @@ func (as *ActionSuite) Test_DbManager_AssociateTags() {
 	as.NoError(t_err, "We should be able to list tags.")
 	as.Equal(2, len(*tags), fmt.Sprintf("There should be two tags %s", mc))
 
-	screens, s_err := man.ListScreens(mc.ID, 0, 10)
+	screens, count, s_err := man.ListScreens(ScreensQuery{ContentID: mc.ID.String()})
 	as.NoError(s_err, "Screens should list")
 	as.Equal(1, len(*screens), "We should have a screen associated")
+	as.Equal(1, count, "We should have a proper screen count")
 
 	tCheck, _ := man.GetContent(mc.ID)
 	as.Equal(2, len(tCheck.Tags), fmt.Sprintf("It should eager load tags %s", tCheck))
@@ -229,13 +233,15 @@ func (as *ActionSuite) Test_ManagerDBPreviews() {
 	man.CreateScreen(&p2)
 	man.CreateScreen(&p3)
 
-	previewList, err := man.ListScreens(mc1.ID, 1, 10)
+	previewList, count1, err := man.ListScreens(ScreensQuery{ContentID: mc1.ID.String()})
 	as.NoError(err)
 	as.Equal(len(*previewList), 2, "We should have two previews")
+	as.Equal(count1, 2, "We should have two previews")
 
-	previewOne, p_err := man.ListScreens(mc2.ID, 1, 10)
+	previewOne, count2, p_err := man.ListScreens(ScreensQuery{ContentID: mc2.ID.String()})
 	as.NoError(p_err)
 	as.Equal(len(*previewOne), 1, "Now there should be 1")
+	as.Equal(count2, 1, "Now there should be 1")
 
 	p4 := models.Screen{Src: "fake4.png", Idx: 1, ContentID: mc2.ID}
 	c_err := man.CreateScreen(&p4)

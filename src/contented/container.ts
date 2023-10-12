@@ -40,7 +40,9 @@ export class Container {
         this.id = _.get(cnt, 'id') || '';
         this.name = _.get(cnt, 'name') || '';
         this.previewUrl = _.get(cnt, 'previewUrl') || '';
-        this.setContents(this.buildImgs(_.get(cnt, 'contents') || []));
+        this.setContents(
+            this.buildImgs(_.get(cnt, 'contents') || [])
+        );
     }
 
     public getCurrentContent() {

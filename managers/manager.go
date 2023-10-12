@@ -34,7 +34,8 @@ type GetConnType func() *pop.Connection
 type GetParamsType func() *url.Values
 type GetAppWorker func() worker.Worker
 
-type SearchRequest struct {
+// TODO: Make it Search vs Name(Src)
+type SearchQuery struct {
 	Text        string   `json:"text" default:""`
 	Page        int      `json:"page" default:"1"`
 	PerPage     int      `json:"per_page" default:"10"`
@@ -51,7 +52,30 @@ type TaskQuery struct {
 	Status    string `json:"status" default:""`
 }
 
-func (sr SearchRequest) String() string {
+type ScreensQuery struct {
+	Text      string `json:"text" default:""`
+	Page      int    `json:"page" default:"1"`
+	PerPage   int    `json:"per_page" default:"100"`
+	ContentID string `json:"content_id" default:""`
+}
+
+type ContainerQuery struct {
+	Name          string `json:"name" default:""`
+	Search        string `json:"search" default:""`
+	Page          int    `json:"page" default:"1"`
+	PerPage       int    `json:"per_page" default:"100"`
+	IncludeHidden bool   `json:"hidden" default:"false"`
+}
+
+type ContentQuery struct {
+	Text          string `json:"text" default:""`
+	Page          int    `json:"page" default:"1"`
+	PerPage       int    `json:"per_page" default:"1000"`
+	ContainerID   string `json:"container_id" default:""`
+	IncludeHidden bool   `json:"hidden" default:"false"`
+}
+
+func (sr SearchQuery) String() string {
 	s, _ := json.MarshalIndent(sr, "", "  ")
 	return string(s)
 }
@@ -67,37 +91,37 @@ type ContentManager interface {
 
 	// Container Management
 	GetContainer(cID uuid.UUID) (*models.Container, error)
-	ListContainers(page int, per_page int) (*models.Containers, error)
-	ListContainersFiltered(page int, per_page int, includeHidden bool) (*models.Containers, error)
-	ListContainersContext() (*models.Containers, error)
+	ListContainers(cq ContainerQuery) (*models.Containers, int, error)
+	ListContainersFiltered(cq ContainerQuery) (*models.Containers, int, error)
+	ListContainersContext() (*models.Containers, int, error)
 	UpdateContainer(c *models.Container) (*models.Container, error)
 	CreateContainer(c *models.Container) error
 	DestroyContainer(id string) (*models.Container, error)
 
 	// Content listing (why did I name it Content vs Media?)
 	GetContent(content_id uuid.UUID) (*models.Content, error)
-	ListContent(ContainerID uuid.UUID, page int, per_page int) (*models.Contents, error)
-	ListContentContext(ContainerID uuid.UUID) (*models.Contents, error)
-	ListAllContent(page int, per_page int) (*models.Contents, error)
+	ListContent(cs ContentQuery) (*models.Contents, int, error)
+	ListContentContext() (*models.Contents, int, error)
+
 	SearchContentContext() (*models.Contents, int, error)
-	SearchContent(sr SearchRequest) (*models.Contents, int, error)
-	SearchContainers(search string, page int, per_page int, includeHidden bool) (*models.Containers, error)
+	SearchContent(sr SearchQuery) (*models.Contents, int, error)
+	SearchContainers(cs ContainerQuery) (*models.Containers, int, error)
+
 	UpdateContent(content *models.Content) error
 	DestroyContent(id string) (*models.Content, error)
 	CreateContent(mc *models.Content) error
 	GetPreviewForMC(mc *models.Content) (string, error)
 
 	// Functions that help with viewing movie screens if found.
-	ListAllScreens(page int, per_page int) (*models.Screens, error)
-	ListAllScreensContext() (*models.Screens, error)
-	ListScreensContext(mcID uuid.UUID) (*models.Screens, error)
-	ListScreens(mcID uuid.UUID, page int, per_page int) (*models.Screens, error)
+	ListScreensContext() (*models.Screens, int, error)
+	ListScreens(sr ScreensQuery) (*models.Screens, int, error)
+
 	GetScreen(psID uuid.UUID) (*models.Screen, error)
 	CreateScreen(s *models.Screen) error
 	UpdateScreen(s *models.Screen) error
 	DestroyScreen(id string) (*models.Screen, error)
 
-	// Tags listing
+	// Tags listing (oy do I need to deal with this?)
 	GetTag(id string) (*models.Tag, error)
 	ListAllTags(page int, perPage int) (*models.Tags, error)
 	ListAllTagsContext() (*models.Tags, error)
@@ -246,9 +270,9 @@ func GetPagination(params pop.PaginationParams, DefaultLimit int) (int, int, int
 }
 
 // TODO: Fill in tags if they are provided.
-func ContextToSearchRequest(params pop.PaginationParams, cfg *utils.DirConfigEntry) SearchRequest {
+func ContextToSearchQuery(params pop.PaginationParams, cfg *utils.DirConfigEntry) SearchQuery {
 	_, per_page, page := GetPagination(params, cfg.Limit)
-	sReq := SearchRequest{
+	sReq := SearchQuery{
 		Text:        StringDefault(params.Get("text"), ""),
 		ContainerID: StringDefault(params.Get("cId"), ""),
 		ContentType: StringDefault(params.Get("contentType"), ""),
@@ -371,13 +395,13 @@ func WebpFromScreensTask(man ContentManager, id uuid.UUID) error {
 
 // HMMMM, should this be smarter?
 func WebpFromContent(man ContentManager, content *models.Content) (string, error) {
-	screens, err := man.ListScreens(content.ID, 1, 9000)
+	sr := ScreensQuery{ContentID: content.ID.String()}
+	screens, count, err := man.ListScreens(sr)
 	if err != nil {
 		return "", err
 	}
 
-	// Good test case... hmmm
-	if screens == nil || len(*screens) == 0 {
+	if screens == nil || count <= 0 {
 		return "", errors.New("Not enough screens to create a preview")
 	}
 	_, cnt, err := GetContentAndContainer(man, content.ID)
@@ -442,7 +466,7 @@ func CreateContentAfterEncoding(man ContentManager, originalContent *models.Cont
 	if f, ok := os.Stat(newFile); ok == nil {
 
 		// Check if we already have a content object for this.
-		sr := SearchRequest{Text: f.Name(), ContainerID: originalContent.ContainerID.UUID.String()}
+		sr := SearchQuery{Text: f.Name(), ContainerID: originalContent.ContainerID.UUID.String()}
 		contents, _, err := man.SearchContent(sr)
 		if err != nil {
 			return nil, err

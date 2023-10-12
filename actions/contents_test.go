@@ -72,13 +72,13 @@ func (as *ActionSuite) Test_ContentSubQuery_DB() {
 	as.Equal(http.StatusOK, res2.Code)
 	// Add resources to both
 	// Filter based on container
-	validate1 := models.Contents{}
-	validate2 := models.Contents{}
+	validate1 := ContentsResponse{}
+	validate2 := ContentsResponse{}
 	json.NewDecoder(res1.Body).Decode(&validate1)
 	json.NewDecoder(res2.Body).Decode(&validate2)
 
-	as.Equal(len(validate1), 2, "There should be 2 content containers found")
-	as.Equal(len(validate2), 3, "There should be 3 in this one")
+	as.Equal(2, len(validate1.Results), "There should be 2 content containers found")
+	as.Equal(3, len(validate2.Results), "There should be 3 in this one")
 
 	// Add in a test that uses the search interface via the actions via DB
 	params := url.Values{}
@@ -87,7 +87,7 @@ func (as *ActionSuite) Test_ContentSubQuery_DB() {
 	as.Equal(http.StatusOK, res3.Code)
 	validate3 := SearchResult{}
 	json.NewDecoder(res3.Body).Decode(&validate3)
-	as.Equal(1, len(*validate3.Content), "We have one donut that is not hidden")
+	as.Equal(1, len(*validate3.Results), "We have one donut that is not hidden")
 }
 
 func (as *ActionSuite) Test_ManagerDB_Preview() {
@@ -119,9 +119,9 @@ func (as *ActionSuite) Test_MemoryAPIBasics() {
 	as.Equal(http.StatusOK, res.Code)
 
 	// Also validates that hidden content doesn't come back from the main listing API
-	validate := models.Contents{}
+	validate := ContentsResponse{}
 	json.NewDecoder(res.Body).Decode(&validate)
-	as.Equal(test_common.TOTAL_MEDIA, len(validate), "It should have a known set of mock data")
+	as.Equal(test_common.TOTAL_MEDIA, len(validate.Results), "It should have a known set of mock data")
 
 	// I feel like this should be failing?
 	res_search := as.JSON("/search/?text=Large").Get()
@@ -129,7 +129,7 @@ func (as *ActionSuite) Test_MemoryAPIBasics() {
 
 	validate_search := SearchResult{}
 	json.NewDecoder(res_search.Body).Decode(&validate_search)
-	as.Equal(5, len(*validate_search.Content), fmt.Sprintf("In memory should have these %s", res_search.Body.String()))
+	as.Equal(5, len(*validate_search.Results), fmt.Sprintf("In memory should have these %s", res_search.Body.String()))
 }
 
 func (as *ActionSuite) Test_ContentsResource_List() {
@@ -137,12 +137,12 @@ func (as *ActionSuite) Test_ContentsResource_List() {
 	src := "test_list"
 	CreateResource(src, nulls.UUID{}, as)
 	res := as.JSON("/contents").Get()
-	as.Equal(http.StatusOK, res.Code)
+	as.Equal(http.StatusOK, res.Code, fmt.Sprintf("Failed %s", res.Body.String()))
 
-	validate := models.Contents{}
+	validate := ContentsResponse{}
 	json.NewDecoder(res.Body).Decode(&validate)
-	as.Equal(src, validate[0].Src)
-	as.Equal(1, len(validate), "One item should be in the DB")
+	as.Equal(src, validate.Results[0].Src)
+	as.Equal(1, len(validate.Results), "One item should be in the DB")
 }
 
 func (as *ActionSuite) Test_ContentsResource_Show() {
@@ -242,5 +242,5 @@ func ActionsTagSearchValidation(as *ActionSuite) {
 
 	validate := SearchResult{}
 	json.NewDecoder(res.Body).Decode(&validate)
-	as.Equal(1, len(*validate.Content), fmt.Sprintf("Searching tags return content"))
+	as.Equal(1, len(*validate.Results), fmt.Sprintf("Searching tags return content"))
 }

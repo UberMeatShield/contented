@@ -204,7 +204,8 @@ func (as *ActionSuite) Test_CreateContainerPreviews() {
 		}
 	}
 	man := GetManagerActionSuite(cfg, as)
-	cnts, c_err := man.ListContainers(0, 2)
+	cnts, count, c_err := man.ListContainers(ContainerQuery{Page: 1, PerPage: 2})
+	as.Greater(count, 0, "There should be a container")
 	as.Equal(len(*cnts), 1, "It should have containers")
 	as.NoError(c_err)
 
@@ -258,7 +259,8 @@ func (as *ActionSuite) Test_PreviewAllData() {
 	c_err := CreateInitialStructure(cfg)
 	man := GetManagerActionSuite(cfg, as)
 
-	cnts, c_err := man.ListContainers(0, 3)
+	cnts, count, c_err := man.ListContainers(ContainerQuery{Page: 1, PerPage: 3})
+	as.Greater(count, 1, "There should be a positive count")
 	as.Equal(len(*cnts), 3, "It should have containers")
 	as.NoError(c_err)
 
@@ -294,9 +296,10 @@ func (as *ActionSuite) Test_PreviewsWithCorrupted() {
 	as.NoError(c_err, "Failed to build out the initial database")
 	as.Equal(true, man.CanEdit(), "It should be able to edit")
 
-	content, m_err := man.ListAllContent(0, 42)
+	content, count, m_err := man.ListContent(ContentQuery{PerPage: 100})
 	as.NoError(m_err)
 	as.Equal(2, len(*content), "It should all be loaded in the db")
+	as.Equal(2, count, "Count should be correct")
 	for _, mc := range *content {
 		if mc.Src != "nature-corrupted-free-use.jpg" && mc.Src != "snow-corrupted-free-use.png" {
 			as.Equal(mc.Corrupt, false, fmt.Sprintf("And at this point nothing is corrupt %s", mc.Src))
@@ -308,9 +311,10 @@ func (as *ActionSuite) Test_PreviewsWithCorrupted() {
 	all_created_err := CreateAllPreviews(man)
 	as.Error(all_created_err, "It should ACTUALLY have an error now.")
 
-	content_check, m_err := man.ListAllContent(0, 42)
+	content_check, count, m_err := man.ListContent(ContentQuery{PerPage: 100})
 	as.NoError(m_err)
 	as.Equal(2, len(*content_check), "It should have two corrupt content items")
+	as.Equal(2, count, "Count should be correct")
 
 	for _, mc_check := range *content_check {
 		as.Equal(mc_check.Corrupt, true, "These images should actually be corrupt")

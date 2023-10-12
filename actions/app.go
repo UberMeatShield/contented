@@ -38,7 +38,7 @@ func App(UseDatabase bool) *buffalo.App {
 		app = internals.CreateBuffaloApp(UseDatabase, ENV)
 		app.Use(forceSSL())
 
-		// Run grift?  Do dev from an actual DB instance?
+		// TODO: Clean this up to always use content_id
 		app.GET("/preview/{mcID}", PreviewHandler)
 		app.GET("/view/{mcID}", FullHandler)
 		app.GET("/download/{mcID}", DownloadHandler)

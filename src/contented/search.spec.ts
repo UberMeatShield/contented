@@ -78,14 +78,14 @@ describe('TestingSearchCmp', () => {
         let vals = comp.getValues();
         console.log(vals);
         tick(100);
-        expect(vals['searchText']).toBe(st, "It should default via route params");
+        expect(vals['searchText']).withContext("It should default via route params").toBe(st);
 
         let req = httpMock.expectOne(req => req.url === ApiDef.contented.search);
         let sr = MockData.getSearch()
-        expect(sr['content'].length).toBeGreaterThan(0, "We need some search results.");
+        expect(sr.results.length).withContext("We need some search results.").toBeGreaterThan(0);
         req.flush(sr);
         fixture.detectChanges();
-        expect($('.search-result').length).toEqual(sr['content'].length);
+        expect($('.search-result').length).withContext("It should render dom results").toEqual(sr.results.length);
     }));
 });
 

@@ -40,6 +40,10 @@ class MockLoader {
         return _.clone(require('./video_content.json'));
     }
 
+    public getFullContainer() {
+        return _.clone(require('./full.json'));
+    }
+
     public taskRequest(taskId: string) {
         let tasks = _.clone(require('./task_requests.json'));
         let task = tasks[0];
@@ -51,20 +55,24 @@ class MockLoader {
         return _.clone(require('./task_requests.json'));
     }
 
-    public getContent(container_id = null, count = null) {
-        let content = _.clone(require('./content.json'));
+    public getContent(container_id = null, total = null) {
+        let res = _.clone(require('./content.json'));
         if (container_id) {
-            _.each(content, m => {
-                m.id = m.id + container_id;
-                m.container_id = container_id;
+            _.each(res.results, content => {
+                content.id = content.id + container_id;
+                content.container_id = container_id;
             });
         }
         // TODO: Create fake content / id info if given a count
-        return content.slice(0, count);
+        return {
+            results: res.results.slice(0, total),
+            total: total,
+        };
     }
 
-    public getFullContainer() {
-        return require('./full.json');
+    public getContentArr(container_id = null, total = null) {
+        let cRes = this.getContent(container_id, total);
+        return _.map(cRes.results, r => new Content(r));
     }
 
     public getMockDir(count: number, itemPrefix: string = 'item-', offset: number = 0, total = 20) {
@@ -86,36 +94,44 @@ class MockLoader {
         return fakeDirResponse;
     }
 
+    public getContentsResponse(count: number, itemPrefix: string = "item-", offset: number = 0, total = 20) {
+        let cnt = this.getMockDir(count, itemPrefix, offset, total);
+        return {
+            total: total,
+            results: cnt.contents,
+        }
+    }
+
     public handleCmpDefaultLoad(httpMock, fixture = null) {
         let containers = this.handleContainerLoad(httpMock)
-
         if (fixture) {
             fixture.detectChanges();
             this.handleContainerContentLoad(httpMock, containers);
         }
     }
 
-    public handleContainerLoad(httpMock) {
-        let containers = this.getPreview();
+    public handleContainerLoad(httpMock) : Array<Container> {
+        let cntRes = this.getPreview();
         let containersReq = httpMock.expectOne(req => req.url === ApiDef.contented.containers);
-        containersReq.flush(containers);
-        return containers;
+        containersReq.flush(cntRes);
+        return _.map(cntRes.results, res => new Container(res));
     }
 
     public handleContainerContentLoad(httpMock, cnts: Array<Container>, count = 2) {
         _.each(cnts, cnt => {
             let url = ApiDef.contented.containerContent.replace('{cId}', cnt.id);
-            let reqs = httpMock.match(r => r.url === url);
+            let reqs = httpMock.match(r => r.url.includes(url));
             _.each(reqs, req => {
-                req.flush(MockData.getContent(cnt.name, count));
+                let res = this.getContent(cnt.name, cnt.count)
+                req.flush(res);
             });
         });
     }
 
     public getImg() {
-        let img = new Content();
-        img.fromJson(this.getContent("10", 1)[0]);
-        return img;
+        let res = this.getContent("10", 1);
+        let actualContent = res.results[0];
+        return new Content(actualContent);
     }
 }
 export let MockData = new MockLoader();

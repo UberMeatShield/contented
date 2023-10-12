@@ -23,6 +23,10 @@ import (
 // Resource: Plural (Screens)
 // Path: Plural (/screens)
 // View Template Folder: Plural (/templates/screens/)
+type ScreensResponse struct {
+	Total   int            `json:"total" default:"0"`
+	Results models.Screens `json:"results" default:"[]"`
+}
 
 // ScreensResource is the resource for the Screen model
 type ScreensResource struct {
@@ -33,27 +37,28 @@ type ScreensResource struct {
 // GET /screens
 func (v ScreensResource) List(c buffalo.Context) error {
 	// Get the DB connection from the context
-	var previewScreens *models.Screens
-	var err error
-
-	mcStrID := c.Param("content_id")
+	mcStrID := managers.StringDefault(c.Param("content_id"), "")
 	log.Printf("Content ID specified %s", mcStrID)
-
-	man := managers.GetManager(&c)
 	if mcStrID != "" {
-		mcID, err := uuid.FromString(mcStrID)
-		if err != nil {
-			return c.Error(http.StatusBadRequest, err)
-		}
-		previewScreens, err = man.ListScreensContext(mcID)
-
-	} else {
-		previewScreens, err = man.ListAllScreensContext()
+		_, err := uuid.FromString(mcStrID)
 		if err != nil {
 			return c.Error(http.StatusBadRequest, err)
 		}
 	}
-	return c.Render(200, r.JSON(previewScreens))
+	// TODO: Screens Response (total count provided)
+	man := managers.GetManager(&c)
+	screens, total, err := man.ListScreensContext()
+	if err != nil {
+		return c.Error(http.StatusBadRequest, err)
+	}
+	if screens == nil {
+		screens = &models.Screens{}
+	}
+	res := ScreensResponse{
+		Total:   total,
+		Results: *screens,
+	}
+	return c.Render(200, r.JSON(res))
 }
 
 // Show gets the data for one Screen. This function is mapped to

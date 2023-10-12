@@ -62,7 +62,6 @@ export class ContainerNavCmp implements OnInit, OnDestroy {
         if (this.cnt) {
             this.currentContent = this.cnt.getContent();
         }
-
         this.navForm.get("idxControl").valueChanges.subscribe(
             idx => {
                 if (idx != this.cnt.rowIdx) {

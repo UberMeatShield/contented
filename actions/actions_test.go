@@ -36,9 +36,9 @@ func (as *ActionSuite) Test_ContentList() {
 
 	res := as.JSON("/containers").Get()
 	as.Equal(http.StatusOK, res.Code)
-	resObj := models.Containers{}
+	resObj := ContainersResponse{}
 	json.NewDecoder(res.Body).Decode(&resObj)
-	as.Equal(test_common.TOTAL_CONTAINERS, len(resObj), "We should have this many dirs present")
+	as.Equal(test_common.TOTAL_CONTAINERS, len(resObj.Results), "We should have this many dirs present")
 }
 
 func (as *ActionSuite) Test_ContentDirLoad() {
@@ -46,21 +46,19 @@ func (as *ActionSuite) Test_ContentDirLoad() {
 
 	res := as.JSON("/containers").Get()
 	as.Equal(http.StatusOK, res.Code)
-	cnts := models.Containers{}
+	cnts := ContainersResponse{}
 	json.NewDecoder(res.Body).Decode(&cnts)
-	as.Equal(test_common.TOTAL_CONTAINERS, len(cnts), "We should have this many dirs present")
+	as.Equal(test_common.TOTAL_CONTAINERS, len(cnts.Results), "We should have this many dirs present")
 
-	for _, c := range cnts {
+	for _, c := range cnts.Results {
 		res := as.JSON("/containers/" + c.ID.String() + "/contents").Get()
 		as.Equal(http.StatusOK, res.Code)
 
-		resObj := []models.Containers{}
-		json.NewDecoder(res.Body).Decode(&resObj)
-
-		fmt.Printf("What was the result %s\n", resObj)
-
+		cntRes := ContentsResponse{}
+		json.NewDecoder(res.Body).Decode(&cntRes)
 		if c.Name == "dir1" {
-			as.Equal(len(resObj), 12, "It should have a known number of images")
+			as.Equal(12, len(cntRes.Results), fmt.Sprintf("Known content sizes %s", res.Body.String()))
+			as.Equal(12, cntRes.Total, "The count should be correct")
 		}
 	}
 }
@@ -72,9 +70,10 @@ func (as *ActionSuite) Test_ViewRef() {
 	app := as.App
 	ctx := test_common.GetContext(app)
 	man := managers.GetManager(&ctx)
-	mcs, err := man.ListAllContent(2, 2)
+	mcs, count, err := man.ListContent(managers.ContentQuery{Page: 2, PerPage: 2})
 	as.NoError(err)
 	as.Equal(2, len(*mcs), "It should have only two results")
+	as.Greater(count, 2, "But the count should be the total")
 
 	// TODO: Make it better about the type checking
 	// TODO: Make it always pass in the file ID
@@ -92,9 +91,10 @@ func (as *ActionSuite) Test_ContentDirDownload() {
 
 	ctx := test_common.GetContext(as.App)
 	man := managers.GetManager(&ctx)
-	mcs, err := man.ListAllContent(2, 2)
+	mcs, count, err := man.ListContent(managers.ContentQuery{Page: 2, PerPage: 2})
 	as.NoError(err)
 	as.Equal(2, len(*mcs), "It should have only two results")
+	as.Greater(count, 2, "It should have more content")
 
 	for _, mc := range *mcs {
 		res := as.HTML("/download/" + mc.ID.String()).Get()
@@ -123,7 +123,7 @@ func (as *ActionSuite) Test_FindAndLoadFile() {
 
 	ctx := test_common.GetContext(as.App)
 	man := managers.GetManager(&ctx)
-	mcs, err := man.ListAllContent(1, 200)
+	mcs, _, err := man.ListContent(managers.ContentQuery{})
 	as.NoError(err)
 
 	// TODO: Should make the hidden file actually a file somehow
@@ -146,7 +146,7 @@ func (as *ActionSuite) Test_PreviewFile() {
 	test_common.InitFakeApp(false)
 	ctx := test_common.GetContext(as.App)
 	man := managers.GetManager(&ctx)
-	mcs, err := man.ListAllContent(1, 200)
+	mcs, _, err := man.ListContent(managers.ContentQuery{})
 	as.NoError(err)
 
 	for _, mc := range *mcs {
@@ -162,7 +162,7 @@ func (as *ActionSuite) Test_FullFile() {
 	test_common.InitFakeApp(false)
 	ctx := test_common.GetContext(as.App)
 	man := managers.GetManager(&ctx)
-	mcs, err := man.ListAllContent(1, 200)
+	mcs, _, err := man.ListContent(managers.ContentQuery{})
 	as.NoError(err)
 
 	for _, mc := range *mcs {
@@ -181,7 +181,7 @@ func (as *ActionSuite) Test_PreviewWorking() {
 	test_common.InitFakeApp(false)
 	ctx := test_common.GetContext(as.App)
 	man := managers.GetManager(&ctx)
-	mcs, err := man.ListAllContent(1, 200)
+	mcs, _, err := man.ListContent(managers.ContentQuery{})
 	as.NoError(err)
 
 	for _, mc := range *mcs {

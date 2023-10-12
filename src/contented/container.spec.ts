@@ -14,11 +14,11 @@ describe('TestingContainer', () => {
 
     it('Should be able to create a set of container objects', () => {
         let dirResponse = MockData.getPreview();
-        let dirs = _.map(dirResponse, data => {
+        let cnts = _.map(dirResponse.results, data => {
             return new Container(data);
         });
-        expect(dirs.length > 0).toBe(true, "It should actually have some responses.");
-        _.each(dirs, dir => {
+        expect(cnts.length > 0).toBe(true, "It should actually have some responses.");
+        _.each(cnts, dir => {
             expect(dir.total).toBeGreaterThan(0, "There should be contents");
             expect(dir.id).toBeDefined("We should have an id set for each dir.");
         });

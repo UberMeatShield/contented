@@ -9,7 +9,7 @@ export let ApiDef = {
         download: base + 'download/{mcID}',
         preview: base + 'preview/',
         containers: base + 'containers/',
-        containerContent: base + 'containers/{cId}/content',
+        containerContent: base + 'containers/{cId}/contents',
         content: "/contents/{id}/",
         contentScreens: base + 'contents/{mcID}/screens',
         screens: base + 'screens/',

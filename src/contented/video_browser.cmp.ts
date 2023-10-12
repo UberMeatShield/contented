@@ -92,8 +92,8 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
 
     public loadContainers() {
         this._contentedService.getContainers().subscribe(
-            (cnts: Array<Container>) => {
-               this.containers = cnts; 
+            (cnts) => {
+               this.containers = cnts.results || []; 
             }
         );
     }
@@ -241,7 +241,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
             finalize(() => this.loading = false)
         ).subscribe(
             (res) => {
-                let content = _.map(res['content'], m => new Content(m));
+                let content = _.map(res.results, m => new Content(m));
                 let total = res['total'] || 0;
                 
                 this.offset = offset;

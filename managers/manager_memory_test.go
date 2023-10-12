@@ -17,8 +17,9 @@ func (as *ActionSuite) Test_ManagerContainers() {
 	test_common.InitFakeApp(false)
 	ctx := test_common.GetContext(as.App)
 	man := GetManager(&ctx)
-	containers, err := man.ListContainersContext()
+	containers, count, err := man.ListContainersContext()
 	as.NoError(err)
+	as.Greater(count, 1, "There should be containers")
 
 	for _, c := range *containers {
 		c_mem, err := man.GetContainer(c.ID)
@@ -33,15 +34,16 @@ func (as *ActionSuite) Test_ManagerContent() {
 	test_common.InitFakeApp(false)
 	ctx := test_common.GetContext(as.App)
 	man := GetManager(&ctx)
-	mcs, err := man.ListAllContent(1, 9001)
+	contents, count, err := man.ListContent(ContentQuery{})
 	as.NoError(err)
+	as.Greater(count, 0, "It should have contents")
 
-	for _, mc := range *mcs {
-		cm, err := man.GetContent(mc.ID)
+	for _, content := range *contents {
+		cm, err := man.GetContent(content.ID)
 		if err != nil {
 			as.Fail("It should not have an issue finding valid content")
 		}
-		as.Equal(cm.ID, mc.ID)
+		as.Equal(cm.ID, content.ID)
 	}
 }
 
@@ -57,14 +59,14 @@ func (as *ActionSuite) Test_AssignManager() {
 
 	memCfg := mem.GetCfg()
 	as.NotNil(memCfg, "It should be defined")
-	mcs, err := mem.ListAllContent(1, 9001)
+	mcs, _, err := mem.ListContent(ContentQuery{})
 	as.NoError(err)
 	as.Greater(len(*mcs), 0, "It should have valid files in the manager")
 
 	cfg.UseDatabase = false
 	ctx := test_common.GetContext(as.App)
 	man := GetManager(&ctx) // New Reference but should have the same count of content
-	mcs_2, _ := man.ListAllContent(1, 9000)
+	mcs_2, _, _ := man.ListContent(ContentQuery{})
 
 	as.Equal(len(*mcs), len(*mcs_2), "A new instance should use the same storage")
 }
@@ -78,25 +80,28 @@ func (as *ActionSuite) Test_MemoryManagerPaginate() {
 	man := GetManager(&ctx)
 	as.Equal(man.CanEdit(), false, "Memory manager should not allow editing")
 
-	containers, err := man.ListContainers(1, 1)
+	containers, count, err := man.ListContainers(ContainerQuery{Page: 1, PerPage: 1})
 	as.NoError(err, "It should list with pagination")
 	as.Equal(1, len(*containers), "It should respect paging")
+	as.Equal(5, count, "Paging check that count is still correct")
 
 	cnt := (*containers)[0]
 	as.NotNil(cnt, "There should be a container with 12 entries")
 	as.Equal(cnt.Total, 12, "There should be 12 test images in the first ORDERED containers")
 	as.NoError(err)
 	as.NotEqual("", cnt.PreviewUrl, "The previewUrl should be set")
-	content_page_1, _ := man.ListContent(cnt.ID, 1, 4)
+	content_page_1, count, _ := man.ListContent(ContentQuery{ContainerID: cnt.ID.String(), PerPage: 4})
 	as.Equal(len(*content_page_1), 4, "It should respect page size")
+	as.Equal(count, 12, "It should respect page size but get the total count")
 
-	content_page_3, _ := man.ListContent(cnt.ID, 3, 4)
+	content_page_3, count, _ := man.ListContent(ContentQuery{ContainerID: cnt.ID.String(), Page: 3, PerPage: 4})
 	as.Equal(len(*content_page_3), 4, "It should respect page size and get the last page")
 	as.NotEqual((*content_page_3)[3].ID, (*content_page_1)[3].ID, "Ensure it actually paged")
 
 	// Last container pagination check
-	l_cnts, _ := man.ListContainers(4, 1)
+	l_cnts, count, _ := man.ListContainers(ContainerQuery{Page: 4, PerPage: 1})
 	as.Equal(1, len(*l_cnts), "It should still return only as we are on the last page")
+	as.Equal(5, count, "The count should be consistent")
 	l_cnt := (*l_cnts)[0]
 	as.Equal(test_common.EXPECT_CNT_COUNT[l_cnt.Name], l_cnt.Total, "There are 3 entries in the ordered test data last container")
 }
@@ -108,7 +113,7 @@ func (as *ActionSuite) Test_ManagerInitialize() {
 	man := GetManager(&ctx)
 	as.NotNil(man, "It should have a manager defined after init")
 
-	containers, err := man.ListContainersContext()
+	containers, _, err := man.ListContainersContext()
 	as.NoError(err, "It should list all containers")
 	as.NotNil(containers, "It should have containers")
 	as.Equal(len(*containers), test_common.TOTAL_CONTAINERS, "Unexpected container count")
@@ -116,7 +121,7 @@ func (as *ActionSuite) Test_ManagerInitialize() {
 	// Memory test working
 	for _, c := range *containers {
 		// fmt.Printf("Searching for this container %s with name %s\n", c.ID, c.Name)
-		content, err := man.ListContentContext(c.ID)
+		content, _, err := man.ListContent(ContentQuery{ContainerID: c.ID.String()})
 		as.NoError(err)
 		as.NotNil(content)
 
@@ -135,27 +140,28 @@ func (as *ActionSuite) Test_MemoryManagerSearch() {
 	man := GetManager(&ctx)
 	as.NotNil(man, "It should have a manager defined after init")
 
-	containers, err := man.ListContainersContext()
+	containers, _, err := man.ListContainersContext()
 	as.NoError(err, "It should list all containers")
 	as.NotNil(containers, "It should have containers")
 	as.Equal(len(*containers), test_common.TOTAL_CONTAINERS, "Wrong number of containers found")
 
-	s_cnts, s_err := man.SearchContainers("dir2", 1, 2, false)
+	s_cnts, count, s_err := man.SearchContainers(ContainerQuery{Search: "dir2", Page: 1, PerPage: 2})
 	as.NoError(s_err, "Error searching memory containers")
 	as.Equal(1, len(*s_cnts), "It should only filter to one directory")
+	as.Equal(1, count, "There should be one count")
 
-	sr := SearchRequest{Text: "Donut", PerPage: 20}
+	sr := SearchQuery{Text: "Donut", PerPage: 20}
 	mcs, total, err := man.SearchContent(sr)
 	as.NoError(err, "Can we search in the memory manager")
 	as.Equal(len(*mcs), 1, "One donut should be found")
 	as.Equal(total, len(*mcs), "It should get the total right")
 
-	sr = SearchRequest{Text: "Large", PerPage: 6}
+	sr = SearchQuery{Text: "Large", PerPage: 6}
 	mcs_1, _, err_1 := man.SearchContent(sr)
 	as.NoError(err_1, "Can we search in the memory manager")
 	as.Equal(5, len(*mcs_1), "There are 5 images with 'large' in them ignoring case")
 
-	sr = SearchRequest{PerPage: 9001}
+	sr = SearchQuery{PerPage: 9001}
 	all_mc, _, err_all := man.SearchContent(sr)
 	as.NoError(err_all, "Can in search everything")
 	as.Equal(len(*all_mc), test_common.TOTAL_MEDIA, "The Kitchen sink")
@@ -171,26 +177,27 @@ func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
 
 	// Ensure we initialized with a known search
 	as.Equal(man.CanEdit(), true)
-	sr := SearchRequest{Text: "donut"}
+	sr := SearchQuery{Text: "donut"}
 	mcs, total, err := man.SearchContent(sr)
 	as.NoError(err, "Can we search in the memory manager")
 	as.Equal(len(*mcs), 1, "One donut should be found")
 	as.Equal(total, len(*mcs), "It should get the total right")
 
-	cnts, eep := man.ListContainers(0, 10)
-	as.NoError(eep, "It should have 4 containers")
+	cnts, _, eep := man.ListContainers(ContainerQuery{Page: 1, PerPage: 10})
+	as.NoError(eep, fmt.Sprintf("It should have 4 containers %s", eep))
 	as.Greater(len(*cnts), 1, "We should have containers")
 
-	allContent, errAll := man.ListAllContent(0, 50)
+	allContent, count, errAll := man.ListContent(ContentQuery{PerPage: 50})
 	as.Greater(len(*allContent), 0, "We should have content")
+	as.Greater(count, 0, "We should have content")
 	as.NoError(errAll)
 
-	sr = SearchRequest{Text: "", PerPage: 40}
+	sr = SearchQuery{Text: "", PerPage: 40}
 	all_content, wild_total, _ := man.SearchContent(sr)
 	as.Greater(wild_total, 0)
 	as.Equal(len(*all_content), wild_total)
 
-	sr = SearchRequest{ContentType: "video"}
+	sr = SearchQuery{ContentType: "video"}
 	video_content, vid_total, _ := man.SearchContent(sr)
 	as.Equal(vid_total, 1)
 	as.Equal(len(*video_content), vid_total)
@@ -199,13 +206,13 @@ func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
 
 	for _, cnt := range *cnts {
 		if cnt.Name == "dir1" {
-			sr = SearchRequest{Text: "donut", ContainerID: cnt.ID.String()}
+			sr = SearchQuery{Text: "donut", ContainerID: cnt.ID.String()}
 			_, no_total, n_err := man.SearchContent(sr)
 			as.NoError(n_err)
 			as.Equal(no_total, 0, "It should not be in this directory")
 		}
 		if cnt.Name == "dir2" {
-			sr = SearchRequest{Text: "donut", ContainerID: cnt.ID.String()}
+			sr = SearchQuery{Text: "donut", ContainerID: cnt.ID.String()}
 			yes_match, y_total, r_err := man.SearchContent(sr)
 			as.NoError(r_err)
 			as.Equal(y_total, 1, "We did not find the expected content")
@@ -213,12 +220,12 @@ func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
 			movie := (*yes_match)[0]
 			as.Equal(movie.Src, test_common.VIDEO_FILENAME)
 
-			sr = SearchRequest{ContainerID: cnt.ID.String(), ContentType: "image"}
+			sr = SearchQuery{ContainerID: cnt.ID.String(), ContentType: "image"}
 			_, imgCount, _ := man.SearchContent(sr)
 			as.Equal(imgCount, 2, "It should filter out the donut this time")
 		}
 		if cnt.Name == "dir3" {
-			sr = SearchRequest{ContainerID: cnt.ID.String(), PerPage: 1}
+			sr = SearchQuery{ContainerID: cnt.ID.String(), PerPage: 1}
 			has_content, _, err := man.SearchContent(sr)
 			as.NoError(err, "We should have content")
 			as.Greater(len(*has_content), 0)
@@ -307,9 +314,10 @@ func (as *ActionSuite) Test_ManagerMemoryScreens() {
 	cfg := test_common.InitFakeApp(false)
 
 	man := GetManagerActionSuite(cfg, as)
-	content, err := man.ListAllContent(1, 100)
+	content, count, err := man.ListContent(ContentQuery{PerPage: 100})
 	as.NoError(err)
 	as.Greater(len(*content), 0, "It should have content setup")
+	as.Greater(count, 0, "It should have content counted")
 
 	contentArr := *content
 	mc := contentArr[0]
@@ -326,10 +334,11 @@ func (as *ActionSuite) Test_ManagerMemoryScreens() {
 	mem.ValidScreens[s1.ID] = s1
 	mem.ValidScreens[s2.ID] = s2
 
-	screens, err := man.ListScreens(mc.ID, 1, 10)
+	screens, count, err := man.ListScreens(ScreensQuery{ContentID: mc.ID.String()})
 	as.NoError(err)
 	as.NotNil(screens)
-	as.Equal(2, len(*screens))
+	as.Equal(2, len(*screens), "We should have two screens")
+	as.Equal(2, count, "And the count should be right")
 	// Check that our single lookup hash is also populated
 	for _, screen := range *screens {
 		obj, mia := man.GetScreen(screen.ID)
@@ -337,9 +346,10 @@ func (as *ActionSuite) Test_ManagerMemoryScreens() {
 		as.Equal(obj.ID, screen.ID)
 	}
 
-	allScreens, all_err := man.ListAllScreens(0, 10)
+	allScreens, all_count, all_err := man.ListScreens(ScreensQuery{})
 	as.NoError(all_err, "It should work out ok")
 	as.Equal(2, len(*allScreens), "We should have 2 screens")
+	as.Equal(2, all_count, "We should have 2 screens")
 }
 
 func (as *ActionSuite) Test_ManagerMemoryCRU() {
@@ -375,9 +385,10 @@ func (as *ActionSuite) Test_ManagerMemoryCRU() {
 	as.NoError(man.CreateScreen(&s1), "Did not associate screen correctly")
 	as.NoError(man.CreateScreen(&s2), "Did not associate screen correctly")
 
-	sCheck, sErr := man.ListScreens(mc.ID, 1, 10)
+	sCheck, count, sErr := man.ListScreens(ScreensQuery{ContentID: mc.ID.String()})
 	as.NoError(sErr, "Failed to list screens")
 	as.Equal(len(*sCheck), 1, "It should properly filter screens.")
+	as.Equal(count, 1, "Count should be correct")
 
 	s1Update := models.Screen{ID: s1.ID, Path: "C", ContentID: mc.ID}
 	as.NoError(man.UpdateScreen(&s1Update))

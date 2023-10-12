@@ -23,7 +23,7 @@ import * as _ from 'lodash';
 
 
 @Component({
-    selector: 'search-cmp',
+    selector: 'earcearch-cmp',
     templateUrl: './search.ng.html'
 })
 export class SearchCmp implements OnInit{
@@ -121,10 +121,9 @@ export class SearchCmp implements OnInit{
             finalize(() => this.loading = false)
         ).subscribe(
             (res) => {
-                let content = _.map((res['content'] || []), m => new Content(m));
+                let content = _.map((res.results || []), m => new Content(m));
                 let total = res['total'] || 0;
-                
-                console.log("Search results", content, total);
+                // console.log("Search results", content, total);
                 this.content = content;
                 this.total = total;
             }, err => {
