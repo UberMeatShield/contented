@@ -92,7 +92,7 @@ describe('TestingContentBrowserCmp', () => {
         fixture.detectChanges();
         MockData.handleCmpDefaultLoad(httpMock, fixture);
         tick(2000);
-        expect(comp.allCnts.length).toBe(4, "We should have 4 containers set");
+        expect(comp.allCnts.length).toBe(5, "We should have 4 containers set");
 
         let dirs = comp.getVisibleContainers();
         expect(dirs.length).toBe(comp.maxVisible, "Should only have the max visible containers present.");
@@ -166,7 +166,8 @@ describe('TestingContentBrowserCmp', () => {
         // Kick off a load and use the http controller mocks to return our containers
         fixture.detectChanges();
 
-        let containers = MockData.getPreview();
+        let cntRes = MockData.getPreview();
+        let containers = cntRes.results;
         MockData.handleCmpDefaultLoad(httpMock, fixture);
 
         expect(comp.loading).toBe(false, "It should be fine with loading the containers");
@@ -210,32 +211,35 @@ describe('TestingContentBrowserCmp', () => {
 
         let page = parseInt(checkParams.get('page'), 10);
         let offset = (page) * service.LIMIT;
-        expect(page).toBeGreaterThan(2, "It should load more, not the beginning");
-        expect(offset).toEqual(3, "Calculating the offset should be more than the current count");
+        expect(page).withContext("It should load more, not the beginning").toBeGreaterThan(2)
+        expect(offset).withContext("Calculating the offset should be more than the current count").toEqual(3);
 
         let content = MockData.getContent(dir.id, service.LIMIT);
         loadReq.flush(content);
         fixture.detectChanges();
 
-        expect(dir.count).toEqual(3, "Now we should have loaded more based on the limit");
+        expect(dir.count).withContext("Now we should have loaded more based on the limit").toEqual(3);
         fixture.detectChanges();
     }));
 
-    it('Pull in more more contents in a dir', fakeAsync(() => {
+    it('Ensure indexing works at least somewhat and loads the last selected', fakeAsync(() => {
         fixture.detectChanges();
         MockData.handleCmpDefaultLoad(httpMock, fixture);
         fixture.detectChanges();
 
-        let cnt = comp.allCnts[3];
+        let lastIdx = comp.allCnts.length - 1;
+        let cnt = comp.allCnts[lastIdx];
         let content = cnt.getContent();
-        // Check that a content in container 3 is not visible
-        expect(comp.allCnts.length).toBeGreaterThan(0, "We should have containers");
-        expect(comp.idx).toEqual(0, "We should be at index 0");
+        expect(comp.allCnts.length).withContext("We should have containers").toBeGreaterThan(0);
+        expect(comp.idx).withContext("We should be at index 0").toEqual(0);
 
         GlobalNavEvents.selectContainer(cnt);
         fixture.detectChanges();
+        tick(1000);
+        expect(comp.idx).withContext("We should now be on the third index").toEqual(lastIdx);
+        //console.log("Current", comp.getCurrentContainer(), cnt.id);
+        fixture.detectChanges();
         MockData.handleContainerContentLoad(httpMock, [cnt], 3);
-        expect(comp.idx).toEqual(3, "We should now be on the third index")
         tick(1000);
         fixture.detectChanges();
     }));

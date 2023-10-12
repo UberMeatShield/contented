@@ -101,7 +101,7 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
             .pipe(finalize(() => {this.loading = false; }))
             .subscribe(
                 res => {
-                    this.previewResults(res);
+                    this.previewResults(res.results);
                 },
                 err => { console.error(err); }
             );

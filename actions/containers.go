@@ -23,6 +23,11 @@ import (
 // Path: Plural (/containers)
 // View Template Folder: Plural (/templates/containers/)
 
+type ContainersResponse struct {
+	Total   int               `json:"total"`
+	Results models.Containers `json:"results"`
+}
+
 // ContainersResource is the resource for the Container model
 type ContainersResource struct {
 	buffalo.Resource
@@ -34,12 +39,16 @@ func (v ContainersResource) List(c buffalo.Context) error {
 	// Get the DB connection from the context
 
 	man := managers.GetManager(&c)
-	containers, count, err := man.ListContainersContext()
+	containers, total, err := man.ListContainersContext()
 	if err != nil {
 		return c.Error(http.StatusBadRequest, err)
 	}
-	log.Printf("Found %d containers", count)
-	return c.Render(200, r.JSON(containers))
+	log.Printf("Found %d containers", total)
+	cr := ContainersResponse{
+		Total:   total,
+		Results: *containers,
+	}
+	return c.Render(200, r.JSON(cr))
 }
 
 // Show gets the data for one Container. This function is mapped to

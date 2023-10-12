@@ -97,11 +97,11 @@ class MockLoader {
         }
     }
 
-    public handleContainerLoad(httpMock) {
-        let containers = this.getPreview();
+    public handleContainerLoad(httpMock) : Array<Container> {
+        let cntRes = this.getPreview();
         let containersReq = httpMock.expectOne(req => req.url === ApiDef.contented.containers);
-        containersReq.flush(containers);
-        return containers;
+        containersReq.flush(cntRes);
+        return _.map(cntRes.results, res => new Container(res));
     }
 
     public handleContainerContentLoad(httpMock, cnts: Array<Container>, count = 2) {
@@ -109,8 +109,10 @@ class MockLoader {
             let url = ApiDef.contented.containerContent.replace('{cId}', cnt.id);
             let reqs = httpMock.match(r => r.url.includes(url));
             _.each(reqs, req => {
-                req.flush(this.getContent(cnt.name, count));
+                let res = this.getContent(cnt.name, count);
+                req.flush(res);
             });
+            // reqs = httpMock.match(r => r.url.includes("content"));
         });
     }
 

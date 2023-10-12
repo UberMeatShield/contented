@@ -92,8 +92,8 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
 
     public loadContainers() {
         this._contentedService.getContainers().subscribe(
-            (cnts: Array<Container>) => {
-               this.containers = cnts; 
+            (cnts) => {
+               this.containers = cnts.results || []; 
             }
         );
     }

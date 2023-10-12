@@ -47,13 +47,14 @@ describe('TestingContentedService', () => {
 
         let preview = MockData.getPreview();
         service.getContainers().subscribe(
-            (dirs: Array<Container>) => {
-                expect(dirs.length).toEqual(preview.length, "It should kick back data");
+            (res) => {
+                expect(res.total).withContext("It should have a count").toEqual(preview.results.length);
 
-                _.each(dirs, dir => {
-                    expect(dir.name).toBeDefined("It should have a name");
-                    expect(dir.total).toBeGreaterThan(0, "There should be a total");
-                    expect(dir.count).toBe(0, "We have not loaded data at this point");
+                let cnts = res.results;
+                _.each(cnts, cnt => {
+                    expect(cnt.name).withContext("They should have names").toBeDefined();
+                    expect(cnt.total).withContext("A Total should exist").toBeGreaterThan(0);
+                    expect(cnt.count).withContext("And data should be loaded").toBe(0);
                 });
                 reallyRan = true;
             },
@@ -117,27 +118,27 @@ describe('TestingContentedService', () => {
     }));
 
     it('Can load the entire container', fakeAsync(() => {
-        let dirs: Array<Container> = null;
+        let cnts: Array<Container> = null;
         service.getContainers().subscribe(
-            (previewDirs: Array<Container>) => {
-                dirs = previewDirs;
+            (res) => {
+                cnts = res.results;
             },
             err => {
                 fail(err);
             }
         );
-        let preview = _.clone(MockData.getPreview());
+        let cntRes = _.clone(MockData.getPreview());
 
         let total = 30;
-        preview[0].total = total;
+        cntRes.results[0].total = total;
         let previewReq = httpMock.expectOne(req => req.url === ApiDef.contented.containers);
         let params: HttpParams = previewReq.request.params;
-        previewReq.flush(preview);
+        previewReq.flush(cntRes);
 
-        expect(dirs.length).toBeGreaterThan(1, "Should have containers");
-        expect(dirs[0].total).toEqual(total);
+        expect(cnts.length).toBeGreaterThan(1, "Should have containers");
+        expect(cnts[0].total).toEqual(total);
 
-        let content = dirs[0];
+        let content = cnts[0];
         expect(content.count).toBeLessThan(content.total, "We should not be loaded");
 
         let loaded: Container;

@@ -29,8 +29,11 @@ export class ContentedService {
     public getContainers() {
         return this.http.get(ApiDef.contented.containers, this.options)
             .pipe(
-                map(res => {
-                    return _.map(res, cnt => new Container(cnt));
+                map((res: any) => {
+                    return {
+                        total: res.total,
+                        results: _.map(res.results, cnt => new Container(cnt)),
+                    };
                 }),
                 catchError(err => this.handleError(err))
             );

@@ -115,12 +115,12 @@ func (as *ActionSuite) Test_ContainerList() {
 	res := as.JSON("/containers").Get()
 	as.Equal(http.StatusOK, res.Code)
 
-	containers := models.Containers{}
+	containers := ContainersResponse{}
 	json.NewDecoder(res.Body).Decode(&containers)
 
-	as.Equal(2, len(containers), "It should have loaded two fixtures")
+	as.Equal(2, len(containers.Results), "It should have loaded two fixtures")
 	var found *models.Container
-	for _, c := range containers {
+	for _, c := range containers.Results {
 		if c.Name == "dir2" {
 			found = &c
 		}

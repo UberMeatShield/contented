@@ -36,9 +36,9 @@ func (as *ActionSuite) Test_ContentList() {
 
 	res := as.JSON("/containers").Get()
 	as.Equal(http.StatusOK, res.Code)
-	resObj := models.Containers{}
+	resObj := ContainersResponse{}
 	json.NewDecoder(res.Body).Decode(&resObj)
-	as.Equal(test_common.TOTAL_CONTAINERS, len(resObj), "We should have this many dirs present")
+	as.Equal(test_common.TOTAL_CONTAINERS, len(resObj.Results), "We should have this many dirs present")
 }
 
 func (as *ActionSuite) Test_ContentDirLoad() {
@@ -46,19 +46,19 @@ func (as *ActionSuite) Test_ContentDirLoad() {
 
 	res := as.JSON("/containers").Get()
 	as.Equal(http.StatusOK, res.Code)
-	cnts := models.Containers{}
+	cnts := ContainersResponse{}
 	json.NewDecoder(res.Body).Decode(&cnts)
-	as.Equal(test_common.TOTAL_CONTAINERS, len(cnts), "We should have this many dirs present")
+	as.Equal(test_common.TOTAL_CONTAINERS, len(cnts.Results), "We should have this many dirs present")
 
-	for _, c := range cnts {
+	for _, c := range cnts.Results {
 		res := as.JSON("/containers/" + c.ID.String() + "/contents").Get()
 		as.Equal(http.StatusOK, res.Code)
 
-		resObj := ContentsResponse{}
-		json.NewDecoder(res.Body).Decode(&resObj)
+		cntRes := ContentsResponse{}
+		json.NewDecoder(res.Body).Decode(&cntRes)
 		if c.Name == "dir1" {
-			as.Equal(12, len(resObj.Contents), fmt.Sprintf("Known content sizes %s", res.Body.String()))
-			as.Equal(12, resObj.Count, "The count should be correct")
+			as.Equal(12, len(cntRes.Contents), fmt.Sprintf("Known content sizes %s", res.Body.String()))
+			as.Equal(12, cntRes.Count, "The count should be correct")
 		}
 	}
 }
