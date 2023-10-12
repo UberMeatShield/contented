@@ -46,7 +46,7 @@ export class ContentedService {
                 map((res: any) => {
                     return {
                         count: res.count,
-                        screens:  _.map(res.screens, s => new Screen(s))
+                        results:  _.map(res.results, s => new Screen(s))
                     };
                 }),
                 catchError(err => this.handleError(err))

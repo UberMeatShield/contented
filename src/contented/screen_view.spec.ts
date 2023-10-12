@@ -61,12 +61,12 @@ describe('TestingScreensCmp', () => {
 
     it('Should create a screens view component', () => {
         let screen = new Screen({id: 'a'});
-        expect(screen.url).toBeDefined("It should set the link if possible.");
+        expect(screen.url).withContext("It should set the link if possible.").toBeDefined();
     });
 
     it('Should build out a screen view and be able to render', () => {
-        expect(el).toBeDefined("We should have built out a component.");
-        expect($(".screens-cmp").length).toEqual(1, "The component should exist");
+        expect(el).withContext("We should have built out a component.").toBeDefined();
+        expect($(".screens-cmp").length).withContext("The component should exist").toEqual(1);
     });
 
     it('Given a content id it will try and render screens', fakeAsync(() => {
@@ -79,12 +79,12 @@ describe('TestingScreensCmp', () => {
         let req = httpMock.expectOne(req => req.url == url);
         let sRes = MockData.getScreens();
         
-        expect(sRes.screens.length).withContext("We should have screens in the mock data").toBeGreaterThan(0);
+        expect(sRes.results.length).withContext("We should have screens in the mock data").toBeGreaterThan(0);
         req.flush(sRes);
         tick(1000);
 
         fixture.detectChanges();
-        let expectCount = sRes.screens.length;
+        let expectCount = sRes.results.length;
         expect(comp.loading).toBeFalse(); // It should no longer be loading
         expect(comp.screens.length).withContext("We should have assigned screens").toEqual(expectCount);
         expect($(".screen-img", el).length).withContext("There should be screens rendered").toEqual(expectCount);

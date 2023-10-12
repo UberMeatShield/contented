@@ -52,7 +52,7 @@ export class ScreensCmp implements OnInit {
                 finalize(() => { this.loading = false; })
             ).subscribe(
                 (res) => {
-                    this.screens = res.screens;
+                    this.screens = res.results;
                     this.calculateDimensions();
                 }, err => {
                     console.error(err);

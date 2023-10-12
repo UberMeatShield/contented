@@ -82,7 +82,7 @@ func (as *ActionSuite) Test_ScreensResource_List() {
 
 	validate := ScreensResponse{}
 	json.NewDecoder(res.Body).Decode(&validate)
-	as.Equal(len(validate.Screens), 2, "There should be two preview screens")
+	as.Equal(len(validate.Results), 2, "There should be two preview screens")
 }
 
 func (as *ActionSuite) Test_ScreensResource_ListMC() {
@@ -99,9 +99,9 @@ func (as *ActionSuite) Test_ScreensResource_ListMC() {
 
 	validate := ScreensResponse{}
 	json.NewDecoder(res.Body).Decode(&validate)
-	as.Equal(len(validate.Screens), 2, "Note we should have only two screens")
-	as.Equal(validate.Count, 2, "Count should be correct")
-	for _, ps := range validate.Screens {
+	as.Equal(len(validate.Results), 2, "Note we should have only two screens")
+	as.Equal(validate.Total, 2, "Count should be correct")
+	for _, ps := range validate.Results {
 		as.Equal(ps.ContentID, mc1.ID)
 		as.Equal(ps.Path, "") // Path should not be visible in the API
 	}

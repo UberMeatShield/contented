@@ -86,8 +86,8 @@ func ValidateEditingQueue(as *ActionSuite) {
 
 	sres := ScreensResponse{}
 	json.NewDecoder(screensRes.Body).Decode(&sres)
-	as.Equal(screenCount, len(sres.Screens), fmt.Sprintf("We should have a set number of screens %s", sres.Screens))
-	as.Equal(screenCount, sres.Count, "The count should be correct")
+	as.Equal(screenCount, len(sres.Results), fmt.Sprintf("We should have a set number of screens %s", sres.Results))
+	as.Equal(screenCount, sres.Total, "The count should be correct")
 
 	// Validate the task is now done
 	checkR := as.JSON(fmt.Sprintf("/task_requests/%s", tr.ID.String())).Get()
