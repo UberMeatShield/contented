@@ -204,7 +204,8 @@ func (as *ActionSuite) Test_CreateContainerPreviews() {
 		}
 	}
 	man := GetManagerActionSuite(cfg, as)
-	cnts, c_err := man.ListContainers(0, 2)
+	cnts, count, c_err := man.ListContainers(ContainerQuery{Page: 1, PerPage: 2})
+	as.Greater(count, 0, "There should be a container")
 	as.Equal(len(*cnts), 1, "It should have containers")
 	as.NoError(c_err)
 
@@ -258,7 +259,8 @@ func (as *ActionSuite) Test_PreviewAllData() {
 	c_err := CreateInitialStructure(cfg)
 	man := GetManagerActionSuite(cfg, as)
 
-	cnts, c_err := man.ListContainers(0, 3)
+	cnts, count, c_err := man.ListContainers(ContainerQuery{Page: 1, PerPage: 3})
+	as.Greater(count, 1, "There should be a positive count")
 	as.Equal(len(*cnts), 3, "It should have containers")
 	as.NoError(c_err)
 

@@ -241,26 +241,22 @@ func (cm ContentManagerMemory) getContentFiltered(containerID string, search str
 }
 
 // TODO: Make it page but right now this will only be used in splash (regex it?)
-func (cm ContentManagerMemory) SearchContainers(search string, page int, per_page int, includeHidden bool) (*models.Containers, error) {
-	cArr := models.Containers{}
-	if search == "" || search == "*" {
-		return cm.ListContainersFiltered(page, per_page, includeHidden)
+func (cm ContentManagerMemory) SearchContainers(cs ContainerQuery) (*models.Containers, int, error) {
+	cnts, _, cErr := cm.ListContainersFiltered(cs)
+	if cErr != nil {
+		return nil, -1, cErr
 	}
-
-	searcher := regexp.MustCompile("(?i)" + search)
-	mem := cm.GetStore()
-	for _, c := range mem.ValidContainers {
+	if cnts == nil {
+		cnts = &models.Containers{}
+	}
+	cArr := models.Containers{}
+	searcher := regexp.MustCompile("(?i)" + cs.Search)
+	for _, c := range *cnts {
 		if searcher.MatchString(c.Name) {
-			if includeHidden == false {
-				if c.Hidden != true {
-					cArr = append(cArr, c)
-				}
-			} else {
-				cArr = append(cArr, c)
-			}
+			cArr = append(cArr, c)
 		}
 	}
-	return &cArr, nil
+	return &cArr, len(cArr), nil
 }
 
 // Awkard GoLang interface support is awkward
@@ -364,23 +360,27 @@ func (cm ContentManagerMemory) UpdateScreen(s *models.Screen) error {
 }
 
 // Given the current parameters in the buffalo context return a list of matching containers.
-func (cm ContentManagerMemory) ListContainersContext() (*models.Containers, error) {
-	_, per_page, page := GetPagination(cm.Params(), cm.cfg.Limit)
-	return cm.ListContainers(page, per_page)
+func (cm ContentManagerMemory) ListContainersContext() (*models.Containers, int, error) {
+	params := cm.Params()
+	_, limit, page := GetPagination(params, cm.cfg.Limit)
+	cs := ContainerQuery{
+		Page:    page,
+		PerPage: limit,
+		Name:    StringDefault(params.Get("name"), ""),
+	}
+	return cm.ListContainers(cs)
 }
 
 // Actually list containers using a page and per_page which is consistent with buffalo standard pagination
-func (cm ContentManagerMemory) ListContainers(page int, per_page int) (*models.Containers, error) {
-	return cm.ListContainersFiltered(page, per_page, false)
+func (cm ContentManagerMemory) ListContainers(cs ContainerQuery) (*models.Containers, int, error) {
+	return cm.ListContainersFiltered(cs)
 }
 
-func (cm ContentManagerMemory) ListContainersFiltered(page int, per_page int, includeHidden bool) (*models.Containers, error) {
-	log.Printf("List Containers with page(%d) and per_page(%d)", page, per_page)
-
+func (cm ContentManagerMemory) ListContainersFiltered(cs ContainerQuery) (*models.Containers, int, error) {
 	c_arr := models.Containers{}
 	mem := cm.GetStore()
 	for _, c := range mem.ValidContainers {
-		if includeHidden == false {
+		if cs.IncludeHidden == false {
 			if c.Hidden != true {
 				c_arr = append(c_arr, c)
 			}
@@ -391,10 +391,11 @@ func (cm ContentManagerMemory) ListContainersFiltered(page int, per_page int, in
 	sort.SliceStable(c_arr, func(i, j int) bool {
 		return c_arr[i].Idx < c_arr[j].Idx
 	})
+	count := len(c_arr)
 
-	offset, end := GetOffsetEnd(page, per_page, len(c_arr))
+	offset, end := GetOffsetEnd(cs.Page, cs.PerPage, len(c_arr))
 	c_arr = c_arr[offset:end]
-	return &c_arr, nil
+	return &c_arr, count, nil
 }
 
 // Get a single container given the primary key

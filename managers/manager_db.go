@@ -74,10 +74,12 @@ func (cm ContentManagerDB) ListContent(cs ContentQuery) (*models.Contents, int, 
 	if cs.ContainerID != "" {
 		q = q.Where("container_id = ?", cs.ContainerID)
 	}
-	if q_err := q.All(contentContainers); q_err != nil {
-		return nil, -1, q_err
-	}
 	count, _ := q.Count(&models.Contents{})
+	if count > 0 {
+		if q_err := q.All(contentContainers); q_err != nil {
+			return nil, -1, q_err
+		}
+	}
 	return contentContainers, count, nil
 }
 
@@ -188,39 +190,45 @@ func (cm ContentManagerDB) SearchContent(sr SearchQuery) (*models.Contents, int,
 	count, _ := q.Count(&models.Contents{})
 	log.Printf("Total count of search content %d using search (%s) and contentType (%s)", count, sr.Text, sr.ContentType)
 
-	if q_err := q.All(contentContainers); q_err != nil {
-		return contentContainers, count, q_err
-	}
-	// Now need to get any screens and associate them in a lookup
-	screenMap, s_err := cm.LoadRelatedScreens(contentContainers)
-	contentWithScreens := models.Contents{}
-	if s_err == nil {
-		for _, mcPt := range *contentContainers {
-			mc := mcPt // GoLang... sometimes this just makes me sad.
-			if _, ok := screenMap[mc.ID]; ok {
-				mc.Screens = screenMap[mc.ID]
-			}
-			contentWithScreens = append(contentWithScreens, mc)
+	if count > 0 {
+		if q_err := q.All(contentContainers); q_err != nil {
+			return contentContainers, -1, q_err
 		}
+		// Now need to get any screens and associate them in a lookup
+		screenMap, s_err := cm.LoadRelatedScreens(contentContainers)
+		contentWithScreens := models.Contents{}
+		if s_err == nil {
+			for _, mcPt := range *contentContainers {
+				mc := mcPt // GoLang... sometimes this just makes me sad.
+				if _, ok := screenMap[mc.ID]; ok {
+					mc.Screens = screenMap[mc.ID]
+				}
+				contentWithScreens = append(contentWithScreens, mc)
+			}
+		}
+		return &contentWithScreens, count, nil
 	}
-	return &contentWithScreens, count, nil
+	return contentContainers, count, nil
 }
 
-func (cm ContentManagerDB) SearchContainers(search string, page int, per_page int, includeHidden bool) (*models.Containers, error) {
-	if search == "" || search == "*" {
-		return cm.ListContainers(page, per_page)
+func (cm ContentManagerDB) SearchContainers(cs ContainerQuery) (*models.Containers, int, error) {
+	if cs.Search == "" || cs.Search == "*" {
+		return cm.ListContainers(cs)
 	}
 	containers := &models.Containers{}
 	tx := cm.GetConnection()
-	q := tx.Paginate(page, per_page)
-	q = q.Where("name ilike ?", search)
-	if includeHidden == false {
+	q := tx.Paginate(cs.Page, cs.PerPage)
+	q = q.Where("name ilike ?", cs.Search)
+	if cs.IncludeHidden == false {
 		q = q.Where(`hidden = ?`, false)
 	}
-	if q_err := q.All(containers); q_err != nil {
-		return containers, q_err
+	count, _ := q.Count(&models.Containers{})
+	if count > 0 {
+		if q_err := q.All(containers); q_err != nil {
+			return containers, -1, q_err
+		}
 	}
-	return containers, nil
+	return containers, count, nil
 }
 
 func (cm ContentManagerDB) LoadRelatedScreens(content *models.Contents) (models.ScreenCollection, error) {
@@ -257,30 +265,40 @@ func (cm ContentManagerDB) LoadRelatedScreens(content *models.Contents) (models.
 	return screenMap, nil
 }
 
+// Hate
 // The default list using the current manager configuration
-func (cm ContentManagerDB) ListContainersContext() (*models.Containers, error) {
-	return cm.ListContainers(1, cm.cfg.Limit)
+func (cm ContentManagerDB) ListContainersContext() (*models.Containers, int, error) {
+	params := cm.Params()
+	_, limit, page := GetPagination(params, cm.cfg.Limit)
+	cs := ContainerQuery{
+		Name:    StringDefault(params.Get("name"), ""),
+		Page:    page,
+		PerPage: limit,
+	}
+	return cm.ListContainers(cs)
 }
 
-func (cm ContentManagerDB) ListContainers(page int, per_page int) (*models.Containers, error) {
-	return cm.ListContainersFiltered(page, per_page, false)
+func (cm ContentManagerDB) ListContainers(cs ContainerQuery) (*models.Containers, int, error) {
+	return cm.ListContainersFiltered(cs)
 }
 
 // TODO: Add in support for actually doing the query using the current buffalo.Context
-func (cm ContentManagerDB) ListContainersFiltered(page int, per_page int, includeHidden bool) (*models.Containers, error) {
-	log.Printf("DB List all containers")
+func (cm ContentManagerDB) ListContainersFiltered(cs ContainerQuery) (*models.Containers, int, error) {
 	tx := cm.GetConnection()
-	q := tx.Paginate(page, per_page)
-	if includeHidden == false {
+	q := tx.Paginate(cs.Page, cs.PerPage)
+	if cs.IncludeHidden == false {
 		q = q.Where("hidden = ?", false)
 	}
 
-	// Retrieve all Containers from the DB
+	// Retrieve all Containers from the DB (if there are any)
+	count, _ := q.Count(&models.Containers{})
 	containers := &models.Containers{}
-	if err := q.All(containers); err != nil {
-		return nil, err
+	if count > 0 {
+		if err := q.All(containers); err != nil {
+			return nil, count, err
+		}
 	}
-	return containers, nil
+	return containers, count, nil
 }
 
 // TODO: Need a preview test using the database where we do NOT have a preview created
@@ -343,10 +361,12 @@ func (cm ContentManagerDB) ListScreens(sr ScreensQuery) (*models.Screens, int, e
 	if sr.ContentID != "" {
 		q = q.Where("content_id = ?", sr.ContentID)
 	}
-	if q_err := q.All(previews); q_err != nil {
-		return nil, -1, q_err
-	}
 	count, _ := q.Count(&models.Screens{})
+	if count > 0 {
+		if q_err := q.All(previews); q_err != nil {
+			return nil, -1, q_err
+		}
+	}
 	return previews, count, nil
 }
 

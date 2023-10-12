@@ -17,8 +17,9 @@ func (as *ActionSuite) Test_ManagerContainers() {
 	test_common.InitFakeApp(false)
 	ctx := test_common.GetContext(as.App)
 	man := GetManager(&ctx)
-	containers, err := man.ListContainersContext()
+	containers, count, err := man.ListContainersContext()
 	as.NoError(err)
+	as.Greater(count, 1, "There should be containers")
 
 	for _, c := range *containers {
 		c_mem, err := man.GetContainer(c.ID)
@@ -79,9 +80,10 @@ func (as *ActionSuite) Test_MemoryManagerPaginate() {
 	man := GetManager(&ctx)
 	as.Equal(man.CanEdit(), false, "Memory manager should not allow editing")
 
-	containers, err := man.ListContainers(1, 1)
+	containers, count, err := man.ListContainers(ContainerQuery{Page: 1, PerPage: 1})
 	as.NoError(err, "It should list with pagination")
 	as.Equal(1, len(*containers), "It should respect paging")
+	as.Equal(5, count, "Paging check that count is still correct")
 
 	cnt := (*containers)[0]
 	as.NotNil(cnt, "There should be a container with 12 entries")
@@ -97,8 +99,9 @@ func (as *ActionSuite) Test_MemoryManagerPaginate() {
 	as.NotEqual((*content_page_3)[3].ID, (*content_page_1)[3].ID, "Ensure it actually paged")
 
 	// Last container pagination check
-	l_cnts, _ := man.ListContainers(4, 1)
+	l_cnts, count, _ := man.ListContainers(ContainerQuery{Page: 4, PerPage: 1})
 	as.Equal(1, len(*l_cnts), "It should still return only as we are on the last page")
+	as.Equal(5, count, "The count should be consistent")
 	l_cnt := (*l_cnts)[0]
 	as.Equal(test_common.EXPECT_CNT_COUNT[l_cnt.Name], l_cnt.Total, "There are 3 entries in the ordered test data last container")
 }
@@ -110,7 +113,7 @@ func (as *ActionSuite) Test_ManagerInitialize() {
 	man := GetManager(&ctx)
 	as.NotNil(man, "It should have a manager defined after init")
 
-	containers, err := man.ListContainersContext()
+	containers, _, err := man.ListContainersContext()
 	as.NoError(err, "It should list all containers")
 	as.NotNil(containers, "It should have containers")
 	as.Equal(len(*containers), test_common.TOTAL_CONTAINERS, "Unexpected container count")
@@ -137,14 +140,15 @@ func (as *ActionSuite) Test_MemoryManagerSearch() {
 	man := GetManager(&ctx)
 	as.NotNil(man, "It should have a manager defined after init")
 
-	containers, err := man.ListContainersContext()
+	containers, _, err := man.ListContainersContext()
 	as.NoError(err, "It should list all containers")
 	as.NotNil(containers, "It should have containers")
 	as.Equal(len(*containers), test_common.TOTAL_CONTAINERS, "Wrong number of containers found")
 
-	s_cnts, s_err := man.SearchContainers("dir2", 1, 2, false)
+	s_cnts, count, s_err := man.SearchContainers(ContainerQuery{Search: "dir2", Page: 1, PerPage: 2})
 	as.NoError(s_err, "Error searching memory containers")
 	as.Equal(1, len(*s_cnts), "It should only filter to one directory")
+	as.Equal(1, count, "There should be one count")
 
 	sr := SearchQuery{Text: "Donut", PerPage: 20}
 	mcs, total, err := man.SearchContent(sr)
@@ -179,8 +183,8 @@ func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
 	as.Equal(len(*mcs), 1, "One donut should be found")
 	as.Equal(total, len(*mcs), "It should get the total right")
 
-	cnts, eep := man.ListContainers(0, 10)
-	as.NoError(eep, "It should have 4 containers")
+	cnts, _, eep := man.ListContainers(ContainerQuery{Page: 1, PerPage: 10})
+	as.NoError(eep, fmt.Sprintf("It should have 4 containers %s", eep))
 	as.Greater(len(*cnts), 1, "We should have containers")
 
 	allContent, count, errAll := man.ListContent(ContentQuery{PerPage: 50})

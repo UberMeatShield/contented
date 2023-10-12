@@ -33,9 +33,10 @@ func (as *ActionSuite) Test_DbManagerSearch() {
 	c2_err := man.CreateContainer(cnt2)
 	as.NoError(c2_err)
 
-	cnts, s_err := man.SearchContainers("dir1", 1, 2, false)
+	cnts, count, s_err := man.SearchContainers(ContainerQuery{Search: "dir1", Page: 1, PerPage: 2})
 	as.NoError(s_err, "Searching for dir1 caused an error")
 	as.Equal(1, len(*cnts), "We should only get one container back")
+	as.Equal(1, count, "It should get the count right")
 
 	for _, mc := range content1 {
 		man.CreateContent(&mc)

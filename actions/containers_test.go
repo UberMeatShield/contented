@@ -136,8 +136,9 @@ func (as *ActionSuite) Test_Memory_ReadOnlyDenyEdit() {
 	ctx := test_common.GetContext(as.App)
 	man := managers.GetManager(&ctx)
 
-	containers, err := man.ListContainersContext()
+	containers, count, err := man.ListContainersContext()
 	as.NoError(err, "It should list containers")
+	as.Greater(count, 0, "The count should be positive")
 	as.Greater(len(*containers), 0, "There should be containers")
 
 	for _, c := range *containers {

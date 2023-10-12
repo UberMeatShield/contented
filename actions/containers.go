@@ -3,6 +3,7 @@ package actions
 import (
 	"contented/managers"
 	"contented/models"
+	"log"
 
 	"net/http"
 
@@ -33,10 +34,11 @@ func (v ContainersResource) List(c buffalo.Context) error {
 	// Get the DB connection from the context
 
 	man := managers.GetManager(&c)
-	containers, err := man.ListContainersContext()
+	containers, count, err := man.ListContainersContext()
 	if err != nil {
 		return c.Error(http.StatusBadRequest, err)
 	}
+	log.Printf("Found %d containers", count)
 	return c.Render(200, r.JSON(containers))
 }
 

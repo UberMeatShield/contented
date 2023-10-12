@@ -94,7 +94,9 @@ func SplashHandler(c buffalo.Context) error {
 	sr := SplashResponse{}
 	if cfg.SplashContainerName != "" {
 		log.Printf("It should look up %s", cfg.SplashContainerName)
-		if cnts, err := man.SearchContainers(cfg.SplashContainerName, 1, 1, true); err == nil {
+
+		cs := managers.ContainerQuery{Name: cfg.SplashContainerName, PerPage: 1, Page: 1, IncludeHidden: true}
+		if cnts, _, err := man.SearchContainers(cs); err == nil {
 			if cnts != nil && len(*cnts) == 1 {
 				refs := *cnts // Ok, seriously why is the de-ref so annoying
 				cnt := refs[0]

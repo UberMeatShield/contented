@@ -34,6 +34,7 @@ type GetConnType func() *pop.Connection
 type GetParamsType func() *url.Values
 type GetAppWorker func() worker.Worker
 
+// TODO: Make it Search vs Name(Src)
 type SearchQuery struct {
 	Text        string   `json:"text" default:""`
 	Page        int      `json:"page" default:"1"`
@@ -56,6 +57,14 @@ type ScreensQuery struct {
 	Page      int    `json:"page" default:"1"`
 	PerPage   int    `json:"per_page" default:"100"`
 	ContentID string `json:"content_id" default:""`
+}
+
+type ContainerQuery struct {
+	Name          string `json:"name" default:""`
+	Search        string `json:"search" default:""`
+	Page          int    `json:"page" default:"1"`
+	PerPage       int    `json:"per_page" default:"100"`
+	IncludeHidden bool   `json:"hidden" default:"false"`
 }
 
 type ContentQuery struct {
@@ -82,9 +91,9 @@ type ContentManager interface {
 
 	// Container Management
 	GetContainer(cID uuid.UUID) (*models.Container, error)
-	ListContainers(page int, per_page int) (*models.Containers, error)
-	ListContainersFiltered(page int, per_page int, includeHidden bool) (*models.Containers, error)
-	ListContainersContext() (*models.Containers, error)
+	ListContainers(cq ContainerQuery) (*models.Containers, int, error)
+	ListContainersFiltered(cq ContainerQuery) (*models.Containers, int, error)
+	ListContainersContext() (*models.Containers, int, error)
 	UpdateContainer(c *models.Container) (*models.Container, error)
 	CreateContainer(c *models.Container) error
 	DestroyContainer(id string) (*models.Container, error)
@@ -96,7 +105,7 @@ type ContentManager interface {
 
 	SearchContentContext() (*models.Contents, int, error)
 	SearchContent(sr SearchQuery) (*models.Contents, int, error)
-	SearchContainers(search string, page int, per_page int, includeHidden bool) (*models.Containers, error)
+	SearchContainers(cs ContainerQuery) (*models.Containers, int, error)
 
 	UpdateContent(content *models.Content) error
 	DestroyContent(id string) (*models.Content, error)
