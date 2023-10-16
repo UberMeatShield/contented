@@ -2,6 +2,8 @@ package models
 
 import (
 	"encoding/json"
+	"fmt"
+	"slices"
 	"time"
 
 	//"contented/actions"
@@ -63,10 +65,6 @@ func GetContentSort(arr Contents, jsonFieldName string) ContentJsonSort {
 		theSort = func(i, j int) bool {
 			return arr[i].ContainerID.UUID.String() < arr[j].ContainerID.UUID.String()
 		}
-	case "idx":
-		theSort = func(i, j int) bool {
-			return arr[i].Idx < arr[j].Idx
-		}
 	case "size":
 		theSort = func(i, j int) bool {
 			return arr[i].SizeBytes < arr[j].SizeBytes
@@ -75,12 +73,40 @@ func GetContentSort(arr Contents, jsonFieldName string) ContentJsonSort {
 		theSort = func(i, j int) bool {
 			return arr[i].Description < arr[j].Description
 		}
-	default:
+	case "created_at":
 		theSort = func(i, j int) bool {
 			return arr[i].CreatedAt.Unix() < arr[j].CreatedAt.Unix()
 		}
+	case "idx":
+	default:
+		theSort = func(i, j int) bool {
+			return arr[i].Idx < arr[j].Idx
+		}
+
 	}
 	return theSort
+}
+
+var VALID_CONTENT_ORDERS = []string{
+	"created_at",
+	"updated_at",
+	"content_type",
+	"container_id",
+	"idx",
+	"size",
+	"description",
+}
+
+func GetContentOrder(order string, direction string) string {
+	valid_order := "idx"
+	if slices.Contains(VALID_CONTENT_ORDERS, order) {
+		valid_order = order
+	}
+	valid_direction := "desc"
+	if direction == "asc" || direction == "desc" {
+		valid_direction = direction
+	}
+	return fmt.Sprintf("%s %s", valid_order, valid_direction)
 }
 
 // String is not required by pop and may be deleted
@@ -92,6 +118,13 @@ func (m Content) String() string {
 // Contents is not required by pop and may be deleted
 type Contents []Content
 type ContentMap map[uuid.UUID]Content
+
+func (arr Contents) Reverse() Contents {
+	for i, j := 0, len(arr)-1; i < j; i, j = i+1, j-1 {
+		arr[i], arr[j] = arr[j], arr[i]
+	}
+	return arr
+}
 
 // String is not required by pop and may be deleted
 func (m Contents) String() string {

@@ -74,6 +74,8 @@ func (cm ContentManagerDB) ListContent(cs ContentQuery) (*models.Contents, int, 
 	if cs.ContainerID != "" {
 		q = q.Where("container_id = ?", cs.ContainerID)
 	}
+	q = q.Order(models.GetContentOrder(cs.Order, cs.Direction))
+
 	count, _ := q.Count(&models.Contents{})
 	if count > 0 {
 		if q_err := q.All(contentContainers); q_err != nil {
@@ -189,6 +191,7 @@ func (cm ContentManagerDB) SearchContent(sr ContentQuery) (*models.Contents, int
 	if sr.IncludeHidden == false {
 		q = q.Where(`hidden = ?`, false)
 	}
+	q = q.Order(models.GetContentOrder(sr.Order, sr.Direction))
 
 	count, _ := q.Count(&models.Contents{})
 	log.Printf("Total count of search content %d using search (%s) and contentType (%s)", count, sr.Text, sr.ContentType)
@@ -225,6 +228,7 @@ func (cm ContentManagerDB) SearchContainers(cs ContainerQuery) (*models.Containe
 	if cs.IncludeHidden == false {
 		q = q.Where(`hidden = ?`, false)
 	}
+	q = q.Order(models.GetContainerOrder(cs.Order, cs.Direction))
 	count, _ := q.Count(&models.Containers{})
 	if count > 0 {
 		if q_err := q.All(containers); q_err != nil {
@@ -268,7 +272,6 @@ func (cm ContentManagerDB) LoadRelatedScreens(content *models.Contents) (models.
 	return screenMap, nil
 }
 
-// Hate
 // The default list using the current manager configuration
 func (cm ContentManagerDB) ListContainersContext() (*models.Containers, int, error) {
 	params := cm.Params()
@@ -292,6 +295,7 @@ func (cm ContentManagerDB) ListContainersFiltered(cs ContainerQuery) (*models.Co
 	if cs.IncludeHidden == false {
 		q = q.Where("hidden = ?", false)
 	}
+	q.Order(models.GetContainerOrder(cs.Order, cs.Direction))
 
 	// Retrieve all Containers from the DB (if there are any)
 	count, _ := q.Count(&models.Containers{})

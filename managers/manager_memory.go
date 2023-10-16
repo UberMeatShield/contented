@@ -120,6 +120,12 @@ func (cm ContentManagerMemory) SearchContent(sr ContentQuery) (*models.Contents,
 	mc_arr := *filteredContent
 	count := len(mc_arr)
 	offset, end := GetOffsetEnd(sr.Page, sr.PerPage, count)
+
+	// Finally sort any content that is matching so that pagination will work
+	sort.SliceStable(mc_arr, models.GetContentSort(mc_arr, sr.Order))
+	if sr.Direction == "desc" {
+		mc_arr = mc_arr.Reverse()
+	}
 	if end > 0 { // If it is empty a slice ending in 0 = boom
 		mc_arr = mc_arr[offset:end]
 		return &mc_arr, count, nil
@@ -213,8 +219,6 @@ func (cm ContentManagerMemory) getContentFiltered(cs ContentQuery) (*models.Cont
 		}
 		mcArr = visibleArr
 	}
-	// Finally sort any content that is matching so that pagination will work
-	sort.SliceStable(mcArr, models.GetContentSort(mcArr, cs.Order))
 	return &mcArr, nil
 }
 
@@ -239,6 +243,9 @@ func (cm ContentManagerMemory) SearchContainers(cs ContainerQuery) (*models.Cont
 
 	offset, end := GetOffsetEnd(cs.Page, limit, len(cArr))
 	sort.SliceStable(cArr, models.GetContainerSort(cArr, cs.Order))
+	if cs.Direction == "desc" {
+		cArr = cArr.Reverse()
+	}
 	count := len(cArr)
 	if end > 0 { // If it is empty a slice ending in 0 = boom
 		cArr = cArr[offset:end]
@@ -466,6 +473,9 @@ func (cm ContentManagerMemory) ListScreens(sr ScreensQuery) (*models.Screens, in
 	// Potentially text search the screens
 
 	sort.SliceStable(s_arr, models.GetScreensSort(s_arr, sr.Order))
+	if sr.Direction == "desc" {
+		s_arr = s_arr.Reverse()
+	}
 	count := len(s_arr)
 	offset, end := GetOffsetEnd(sr.Page, sr.PerPage, len(s_arr))
 	if end > 0 { // If it is empty a slice ending in 0 = boom

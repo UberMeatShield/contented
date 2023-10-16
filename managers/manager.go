@@ -40,6 +40,7 @@ type TaskQuery struct {
 	ContentID string `json:"content_id" default:""`
 	Order     string `json:"order" default:"created_at"`
 	Status    string `json:"status" default:""`
+	Direction string `json:"direction" default:"desc"`
 }
 
 type ScreensQuery struct {
@@ -48,6 +49,7 @@ type ScreensQuery struct {
 	PerPage   int    `json:"per_page" default:"100"`
 	ContentID string `json:"content_id" default:""`
 	Order     string `json:"order" default:"created_at"`
+	Direction string `json:"direction" default:"desc"`
 }
 
 type ContainerQuery struct {
@@ -57,6 +59,7 @@ type ContainerQuery struct {
 	PerPage       int    `json:"per_page" default:"100"`
 	IncludeHidden bool   `json:"hidden" default:"false"`
 	Order         string `json:"order" default:"created_at"`
+	Direction     string `json:"direction" default:"desc"`
 }
 
 type ContentQuery struct {
@@ -69,6 +72,7 @@ type ContentQuery struct {
 	IncludeHidden bool     `json:"hidden" default:"false"`
 	Order         string   `json:"order" default:"created_at"`
 	Tags          []string `json:"tags" default:"[]"`
+	Direction     string   `json:"direction" default:"desc"`
 }
 
 type QueryInterface struct {

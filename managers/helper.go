@@ -153,7 +153,8 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
 	}
 
 	// TODO: It should fix up the total count there (-1 for unlimited?)
-	content, _, q_err := cm.ListContent(ContentQuery{ContainerID: c.ID.String(), PerPage: 90000})
+	cq := ContentQuery{ContainerID: c.ID.String(), PerPage: 90000, Direction: "asc", Order: "idx"}
+	content, _, q_err := cm.ListContent(cq)
 	if q_err != nil {
 		log.Fatal(q_err) // Also fatal if we can no longer list content
 	}

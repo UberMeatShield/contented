@@ -67,6 +67,13 @@ type Screens []Screen
 type ScreenMap map[uuid.UUID]Screen
 type ScreenCollection map[uuid.UUID]Screens
 
+func (arr Screens) Reverse() Screens {
+	for i, j := 0, len(arr)-1; i < j; i, j = i+1, j-1 {
+		arr[i], arr[j] = arr[j], arr[i]
+	}
+	return arr
+}
+
 // String is not required by pop and may be deleted
 func (m Screens) String() string {
 	jm, _ := json.Marshal(m)

@@ -194,7 +194,8 @@ func (as *ActionSuite) Test_CreateContainerPreviews() {
 
 	// Check that we have a container preview at this point
 	expect_c_preview := ""
-	for _, mc := range content {
+	for idx, mc := range content {
+		mc.Idx = idx
 		mc.ContainerID = nulls.NewUUID(c_pt.ID)
 		mc_err := models.DB.Create(&mc)
 		as.NoError(mc_err)
@@ -203,6 +204,7 @@ func (as *ActionSuite) Test_CreateContainerPreviews() {
 			expect_c_preview = "/preview/" + mc.ID.String()
 		}
 	}
+
 	man := GetManagerActionSuite(cfg, as)
 	cnts, count, c_err := man.ListContainers(ContainerQuery{Page: 1, PerPage: 2})
 	as.Greater(count, 0, "There should be a container")
@@ -211,6 +213,7 @@ func (as *ActionSuite) Test_CreateContainerPreviews() {
 
 	p_err := CreateContainerPreviews(c_pt, man)
 	as.Equal(expect_c_preview, c_pt.PreviewUrl, "It should assign a mc preview to the container")
+
 	as.NoError(p_err, "An error happened creating the previews")
 	dstPath := utils.GetContainerPreviewDst(c_pt)
 	previews, read_err := ioutil.ReadDir(dstPath)
@@ -219,7 +222,7 @@ func (as *ActionSuite) Test_CreateContainerPreviews() {
 
 	// Validate that the content was updated in the DB
 	content_check := models.Contents{}
-	models.DB.Where("container_id = ?", c_pt.ID).All(&content_check)
+	models.DB.Where("container_id = ?", c_pt.ID).Order("created_at desc").All(&content_check)
 	as.Equal(TOTAL_IN_SCREENS, len(content_check), "We should just have 6 things to check")
 	for _, mc_check := range content_check {
 		as.NotEqual(mc_check.Preview, "", "It should now have a preview")
