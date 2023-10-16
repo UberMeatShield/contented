@@ -39,6 +39,7 @@
               [containerWidth]="screenWidth - previewWidth"
               [containerHeight]="2 * previewHeight"
               (clickedItem)="screenEvt($event)"
+              (screensLoaded)="screensLoaded($event)"
             ></screens-cmp>
           </div>
         </div>

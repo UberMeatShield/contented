@@ -22,6 +22,8 @@ export class ScreensCmp implements OnInit {
     @Input() containerWidth: number = null;
     @Input() containerHeight: number = null;
 
+    @Output() screensLoaded: EventEmitter<Array<Screen>> = new EventEmitter<Array<Screen>>();
+
     // TODO: These are not used
     /*
     @Input() maxRendered: number = 8; // Default setting for how many should be visible at any given time
@@ -52,8 +54,10 @@ export class ScreensCmp implements OnInit {
                 finalize(() => { this.loading = false; })
             ).subscribe(
                 (res) => {
+                    // Could emit an event for the screens loading and listen so it updates the content
                     this.screens = res.results;
                     this.calculateDimensions();
+                    this.screensLoaded.emit(this.screens);
                 }, err => {
                     console.error(err);
                 }

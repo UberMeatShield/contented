@@ -47,6 +47,19 @@ export class VideoPreviewCmp implements OnInit {
     constructor(public dialog: MatDialog) {
     }
 
+
+    public screensLoaded(screens: Array<Screen>) {
+        console.log("Screens loaded", screens);
+        if (this.content) {
+            this.content.screens = this.content.screens || [];
+            _.each(screens, screen => {
+                if (this.content && this.content.id == screen.content_id) {
+                    this.content.screens.push(screen);
+                }
+            });
+        }
+    }
+
     public ngOnInit() {
         this.calculateDimensions();
     }
