@@ -179,7 +179,7 @@ export class ContentedService {
 
     public searchContent(text: string, offset: number = 0, limit: number = 0, contentType: string = "", cId: string = "") {
         let params = this.getPaginationParams(offset, limit);
-        params = params.set("text", text);
+        params = params.set("search", text);
         if (contentType) {
             params = params.set("contentType", contentType);
         }

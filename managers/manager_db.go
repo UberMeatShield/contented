@@ -74,6 +74,8 @@ func (cm ContentManagerDB) ListContent(cs ContentQuery) (*models.Contents, int, 
 	if cs.ContainerID != "" {
 		q = q.Where("container_id = ?", cs.ContainerID)
 	}
+	q = q.Order(models.GetContentOrder(cs.Order, cs.Direction))
+
 	count, _ := q.Count(&models.Contents{})
 	if count > 0 {
 		if q_err := q.All(contentContainers); q_err != nil {
@@ -159,11 +161,11 @@ func (cm ContentManagerDB) ListAllContent(page int, per_page int) (*models.Conte
 
 // It should probably be able to search the container too?
 func (cm ContentManagerDB) SearchContentContext() (*models.Contents, int, error) {
-	sr := ContextToSearchQuery(cm.Params(), cm.GetCfg())
+	sr := ContextToContentQuery(cm.Params(), cm.GetCfg())
 	return cm.SearchContent(sr)
 }
 
-func (cm ContentManagerDB) SearchContent(sr SearchQuery) (*models.Contents, int, error) {
+func (cm ContentManagerDB) SearchContent(sr ContentQuery) (*models.Contents, int, error) {
 	contentContainers := &models.Contents{}
 	tx := cm.GetConnection()
 	q := tx.Paginate(sr.Page, sr.PerPage)
@@ -171,10 +173,13 @@ func (cm ContentManagerDB) SearchContent(sr SearchQuery) (*models.Contents, int,
 	if len(sr.Tags) > 0 {
 		q = q.Join("contents_tags as ct", "ct.content_id = contents.id").Where("ct.tag_id IN (?)", sr.Tags)
 	}
-	// Could also search description
-	if sr.Text != "*" && sr.Text != "" {
-		search := ("%" + sr.Text + "%")
+	// Could also search description (expand this)
+	if sr.Search != "*" && sr.Search != "" {
+		search := ("%" + sr.Search + "%")
 		q = q.Where(`src like ?`, search)
+	}
+	if sr.Text != "" {
+		q = q.Where(`src = ?`, sr.Text)
 	}
 	if sr.ContentType != "" {
 		contentType := ("%" + sr.ContentType + "%")
@@ -183,9 +188,10 @@ func (cm ContentManagerDB) SearchContent(sr SearchQuery) (*models.Contents, int,
 	if sr.ContainerID != "" {
 		q = q.Where(`container_id = ?`, sr.ContainerID)
 	}
-	if sr.Hidden == false {
+	if sr.IncludeHidden == false {
 		q = q.Where(`hidden = ?`, false)
 	}
+	q = q.Order(models.GetContentOrder(sr.Order, sr.Direction))
 
 	count, _ := q.Count(&models.Contents{})
 	log.Printf("Total count of search content %d using search (%s) and contentType (%s)", count, sr.Text, sr.ContentType)
@@ -222,6 +228,7 @@ func (cm ContentManagerDB) SearchContainers(cs ContainerQuery) (*models.Containe
 	if cs.IncludeHidden == false {
 		q = q.Where(`hidden = ?`, false)
 	}
+	q = q.Order(models.GetContainerOrder(cs.Order, cs.Direction))
 	count, _ := q.Count(&models.Containers{})
 	if count > 0 {
 		if q_err := q.All(containers); q_err != nil {
@@ -265,7 +272,6 @@ func (cm ContentManagerDB) LoadRelatedScreens(content *models.Contents) (models.
 	return screenMap, nil
 }
 
-// Hate
 // The default list using the current manager configuration
 func (cm ContentManagerDB) ListContainersContext() (*models.Containers, int, error) {
 	params := cm.Params()
@@ -289,6 +295,7 @@ func (cm ContentManagerDB) ListContainersFiltered(cs ContainerQuery) (*models.Co
 	if cs.IncludeHidden == false {
 		q = q.Where("hidden = ?", false)
 	}
+	q.Order(models.GetContainerOrder(cs.Order, cs.Direction))
 
 	// Retrieve all Containers from the DB (if there are any)
 	count, _ := q.Count(&models.Containers{})

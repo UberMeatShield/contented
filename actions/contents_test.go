@@ -82,7 +82,7 @@ func (as *ActionSuite) Test_ContentSubQuery_DB() {
 
 	// Add in a test that uses the search interface via the actions via DB
 	params := url.Values{}
-	params.Add("text", "donut")
+	params.Add("search", "donut")
 	res3 := as.JSON("/search?%s", params.Encode()).Get()
 	as.Equal(http.StatusOK, res3.Code)
 	validate3 := SearchResult{}
@@ -124,7 +124,7 @@ func (as *ActionSuite) Test_MemoryAPIBasics() {
 	as.Equal(test_common.TOTAL_MEDIA, len(validate.Results), "It should have a known set of mock data")
 
 	// I feel like this should be failing?
-	res_search := as.JSON("/search/?text=Large").Get()
+	res_search := as.JSON("/search/?search=Large").Get()
 	as.Equal(res_search.Code, http.StatusOK, "It should search")
 
 	validate_search := SearchResult{}

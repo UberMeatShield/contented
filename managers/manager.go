@@ -34,22 +34,13 @@ type GetConnType func() *pop.Connection
 type GetParamsType func() *url.Values
 type GetAppWorker func() worker.Worker
 
-// TODO: Make it Search vs Name(Src)
-type SearchQuery struct {
-	Text        string   `json:"text" default:""`
-	Page        int      `json:"page" default:"1"`
-	PerPage     int      `json:"per_page" default:"10"`
-	ContainerID string   `json:"container_id" default:""`
-	ContentType string   `json:"content_type" default:""`
-	Hidden      bool     `json:"hidden" default:"false"`
-	Tags        []string `json:"tags" default:"[]"`
-}
-
 type TaskQuery struct {
 	Page      int    `json:"page" default:"1"`
 	PerPage   int    `json:"per_page" default:"100"`
 	ContentID string `json:"content_id" default:""`
+	Order     string `json:"order" default:"created_at"`
 	Status    string `json:"status" default:""`
+	Direction string `json:"direction" default:"desc"`
 }
 
 type ScreensQuery struct {
@@ -57,6 +48,8 @@ type ScreensQuery struct {
 	Page      int    `json:"page" default:"1"`
 	PerPage   int    `json:"per_page" default:"100"`
 	ContentID string `json:"content_id" default:""`
+	Order     string `json:"order" default:"created_at"`
+	Direction string `json:"direction" default:"desc"`
 }
 
 type ContainerQuery struct {
@@ -65,17 +58,27 @@ type ContainerQuery struct {
 	Page          int    `json:"page" default:"1"`
 	PerPage       int    `json:"per_page" default:"100"`
 	IncludeHidden bool   `json:"hidden" default:"false"`
+	Order         string `json:"order" default:"created_at"`
+	Direction     string `json:"direction" default:"desc"`
 }
 
 type ContentQuery struct {
-	Text          string `json:"text" default:""`
-	Page          int    `json:"page" default:"1"`
-	PerPage       int    `json:"per_page" default:"1000"`
-	ContainerID   string `json:"container_id" default:""`
-	IncludeHidden bool   `json:"hidden" default:"false"`
+	Search        string   `json:"search" default:""`
+	Text          string   `json:"text" default:""`
+	Page          int      `json:"page" default:"1"`
+	PerPage       int      `json:"per_page" default:"1000"`
+	ContentType   string   `json:"content_type" default:""`
+	ContainerID   string   `json:"container_id" default:""`
+	IncludeHidden bool     `json:"hidden" default:"false"`
+	Order         string   `json:"order" default:"created_at"`
+	Tags          []string `json:"tags" default:"[]"`
+	Direction     string   `json:"direction" default:"desc"`
 }
 
-func (sr SearchQuery) String() string {
+type QueryInterface struct {
+}
+
+func (sr ContentQuery) String() string {
 	s, _ := json.MarshalIndent(sr, "", "  ")
 	return string(s)
 }
@@ -104,7 +107,7 @@ type ContentManager interface {
 	ListContentContext() (*models.Contents, int, error)
 
 	SearchContentContext() (*models.Contents, int, error)
-	SearchContent(sr SearchQuery) (*models.Contents, int, error)
+	SearchContent(cq ContentQuery) (*models.Contents, int, error)
 	SearchContainers(cs ContainerQuery) (*models.Containers, int, error)
 
 	UpdateContent(content *models.Content) error
@@ -270,17 +273,18 @@ func GetPagination(params pop.PaginationParams, DefaultLimit int) (int, int, int
 }
 
 // TODO: Fill in tags if they are provided.
-func ContextToSearchQuery(params pop.PaginationParams, cfg *utils.DirConfigEntry) SearchQuery {
+func ContextToContentQuery(params pop.PaginationParams, cfg *utils.DirConfigEntry) ContentQuery {
 	_, per_page, page := GetPagination(params, cfg.Limit)
-	sReq := SearchQuery{
-		Text:        StringDefault(params.Get("text"), ""),
-		ContainerID: StringDefault(params.Get("cId"), ""),
-		ContentType: StringDefault(params.Get("contentType"), ""),
-		PerPage:     per_page,
-		Page:        page,
-		Hidden:      false,
+	sReq := ContentQuery{
+		Text:          StringDefault(params.Get("text"), ""),
+		Search:        StringDefault(params.Get("search"), ""),
+		ContainerID:   StringDefault(params.Get("cId"), ""),
+		ContentType:   StringDefault(params.Get("contentType"), ""),
+		PerPage:       per_page,
+		Page:          page,
+		IncludeHidden: false,
+		Order:         StringDefault(params.Get("order"), ""),
 	}
-
 	tagStr := StringDefault(params.Get("tags"), "")
 	if tagStr != "" {
 		sReq.Tags = strings.Split(tagStr, ",")
@@ -466,7 +470,7 @@ func CreateContentAfterEncoding(man ContentManager, originalContent *models.Cont
 	if f, ok := os.Stat(newFile); ok == nil {
 
 		// Check if we already have a content object for this.
-		sr := SearchQuery{Text: f.Name(), ContainerID: originalContent.ContainerID.UUID.String()}
+		sr := ContentQuery{Text: f.Name(), ContainerID: originalContent.ContainerID.UUID.String()}
 		contents, _, err := man.SearchContent(sr)
 		if err != nil {
 			return nil, err

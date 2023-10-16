@@ -84,24 +84,27 @@ func (cm ContentManagerMemory) GetParams() *url.Values {
 func (cm ContentManagerMemory) ListContentContext() (*models.Contents, int, error) {
 	params := cm.Params()
 	_, limit, page := GetPagination(params, cm.cfg.Limit)
+
+	// Note text is an exact match, search is a regex or partial
 	cs := ContentQuery{
 		Text:        StringDefault(params.Get("text"), ""),
 		ContainerID: StringDefault(params.Get("container_id"), ""),
 		Page:        page,
 		PerPage:     limit,
+		Order:       StringDefault(params.Get("order"), ""),
 	}
 	return cm.ListContent(cs)
 }
 
 // It should probably be able to search the container too?
 func (cm ContentManagerMemory) SearchContentContext() (*models.Contents, int, error) {
-	sr := ContextToSearchQuery(cm.Params(), cm.GetCfg())
+	sr := ContextToContentQuery(cm.Params(), cm.GetCfg())
 	return cm.SearchContent(sr)
 }
 
 // Memory version is going to be extra annoying to tag search more than one tag on an or, or AND...
-func (cm ContentManagerMemory) SearchContent(sr SearchQuery) (*models.Contents, int, error) {
-	filteredContent, cErr := cm.getContentFiltered(sr.ContainerID, sr.Text, sr.ContentType, sr.Hidden)
+func (cm ContentManagerMemory) SearchContent(sr ContentQuery) (*models.Contents, int, error) {
+	filteredContent, cErr := cm.getContentFiltered(sr)
 	if cErr != nil {
 		return nil, 0, cErr
 	}
@@ -117,6 +120,12 @@ func (cm ContentManagerMemory) SearchContent(sr SearchQuery) (*models.Contents, 
 	mc_arr := *filteredContent
 	count := len(mc_arr)
 	offset, end := GetOffsetEnd(sr.Page, sr.PerPage, count)
+
+	// Finally sort any content that is matching so that pagination will work
+	sort.SliceStable(mc_arr, models.GetContentSort(mc_arr, sr.Order))
+	if sr.Direction == "desc" {
+		mc_arr = mc_arr.Reverse()
+	}
 	if end > 0 { // If it is empty a slice ending in 0 = boom
 		mc_arr = mc_arr[offset:end]
 		return &mc_arr, count, nil
@@ -141,14 +150,14 @@ func (cm ContentManagerMemory) tagSearch(contents *models.Contents, tags []strin
 }
 
 // Search Request may still make more sense.
-func (cm ContentManagerMemory) getContentFiltered(containerID string, search string, contentType string, includeHidden bool) (*models.Contents, error) {
+func (cm ContentManagerMemory) getContentFiltered(cs ContentQuery) (*models.Contents, error) {
 	// If a containerID is specified and is totally invalid raise an error, otherwise filter
 	var mcArr models.Contents
 	cidArr := models.Contents{}
 	mem := cm.GetStore()
 
-	if containerID != "" {
-		cID, cErr := uuid.FromString(containerID)
+	if cs.ContainerID != "" {
+		cID, cErr := uuid.FromString(cs.ContainerID)
 		if cErr == nil {
 			for _, mc := range mem.ValidContent {
 				if mc.ContainerID.Valid && mc.ContainerID.UUID == cID {
@@ -167,8 +176,9 @@ func (cm ContentManagerMemory) getContentFiltered(containerID string, search str
 		mcArr = cidArr
 	}
 
-	if search != "" && search != "*" {
-		searchStr := regexp.QuoteMeta(search)
+	log.Printf("It should be searching the contents %s", cs.Search)
+	if cs.Search != "" && cs.Search != "*" {
+		searchStr := regexp.QuoteMeta(cs.Search)
 		searcher := regexp.MustCompile("(?i)" + searchStr)
 		searchArr := models.Contents{}
 		for _, mc := range mcArr {
@@ -179,8 +189,18 @@ func (cm ContentManagerMemory) getContentFiltered(containerID string, search str
 		mcArr = searchArr
 	}
 
-	if contentType != "" && contentType != "*" {
-		searcher := regexp.MustCompile(contentType)
+	if cs.Text != "" {
+		nameArr := models.Contents{}
+		for _, content := range mcArr {
+			if content.Src == cs.Text {
+				nameArr = append(nameArr, content)
+			}
+		}
+		mcArr = nameArr
+	}
+
+	if cs.ContentType != "" && cs.ContentType != "*" {
+		searcher := regexp.MustCompile(cs.ContentType)
 		contentArr := models.Contents{}
 		for _, mc := range mcArr {
 			if searcher.MatchString(mc.ContentType) {
@@ -190,7 +210,7 @@ func (cm ContentManagerMemory) getContentFiltered(containerID string, search str
 		mcArr = contentArr
 	}
 
-	if includeHidden == false {
+	if cs.IncludeHidden == false {
 		visibleArr := models.Contents{}
 		for _, mc := range mcArr {
 			if mc.Hidden != true {
@@ -199,11 +219,6 @@ func (cm ContentManagerMemory) getContentFiltered(containerID string, search str
 		}
 		mcArr = visibleArr
 	}
-
-	// Finally sort any content that is matching so that pagination will work
-	sort.SliceStable(mcArr, func(i, j int) bool {
-		return mcArr[i].Idx < mcArr[j].Idx
-	})
 	return &mcArr, nil
 }
 
@@ -227,9 +242,10 @@ func (cm ContentManagerMemory) SearchContainers(cs ContainerQuery) (*models.Cont
 	}
 
 	offset, end := GetOffsetEnd(cs.Page, limit, len(cArr))
-	sort.SliceStable(cArr, func(i, j int) bool {
-		return cArr[i].Idx < cArr[j].Idx
-	})
+	sort.SliceStable(cArr, models.GetContainerSort(cArr, cs.Order))
+	if cs.Direction == "desc" {
+		cArr = cArr.Reverse()
+	}
 	count := len(cArr)
 	if end > 0 { // If it is empty a slice ending in 0 = boom
 		cArr = cArr[offset:end]
@@ -273,10 +289,8 @@ func (cm ContentManagerMemory) ListContentFiltered(cs ContentQuery) (*models.Con
 		}
 	}
 	m_arr = h_arr
-	sort.SliceStable(m_arr, func(i, j int) bool {
-		return m_arr[i].Idx < m_arr[j].Idx
-	})
 
+	sort.SliceStable(m_arr, models.GetContentSort(m_arr, cs.Order))
 	count := len(m_arr)
 	offset, end := GetOffsetEnd(cs.Page, cs.PerPage, len(m_arr))
 	if end > 0 { // If it is empty a slice ending in 0 = boom
@@ -346,6 +360,7 @@ func (cm ContentManagerMemory) ListContainersContext() (*models.Containers, int,
 		Page:    page,
 		PerPage: limit,
 		Name:    StringDefault(params.Get("name"), ""),
+		Order:   StringDefault(params.Get("order"), ""),
 	}
 	return cm.ListContainers(cs)
 }
@@ -428,19 +443,20 @@ func (cm ContentManagerMemory) ListScreensContext() (*models.Screens, int, error
 		Page:      page,
 		PerPage:   limit,
 		ContentID: params.Get("content_id"),
+		Order:     StringDefault(params.Get("order"), ""),
 	}
 	return cm.ListScreens(sr)
 }
 
 // TODO: Get a pattern for each MC, look at a preview Destination, then match against the pattern
 // And build out a set of screens.
-func (cm ContentManagerMemory) ListScreens(sr ScreensQuery) (*models.Screens, int, error) {
+func (cm ContentManagerMemory) ListScreens(sq ScreensQuery) (*models.Screens, int, error) {
 
 	// Did I create this just to sort by Idx across all content?  Kinda strange
 	mem := cm.GetStore()
 	s_arr := models.Screens{}
-	if sr.ContentID != "" {
-		contentID, idErr := uuid.FromString(sr.ContentID)
+	if sq.ContentID != "" {
+		contentID, idErr := uuid.FromString(sq.ContentID)
 		if idErr != nil {
 			return nil, -1, idErr
 		}
@@ -455,12 +471,12 @@ func (cm ContentManagerMemory) ListScreens(sr ScreensQuery) (*models.Screens, in
 		}
 	}
 	// Potentially text search the screens
-
-	sort.SliceStable(s_arr, func(i, j int) bool {
-		return s_arr[i].Idx < s_arr[j].Idx
-	})
+	sort.SliceStable(s_arr, models.GetScreensSort(s_arr, sq.Order))
+	if sq.Direction == "desc" {
+		s_arr = s_arr.Reverse()
+	}
 	count := len(s_arr)
-	offset, end := GetOffsetEnd(sr.Page, sr.PerPage, len(s_arr))
+	offset, end := GetOffsetEnd(sq.Page, sq.PerPage, len(s_arr))
 	if end > 0 { // If it is empty a slice ending in 0 = boom
 		s_arr = s_arr[offset:end]
 		return &s_arr, count, nil

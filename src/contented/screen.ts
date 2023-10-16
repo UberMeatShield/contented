@@ -6,6 +6,8 @@ export class Screen {
     public src: string;
     public idx: number;
 
+    public content_id: string;
+    public size_bytes: number;
     public content_container_id: string;
     public url: string;
 
