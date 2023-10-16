@@ -8,7 +8,7 @@
       "updated": "2023-10-11T10:08:11.309568Z",
       "src": "/donut_[special( gunk.mp4.screens.000ss00000.jpg",
       "idx": 0,
-      "size": 0
+      "size_bytes": 0
     },
     {
       "id": "16c9f5cb-c0b0-4ce8-8e24-3a972c0adb83",
@@ -17,7 +17,7 @@
       "updated": "2023-10-11T10:08:11.316401Z",
       "src": "/donut_[special( gunk.mp4.screens.001ss00002.jpg",
       "idx": 1,
-      "size": 0
+      "size_bytes": 0
     },
     {
       "id": "c1bdab89-158b-405f-806f-005baa143ae8",
@@ -26,7 +26,7 @@
       "updated": "2023-10-11T10:08:11.318995Z",
       "src": "/donut_[special( gunk.mp4.screens.002ss00004.jpg",
       "idx": 2,
-      "size": 0
+      "size_bytes": 0
     },
     {
       "id": "aa3370d9-02bc-4dcd-ad91-63ac8f342904",
@@ -35,7 +35,7 @@
       "updated": "2023-10-11T10:08:11.321049Z",
       "src": "/donut_[special( gunk.mp4.screens.003ss00006.jpg",
       "idx": 3,
-      "size": 0
+      "size_bytes": 0
     },
     {
       "id": "d823f49f-f1d0-4c57-bfd6-ee5c887b53b1",
@@ -44,7 +44,7 @@
       "updated": "2023-10-11T10:08:11.322912Z",
       "src": "/donut_[special( gunk.mp4.screens.004ss00008.jpg",
       "idx": 4,
-      "size": 0
+      "size_bytes": 0
     }
   ]
 }

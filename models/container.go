@@ -2,9 +2,7 @@ package models
 
 import (
 	"encoding/json"
-	"fmt"
 	"path/filepath"
-	"slices"
 	"time"
 
 	"github.com/gobuffalo/pop/v6"
@@ -35,6 +33,8 @@ type Container struct {
 }
 type ContainerJsonSort func(i, j int) bool
 
+var VALID_CONTAINER_ORDERS = []string{"created_at", "updated_at", "total", "name", "preview_url", "description"}
+
 func GetContainerSort(arr Containers, jsonFieldName string) ContentJsonSort {
 	var theSort ContentJsonSort
 	switch jsonFieldName {
@@ -63,6 +63,9 @@ func GetContainerSort(arr Containers, jsonFieldName string) ContentJsonSort {
 			return arr[i].CreatedAt.Unix() < arr[j].CreatedAt.Unix()
 		}
 	case "idx":
+		theSort = func(i, j int) bool {
+			return arr[i].Idx < arr[j].Idx
+		}
 	default:
 		theSort = func(i, j int) bool {
 			return arr[i].Idx < arr[j].Idx
@@ -71,18 +74,8 @@ func GetContainerSort(arr Containers, jsonFieldName string) ContentJsonSort {
 	return theSort
 }
 
-var VALID_CONTAINER_ORDERS = []string{"created_at", "updated_at", "total", "name", "preview_url", "description"}
-
 func GetContainerOrder(order string, direction string) string {
-	valid_order := "created_at"
-	if slices.Contains(VALID_CONTENT_ORDERS, order) {
-		valid_order = order
-	}
-	valid_direction := "desc"
-	if direction == "asc" || direction == "desc" {
-		valid_direction = direction
-	}
-	return fmt.Sprintf("%s %s", valid_order, valid_direction)
+	return GetValidOrder(VALID_CONTAINER_ORDERS, order, direction, "idx")
 }
 
 // String is not required by pop and may be deleted

@@ -46,6 +46,16 @@ type Content struct {
 // these struct elements do not have a default sort implemented soooo I guess this makes sense.
 type ContentJsonSort func(i, j int) bool
 
+var VALID_CONTENT_ORDERS = []string{
+	"created_at",
+	"updated_at",
+	"content_type",
+	"container_id",
+	"idx",
+	"size",
+	"description",
+}
+
 func GetContentSort(arr Contents, jsonFieldName string) ContentJsonSort {
 	var theSort ContentJsonSort
 	switch jsonFieldName {
@@ -78,27 +88,19 @@ func GetContentSort(arr Contents, jsonFieldName string) ContentJsonSort {
 			return arr[i].CreatedAt.Unix() < arr[j].CreatedAt.Unix()
 		}
 	case "idx":
+		theSort = func(i, j int) bool {
+			return arr[i].Idx < arr[j].Idx
+		}
 	default:
 		theSort = func(i, j int) bool {
 			return arr[i].Idx < arr[j].Idx
 		}
-
 	}
 	return theSort
 }
 
-var VALID_CONTENT_ORDERS = []string{
-	"created_at",
-	"updated_at",
-	"content_type",
-	"container_id",
-	"idx",
-	"size",
-	"description",
-}
-
-func GetContentOrder(order string, direction string) string {
-	valid_order := "idx"
+func GetValidOrder(validOrders []string, order string, direction string, defaultOrder string) string {
+	valid_order := defaultOrder
 	if slices.Contains(VALID_CONTENT_ORDERS, order) {
 		valid_order = order
 	}
@@ -107,6 +109,10 @@ func GetContentOrder(order string, direction string) string {
 		valid_direction = direction
 	}
 	return fmt.Sprintf("%s %s", valid_order, valid_direction)
+}
+
+func GetContentOrder(order string, direction string) string {
+	return GetValidOrder(VALID_CONTENT_ORDERS, order, direction, "idx")
 }
 
 // String is not required by pop and may be deleted

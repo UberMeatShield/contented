@@ -20,25 +20,27 @@ type Screen struct {
 	Path      string    `json:"-" db:"path"`
 	Src       string    `json:"src" db:"src"`
 	Idx       int       `json:"idx" db:"idx"`
-	SizeBytes int64     `json:"size" db:"size_bytes"`
+	SizeBytes int64     `json:"size_bytes" db:"size_bytes"`
 }
 
 type ScreensJsonSort func(i, j int) bool
 
+var VALID_SCREENS_ORDERS = []string{"created_at", "updated_at", "idx", "size", "src", "content_id", "src"}
+
 func GetScreensSort(arr Screens, jsonFieldName string) ContentJsonSort {
 	var theSort ContentJsonSort
 	switch jsonFieldName {
-	case "updated":
+	case "updated_at":
 		theSort = func(i, j int) bool {
 			return arr[i].UpdatedAt.Unix() < arr[j].UpdatedAt.Unix()
+		}
+	case "created_at":
+		theSort = func(i, j int) bool {
+			return arr[i].CreatedAt.Unix() < arr[j].CreatedAt.Unix()
 		}
 	case "content_id":
 		theSort = func(i, j int) bool {
 			return arr[i].ContentID.String() < arr[j].ContentID.String()
-		}
-	case "idx":
-		theSort = func(i, j int) bool {
-			return arr[i].Idx < arr[j].Idx
 		}
 	case "size":
 		theSort = func(i, j int) bool {
@@ -48,9 +50,13 @@ func GetScreensSort(arr Screens, jsonFieldName string) ContentJsonSort {
 		theSort = func(i, j int) bool {
 			return arr[i].Src < arr[j].Src
 		}
+	case "idx":
+		theSort = func(i, j int) bool {
+			return arr[i].Idx < arr[j].Idx
+		}
 	default:
 		theSort = func(i, j int) bool {
-			return arr[i].CreatedAt.Unix() < arr[j].CreatedAt.Unix()
+			return arr[i].Idx < arr[j].Idx
 		}
 	}
 	return theSort
@@ -62,14 +68,20 @@ func (m Screen) String() string {
 	return string(jm)
 }
 
+func GetScreensOrder(order string, direction string) string {
+	return GetValidOrder(VALID_SCREENS_ORDERS, order, direction, "idx")
+}
+
 // Screens is not required by pop and may be deleted
 type Screens []Screen
 type ScreenMap map[uuid.UUID]Screen
 type ScreenCollection map[uuid.UUID]Screens
 
 func (arr Screens) Reverse() Screens {
-	for i, j := 0, len(arr)-1; i < j; i, j = i+1, j-1 {
-		arr[i], arr[j] = arr[j], arr[i]
+	if len(arr) > 1 {
+		for i, j := 0, len(arr)-1; i < j; i, j = i+1, j-1 {
+			arr[i], arr[j] = arr[j], arr[i]
+		}
 	}
 	return arr
 }

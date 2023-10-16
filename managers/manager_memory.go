@@ -450,13 +450,13 @@ func (cm ContentManagerMemory) ListScreensContext() (*models.Screens, int, error
 
 // TODO: Get a pattern for each MC, look at a preview Destination, then match against the pattern
 // And build out a set of screens.
-func (cm ContentManagerMemory) ListScreens(sr ScreensQuery) (*models.Screens, int, error) {
+func (cm ContentManagerMemory) ListScreens(sq ScreensQuery) (*models.Screens, int, error) {
 
 	// Did I create this just to sort by Idx across all content?  Kinda strange
 	mem := cm.GetStore()
 	s_arr := models.Screens{}
-	if sr.ContentID != "" {
-		contentID, idErr := uuid.FromString(sr.ContentID)
+	if sq.ContentID != "" {
+		contentID, idErr := uuid.FromString(sq.ContentID)
 		if idErr != nil {
 			return nil, -1, idErr
 		}
@@ -471,13 +471,12 @@ func (cm ContentManagerMemory) ListScreens(sr ScreensQuery) (*models.Screens, in
 		}
 	}
 	// Potentially text search the screens
-
-	sort.SliceStable(s_arr, models.GetScreensSort(s_arr, sr.Order))
-	if sr.Direction == "desc" {
+	sort.SliceStable(s_arr, models.GetScreensSort(s_arr, sq.Order))
+	if sq.Direction == "desc" {
 		s_arr = s_arr.Reverse()
 	}
 	count := len(s_arr)
-	offset, end := GetOffsetEnd(sr.Page, sr.PerPage, len(s_arr))
+	offset, end := GetOffsetEnd(sq.Page, sq.PerPage, len(s_arr))
 	if end > 0 { // If it is empty a slice ending in 0 = boom
 		s_arr = s_arr[offset:end]
 		return &s_arr, count, nil

@@ -23,7 +23,7 @@ export class Content {
     // cases it is.
     public content_type: string;
     public container_id: string;
-    public size: number;
+    public size_bytes: number;
 
     public previewUrl: string;
     public fullUrl: string;

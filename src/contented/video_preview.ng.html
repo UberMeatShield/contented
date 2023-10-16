@@ -8,7 +8,7 @@
             New Tab
           </a>
           <a mat-raised-button href="/download/{{content.id}}" title="Downlaod">
-            {{content.size | byteFormatter: 0}}
+            {{content.size_bytes | byteFormatter: 0}}
             <mat-icon >download</mat-icon>
           </a>
           <span class="video-title">{{content.src}}</span>
