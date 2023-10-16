@@ -12,16 +12,17 @@ import (
 
 // Container is used by pop to map your containers database table to your go code.
 type Container struct {
-	ID        uuid.UUID `json:"id" db:"id"`
-	Total     int       `json:"total" db:"total" default:"0"`
-	Path      string    `json:"-" db:"path"`
-	Name      string    `json:"name" db:"name"`
-	CreatedAt time.Time `json:"created" db:"created_at"`
-	UpdatedAt time.Time `json:"updated" db:"updated_at"`
-	Active    bool      `json:"active" db:"active" default:"true"`
-	Idx       int       `json:"idx" db:"idx" default:"0"`
-	Contents  Contents  `json:"contents" has_many:"contents" db:"-"`
-	Hidden    bool      `json:"-" db:"hidden" default:"false"`
+	ID          uuid.UUID `json:"id" db:"id"`
+	Total       int       `json:"total" db:"total" default:"0"`
+	Path        string    `json:"-" db:"path"`
+	Name        string    `json:"name" db:"name"`
+	Description string    `json:"description" db:"description" default:""`
+	CreatedAt   time.Time `json:"created" db:"created_at"`
+	UpdatedAt   time.Time `json:"updated" db:"updated_at"`
+	Active      bool      `json:"active" db:"active" default:"true"`
+	Idx         int       `json:"idx" db:"idx" default:"0"`
+	Contents    Contents  `json:"contents" has_many:"contents" db:"-"`
+	Hidden      bool      `json:"-" db:"hidden" default:"false"`
 
 	// This is expected to be a URL where often a configured /preview/{mcID} is going
 	// to be assigned by default.  However you should be able to use any link but it is
@@ -29,6 +30,42 @@ type Container struct {
 	PreviewUrl string `json:"previewUrl" db:"preview_url"`
 	// TODO:  Should I add a preview type in the future?
 
+}
+type ContainerJsonSort func(i, j int) bool
+
+func GetContainerSort(arr Containers, jsonFieldName string) ContentJsonSort {
+	var theSort ContentJsonSort
+	switch jsonFieldName {
+	case "updated":
+		theSort = func(i, j int) bool {
+			return arr[i].UpdatedAt.Unix() < arr[j].UpdatedAt.Unix()
+		}
+	case "name":
+		theSort = func(i, j int) bool {
+			return arr[i].Name < arr[j].Name
+		}
+	case "total":
+		theSort = func(i, j int) bool {
+			return arr[i].Total < arr[j].Total
+		}
+	case "idx":
+		theSort = func(i, j int) bool {
+			return arr[i].Idx < arr[j].Idx
+		}
+	case "preview_url":
+		theSort = func(i, j int) bool {
+			return arr[i].PreviewUrl < arr[j].PreviewUrl
+		}
+	case "description":
+		theSort = func(i, j int) bool {
+			return arr[i].Description < arr[j].Description
+		}
+	default:
+		theSort = func(i, j int) bool {
+			return arr[i].CreatedAt.Unix() < arr[j].CreatedAt.Unix()
+		}
+	}
+	return theSort
 }
 
 // String is not required by pop and may be deleted

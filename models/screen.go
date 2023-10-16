@@ -23,6 +23,39 @@ type Screen struct {
 	SizeBytes int64     `json:"size" db:"size_bytes"`
 }
 
+type ScreensJsonSort func(i, j int) bool
+
+func GetScreensSort(arr Screens, jsonFieldName string) ContentJsonSort {
+	var theSort ContentJsonSort
+	switch jsonFieldName {
+	case "updated":
+		theSort = func(i, j int) bool {
+			return arr[i].UpdatedAt.Unix() < arr[j].UpdatedAt.Unix()
+		}
+	case "content_id":
+		theSort = func(i, j int) bool {
+			return arr[i].ContentID.String() < arr[j].ContentID.String()
+		}
+	case "idx":
+		theSort = func(i, j int) bool {
+			return arr[i].Idx < arr[j].Idx
+		}
+	case "size":
+		theSort = func(i, j int) bool {
+			return arr[i].SizeBytes < arr[j].SizeBytes
+		}
+	case "src":
+		theSort = func(i, j int) bool {
+			return arr[i].Src < arr[j].Src
+		}
+	default:
+		theSort = func(i, j int) bool {
+			return arr[i].CreatedAt.Unix() < arr[j].CreatedAt.Unix()
+		}
+	}
+	return theSort
+}
+
 // String is not required by pop and may be deleted
 func (m Screen) String() string {
 	jm, _ := json.Marshal(m)

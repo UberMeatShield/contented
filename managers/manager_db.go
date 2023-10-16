@@ -159,11 +159,11 @@ func (cm ContentManagerDB) ListAllContent(page int, per_page int) (*models.Conte
 
 // It should probably be able to search the container too?
 func (cm ContentManagerDB) SearchContentContext() (*models.Contents, int, error) {
-	sr := ContextToSearchQuery(cm.Params(), cm.GetCfg())
+	sr := ContextToContentQuery(cm.Params(), cm.GetCfg())
 	return cm.SearchContent(sr)
 }
 
-func (cm ContentManagerDB) SearchContent(sr SearchQuery) (*models.Contents, int, error) {
+func (cm ContentManagerDB) SearchContent(sr ContentQuery) (*models.Contents, int, error) {
 	contentContainers := &models.Contents{}
 	tx := cm.GetConnection()
 	q := tx.Paginate(sr.Page, sr.PerPage)
@@ -171,10 +171,13 @@ func (cm ContentManagerDB) SearchContent(sr SearchQuery) (*models.Contents, int,
 	if len(sr.Tags) > 0 {
 		q = q.Join("contents_tags as ct", "ct.content_id = contents.id").Where("ct.tag_id IN (?)", sr.Tags)
 	}
-	// Could also search description
-	if sr.Text != "*" && sr.Text != "" {
-		search := ("%" + sr.Text + "%")
+	// Could also search description (expand this)
+	if sr.Search != "*" && sr.Search != "" {
+		search := ("%" + sr.Search + "%")
 		q = q.Where(`src like ?`, search)
+	}
+	if sr.Text != "" {
+		q = q.Where(`src = ?`, sr.Text)
 	}
 	if sr.ContentType != "" {
 		contentType := ("%" + sr.ContentType + "%")
@@ -183,7 +186,7 @@ func (cm ContentManagerDB) SearchContent(sr SearchQuery) (*models.Contents, int,
 	if sr.ContainerID != "" {
 		q = q.Where(`container_id = ?`, sr.ContainerID)
 	}
-	if sr.Hidden == false {
+	if sr.IncludeHidden == false {
 		q = q.Where(`hidden = ?`, false)
 	}
 

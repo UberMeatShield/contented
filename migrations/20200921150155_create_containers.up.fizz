@@ -4,6 +4,7 @@ create_table("containers") {
 	t.Column("total", "integer", {"default": 0})
 	t.Column("path", "string", {"default": ""})
 	t.Column("name", "string", {"default": ""})
+	t.Column("description", "text", {"default": ""})
 	t.Column("active", "boolean", {"default": true})
 	t.Column("idx", "integer", {"default": 0})
 	t.Column("hidden", "boolean", {"default": false})

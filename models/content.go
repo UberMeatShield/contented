@@ -40,6 +40,49 @@ type Content struct {
 	Encoding string `json:"encoding" db:"encoding"`
 }
 
+// It seems odd there is no arbitrary json field => proper sort on the struct but then many of
+// these struct elements do not have a default sort implemented soooo I guess this makes sense.
+type ContentJsonSort func(i, j int) bool
+
+func GetContentSort(arr Contents, jsonFieldName string) ContentJsonSort {
+	var theSort ContentJsonSort
+	switch jsonFieldName {
+	case "updated":
+		theSort = func(i, j int) bool {
+			return arr[i].UpdatedAt.Unix() < arr[j].UpdatedAt.Unix()
+		}
+	case "src":
+		theSort = func(i, j int) bool {
+			return arr[i].Src < arr[j].Src
+		}
+	case "content_type":
+		theSort = func(i, j int) bool {
+			return arr[i].ContentType < arr[j].ContentType
+		}
+	case "container_id":
+		theSort = func(i, j int) bool {
+			return arr[i].ContainerID.UUID.String() < arr[j].ContainerID.UUID.String()
+		}
+	case "idx":
+		theSort = func(i, j int) bool {
+			return arr[i].Idx < arr[j].Idx
+		}
+	case "size":
+		theSort = func(i, j int) bool {
+			return arr[i].SizeBytes < arr[j].SizeBytes
+		}
+	case "description":
+		theSort = func(i, j int) bool {
+			return arr[i].Description < arr[j].Description
+		}
+	default:
+		theSort = func(i, j int) bool {
+			return arr[i].CreatedAt.Unix() < arr[j].CreatedAt.Unix()
+		}
+	}
+	return theSort
+}
+
 // String is not required by pop and may be deleted
 func (m Content) String() string {
 	jm, _ := json.Marshal(m)
