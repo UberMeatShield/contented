@@ -45,13 +45,22 @@ export let TAGGING_SYNTAX = {
       [mailFormat, 'type.identifier'],
       [/^[A-Z].*\./, 'type.identifier'], 
 
-      // MultiWord tags would need to have a different matcher (and remove the hack)
-      [/C#|[a-zA-Z_$][\w$]*/, { 
+
+      // Matching wordlike bounds but this absorbs tokens and then the typeKeywords do not work
+      [/[a-zA-Z_][\w$]*/, { 
         cases: {
          '@typeKeywords': 'keyword',
          '@keywords': 'keyword',
           } 
-       }],
+      }],
+
+      // MultiWord tags would need to have a different matcher (and remove the hack)
+      [/\w+\s\w+/, { 
+        cases: {
+         '@typeKeywords': 'typeKeyword',
+         //'@keywords': 'keyword',
+          } 
+      }],
 
       // whitespace
       { include: '@whitespace' },

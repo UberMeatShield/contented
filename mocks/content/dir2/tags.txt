@@ -43,15 +43,15 @@ S3
 SQS
 jquery
 //TagType:typeKeywords
-Google Earth
-Google Maps
-Open Search
+Google_Earth
+Google_Maps
+Open_Search
 Postgis
 Route53
 Angular.io
 
 Angular
 //TagType:actors
-John Travolta
-Keanu Reeves
+John_Travolta
+Keanu_Reeves
 
