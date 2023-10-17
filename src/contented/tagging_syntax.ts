@@ -1,6 +1,7 @@
 import {ApiDef} from './api_def';
 import {Injectable} from '@angular/core';
 import {ContentedService} from './contented_service';
+import {Tag} from './content';
 
 
 import * as $ from 'jquery';
@@ -9,6 +10,12 @@ import * as _ from 'lodash-es';
 let languages = [];
 
 let technologies = [];
+let operators = [
+    '=', '>', '<', '!', '~', '?', ':', '==', '<=', '>=', '!=',
+    '&&', '||', '++', '--', '+', '-', '*', '/', '&', '|', '^', '%',
+    '<<', '>>', '>>>', '+=', '-=', '*=', '/=', '&=', '|=', '^=',
+    '%=', '<<=', '>>=', '>>>='
+  ];
 
 // Restrictive email format so the highlights do not fight with other elements (no UC)
 let mailFormat = /^[a-z0-9.!$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
@@ -23,12 +30,7 @@ export let TAGGING_SYNTAX = {
   // These should be loaded from the API
   keywords: languages,
   typeKeywords: technologies,
-  operators: [
-    '=', '>', '<', '!', '~', '?', ':', '==', '<=', '>=', '!=',
-    '&&', '||', '++', '--', '+', '-', '*', '/', '&', '|', '^', '%',
-    '<<', '>>', '>>>', '+=', '-=', '*=', '/=', '&=', '|=', '^=',
-    '%=', '<<=', '>>=', '>>>='
-  ],
+  operators: operators,
 
   // we include these common regular expressions
   symbols:  /[=><!~?:&|+\-*\/\^%]+/,
@@ -36,7 +38,7 @@ export let TAGGING_SYNTAX = {
   // C# style strings
   escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
 
-  // Complex tokenizer example
+  // Complex tokenizer example (awkward to use with other matchers)
   tokenizer: {
     root: [
       // to show sections names nicely
@@ -109,11 +111,12 @@ export let TAGGING_SYNTAX = {
 };
 
 
-export function setMonacoLanguage(languageName: string, keywords: Array<string>, typeKeywords: Array<string>) {
+export function setMonacoLanguage(languageName: string, keywords: Array<string>, typeKeywords: Array<string>, operators: Array<string> = []) {
   let lang = (window as any).monaco.languages;
   let syntax = _.clone(TAGGING_SYNTAX);
   syntax.keywords = keywords || []
   syntax.typeKeywords = typeKeywords || [];
+  syntax.operators = _.isEmpty(operators) ? syntax.operators : operators;
   lang.register({id: languageName, configuration: syntax})
   lang.setMonarchTokensProvider(languageName, syntax);
 
@@ -136,12 +139,17 @@ export class TagLang {
     $.ajax(ApiDef.contented.tags, {
       success: res => {
         // I should also change the color of the type and the keyword.
-        let tags = _.map(res, 'id');
-        let keywords = tags.concat(
+
+        let tags = _.map(res, r => new Tag(r));
+
+        let keywordTags = _.map(_.filter(tags, {tag_type: 'keywords'}), 'id');
+        let keywords = keywordTags.concat(
           _.map(languages, lang => _.upperFirst(lang)),
           _.map(languages, lang => lang.toUpperCase())
         );
-        setMonacoLanguage("tagging", keywords, []);
+        let typeKeywordTags = _.map(_.filter(tags, {tag_type: 'typeKeywords'}), 'id');
+        let operators = _.map(_.filter(tags, {tag_type: 'operators'}), 'id');
+        setMonacoLanguage("tagging", keywords, typeKeywordTags, operators);
       }, error: err => {
         setMonacoLanguage("tagging", [], []);
         console.error("Failed to load tags", err)

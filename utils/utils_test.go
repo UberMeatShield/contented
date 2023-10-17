@@ -246,3 +246,48 @@ func Test_Channels(t *testing.T) {
 		t.Errorf("What the actual fuck %s", b)
 	}
 }
+
+func Test_TagFileRead(t *testing.T) {
+	var testDir, _ = envy.MustGet("DIR")
+	tagFile := filepath.Join(testDir, "dir2", "tags.txt")
+
+	tags, err := ReadTagsFromFile(tagFile)
+	if err != nil {
+		t.Errorf("It should not have an issue reading the tag file %s", err)
+	}
+	if tags == nil {
+		t.Errorf("No tags were found %s", err)
+	}
+	if len(*tags) < 5 {
+		t.Errorf("There were not enough tags found")
+	}
+
+	actorCount := 0
+	actorExpect := 2
+	typeKeywordCount := 0
+	typeKeywordExpect := 7
+	keywordCount := 0
+	keywordExpect := 40
+
+	for _, tag := range *tags {
+		if tag.TagType == "keywords" {
+			keywordCount += 1
+		}
+		if tag.TagType == "typeKeywords" {
+			typeKeywordCount += 1
+		}
+		if tag.TagType == "actor" {
+			actorCount += 1
+		}
+	}
+	if actorExpect != actorCount {
+		t.Errorf("Actor count should be %d but was %d", actorExpect, actorCount)
+	}
+	if typeKeywordExpect != typeKeywordCount {
+		t.Errorf("typeKeywords count should be %d but was %d", typeKeywordExpect, typeKeywordCount)
+	}
+	if keywordExpect != keywordCount {
+		t.Errorf("keywords count should be %d but was %d", keywordExpect, keywordCount)
+	}
+
+}
