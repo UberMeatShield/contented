@@ -49,7 +49,7 @@ export class VideoPreviewCmp implements OnInit {
 
 
     public screensLoaded(screens: Array<Screen>) {
-        console.log("Screens loaded", screens);
+        //console.log("Screens loaded", screens);
         if (this.content) {
             this.content.screens = this.content.screens || [];
             _.each(screens, screen => {
