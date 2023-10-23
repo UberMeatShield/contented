@@ -1,10 +1,11 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders, HttpParams, HttpErrorResponse} from '@angular/common/http';
 import {Container, LoadStates} from './container';
-import {Content} from './content';
+import {Content, Tag} from './content';
 import {Screen} from './screen';
 import {TaskRequest} from './task_request';
 import {ApiDef} from './api_def';
+import {TAGS_RESPONSE} from './tagging_syntax';
 
 // The manner in which RxJS does this is really stupid, saving 50K for hours of dev time is fail
 import {Observable, forkJoin, from as observableFrom} from 'rxjs';
@@ -274,6 +275,27 @@ export class ContentedService {
         return this.http.post(url, {}).pipe(
             map(res => {
                 return new TaskRequest(res);
+            })
+        );
+    }
+
+
+    getTags(page: number = 1, perPage: number = 1000, pageType: string = "") {
+        if (TAGS_RESPONSE.initialized) {
+            return observableFrom(new Promise((resolve, reject) => {
+                resolve(TAGS_RESPONSE)
+            }));
+        }
+        let params = new HttpParams();
+        params = params.set("page", "" + page);
+        params = params.set("per_page", "" + perPage);
+        params = params.set("page_type", pageType);
+        return this.http.get(ApiDef.contented.tags, {params: params}).pipe(
+            map((res: any) => {
+                return {
+                    total: res.total || 0,
+                    results: _.map(res.results, t => new Tag(t))
+                };
             })
         );
     }

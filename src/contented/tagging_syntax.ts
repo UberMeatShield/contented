@@ -21,6 +21,13 @@ let operators = [
 let mailFormat = /^[a-z0-9.!$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
 //let mailFormat = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
 
+let results: Array<Tag> = [];
+export let TAGS_RESPONSE = {
+  total: -1,
+  initialized: false,
+  results: results,
+};
+
 // Mostly empty tagging support, dynamically load the tags and THEN register the language.
 // https://stackoverflow.com/questions/52700307/how-to-use-monaco-editor-for-syntax-highlighting
 export let TAGGING_SYNTAX = {
@@ -132,12 +139,16 @@ export class TagLang {
   createHackeryMatcher(tags: Array<string>): RegExp|undefined {
     let hackery: Array<string> = [];
     _.each(tags, tag => {
-      if (tag.split(" ").length > 1 ) {
+      let arr = tag ? tag.split(" ") : [];
+      if (arr && arr.length > 1) {
         hackery.push(tag);
       }
     });
     if (!_.isEmpty(hackery)) {
-      return new RegExp(hackery.join("|"), 'igm');
+      let wat = hackery.join("|")
+      let re = new RegExp(wat);
+      console.log("HACKERY", hackery, wat, re);
+      return re;
     }
     return undefined
   }
@@ -150,7 +161,6 @@ export class TagLang {
     syntax.keywords = keywords || []
     syntax.typeKeywords = typeKeywords || [];
     syntax.operators = _.isEmpty(operators) ? syntax.operators : operators;
-
     lang.register({id: languageName, configuration: syntax})
 
     // Doesn't exactly work, there needs to be a unity between type keyword matching?
@@ -164,11 +174,11 @@ export class TagLang {
     let typesHack = this.createHackeryMatcher(typeKeywords);
     let operatorsHack = this.createHackeryMatcher(operators);
     if (keywordsHack) {
-      console.log("Keywords", keywordsHack)
+      console.log("Keywords in the hack", keywordsHack)
       syntax.tokenizer.root.push([keywordsHack, 'keyword']);
     }
     if (typesHack) {
-      console.log("Types", typesHack)
+      console.log("Types hack", typesHack)
       syntax.tokenizer.root.unshift([typesHack, 'type']);
     }
     if (!_.isEmpty(operatorsHack)) {
@@ -180,9 +190,9 @@ export class TagLang {
 
   loadLanguage(monaco: any, languageName: string) {
     $.ajax(ApiDef.contented.tags, {
+      params: {per_page: 1000},
       success: res => {
         // I should also change the color of the type and the keyword.
-
         let results = res.results;
 
         let tags = _.map(results, r => new Tag(r));
@@ -195,8 +205,13 @@ export class TagLang {
         let operators = _.map(_.filter(tags, {tag_type: 'operators'}), 'id');
         
         this.setMonacoLanguage("tagging", keywords, typeKeywordTags, operators);
+
+        // Load this data once.
+        TAGS_RESPONSE.total = res.total;
+        TAGS_RESPONSE.results = tags;
+        TAGS_RESPONSE.initialized = true;
       }, error: err => {
-        this.setMonacoLanguage("tagging", [], []);
+        //this.setMonacoLanguage("tagging", [], []);
         console.error("Failed to load tags", err)
       }
     });

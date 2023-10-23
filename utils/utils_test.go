@@ -276,7 +276,7 @@ func Test_TagFileRead(t *testing.T) {
 		if tag.TagType == "typeKeywords" {
 			typeKeywordCount += 1
 		}
-		if tag.TagType == "actor" {
+		if tag.TagType == "actors" {
 			actorCount += 1
 		}
 	}

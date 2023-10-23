@@ -9,7 +9,7 @@ import {finalize, debounceTime, distinctUntilChanged} from 'rxjs/operators';
 import {MatRipple} from '@angular/material/core';
 import {EditorComponent} from 'ngx-monaco-editor-v2';
 import {ContentedService} from './contented_service';
-import {Content} from './content';
+import {Content, Tag} from './content';
 import {Container} from './container';
 
 import * as _ from 'lodash-es';
@@ -43,6 +43,9 @@ export class VSCodeEditorCmp implements OnInit {
   // Reference to the raw Microsoft component, allows for
   public monacoEditor?: any;
   public initialized = false;
+  public tags: Array<Tag> = [];
+  public problemTags: Array<Tag> = [];
+  public tagLookup: {[id: string]: Tag} = {};
 
   constructor(public fb: FormBuilder, public route: ActivatedRoute, public _service: ContentedService) {
   }
@@ -60,6 +63,21 @@ export class VSCodeEditorCmp implements OnInit {
     this.descriptionControl = (control as FormControl<string>);  // Sketchy...
 
     this.monacoDigestHackery()
+    this.loadTags();
+  }
+
+  loadTags() {
+    this._service.getTags().subscribe(
+      (tagRes: any) => {
+        this.tags = tagRes.results;
+        this.tagLookup = _.keyBy(this.tags, 'id');
+
+        this.problemTags = _.filter(this.tags, t => {
+          return t.isProblem()
+        });
+
+      }, console.error
+    )
   }
 
   // The onInit from monaco pulls us OUT of a proper digest detection, so if I set initialized
@@ -111,6 +129,7 @@ export class VSCodeEditorCmp implements OnInit {
     this.afterMonaco();
   }
 
+  // TokenType match must be set smarter.
   public getTokens(tokenType: string = "keyword", language = this.language) {
     // Dynamically loaded
     let monaco = (window as any).monaco;
@@ -129,6 +148,7 @@ export class VSCodeEditorCmp implements OnInit {
       _.each(tokenArr, (tokens, lineIdx) => {
         let line = m.getLineContent(lineIdx + 1)
         _.each(tokens, token => {
+          console.log("token.type", token.type)
           if (token.type == match) {
             // This should work, but doesn't because of crazy word boundry monaco stuff?
             // let position = m.getPositionAt(token.offset + 1);
@@ -137,12 +157,27 @@ export class VSCodeEditorCmp implements OnInit {
 
             // The highlights work but the word positions are all jacked up
             let word = this.readToken(line, token.offset)
-            tags.add(word);
+            if (this.tagLookup[word]) {
+              console.log("What the shit", word, line);
+              tags.add(word);
+            } else {
+              console.log("Problem tags?", line, tags)
+              this.processProblemTags(line, tags);
+            }
           }
         })
       });
     }
     return Array.from(tags);
+  }
+
+  processProblemTags(line: string, tags: Set<string>) {
+    console.log("Problem line", line);
+    _.each(this.problemTags, t => {
+      if (line.includes(t.id)) {
+        tags.add(t.id)
+      }
+    });
   }
 
   // Additional keys for token matching?

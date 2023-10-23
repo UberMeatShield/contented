@@ -17,7 +17,12 @@ let editorValue = ` class Funky() {
    }
    monkey() {
    }
+
+   Google Earth
+
+   what the heck
 }`;
+import * as _ from 'lodash-es';
 
 describe('VSCodeEditorCmp', () => {
 
@@ -62,23 +67,38 @@ describe('VSCodeEditorCmp', () => {
   });
 
   // TODO: The ajax load of tags is still not working right.
-  it("Should be able to render the monaco editor and process tokens", waitForAsync(() => {
+  fit("Should be able to render the monaco editor and process tokens", waitForAsync(() => {
     cmp.language = "test";
     cmp.editorValue = editorValue;
     fixture.detectChanges()
-    WaitForMonacoLoad();
 
+    let keywords = [
+        {id: "constructor", tag_type: "keywords"},
+        {id: "number", tag_type: "keywords"},
+        {id: "class", tag_type: "keywords"},
+        {id: "Google Earth", tag_type: "typeKeywords"},
+    ]
+    let tags = {
+      total: 4,
+      results: keywords
+    }
+
+    WaitForMonacoLoad();
+    httpMock.expectOne(r => r.url.includes(ApiDef.contented.tags)).flush(tags);
+    expect(cmp.problemTags.length).withContext("We should consider Google Earth a problem").toBe(1);
 
     fixture.whenStable().then(() => {
       expect((window as any).monaco).toBeDefined()
-      let keywords = ["constructor", "number", "class"];
-      tagLang.setMonacoLanguage(cmp.language, keywords, []);
+      let ids = _.map(keywords, 'id')
+      tagLang.setMonacoLanguage(cmp.language, ids.slice(0, 3), ["Google Earth", "WTF Mate"]);
 
       expect(cmp.descriptionControl.value).toEqual(editorValue);
       let tokens = cmp.getTokens();
+      let tokenType = cmp.getTokens("type");
+      console.log("tokenType", tokenType);
 
       expect(cmp.editor).withContext("It should have initialized").toBeDefined();
-      expect(tokens.sort()).toEqual(keywords.sort())
+      expect(tokens.sort()).toEqual(ids.sort())
       expect(cmp.monacoEditor).toBeDefined();
     })
   }));
