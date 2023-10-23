@@ -46,22 +46,7 @@ export let TAGGING_SYNTAX = {
       [/^[A-Z].*\./, 'type.identifier'], 
 
 
-      // Matching wordlike bounds but this absorbs tokens and then the typeKeywords do not work
-      [/[a-zA-Z_][\w$]*/, { 
-        cases: {
-         '@typeKeywords': 'keyword',
-         '@keywords': 'keyword',
-          } 
-      }],
-
       // MultiWord tags would need to have a different matcher (and remove the hack)
-      [/\w+\s\w+/, { 
-        cases: {
-         '@typeKeywords': 'typeKeyword',
-         //'@keywords': 'keyword',
-          } 
-      }],
-
       // whitespace
       { include: '@whitespace' },
 
@@ -91,7 +76,16 @@ export let TAGGING_SYNTAX = {
       // characters
       [/'[^\\']'/, 'string'],
       [/(')(@escapes)(')/, ['string','string.escape','string']],
-      [/'/, 'string.invalid']
+      [/'/, 'string.invalid'],
+
+      // Matching wordlike bounds but this absorbs tokens and then the typeKeywords do not work
+      [/[a-zA-Z_][\w$]*/, { 
+        cases: {
+         '@keywords': 'keyword',
+         '@typeKeywords': 'type',
+         '@operators': 'operator',
+          } 
+      }],
     ],
     //wordPattern: /'?\w[\w'-.]*[?!,;:"]*/,
 
@@ -120,23 +114,14 @@ export let TAGGING_SYNTAX = {
 };
 
 
-export function setMonacoLanguage(languageName: string, keywords: Array<string>, typeKeywords: Array<string>, operators: Array<string> = []) {
-  let lang = (window as any).monaco.languages;
-  let syntax = _.clone(TAGGING_SYNTAX);
-  syntax.keywords = keywords || []
-  syntax.typeKeywords = typeKeywords || [];
-  syntax.operators = _.isEmpty(operators) ? syntax.operators : operators;
-  lang.register({id: languageName, configuration: syntax})
-  lang.setMonarchTokensProvider(languageName, syntax);
 
-  // Doesn't exactly work, there needs to be a unity between type keyword matching?
-  // The same word pattern does NOT make the wordAtPosition API play nice with the token offset
-  lang.setLanguageConfiguration(languageName, {
-    //wordPattern: /'?\w[\w'-.]*[?!,;:"]*/
-    wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\#\%\^\&\*\(\)\-\=\+\{\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
-  });
-}
+// First get a system that will build out and grab problem tags
+// Grab the regex that this builds and have it useful in the vscode_editor
+// Make it so the setMonacoLanguage is a class method that is smart enough to build out the hackery options
+// Fix the unit test so that it can also be run with a load language call.
+// Fix the API to have pages, search etc.
 
+// Could make it so this takes the language name
 @Injectable()
 export class TagLang {
 
@@ -144,13 +129,60 @@ export class TagLang {
 
   }
 
+  createHackeryMatcher(tags: Array<string>): RegExp|undefined {
+    let hackery: Array<string> = [];
+    _.each(tags, tag => {
+      if (tag.split(" ").length > 1 ) {
+        hackery.push(tag);
+      }
+    });
+    if (!_.isEmpty(hackery)) {
+      return new RegExp(hackery.join("|"), 'igm');
+    }
+    return undefined
+  }
+
+  setMonacoLanguage(languageName: string, keywords: Array<string>, typeKeywords: Array<string>, operators: Array<string> = []) {
+    let lang = (window as any).monaco.languages;
+    let syntax = _.clone(TAGGING_SYNTAX);
+
+    // HACKERY!   WEEEEE
+    syntax.keywords = keywords || []
+    syntax.typeKeywords = typeKeywords || [];
+    syntax.operators = _.isEmpty(operators) ? syntax.operators : operators;
+
+    lang.register({id: languageName, configuration: syntax})
+
+    // Doesn't exactly work, there needs to be a unity between type keyword matching?
+    // The same word pattern does NOT make the wordAtPosition API play nice with the token offset
+    lang.setLanguageConfiguration(languageName, {
+      //wordPattern: /'?\w[\w'-.]*[?!,;:"]*/
+      wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\#\%\^\&\*\(\)\-\=\+\{\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
+    });
+
+    let keywordsHack = this.createHackeryMatcher(keywords);
+    let typesHack = this.createHackeryMatcher(typeKeywords);
+    let operatorsHack = this.createHackeryMatcher(operators);
+    if (keywordsHack) {
+      console.log("Keywords", keywordsHack)
+      syntax.tokenizer.root.push([keywordsHack, 'keyword']);
+    }
+    if (typesHack) {
+      console.log("Types", typesHack)
+      syntax.tokenizer.root.unshift([typesHack, 'type']);
+    }
+    if (!_.isEmpty(operatorsHack)) {
+      syntax.tokenizer.root.unshift([operatorsHack, 'number']);
+    }
+    lang.setMonarchTokensProvider(languageName, syntax);
+    return syntax
+  }
+
   loadLanguage(monaco: any, languageName: string) {
     $.ajax(ApiDef.contented.tags, {
       success: res => {
         // I should also change the color of the type and the keyword.
-
         let tags = _.map(res, r => new Tag(r));
-
         let keywordTags = _.map(_.filter(tags, {tag_type: 'keywords'}), 'id');
         let keywords = keywordTags.concat(
           _.map(languages, lang => _.upperFirst(lang)),
@@ -158,13 +190,12 @@ export class TagLang {
         );
         let typeKeywordTags = _.map(_.filter(tags, {tag_type: 'typeKeywords'}), 'id');
         let operators = _.map(_.filter(tags, {tag_type: 'operators'}), 'id');
-        setMonacoLanguage("tagging", keywords, typeKeywordTags, operators);
+        
+        this.setMonacoLanguage("tagging", keywords, typeKeywordTags, operators);
       }, error: err => {
-        setMonacoLanguage("tagging", [], []);
+        this.setMonacoLanguage("tagging", [], []);
         console.error("Failed to load tags", err)
       }
     });
-    //console.log("Now here is where we register a new language for tags.");
-    //let monaco = (<any>window).monaco;
   }
 }

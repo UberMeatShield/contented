@@ -6,7 +6,7 @@ import { HttpClientTestingModule, HttpTestingController } from '@angular/common/
 import {NoopAnimationsModule} from '@angular/platform-browser/animations';
 import {MockData} from '../test/mock/mock_data';
 import {MonacoLoaded, WaitForMonacoLoad, ContentedModule} from './contented_module';
-import {setMonacoLanguage} from './tagging_syntax';
+import {TagLang} from './tagging_syntax';
 import {ApiDef} from './api_def';
 import { VSCodeEditorCmp } from './vscode_editor.cmp';
 
@@ -26,6 +26,7 @@ describe('VSCodeEditorCmp', () => {
   let el: HTMLElement;
   let de: DebugElement;
   let httpMock: HttpTestingController;
+  let tagLang: TagLang;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -47,6 +48,8 @@ describe('VSCodeEditorCmp', () => {
     el = de.nativeElement;
     cmp = fixture.componentInstance;
     httpMock = TestBed.inject(HttpTestingController);
+
+    tagLang = new TagLang();
   });
 
   afterEach(() => {
@@ -69,7 +72,7 @@ describe('VSCodeEditorCmp', () => {
     fixture.whenStable().then(() => {
       expect((window as any).monaco).toBeDefined()
       let keywords = ["constructor", "number", "class"];
-      setMonacoLanguage(cmp.language, keywords, []);
+      tagLang.setMonacoLanguage(cmp.language, keywords, []);
 
       expect(cmp.descriptionControl.value).toEqual(editorValue);
       let tokens = cmp.getTokens();

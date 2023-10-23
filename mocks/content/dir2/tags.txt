@@ -43,9 +43,9 @@ S3
 SQS
 jquery
 //TagType:typeKeywords
-Google_Earth
-Google_Maps
-Open_Search
+Google Earth
+Google Maps
+Open Search
 Postgis
 Route53
 Angular.io
