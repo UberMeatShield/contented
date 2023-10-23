@@ -182,7 +182,10 @@ export class TagLang {
     $.ajax(ApiDef.contented.tags, {
       success: res => {
         // I should also change the color of the type and the keyword.
-        let tags = _.map(res, r => new Tag(r));
+
+        let results = res.results;
+
+        let tags = _.map(results, r => new Tag(r));
         let keywordTags = _.map(_.filter(tags, {tag_type: 'keywords'}), 'id');
         let keywords = keywordTags.concat(
           _.map(languages, lang => _.upperFirst(lang)),

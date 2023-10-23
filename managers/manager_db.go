@@ -448,19 +448,31 @@ func (cm ContentManagerDB) DestroyScreen(id string) (*models.Screen, error) {
 	return screen, nil
 }
 
-func (cm ContentManagerDB) ListAllTags(page int, perPage int) (*models.Tags, error) {
+func (cm ContentManagerDB) ListAllTags(tq TagQuery) (*models.Tags, int, error) {
 	tx := cm.GetConnection()
-	tags := &models.Tags{}
-	q := tx.Paginate(page, perPage)
-	if q_err := q.All(tags); q_err != nil {
-		return nil, q_err
+	q := tx.Paginate(tq.Page, tq.PerPage)
+	if tq.TagType != "" {
+		q = q.Where("tag_type = ?", tq.TagType)
 	}
-	return tags, nil
+	total, _ := q.Count(&models.Tags{})
+	tags := &models.Tags{}
+	if total > 0 {
+		if q_err := q.All(tags); q_err != nil {
+			return nil, total, q_err
+		}
+	}
+	return tags, total, nil
 }
 
-func (cm ContentManagerDB) ListAllTagsContext() (*models.Tags, error) {
-	_, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
-	return cm.ListAllTags(page, limit)
+func (cm ContentManagerDB) ListAllTagsContext() (*models.Tags, int, error) {
+	params := cm.Params()
+	_, limit, page := GetPagination(params, cm.cfg.Limit)
+	tq := TagQuery{
+		Page:    page,
+		PerPage: limit,
+		TagType: StringDefault(params.Get("tag_type"), ""),
+	}
+	return cm.ListAllTags(tq)
 }
 
 func (cm ContentManagerDB) CreateTag(tag *models.Tag) error {

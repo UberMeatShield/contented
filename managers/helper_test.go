@@ -165,14 +165,15 @@ func (as *ActionSuite) Test_CreateBaseTags() {
 	as.NotNil(tags)
 	as.Equal(len(*tags), test_common.TOTAL_TAGS, "It should keep track of what was created")
 
-	tagsCheck, lErr := man.ListAllTags(0, 9000)
+	tagsCheck, total, lErr := man.ListAllTags(TagQuery{PerPage: 50})
 	as.NoError(lErr, "It should not error out listing tags")
+	as.Greater(total, 0, "We should have a tag count")
 	as.NotNil(tags, "There should be tags")
-	as.Equal(len(*tagsCheck), test_common.TOTAL_TAGS, "There should be 4 tags now")
+	as.Equal(test_common.TOTAL_TAGS, len(*tagsCheck), "The tags should be created and queried")
 
 	tagsAgain, retryError := CreateTagsFromFile(man)
 	as.NoError(retryError, "We should not have any DB error")
-	as.Equal(len(*tagsAgain), test_common.TOTAL_TAGS, "There should still be 4 tags")
+	as.Equal(test_common.TOTAL_TAGS, len(*tagsAgain), "The Tag count should be the same.")
 	// Add test to ensure we do not try and create the same tag over and over
 	// TODO: Need to do a test that actually checks memory
 }

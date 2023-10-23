@@ -281,9 +281,10 @@ func (as *ActionSuite) Test_ManagerTagsMemory() {
 	man := GetManagerActionSuite(cfg, as)
 	as.NoError(man.CreateTag(&models.Tag{ID: "A"}), "couldn't create tag A")
 	as.NoError(man.CreateTag(&models.Tag{ID: "B"}), "couldn't create tag B")
-	tags, err := man.ListAllTags(0, 3)
+	tags, total, err := man.ListAllTags(TagQuery{PerPage: 3})
 	as.NoError(err, "It should be able to list tags")
 	as.Equal(len(*tags), 2, "We should have two tags")
+	as.Equal(total, 2, "It should have a tag count")
 }
 
 // A Lot more of these could be a test in manager that passes in the manager
@@ -302,12 +303,14 @@ func (as *ActionSuite) Test_MangerTagsMemoryCRUD() {
 	as.NoError(man.CreateTag(&t), "couldn't create tag A")
 	as.NoError(man.UpdateTag(&t), "It should udpate")
 
-	tags, err := man.ListAllTags(0, 3)
+	tags, total, err := man.ListAllTags(TagQuery{PerPage: 3})
 	as.NoError(err)
+	as.Equal(total, 1, "there should be one tag")
 	as.Equal(len(*tags), 1, "We should have one tag")
 	man.DestroyTag(t.ID)
-	tags_gone, _ := man.ListAllTags(0, 3)
+	tags_gone, total_gone, _ := man.ListAllTags(TagQuery{PerPage: 3})
 	as.Equal(len(*tags_gone), 0, "Now there should be no tags")
+	as.Equal(total_gone, 0, "it should be empty")
 }
 
 func (as *ActionSuite) Test_ManagerMemoryScreens() {

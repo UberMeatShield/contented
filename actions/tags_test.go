@@ -20,9 +20,9 @@ func (as *ActionSuite) Test_TagsResource_List_DB() {
 	res := as.JSON("/tags/").Get()
 	as.Equal(http.StatusOK, res.Code, fmt.Sprintf("Failed to load tags %s", res.Body.String()))
 
-	tags := models.Tags{}
+	tags := TagResponse{}
 	json.NewDecoder(res.Body).Decode(&tags)
-	as.Equal(len(tags), 2, fmt.Sprintf("There should be two tags %s", tags))
+	as.Equal(len(tags.Results), 2, fmt.Sprintf("There should be two tags %s", tags.Results))
 }
 
 func (as *ActionSuite) Test_TagsResource_Show_DB() {
@@ -51,9 +51,9 @@ func (as *ActionSuite) Test_TagsResource_Create_DB() {
 	check := as.JSON("/tags").Get()
 	as.Equal(http.StatusOK, check.Code, fmt.Sprintf("It should find the tag %s", res.Body.String()))
 
-	checkTags := models.Tags{}
+	checkTags := TagResponse{}
 	json.NewDecoder(check.Body).Decode(&checkTags)
-	as.Equal(1, len(checkTags), fmt.Sprintf("We should have a tag %s", check.Body.String()))
+	as.Equal(1, len(checkTags.Results), fmt.Sprintf("We should have a tag %s", check.Body.String()))
 }
 
 func (as *ActionSuite) Test_TagsResource_Update_DB() {

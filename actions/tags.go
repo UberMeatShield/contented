@@ -25,19 +25,25 @@ type TagsResource struct {
 	buffalo.Resource
 }
 
+type TagResponse struct {
+	Total   int         `json:"total"`
+	Results models.Tags `json:"results"`
+}
+
 // List gets all Tags. This function is mapped to the path
 // GET /tags
 func (v TagsResource) List(c buffalo.Context) error {
 	// Get the DB connection from the context
-	var previewTags *models.Tags
-	var err error
-
 	man := managers.GetManager(&c)
-	previewTags, err = man.ListAllTagsContext()
+	previewTags, total, err := man.ListAllTagsContext()
 	if err != nil {
 		return c.Error(http.StatusBadRequest, err)
 	}
-	return c.Render(200, r.JSON(previewTags))
+	tr := TagResponse{
+		Total:   total,
+		Results: *previewTags,
+	}
+	return c.Render(200, r.JSON(tr))
 }
 
 // Show gets the data for one Tag. This function is mapped to
