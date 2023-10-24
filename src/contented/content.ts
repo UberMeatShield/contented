@@ -5,9 +5,22 @@ import {Screen} from './screen';
 // Why does a TAG have an id?!?!  Because goBuffalo really likes the id field.
 export class Tag {
     public id: string;
+    public tag_type: string;
 
-    constructor(tagName: string) {
-        this.id = tagName;
+    constructor(obj: any) {
+        if (typeof obj == 'string') {
+            this.id = obj;
+        } else {
+            Object.assign(this, obj);
+        }
+    }
+
+    isProblem() {
+        let arr = this.id ? this.id.split(" ") : [this.id];
+        if (arr.length > 1) {
+           return true; 
+        }
+        return false;
     }
 }
 
@@ -32,8 +45,10 @@ export class Content {
     public meta: string;
 
     public fullText: string|undefined = undefined;
-
     public videoInfo?: VideoCodecInfo;
+
+    public created_at: Date;
+    public updated_at: Date;
 
     constructor(obj: any = {}) {
         this.fromJson(obj);
@@ -44,6 +59,9 @@ export class Content {
             Object.assign(this, raw);
             this.links();
             this.screens = _.map(raw.screens, s => new Screen(s));
+
+            this.created_at = new Date(this.created_at);
+            this.updated_at = new Date(this.updated_at);
         }
     }
 

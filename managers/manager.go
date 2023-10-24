@@ -75,6 +75,14 @@ type ContentQuery struct {
 	Direction     string   `json:"direction" default:"desc"`
 }
 
+type TagQuery struct {
+	Search  string `json:"search" default:""`
+	Text    string `json:"text" default:""`
+	Page    int    `json:"page" default:"1"`
+	PerPage int    `json:"per_page" default:"1000"` // Doesn't work on create?
+	TagType string `json:"tag_type" default:""`
+}
+
 type QueryInterface struct {
 }
 
@@ -126,8 +134,8 @@ type ContentManager interface {
 
 	// Tags listing (oy do I need to deal with this?)
 	GetTag(id string) (*models.Tag, error)
-	ListAllTags(page int, perPage int) (*models.Tags, error)
-	ListAllTagsContext() (*models.Tags, error)
+	ListAllTags(tq TagQuery) (*models.Tags, int, error)
+	ListAllTagsContext() (*models.Tags, int, error)
 	CreateTag(tag *models.Tag) error
 	UpdateTag(tag *models.Tag) error
 	DestroyTag(id string) (*models.Tag, error)

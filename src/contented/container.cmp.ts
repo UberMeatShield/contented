@@ -71,7 +71,9 @@ export class ContainerCmp implements OnInit, OnDestroy {
     }
 
     public ngOnDestroy() {
-        this.sub.unsubscribe();
+        if (this.sub) {
+            this.sub.unsubscribe();
+        }
     }
 
     public saveContent() {

@@ -6,7 +6,7 @@ import { HttpClientTestingModule, HttpTestingController } from '@angular/common/
 import {NoopAnimationsModule} from '@angular/platform-browser/animations';
 import {MockData} from '../test/mock/mock_data';
 import {MonacoLoaded, WaitForMonacoLoad, ContentedModule} from './contented_module';
-import {setMonacoLanguage} from './tagging_syntax';
+import {TagLang} from './tagging_syntax';
 import {ApiDef} from './api_def';
 import { VSCodeEditorCmp } from './vscode_editor.cmp';
 
@@ -15,9 +15,14 @@ let editorValue = ` class Funky() {
   public answer: number = 42;
    constructor (zug: number) {
    }
-   monkey() {
+   monkey() { . Wagggh
    }
+
+   Google Earth
+
+   what the heck
 }`;
+import * as _ from 'lodash-es';
 
 describe('VSCodeEditorCmp', () => {
 
@@ -26,6 +31,7 @@ describe('VSCodeEditorCmp', () => {
   let el: HTMLElement;
   let de: DebugElement;
   let httpMock: HttpTestingController;
+  let tagLang: TagLang;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -47,6 +53,8 @@ describe('VSCodeEditorCmp', () => {
     el = de.nativeElement;
     cmp = fixture.componentInstance;
     httpMock = TestBed.inject(HttpTestingController);
+
+    tagLang = new TagLang();
   });
 
   afterEach(() => {
@@ -63,20 +71,40 @@ describe('VSCodeEditorCmp', () => {
     cmp.language = "test";
     cmp.editorValue = editorValue;
     fixture.detectChanges()
-    WaitForMonacoLoad();
 
+    let keywords = [
+        {id: "constructor", tag_type: "keywords"},
+        {id: "number", tag_type: "keywords"},
+        {id: "class", tag_type: "keywords"},
+        {id: "Google Earth", tag_type: "typeKeywords"},
+        {id: "Wagggh", tag_type: "typeKeywords"},
+    ]
+    let tags = {
+      total: 4,
+      results: keywords
+    }
+
+    WaitForMonacoLoad();
+    httpMock.expectOne(r => r.url.includes(ApiDef.contented.tags)).flush(tags);
+    expect(cmp.problemTags.length).withContext("We should consider Google Earth a problem").toBe(1);
 
     fixture.whenStable().then(() => {
       expect((window as any).monaco).toBeDefined()
-      let keywords = ["constructor", "number", "class"];
-      setMonacoLanguage(cmp.language, keywords, []);
+      let ids = _.map(keywords, 'id').slice(0, keywords.length - 2)
+      let types = _.map(keywords, 'id').slice(keywords.length - 2, keywords.length)
+      tagLang.setMonacoLanguage(cmp.language, ids, types);
 
       expect(cmp.descriptionControl.value).toEqual(editorValue);
       let tokens = cmp.getTokens();
 
+
       expect(cmp.editor).withContext("It should have initialized").toBeDefined();
-      expect(tokens.sort()).toEqual(keywords.sort())
+      expect(tokens.sort()).toEqual(ids.sort())
       expect(cmp.monacoEditor).toBeDefined();
+
+      // Qoutes in the string can still be a problem
+      let tokenTypes = cmp.getTokens("type");
+      expect(tokenTypes.sort()).toEqual(types);
     })
   }));
 });

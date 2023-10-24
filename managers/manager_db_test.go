@@ -142,8 +142,9 @@ func (as *ActionSuite) Test_ManagerTagsDB() {
 
 	as.NoError(man.CreateTag(&models.Tag{ID: "A"}), "couldn't create tag A")
 	as.NoError(man.CreateTag(&models.Tag{ID: "B"}), "couldn't create tag B")
-	tags, err := man.ListAllTags(0, 3)
+	tags, total, err := man.ListAllTags(TagQuery{PerPage: 3})
 	as.NoError(err, "It should be able to list tags")
+	as.Greater(total, 0, "It should have a total")
 	as.Equal(len(*tags), 2, "We should have two tags")
 }
 
@@ -154,12 +155,15 @@ func (as *ActionSuite) Test_ManagerTagsDB_CRUD() {
 	t := models.Tag{ID: "A"}
 	as.NoError(man.CreateTag(&t), "couldn't create tag A")
 
-	tags, err := man.ListAllTags(0, 3)
+	tags, total, err := man.ListAllTags(TagQuery{PerPage: 3})
 	as.NoError(err)
+	as.Greater(total, 0, "A tag should exist")
 	as.Equal(len(*tags), 1, "We should have one tag")
 	man.DestroyTag(t.ID)
-	tags_gone, _ := man.ListAllTags(0, 3)
+	tags_gone, total_gone, err := man.ListAllTags(TagQuery{PerPage: 3})
+	as.NoError(err)
 	as.Equal(len(*tags_gone), 0, "No tags should be in the DB")
+	as.Equal(total_gone, 0, "It should have no tags")
 }
 
 func (as *ActionSuite) Test_DbManager_AssociateTags() {
@@ -181,9 +185,10 @@ func (as *ActionSuite) Test_DbManager_AssociateTags() {
 	mc.Screens = models.Screens{s}
 	man.UpdateContent(&mc)
 
-	tags, t_err := man.ListAllTags(0, 10)
+	tags, total, t_err := man.ListAllTags(TagQuery{PerPage: 10})
 	as.NoError(t_err, "We should be able to list tags.")
 	as.Equal(2, len(*tags), fmt.Sprintf("There should be two tags %s", mc))
+	as.Greater(total, 0, "It should have a total")
 
 	screens, count, s_err := man.ListScreens(ScreensQuery{ContentID: mc.ID.String()})
 	as.NoError(s_err, "Screens should list")

@@ -494,26 +494,30 @@ func (cm ContentManagerMemory) GetScreen(psID uuid.UUID) (*models.Screen, error)
 }
 
 // It really seems like it would be nicer to have a base class do this...
-func (cm ContentManagerMemory) ListAllTags(page int, perPage int) (*models.Tags, error) {
-	log.Printf("Using memory manager for tag page %d perPage %d \n", page, perPage)
+func (cm ContentManagerMemory) ListAllTags(tq TagQuery) (*models.Tags, int, error) {
+	log.Printf("Using memory manager for tag page %d perPage %d \n", tq.Page, tq.PerPage)
 	t_arr := models.Tags{}
 	mem := cm.GetStore()
 	for _, t := range mem.ValidTags {
-		t_arr = append(t_arr, t)
+		if tq.TagType == "" || tq.TagType == t.TagType {
+			t_arr = append(t_arr, t)
+		}
 	}
 	if len(t_arr) == 0 {
-		return &t_arr, nil
+		return &t_arr, 0, nil
 	}
 
 	sort.SliceStable(t_arr, func(i, j int) bool {
 		return t_arr[i].ID < t_arr[j].ID
 	})
-	offset, end := GetOffsetEnd(page, perPage, len(t_arr))
+	offset, end := GetOffsetEnd(tq.Page, tq.PerPage, len(t_arr))
+	total := len(t_arr)
+
 	if end > 0 { // If it is empty a slice ending in 0 = boom
 		t_arr = t_arr[offset:end]
-		return &t_arr, nil
+		return &t_arr, total, nil
 	}
-	return nil, errors.New("Not implemented")
+	return &t_arr, total, errors.New("Not implemented")
 }
 
 func (cm ContentManagerMemory) GetTag(id string) (*models.Tag, error) {
@@ -524,9 +528,15 @@ func (cm ContentManagerMemory) GetTag(id string) (*models.Tag, error) {
 	return nil, errors.New(fmt.Sprintf("Tag not found %s", id))
 }
 
-func (cm ContentManagerMemory) ListAllTagsContext() (*models.Tags, error) {
-	_, limit, page := GetPagination(cm.Params(), cm.cfg.Limit)
-	return cm.ListAllTags(page, limit)
+func (cm ContentManagerMemory) ListAllTagsContext() (*models.Tags, int, error) {
+	params := cm.Params()
+	_, limit, page := GetPagination(params, cm.cfg.Limit)
+	tq := TagQuery{
+		Page:    page,
+		PerPage: limit,
+		TagType: StringDefault(params.Get("tag_type"), ""),
+	}
+	return cm.ListAllTags(tq)
 }
 
 func (cm ContentManagerMemory) CreateTag(tag *models.Tag) error {

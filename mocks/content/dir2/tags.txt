@@ -1,3 +1,7 @@
+// This is a comment, if you have exactly the following line it will associate a tag_type with the following
+// tags.  This can then let you filter your tags by groups.  For syntax highlights you can use some of the known
+// VSCode elements (keywords, typeKeywords, operators)
+//TagType:keywords
 c#
 python
 typescript
@@ -38,9 +42,16 @@ RDS
 S3
 SQS
 jquery
+//TagType:typeKeywords
 Google Earth
 Google Maps
-postgis
+Open Search
+Postgis
 Route53
-OpenSearch
+Angular.io
+
 Angular
+//TagType:actors
+John_Travolta
+Keanu_Reeves
+

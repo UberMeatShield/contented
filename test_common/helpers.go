@@ -23,7 +23,7 @@ import (
 
 const TOTAL_CONTAINERS = 5
 const TOTAL_MEDIA = 32
-const TOTAL_TAGS = 46
+const TOTAL_TAGS = 49
 const VIDEO_FILENAME = "donut_[special( gunk.mp4"
 
 var EXPECT_CNT_COUNT = map[string]int{

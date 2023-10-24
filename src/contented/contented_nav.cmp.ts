@@ -96,7 +96,7 @@ export class ContentedNavCmp implements OnInit {
         let btn = $(`#BTN_${evt.key}`)
         let pos = btn.offset();
         if (pos) {
-            console.log("Position and btn value", pos, btn.val());
+            // console.log("Position and btn value", pos, btn.val());
             let x = pos.left + 32;
             let y = pos.top + 20;
             let rippleRef = this.ripple.launch(x, y, {
@@ -110,7 +110,7 @@ export class ContentedNavCmp implements OnInit {
     }
 
     public handleKey(key: string) {
-        console.log("Handle keypress", key);
+        // console.log("Handle keypress", key);
         switch (key) {
             case 'w':
                 GlobalNavEvents.prevContainer();

@@ -1,6 +1,7 @@
 create_table("tags") {
 	t.Column("id", "string", {primary: true})
 	t.Column("description", "string", {default: ""})
+	t.Column("tag_type", "string", {default: ""})
 	t.Timestamps()
 }
 

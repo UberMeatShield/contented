@@ -340,16 +340,26 @@ func ReadTagsFromFile(tagFile string) (*models.Tags, error) {
 		}
 
 		// I could also make this smarter and do a single IN query and then a single insert
+		tagType := "keywords"
 		sc := bufio.NewScanner(f)
 		for sc.Scan() {
-			tagLine := sc.Text()
+			tagLine := strings.TrimSpace(sc.Text())
+			if tagLine != "" {
+				if strings.Contains(tagLine, "//") {
+					if strings.Contains(tagLine, "//TagType:") {
+						tagTypeArr := strings.Split(tagLine, ":")
+						if len(tagTypeArr) > 1 {
+							tagType = strings.TrimSpace(strings.Join(tagTypeArr[1:], " "))
+						}
+					}
+				} else {
+					name := strings.TrimSpace(tagLine)
+					t := models.Tag{ID: name, TagType: tagType}
+					tags = append(tags, t)
+				}
+			}
 
 			// TODO: Make tags under their sections
-			if tagLine != "" {
-				name := strings.TrimSpace(tagLine)
-				t := models.Tag{ID: name}
-				tags = append(tags, t)
-			}
 		}
 	} else {
 		log.Printf("No tagfile found at %s", tagFile)
