@@ -34,8 +34,6 @@ describe('TestingContainer', () => {
         let interval = dir.getIntervalAround(contents[testIdx], 5, 1);
         expect(interval.length).toBe(5, "We should get a 3 item interval");
 
-        console.log("Wat", interval);
-
         let targetIdx = dir.indexOf(contents[testIdx - 1], interval);
         expect(targetIdx).toBe(0, "It should be in the first result (the previous item)");
 

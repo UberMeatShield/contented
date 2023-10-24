@@ -145,10 +145,7 @@ export class TagLang {
       }
     });
     if (!_.isEmpty(hackery)) {
-      let wat = hackery.join("|")
-      let re = new RegExp(wat);
-      console.log("HACKERY", hackery, wat, re);
-      return re;
+      return new RegExp(hackery.join("|"));
     }
     return undefined
   }
@@ -170,15 +167,16 @@ export class TagLang {
       wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\#\%\^\&\*\(\)\-\=\+\{\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
     });
 
+    // These allow for matching specific keys that are multi-word or a pain to match.
     let keywordsHack = this.createHackeryMatcher(keywords);
     let typesHack = this.createHackeryMatcher(typeKeywords);
     let operatorsHack = this.createHackeryMatcher(operators);
     if (keywordsHack) {
-      console.log("Keywords in the hack", keywordsHack)
+      // console.log("Keywords in the hack", keywordsHack)
       syntax.tokenizer.root.push([keywordsHack, 'keyword']);
     }
     if (typesHack) {
-      console.log("Types hack", typesHack)
+      // console.log("Types hack", typesHack)
       syntax.tokenizer.root.unshift([typesHack, 'type']);
     }
     if (!_.isEmpty(operatorsHack)) {

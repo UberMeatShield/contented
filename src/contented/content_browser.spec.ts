@@ -275,6 +275,8 @@ describe('TestingContentBrowserCmp', () => {
         fixture.detectChanges();
         expect($(".preview-type").length).withContext("There should be a text editor").toEqual(1);
         fixture.detectChanges();
+    
+        httpMock.expectOne(r => r.url.includes(ApiDef.contented.tags)).flush(MockData.tags());
         expect($("vscode-editor-cmp").length).withContext("Text should load the editor").toEqual(1);
         tick(10000);
     }));

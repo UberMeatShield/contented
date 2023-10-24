@@ -70,6 +70,7 @@ describe('EditorContentCmp', () => {
 
     let taskUrl = `${ApiDef.tasks.list}?page=1&per_page=25&content_id=${id}`;
     httpMock.expectOne(taskUrl).flush(MockData.taskRequests());
+    httpMock.expectOne(r => r.url.includes(ApiDef.contented.tags)).flush(MockData.tags());
     expect($(".screens-form").length).withContext("Video should have the ability to take screens").toEqual(1);
     tick(15000);
     tick(15000);
@@ -99,6 +100,7 @@ describe('EditorContentCmp', () => {
 
     let taskUrl = `${ApiDef.tasks.list}?page=1&per_page=25&content_id=${content.id}`;
     httpMock.expectOne(taskUrl).flush(MockData.taskRequests());
+    httpMock.expectOne(r => r.url.includes(ApiDef.contented.tags)).flush(MockData.tags());
     tick(15000);
   }));
 });

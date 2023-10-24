@@ -8,7 +8,6 @@ export class Tag {
     public tag_type: string;
 
     constructor(obj: any) {
-        console.log("Object", obj);
         if (typeof obj == 'string') {
             this.id = obj;
         } else {

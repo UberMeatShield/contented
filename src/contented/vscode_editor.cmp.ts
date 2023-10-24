@@ -148,7 +148,7 @@ export class VSCodeEditorCmp implements OnInit {
       _.each(tokenArr, (tokens, lineIdx) => {
         let line = m.getLineContent(lineIdx + 1)
         _.each(tokens, token => {
-          console.log("token.type", token.type)
+          //console.log("token.type", token.type)
           if (token.type == match) {
             // This should work, but doesn't because of crazy word boundry monaco stuff?
             // let position = m.getPositionAt(token.offset + 1);
@@ -158,10 +158,8 @@ export class VSCodeEditorCmp implements OnInit {
             // The highlights work but the word positions are all jacked up
             let word = this.readToken(line, token.offset)
             if (this.tagLookup[word]) {
-              console.log("What the shit", word, line);
               tags.add(word);
             } else {
-              console.log("Problem tags?", line, tags)
               this.processProblemTags(line, tags);
             }
           }
@@ -172,7 +170,7 @@ export class VSCodeEditorCmp implements OnInit {
   }
 
   processProblemTags(line: string, tags: Set<string>) {
-    console.log("Problem line", line);
+    // console.log("Problem line", line);
     _.each(this.problemTags, t => {
       if (line.includes(t.id)) {
         tags.add(t.id)
