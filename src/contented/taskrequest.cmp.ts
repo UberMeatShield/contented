@@ -45,8 +45,6 @@ export class TaskRequestCmp implements OnInit {
 
       if (this.reloadEvt) {
         this.reloadEvt.subscribe(() => {
-          // Reload and consider we should have a watcher
-
           _.delay(() => {
             this.loadTasks(this.contentID);
           }, 2000);
@@ -59,10 +57,10 @@ export class TaskRequestCmp implements OnInit {
         // Prevent bubble on keypress
       ).subscribe(
           formData => {
-              console.log("Form data changing", formData);
+              this.loadTasks(this.contentID, [], formData.status, formData.search)
           },
           error => {
-               console.error("failed to search, erro", error);
+               console.error("Failed to search Tasks error", error);
           }
       );
       if (this.checkStates) {
@@ -70,14 +68,17 @@ export class TaskRequestCmp implements OnInit {
       }
     }
 
-    loadTasks(contentID: string, watching: Array<TaskRequest> = []) {
+    loadTasks(contentID: string, watching: Array<TaskRequest> = [], status = "", search = "") {
       this.loading = true;
-      this._service.getTasks(this.contentID, 1, this.pageSize).pipe(finalize(() => this.loading = false)).subscribe(
+      this._service.getTasks(this.contentID, 1, this.pageSize, status, search).pipe(
+        finalize(() => this.loading = false)
+      ).subscribe(
         (taskResponse) => {
           this.tasks = taskResponse.results;
           this.total = taskResponse.total;
-          console.log("Task Response", taskResponse, this.tasks);
           this.dataSource = new MatTableDataSource<TaskRequest>(this.tasks || [])
+
+          this.checkComplete(this.tasks, watching);
         },
         console.error
       );
@@ -87,7 +88,6 @@ export class TaskRequestCmp implements OnInit {
       let check = _.keyBy(watching, 'id');
       (tasks || []).forEach(task => {
         if (check[task.id] && task.isComplete()) {
-          console.log("Watching tasks")
           this.taskUpdated.emit(task);
         }
       });
@@ -101,13 +101,17 @@ export class TaskRequestCmp implements OnInit {
     }
 
     pollTasks() {
+      if (this.loading) {
+        return
+      }
       let notComplete: Array<TaskRequest> = _.filter(this.tasks, task => {
         return task.isComplete();
       }) || [];
-      this.loadTasks(this.contentID, notComplete);
+      let vals = this.searchForm.value;
+      this.loadTasks(this.contentID, notComplete, vals.status, vals.search);
     }
 
     pageEvt(evt: any) {
-      console.log("Page event", evt);
+      console.log("Page event is annoying", evt);
     }
 }

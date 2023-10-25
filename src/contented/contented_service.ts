@@ -289,7 +289,7 @@ export class ContentedService {
         let params = new HttpParams();
         params = params.set("page", "" + page);
         params = params.set("per_page", "" + perPage);
-        params = params.set("page_type", pageType);
+        params = params.set("tag_type", pageType);
         return this.http.get(ApiDef.contented.tags, {params: params}).pipe(
             map((res: any) => {
                 return {
@@ -300,11 +300,17 @@ export class ContentedService {
         );
     }
 
-    getTasks(id: string, page: number = 1, perPage: number = 100) {
+    getTasks(id: string, page: number = 1, perPage: number = 100, status = "", search = "") {
         let params = new HttpParams();
         params = params.set("page", "" + page);
         params = params.set("per_page", "" + perPage);
         params = params.set("content_id", id || "");
+        if (status != "") {
+            params = params.set("status", status);
+        }
+        if (search != "") {
+            params = params.set("search", search);
+        }
         return this.http.get(ApiDef.tasks.list, {params: params}).pipe(
             map((res: any) => {
                 return {

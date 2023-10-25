@@ -662,6 +662,7 @@ func (cm ContentManagerDB) ListTasksContext() (*models.TaskRequests, int, error)
 		PerPage:   limit,
 		ContentID: StringDefault(params.Get("content_id"), ""),
 		Status:    StringDefault(params.Get("status"), ""), // Check it is in the Status values?
+		Search:    StringDefault(params.Get("search"), ""),
 	}
 	return cm.ListTasks(query)
 }
@@ -675,6 +676,11 @@ func (cm ContentManagerDB) ListTasks(query TaskQuery) (*models.TaskRequests, int
 	}
 	if query.ContentID != "" {
 		q = q.Where("content_id = ?", query.ContentID)
+	}
+	// TODO: Add in another search for searching errors potentially
+	if query.Search != "" {
+		search := ("%" + query.Search + "%")
+		q = q.Where("message ilike ?", search)
 	}
 	total, _ := q.Count(&models.TaskRequests{})
 	if total > 0 {

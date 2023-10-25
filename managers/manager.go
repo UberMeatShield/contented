@@ -41,6 +41,7 @@ type TaskQuery struct {
 	Order     string `json:"order" default:"created_at"`
 	Status    string `json:"status" default:""`
 	Direction string `json:"direction" default:"desc"`
+	Search    string `json:"search" default:""`
 }
 
 type ScreensQuery struct {
