@@ -10,6 +10,7 @@ import {SplashCmp} from './../contented/splash.cmp';
 
 import {APP_BASE_HREF} from '@angular/common';
 import {RouterModule, Routes} from '@angular/router';
+import { TaskRequestCmp } from '../contented/taskrequest.cmp';
 
 // Hmm, should have made this route have a saner extension
 const appRoutes: Routes = [
@@ -20,6 +21,7 @@ const appRoutes: Routes = [
     {path: 'ui/content/:id', component: ContentViewCmp},
     {path: 'ui/editor_content/:id', component: EditorContentCmp},
     {path: 'ui/splash', component: SplashCmp},
+    {path: 'admin_ui/tasks', component: TaskRequestCmp},
 ];
 @NgModule({
     imports: [RouterModule.forRoot(appRoutes, {})],

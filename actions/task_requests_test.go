@@ -47,14 +47,14 @@ func ValidateTaskRequestListApi(as *ActionSuite) {
 	for _, content := range *contents {
 		CreateTask(content.ID, as, man)
 	}
-	taskRequests := models.TaskRequests{}
+	taskRequests := TaskRequestResponse{}
 	res := as.JSON("/task_requests/").Get()
 	as.Equal(http.StatusOK, res.Code, fmt.Sprintf("Failed /task_requests call %s", res.Body))
 	json.NewDecoder(res.Body).Decode(&taskRequests)
-	as.Equal(len(*contents), len(taskRequests), "We should have a task for each content")
+	as.Equal(len(*contents), len(taskRequests.Results), "We should have a task for each content")
 
 	// Update a status and query by status
-	tUp := taskRequests[0]
+	tUp := taskRequests.Results[0]
 	as.Equal(models.TaskStatus.NEW, tUp.Status)
 
 	tUp.Status = models.TaskStatus.DONE
@@ -63,19 +63,19 @@ func ValidateTaskRequestListApi(as *ActionSuite) {
 	as.NoError(upErr)
 
 	// Do a query by container ID
-	upFilter := models.TaskRequests{}
+	upFilter := TaskRequestResponse{}
 	url := fmt.Sprintf("/task_requests?status=%s", tUp.Status.String())
 	resUp := as.JSON(url).Get()
 	as.Equal(http.StatusOK, resUp.Code, fmt.Sprintf("Updated query failed %s", resUp.Body.String()))
 	json.NewDecoder(resUp.Body).Decode(&upFilter)
-	as.Equal(1, len(upFilter), fmt.Sprintf("There should be only one task %s", upFilter))
+	as.Equal(1, len(upFilter.Results), fmt.Sprintf("There should be only one task %s", upFilter.Results))
 
 	content := (*contents)[2]
 	cUrl := fmt.Sprintf("/task_requests?content_id=%s", content.ID.String())
 	resContentFilter := as.JSON(cUrl).Get()
 	as.Equal(http.StatusOK, resContentFilter.Code, fmt.Sprintf("Failed to filter on content ID %s", resContentFilter.Body.String()))
 
-	tIdFilter := models.TaskRequests{}
+	tIdFilter := TaskRequestResponse{}
 	json.NewDecoder(resContentFilter.Body).Decode(&tIdFilter)
-	as.Equal(1, len(tIdFilter), fmt.Sprintf("It should search by contentID %s", tIdFilter))
+	as.Equal(1, len(tIdFilter.Results), fmt.Sprintf("It should search by contentID %s", tIdFilter.Results))
 }

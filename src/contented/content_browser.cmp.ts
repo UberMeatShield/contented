@@ -121,7 +121,7 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
     }
 
     public cntResults(cnt: Container, response) {
-        console.log("Results loading, what is in the results?", response);
+        // console.log("Results loading, what is in the results?", response);
         cnt.addContents(cnt.buildImgs(response));
     }
 
@@ -218,7 +218,7 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
     }
 
     public previewResults(containers: Array<Container>) {
-        console.log("Results returned from the preview results.", containers);
+        // console.log("Results returned from the preview results.", containers);
         this.allCnts = containers || [];
         if (_.isEmpty(containers)) {
             this.emptyMessage = "No Directories found, did you load the DB?";

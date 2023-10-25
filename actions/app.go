@@ -38,6 +38,7 @@ func App(UseDatabase bool) *buffalo.App {
 		app = internals.CreateBuffaloApp(UseDatabase, ENV)
 		app.Use(forceSSL())
 
+		// Need to move all the things under /api
 		// TODO: Clean this up to always use content_id
 		app.GET("/preview/{mcID}", PreviewHandler)
 		app.GET("/view/{mcID}", FullHandler)
@@ -76,6 +77,7 @@ func App(UseDatabase bool) *buffalo.App {
 		app.GET("/ui/search", AngularIndex)
 		app.GET("/ui/video", AngularIndex)
 		app.GET("/ui/splash", AngularIndex)
+		app.GET("/admin_ui/tasks", AngularIndex)
 
 		// Need to make the file serving location smarter (serve the dir + serve static?)
 		cfg := utils.GetCfg()

@@ -654,7 +654,7 @@ func (cm ContentManagerDB) NextTask() (*models.TaskRequest, error) {
 	return nil, errors.New("No Tasks to pull off the queue")
 }
 
-func (cm ContentManagerDB) ListTasksContext() (*models.TaskRequests, error) {
+func (cm ContentManagerDB) ListTasksContext() (*models.TaskRequests, int, error) {
 	params := cm.Params()
 	_, limit, page := GetPagination(params, cm.GetCfg().Limit)
 	query := TaskQuery{
@@ -662,11 +662,12 @@ func (cm ContentManagerDB) ListTasksContext() (*models.TaskRequests, error) {
 		PerPage:   limit,
 		ContentID: StringDefault(params.Get("content_id"), ""),
 		Status:    StringDefault(params.Get("status"), ""), // Check it is in the Status values?
+		Search:    StringDefault(params.Get("search"), ""),
 	}
 	return cm.ListTasks(query)
 }
 
-func (cm ContentManagerDB) ListTasks(query TaskQuery) (*models.TaskRequests, error) {
+func (cm ContentManagerDB) ListTasks(query TaskQuery) (*models.TaskRequests, int, error) {
 	tasks := models.TaskRequests{}
 	tx := cm.GetConnection()
 	q := tx.Paginate(query.Page, query.PerPage)
@@ -676,9 +677,17 @@ func (cm ContentManagerDB) ListTasks(query TaskQuery) (*models.TaskRequests, err
 	if query.ContentID != "" {
 		q = q.Where("content_id = ?", query.ContentID)
 	}
-	err := q.All(&tasks)
-	if err != nil {
-		return nil, err
+	// TODO: Add in another search for searching errors potentially
+	if query.Search != "" {
+		search := ("%" + query.Search + "%")
+		q = q.Where("message ilike ?", search)
 	}
-	return &tasks, nil
+	total, _ := q.Count(&models.TaskRequests{})
+	if total > 0 {
+		err := q.All(&tasks)
+		if err != nil {
+			return nil, total, err
+		}
+	}
+	return &tasks, total, nil
 }

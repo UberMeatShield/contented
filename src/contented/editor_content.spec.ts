@@ -68,7 +68,7 @@ describe('EditorContentCmp', () => {
     fixture.detectChanges();
     tick(1000);
 
-    let taskUrl = `${ApiDef.tasks.list}?page=1&per_page=25&content_id=${id}`;
+    let taskUrl = `${ApiDef.tasks.list}?page=1&per_page=100&content_id=${id}`;
     httpMock.expectOne(taskUrl).flush(MockData.taskRequests());
     httpMock.expectOne(r => r.url.includes(ApiDef.contented.tags)).flush(MockData.tags());
     expect($(".screens-form").length).withContext("Video should have the ability to take screens").toEqual(1);
@@ -98,7 +98,7 @@ describe('EditorContentCmp', () => {
     expect(btn.attr("disabled")).toEqual(undefined);
 
 
-    let taskUrl = `${ApiDef.tasks.list}?page=1&per_page=25&content_id=${content.id}`;
+    let taskUrl = `${ApiDef.tasks.list}?page=1&per_page=100&content_id=${content.id}`;
     httpMock.expectOne(taskUrl).flush(MockData.taskRequests());
     httpMock.expectOne(r => r.url.includes(ApiDef.contented.tags)).flush(MockData.tags());
     tick(15000);

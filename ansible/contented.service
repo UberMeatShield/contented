@@ -3,6 +3,7 @@
 Description=Contented service as a resume host
 
 [Service]
+WorkingDirectory=/home/user/contented
 ExecStart=/usr/local/bin/contented
 User=ec2-user
 Group=ec2-user
