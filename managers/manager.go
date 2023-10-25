@@ -148,8 +148,8 @@ type ContentManager interface {
 	NextTask() (*models.TaskRequest, error) // Assigns it (not really required yet)
 
 	// For the API exposed
-	ListTasksContext() (*models.TaskRequests, error)
-	ListTasks(query TaskQuery) (*models.TaskRequests, error)
+	ListTasksContext() (*models.TaskRequests, int, error)
+	ListTasks(query TaskQuery) (*models.TaskRequests, int, error)
 	GetTask(id uuid.UUID) (*models.TaskRequest, error)
 }
 

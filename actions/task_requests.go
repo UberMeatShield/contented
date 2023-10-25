@@ -7,6 +7,7 @@ import (
 	"net/http"
 	// "errors"
 	"contented/managers"
+	"contented/models"
 
 	"github.com/gobuffalo/buffalo"
 
@@ -27,16 +28,25 @@ type TaskRequestResource struct {
 	buffalo.Resource
 }
 
+type TaskRequestResponse struct {
+	Total   int                 `json:"total"`
+	Results models.TaskRequests `json:"results"`
+}
+
 // List gets all TaskRequest. This function is mapped to the path
 // GET /task_request
 func (v TaskRequestResource) List(c buffalo.Context) error {
 	// Get the DB connection from the context
 	man := managers.GetManager(&c)
-	tasks, err := man.ListTasksContext()
+	tasks, total, err := man.ListTasksContext()
 	if err != nil {
 		return c.Error(http.StatusBadRequest, err)
 	}
-	return c.Render(200, r.JSON(tasks))
+	tres := TaskRequestResponse{
+		Total:   total,
+		Results: *tasks,
+	}
+	return c.Render(200, r.JSON(tres))
 }
 
 // Show gets the data for one TaskRequest. This function is mapped to

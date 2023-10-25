@@ -35,10 +35,11 @@ export class TaskRequest {
     err_msg: string;
 
     constructor(obj: any) {
-        Object.assign(this, obj);
-
-        this.created_at = obj.created_at ? new Date(obj.created_at) : undefined;
-        this.updated_at = obj.created_at ? new Date(obj.updated_at) : undefined;
+        if (obj) {
+            Object.assign(this, obj);
+            this.created_at = obj.created_at ? new Date(obj.created_at) : undefined;
+            this.updated_at = obj.created_at ? new Date(obj.updated_at) : undefined;
+        }
     }
 
     isComplete() {

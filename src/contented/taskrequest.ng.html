@@ -1,11 +1,29 @@
 <div class="task-request-cmp">
 
-    <ul>
-    <li>Pagination</li>
-    <li>Search</li>
-    </ul>
-
     <h4>Associated Tasks</h4>
+    <div class="task-bar">
+      <form #searchTaskForm [formGroup]="searchForm">
+        <mat-form-field class="input-third">
+          <input matInput type="text" value="" placeholder="Search in task messages or content_id" [formControl]="search">
+        </mat-form-field>
+
+        <mat-form-field class="input-third">
+        <mat-select [formControl]="status">
+          <mat-option value="">No Filter</mat-option>
+          <mat-option *ngFor="let pair of states | keyvalue" [value]="pair.value">
+            {{pair.key}}
+          </mat-option>
+        </mat-select>
+        </mat-form-field>
+
+        <mat-paginator
+          [length]="total"
+          [pageSize]="pageSize"
+          (page)="pageEvt($event)"
+        ></mat-paginator>
+      </form>
+    </div>
+
       <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
         <!-- Position Column -->
         <ng-container matColumnDef="operation">

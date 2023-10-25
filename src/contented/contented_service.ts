@@ -306,8 +306,11 @@ export class ContentedService {
         params = params.set("per_page", "" + perPage);
         params = params.set("content_id", id || "");
         return this.http.get(ApiDef.tasks.list, {params: params}).pipe(
-            map(res => {
-                return _.map(res, r => new TaskRequest(r))
+            map((res: any) => {
+                return {
+                    total: res.total,
+                    results: _.map(res.results, r => new TaskRequest(r)),
+                }
             })
         );
     }

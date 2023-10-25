@@ -723,7 +723,7 @@ func (cm ContentManagerMemory) NextTask() (*models.TaskRequest, error) {
 /*
 *
  */
-func (cm ContentManagerMemory) ListTasksContext() (*models.TaskRequests, error) {
+func (cm ContentManagerMemory) ListTasksContext() (*models.TaskRequests, int, error) {
 	params := cm.Params()
 	_, limit, page := GetPagination(params, cm.GetCfg().Limit)
 	query := TaskQuery{
@@ -735,14 +735,14 @@ func (cm ContentManagerMemory) ListTasksContext() (*models.TaskRequests, error) 
 	return cm.ListTasks(query)
 }
 
-func (cm ContentManagerMemory) ListTasks(query TaskQuery) (*models.TaskRequests, error) {
+func (cm ContentManagerMemory) ListTasks(query TaskQuery) (*models.TaskRequests, int, error) {
 	mem := cm.GetStore()
 	task_arr := mem.ValidTasks
 	if query.ContentID != "" {
 		contentID, err := uuid.FromString(query.ContentID)
 		filtered_tasks := models.TaskRequests{}
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		for _, task := range task_arr {
 			if task.ContentID == contentID {
@@ -760,10 +760,11 @@ func (cm ContentManagerMemory) ListTasks(query TaskQuery) (*models.TaskRequests,
 		}
 		task_arr = filtered_tasks
 	}
-	offset, end := GetOffsetEnd(query.Page, query.PerPage, len(task_arr))
+	total := len(task_arr)
+	offset, end := GetOffsetEnd(query.Page, query.PerPage, total)
 	if end > 0 { // If it is empty a slice ending in 0 = boom
 		task_arr = task_arr[offset:end]
-		return &task_arr, nil
+		return &task_arr, total, nil
 	}
-	return &task_arr, nil
+	return &task_arr, total, nil
 }
