@@ -53,19 +53,14 @@ Start by running yarn install in order to get all the required javascript and ty
     $ yarn run ng build contented --configuration=dev --watch=true --deploy-url /public/build/
     $ yarn run ng test contented --watch=true
 
-TODO: Make it so the base gulp run is a little smarter, buffalo dev is SUPPOSED to do solid reloads on file
-change but it is actually kinda sketchy.
-TODO: Maybe stop using buffalo dev and instead rebuild and kick it manually...?
-
 ## Starting the Application
 
-The app is currently split into an angular setup, a gulp helpfile (in Typescript) and the buffalo system.  Buffalo dev
-mode seems to mostly restart buffalo correctly but sometimes doesn't notice a file save.  Save again...
+The app is currently split into the angular app on top and a buffalo webserver.
 
-    $ yarn install
-    $ yarn run gulp buildDeploy  # Running just yarn run gulp will kick off the dev builds and watchers
-	$ export DIR=`pwd`/mocks/content/ && buffalo dev
-	$ export DIR=`pwd`/mocks/content/ && buffalo test
+    $ make install  # install dependencies
+    $ make typescript # Compile the typescript
+	$ make dev # Run the webserver
+	$ make test
 
 Alternatively you can run it as a docker setup but that is a little rougher for dev without restarts etc.
 
