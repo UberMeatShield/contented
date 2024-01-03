@@ -3,7 +3,7 @@ import {HttpClient, HttpHeaders, HttpParams, HttpErrorResponse} from '@angular/c
 import {Container, LoadStates} from './container';
 import {Content, Tag} from './content';
 import {Screen} from './screen';
-import {TaskRequest} from './task_request';
+import {TaskRequest, TASK_STATES} from './task_request';
 import {ApiDef} from './api_def';
 import {TAGS_RESPONSE} from './tagging_syntax';
 
@@ -317,6 +317,17 @@ export class ContentedService {
                     total: res.total,
                     results: _.map(res.results, r => new TaskRequest(r)),
                 }
+            })
+        );
+    }
+
+    cancelTask(task: TaskRequest) {
+        const url = ApiDef.tasks.update.replace('{id}', task.id);
+        const up = _.clone(task);
+        up.status = TASK_STATES.CANCELED;
+        return this.http.put(url, up).pipe(
+            map((res: any) => {
+                return new TaskRequest(res);
             })
         );
     }

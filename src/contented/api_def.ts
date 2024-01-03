@@ -23,6 +23,7 @@ export let ApiDef = {
     },
     tasks: {
         get: "/task_requests/{id}",
+        update: "/task_requests/{id}",
         list: "/task_requests/",
     }
 };

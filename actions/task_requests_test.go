@@ -36,6 +36,19 @@ func (as *ActionSuite) Test_DatabaseTaskRequestApi() {
 	ValidateTaskRequestListApi(as)
 }
 
+func (as *ActionSuite) Test_MemoryCancelTask() {
+	useDB := false
+	test_common.InitFakeApp(useDB)
+	ValidateTaskRequestUpdate(as)
+}
+
+func (as *ActionSuite) Test_DatabaseCancelTask() {
+	useDB := true
+	test_common.InitFakeApp(useDB)
+	test_common.CreateContentByDirName("dir1")
+	ValidateTaskRequestUpdate(as)
+}
+
 func ValidateTaskRequestListApi(as *ActionSuite) {
 	ctx := test_common.GetContext(as.App)
 	man := managers.GetManager(&ctx)
@@ -78,4 +91,36 @@ func ValidateTaskRequestListApi(as *ActionSuite) {
 	tIdFilter := TaskRequestResponse{}
 	json.NewDecoder(resContentFilter.Body).Decode(&tIdFilter)
 	as.Equal(1, len(tIdFilter.Results), fmt.Sprintf("It should search by contentID %s", tIdFilter.Results))
+}
+
+// Should do this for DB and memory
+func ValidateTaskRequestUpdate(as *ActionSuite) {
+	ctx := test_common.GetContext(as.App)
+	man := managers.GetManager(&ctx)
+
+	contents, _, err := man.ListContent(managers.ContentQuery{PerPage: 1})
+	as.NoError(err)
+	as.Equal(len(*contents), 1)
+
+	content := (*contents)[0]
+	task := CreateTask(content.ID, as, man)
+	as.NotEmpty(task.ID)
+	as.NotEqual(task.ID.String(), "00000000-0000-0000-0000-000000000000")
+
+	url := fmt.Sprintf("/task_requests/%s", task.ID.String())
+	res := as.JSON(url).Get()
+	as.Equal(http.StatusOK, res.Code)
+
+	taskCheck := models.TaskRequest{}
+	json.NewDecoder(res.Body).Decode(&taskCheck)
+	as.Equal(taskCheck.ID, task.ID)
+
+	taskCheck.Status = models.TaskStatus.ERROR
+	upUrl := fmt.Sprintf("/task_requests/%s", taskCheck.ID.String())
+	upErr := as.JSON(upUrl).Put(&taskCheck)
+	as.Equal(upErr.Code, http.StatusBadRequest, "It should fail cancel only")
+
+	taskCheck.Status = models.TaskStatus.CANCELED
+	upOk := as.JSON(upUrl).Put(&taskCheck)
+	as.Equal(upOk.Code, http.StatusOK, "This should work as this is a cancel")
 }

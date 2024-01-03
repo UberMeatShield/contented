@@ -34,7 +34,13 @@ export class TaskRequest {
     message: string;
     err_msg: string;
 
+    uxLoading = false;
+
     constructor(obj: any) {
+        this.update(obj);        
+    }
+
+    update(obj: any) {
         if (obj) {
             Object.assign(this, obj);
             this.created_at = obj.created_at ? new Date(obj.created_at) : undefined;

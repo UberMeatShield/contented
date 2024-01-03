@@ -21,7 +21,6 @@ const sniffLen = 512           // How many bytes to read in a file when trying t
 const DefaultLimit int = 10000 // The max limit set by environment variable
 const DefaultPreviewCount int = 8
 const DefaultUseDatabase bool = false
-const Default bool = false
 const DefaultMaxSearchDepth int = 1
 const DefaultMaxContentPerContainer int = 90001
 const DefaultExcludeEmptyContainers bool = true
@@ -107,6 +106,8 @@ type DirConfigEntry struct {
 	CodecForConversion  string // libx265 is the default and that makes hevc files
 	EncodingDestination string // defaults to same directory but can override as well
 
+	StartQueueWorkers bool // Should we process requested tasks on this server
+
 	// Matchers that will determine which content elements to be included or excluded
 	IncContent      ContentMatcher
 	IncludeOperator string
@@ -166,6 +167,9 @@ func GetCfgDefaults() DirConfigEntry {
 		CodecForConversion:  DefaultCodecForConversion,
 		EncodingDestination: DefaultEncodingDestination,
 
+		// Should this server start up processing tasks for tasking screens, encoding etc.
+		StartQueueWorkers: true,
+
 		// Just grab all files by default
 		IncContent:             IncludeAllFiles,
 		IncludeOperator:        "AND",
@@ -215,6 +219,7 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
 	previewCount, previewErr := strconv.Atoi(envy.Get("PREVIEW", strconv.Itoa(DefaultPreviewCount)))
 	useDatabase, connErr := strconv.ParseBool(envy.Get("USE_DATABASE", strconv.FormatBool(DefaultUseDatabase)))
 	coreCount, coreErr := strconv.Atoi(envy.Get("CORE_COUNT", "4"))
+	startQueueWorkers, qErr := strconv.ParseBool(envy.Get("START_QUEUE_WORKERS", "true"))
 
 	// There must be a cleaner way to do some of this default loading...
 	excludeEmpty, emptyErr := strconv.ParseBool(envy.Get("EXCLUDE_EMPTY_CONTAINER", strconv.FormatBool(DefaultExcludeEmptyContainers)))
@@ -246,6 +251,8 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
 		panic(connErr)
 	} else if coreErr != nil {
 		panic(coreErr)
+	} else if qErr != nil {
+		panic(qErr)
 	} else if perr != nil {
 		panic(perr)
 	} else if seekErr != nil {
@@ -275,6 +282,7 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
 	cfg.TagFile = tagFile
 	cfg.Limit = limitCount
 	cfg.CoreCount = coreCount
+	cfg.StartQueueWorkers = startQueueWorkers
 	cfg.PreviewCount = previewCount
 	cfg.PreviewVideoType = previewType
 	cfg.PreviewOverSize = psize

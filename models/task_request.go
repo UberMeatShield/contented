@@ -23,6 +23,7 @@ var TaskStatus = struct {
 	CANCELED    TaskStatusType
 	ERROR       TaskStatusType
 	DONE        TaskStatusType
+	INVALID     TaskStatusType
 }{
 	NEW:         "new",
 	PENDING:     "pending",
@@ -30,6 +31,7 @@ var TaskStatus = struct {
 	CANCELED:    "canceled",
 	ERROR:       "error",
 	DONE:        "done",
+	INVALID:     "invalid",
 }
 
 func (ts TaskStatusType) String() string {
@@ -46,13 +48,14 @@ func (ts TaskStatusType) String() string {
 		return "error"
 	case TaskStatus.DONE:
 		return "done"
+	case TaskStatus.INVALID:
+		return "invalid"
 	}
 	return "unknown"
 }
 
-func (ts TaskStatusType) Copy() TaskStatusType {
-	str := ts.String()
-	switch str {
+func GetTaskStatus(name string) TaskStatusType {
+	switch name {
 	case "new":
 		return TaskStatus.NEW
 	case "pending":
@@ -66,7 +69,11 @@ func (ts TaskStatusType) Copy() TaskStatusType {
 	case "done":
 		return TaskStatus.DONE
 	}
-	return TaskStatus.NEW
+	return TaskStatus.INVALID
+}
+
+func (ts TaskStatusType) Copy() TaskStatusType {
+	return GetTaskStatus(ts.String())
 }
 
 type TaskOperationType string

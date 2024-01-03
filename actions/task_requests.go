@@ -2,6 +2,8 @@ package actions
 
 import (
 	"errors"
+	"fmt"
+	"log"
 
 	//"fmt"
 	"net/http"
@@ -73,7 +75,55 @@ func (v TaskRequestResource) Create(c buffalo.Context) error {
 
 // Another private method, might be opened to just canceling a task (if possible)
 func (v TaskRequestResource) Update(c buffalo.Context) error {
-	return c.Error(http.StatusNotImplemented, errors.New("Not implemented"))
+	_, _, err := managers.ManagerCanCUD(&c)
+	if err != nil {
+		return err
+	}
+
+	man := managers.GetManager(&c)
+	id, _ := uuid.FromString(c.Param("task_request_id"))
+	exists, err := man.GetTask(id)
+	if err != nil || exists == nil {
+		return c.Error(http.StatusNotFound, err)
+	}
+
+	// Maybe this would be fine with a custom route an /ID/state on a put
+	taskUp := models.TaskRequest{}
+	if err := c.Bind(&taskUp); err != nil {
+		msg := fmt.Sprintf("Bad TaskRequest passed %s", taskUp)
+		log.Printf(msg)
+		return c.Error(http.StatusBadRequest, errors.New(msg))
+	}
+
+	state := taskUp.Status
+	if state == models.TaskStatus.INVALID {
+		msg := fmt.Sprintf("Invalid state passed %s to task update", state)
+		log.Printf(msg)
+		return c.Error(http.StatusBadRequest, errors.New(msg))
+	}
+
+	if state != models.TaskStatus.CANCELED {
+		msg := fmt.Sprintf("Currently only supports canceled. %s", state)
+		log.Printf(msg)
+		return c.Error(http.StatusBadRequest, errors.New(msg))
+	}
+
+	// Awkward states to handle, but the basic one is just going to be can we cancel
+	task := *exists
+	if !(task.Status == models.TaskStatus.NEW || task.Status == models.TaskStatus.PENDING) {
+		msg := fmt.Sprintf("Cannot change state from current (%s) to %s", task.Status, state)
+		log.Printf(msg)
+		return c.Error(http.StatusBadRequest, errors.New(msg))
+	}
+
+	currentState := task.Status
+	task.Status = state
+	taskUpdated, upErr := man.UpdateTask(&task, currentState)
+	if upErr != nil || taskUpdated == nil {
+		log.Printf("Failed to update resource %s", upErr)
+		return upErr
+	}
+	return c.Render(http.StatusOK, r.JSON(taskUpdated))
 }
 
 // Also a private setup, it is saner to not have somebody messing with the task queue.

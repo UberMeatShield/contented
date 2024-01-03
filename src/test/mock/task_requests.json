@@ -1,4 +1,6 @@
-[
+{
+"total": 6,
+"results": [
   {
     "id": "61e8d6d7-a906-4315-88a2-c1fb9b7aedaf",
     "content_id": "26487795-18b1-4917-8634-ea65bc096417",
@@ -64,7 +66,7 @@
     "content_id": "a702f6ab-24be-4d64-91b3-cb4ff9415015",
     "created_at": "2023-10-05T13:03:28.027624Z",
     "updated_at": "2023-10-05T13:03:30.892973Z",
-    "status": "done",
+    "status": "pending",
     "operation": "screen_capture",
     "message": "Successfully created screens /Users/ubermeatshield/code/contented/mocks/content/dir2/container_previews/donut_[special( gunk_h256.mp4.screens.%03dss%05d.jpg",
     "err_msg": "",
@@ -79,7 +81,7 @@
     "content_id": "a702f6ab-24be-4d64-91b3-cb4ff9415015",
     "created_at": "2023-10-05T13:03:29.918404Z",
     "updated_at": "2023-10-05T13:03:33.203595Z",
-    "status": "done",
+    "status": "new",
     "operation": "screen_capture",
     "message": "Successfully created screens /Users/ubermeatshield/code/contented/mocks/content/dir2/container_previews/donut_[special( gunk_h256.mp4.screens.%03dss%05d.jpg",
     "err_msg": "",
@@ -90,3 +92,5 @@
     "height": 0
   }
 ]
+
+}
