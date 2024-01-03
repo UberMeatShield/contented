@@ -45,6 +45,7 @@
           <th mat-header-cell *matHeaderCellDef> Actions </th>
           <td mat-cell *matCellDef="let element"> 
             <button *ngIf="['new', 'pending'].includes(element.status)" 
+              class="task-cancel-btn"
               title="Cancel Task"
               type="button" 
               [disabled]="element.uxLoading"

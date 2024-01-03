@@ -53,6 +53,9 @@ describe('TaskRequestCmp', () => {
       return r.url.includes('/task_requests') && r.params.get('content_id') === contentID
     })
     req.flush(MockData.taskRequests());
+    fixture.detectChanges();
+
+    expect($('.task-cancel-btn').length).toEqual(2);
   });
 
   it('Should be trying to load tasks', fakeAsync(() => {
