@@ -36,7 +36,23 @@
         <!-- Name Column -->
         <ng-container matColumnDef="status">
           <th mat-header-cell *matHeaderCellDef> Status </th>
-          <td mat-cell *matCellDef="let element"> {{element.status}} </td>
+          <td mat-cell *matCellDef="let element"> 
+            {{element.status}}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef> Actions </th>
+          <td mat-cell *matCellDef="let element"> 
+            <button *ngIf="['new', 'pending'].includes(element.status)" 
+              title="Cancel Task"
+              type="button" 
+              [disabled]="element.uxLoading"
+              mat-icon-button
+              (click)="cancelTask(element)">
+              <mat-icon>cancel</mat-icon>Cancel
+            </button>
+          </td>
         </ng-container>
 
         <ng-container matColumnDef="created_id">

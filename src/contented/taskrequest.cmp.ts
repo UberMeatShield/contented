@@ -24,7 +24,7 @@ export class TaskRequestCmp implements OnInit {
     public tasks: Array<TaskRequest>;
     public total = 0;
 
-    displayedColumns: string[] = ['operation', 'status', 'created_at', 'updated_at', 'message', 'created_id', 'error'];
+    displayedColumns: string[] = ['operation', 'status', 'actions', 'created_at', 'updated_at', 'message', 'created_id', 'error'];
     dataSource = new MatTableDataSource<TaskRequest>([]);
     states = TASK_STATES;
 
@@ -55,14 +55,14 @@ export class TaskRequestCmp implements OnInit {
         debounceTime(500),
         distinctUntilChanged()
         // Prevent bubble on keypress
-      ).subscribe(
-          formData => {
-              this.loadTasks(this.contentID, [], formData.status, formData.search)
+      ).subscribe({
+          next: (formData) => {
+              return this.loadTasks(this.contentID, [], formData.status, formData.search)
           },
-          error => {
-               console.error("Failed to search Tasks error", error);
+          error: error => {
+            console.error("Failed to search Tasks error", error);
           }
-      );
+      });
       if (this.checkStates) {
         this.pollStart();
       }
@@ -70,7 +70,7 @@ export class TaskRequestCmp implements OnInit {
 
     loadTasks(contentID: string, watching: Array<TaskRequest> = [], status = "", search = "") {
       this.loading = true;
-      this._service.getTasks(this.contentID, 1, this.pageSize, status, search).pipe(
+      return this._service.getTasks(this.contentID, 1, this.pageSize, status, search).pipe(
         finalize(() => this.loading = false)
       ).subscribe(
         (taskResponse) => {
@@ -82,6 +82,19 @@ export class TaskRequestCmp implements OnInit {
         },
         console.error
       );
+    }
+
+    cancelTask(task: TaskRequest) {
+      console.log("Attempt to cancel task", task);
+      task.uxLoading = true;
+      this._service.cancelTask(task).pipe(
+        finalize(() => task.uxLoading = false)
+      ).subscribe({
+        next: (taskResponse) => {
+          return new TaskRequest(taskResponse);  
+        },
+        error: (err) => console.error
+      });
     }
 
     checkComplete(tasks: Array<TaskRequest>, watching: Array<TaskRequest> = []) {

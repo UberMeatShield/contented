@@ -33,7 +33,6 @@ describe('TaskRequestCmp', () => {
     });
     fixture = TestBed.createComponent(TaskRequestCmp);
     component = fixture.componentInstance;
-    fixture.detectChanges();
 
     httpMock = TestBed.inject(HttpTestingController);
     de = fixture.debugElement.query(By.css('.task-request-cmp'));
@@ -44,14 +43,22 @@ describe('TaskRequestCmp', () => {
     httpMock.verify();
   });
 
-  it('should create', () => {
+  it('On create we should query for tasks', () => {
+    const contentID = 'abc'
+    component.contentID = contentID;
     expect(component).toBeTruthy();
-  });
-
-  fit('Should be trying to load tasks', fakeAsync(() => {
     fixture.detectChanges();
 
-    let req = httpMock.expectOne(req => req.url.includes('/task_requests'));
+    let req = httpMock.expectOne(r => {
+      return r.url.includes('/task_requests') && r.params.get('content_id') === contentID
+    })
+    req.flush(MockData.taskRequests());
+  });
+
+  it('Should be trying to load tasks', fakeAsync(() => {
+    fixture.detectChanges();
+
+    let req = httpMock.expectOne(r => r.url.includes('/task_requests'));
     req.flush(MockData.taskRequests());
     tick(1000);
 
