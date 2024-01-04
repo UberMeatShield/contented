@@ -1,0 +1,9 @@
+<div class="error-handler-cmp">
+    Error Cmp
+    <div class="error error-msg" *ngFor="let key of getErrorKeys()">
+        Error: {{key}}
+        <div class="hidden error-debug-info">
+            {{this.events[key].message?.info || "No debug info"}}
+        </div>
+    </div>
+</div>

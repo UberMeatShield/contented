@@ -8,8 +8,8 @@ import {ApiDef} from './api_def';
 import {TAGS_RESPONSE} from './tagging_syntax';
 
 // The manner in which RxJS does this is really stupid, saving 50K for hours of dev time is fail
-import {Observable, forkJoin, from as observableFrom} from 'rxjs';
-import {catchError, map, finalize} from 'rxjs/operators';
+import {forkJoin, from as observableFrom} from 'rxjs';
+import {catchError, map} from 'rxjs/operators';
 
 import * as _ from 'lodash';
 @Injectable()
@@ -205,7 +205,7 @@ export class ContentedService {
     }
 
     public handleError(err: HttpErrorResponse) {
-        console.error("Failed to handle API call error", err);
+        console.error("Error calling API", err);
         let parsed = {};
         if (_.isObject(err.error)) {
             parsed = _.clone(err.error);

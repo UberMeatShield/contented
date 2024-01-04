@@ -1,6 +1,5 @@
-import { fakeAsync, getTestBed, tick, ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { fakeAsync, tick, ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import {By} from '@angular/platform-browser';
-import {HttpParams} from '@angular/common/http';
 import {HttpClientTestingModule, HttpTestingController} from '@angular/common/http/testing';
 import {DebugElement} from '@angular/core';
 import {FormsModule} from '@angular/forms';
@@ -43,9 +42,9 @@ describe('TestingSplashCmp', () => {
             ]
         }).compileComponents();
 
-        service = TestBed.get(ContentedService);
+        service = TestBed.inject(ContentedService);
         fixture = TestBed.createComponent(SplashCmp);
-        httpMock = TestBed.get(HttpTestingController);
+        httpMock = TestBed.inject(HttpTestingController);
         comp = fixture.componentInstance;
 
         de = fixture.debugElement.query(By.css('.splash-cmp'));
@@ -59,8 +58,8 @@ describe('TestingSplashCmp', () => {
     });
 
     it('Should create a contented component', () => {
-        expect(comp).toBeDefined("We should have the Contented comp");
-        expect(el).toBeDefined("We should have a top level element");
+        expect(comp).withContext("We should have the SplashCmp").toBeDefined();
+        expect(el).withContext("We should have a top level element").toBeDefined();
     });
 
     it('Fully handles routing arguments', fakeAsync(() => {
