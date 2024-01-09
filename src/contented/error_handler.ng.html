@@ -3,6 +3,6 @@
      (click)="viewErrors()"
      *ngIf="hasErrors()">
       <mat-icon class="error" *ngIf="hasErrors()">error</mat-icon> 
-      Errors ({{getErrorCount()}})
+      Errors (<span class="error-count">{{getErrorCount()}}</span>)
     </button>
 </span>

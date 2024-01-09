@@ -51,16 +51,19 @@ fdescribe('TestingErrorHandlerCmp', () => {
         expect(el).withContext("We should have a top level element").toBeDefined();
     });
 
-    it('Can we render errors?', fakeAsync(() => {
+    it('Can we render errors and prevent duplicates', fakeAsync(() => {
         fixture.detectChanges();
         GlobalBroadcast.error("Boom", {thing: 'bad'});
         GlobalBroadcast.error("Boom", {thing: 'bad'});
+        GlobalBroadcast.error("Satellite", {thing: 'bad'});
         GlobalBroadcast.evt("Not Boom", {thing: 'bad'});
 
         fixture.detectChanges();
         tick(1000);
         tick(1000);
-        expect($(".error-msg").length).withContext("We should have some errors").toEqual(1);
+
+        expect($(".error-count").length).withContext("The button should have a count").toEqual(1);
+        expect($(".error-count").text()).withContext("We should have some errors").toEqual("2");
 
     }));
 });
