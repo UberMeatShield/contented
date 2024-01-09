@@ -14,7 +14,6 @@ import { Router } from '@angular/router';
 import {VideoBrowserCmp} from '../contented/video_browser.cmp';
 import {ContentedService} from '../contented/contented_service';
 import {ContentedModule} from '../contented/contented_module';
-import {Container} from '../contented/container';
 import {ApiDef} from '../contented/api_def';
 
 import * as _ from 'lodash';

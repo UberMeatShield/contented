@@ -3,6 +3,7 @@ import {By} from '@angular/platform-browser';
 import {HttpClientTestingModule, HttpTestingController} from '@angular/common/http/testing';
 import {DebugElement} from '@angular/core';
 import {FormsModule} from '@angular/forms';
+import {NoopAnimationsModule} from '@angular/platform-browser/animations';
 
 import {ErrorHandlerCmp} from '../contented/error_handler.cmp';
 import {ContentedService} from '../contented/contented_service';
@@ -12,9 +13,7 @@ import * as _ from 'lodash';
 import * as $ from 'jquery';
 import { GlobalBroadcast } from './global_message';
 
-declare var $;
-
-describe('TestingErrorHandlerCmp', () => {
+fdescribe('TestingErrorHandlerCmp', () => {
     let fixture: ComponentFixture<ErrorHandlerCmp>;
     let comp: ErrorHandlerCmp;
     let el: HTMLElement;
@@ -27,7 +26,8 @@ describe('TestingErrorHandlerCmp', () => {
             imports: [
                 FormsModule,
                 ContentedModule,
-                HttpClientTestingModule
+                HttpClientTestingModule,
+                NoopAnimationsModule,
             ],
             providers: [
                 ContentedService
@@ -51,7 +51,7 @@ describe('TestingErrorHandlerCmp', () => {
         expect(el).withContext("We should have a top level element").toBeDefined();
     });
 
-    fit('Can we render errors?', fakeAsync(() => {
+    it('Can we render errors?', fakeAsync(() => {
         fixture.detectChanges();
         GlobalBroadcast.error("Boom", {thing: 'bad'});
         GlobalBroadcast.error("Boom", {thing: 'bad'});

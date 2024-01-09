@@ -1,9 +1,15 @@
-<div class="error-handler-cmp">
-    Error Cmp
-    <div class="error error-msg" *ngFor="let key of getErrorKeys()">
+<span class="error-handler-cmp">
+    <button type="button" mat-raised-button color="warn"
+     (click)="viewErrors()"
+     *ngIf="hasErrors()">
+      <mat-icon class="error" *ngIf="hasErrors()">error</mat-icon> 
+      Errors ({{getErrorCount()}})
+    </button>
+
+    <span class="error error-msg" *ngFor="let key of getErrorKeys()">
         Error: {{key}}
-        <div class="hidden error-debug-info">
+        <span class="hidden error-debug-info">
             {{this.events[key].message?.info || "No debug info"}}
-        </div>
-    </div>
-</div>
+        </span>
+    </span>
+</span>

@@ -18,6 +18,7 @@ import {MatAutocompleteModule as MatAutocompleteModule} from '@angular/material/
 import {MatIconModule} from '@angular/material/icon';
 import {MatTableModule} from '@angular/material/table';
 import {MatSelectModule} from '@angular/material/select';
+import {MatSnackBarModule} from '@angular/material/snack-bar';
 
 import {ContentBrowserCmp} from './content_browser.cmp';
 import {ContentedNavCmp} from './contented_nav.cmp';
@@ -34,7 +35,7 @@ import {EditorContentCmp} from './editor_content.cmp';
 import {SplashCmp} from './splash.cmp';
 import {VSCodeEditorCmp} from './vscode_editor.cmp';
 import {TaskRequestCmp} from './taskrequest.cmp';
-import { ErrorHandlerCmp } from './error_handler.cmp';
+import { ErrorHandlerCmp, ErrorDialogCmp } from './error_handler.cmp';
 import {Container} from './container';
 import {Content} from './content';
 import {Screen} from './screen';
@@ -122,6 +123,7 @@ const monacoConfig: NgxMonacoEditorConfig = {
       MatToolbarModule,
       MatTableModule,
       MatSelectModule,
+      MatSnackBarModule,
   ],
   declarations: [
       ContentBrowserCmp,
@@ -143,6 +145,7 @@ const monacoConfig: NgxMonacoEditorConfig = {
       TaskRequestCmp,
       VSCodeEditorCmp,
       ErrorHandlerCmp,
+      ErrorDialogCmp,
   ],
   exports: [
       ContentBrowserCmp,

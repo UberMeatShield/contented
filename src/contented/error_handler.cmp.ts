@@ -1,6 +1,9 @@
 import * as _ from 'lodash';
-import {OnInit, OnDestroy, Component, Input, EventEmitter} from '@angular/core';
 import { Subscription } from 'rxjs';
+import {OnInit, OnDestroy, Component, Input, ViewChild, AfterViewInit, Inject} from '@angular/core';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {MatDialog as MatDialog, MatDialogConfig as MatDialogConfig, MAT_DIALOG_DATA} from '@angular/material/dialog';
+
 import { GlobalBroadcast, MessageBroadcast, Message } from './global_message';
 
 interface CountMessages {
@@ -19,6 +22,10 @@ export class ErrorHandlerCmp implements OnInit, OnDestroy {
     public events: {[id: string]: CountMessages} = {};
     public sub: Subscription;
 
+    constructor(private snack: MatSnackBar, public dialog: MatDialog) {
+
+    }
+
     ngOnInit() {
         this.broadcast = this.broadcast || GlobalBroadcast;
         this.sub = this.broadcast.evts.subscribe({
@@ -28,12 +35,24 @@ export class ErrorHandlerCmp implements OnInit, OnDestroy {
                 }
             }
         });
+
+        setTimeout(() => {
+            GlobalBroadcast.error("A bad thing goes bad");
+        });
     }
 
     ngOnDestroy() {
         if (this.sub) {
             this.sub.unsubscribe();
         }
+    }
+
+    getErrorCount() {
+        return _.filter(this.events, e => e.count > 0).length;
+    }
+
+    hasErrors() {
+        return !_.isEmpty(_.filter(this.events, e => e.count > 0));
     }
 
     showError(evt: Message) {
@@ -48,6 +67,24 @@ export class ErrorHandlerCmp implements OnInit, OnDestroy {
             err.count++;
         }
         this.events[evt.msg] = err;
+        this.snack.open(evt.msg, 'dismiss', {panelClass: 'error', duration: 2000});
+    }
+
+    viewErrors() {
+        console.log("Open a dialog with a summary of the errors");
+        const errors = _.values(this.events);
+        const dialogRef = this.dialog.open(ErrorDialogCmp, {
+            data: {
+                errors: errors,
+                width: '90%',
+                height: '100%',
+                maxWidth: '100vw',
+                maxHeight: '100vh',
+            }
+        });
+        dialogRef.afterClosed().subscribe(result => {
+            console.log("Closing the dialog", result);
+        });
     }
 
     // Sort, get a count porbably.
@@ -63,5 +100,28 @@ export class ErrorHandlerCmp implements OnInit, OnDestroy {
         if (this.events[msg]) {
             delete(this.events[msg]);
         }
+    }
+}
+
+
+// This just doesn't seem like a great approach :(
+@Component({
+    selector: 'error-dialog',
+    templateUrl: 'error_dialog.ng.html'
+})
+export class ErrorDialogCmp implements AfterViewInit {
+
+    public errors: Array<CountMessages>
+
+    constructor(@Inject(MAT_DIALOG_DATA) public data) {
+        this.errors = data.errors;
+    }
+
+    dismiss(err: CountMessages) {
+        err.count = 0;
+    }
+
+    ngAfterViewInit() {
+        console.log("After view init");
     }
 }

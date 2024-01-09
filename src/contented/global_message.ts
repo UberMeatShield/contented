@@ -26,7 +26,7 @@ export class MessageBroadcast {
         this.evts.emit(new Message(msg, 'evt', obj, this.channelName));
     }
 
-    error(msg: string, err: any) {
+    error(msg: string, err: any = {}) {
         console.error(msg, err);
         this.evts.emit(new Message(msg, 'error', err, this.channelName));
     }
