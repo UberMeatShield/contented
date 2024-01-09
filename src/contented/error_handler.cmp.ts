@@ -35,7 +35,6 @@ export class ErrorHandlerCmp implements OnInit, OnDestroy {
                 }
             }
         });
-
         setTimeout(() => {
             GlobalBroadcast.error("A bad thing goes bad");
         });

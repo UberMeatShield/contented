@@ -5,11 +5,4 @@
       <mat-icon class="error" *ngIf="hasErrors()">error</mat-icon> 
       Errors ({{getErrorCount()}})
     </button>
-
-    <span class="error error-msg" *ngFor="let key of getErrorKeys()">
-        Error: {{key}}
-        <span class="hidden error-debug-info">
-            {{this.events[key].message?.info || "No debug info"}}
-        </span>
-    </span>
 </span>
