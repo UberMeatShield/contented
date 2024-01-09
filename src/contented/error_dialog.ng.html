@@ -1,0 +1,13 @@
+<mat-dialog-content #ErrorDialog class="search-dialog">
+    <div class="error error-msg" *ngFor="let err of errors">
+        Error: {{err.message.msg}}
+        <span class="hidden error-debug-info">
+            {{err.message.info || "No debug info"}}
+        </span>
+    </div>
+ </mat-dialog-content>
+ <mat-dialog-actions align="end">
+   <button mat-raised-button
+      mat-dialog-close
+   >Close</button>
+ </mat-dialog-actions>
