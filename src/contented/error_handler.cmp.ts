@@ -90,6 +90,7 @@ export class ErrorHandlerCmp implements OnInit, OnDestroy {
         });
     }
 
+
     // Sort, get a count porbably.
     getErrorKeys() {
         return (_.keys(this.events) || []).sort();
@@ -129,5 +130,9 @@ export class ErrorDialogCmp implements AfterViewInit {
 
     ngAfterViewInit() {
         console.log("After view init");
+    }
+
+    hasDebug(info: any) {
+        return !_.isEmpty(info);
     }
 }

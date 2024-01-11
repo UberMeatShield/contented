@@ -7,7 +7,8 @@ export class Message {
         public msg: string,
         public category: string,
         public info: any,
-        public channel: string
+        public channel: string,
+        public uxVisible = false,
     ) {
 
     }
