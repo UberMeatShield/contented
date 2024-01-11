@@ -1,8 +1,7 @@
-<mat-dialog-content #ErrorDialog class="search-dialog">
-    <div class="error" *ngFor="let err of errors">
-
+<mat-dialog-content #ErrorDialog class="error-dialog">
+    <div class="error error-dialog-messages" *ngFor="let err of errors">
         <div class="error-msg" *ngIf="err.count > 0">
-            Error: {{err.message.msg}}
+            <span>Error: {{err.message.msg}}</span>
             <button type="button" mat-icon-button (click)="dismiss(err)">
                 <mat-icon>close</mat-icon>
             </button>

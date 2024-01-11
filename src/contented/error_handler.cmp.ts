@@ -86,7 +86,7 @@ export class ErrorHandlerCmp implements OnInit, OnDestroy {
             }
         });
         dialogRef.afterClosed().subscribe(result => {
-            console.log("Closing the dialog", result);
+            console.log("Closed the dialog", result);
         });
     }
 

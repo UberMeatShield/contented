@@ -314,3 +314,13 @@ body {
     width: 32%;
 }
 
+.error-dialog {
+    min-width: 30rem;
+}
+
+.error-msg {
+    text-align: left;
+    span {
+        vertical-align: super;
+    }
+}
