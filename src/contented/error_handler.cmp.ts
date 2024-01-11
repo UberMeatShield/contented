@@ -2,7 +2,11 @@ import * as _ from 'lodash';
 import { Subscription } from 'rxjs';
 import {OnInit, OnDestroy, Component, Input, ViewChild, AfterViewInit, Inject} from '@angular/core';
 import {MatSnackBar} from '@angular/material/snack-bar';
-import {MatDialog as MatDialog, MatDialogConfig as MatDialogConfig, MAT_DIALOG_DATA} from '@angular/material/dialog';
+import {
+    MatDialog,
+    MatDialogRef,
+    MAT_DIALOG_DATA
+} from '@angular/material/dialog';
 
 import { GlobalBroadcast, MessageBroadcast, Message } from './global_message';
 
@@ -112,12 +116,15 @@ export class ErrorDialogCmp implements AfterViewInit {
 
     public errors: Array<CountMessages>
 
-    constructor(@Inject(MAT_DIALOG_DATA) public data) {
+    constructor(public dialogRef: MatDialogRef<ErrorDialogCmp>, @Inject(MAT_DIALOG_DATA) public data) {
         this.errors = data.errors;
     }
 
     dismiss(err: CountMessages) {
         err.count = 0;
+        if (_.isEmpty(_.filter(this.errors, err => err.count > 0))) {
+            this.dialogRef.close();
+        } 
     }
 
     ngAfterViewInit() {
