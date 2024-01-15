@@ -1,0 +1,34 @@
+<mat-dialog-content #ErrorDialog class="error-dialog">
+    <div class="error error-dialog-messages" *ngFor="let err of errors">
+      <mat-card class="error-card" *ngIf="err.count > 0">
+        <mat-card-header>
+              <div class="card-with-actions">
+            <mat-card-title class="error-row">
+                <span class="card-title">Error: {{err.message.msg}}</span>
+            </mat-card-title>
+              </div>
+            <div style="flex-grow: 1"></div>
+                <button type="button" class="pull-right" 
+                    title="Show debug info"
+                    mat-icon-button 
+                    *ngIf="hasDebug(err.message.info)"
+                    (click)="err.message.uxVisible = !err.message.uxVisible">
+                    <mat-icon *ngIf="err.message.uxVisible">visibility_off</mat-icon>
+                    <mat-icon *ngIf="!err.message.uxVisible">visibility</mat-icon>
+                </button>
+                <button type="button" class="pull-right" mat-icon-button (click)="dismiss(err)">
+                    <mat-icon>close</mat-icon>
+                </button>
+        </mat-card-header>
+        <mat-card-content>
+            <span *ngIf="!err.message.info">No debug information.</span>
+            <pre [class.hidden]="!err.message.uxVisible" class="error-debug-info">{{err.message.info | json }}</pre>
+        </mat-card-content>
+      </mat-card>
+    </div>
+ </mat-dialog-content>
+ <mat-dialog-actions align="end">
+   <button mat-raised-button
+      mat-dialog-close
+   >Close</button>
+ </mat-dialog-actions>

@@ -13,8 +13,8 @@ import {ContentedService} from '../contented/contented_service';
 import {ContentedModule} from '../contented/contented_module';
 import {Content} from '../contented/content';
 import {Container} from '../contented/container';
-import {ApiDef} from '../contented/api_def';
 import {GlobalNavEvents} from '../contented/nav_events';
+import {NoopAnimationsModule} from '@angular/platform-browser/animations';
 
 import * as _ from 'lodash';
 import {MockData} from '../test/mock/mock_data';
@@ -38,7 +38,8 @@ describe('TestingContentedViewCmp', () => {
                 ),
                 FormsModule,
                 ContentedModule,
-                HttpClientTestingModule
+                HttpClientTestingModule,
+                NoopAnimationsModule,
             ],
             providers: [
                 ContentedService
