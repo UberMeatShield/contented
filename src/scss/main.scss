@@ -38,6 +38,17 @@ body {
     }
 }
 
+.error-card {
+    margin: 0.1rem 0.25rem 0 0.25rem;
+    mat-card-header {
+        border-top: 2px solid $color-sec;
+        border-radius: 3px;
+        background-color: lighten($color-sec, 20%) !important;
+        margin-bottom: 0.25rem;
+        padding: 6px 4px 6px 4px;
+    }
+}
+
 .hidden {
     display: none !important;
 }
@@ -315,12 +326,26 @@ body {
 }
 
 .error-dialog {
-    min-width: 30rem;
+    min-width: 60rem;
 }
 
 .error-msg {
     text-align: left;
     span {
         vertical-align: super;
+    }
+}
+
+.error-row {
+    width: 100%;
+}
+
+.card-with-actions {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+
+    .card-title {
+        flex: 1 1 auto;
     }
 }

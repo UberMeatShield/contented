@@ -13,7 +13,7 @@ import * as _ from 'lodash';
 import * as $ from 'jquery';
 import { GlobalBroadcast } from './global_message';
 
-fdescribe('TestingErrorHandlerCmp', () => {
+describe('TestingErrorHandlerCmp', () => {
     let fixture: ComponentFixture<ErrorHandlerCmp>;
     let comp: ErrorHandlerCmp;
     let el: HTMLElement;

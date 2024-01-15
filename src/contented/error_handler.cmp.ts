@@ -39,9 +39,11 @@ export class ErrorHandlerCmp implements OnInit, OnDestroy {
                 }
             }
         });
+        /*
         setTimeout(() => {
-            GlobalBroadcast.error("A bad thing goes bad");
+            GlobalBroadcast.error("A bad thing goes bad", {debug: "WAAGGGH"});
         });
+        */
     }
 
     ngOnDestroy() {
