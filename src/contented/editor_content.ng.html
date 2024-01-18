@@ -70,14 +70,14 @@
     </mat-card>
   </div>
 
-  <mat-card *ngIf="!!content">
+  <mat-card class="primary-card" *ngIf="!!content">
     <mat-card-header>
       <mat-card-title>
         Editing Description
+      </mat-card-title>
         <button mat-icon-button (click)="save()" title="Save the description" [disabled]="loading">
           <mat-icon>save</mat-icon>
         </button>
-      </mat-card-title>
     </mat-card-header>
     <mat-card-content>
       <!-- TODO: Dynamically select language based on content type ?-->
@@ -86,11 +86,21 @@
   </mat-card>
 
 
-  <task-request-cmp *ngIf="content" 
-    [contentID]="content.id"
-    [reloadEvt]="taskCreated"
-    [checkStates]="checkStates"
-  ></task-request-cmp>
+  <mat-card class="primary-card">
+    <mat-card-header>
+      <mat-card-title>
+        Associated Tasks
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <task-request-cmp *ngIf="content" 
+        [contentID]="content.id"
+        [reloadEvt]="taskCreated"
+        [checkStates]="checkStates"
+      ></task-request-cmp>
+    </mat-card-content>
+  </mat-card>
 
 </div>
 

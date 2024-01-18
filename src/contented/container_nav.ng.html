@@ -64,7 +64,7 @@
           <span *ngIf="currentContent">
               /
               <a target="window" class="current-item" href="{{currentContent.fullUrl}}"> {{currentContent?.src}}</a>
-              <span class="content-size-info"> {{currentContent.size_bytes | byteFormatter: 0}}</span>
+              <span class="content-size-info"> {{currentContent.size | byteFormatter: 0}}</span>
               <span class="content-content-type"> {{currentContent?.content_type}}</span>
           </span>
           </span>

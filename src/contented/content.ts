@@ -36,7 +36,7 @@ export class Content {
     // cases it is.
     public content_type: string;
     public container_id: string;
-    public size_bytes: number;
+    public size: number;  // size in bytes
 
     public previewUrl: string;
     public fullUrl: string;
