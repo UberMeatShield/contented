@@ -4,13 +4,14 @@ import {ContentBrowserCmp} from './../contented/content_browser.cmp';
 import {VideoBrowserCmp} from './../contented/video_browser.cmp';
 import {SearchCmp} from './../contented/search.cmp';
 
-import {EditorContentCmp} from './../contented/editor_content.cmp';
 import {ContentViewCmp} from './../contented/content_view.cmp';
 import {SplashCmp} from './../contented/splash.cmp';
 
 import {APP_BASE_HREF} from '@angular/common';
 import {RouterModule, Routes} from '@angular/router';
 import { TasksCmp } from '../contented/tasks.cmp';
+import { AdminSearchCmp } from '../contented/admin_search.cmp';
+import { EditorContentCmp } from './../contented/editor_content.cmp';
 
 // Hmm, should have made this route have a saner extension
 const appRoutes: Routes = [
@@ -19,9 +20,11 @@ const appRoutes: Routes = [
     {path: 'ui/video', component: VideoBrowserCmp},
     {path: 'ui/search', component: SearchCmp},
     {path: 'ui/content/:id', component: ContentViewCmp},
-    {path: 'ui/editor_content/:id', component: EditorContentCmp},
     {path: 'ui/splash', component: SplashCmp},
+
+    {path: 'admin_ui/editor_content/:id', component: EditorContentCmp},
     {path: 'admin_ui/tasks', component: TasksCmp},
+    {path: 'admin_ui/search', component: AdminSearchCmp},
 ];
 @NgModule({
     imports: [RouterModule.forRoot(appRoutes, {})],
