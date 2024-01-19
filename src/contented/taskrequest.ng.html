@@ -57,7 +57,7 @@
         <ng-container matColumnDef="created_id">
           <th mat-header-cell *matHeaderCellDef> New Content ID </th>
           <td mat-cell *matCellDef="let element"> 
-            <a [routerLink]="['/ui/editor_content', element.created_id]">
+            <a [routerLink]="['/admin_ui/editor_content', element.created_id]">
                 {{element.created_id}}
             </a>
           </td>

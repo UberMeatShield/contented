@@ -166,7 +166,7 @@ export class SearchCmp implements OnInit{
         // Debugging / hooks but could also be a hook into a total loaded.
     }
 
-    imgClicked(mc: Content) {
+    contentClicked(mc: Content) {
         console.log("Click the image", mc);
         this.fullView(mc);
     }

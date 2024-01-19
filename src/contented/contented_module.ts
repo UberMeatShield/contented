@@ -23,6 +23,7 @@ import {MatSnackBarModule} from '@angular/material/snack-bar';
 import {ContentBrowserCmp} from './content_browser.cmp';
 import {ContentedNavCmp} from './contented_nav.cmp';
 import {SearchCmp, SearchDialog} from './search.cmp';
+import {AdminSearchCmp} from './admin_search.cmp';
 import {ContainerCmp} from './container.cmp';
 import {ContainerNavCmp} from './container_nav.cmp';
 import {ContentedViewCmp} from './contented_view_cmp';
@@ -136,6 +137,7 @@ const monacoConfig: NgxMonacoEditorConfig = {
       VideoBrowserCmp,
       VideoPreviewCmp,
       ScreenDialog,
+      AdminSearchCmp,
       SearchCmp,
       SearchDialog,
       ScreensCmp,
@@ -155,6 +157,7 @@ const monacoConfig: NgxMonacoEditorConfig = {
       ContentedViewCmp,
       ContainerCmp,
       ContainerNavCmp,
+      AdminSearchCmp,
       SearchCmp,
       VideoBrowserCmp,
       ContentViewCmp,
