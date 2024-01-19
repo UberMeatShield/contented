@@ -75,14 +75,16 @@
       <mat-card-title>
         Editing Description
       </mat-card-title>
-        <button mat-icon-button (click)="save()" title="Save the description" [disabled]="loading">
-          <mat-icon>save</mat-icon>
-        </button>
     </mat-card-header>
     <mat-card-content>
       <!-- TODO: Dynamically select language based on content type ?-->
       <vscode-editor-cmp #description [editForm]="editForm" [showTagging]="true"></vscode-editor-cmp>
     </mat-card-content>
+    <mat-card-actions align="left">
+        <button mat-icon-button (click)="save()" title="Save the description" [disabled]="loading">
+          <mat-icon>save</mat-icon>
+        </button>
+    </mat-card-actions>
   </mat-card>
 
 
