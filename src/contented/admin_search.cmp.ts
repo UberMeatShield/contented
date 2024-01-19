@@ -14,6 +14,5 @@ export class AdminSearchCmp extends SearchCmp {
     contentClicked(mc: Content) {
         console.log("Click a content element to open the editor for it.");
         window.open(`/admin_ui/editor_content/${mc.id}`);
-        window.focus();
     }
 }
