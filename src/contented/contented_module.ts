@@ -1,5 +1,5 @@
 import {NgModule} from '@angular/core';
-import {BrowserModule} from '@angular/platform-browser';
+import {BrowserModule, Title} from '@angular/platform-browser';
 import {HttpClientModule} from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 
@@ -169,6 +169,6 @@ const monacoConfig: NgxMonacoEditorConfig = {
       VSCodeEditorCmp,
       ErrorHandlerCmp,
   ],
-  providers: [ContentedService]
+  providers: [ContentedService, Title]
 })
 export class ContentedModule {}
