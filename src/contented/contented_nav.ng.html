@@ -71,6 +71,7 @@
     <mat-icon>home</mat-icon><span>Home</span>
   </button>&nbsp;&nbsp;
 
+  <span class="nav-title">{{title}}</span>
   <form *ngIf="containers" class="container-search-form" (keypress)="$event.stopPropagation()">
     <mat-form-field class="container-nav-search" appearance="outline">
       <input type="text"
