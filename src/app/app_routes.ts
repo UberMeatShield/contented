@@ -24,7 +24,7 @@ const appRoutes: Routes = [
 
     {path: 'admin_ui/editor_content/:id', component: EditorContentCmp, data: {title: 'Edit Content'},},
     {path: 'admin_ui/tasks', component: TasksCmp, data: {title: 'Tasks'},},
-    {path: 'admin_ui/search', component: AdminSearchCmp, data: {title: 'Admin Search'},},
+    {path: 'admin_ui/search', component: AdminSearchCmp, data: {title: 'Administrate Content'},},
 ];
 @NgModule({
     imports: [RouterModule.forRoot(appRoutes, {})],

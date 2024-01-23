@@ -6,7 +6,6 @@
     <mat-icon>more_vert</mat-icon>
   </button>
   <mat-menu #menu="matMenu">
-
     <button class="nav-link"
       mat-menu-item
       [routerLink]="['/ui/splash']" href="/ui/splash"
@@ -40,11 +39,38 @@
       <mat-icon>browse_gallery</mat-icon>
       <span>Browse</span>
     </button>
+    <button mat-menu-item [matMenuTriggerFor]="admin">Admin</button>
   </mat-menu>
 
+  <mat-menu #admin="matMenu">
+    <button class="nav-link"
+      mat-menu-item
+      [routerLink]="['/admin_ui/search']"
+      [routerLinkActive]="['active']"
+      href="/admin_ui/search"
+    >
+      <mat-icon>search</mat-icon>
+      <span>Administrate Content</span>
+    </button>
+    <button class="nav-link"
+      mat-menu-item
+      [routerLink]="['/admin_ui/tasks']"
+      [routerLinkActive]="['active']"
+      href="/admin_ui/tasks"
+    >
+      <mat-icon>analytics</mat-icon>
+      <span>Tasks</span>
+    </button>
+  </mat-menu>
 
+  <button class="nav-link"
+    mat-raised-button
+    [routerLink]="['/ui/splash']" href="/ui/splash"
+    [routerLinkActive]="['active']"
+  >
+    <mat-icon>home</mat-icon><span>Home</span>
+  </button>&nbsp;&nbsp;
 
-  <span class="nav-title">{{title}}</span>
   <form *ngIf="containers" class="container-search-form" (keypress)="$event.stopPropagation()">
     <mat-form-field class="container-nav-search" appearance="outline">
       <input type="text"
