@@ -1,5 +1,5 @@
 import {NgModule} from '@angular/core';
-import {BrowserModule} from '@angular/platform-browser';
+import {BrowserModule, Title} from '@angular/platform-browser';
 import {HttpClientModule} from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 
@@ -19,6 +19,7 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatTableModule} from '@angular/material/table';
 import {MatSelectModule} from '@angular/material/select';
 import {MatSnackBarModule} from '@angular/material/snack-bar';
+import {MatMenuModule} from '@angular/material/menu';
 
 import {ContentBrowserCmp} from './content_browser.cmp';
 import {ContentedNavCmp} from './contented_nav.cmp';
@@ -126,6 +127,7 @@ const monacoConfig: NgxMonacoEditorConfig = {
       MatTableModule,
       MatSelectModule,
       MatSnackBarModule,
+      MatMenuModule,
   ],
   declarations: [
       ContentBrowserCmp,
@@ -167,6 +169,6 @@ const monacoConfig: NgxMonacoEditorConfig = {
       VSCodeEditorCmp,
       ErrorHandlerCmp,
   ],
-  providers: [ContentedService]
+  providers: [ContentedService, Title]
 })
 export class ContentedModule {}

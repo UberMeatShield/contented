@@ -16,15 +16,15 @@ import { EditorContentCmp } from './../contented/editor_content.cmp';
 // Hmm, should have made this route have a saner extension
 const appRoutes: Routes = [
     {path: '', redirectTo: '/ui/splash', pathMatch: 'full'},
-    {path: 'ui/browse/:idx/:rowIdx', component: ContentBrowserCmp},
-    {path: 'ui/video', component: VideoBrowserCmp},
-    {path: 'ui/search', component: SearchCmp},
-    {path: 'ui/content/:id', component: ContentViewCmp},
-    {path: 'ui/splash', component: SplashCmp},
+    {path: 'ui/browse/:idx/:rowIdx', component: ContentBrowserCmp, data: {title: 'Browsing Content'},},
+    {path: 'ui/video', component: VideoBrowserCmp, data: {title: 'Videos'},},
+    {path: 'ui/search', component: SearchCmp, data: {title: 'Search'},},
+    {path: 'ui/content/:id', component: ContentViewCmp, data: {title: 'Content View'},},
+    {path: 'ui/splash', component: SplashCmp, data: {title: 'Home'},},
 
-    {path: 'admin_ui/editor_content/:id', component: EditorContentCmp},
-    {path: 'admin_ui/tasks', component: TasksCmp},
-    {path: 'admin_ui/search', component: AdminSearchCmp},
+    {path: 'admin_ui/editor_content/:id', component: EditorContentCmp, data: {title: 'Edit Content'},},
+    {path: 'admin_ui/tasks', component: TasksCmp, data: {title: 'Tasks'},},
+    {path: 'admin_ui/search', component: AdminSearchCmp, data: {title: 'Administrate Content'},},
 ];
 @NgModule({
     imports: [RouterModule.forRoot(appRoutes, {})],

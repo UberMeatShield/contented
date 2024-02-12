@@ -1,46 +1,77 @@
 <mat-toolbar class="contented-nav-cmp">
   <!-- A link to search here is a little odd -->
-  <div class="nav-route-selection">
+
+
+  <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Navigation around the content">
+    <mat-icon>more_vert</mat-icon>
+  </button>
+  <mat-menu #menu="matMenu">
+    <button class="nav-link"
+      mat-menu-item
+      [routerLink]="['/ui/splash']" href="/ui/splash"
+      [routerLinkActive]="['active']"
+    >
+      <mat-icon>home</mat-icon><span>Home</span>
+    </button>
+
+    <button class="nav-link"
+      mat-menu-item
+      [routerLink]="['/ui/search']" href="/ui/search"
+      [routerLinkActive]="['active']"
+    >
+      <mat-icon>search</mat-icon><span>Search</span>
+    </button>
+
+    <button class="nav-link" href="/ui/video"
+      mat-menu-item
+      [routerLink]="['/ui/video']" 
+      [routerLinkActive]="['active']"
+    >
+      <mat-icon>videocam</mat-icon><span>Video</span>
+    </button>
+
+    <button class="nav-link"
+      mat-menu-item
+      [routerLink]="['/ui/browse', '0', '0']"
+      [routerLinkActive]="['active']"
+      href="/ui/browse/0/0/"
+    >
+      <mat-icon>browse_gallery</mat-icon>
+      <span>Browse</span>
+    </button>
+    <button mat-menu-item [matMenuTriggerFor]="admin">Admin</button>
+  </mat-menu>
+
+  <mat-menu #admin="matMenu">
+    <button class="nav-link"
+      mat-menu-item
+      [routerLink]="['/admin_ui/search']"
+      [routerLinkActive]="['active']"
+      href="/admin_ui/search"
+    >
+      <mat-icon>search</mat-icon>
+      <span>Administrate Content</span>
+    </button>
+    <button class="nav-link"
+      mat-menu-item
+      [routerLink]="['/admin_ui/tasks']"
+      [routerLinkActive]="['active']"
+      href="/admin_ui/tasks"
+    >
+      <mat-icon>analytics</mat-icon>
+      <span>Tasks</span>
+    </button>
+  </mat-menu>
+
   <button class="nav-link"
     mat-raised-button
     [routerLink]="['/ui/splash']" href="/ui/splash"
     [routerLinkActive]="['active']"
   >
-    <mat-icon>home</mat-icon>Home
-  </button>
-
-  <button class="nav-link"
-    mat-raised-button
-    [routerLink]="['/ui/search']" href="/ui/search"
-    [routerLinkActive]="['active']"
-  >
-    <mat-icon>search</mat-icon>Search
-  </button>
-
-  <button class="nav-link" href="/ui/video"
-    mat-raised-button
-    [routerLink]="['/ui/video']" 
-    [routerLinkActive]="['active']"
-  >
-    <mat-icon>videocam</mat-icon>Video
-  </button>
-
-  <button class="nav-link"
-    mat-raised-button
-    [routerLink]="['/ui/browse', '0', '0']"
-    [routerLinkActive]="['active']"
-    href="/ui/browse/0/0/"
-  >
-    <mat-icon>browse_gallery</mat-icon>
-    Browse
-  </button>
-
-  </div>
+    <mat-icon>home</mat-icon><span>Home</span>
+  </button>&nbsp;&nbsp;
 
   <span class="nav-title">{{title}}</span>
-  
-
-
   <form *ngIf="containers" class="container-search-form" (keypress)="$event.stopPropagation()">
     <mat-form-field class="container-nav-search" appearance="outline">
       <input type="text"
