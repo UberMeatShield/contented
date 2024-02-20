@@ -124,6 +124,7 @@ func (m Content) String() string {
 // Contents is not required by pop and may be deleted
 type Contents []Content
 type ContentMap map[uuid.UUID]Content
+type ContentMapBySrc map[string]Content
 
 func (arr Contents) Reverse() Contents {
 	for i, j := 0, len(arr)-1; i < j; i, j = i+1, j-1 {

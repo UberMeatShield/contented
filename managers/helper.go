@@ -13,6 +13,7 @@ import (
 	"contented/utils"
 	"fmt"
 	"log"
+	"path/filepath"
 	"strings"
 
 	"github.com/gobuffalo/nulls"
@@ -113,6 +114,7 @@ func CreateTagsFromFile(cm ContentManager) (*models.Tags, error) {
 
 // Init a manager and pass it in or just do this via config value instead of a pass in
 func CreateAllPreviews(cm ContentManager) error {
+	log.Printf("Attempting to create all previews")
 	cnts, _, c_err := cm.ListContainers(ContainerQuery{PerPage: 9001}) // Might need to make this smarter :(
 	if c_err != nil {
 		log.Printf("Failed to list all containers %s", c_err)
@@ -138,6 +140,77 @@ func CreateAllPreviews(cm ContentManager) error {
 		return errors.New(strings.Join(err_msg, "\n"))
 	}
 	return nil
+}
+
+// Attempts to look in a container for videos that were already encoded but where the original
+// source video was not removed.
+func FindDuplicateVideos(cm ContentManager) (models.Contents, error) {
+	log.Printf("Attempting to remove Duplicate videos")
+	cfg := utils.GetCfg()
+	if cfg.EncodingFilenameModifier == "" {
+		log.Fatalf("The encoding filename modifier is used to look for a dupe and it is not set.")
+	}
+
+	// Containers are cheap... maybe just grab them all initially?
+	cq := ContainerQuery{PerPage: 9001}
+	containers, totalCnt, err := cm.ListContainers(cq)
+	if err != nil || totalCnt == 0 {
+		log.Fatalf("No containers found in the system")
+	}
+
+	duplicates := models.Contents{}
+	for _, cnt := range *containers {
+		FindDuplicateContents(cm, &cnt, "video")
+	}
+	return duplicates, nil
+}
+
+func FindDuplicateContents(cm ContentManager, cnt *models.Container, contentType string) models.Contents {
+	cfg := utils.GetCfg()
+	cs := ContentQuery{
+		ContentType: contentType,
+		PerPage:     90001, // TODO: just page it better
+		ContainerID: cnt.ID.String(),
+	}
+	contents, total, err := cm.ListContent(cs)
+	if total == 0 || err == nil {
+		log.Printf("Could not find any content under %s", cnt.GetFqPath())
+		return models.Contents{}
+	}
+
+	// We are only going to look for dupes in the same folder initially
+	contentNames := models.ContentMapBySrc{}
+	for _, content := range *contents {
+		contentNames[content.Src] = content
+	}
+
+	// Initially we are only going to look for encoding dupes that are video
+	cntPath := cnt.GetFqPath()
+	duplicates := models.Contents{}
+	for _, content := range *contents {
+		if content.Encoding == cfg.CodecForConversionName {
+			originalName := strings.Replace(content.Src, cfg.EncodingFilenameModifier, "", 1)
+			log.Printf("It should %s look for a dupe called", originalName)
+
+			if mContent, ok := contentNames[originalName]; ok {
+				encodedPath := filepath.Join(cntPath, mContent.Src)
+				dupePath := filepath.Join(cntPath, content.Src)
+
+				foundDupe, checkErr := utils.IsDuplicateVideo(encodedPath, dupePath)
+				if checkErr != nil {
+					log.Printf("Error attempting to determine if a video was a dupe %s", checkErr)
+				} else {
+					if foundDupe {
+						log.Printf("Found a duplicate at %s", dupePath)
+					} else {
+						log.Printf("Checked %s but it was not a duplicate (reason?todo)", dupePath)
+					}
+
+				}
+			}
+		}
+	}
+	return duplicates
 }
 
 // TODO: Should this return a total of previews created or something?

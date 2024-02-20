@@ -24,6 +24,8 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/tidwall/gjson"
+
 	"github.com/gobuffalo/nulls"
 	"github.com/gofrs/uuid"
 )
@@ -171,6 +173,7 @@ func SniffFileType(content *os.File) (string, error) {
 	return ctype, nil
 }
 
+// This is a little slow so the video info might need to be a lazy load
 func GetContent(id uuid.UUID, fileInfo os.FileInfo, path string) models.Content {
 	// https://golangcode.com/get-the-content-type-of-file/
 	contentType, err := GetMimeType(path, fileInfo.Name())
@@ -183,6 +186,7 @@ func GetContent(id uuid.UUID, fileInfo os.FileInfo, path string) models.Content 
 	// For images I could try and probe the encoding & resolution
 
 	meta := ""
+	encoding := ""
 	corrupt := false
 	srcFile := filepath.Join(path, fileInfo.Name())
 	if strings.Contains(contentType, "image") {
@@ -192,6 +196,7 @@ func GetContent(id uuid.UUID, fileInfo os.FileInfo, path string) models.Content 
 		vidInfo, probeErr := GetVideoInfo(srcFile)
 		if probeErr == nil {
 			meta = vidInfo
+			encoding = gjson.Get(meta, "streams.0.codec_name").String() // hate
 		} else {
 			meta = fmt.Sprintf("Failed to probe video %s", probeErr)
 			corrupt = true
@@ -207,6 +212,7 @@ func GetContent(id uuid.UUID, fileInfo os.FileInfo, path string) models.Content 
 		ContentType: contentType,
 		Meta:        meta,
 		Corrupt:     corrupt,
+		Encoding:    encoding,
 	}
 	return content
 }

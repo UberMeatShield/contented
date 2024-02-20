@@ -72,6 +72,16 @@ func Test_VideoEncoding(t *testing.T) {
 	if codecName != "hevc" {
 		t.Errorf("Failed encoding %s dstFile: %s was not hevc but %s", cfg.CodecForConversion, dstFile, codecName)
 	}
+
+	// Now check if we think the srcFile is a duplicate
+	isDuplicate, dupeErr := IsDuplicateVideo(dstFile, srcFile)
+	if dupeErr != nil {
+		t.Errorf("The srcFile had an error when determining if it was a dupe %s", dupeErr)
+	}
+	if isDuplicate == false {
+		t.Errorf("The srcFile was not detected as a duplicate and it should be a candidate for removal")
+	}
+
 	shouldNotEncodeTwice := dstFile + "ShouldNotEncodeAlreadyDone.mp4"
 	checkMsg, err, encoded := ConvertVideoToH256(dstFile, shouldNotEncodeTwice)
 	if !strings.Contains(checkMsg, "ignored because it matched") || err != nil {

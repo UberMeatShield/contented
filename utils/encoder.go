@@ -189,3 +189,41 @@ func ConvertVideoToH256(srcFile string, dstFile string) (string, error, bool) {
 	}
 	return "Success: " + reason, nil, true
 }
+
+/*
+ * Given two video files see if they are likely the same video
+ */
+func IsDuplicateVideo(encodedFile string, dupeFile string) (bool, error) {
+
+	// Probe srcFile
+	encodedCodec, encodedSize, encodedErr, encodedMeta := IsValidVideo(encodedFile)
+	if encodedErr != nil {
+		return false, encodedErr
+	}
+	encodedDuration := gjson.Get(encodedMeta, "format.duration").Float()
+	log.Printf("Src %s had codec %s, size %d and runtime %f", encodedFile, encodedCodec, encodedSize, encodedDuration)
+
+	cfg := GetCfg()
+	if encodedCodec != cfg.CodecForConversionName {
+		msg := fmt.Sprintf("Encoded File %s was not what we want %s", encodedFile, encodedCodec)
+		return false, errors.New(msg)
+	}
+
+	// Probe dstFile
+	dupeCodec, dupeSize, dupeErr, dupeMeta := IsValidVideo(dupeFile)
+	if dupeErr != nil {
+		return false, dupeErr
+	}
+	dupeDuration := gjson.Get(dupeMeta, "format.duration").Float()
+	log.Printf("Dst %s had codec %s, size %d and runtime %f", dupeFile, dupeCodec, dupeSize, dupeDuration)
+
+	// Within minimal amount length?
+	if int(dupeDuration) != int(dupeDuration) {
+		log.Printf("Files had different durations %f and %f", dupeDuration, dupeDuration)
+		return false, nil
+	}
+	// Take a screen at about the same time
+	// Ensure that screen has some level of complexity (not a black screen)
+	// Do at least some form of pixel compare
+	return true, nil
+}

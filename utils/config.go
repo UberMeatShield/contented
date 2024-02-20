@@ -26,10 +26,12 @@ const DefaultMaxContentPerContainer int = 90001
 const DefaultExcludeEmptyContainers bool = true
 const DefeaultTotalScreens = 12
 const DefaultPreviewFirstScreenOffset = 5
-const DefaultCodecsToConvert = ".*"  // regex match
-const DefaultCodecsToIgnore = "hevc" // regex match
+const DefaultCodecsToConvert = ".*"          // regex match
+const DefaultCodecsToIgnore = "hevc"         // regex match (do not try and double encode)
+const DefaultCodecForConversionName = "hevc" // The name of the encoding (sometimes not the lib)
 const DefaultEncodingDestination = ""
 const DefaultCodecForConversion = "libx265"
+const DefaultEncodingFilenameModifier = "_h265" // This is used when encoding a new video file name <name>_h265.mp4
 
 // Matchers that determine if you want to include specific filenames/content types
 type ContentMatcher func(string, string) bool
@@ -101,10 +103,15 @@ type DirConfigEntry struct {
 	PreviewFirstScreenOffset int    // Seconds to skip before taking a screen (black screen / titles)
 
 	// Convertion script configuration
-	CodecsToConvert     string // A matching regex for codecs to convert
-	CodecsToIgnore      string // Which codecs should not be converted (hevc is libx265 so default ignore)
-	CodecForConversion  string // libx265 is the default and that makes hevc files
-	EncodingDestination string // defaults to same directory but can override as well
+	CodecsToConvert        string // A matching regex for codecs to convert
+	CodecsToIgnore         string // Which codecs should not be converted (hevc is libx265 so default ignore)
+	CodecForConversion     string // libx265 is the default and that makes hevc files
+	CodecForConversionName string // ie libx265 becomes hevc
+	EncodingDestination    string // defaults to same directory but can override as well
+
+	// TODO: Handle it being mp4?
+	EncodingFilenameModifier string // After re-encoding filename<EncodingFilenameModifier>.mp4
+	RemoveDuplicateFiles     bool   // Removing old video files after re-encoding
 
 	StartQueueWorkers bool // Should we process requested tasks on this server
 
@@ -162,10 +169,14 @@ func GetCfgDefaults() DirConfigEntry {
 		PreviewFirstScreenOffset: DefaultPreviewFirstScreenOffset,
 
 		// Conversion codecs
-		CodecsToConvert:     DefaultCodecsToConvert,
-		CodecsToIgnore:      DefaultCodecsToIgnore,
-		CodecForConversion:  DefaultCodecForConversion,
-		EncodingDestination: DefaultEncodingDestination,
+		CodecsToConvert:        DefaultCodecsToConvert,
+		CodecsToIgnore:         DefaultCodecsToIgnore,
+		CodecForConversion:     DefaultCodecForConversion,
+		CodecForConversionName: DefaultCodecForConversionName,
+		EncodingDestination:    DefaultEncodingDestination,
+
+		EncodingFilenameModifier: DefaultEncodingFilenameModifier,
+		RemoveDuplicateFiles:     false,
 
 		// Should this server start up processing tasks for tasking screens, encoding etc.
 		StartQueueWorkers: true,
@@ -299,7 +310,13 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
 	cfg.CodecsToConvert = envy.Get("CODECS_TO_CONVERT", DefaultCodecsToConvert)
 	cfg.CodecsToIgnore = envy.Get("CODECS_TO_IGNORE", DefaultCodecsToIgnore)
 	cfg.CodecForConversion = envy.Get("CODEC_FOR_CONVERSION", DefaultCodecForConversion)
+	cfg.CodecForConversionName = envy.Get("CODEC_FOR_CONVERSION", DefaultCodecForConversionName)
 	cfg.EncodingDestination = envy.Get("ENCODING_DESTINATION", DefaultEncodingDestination)
+
+	// TODO: Make this a little saner on the name side
+	removeDuplicates, _ := strconv.ParseBool(envy.Get("REMOVE_DUPLICATE_FILES", "false"))
+	cfg.EncodingFilenameModifier = envy.Get("ENCODING_FILENAME_MODIFIER", DefaultEncodingFilenameModifier)
+	cfg.RemoveDuplicateFiles = removeDuplicates
 
 	cfg.ExcludeEmptyContainers = excludeEmpty
 	cfg.MaxSearchDepth = maxSearchDepth

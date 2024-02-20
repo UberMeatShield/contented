@@ -97,6 +97,16 @@ var _ = grift.Namespace("db", func() {
 		}
 	})
 
+	/*
+	 * Attempt to remove duplicate videos that are already encoded (safely).
+	 */
+	grift.Add("removeDuplicates", func(c *grift.Context) error {
+		cfg := utils.GetCfg()
+		utils.InitConfigEnvy(cfg)
+		fmt.Printf("Starting to look %s for duplicate videos under", cfg.Dir)
+		return nil
+	})
+
 	grift.Add("tags", func(c *grift.Context) error {
 		cfg := utils.GetCfg()
 		utils.InitConfigEnvy(cfg)
