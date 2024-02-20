@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
+	"strings"
 	"time"
 
 	//"contented/actions"
@@ -65,7 +66,7 @@ func GetContentSort(arr Contents, jsonFieldName string) ContentJsonSort {
 		}
 	case "src":
 		theSort = func(i, j int) bool {
-			return arr[i].Src < arr[j].Src
+			return strings.ToLower(arr[i].Src) < strings.ToLower(arr[j].Src)
 		}
 	case "content_type":
 		theSort = func(i, j int) bool {

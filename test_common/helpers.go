@@ -21,9 +21,10 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-const TOTAL_CONTAINERS = 5
-const TOTAL_MEDIA = 32
+const TOTAL_CONTAINERS = 6
+const TOTAL_MEDIA = 34
 const TOTAL_TAGS = 49
+const TOTAL_VIDEO = 3
 const VIDEO_FILENAME = "donut_[special( gunk.mp4"
 
 var EXPECT_CNT_COUNT = map[string]int{
@@ -32,6 +33,7 @@ var EXPECT_CNT_COUNT = map[string]int{
 	"dir3":            10,
 	"screens":         4,
 	"screens_sub_dir": 2,
+	"test_encoding":   2,
 }
 
 // Helper for a common block of video test code (duplicated in internals)

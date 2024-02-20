@@ -81,7 +81,7 @@ func (as *ActionSuite) Test_CfgIncExcContent() {
 	content := models.Contents{}
 	as.DB.All(&content)
 	dbg, _ := json.Marshal(content)
-	as.Equal(1, len(content), "There should be one match: "+string(dbg))
+	as.Equal(test_common.TOTAL_VIDEO, len(content), fmt.Sprintf("There should be three: %s", dbg))
 	as.Equal(content[0].ContentType, "video/mp4", "It should be the video")
 
 	clear_err := models.DB.TruncateAll()
@@ -94,7 +94,7 @@ func (as *ActionSuite) Test_CfgIncExcContent() {
 
 	jpeg_content := models.Contents{}
 	as.DB.All(&jpeg_content)
-	as.Equal(1, len(content), "There is one jpeg")
+	as.Equal(2, len(jpeg_content), fmt.Sprintf("There are 2 jpeg %s", jpeg_content))
 }
 
 func (as *ActionSuite) Test_ImgShouldCreatePreview() {
@@ -263,9 +263,10 @@ func (as *ActionSuite) Test_PreviewAllData() {
 	c_err := CreateInitialStructure(cfg)
 	man := GetManagerActionSuite(cfg, as)
 
-	cnts, count, c_err := man.ListContainers(ContainerQuery{Page: 1, PerPage: 3})
+	cquery := ContainerQuery{Page: 1, PerPage: 3}
+	cnts, count, c_err := man.ListContainers(cquery)
 	as.Greater(count, 1, "There should be a positive count")
-	as.Equal(len(*cnts), 3, "It should have containers")
+	as.Equal(cquery.PerPage, len(*cnts), "It should have containers")
 	as.NoError(c_err)
 
 	as.NoError(c_err, "Failed to build out the initial database")
