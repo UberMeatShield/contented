@@ -33,7 +33,7 @@ var EXPECT_CNT_COUNT = map[string]int{
 	"dir3":            10,
 	"screens":         4,
 	"screens_sub_dir": 2,
-	"test_encoding":   2,
+	"test_encoding":   4,
 }
 
 // Helper for a common block of video test code (duplicated in internals)

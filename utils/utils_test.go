@@ -12,11 +12,11 @@ import (
 func TestFindContainers(t *testing.T) {
 	var testDir, _ = envy.MustGet("DIR")
 	containers := FindContainers(testDir)
-	if len(containers) != 4 {
-		t.Fatal("There should be 4 containers in the mock")
+	if len(containers) != 5 {
+		t.Fatal("There should be 5 containers in the mock")
 	}
 
-	var known_dirs = map[string]bool{"dir1": true, "dir2": true, "dir3": true, "screens": true}
+	var known_dirs = map[string]bool{"dir1": true, "dir2": true, "dir3": true, "screens": true, "test_encoding": true}
 	count := 0
 	for _, c := range containers {
 		if _, ok := known_dirs[c.Name]; ok {
@@ -25,8 +25,8 @@ func TestFindContainers(t *testing.T) {
 			t.Errorf("Failed to get a lookup for this dir %s", c.Name)
 		}
 	}
-	if count != 4 {
-		t.Error("Failed to pull in the known / expected directories")
+	if count != 5 {
+		t.Errorf("Failed to pull in the known / expected directories %d", count)
 	}
 }
 
@@ -54,11 +54,11 @@ func Test_SetupContainerMatchers(t *testing.T) {
 		t.Errorf("We should only have matched two directories")
 	}
 	all_containers := FindContainersMatcher(testDir, IncludeAllContainers, cfg.ExcContainer)
-	if len(all_containers) != 4 {
+	if len(all_containers) != 5 {
 		t.Errorf("We should have excluded the .DS_Store")
 	}
 	exclude_none := FindContainersMatcher(testDir, IncludeAllContainers, ExcludeNoContainers)
-	if len(exclude_none) != 5 { // Prove we excluded some containers
+	if len(exclude_none) != 6 { // Prove we excluded some containers
 		t.Errorf("The DS_Store exists, if nothing is excluded then it should count")
 	}
 }
@@ -149,16 +149,16 @@ func TestCreateStructure(t *testing.T) {
 		t.Errorf("Container tree was set to nil")
 	}
 	lenTree := len(*tree)
-	if lenTree != 5 {
-		t.Errorf("The Tree should have 5 containers %d", lenTree)
+	if lenTree != 6 {
+		t.Errorf("The Tree should have 6 containers %d", lenTree)
 	}
 
 	cfg.MaxSearchDepth = 0
 	restricted := ContentTree{}
 	restrictTree, err := CreateStructure(testDir, cfg, &restricted, 0)
 	lenRestricted := len(*restrictTree)
-	if lenRestricted != 4 {
-		t.Errorf("We should have restricted it to top level 4 vs %d", lenRestricted)
+	if lenRestricted != 5 {
+		t.Errorf("We should have restricted it to top level 5 vs %d", lenRestricted)
 	}
 }
 
