@@ -158,9 +158,14 @@ func FindDuplicateVideos(cm ContentManager) (models.Contents, error) {
 		log.Fatalf("No containers found in the system")
 	}
 
+	log.Printf("Looking in %d containers", len(*containers))
 	duplicates := models.Contents{}
 	for _, cnt := range *containers {
-		FindDuplicateContents(cm, &cnt, "video")
+		dupes := FindDuplicateContents(cm, &cnt, "video")
+		if len(dupes) > 0 {
+			log.Printf("Found duplicates %d", len(dupes))
+			duplicates = append(duplicates, dupes...)
+		}
 	}
 	return duplicates, nil
 }
@@ -173,7 +178,7 @@ func FindDuplicateContents(cm ContentManager, cnt *models.Container, contentType
 		ContainerID: cnt.ID.String(),
 	}
 	contents, total, err := cm.ListContent(cs)
-	if total == 0 || err == nil {
+	if total == 0 || err != nil {
 		log.Printf("Could not find any content under %s", cnt.GetFqPath())
 		return models.Contents{}
 	}
@@ -188,24 +193,26 @@ func FindDuplicateContents(cm ContentManager, cnt *models.Container, contentType
 	cntPath := cnt.GetFqPath()
 	duplicates := models.Contents{}
 	for _, content := range *contents {
+		log.Printf("%s Checking has encoding %s for %s", content.Src, content.Encoding, cfg.CodecForConversionName)
 		if content.Encoding == cfg.CodecForConversionName {
 			originalName := strings.Replace(content.Src, cfg.EncodingFilenameModifier, "", 1)
-			log.Printf("It should %s look for a dupe called", originalName)
+			log.Printf("%s It should look for a dupe called %s", originalName, cfg.EncodingFilenameModifier)
+
+			if originalName == content.Src {
+				continue
+			}
 
 			if mContent, ok := contentNames[originalName]; ok {
-				encodedPath := filepath.Join(cntPath, mContent.Src)
-				dupePath := filepath.Join(cntPath, content.Src)
+				encodedPath := filepath.Join(cntPath, content.Src)
+				dupePath := filepath.Join(cntPath, mContent.Src)
 
 				foundDupe, checkErr := utils.IsDuplicateVideo(encodedPath, dupePath)
 				if checkErr != nil {
 					log.Printf("Error attempting to determine if a video was a dupe %s", checkErr)
-				} else {
-					if foundDupe {
-						log.Printf("Found a duplicate at %s", dupePath)
-					} else {
-						log.Printf("Checked %s but it was not a duplicate (reason?todo)", dupePath)
-					}
-
+				} else if foundDupe {
+					log.Printf("Found a duplicate at %s", dupePath)
+					mContent.FqPath = dupePath
+					duplicates = append(duplicates, mContent)
 				}
 			}
 		}

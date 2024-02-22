@@ -41,6 +41,9 @@ type Content struct {
 	// TODO: Maybe, MAYBE drop this?  None of the code currently really looks at the encoding
 	// till actually creating a preview.
 	Encoding string `json:"encoding" db:"encoding"`
+
+	// Useful for when we built out media in a container and want to associate it.
+	FqPath string `json:"-" db:"-" default:""` // NOT SET BY DEFAULT
 }
 
 // It seems odd there is no arbitrary json field => proper sort on the struct but then many of

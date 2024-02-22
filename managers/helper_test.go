@@ -325,3 +325,32 @@ func (as *ActionSuite) Test_PreviewsWithCorrupted() {
 		as.Equal(mc_check.Corrupt, true, "These images should actually be corrupt")
 	}
 }
+
+func (as *ActionSuite) Test_FindDuplicateVideos() {
+	err := models.DB.TruncateAll()
+	as.NoError(err, "Couldn't clean the DB")
+
+	dir, _ := envy.MustGet("DIR")
+	as.NotEmpty(dir, "The test must specify a directory to run on")
+
+	cfg := utils.GetCfg()
+	cfg.UseDatabase = false
+	cfg.Dir = dir
+
+	c_err := CreateInitialStructure(cfg)
+	as.NoError(c_err)
+	man := GetManagerActionSuite(cfg, as)
+
+	cquery := ContentQuery{ContentType: "video"}
+	contents, total, cErr := man.ListContent(cquery)
+	as.NoError(cErr)
+	as.Equal(test_common.TOTAL_VIDEO, total, "There should be this many videos")
+	as.Equal(len(*contents), total, "It should find all video content")
+
+	dupeSample := "SampleVideo_1280x720_1mb.mp4"
+	// There should be one video already encoded, and we should detect it.
+	dupeContent, dupeErr := FindDuplicateVideos(man)
+	as.NoError(dupeErr)
+	as.NotNil(dupeContent)
+	as.Equal(1, len(dupeContent), fmt.Sprintf("It should find %s", dupeSample))
+}

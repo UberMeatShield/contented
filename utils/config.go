@@ -310,7 +310,7 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
 	cfg.CodecsToConvert = envy.Get("CODECS_TO_CONVERT", DefaultCodecsToConvert)
 	cfg.CodecsToIgnore = envy.Get("CODECS_TO_IGNORE", DefaultCodecsToIgnore)
 	cfg.CodecForConversion = envy.Get("CODEC_FOR_CONVERSION", DefaultCodecForConversion)
-	cfg.CodecForConversionName = envy.Get("CODEC_FOR_CONVERSION", DefaultCodecForConversionName)
+	cfg.CodecForConversionName = envy.Get("CODEC_FOR_CONVERSION_NAME", DefaultCodecForConversionName)
 	cfg.EncodingDestination = envy.Get("ENCODING_DESTINATION", DefaultEncodingDestination)
 
 	// TODO: Make this a little saner on the name side

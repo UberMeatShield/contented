@@ -93,6 +93,10 @@ preview:
 encode:
 	export DIR=$(DIR) && buffalo task db:encode
 
+.PHONY: find-dupes
+find-dupes:
+	export DIR=$(DIR) && buffalo task db:removeDuplicates
+
 # Read from a tag file and import the tags to the DB
 .PHONY: tags
 tags:

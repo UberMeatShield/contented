@@ -103,8 +103,35 @@ var _ = grift.Namespace("db", func() {
 	grift.Add("removeDuplicates", func(c *grift.Context) error {
 		cfg := utils.GetCfg()
 		utils.InitConfigEnvy(cfg)
-		fmt.Printf("Starting to look %s for duplicate videos under", cfg.Dir)
-		return nil
+		fmt.Printf("Configuration is loaded %s Looking for duplicates", cfg.Dir)
+
+		if cfg.UseDatabase {
+			fmt.Printf("DB Manager is being used trying to find duplicates.")
+			return models.DB.Transaction(func(tx *pop.Connection) error {
+				get_connection := func() *pop.Connection {
+					return tx
+				}
+				man := managers.CreateManager(cfg, get_connection, get_params)
+				dupes, err := managers.FindDuplicateVideos(man)
+				if len(dupes) > 0 {
+					for _, dupe := range dupes {
+						fmt.Printf("%s", dupe.FqPath)
+					}
+				}
+				return err
+			})
+		} else {
+			get_connection := no_connection
+			man := managers.CreateManager(cfg, get_connection, get_params)
+			fmt.Printf("Memory Manager looking for duplicates.\n")
+			dupes, err := managers.FindDuplicateVideos(man)
+			if len(dupes) > 0 {
+				for _, dupe := range dupes {
+					fmt.Printf("%s\n", dupe.FqPath)
+				}
+			}
+			return err
+		}
 	})
 
 	grift.Add("tags", func(c *grift.Context) error {

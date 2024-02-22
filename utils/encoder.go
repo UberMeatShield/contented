@@ -159,7 +159,8 @@ func GetVideoConversionName(srcFile string) string {
 		path = cfg.EncodingDestination
 	}
 	stripExtension := regexp.MustCompile(fmt.Sprintf("%s$", ext))
-	newFilename := stripExtension.ReplaceAllString(filename, "_h256.mp4")
+	extension := fmt.Sprintf("%s.mp4", cfg.EncodingFilenameModifier)
+	newFilename := stripExtension.ReplaceAllString(filename, extension)
 	return filepath.Join(path, newFilename)
 }
 
@@ -168,7 +169,7 @@ func GetVideoConversionName(srcFile string) string {
 //   - (msg: string) : What happened in human readable form
 //   - (err: error) : did we hit a full error state
 //   - (encoded: bool) : Did actual encoding take place vs just 'should not do it (ie: already encoded)'
-func ConvertVideoToH256(srcFile string, dstFile string) (string, error, bool) {
+func ConvertVideoToH265(srcFile string, dstFile string) (string, error, bool) {
 	reason, err, shouldConvert := ShouldEncodeVideo(srcFile, dstFile)
 	if shouldConvert == false {
 		log.Printf("Not converting %s", reason)
