@@ -81,7 +81,7 @@ func (as *ActionSuite) Test_CfgIncExcContent() {
 	content := models.Contents{}
 	as.DB.All(&content)
 	dbg, _ := json.Marshal(content)
-	as.Equal(1, len(content), "There should be one match: "+string(dbg))
+	as.Equal(test_common.TOTAL_VIDEO, len(content), fmt.Sprintf("There should be three: %s", dbg))
 	as.Equal(content[0].ContentType, "video/mp4", "It should be the video")
 
 	clear_err := models.DB.TruncateAll()
@@ -94,7 +94,7 @@ func (as *ActionSuite) Test_CfgIncExcContent() {
 
 	jpeg_content := models.Contents{}
 	as.DB.All(&jpeg_content)
-	as.Equal(1, len(content), "There is one jpeg")
+	as.Equal(2, len(jpeg_content), fmt.Sprintf("There are 2 jpeg %s", jpeg_content))
 }
 
 func (as *ActionSuite) Test_ImgShouldCreatePreview() {
@@ -263,9 +263,10 @@ func (as *ActionSuite) Test_PreviewAllData() {
 	c_err := CreateInitialStructure(cfg)
 	man := GetManagerActionSuite(cfg, as)
 
-	cnts, count, c_err := man.ListContainers(ContainerQuery{Page: 1, PerPage: 3})
+	cquery := ContainerQuery{Page: 1, PerPage: 3}
+	cnts, count, c_err := man.ListContainers(cquery)
 	as.Greater(count, 1, "There should be a positive count")
-	as.Equal(len(*cnts), 3, "It should have containers")
+	as.Equal(cquery.PerPage, len(*cnts), "It should have containers")
 	as.NoError(c_err)
 
 	as.NoError(c_err, "Failed to build out the initial database")
@@ -323,4 +324,33 @@ func (as *ActionSuite) Test_PreviewsWithCorrupted() {
 	for _, mc_check := range *content_check {
 		as.Equal(mc_check.Corrupt, true, "These images should actually be corrupt")
 	}
+}
+
+func (as *ActionSuite) Test_FindDuplicateVideos() {
+	err := models.DB.TruncateAll()
+	as.NoError(err, "Couldn't clean the DB")
+
+	dir, _ := envy.MustGet("DIR")
+	as.NotEmpty(dir, "The test must specify a directory to run on")
+
+	cfg := utils.GetCfg()
+	cfg.UseDatabase = false
+	cfg.Dir = dir
+
+	c_err := CreateInitialStructure(cfg)
+	as.NoError(c_err)
+	man := GetManagerActionSuite(cfg, as)
+
+	cquery := ContentQuery{ContentType: "video"}
+	contents, total, cErr := man.ListContent(cquery)
+	as.NoError(cErr)
+	as.Equal(test_common.TOTAL_VIDEO, total, "There should be this many videos")
+	as.Equal(len(*contents), total, "It should find all video content")
+
+	dupeSample := "SampleVideo_1280x720_1mb.mp4"
+	// There should be one video already encoded, and we should detect it.
+	dupeContent, dupeErr := FindDuplicateVideos(man)
+	as.NoError(dupeErr)
+	as.NotNil(dupeContent)
+	as.Equal(1, len(dupeContent), fmt.Sprintf("It should find %s", dupeSample))
 }

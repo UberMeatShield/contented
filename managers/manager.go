@@ -248,6 +248,13 @@ func StringDefault(s1 string, s2 string) string {
 
 // Used when doing pagination on the arrays of memory manager
 func GetOffsetEnd(page int, per_page int, max int) (int, int) {
+	if per_page <= 0 {
+		per_page = utils.DefaultLimit
+	}
+	if page <= 0 {
+		page = 1
+	}
+
 	offset := (page - 1) * per_page
 	if offset < 0 {
 		offset = 0
@@ -357,7 +364,7 @@ func EncodeVideoContent(man ContentManager, content *models.Content, codec strin
 	path := cnt.GetFqPath()
 	srcFile := filepath.Join(path, content.Src)
 	dstFile := utils.GetVideoConversionName(srcFile)
-	msg, eErr, shouldEncode := utils.ConvertVideoToH256(srcFile, dstFile)
+	msg, eErr, shouldEncode := utils.ConvertVideoToH265(srcFile, dstFile)
 	return msg, eErr, shouldEncode, dstFile
 }
 

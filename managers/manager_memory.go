@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"regexp"
 	"sort"
+	"strings"
 
 	"github.com/gofrs/uuid"
 )
@@ -278,6 +279,16 @@ func (cm ContentManagerMemory) ListContentFiltered(cs ContentQuery) (*models.Con
 		}
 	}
 
+	if cs.ContentType != "" {
+		ct_arr := models.Contents{}
+		for _, content := range m_arr {
+			if strings.Contains(content.ContentType, cs.ContentType) {
+				ct_arr = append(ct_arr, content)
+			}
+		}
+		m_arr = ct_arr
+	}
+
 	h_arr := models.Contents{}
 	for _, m := range m_arr {
 		if cs.IncludeHidden == false {
@@ -297,7 +308,7 @@ func (cm ContentManagerMemory) ListContentFiltered(cs ContentQuery) (*models.Con
 		m_arr = m_arr[offset:end]
 		return &m_arr, count, nil
 	}
-	log.Printf("Get a list of content offset(%d), end(%d) we should have some %d", offset, end, len(m_arr))
+	// log.Printf("Get a list of content offset(%d), end(%d) we should have some %d", offset, end, len(m_arr))
 	return &m_arr, count, nil
 
 }

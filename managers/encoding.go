@@ -150,7 +150,7 @@ func StartEncoder(ew utils.EncodingWorker) {
 		// Should check the on disk size and add a check to look at a post encode filesize
 		log.Printf("Worker %d Doing encoding for %s - %s\n", ew.Id, mc.ID.String(), mc.Src)
 
-		msg, err, converted := utils.ConvertVideoToH256(req.SrcFile, req.DstFile)
+		msg, err, converted := utils.ConvertVideoToH265(req.SrcFile, req.DstFile)
 
 		if err == nil && converted == false {
 			err = errors.New(fmt.Sprintf("A request was made to convert %s but it did not encode %s", req.SrcFile, msg))

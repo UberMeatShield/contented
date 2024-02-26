@@ -83,7 +83,7 @@ func (as *ActionSuite) Test_MemoryManagerPaginate() {
 	containers, count, err := man.ListContainers(ContainerQuery{Page: 1, PerPage: 1})
 	as.NoError(err, "It should list with pagination")
 	as.Equal(1, len(*containers), "It should respect paging")
-	as.Equal(5, count, "Paging check that count is still correct")
+	as.Equal(test_common.TOTAL_CONTAINERS, count, "Paging check that count is still correct")
 
 	cnt := (*containers)[0]
 	as.NotNil(cnt, "There should be a container with 12 entries")
@@ -101,7 +101,7 @@ func (as *ActionSuite) Test_MemoryManagerPaginate() {
 	// Last container pagination check
 	l_cnts, count, _ := man.ListContainers(ContainerQuery{Page: 4, PerPage: 1})
 	as.Equal(1, len(*l_cnts), "It should still return only as we are on the last page")
-	as.Equal(5, count, "The count should be consistent")
+	as.Equal(test_common.TOTAL_CONTAINERS, count, "The count should be consistent")
 	l_cnt := (*l_cnts)[0]
 	as.Equal(test_common.EXPECT_CNT_COUNT[l_cnt.Name], l_cnt.Total, "There are 3 entries in the ordered test data last container")
 }
@@ -197,12 +197,12 @@ func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
 	as.Greater(wild_total, 0)
 	as.Equal(len(*all_content), wild_total)
 
-	sr = ContentQuery{ContentType: "video"}
+	sr = ContentQuery{ContentType: "video", Order: "src", Direction: "asc"}
 	video_content, vid_total, _ := man.SearchContent(sr)
-	as.Equal(vid_total, 1)
+	as.Equal(test_common.TOTAL_VIDEO, vid_total)
 	as.Equal(len(*video_content), vid_total)
 	vs := *video_content
-	as.Equal(vs[0].Src, test_common.VIDEO_FILENAME)
+	as.Equal(test_common.VIDEO_FILENAME, vs[0].Src)
 
 	for _, cnt := range *cnts {
 		if cnt.Name == "dir1" {
@@ -262,17 +262,21 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
 
 	// Checks that if a preview exists
 	cnts, content, _, _ := utils.PopulateMemoryView(cfg.Dir)
-	as.Equal(1, len(cnts), "We should only pull in containers that have content")
-	as.Equal(len(content), 1, "But there is only one video by mime type")
+	as.Equal(2, len(cnts), "We should only pull in containers that have video content")
+	as.Equal(test_common.TOTAL_VIDEO, len(content), fmt.Sprintf("There are %d videos", test_common.TOTAL_VIDEO))
+	foundDonut := false
 	for _, mc := range content {
-		expect := fmt.Sprintf("/container_previews/%s.png", test_common.VIDEO_FILENAME)
-		as.Equal(expect, mc.Preview)
+		if mc.Src == test_common.VIDEO_FILENAME {
+			expect := fmt.Sprintf("/container_previews/%s.png", test_common.VIDEO_FILENAME)
+			as.Equal(expect, mc.Preview)
+			foundDonut = true
+		}
 	}
+	as.Equal(true, foundDonut, "We should have a video preview for the donuts")
 
 	cfg.ExcludeEmptyContainers = false
 	all_cnts, one_content, _, _ := utils.PopulateMemoryView(cfg.Dir)
-	as.Equal(1, len(one_content), "But there is only one video by mime type")
-
+	as.Equal(test_common.TOTAL_VIDEO, len(one_content), "Expect some videos")
 	as.Equal(test_common.TOTAL_CONTAINERS, len(all_cnts), "Allow it to pull in all containers")
 }
 

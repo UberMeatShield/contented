@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
+	"strings"
 	"time"
 
 	//"contented/actions"
@@ -40,6 +41,9 @@ type Content struct {
 	// TODO: Maybe, MAYBE drop this?  None of the code currently really looks at the encoding
 	// till actually creating a preview.
 	Encoding string `json:"encoding" db:"encoding"`
+
+	// Useful for when we built out media in a container and want to associate it.
+	FqPath string `json:"-" db:"-" default:""` // NOT SET BY DEFAULT
 }
 
 // It seems odd there is no arbitrary json field => proper sort on the struct but then many of
@@ -65,7 +69,7 @@ func GetContentSort(arr Contents, jsonFieldName string) ContentJsonSort {
 		}
 	case "src":
 		theSort = func(i, j int) bool {
-			return arr[i].Src < arr[j].Src
+			return strings.ToLower(arr[i].Src) < strings.ToLower(arr[j].Src)
 		}
 	case "content_type":
 		theSort = func(i, j int) bool {
@@ -124,6 +128,7 @@ func (m Content) String() string {
 // Contents is not required by pop and may be deleted
 type Contents []Content
 type ContentMap map[uuid.UUID]Content
+type ContentMapBySrc map[string]Content
 
 func (arr Contents) Reverse() Contents {
 	for i, j := 0, len(arr)-1; i < j; i, j = i+1, j-1 {

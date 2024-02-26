@@ -42,11 +42,11 @@ func Test_VideoMeta(t *testing.T) {
 func Test_VideoEncoding(t *testing.T) {
 	srcDir, _, testFile := Get_VideoAndSetupPaths()
 	srcFile := filepath.Join(srcDir, testFile)
-	dstFile := fmt.Sprintf("%s.%s", srcFile, "[h256].mp4")
+	dstFile := fmt.Sprintf("%s.%s", srcFile, "[h265].mp4")
 
 	nukeFile(dstFile)
 	// Check if the dstFile exists and delete it if it does.
-	msg, err, encoded := ConvertVideoToH256(srcFile, dstFile)
+	msg, err, encoded := ConvertVideoToH265(srcFile, dstFile)
 	if err != nil {
 		t.Errorf("Failed to convert %s", err)
 	}
@@ -72,8 +72,18 @@ func Test_VideoEncoding(t *testing.T) {
 	if codecName != "hevc" {
 		t.Errorf("Failed encoding %s dstFile: %s was not hevc but %s", cfg.CodecForConversion, dstFile, codecName)
 	}
+
+	// Now check if we think the srcFile is a duplicate
+	isDuplicate, dupeErr := IsDuplicateVideo(dstFile, srcFile)
+	if dupeErr != nil {
+		t.Errorf("The srcFile had an error when determining if it was a dupe %s", dupeErr)
+	}
+	if isDuplicate == false {
+		t.Errorf("The srcFile was not detected as a duplicate and it should be a candidate for removal")
+	}
+
 	shouldNotEncodeTwice := dstFile + "ShouldNotEncodeAlreadyDone.mp4"
-	checkMsg, err, encoded := ConvertVideoToH256(dstFile, shouldNotEncodeTwice)
+	checkMsg, err, encoded := ConvertVideoToH265(dstFile, shouldNotEncodeTwice)
 	if !strings.Contains(checkMsg, "ignored because it matched") || err != nil {
 		t.Errorf("This should be encoded as hevc and shouldn't work %s err: %s", checkMsg, err)
 	}
@@ -87,14 +97,14 @@ func Test_VideoEncoding(t *testing.T) {
 func Test_VideoEncodingNotMatching(t *testing.T) {
 	srcDir, _, testFile := Get_VideoAndSetupPaths()
 	srcFile := filepath.Join(srcDir, testFile)
-	dstFile := fmt.Sprintf("%s.%s", srcFile, "[h256].mp4")
+	dstFile := fmt.Sprintf("%s.%s", srcFile, "[h265].mp4")
 
 	nukeFile(dstFile) // Ensure a previous test fail doesn't leave files
 	cfg := GetCfg()
 	cfg.CodecsToConvert = "windows_trash|quicktime" // Shouldn't match
 	SetCfg(*cfg)
 
-	checkMsg, checkErr, encoded := ConvertVideoToH256(srcFile, dstFile)
+	checkMsg, checkErr, encoded := ConvertVideoToH265(srcFile, dstFile)
 	if _, err := os.Stat(dstFile); !os.IsNotExist(err) {
 		t.Errorf("We should NOT have a file called %s", dstFile)
 	}
