@@ -106,6 +106,7 @@ type TaskRequest struct {
 	ContentID uuid.UUID `json:"content_id" db:"content_id"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	StartedAt time.Time `json:"started_at" db:"started_at"`
 
 	Status    TaskStatusType    `json:"status" db:"status" default:"new" `
 	Operation TaskOperationType `json:"operation" db:"operation"`

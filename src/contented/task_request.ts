@@ -22,6 +22,7 @@ export class TaskRequest {
     content_id: string;
     created_at: Date|undefined;
     updated_at: Date|undefined;
+    started_at: Date|undefined;
     status: string;
     operation: string;
     number_of_screens: number;
@@ -45,6 +46,7 @@ export class TaskRequest {
             Object.assign(this, obj);
             this.created_at = obj.created_at ? new Date(obj.created_at) : undefined;
             this.updated_at = obj.created_at ? new Date(obj.updated_at) : undefined;
+            this.started_at = obj.created_at ? new Date(obj.started_at) : undefined;
         }
     }
 

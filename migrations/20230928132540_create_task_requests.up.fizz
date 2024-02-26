@@ -6,6 +6,7 @@ create_table("task_requests") {
     t.Column("created_id", "uuid", {"null": true, "default": nil})
     t.ForeignKey("created_id", {"contents": ["id"]}, {"null": true})
 
+    t.Column("started_at", "datetime", {"null": true})
 	t.Column("status", "string", {"default": "new"})
 	t.Column("operation", "string", {"default": ""})
 	t.Column("message", "text", {"null": true, "default": ""})

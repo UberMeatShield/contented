@@ -70,12 +70,17 @@
 
         <ng-container matColumnDef="created_at">
           <th mat-header-cell *matHeaderCellDef>Created</th>
-          <td mat-cell *matCellDef="let element"> {{element.created_at}} </td>
+          <td mat-cell *matCellDef="let element"> {{element.created_at?.toUTCString()}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="started_at">
+          <th mat-header-cell *matHeaderCellDef>Started</th>
+          <td mat-cell *matCellDef="let element"> {{element.started_at?.toUTCString()}} </td>
         </ng-container>
 
         <ng-container matColumnDef="updated_at">
           <th mat-header-cell *matHeaderCellDef>Updated</th>
-          <td mat-cell *matCellDef="let element"> {{element.updated_at}} </td>
+          <td mat-cell *matCellDef="let element"> {{element.updated_at?.toUTCString()}} </td>
         </ng-container>
 
         <ng-container matColumnDef="error">
