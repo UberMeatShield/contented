@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gobuffalo/envy"
 	"github.com/gofrs/uuid"
 	"github.com/tidwall/gjson"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
@@ -113,5 +114,32 @@ func Test_VideoEncodingNotMatching(t *testing.T) {
 	}
 	if encoded == true {
 		t.Errorf("The state set should show we did NOT successfully encode")
+	}
+}
+
+func Test_VideoImageDiff(t *testing.T) {
+	testDir, _ := envy.MustGet("DIR")
+	srcDir := filepath.Join(testDir, "test_encoding")
+
+	encodedFile := filepath.Join(srcDir, "SampleVideo_1280x720_1mb_h265.mp4")
+	duplicateFile := filepath.Join(srcDir, "SampleVideo_1280x720_1mb.mp4")
+
+	isDupe, err := VideoDiffFrames(encodedFile, duplicateFile, 10)
+	if err != nil {
+		t.Errorf("Failed to get frame with error %s", err)
+	}
+	if !isDupe {
+		t.Errorf("This should be a duplicate file but was not?")
+	}
+
+	// Now check a file that is NOT a video dupe
+	donutDir, _, testFile := Get_VideoAndSetupPaths()
+	donutFile := filepath.Join(donutDir, testFile)
+	isNotDupe, dupeErr := VideoDiffFrames(encodedFile, donutFile, 5)
+	if isNotDupe == true {
+		t.Errorf("This is not a duplicate %s with %s", encodedFile, donutFile)
+	}
+	if dupeErr != nil {
+		t.Errorf("There should not be an error %s", dupeErr)
 	}
 }

@@ -90,6 +90,7 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/u2takey/go-utils v0.3.1 // indirect
+	github.com/vitali-fedulov/images4 v1.3.0 // indirect
 	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/image v0.11.0 // indirect
 	golang.org/x/mod v0.12.0 // indirect
