@@ -131,8 +131,21 @@ func Test_VideoImageDiff(t *testing.T) {
 	if !isDupe {
 		t.Errorf("This should be a duplicate file but was not?")
 	}
+	isDuplicate, noErr := IsDuplicateVideo(encodedFile, duplicateFile)
+	if noErr != nil {
+		t.Errorf("The files failed to compare %s", noErr)
+	}
+	if isDuplicate == false {
+		t.Errorf("These files should be the same")
+	}
+}
 
-	// Now check a file that is NOT a video dupe
+func Test_VideosAreDifferent(t *testing.T) {
+	testDir, _ := envy.MustGet("DIR")
+	srcDir := filepath.Join(testDir, "test_encoding")
+
+	encodedFile := filepath.Join(srcDir, "SampleVideo_1280x720_1mb_h265.mp4")
+
 	donutDir, _, testFile := Get_VideoAndSetupPaths()
 	donutFile := filepath.Join(donutDir, testFile)
 	isNotDupe, dupeErr := VideoDiffFrames(encodedFile, donutFile, 5)

@@ -225,13 +225,17 @@ func IsDuplicateVideo(encodedFile string, dupeFile string) (bool, error) {
 		log.Printf("Files had different durations %f and %f", dupeDuration, dupeDuration)
 		return false, nil
 	}
+	_, fps, _ := GetTotalVideoLengthFromMeta(encodedMeta, encodedFile)
 
-	// TODO: Now it should iterate over a few frames and make sure they are actually
-	// the same video.  This should be pretty safe and is 'reasonably' fast.
-
-	// Take a screen at about the same time
-	// Ensure that screen has some level of complexity (not a black screen)
-	// Do at least some form of pixel compare
+	// Testing a few frames to see if the files seem to have the same content.
+	testFrames := []float64{1.0, 2.0, 4.0}
+	for _, val := range testFrames {
+		frameNum := val / 5.0 * float64(fps)
+		same, err := VideoDiffFrames(encodedFile, dupeFile, int(frameNum))
+		if !same || err != nil {
+			return same, err
+		}
+	}
 	return true, nil
 }
 
@@ -249,13 +253,13 @@ func VideoDiffFrames(encodedFile string, dupeFile string, frameNumber int) (bool
 		return false, err2
 	}
 
-	/*
-		buff1 := new(bytes.Buffer)
-		buff2 := new(bytes.Buffer)
-		jpeg.Encode(buff1, img1, nil)
-		jpeg.Encode(buff2, img2, nil)
-		os.WriteFile("/Users/ubermeatshield/code/contented/1.jpg", buff1.Bytes(), 0644)
-		os.WriteFile("/Users/ubermeatshield/code/contented/2.jpg", buff2.Bytes(), 0644)
+	/* Just a few tests on the images4 check.
+	buff1 := new(bytes.Buffer)
+	buff2 := new(bytes.Buffer)
+	jpeg.Encode(buff1, img1, nil)
+	jpeg.Encode(buff2, img2, nil)
+	os.WriteFile("/Users/ubermeatshield/code/contented/1.jpg", buff1.Bytes(), 0644)
+	os.WriteFile("/Users/ubermeatshield/code/contented/2.jpg", buff2.Bytes(), 0644)
 	*/
 	// I should create N screens at time diff and then
 	// Icons are compact hash-like image representations.
@@ -265,6 +269,7 @@ func VideoDiffFrames(encodedFile string, dupeFile string, frameNumber int) (bool
 	// Comparison. Images are not used directly.
 	// Use func CustomSimilar for different precision.
 	if images4.Similar(icon1, icon2) {
+		// TODO: We can remove this after a little more experimentation
 		fmt.Println("Images are similar")
 		return true, nil
 	} else {
