@@ -547,7 +547,7 @@ func ChangeTaskState(man ContentManager, task *models.TaskRequest, newStatus mod
 	if status == newStatus {
 		return nil, errors.New(fmt.Sprintf("Task %s Already in state %s", task, newStatus))
 	}
-	if task.Status == models.TaskStatus.IN_PROGRESS {
+	if newStatus == models.TaskStatus.IN_PROGRESS {
 		task.StartedAt = time.Now().UTC()
 	}
 	task.Status = newStatus
