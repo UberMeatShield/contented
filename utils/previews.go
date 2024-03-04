@@ -386,7 +386,7 @@ func CreateSeekScreens(srcFile string, dstFile string, totalScreens int, frameOf
 	for idx := 0; idx < totalScreens; idx++ {
 		ss := (idx * timeSkip) + frameOffset
 		// screenFile := fmt.Sprintf(screenFmt, ss)
-		screenFile := fmt.Sprintf(screenFmt, idx, ss)
+		screenFile := fmt.Sprintf(screenFmt, idx+1, ss)
 		// screenFile := fmt.Sprintf(screenFmt, idx)
 		err := CreateSeekScreen(srcFile, screenFile, ss)
 		if err != nil {
