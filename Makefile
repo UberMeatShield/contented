@@ -82,7 +82,7 @@ db-reset:
 	buffalo db reset
 
 .PHONY: db-populate
-db-seed:
+db-populate:
 	export DIR=$(DIR) && buffalo task db:seed
 
 .PHONY: preview

@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/worker"
@@ -459,7 +460,7 @@ func EncodingVideoTask(man ContentManager, id uuid.UUID) error {
 	msg, encodeErr, shouldEncode, newFile := EncodeVideoContent(man, content, task.Codec)
 	log.Printf("Video Encode video %s %s %t", msg, encodeErr, shouldEncode)
 	if encodeErr != nil {
-		failMsg := fmt.Sprintf("Failing to create screen %s", encodeErr)
+		failMsg := fmt.Sprintf("Failed to encode %s", encodeErr)
 		FailTask(man, task, failMsg)
 		return encodeErr
 	}
@@ -545,6 +546,9 @@ func ChangeTaskState(man ContentManager, task *models.TaskRequest, newStatus mod
 	status := task.Status.Copy()
 	if status == newStatus {
 		return nil, errors.New(fmt.Sprintf("Task %s Already in state %s", task, newStatus))
+	}
+	if task.Status == models.TaskStatus.IN_PROGRESS {
+		task.StartedAt = time.Now().UTC()
 	}
 	task.Status = newStatus
 	task.Message = strings.ReplaceAll(msg, man.GetCfg().Dir, "")

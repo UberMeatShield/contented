@@ -24,7 +24,17 @@ export class TaskRequestCmp implements OnInit {
     public tasks: Array<TaskRequest>;
     public total = 0;
 
-    displayedColumns: string[] = ['operation', 'status', 'actions', 'created_at', 'updated_at', 'message', 'created_id', 'error'];
+    displayedColumns: string[] = [
+      'operation',
+      'status',
+      'actions',
+      'created_at',
+      'started_at',
+      'updated_at',
+      'message',
+      'created_id',
+      'error',
+    ];
     dataSource = new MatTableDataSource<TaskRequest>([]);
     states = TASK_STATES;
 
