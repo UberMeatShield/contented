@@ -221,8 +221,8 @@ func IsDuplicateVideo(encodedFile string, dupeFile string) (bool, error) {
 	log.Printf("Dst %s had codec %s, size %d and runtime %f", dupeFile, dupeCodec, dupeSize, dupeDuration)
 
 	// Within minimal amount length?
-	if int(dupeDuration) != int(dupeDuration) {
-		log.Printf("Files had different durations %f and %f", dupeDuration, dupeDuration)
+	if int(encodedDuration) != int(dupeDuration) {
+		log.Printf("Files had different durations %f and %f", encodedDuration, dupeDuration)
 		return false, nil
 	}
 	_, fps, _ := GetTotalVideoLengthFromMeta(encodedMeta, encodedFile)
@@ -230,7 +230,7 @@ func IsDuplicateVideo(encodedFile string, dupeFile string) (bool, error) {
 	// Testing a few frames to see if the files seem to have the same content.
 	testFrames := []float64{1.0, 2.0, 4.0}
 	for _, val := range testFrames {
-		frameNum := val / 5.0 * float64(fps)
+		frameNum := encodedDuration * (val / 5.0) * float64(fps)
 		same, err := VideoDiffFrames(encodedFile, dupeFile, int(frameNum))
 		if !same || err != nil {
 			return same, err
