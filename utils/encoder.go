@@ -13,9 +13,11 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/disintegration/imaging"
 	"github.com/gofrs/uuid"
 	"github.com/tidwall/gjson"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
+	"github.com/vitali-fedulov/images4"
 )
 
 // Used in the case of async processing when encoding.
@@ -219,12 +221,59 @@ func IsDuplicateVideo(encodedFile string, dupeFile string) (bool, error) {
 	log.Printf("Dst %s had codec %s, size %d and runtime %f", dupeFile, dupeCodec, dupeSize, dupeDuration)
 
 	// Within minimal amount length?
-	if int(dupeDuration) != int(dupeDuration) {
-		log.Printf("Files had different durations %f and %f", dupeDuration, dupeDuration)
+	if int(encodedDuration) != int(dupeDuration) {
+		log.Printf("Files had different durations %f and %f", encodedDuration, dupeDuration)
 		return false, nil
 	}
-	// Take a screen at about the same time
-	// Ensure that screen has some level of complexity (not a black screen)
-	// Do at least some form of pixel compare
+	_, fps, _ := GetTotalVideoLengthFromMeta(encodedMeta, encodedFile)
+
+	// Testing a few frames to see if the files seem to have the same content.
+	testFrames := []float64{1.0, 2.0, 4.0}
+	for _, val := range testFrames {
+		frameNum := encodedDuration * (val / 5.0) * float64(fps)
+		same, err := VideoDiffFrames(encodedFile, dupeFile, int(frameNum))
+		if !same || err != nil {
+			return same, err
+		}
+	}
 	return true, nil
+}
+
+func VideoDiffFrames(encodedFile string, dupeFile string, frameNumber int) (bool, error) {
+	img1Buffer := ReadFrameAsJpeg(encodedFile, frameNumber)
+	img1, err1 := imaging.Decode(img1Buffer)
+	if err1 != nil {
+		log.Printf("Failed to get a jpeg from encoded %s", err1)
+		return false, err1
+	}
+	img2Buffer := ReadFrameAsJpeg(dupeFile, frameNumber)
+	img2, err2 := imaging.Decode(img2Buffer)
+	if err2 != nil {
+		log.Printf("Failed to get a jpeg from dupe %s", err2)
+		return false, err2
+	}
+
+	/* Just a few tests on the images4 check.
+	buff1 := new(bytes.Buffer)
+	buff2 := new(bytes.Buffer)
+	jpeg.Encode(buff1, img1, nil)
+	jpeg.Encode(buff2, img2, nil)
+	os.WriteFile("/Users/ubermeatshield/code/contented/1.jpg", buff1.Bytes(), 0644)
+	os.WriteFile("/Users/ubermeatshield/code/contented/2.jpg", buff2.Bytes(), 0644)
+	*/
+	// I should create N screens at time diff and then
+	// Icons are compact hash-like image representations.
+	icon1 := images4.Icon(img1)
+	icon2 := images4.Icon(img2)
+
+	// Comparison. Images are not used directly.
+	// Use func CustomSimilar for different precision.
+	if images4.Similar(icon1, icon2) {
+		// TODO: We can remove this after a little more experimentation
+		fmt.Println("Images are similar")
+		return true, nil
+	} else {
+		fmt.Println("Not similar")
+		return false, nil
+	}
 }

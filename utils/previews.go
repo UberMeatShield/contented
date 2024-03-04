@@ -500,7 +500,7 @@ func ReadFrameAsJpeg(inFileName string, frameNum int) io.Reader {
 	buf := bytes.NewBuffer(nil)
 	err := ffmpeg.Input(inFileName).
 		Filter("select", ffmpeg.Args{fmt.Sprintf("gte(n,%d)", frameNum)}).
-		Output("pipe:", ffmpeg.KwArgs{"vframes": 1, "format": "image2", "vcodec": "mjpeg"}).
+		Output("pipe:", ffmpeg.KwArgs{"vframes": 1, "format": "image2", "vcodec": "mjpeg", "pix_fmt": "yuvj422p", "update": true}).
 		WithOutput(buf, os.Stdout).
 		Run()
 	if err != nil {
@@ -517,7 +517,11 @@ func GetTotalVideoLength(srcFile string) (float64, int, error) {
 	if err != nil {
 		return 0, 0, err
 	}
+	return GetTotalVideoLengthFromMeta(vidInfo, srcFile)
 
+}
+
+func GetTotalVideoLengthFromMeta(vidInfo string, srcFile string) (float64, int, error) {
 	//log.Printf("What the heck %s", vidInfo) could also get out the resolution
 	duration := gjson.Get(vidInfo, "format.duration").Float()
 	r_frame_rate := gjson.Get(vidInfo, "streams.0.r_frame_rate").String()
