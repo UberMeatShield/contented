@@ -509,6 +509,18 @@ func ReadFrameAsJpeg(inFileName string, frameNum int) io.Reader {
 	return buf
 }
 
+/**
+ * Use a faster read method instead of trying to grab a frame via gte()
+ */
+func ReadSeekScreen(srcFile string, screenTime int) (io.Reader, error) {
+	buf := bytes.NewBuffer(nil)
+	screenErr := ffmpeg.Input(srcFile, ffmpeg.KwArgs{"ss": screenTime}).
+		Output("pipe:", ffmpeg.KwArgs{"format": "image2", "vframes": 1, "update": true}).
+		WithOutput(buf, os.Stdout).
+		Run()
+	return buf, screenErr
+}
+
 // What is up with gjson vs normal processing (this does seem easier to use)?
 // TODO: Consider moving more logic into a ContentHelper (size, rez, probe etc)
 // TODO: Rename this as a helper around the Probe
