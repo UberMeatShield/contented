@@ -470,9 +470,9 @@ func CreateWebpFromScreens(screensSrc string, dstFile string) (string, error) {
 		if f.Size() > 0 {
 			return dstFile, nil
 		}
-		return dstFile, errors.New(fmt.Sprintf("File %s exists on disk but was too small", dstFile))
+		return dstFile, fmt.Errorf("file %s exists on disk but was too small", dstFile)
 	} else {
-		return dstFile, errors.New(fmt.Sprintf("%s doesn't seem to exist err %s", dstFile, err))
+		return dstFile, fmt.Errorf("%s doesn't seem to exist err %s", dstFile, err)
 	}
 }
 

@@ -5,13 +5,18 @@
         <input type="text" name="searchTags" 
           matInput
           aria-label="Search"
-          placeholder="Searches all content"
+          placeholder="Find Tags"
           [formControl]="searchTags"
           (keypress)="$event.stopPropagation()"
         >
-        <mat-icon matSuffix>search</mat-icon>
+        <mat-icon matSuffix>Find Tags</mat-icon>
       </mat-form-field>
   
+      Type ahead tags?
+      Just click to add tag?
+      Find one tag at a time?
+      Get the VSCode editor working as a tag search input?
+
       <mat-paginator
         [length]="total"
         [pageSize]="pageSize"

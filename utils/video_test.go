@@ -124,7 +124,7 @@ func Test_VideoImageDiff(t *testing.T) {
 	encodedFile := filepath.Join(srcDir, "SampleVideo_1280x720_1mb_h265.mp4")
 	duplicateFile := filepath.Join(srcDir, "SampleVideo_1280x720_1mb.mp4")
 
-	isDupe, err := VideoDiffFrames(encodedFile, duplicateFile, 10)
+	isDupe, err := VideoDiffFrames(encodedFile, duplicateFile, 15, 15)
 	if err != nil {
 		t.Errorf("Failed to get frame with error %s", err)
 	}
@@ -148,7 +148,7 @@ func Test_VideosAreDifferent(t *testing.T) {
 
 	donutDir, _, testFile := Get_VideoAndSetupPaths()
 	donutFile := filepath.Join(donutDir, testFile)
-	isNotDupe, dupeErr := VideoDiffFrames(encodedFile, donutFile, 5)
+	isNotDupe, dupeErr := VideoDiffFrames(encodedFile, donutFile, 15, 15)
 	if isNotDupe == true {
 		t.Errorf("This is not a duplicate %s with %s", encodedFile, donutFile)
 	}

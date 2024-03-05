@@ -192,17 +192,16 @@ func FindDuplicateContents(cm ContentManager, cnt *models.Container, contentType
 	// Initially we are only going to look for encoding dupes that are video
 	cntPath := cnt.GetFqPath()
 	duplicates := models.Contents{}
+
+	log.Printf("Searching with files already encoded in %s so we can remove their dupes", cfg.EncodingFilenameModifier)
 	for _, content := range *contents {
-		log.Printf("%s Checking has encoding %s for %s", content.Src, content.Encoding, cfg.CodecForConversionName)
 		if content.Encoding == cfg.CodecForConversionName {
 			originalName := strings.Replace(content.Src, cfg.EncodingFilenameModifier, "", 1)
-			log.Printf("%s It should look for a dupe called %s", originalName, cfg.EncodingFilenameModifier)
-
 			if originalName == content.Src {
 				continue
 			}
-
 			if mContent, ok := contentNames[originalName]; ok {
+				log.Printf("Found a for a dupe called %s", originalName)
 				encodedPath := filepath.Join(cntPath, content.Src)
 				dupePath := filepath.Join(cntPath, mContent.Src)
 
@@ -214,6 +213,8 @@ func FindDuplicateContents(cm ContentManager, cnt *models.Container, contentType
 					mContent.FqPath = dupePath
 					duplicates = append(duplicates, mContent)
 				}
+			} else {
+				log.Printf("No dupe with this name found %s", originalName)
 			}
 		}
 	}

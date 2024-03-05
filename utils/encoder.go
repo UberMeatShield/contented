@@ -225,13 +225,16 @@ func IsDuplicateVideo(encodedFile string, dupeFile string) (bool, error) {
 		log.Printf("Files had different durations %f and %f", encodedDuration, dupeDuration)
 		return false, nil
 	}
-	_, fps, _ := GetTotalVideoLengthFromMeta(encodedMeta, encodedFile)
+	_, fpsEncoded, _ := GetTotalVideoLengthFromMeta(encodedMeta, encodedFile)
+	_, fpsDupe, _ := GetTotalVideoLengthFromMeta(dupeMeta, dupeFile)
 
 	// Testing a few frames to see if the files seem to have the same content.
-	testFrames := []float64{1.0, 2.0, 4.0}
+	// We never _REALLY_ know what fps is so be conservative
+	testFrames := []float64{1.0, 2.0, 4.0, 5.0, 8.0}
 	for _, val := range testFrames {
-		frameNum := encodedDuration * (val / 5.0) * float64(fps)
-		same, err := VideoDiffFrames(encodedFile, dupeFile, int(frameNum))
+		frameEncoded := encodedDuration * (val / 10.0) * float64(fpsEncoded/2)
+		frameDupe := encodedDuration * (val / 10.0) * float64(fpsDupe/2)
+		same, err := VideoDiffFrames(encodedFile, dupeFile, int(frameEncoded), int(frameDupe))
 		if !same || err != nil {
 			return same, err
 		}
@@ -239,28 +242,19 @@ func IsDuplicateVideo(encodedFile string, dupeFile string) (bool, error) {
 	return true, nil
 }
 
-func VideoDiffFrames(encodedFile string, dupeFile string, frameNumber int) (bool, error) {
-	img1Buffer := ReadFrameAsJpeg(encodedFile, frameNumber)
+func VideoDiffFrames(encodedFile string, dupeFile string, encodedFrame int, dupeFrame int) (bool, error) {
+	img1Buffer := ReadFrameAsJpeg(encodedFile, encodedFrame)
 	img1, err1 := imaging.Decode(img1Buffer)
 	if err1 != nil {
 		log.Printf("Failed to get a jpeg from encoded %s", err1)
 		return false, err1
 	}
-	img2Buffer := ReadFrameAsJpeg(dupeFile, frameNumber)
+	img2Buffer := ReadFrameAsJpeg(dupeFile, dupeFrame)
 	img2, err2 := imaging.Decode(img2Buffer)
 	if err2 != nil {
 		log.Printf("Failed to get a jpeg from dupe %s", err2)
 		return false, err2
 	}
-
-	/* Just a few tests on the images4 check.
-	buff1 := new(bytes.Buffer)
-	buff2 := new(bytes.Buffer)
-	jpeg.Encode(buff1, img1, nil)
-	jpeg.Encode(buff2, img2, nil)
-	os.WriteFile("/Users/ubermeatshield/code/contented/1.jpg", buff1.Bytes(), 0644)
-	os.WriteFile("/Users/ubermeatshield/code/contented/2.jpg", buff2.Bytes(), 0644)
-	*/
 	// I should create N screens at time diff and then
 	// Icons are compact hash-like image representations.
 	icon1 := images4.Icon(img1)
@@ -270,10 +264,10 @@ func VideoDiffFrames(encodedFile string, dupeFile string, frameNumber int) (bool
 	// Use func CustomSimilar for different precision.
 	if images4.Similar(icon1, icon2) {
 		// TODO: We can remove this after a little more experimentation
-		fmt.Println("Images are similar")
+		log.Printf("Images are similar at frame encoded %d dupe %d", encodedFrame, dupeFrame)
 		return true, nil
 	} else {
-		fmt.Println("Not similar")
+		log.Printf("Images are different frame encoded %d dupe %d", encodedFrame, dupeFrame)
 		return false, nil
 	}
 }
