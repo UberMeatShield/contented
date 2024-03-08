@@ -470,9 +470,9 @@ func CreateWebpFromScreens(screensSrc string, dstFile string) (string, error) {
 		if f.Size() > 0 {
 			return dstFile, nil
 		}
-		return dstFile, errors.New(fmt.Sprintf("File %s exists on disk but was too small", dstFile))
+		return dstFile, fmt.Errorf("file %s exists on disk but was too small", dstFile)
 	} else {
-		return dstFile, errors.New(fmt.Sprintf("%s doesn't seem to exist err %s", dstFile, err))
+		return dstFile, fmt.Errorf("%s doesn't seem to exist err %s", dstFile, err)
 	}
 }
 
@@ -507,6 +507,18 @@ func ReadFrameAsJpeg(inFileName string, frameNum int) io.Reader {
 		panic(err)
 	}
 	return buf
+}
+
+/**
+ * Use a faster read method instead of trying to grab a frame via gte()
+ */
+func ReadSeekScreen(srcFile string, screenTime int) (io.Reader, error) {
+	buf := bytes.NewBuffer(nil)
+	screenErr := ffmpeg.Input(srcFile, ffmpeg.KwArgs{"ss": screenTime}).
+		Output("pipe:", ffmpeg.KwArgs{"format": "image2", "vframes": 1, "update": true}).
+		WithOutput(buf, os.Stdout).
+		Run()
+	return buf, screenErr
 }
 
 // What is up with gjson vs normal processing (this does seem easier to use)?

@@ -35,6 +35,7 @@ import {ContentedService} from './contented_service';
 import {ScreensCmp} from './screens.cmp';
 import {EditorContentCmp} from './editor_content.cmp';
 import {SplashCmp} from './splash.cmp';
+import { TagsCmp } from './tags.cmp';
 import {VSCodeEditorCmp} from './vscode_editor.cmp';
 import {TaskRequestCmp} from './taskrequest.cmp';
 import {TasksCmp} from './tasks.cmp';
@@ -147,6 +148,7 @@ const monacoConfig: NgxMonacoEditorConfig = {
       ByteFormatterPipe,
       SafePipe,
       EditorContentCmp,
+      TagsCmp,
       TaskRequestCmp,
       TasksCmp,
       VSCodeEditorCmp,
@@ -164,6 +166,7 @@ const monacoConfig: NgxMonacoEditorConfig = {
       VideoBrowserCmp,
       ContentViewCmp,
       SearchDialog,
+      TagsCmp,
       TaskRequestCmp,
       TasksCmp,
       VSCodeEditorCmp,
