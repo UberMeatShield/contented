@@ -67,7 +67,7 @@ export class TagsCmp implements OnInit{
                 console.log("It should setup filter events");
               },
               error => {
-                   console.error("failed to search, erro", error);
+                   console.error("failed to search, error", error);
               }
           );
     }

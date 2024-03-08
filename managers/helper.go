@@ -193,7 +193,10 @@ func FindDuplicateContents(cm ContentManager, cnt *models.Container, contentType
 	cntPath := cnt.GetFqPath()
 	duplicates := models.Contents{}
 
-	log.Printf("Searching with files already encoded in %s so we can remove their dupes", cfg.EncodingFilenameModifier)
+	// TODO: If I can trust the content.Encoding is always already set I could update to query on that
+	// field in addition to the contentType but that is really only useful if I expend the video dupe
+	// check to be a more complicated image hash & time lookup.
+	log.Printf("Finding video already in %s so we can remove their dupes", cfg.EncodingFilenameModifier)
 	for _, content := range *contents {
 		if content.Encoding == cfg.CodecForConversionName {
 			originalName := strings.Replace(content.Src, cfg.EncodingFilenameModifier, "", 1)
