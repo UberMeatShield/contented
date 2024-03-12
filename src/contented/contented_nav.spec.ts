@@ -51,8 +51,8 @@ describe('TestingContentedNavCmp', () => {
     });
 
     it('Should create a contented component', () => {
-        expect(comp).toBeDefined("We should have the Contented comp");
-        expect(el).toBeDefined("We should have a top level element");
+        expect(comp).withContext("We should have the Contented comp").toBeDefined();
+        expect(el).withContext("We should have a top level element").toBeDefined();
     });
 
     it('Should be able to handle certain key events', () => {
@@ -74,7 +74,7 @@ describe('TestingContentedNavCmp', () => {
 
 
         fixture.whenStable().then(() => {
-            expect(counter).toEqual(8, "It should have handled these events");
+            expect(counter).withContext("It should have handled these events").toEqual(8);
         });
     });
 
