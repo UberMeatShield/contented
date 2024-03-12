@@ -2,18 +2,16 @@
  * Provide the ability to edit the descriptions of content and containers.  Also provide the ability
  * to quickly manage tags.
  */
-import { Component, OnInit, AfterViewInit, Input, Output, EventEmitter, ViewChild, ElementRef} from '@angular/core';
-import {ActivatedRoute, Router, ParamMap} from '@angular/router';
-import {FormBuilder, NgForm, FormControl, FormGroup, Validators} from '@angular/forms';
-import {finalize, debounceTime, distinctUntilChanged} from 'rxjs/operators';
-import {MatRipple} from '@angular/material/core';
+import { Component, OnInit, Input, Output, EventEmitter, ViewChild, ElementRef} from '@angular/core';
+import {ActivatedRoute } from '@angular/router';
+import {FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import {debounceTime, distinctUntilChanged} from 'rxjs/operators';
 import {EditorComponent} from 'ngx-monaco-editor-v2';
 import {ContentedService} from './contented_service';
-import {Content, Tag} from './content';
-import {Container} from './container';
+import { GlobalBroadcast } from './global_message';
 
 import * as _ from 'lodash-es';
-import * as $ from 'jquery';
+import { Tag } from './content';
 
 @Component({
   selector: 'vscode-editor-cmp',
@@ -67,17 +65,19 @@ export class VSCodeEditorCmp implements OnInit {
   }
 
   loadTags() {
-    this._service.getTags().subscribe(
-      (tagRes: any) => {
+    this._service.getTags().subscribe({
+      next: (tagRes: {total: number, results: Tag[]}) => {
         this.tags = tagRes.results;
         this.tagLookup = _.keyBy(this.tags, 'id');
-
         this.problemTags = _.filter(this.tags, t => {
           return t.isProblem()
         });
 
-      }, console.error
-    )
+      }, 
+      error: err => { 
+        GlobalBroadcast.error('Failed to load tags', err);
+      }
+    });
   }
 
   // The onInit from monaco pulls us OUT of a proper digest detection, so if I set initialized
@@ -116,12 +116,14 @@ export class VSCodeEditorCmp implements OnInit {
       this.changeEmitter.pipe(
         distinctUntilChanged(),
         debounceTime(10)
-      ).subscribe(
-        (val: string) => {
+      ).subscribe({
+        next: (val: string) => {
             this.editForm.get("description").setValue(val);
         },
-        console.error
-      );
+        error: (err) => {
+          GlobalBroadcast.error('Monaco init failed', err);
+        }
+      });
       this.editor.registerOnChange((val: string) => {
         this.changeEmitter.emit(val);
       });
@@ -198,7 +200,7 @@ export class VSCodeEditorCmp implements OnInit {
   };
 
   public afterMonaco() {
-    console.log("After monaco");
+    console.log("After monaco initialization.");
     if (!this.editForm) {
       return;
     }
@@ -209,14 +211,14 @@ export class VSCodeEditorCmp implements OnInit {
       control.valueChanges.pipe(
         distinctUntilChanged(),
         debounceTime(500)
-      ).subscribe(
-        (evt: any) => {
+      ).subscribe({
+        next: (evt: any) => {
           if (this.editForm) {
-            // console.log("Control updated", evt);
             // console.log("VS Code editor form updated", this.editForm.value);
           }
         }
-      );
+      });
+      // Set this after the initialization.
       this.editorValue = control.value;
     }
     _.delay(() => {

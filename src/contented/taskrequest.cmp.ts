@@ -1,10 +1,11 @@
-import { Component, OnInit, AfterViewInit, Input, Output, EventEmitter, ViewChild} from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import {finalize, debounceTime, distinctUntilChanged} from 'rxjs/operators';
 import {ContentedService} from './contented_service';
 import {TaskRequest, TASK_STATES} from './task_request';
 import { MatTableDataSource} from '@angular/material/table';
 // import {ActivatedRoute, Router, ParamMap} from '@angular/router';
-import {FormBuilder, NgForm, FormControl, FormGroup} from '@angular/forms';
+import {FormBuilder, FormControl, FormGroup} from '@angular/forms';
+import { GlobalBroadcast } from './global_message';
 
 import * as _ from 'lodash-es';
 
@@ -54,11 +55,16 @@ export class TaskRequestCmp implements OnInit {
       this.loadTasks(this.contentID);
 
       if (this.reloadEvt) {
-        this.reloadEvt.subscribe(() => {
-          _.delay(() => {
-            this.loadTasks(this.contentID);
-          }, 2000);
-        }, console.error)
+        this.reloadEvt.subscribe({
+            next: () => {
+              _.delay(() => {
+                this.loadTasks(this.contentID);
+              }, 2000);
+            }, 
+            error: err => {
+              GlobalBroadcast.error('Failed to reload the tasks', err);
+            }
+        });
       }
 
       this.searchForm.valueChanges.pipe(
@@ -82,16 +88,16 @@ export class TaskRequestCmp implements OnInit {
       this.loading = true;
       return this._service.getTasks(this.contentID, 1, this.pageSize, status, search).pipe(
         finalize(() => this.loading = false)
-      ).subscribe(
-        (taskResponse) => {
+      ).subscribe({
+        next: (taskResponse) => {
           this.tasks = taskResponse.results;
           this.total = taskResponse.total;
           this.dataSource = new MatTableDataSource<TaskRequest>(this.tasks || [])
 
           this.checkComplete(this.tasks, watching);
         },
-        console.error
-      );
+        error: (err) => { GlobalBroadcast.error('Failed to load tasks', err); },
+      });
     }
 
     cancelTask(task: TaskRequest) {
@@ -135,6 +141,6 @@ export class TaskRequestCmp implements OnInit {
     }
 
     pageEvt(evt: any) {
-      console.log("Page event is annoying", evt);
+      console.log("Page event is annoying to handle", evt);
     }
 }

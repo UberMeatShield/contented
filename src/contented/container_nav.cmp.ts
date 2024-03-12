@@ -1,13 +1,12 @@
 import {Subscription} from 'rxjs';
-import {OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
+import {OnInit, OnDestroy, Component, EventEmitter, Input, Output} from '@angular/core';
 import {ContentedService} from './contented_service';
 import {Container, LoadStates} from './container';
 import {Content} from './content';
-import {finalize, switchMap} from 'rxjs/operators';
 
-import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 import {GlobalNavEvents, NavTypes} from './nav_events';
 import {FormGroup, FormBuilder, FormControl, Validators} from '@angular/forms';
+import { GlobalBroadcast } from './global_message';
 
 import * as _ from 'lodash';
 
@@ -49,12 +48,14 @@ export class ContainerNavCmp implements OnInit, OnDestroy {
             idxControl: this.idxControl
         });
 
-        this.sub = GlobalNavEvents.navEvts.subscribe(evt => {
-            // console.log("Select Media", evt, evt.cnt == this.cnt, evt.action, evt.content);
-            if (evt.action == NavTypes.SELECT_MEDIA && evt.cnt == this.cnt && evt.content) {
-                //console.log("Container Nav found select content", evt, evt.cnt.name);
-                this.currentContent = evt.content;
-                this.idxControl.setValue(this.cnt.rowIdx);
+        this.sub = GlobalNavEvents.navEvts.subscribe({
+            next: evt => {
+                // console.log("Select Media", evt, evt.cnt == this.cnt, evt.action, evt.content);
+                if (evt.action == NavTypes.SELECT_MEDIA && evt.cnt == this.cnt && evt.content) {
+                    //console.log("Container Nav found select content", evt, evt.cnt.name);
+                    this.currentContent = evt.content;
+                    this.idxControl.setValue(this.cnt.rowIdx);
+                }
             }
         });
         // The select event can trigger BEFORE a render loop so on a new render
@@ -62,8 +63,8 @@ export class ContainerNavCmp implements OnInit, OnDestroy {
         if (this.cnt) {
             this.currentContent = this.cnt.getContent();
         }
-        this.navForm.get("idxControl").valueChanges.subscribe(
-            idx => {
+        this.navForm.get("idxControl").valueChanges.subscribe({
+            next: idx => {
                 if (idx != this.cnt.rowIdx) {
                     let content = this.cnt.getContent(idx);
                     if (content) {
@@ -72,7 +73,7 @@ export class ContainerNavCmp implements OnInit, OnDestroy {
                     }
                 }
             }
-        );
+        });
     }
 
     public ngOnDestroy() {
@@ -83,14 +84,14 @@ export class ContainerNavCmp implements OnInit, OnDestroy {
 
     fullLoadContainer(cnt: Container) {
         console.log("Fully load container from btn click from nav");
-        this._contentedService.fullLoadDir(cnt).subscribe(
-            (loadedDir: Container) => {
+        this._contentedService.fullLoadDir(cnt).subscribe({
+            next: (loadedDir: Container) => {
                 console.log("Fully loaded up the container", loadedDir);
             },
-            err => {
-                console.error("Failed to load", err);
+            error: err => {
+                GlobalBroadcast.error('Failed to load container', err);
              }
-        );
+        });
     }
 
     next() {

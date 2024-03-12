@@ -10,6 +10,7 @@ import {TAGS_RESPONSE} from './tagging_syntax';
 // The manner in which RxJS does this is really stupid, saving 50K for hours of dev time is fail
 import {forkJoin, from as observableFrom} from 'rxjs';
 import {catchError, map} from 'rxjs/operators';
+import { GlobalBroadcast } from './global_message';
 
 import * as _ from 'lodash';
 @Injectable()
@@ -100,15 +101,18 @@ export class ContentedService {
             for (let offset = cnt.count; offset < cnt.total; offset += limit) {
                 ++idx;
                 let delayP = new Promise((yupResolve, nopeReject) => {
-                    this.getFullContainer(cnt.id, offset, limit).subscribe(res => {
-                        _.delay(() => {
-                            // Hmmm, buildImgs is strange and should be fixed up
-                            cnt.addContents(cnt.buildImgs(res.results));
-                            yupResolve(cnt);
-                        }, idx * 500);
-                    }, err => {
-                        console.error('Failed to load', err);
-                        nopeReject(err);
+                    this.getFullContainer(cnt.id, offset, limit).subscribe({
+                        next: res => {
+                            _.delay(() => {
+                                // Hmmm, buildImgs is strange and should be fixed up
+                                cnt.addContents(cnt.buildImgs(res.results));
+                                yupResolve(cnt);
+                            }, idx * 500);
+                        }, 
+                        error: err => {
+                            GlobalBroadcast.error('Failed to load', err);
+                            nopeReject(err);
+                        }
                     });
                 });
 
@@ -119,15 +123,15 @@ export class ContentedService {
             }
 
             // Join all the results and let the call function resolve once the cnt is updated.
-            return forkJoin(calls).pipe().subscribe(
-                results => {
+            return forkJoin(calls).pipe().subscribe({
+                next: results => {
                     resolve(cnt);
                 },
-                err => {
-                    console.error('Could not load all results', err);
+                error: err => {
+                    GlobalBroadcast.error('Could not load all results', err);
                     reject(err);
                 }
-            );
+            });
         });
         return observableFrom(p);
     }

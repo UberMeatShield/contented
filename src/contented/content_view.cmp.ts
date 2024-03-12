@@ -1,9 +1,10 @@
-import {OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
+import {OnInit, Component, Input, } from '@angular/core';
 import {Content} from './content';
 import {ContentedService} from './contented_service';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 
 import {finalize} from 'rxjs/operators';
+import { GlobalBroadcast } from './global_message';
 
 @Component({
     selector: 'content-view',
@@ -26,27 +27,30 @@ export class ContentViewCmp implements OnInit {
     }
 
     public ngOnInit() {
-        this.route.paramMap.pipe().subscribe(
-            (res: ParamMap) => {
+        this.route.paramMap.pipe().subscribe({
+            next: (res: ParamMap) => {
                 let contentID = res.get("id")
                 if (contentID) {
                     this.loadContent(contentID);
                 }
-            }, err => { console.error(err); }
-        )
+            }, 
+            error: err => { 
+                GlobalBroadcast.error('Failed to start the content view', err);
+            }
+        });
     }
 
     public loadContent(contentID: string) {
         this.loading = true;
         this._service.getContent(contentID).pipe(
             finalize(() => { this.loading = false; })
-        ).subscribe(
-            (m: Content) => {
+        ).subscribe({
+            next: (m: Content) => {
                 this.content = m;
-            }, err => {
-                console.error("Failed to load content", err);
-                this.error = "Failed to find contentID" + err;
+            }, 
+            error: err => {
+                GlobalBroadcast.error(`Could not find ${contentID}`, err);
             }
-        )
+        });
     }
 }
