@@ -1,10 +1,10 @@
 import {Subscription} from 'rxjs';
-import {OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
+import {OnInit, OnDestroy, Component, EventEmitter, Input, Output} from '@angular/core';
 import {ContentedService} from './contented_service';
 
 import {Container} from './container';
 import {Content} from './content';
-import {GlobalNavEvents, NavTypes} from './nav_events';
+import {GlobalNavEvents, NavTypes, NavEventMessage} from './nav_events';
 import * as _ from 'lodash';
 
 @Component({
@@ -32,27 +32,29 @@ export class ContainerCmp implements OnInit, OnDestroy {
     }
 
     public ngOnInit() {
-        this.sub = GlobalNavEvents.navEvts.subscribe(evt => {
-            if (this.active) {
-                // console.log("Container Event found", this.container.name, evt);
-                switch (evt.action) {
-                    case NavTypes.NEXT_MEDIA:
-                        console.log("Next in container");
-                        this.nextContent();
-                        break;
-                    case NavTypes.PREV_MEDIA:
-                        console.log("Prev in container");
-                        this.prevContent();
-                        break;
-                    case NavTypes.SAVE_MEDIA:
-                        console.log("Save the currently selected content");
-                        this.saveContent();
-                        break;
-                    case NavTypes.SCROLL_MEDIA_INTO_VIEW:
-                        this.scrollContent(evt.content);
-                        break;
-                    default:
-                        break;
+        this.sub = GlobalNavEvents.navEvts.subscribe({
+            next: (evt: NavEventMessage) => {
+                if (this.active) {
+                    // console.log("Container Event found", this.container.name, evt);
+                    switch (evt.action) {
+                        case NavTypes.NEXT_MEDIA:
+                            console.log("Next in container");
+                            this.nextContent();
+                            break;
+                        case NavTypes.PREV_MEDIA:
+                            console.log("Prev in container");
+                            this.prevContent();
+                            break;
+                        case NavTypes.SAVE_MEDIA:
+                            console.log("Save the currently selected content");
+                            this.saveContent();
+                            break;
+                        case NavTypes.SCROLL_MEDIA_INTO_VIEW:
+                            this.scrollContent(evt.content);
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
         });

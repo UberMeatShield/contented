@@ -1,28 +1,21 @@
-import {forkJoin, Subscription} from 'rxjs';
-import {finalize, debounceTime, map, distinctUntilChanged, catchError} from 'rxjs/operators';
+import {Subscription} from 'rxjs';
+import {finalize, debounceTime, distinctUntilChanged} from 'rxjs/operators';
 
 import {
     OnInit,
     OnDestroy,
-    AfterViewInit,
     Component,
-    EventEmitter,
-    Input,
-    Output,
-    HostListener,
     ViewChild,
-    Inject
 } from '@angular/core';
 import {ContentedService} from './contented_service';
 import {Content} from './content';
 import {Container} from './container';
-import {Screen} from './screen';
-import {GlobalNavEvents, NavTypes} from './nav_events';
+import {GlobalNavEvents, NavTypes, NavEventMessage} from './nav_events';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
-import {FormBuilder, NgForm, FormControl, FormGroup} from '@angular/forms';
+import {FormBuilder, FormControl, FormGroup} from '@angular/forms';
+import { GlobalBroadcast } from './global_message';
 
 import {PageEvent as PageEvent} from '@angular/material/paginator';
-import {MatDialog as MatDialog, MatDialogConfig as MatDialogConfig, MAT_DIALOG_DATA} from '@angular/material/dialog';
 import * as _ from 'lodash';
 
 
@@ -58,7 +51,6 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
         public _contentedService: ContentedService,
         public route: ActivatedRoute,
         public router: Router,
-        public dialog: MatDialog,
         fb: FormBuilder,
     ) {
         this.fb = fb;
@@ -68,8 +60,8 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
         this.resetForm();
 
         // This should also preserve the current page we have selected and restore it.
-        this.route.queryParams.pipe().subscribe(
-            (res: ParamMap) => {
+        this.route.queryParams.pipe().subscribe({
+            next: (res: ParamMap) => {
                 let st = res['videoText'];
                 let text = st !== undefined ? st : '';
 
@@ -80,7 +72,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
                 this.setupFilterEvts();
                 this.loadContainers();
             }
-        );
+        });
         this.setupEvtListener();
     }
 
@@ -91,41 +83,46 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
      }
 
     public loadContainers() {
-        this._contentedService.getContainers().subscribe(
-            (cnts) => {
+        this._contentedService.getContainers().subscribe({
+            next: (cnts) => {
                this.containers = cnts.results || []; 
+            },
+            error: err => {
+                GlobalBroadcast.error('Containers could not load', err);
             }
-        );
+        });
     }
  
      // This will listen to nav events.
      public setupEvtListener() {
-         this.sub = GlobalNavEvents.navEvts.subscribe(evt => {
-             switch(evt.action) {
-                 case NavTypes.NEXT_MEDIA:
-                     this.next();
-                     break;
-                 case NavTypes.PREV_MEDIA:
-                     this.prev();
-                     break;
-                 case NavTypes.HIDE_FULLSCREEN:
-                     // Scroll back into view
-                     console.log("selectedContent", this.selectedContent, evt);
-                     this.selectContent(this.selectedContent, this.selectedContainer);
-                     break;
-                 case NavTypes.LOAD_MORE:
-                     // this.loadMore();
-                     // It might not be TOO abusive to override this and make it page next?
-                     break;
-                 case NavTypes.SELECT_MEDIA:
-                     this.selectContent(evt.content, evt.cnt);
-                     break;
-                 case NavTypes.SELECT_CONTAINER:
-                     this.selectContainer(evt.cnt);
-                     break;
-                 default:
-                     break;
-             }
+         this.sub = GlobalNavEvents.navEvts.subscribe({
+            next: (evt: NavEventMessage) => {
+                switch(evt.action) {
+                    case NavTypes.NEXT_MEDIA:
+                        this.next();
+                        break;
+                    case NavTypes.PREV_MEDIA:
+                        this.prev();
+                        break;
+                    case NavTypes.HIDE_FULLSCREEN:
+                        // Scroll back into view
+                        console.log("selectedContent", this.selectedContent, evt);
+                        this.selectContent(this.selectedContent, this.selectedContainer);
+                        break;
+                    case NavTypes.LOAD_MORE:
+                        // this.loadMore();
+                        // It might not be TOO abusive to override this and make it page next?
+                        break;
+                    case NavTypes.SELECT_MEDIA:
+                        this.selectContent(evt.content, evt.cnt);
+                        break;
+                    case NavTypes.SELECT_CONTAINER:
+                        this.selectContainer(evt.cnt);
+                        break;
+                    default:
+                        break;
+                }
+            }
          });
      }
 
@@ -202,16 +199,16 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
             distinctUntilChanged()
             // Prevent bubble on keypress
           )
-          .subscribe(
-              formData => {
+          .subscribe({
+              next: formData => {
                   console.log("Form data changing");
                   // If the text changes do we reset the search offset etc.
                   this.search(formData['videoText'] || '', 0, this.pageSize, this.getCntId());
               },
-              error => {
-                   console.error("failed to search, erro", error);
+              error: error => {
+                GlobalBroadcast.error('Failed to search', error);
               }
-          );
+          });
     }
 
     getValues() {
@@ -239,8 +236,8 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
         this.loading = true;
         this._contentedService.searchContent(text, offset, limit, "video", cntId).pipe(
             finalize(() => this.loading = false)
-        ).subscribe(
-            (res) => {
+        ).subscribe({
+            next: (res) => {
                 let content = _.map(res.results, m => new Content(m));
                 let total = res['total'] || 0;
                 
@@ -252,10 +249,11 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
                     let mc = content[0];
                     GlobalNavEvents.selectContent(mc, new Container({id: mc.container_id}));
                 }
-            }, err => {
-                console.error("Failed to search for video content.", err);
+            },
+            error: err => {
+                GlobalBroadcast.error("Failed to search for video content.", err);
             }
-        );
+        });
     }
 
     // This will have to be updated to actually work

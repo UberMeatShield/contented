@@ -1,10 +1,10 @@
 import {Subscription} from 'rxjs';
-import {OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
+import {OnInit, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
 import {ContentedService} from './contented_service';
-import {finalize, switchMap} from 'rxjs/operators';
+import {finalize} from 'rxjs/operators';
 
 import {Screen} from './screen';
-import {GlobalNavEvents, NavTypes} from './nav_events';
+import { GlobalBroadcast } from './global_message';
 import * as _ from 'lodash';
 
 @Component({
@@ -52,16 +52,17 @@ export class ScreensCmp implements OnInit {
             this.loading = true;
             this._contentedService.getScreens(this.contentId).pipe(
                 finalize(() => { this.loading = false; })
-            ).subscribe(
-                (res) => {
+            ).subscribe({
+                next: (res: {total: number, results: Screen[]}) => {
                     // Could emit an event for the screens loading and listen so it updates the content
                     this.screens = res.results;
                     this.calculateDimensions();
                     this.screensLoaded.emit(this.screens);
-                }, err => {
+                }, 
+                error: err => {
                     console.error(err);
                 }
-            );
+            });
         }
     }
 

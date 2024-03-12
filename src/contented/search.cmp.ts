@@ -1,13 +1,10 @@
-import {forkJoin, Subscription} from 'rxjs';
-import {finalize, debounceTime, map, distinctUntilChanged, catchError} from 'rxjs/operators';
+import {Subscription} from 'rxjs';
+import {finalize, debounceTime, distinctUntilChanged} from 'rxjs/operators';
 
 import {
     OnInit,
     AfterViewInit,
     Component,
-    EventEmitter,
-    Input,
-    Output,
     HostListener,
     ViewChild,
     Inject
@@ -15,10 +12,11 @@ import {
 import {ContentedService} from './contented_service';
 import {Content} from './content';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
-import {FormBuilder, NgForm, FormControl, FormGroup} from '@angular/forms';
+import {FormBuilder, FormControl, FormGroup} from '@angular/forms';
 
 import {PageEvent} from '@angular/material/paginator';
-import {MatDialog, MatDialogConfig, MAT_DIALOG_DATA} from '@angular/material/dialog';
+import {MatDialog, MAT_DIALOG_DATA} from '@angular/material/dialog';
+import { GlobalBroadcast } from './global_message';
 import * as _ from 'lodash';
 
 
@@ -59,8 +57,8 @@ export class SearchCmp implements OnInit{
 
     public ngOnInit() {
         this.resetForm();
-        this.route.queryParams.pipe().subscribe(
-            (res: ParamMap) => {
+        this.route.queryParams.pipe().subscribe({
+            next: (res: ParamMap) => {
                 let st = res['searchText'];
                 let text = st !== undefined ? st : '';
                 console.log("Search text from url", text, res);
@@ -68,7 +66,7 @@ export class SearchCmp implements OnInit{
                 this.search(text); 
                 this.setupFilterEvts();
             }
-        );
+        });
         this.calculateDimensions();
     }
 
@@ -91,14 +89,14 @@ export class SearchCmp implements OnInit{
             debounceTime(500),
             distinctUntilChanged()
           )
-          .subscribe(
-              formData => {
+          .subscribe({
+              next: (formData: FormData) => {
                   this.search(formData['searchText'] || '');
               },
-              error => {
-                   console.error("failed to search, erro", error);
+              error: err => {
+                GlobalBroadcast.error("Failed to search", err);
               }
-          );
+          });
     }
 
     public getValues() {

@@ -1,15 +1,15 @@
 import {Subscription} from 'rxjs';
-import {OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
+import {OnInit, OnDestroy, Component, Input, HostListener} from '@angular/core';
 import {ContentedService} from './contented_service';
 import {Container} from './container';
 import {Content} from './content';
-import {finalize, switchMap} from 'rxjs/operators';
+import {finalize} from 'rxjs/operators';
 
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
-import {GlobalNavEvents, NavTypes} from './nav_events';
+import {GlobalNavEvents, NavTypes, NavEventMessage} from './nav_events';
 
+import { GlobalBroadcast } from './global_message';
 import * as _ from 'lodash';
-import * as $ from 'jquery';
 
 @Component({
     selector: 'content-browser',
@@ -37,15 +37,17 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
 
     public ngOnInit() {
         // Need to load content if the idx is greater than content loaded (n times potentially)
-        this.route.paramMap.pipe().subscribe(
-            (res: ParamMap) => {
+        this.route.paramMap.pipe().subscribe({
+            next: (res: ParamMap) => {
                 this.setPosition(
                     res.get('idx') ? parseInt(res.get('idx'), 10) : this.idx,
                     res.get('rowIdx') ? parseInt(res.get('rowIdx'), 10) : 0,
                 );
             },
-            err => { console.error(err); }
-        );
+            error: err => {
+                 GlobalBroadcast.error('Failed to set position using route', err);
+            },
+        });
         this.setupEvtListener();
         this.calculateDimensions();
         if (_.isEmpty(this.allCnts)) {
@@ -59,27 +61,28 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
         }
     }
 
-    // This will listen to nav events.
     public setupEvtListener() {
-        this.sub = GlobalNavEvents.navEvts.subscribe(evt => {
-            switch(evt.action) {
-                case NavTypes.NEXT_CONTAINER:
-                    this.next();
-                    break;
-                case NavTypes.PREV_CONTAINER:
-                    this.prev();
-                    break;
-                case NavTypes.LOAD_MORE:
-                    this.loadMore();
-                    break;
-                case NavTypes.SELECT_MEDIA:
-                    this.selectedContent(evt.content, evt.cnt);
-                    break;
-                case NavTypes.SELECT_CONTAINER:
-                    this.selectContainer(evt.cnt);
-                    break;
-                default:
-                    break;
+        this.sub = GlobalNavEvents.navEvts.subscribe({
+            next: (evt: NavEventMessage) => {
+                switch(evt.action) {
+                    case NavTypes.NEXT_CONTAINER:
+                        this.next();
+                        break;
+                    case NavTypes.PREV_CONTAINER:
+                        this.prev();
+                        break;
+                    case NavTypes.LOAD_MORE:
+                        this.loadMore();
+                        break;
+                    case NavTypes.SELECT_MEDIA:
+                        this.selectedContent(evt.content, evt.cnt);
+                        break;
+                    case NavTypes.SELECT_CONTAINER:
+                        this.selectContainer(evt.cnt);
+                        break;
+                    default:
+                        break;
+                }
             }
         });
     }
@@ -99,12 +102,12 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
         this.loading = true;
         this._contentedService.getContainers()
             .pipe(finalize(() => {this.loading = false; }))
-            .subscribe(
-                res => {
+            .subscribe({
+                next: res => {
                     this.previewResults(res.results);
                 },
-                err => { console.error(err); }
-            );
+                error: err => { console.error(err); }
+            });
     }
 
     public loadMoreInDir(cnt: Container) {
@@ -113,10 +116,10 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
             this.loading = true;
             this._contentedService.loadMoreInDir(cnt)
                 .pipe(finalize(() => {this.loading = false; }))
-                .subscribe(
-                    res => { this.cntResults(cnt, res); },
-                    err => { console.error(err); }
-                );
+                .subscribe({
+                    next: res => { this.cntResults(cnt, res); },
+                    error: err => { console.error(err); },
+                });
         }
     }
 
@@ -141,13 +144,14 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
             _.each(cnts, (cnt, idx) => {
                 let obs = this._contentedService.initialLoad(cnt); 
                 if (obs) { 
-                    obs.subscribe(
-                        content => {
+                    obs.subscribe({
+                        next: content => {
                             if (cnt == currCnt) {
                                 GlobalNavEvents.selectContent(cnt.getContent(), cnt);
                             }
-                        }, err => console.error
-                    );
+                        }, 
+                        error: err => console.error
+                    });
                 }
             });
             return cnts;
@@ -230,13 +234,13 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
     }
 
     public fullLoadDir(cnt: Container) {
-        this._contentedService.fullLoadDir(cnt).subscribe(
-            (loadedCnt: Container) => {
+        this._contentedService.fullLoadDir(cnt).subscribe({
+            next: (loadedCnt: Container) => {
                 console.log("Fully loaded up the container", loadedCnt.id);
                 GlobalNavEvents.selectContent(loadedCnt.getContent(), loadedCnt);
             },
-            err => {console.error("Failed to load", err); }
-        );
+            error: err => { console.error("Failed to load", err); }
+        });
     }
 
     public loadView(idx: number, rowIdx: number, triggerSelect: boolean = false) {
