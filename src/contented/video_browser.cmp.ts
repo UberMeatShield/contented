@@ -10,7 +10,7 @@ import {
 import {ContentedService} from './contented_service';
 import {Content} from './content';
 import {Container} from './container';
-import {GlobalNavEvents, NavTypes} from './nav_events';
+import {GlobalNavEvents, NavTypes, NavEventMessage} from './nav_events';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 import {FormBuilder, FormControl, FormGroup} from '@angular/forms';
 import { GlobalBroadcast } from './global_message';
@@ -96,7 +96,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
      // This will listen to nav events.
      public setupEvtListener() {
          this.sub = GlobalNavEvents.navEvts.subscribe({
-            next: evt => {
+            next: (evt: NavEventMessage) => {
                 switch(evt.action) {
                     case NavTypes.NEXT_MEDIA:
                         this.next();

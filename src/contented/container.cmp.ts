@@ -4,7 +4,7 @@ import {ContentedService} from './contented_service';
 
 import {Container} from './container';
 import {Content} from './content';
-import {GlobalNavEvents, NavTypes} from './nav_events';
+import {GlobalNavEvents, NavTypes, NavEventMessage} from './nav_events';
 import * as _ from 'lodash';
 
 @Component({
@@ -33,7 +33,7 @@ export class ContainerCmp implements OnInit, OnDestroy {
 
     public ngOnInit() {
         this.sub = GlobalNavEvents.navEvts.subscribe({
-            next: evt => {
+            next: (evt: NavEventMessage) => {
                 if (this.active) {
                     // console.log("Container Event found", this.container.name, evt);
                     switch (evt.action) {

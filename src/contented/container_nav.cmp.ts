@@ -4,7 +4,7 @@ import {ContentedService} from './contented_service';
 import {Container, LoadStates} from './container';
 import {Content} from './content';
 
-import {GlobalNavEvents, NavTypes} from './nav_events';
+import {GlobalNavEvents, NavTypes, NavEventMessage} from './nav_events';
 import {FormGroup, FormBuilder, FormControl, Validators} from '@angular/forms';
 import { GlobalBroadcast } from './global_message';
 
@@ -49,7 +49,7 @@ export class ContainerNavCmp implements OnInit, OnDestroy {
         });
 
         this.sub = GlobalNavEvents.navEvts.subscribe({
-            next: evt => {
+            next: (evt: NavEventMessage) => {
                 // console.log("Select Media", evt, evt.cnt == this.cnt, evt.action, evt.content);
                 if (evt.action == NavTypes.SELECT_MEDIA && evt.cnt == this.cnt && evt.content) {
                     //console.log("Container Nav found select content", evt, evt.cnt.name);

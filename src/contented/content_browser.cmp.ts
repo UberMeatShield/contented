@@ -1,12 +1,12 @@
 import {Subscription} from 'rxjs';
-import {OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener} from '@angular/core';
+import {OnInit, OnDestroy, Component, Input, HostListener} from '@angular/core';
 import {ContentedService} from './contented_service';
 import {Container} from './container';
 import {Content} from './content';
-import {finalize, switchMap} from 'rxjs/operators';
+import {finalize} from 'rxjs/operators';
 
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
-import {GlobalNavEvents, NavTypes} from './nav_events';
+import {GlobalNavEvents, NavTypes, NavEventMessage} from './nav_events';
 
 import { GlobalBroadcast } from './global_message';
 import * as _ from 'lodash';
@@ -63,7 +63,7 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
 
     public setupEvtListener() {
         this.sub = GlobalNavEvents.navEvts.subscribe({
-            next: evt => {
+            next: (evt: NavEventMessage) => {
                 switch(evt.action) {
                     case NavTypes.NEXT_CONTAINER:
                         this.next();
