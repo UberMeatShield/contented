@@ -16,24 +16,34 @@ export enum NavTypes {
     SCROLL_MEDIA_INTO_VIEW,
 }
 
+export interface NavEventMessage {
+    action: NavTypes,
+    content: Content | undefined,
+    cnt: Container | undefined,
+}
+
 export class NavEvents {
 
     // Subscribe to the navEvts in order to act on comand in the app
-    public navEvts: EventEmitter<any>;
+    public navEvts: EventEmitter<NavEventMessage>;
 
     constructor() {
-        this.navEvts = new EventEmitter<any>();
+        this.navEvts = new EventEmitter<NavEventMessage>();
     }
 
     prevContainer() {
         this.navEvts.emit({
-            action: NavTypes.PREV_CONTAINER
+            action: NavTypes.PREV_CONTAINER,
+            content: undefined,
+            cnt: undefined,
         });
     }
 
     nextContainer() {
         this.navEvts.emit({
-            action: NavTypes.NEXT_CONTAINER
+            action: NavTypes.NEXT_CONTAINER,
+            content: undefined,
+            cnt: undefined,
         });
     }
 
@@ -41,6 +51,7 @@ export class NavEvents {
     selectContainer(container: Container) {
         this.navEvts.emit({
             action: NavTypes.SELECT_CONTAINER,
+            content: undefined,
             cnt: container,
         });
     }
@@ -58,6 +69,7 @@ export class NavEvents {
         this.navEvts.emit({
             action: NavTypes.NEXT_MEDIA,
             cnt: container,
+            content: undefined,
         });
     }
 
@@ -65,6 +77,7 @@ export class NavEvents {
         this.navEvts.emit({
             action: NavTypes.PREV_MEDIA ,
             cnt: container,
+            content: undefined,
         });
     }
 
@@ -72,6 +85,7 @@ export class NavEvents {
         this.navEvts.emit({
             action: NavTypes.VIEW_FULLSCREEN,
             content: content,
+            cnt: undefined,
         });
     }
 
@@ -79,6 +93,8 @@ export class NavEvents {
         // Require no content
         this.navEvts.emit({
             action: NavTypes.HIDE_FULLSCREEN,
+            cnt: undefined,
+            content: undefined,
         });
     }
 
@@ -86,6 +102,7 @@ export class NavEvents {
         this.navEvts.emit({
             action: NavTypes.LOAD_MORE,
             cnt: container,
+            content: undefined,
         });
     }
 
@@ -94,6 +111,7 @@ export class NavEvents {
         this.navEvts.emit({
             action: NavTypes.SAVE_MEDIA,
             content: content,
+            cnt: undefined,
         });
     }
 
@@ -101,6 +119,7 @@ export class NavEvents {
         this.navEvts.emit({
             action: NavTypes.SCROLL_MEDIA_INTO_VIEW,
             content: content,
+            cnt: undefined,
         });
     }
 }

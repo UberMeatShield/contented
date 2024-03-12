@@ -101,8 +101,10 @@ export class VideoPreviewCmp implements OnInit {
                 maxHeight: '100vh',
             }
         );
-        dialogRef.afterClosed().subscribe(result => {
-            console.log("Closing the view", result);
+        dialogRef.afterClosed().subscribe({
+            next: result => {
+                console.log("Closing the Dialog on VideoPreview", result);
+            }
         });
     }
 

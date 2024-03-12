@@ -39,11 +39,6 @@ export class ErrorHandlerCmp implements OnInit, OnDestroy {
                 }
             }
         });
-        /*
-        setTimeout(() => {
-            GlobalBroadcast.error("A bad thing goes bad", {debug: "WAAGGGH"});
-        });
-        */
     }
 
     ngOnDestroy() {
@@ -87,8 +82,10 @@ export class ErrorHandlerCmp implements OnInit, OnDestroy {
                 maxHeight: '100vh',
             }
         });
-        dialogRef.afterClosed().subscribe(result => {
-            console.log("Closed the dialog", result);
+        dialogRef.afterClosed().subscribe({
+            next: (result: boolean) => {
+                console.log("Closed the dialog", result);
+            }
         });
     }
 

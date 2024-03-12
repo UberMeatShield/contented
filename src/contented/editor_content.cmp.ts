@@ -3,14 +3,15 @@
  * to quickly manage tags.  TODO: This component should actually be broken into a pure wrapper around
  * the ngx-monaco intialization and handle just readonly and change emitting.
  */
-import { Component, OnInit, AfterViewInit, Input, Output, EventEmitter, ViewChild} from '@angular/core';
-import {ActivatedRoute, Router, ParamMap} from '@angular/router';
+import { Component, OnInit, Input, EventEmitter, ViewChild} from '@angular/core';
+import {ActivatedRoute, ParamMap} from '@angular/router';
 import {FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms';
-import {finalize, debounceTime, distinctUntilChanged} from 'rxjs/operators';
+import {finalize, } from 'rxjs/operators';
 import {ContentedService} from './contented_service';
 import {Tag, Content, VideoCodecInfo} from './content';
 import {VSCodeEditorCmp} from './vscode_editor.cmp';
 import {TaskRequest} from './task_request';
+import { GlobalBroadcast } from './global_message';
 
 import * as _ from 'lodash-es';
 
@@ -57,28 +58,32 @@ export class EditorContentCmp implements OnInit {
   // Subscribe to options changes, if the definition changes make the call
   public ngOnInit() {
     if (!this.content) {
-        this.route.paramMap.pipe().subscribe(
-            (map: ParamMap) => {
+        this.route.paramMap.pipe().subscribe({
+            next: (map: ParamMap) => {
                 console.log("Reloading content")
                 this.content = null;  // Changing the 
                 this.loadContent(map.get('id'));
             },
-            console.error
-        );
+            error: err => {
+              GlobalBroadcast.error('Loading content for editing', err);
+            },
+        });
     }
   }
 
   loadContent(id: string) {
-      this._service.getContent(id).subscribe(
-          (content: Content) => {
+      this._service.getContent(id).subscribe({
+          next: (content: Content) => {
               this.content = content;
               this.descriptionControl.setValue(content.description);
               if (content.isVideo()) {
                 this.vidInfo = content.getVideoInfo();
               }
           },
-          console.error
-      )
+          error: err => {
+            GlobalBroadcast.error(`Could not load ${id}`, err);
+          },
+      });
   }
 
   save() {
@@ -89,23 +94,31 @@ export class EditorContentCmp implements OnInit {
     let tags = this.editor.getTokens();
     console.log(tags);
     this.content.tags = _.map(tags, tag => new Tag(tag));
-    this._service.saveContent(this.content).pipe(finalize(() => this.loading = false)).subscribe(
-      console.log,
-      console.error
-    );
+    this._service.saveContent(this.content).pipe(finalize(() => this.loading = false)).subscribe({
+      next: ret => {
+        console.log("Saved content", ret);
+      },
+      error: err => {
+        GlobalBroadcast.error('Could not save changes', err);
+      },
+    });
   }
 
   // Generate incremental screens and then check the request
   incrementalScreens(content) {
     let req = this.screensForm.value;
     this.taskLoading = true;
-    this._service.requestScreens(content, req.count, req.offset).pipe(finalize(() => this.taskLoading = false)).subscribe(
-      (task) => {
-        console.log("Request new Screens Task");
+    this._service.requestScreens(content, req.count, req.offset).pipe(
+      finalize(() => this.taskLoading = false)
+    ).subscribe({
+      next: (task: TaskRequest) => {
+        console.log("Success requesting new task for content", task, content);
         this.watchTask(task);
       },
-      console.error
-    )
+      error: err => {
+        GlobalBroadcast.error('Failed to get new screens task', err);
+      },
+    });
   }
 
   canReEncode(content: Content) {
@@ -118,25 +131,33 @@ export class EditorContentCmp implements OnInit {
 
   encodeVideoContent(content: Content) {
     this.taskLoading = true; 
-    this._service.encodeVideoContent(content).pipe(finalize(() => this.taskLoading = false)).subscribe(
-      (task) => {
-        console.log("Watch encoding video task");
+    this._service.encodeVideoContent(content).pipe(
+      finalize(() => this.taskLoading = false)
+    ).subscribe({
+      next: (task: TaskRequest) => {
+        console.log("Created video encoding task", content, task);
         this.watchTask(task);
       },
-      console.error
-    )
+      error: err => {
+        GlobalBroadcast.error('Failed to start encoding tasks', err);
+      },
+    });
   }
 
   createPreviewFromScreens(content: Content) {
     console.log("Create a preview")
     this.taskLoading = true;
-    this._service.createPreviewFromScreens(content).pipe(finalize(() => this.taskLoading = false)).subscribe(
-      (task) => {
-        console.log("Watch preview task");
+    this._service.createPreviewFromScreens(content).pipe(
+      finalize(() => this.taskLoading = false)
+    ).subscribe({
+      next: (task: TaskRequest) => {
+        console.log("Created preview screen tasks", content, task);
         this.watchTask(task);
       },
-      console.error
-    );
+      error: err => {
+        GlobalBroadcast.error('Failed to kick off preview task', err);
+      }
+    });
   }
 
   canCreatePreview(content: Content) {

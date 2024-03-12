@@ -47,7 +47,7 @@ export class ContentedService {
             .pipe(
                 map((res: any) => {
                     return {
-                        count: res.count,
+                        total: res.total,
                         results:  _.map(res.results, s => new Screen(s))
                     };
                 }),
