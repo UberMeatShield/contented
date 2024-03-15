@@ -4,14 +4,16 @@ import {debounceTime, distinctUntilChanged, } from 'rxjs/operators';
 import {
     OnInit,
     Component,
-    Output,
+    Input,
     ViewChild,
 } from '@angular/core';
+import { Tag } from './content';
 import {ContentedService} from './contented_service';
 import {FormBuilder, FormControl, FormGroup} from '@angular/forms';
 
 import {PageEvent} from '@angular/material/paginator';
 import * as _ from 'lodash';
+import { GlobalBroadcast } from './global_message';
 
 @Component({
     selector: 'tags-cmp',
@@ -23,6 +25,11 @@ export class TagsCmp implements OnInit{
     // Take in the search text route param
     // Debounce the search
     @ViewChild('searchForm', { static: true }) searchControl;
+
+    @Input() tags: Array<Tag>;
+    @Input() loadTags = false;
+
+    matchedTags: Array<Tag>;
     throttleSearch: Subscription;
     searchTags = new FormControl<string>("");
     options: FormGroup;
@@ -41,6 +48,20 @@ export class TagsCmp implements OnInit{
 
     public ngOnInit() {
         this.resetForm();
+        if (this.loadTags) {
+            this.search('');
+        }
+    }
+
+    public search(searchText: string) {
+        this._contentedService.getTags().subscribe({
+            next: (res: {results: Array<Tag>, total: number}) => {
+                this.matchedTags = res.results;
+            },
+            error: err => {
+                GlobalBroadcast.error('Failed to load tags', err);
+            }
+        });
     }
 
     public resetForm(setupFilterEvents: boolean = false) {
