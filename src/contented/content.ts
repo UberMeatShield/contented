@@ -38,6 +38,9 @@ export class Content {
     public container_id: string;
     public size: number;  // size in bytes
 
+    // Only defined currently on video
+    public encoding: string | undefined;
+
     public previewUrl: string;
     public fullUrl: string;
     public screens: Array<Screen>;
