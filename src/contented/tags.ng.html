@@ -9,13 +9,11 @@
           [formControl]="searchTags"
           (keypress)="$event.stopPropagation()"
         >
-        <mat-icon matSuffix>Find Tags</mat-icon>
+        <mat-icon matSuffix>tag</mat-icon>
       </mat-form-field>
   
-      Type ahead tags?
-      Just click to add tag?
-      Find one tag at a time?
-      Get the VSCode editor working as a tag search input?
+      I think VSCode type completion would be the best option for the search with the 'current token'
+      being used to try and determine what the tag should be?
 
       <mat-paginator
         [length]="total"
@@ -29,5 +27,11 @@
       [diameter]="32"
       [mode]="'indeterminate'">
     </mat-progress-spinner>
+
+    <div *ngIf="searchTags?.value?.length > 0">
+      <div *ngFor="let tag of matchedTags">
+        {{tag.id}}
+      </div>
+    </div>
   </div>
   

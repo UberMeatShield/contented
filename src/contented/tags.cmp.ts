@@ -29,6 +29,7 @@ export class TagsCmp implements OnInit{
     @Input() tags: Array<Tag>;
     @Input() loadTags = false;
 
+    allTags: Array<Tag>;
     matchedTags: Array<Tag>;
     throttleSearch: Subscription;
     searchTags = new FormControl<string>("");
@@ -47,16 +48,16 @@ export class TagsCmp implements OnInit{
     }
 
     public ngOnInit() {
-        this.resetForm();
         if (this.loadTags) {
             this.search('');
         }
+        this.resetForm(true);
     }
 
     public search(searchText: string) {
         this._contentedService.getTags().subscribe({
             next: (res: {results: Array<Tag>, total: number}) => {
-                this.matchedTags = res.results;
+                this.allTags = res.results;
             },
             error: err => {
                 GlobalBroadcast.error('Failed to load tags', err);
@@ -78,19 +79,27 @@ export class TagsCmp implements OnInit{
         if (this.throttleSearch) {
             this.throttleSearch.unsubscribe();
         }
+
         this.throttleSearch = this.options.valueChanges
           .pipe(
             debounceTime(500),
             distinctUntilChanged()
           )
-          .subscribe(
-              formData => {
-                console.log("It should setup filter events");
+          .subscribe({
+              next: formData => {
+                const searchTag = formData.searchTags;
+                console.log("It should setup filter events", searchTag);
+                if (searchTag) {
+                    const matcher = new RegExp(searchTag, 'ig');
+                    this.matchedTags = _.filter(this.allTags, t => matcher.test(t.id));
+                } else {
+                    this.matchedTags = this.allTags;
+                }
               },
-              error => {
-                   console.error("failed to search, error", error);
+              error: err => {
+                GlobalBroadcast.error('Failed to load tags', err);
               }
-          );
+          });
     }
 
     public getValues() {
