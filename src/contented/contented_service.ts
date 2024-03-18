@@ -284,7 +284,7 @@ export class ContentedService {
     }
 
 
-    getTags(page: number = 1, perPage: number = 1000, pageType: string = "") {
+    getTags(page: number = 1, perPage: number = 1000, tagType: string = "") {
         if (TAGS_RESPONSE.initialized) {
             return observableFrom(new Promise((resolve, reject) => {
                 resolve(TAGS_RESPONSE)
@@ -293,7 +293,7 @@ export class ContentedService {
         let params = new HttpParams();
         params = params.set("page", "" + page);
         params = params.set("per_page", "" + perPage);
-        params = params.set("tag_type", pageType);
+        params = params.set("tag_type", tagType);
         return this.http.get(ApiDef.contented.tags, {params: params}).pipe(
             map((res: any) => {
                 return {
