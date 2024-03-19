@@ -29,12 +29,12 @@ export class TagsCmp implements OnInit{
     @Input() tags: Array<Tag>;
     @Input() loadTags = false;
 
-    allTags: Array<Tag>;
     matchedTags: Array<Tag>;
     throttleSearch: Subscription;
     searchTags = new FormControl<string>("");
     options: FormGroup;
     fb: FormBuilder;
+
 
     public loading: boolean = false;
     public pageSize: number = 1000;
@@ -54,15 +54,25 @@ export class TagsCmp implements OnInit{
         this.resetForm(true);
     }
 
+    // TODO: Get the current input token
+    // TODO: Suggest input tokens
+    // TODO: Provide the ability to select tokens and also remove a token from VSCode
+
     public search(searchText: string) {
         this._contentedService.getTags().subscribe({
             next: (res: {results: Array<Tag>, total: number}) => {
-                this.allTags = res.results;
+                this.tags = res.results;
             },
             error: err => {
                 GlobalBroadcast.error('Failed to load tags', err);
             }
         });
+    }
+
+    // Change the event to provide both the value and the parsed tags
+    public changedTags(evt) {
+        console.log("Changed Tags", evt);
+        //this.search(evt)
     }
 
     public resetForm(setupFilterEvents: boolean = false) {
@@ -91,9 +101,9 @@ export class TagsCmp implements OnInit{
                 console.log("It should setup filter events", searchTag);
                 if (searchTag) {
                     const matcher = new RegExp(searchTag, 'ig');
-                    this.matchedTags = _.filter(this.allTags, t => matcher.test(t.id));
+                    this.matchedTags = _.filter(this.tags, t => matcher.test(t.id));
                 } else {
-                    this.matchedTags = this.allTags;
+                    this.matchedTags = this.tags;
                 }
               },
               error: err => {

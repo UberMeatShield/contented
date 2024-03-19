@@ -13,6 +13,11 @@ import { GlobalBroadcast } from './global_message';
 import * as _ from 'lodash-es';
 import { Tag } from './content';
 
+interface VSCodeChange {
+  value: string;
+  tags: Array<string>;
+}
+
 @Component({
   selector: 'vscode-editor-cmp',
   templateUrl: './vscode_editor.ng.html',
@@ -29,19 +34,19 @@ export class VSCodeEditorCmp implements OnInit {
   @Input() readOnly: boolean = true;
   @Input() language: string = "tagging";
 
+  @Input() tags: Array<Tag> = [];
   @Input() editorOptions = {
     theme: 'vs-dark',
     language: this.language,
   };
   // These are values for the Monaco Editors, change events are passed down into
   // the form event via the AfterInit and set the v7_definition & suricata_definition.
-  @Output() changeEmitter = new EventEmitter<string>();
+  @Output() changeEmitter = new EventEmitter<VSCodeChange>();
 
 
   // Reference to the raw Microsoft component, allows for
   public monacoEditor?: any;
   public initialized = false;
-  public tags: Array<Tag> = [];
   public problemTags: Array<Tag> = [];
   public tagLookup: {[id: string]: Tag} = {};
 
@@ -60,23 +65,26 @@ export class VSCodeEditorCmp implements OnInit {
     this.editorValue = this.editorValue || control.value;
     this.descriptionControl = (control as FormControl<string>);  // Sketchy...
 
-    this.monacoDigestHackery()
-    this.loadTags();
+    this.monacoDigestHackery();
+    this.tags?.length > 0 ? this.assignTagLookup(this.tags) : this.loadTags();
   }
 
   loadTags() {
     this._service.getTags().subscribe({
       next: (tagRes: {total: number, results: Tag[]}) => {
-        this.tags = tagRes.results;
-        this.tagLookup = _.keyBy(this.tags, 'id');
-        this.problemTags = _.filter(this.tags, t => {
-          return t.isProblem()
-        });
-
+        this.assignTagLookup(tagRes.results || []);
       }, 
       error: err => { 
         GlobalBroadcast.error('Failed to load tags', err);
       }
+    });
+  }
+
+  assignTagLookup(tags: Array<Tag>) {
+    this.tags = tags;
+    this.tagLookup = _.keyBy(this.tags, 'id');
+    this.problemTags = _.filter(this.tags, t => {
+      return t.isProblem();
     });
   }
 
@@ -117,15 +125,20 @@ export class VSCodeEditorCmp implements OnInit {
         distinctUntilChanged(),
         debounceTime(10)
       ).subscribe({
-        next: (val: string) => {
-            this.editForm.get("description").setValue(val);
+        next: (evt: VSCodeChange) => {
+          console.log("Debounce time", evt)
+            this.editForm.get("description").setValue(evt.value);
         },
         error: (err) => {
           GlobalBroadcast.error('Monaco init failed', err);
         }
       });
+
       this.editor.registerOnChange((val: string) => {
-        this.changeEmitter.emit(val);
+        this.changeEmitter.emit({
+          tags: this.getTokens(),
+          value: val
+        });
       });
     }
     this.afterMonaco();
@@ -168,6 +181,7 @@ export class VSCodeEditorCmp implements OnInit {
         })
       });
     }
+    console.log('tags', tags);
     return Array.from(tags);
   }
 
