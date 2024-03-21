@@ -126,7 +126,6 @@ export class VSCodeEditorCmp implements OnInit {
         debounceTime(10)
       ).subscribe({
         next: (evt: VSCodeChange) => {
-          console.log("Debounce time", evt)
             this.editForm.get("description").setValue(evt.value);
         },
         error: (err) => {
@@ -161,7 +160,10 @@ export class VSCodeEditorCmp implements OnInit {
 
       let match = `${tokenType}.${language}`;
       _.each(tokenArr, (tokens, lineIdx) => {
-        let line = m.getLineContent(lineIdx + 1)
+
+        if (!tokens) return;
+        const line = m.getLineContent(lineIdx + 1)
+
         _.each(tokens, token => {
           //console.log("token.type", token.type)
           if (token.type == match) {
