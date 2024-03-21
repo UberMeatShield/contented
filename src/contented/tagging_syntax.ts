@@ -1,6 +1,5 @@
 import {ApiDef} from './api_def';
 import {Injectable} from '@angular/core';
-import {ContentedService} from './contented_service';
 import {Tag} from './content';
 
 
@@ -183,7 +182,30 @@ export class TagLang {
       syntax.tokenizer.root.unshift([operatorsHack, 'number']);
     }
     lang.setMonarchTokensProvider(languageName, syntax);
+    lang.registerCompletionItemProvider(languageName, {
+      provideCompletionItems: (model, position) => {
+        const suggestions = [
+        ...this.getSuggestionsForType(lang.CompletionItemKind.Keyword, keywords),
+        ...this.getSuggestionsForType(lang.CompletionItemKind.Type, typeKeywords),
+        ...this.getSuggestionsForType(lang.CompletionItemKind.Number, operators),
+        ];
+        return { suggestions: suggestions }
+      }
+    });
     return syntax
+  }
+
+  // Would be nice to get these imported properly with typing
+  // TODO: Should this only suggest lower case?
+  getSuggestionsForType(kind: number, tags: Array<string>) {
+    console.log(typeof kind);
+    return tags.map((val: string, _idx) => {
+      return {
+        label: val,
+        kind: kind,
+        insertText: val?.toLowerCase(),
+      }
+    });
   }
 
   loadLanguage(monaco: any, languageName: string) {
@@ -210,7 +232,7 @@ export class TagLang {
         TAGS_RESPONSE.initialized = true;
       }, error: err => {
         //this.setMonacoLanguage("tagging", [], []);
-        console.error("Failed to load tags", err)
+        console.error("loadLanguage failed to load tags", err)
       }
     });
   }
