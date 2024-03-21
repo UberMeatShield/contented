@@ -183,7 +183,6 @@ export class VSCodeEditorCmp implements OnInit {
         })
       });
     }
-    console.log('tags', tags);
     return Array.from(tags);
   }
 

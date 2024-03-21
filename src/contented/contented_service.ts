@@ -294,6 +294,7 @@ export class ContentedService {
         params = params.set("page", "" + page);
         params = params.set("per_page", "" + perPage);
         params = params.set("tag_type", tagType);
+
         return this.http.get(ApiDef.contented.tags, {params: params}).pipe(
             map((res: any) => {
                 return {

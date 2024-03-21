@@ -64,13 +64,17 @@ describe('Testing TagsCmp', () => {
         expect(el).withContext("We should have a top level element").toBeDefined();
     });
 
-    it('Should be able to render or handle the tags in some way', () => {
+    it('Should be able to render or handle the tags in some way', fakeAsync(() => {
         comp.loadTags = true;
         fixture.detectChanges();
 
-        const req = httpMock.expectOne(r => r.url.includes('/tags'));
+        const req = httpMock.expectOne(r => r.url.includes('/tags/'));
         req.flush(MockData.tags());
-        expect(comp.matchedTags?.length).toBeGreaterThan(10);
-    });
+        tick(1000);
+
+        expect(comp.tags?.length).toBeGreaterThan(10);
+        fixture.detectChanges();
+        tick(10000);
+    }));
 });
 

@@ -30,10 +30,6 @@ export class TagsCmp implements OnInit{
     @Input() loadTags = false;
 
     matchedTags: Array<Tag>;
-    throttleSearch: Subscription;
-    searchTags = new FormControl<string>("");
-    options: FormGroup;
-    fb: FormBuilder;
 
 
     public loading: boolean = false;
@@ -42,29 +38,25 @@ export class TagsCmp implements OnInit{
 
     constructor(
         public _contentedService: ContentedService,
-        fb: FormBuilder,
     ) {
-        this.fb = fb;
     }
 
     public ngOnInit() {
         if (this.loadTags) {
             this.search('');
         }
-        this.resetForm(true);
     }
 
     // TODO: Get the current input token
     // TODO: Suggest input tokens
     // TODO: Provide the ability to select tokens and also remove a token from VSCode
-
     public search(searchText: string) {
         this._contentedService.getTags().subscribe({
-            next: (res: {results: Array<Tag>, total: number}) => {
+            next: (res: any ) => {
                 this.tags = res.results;
             },
-            error: err => {
-                GlobalBroadcast.error('Failed to load tags', err);
+            error: (err) => {
+                GlobalBroadcast.error('Failed to load tags in tagging component', err.message);
             }
         });
     }
@@ -73,52 +65,5 @@ export class TagsCmp implements OnInit{
     public changedTags(evt) {
         console.log("Changed Tags", evt);
         //this.search(evt)
-    }
-
-    public resetForm(setupFilterEvents: boolean = false) {
-        this.options = this.fb.group({
-            searchTags: this.searchTags,
-        });
-        if (setupFilterEvents) {
-            this.setupFilterEvts();
-        }
-    }
-
-    public setupFilterEvts() {
-        // Kicks off a search
-        if (this.throttleSearch) {
-            this.throttleSearch.unsubscribe();
-        }
-
-        this.throttleSearch = this.options.valueChanges
-          .pipe(
-            debounceTime(500),
-            distinctUntilChanged()
-          )
-          .subscribe({
-              next: formData => {
-                const searchTag = formData.searchTags;
-                console.log("It should setup filter events", searchTag);
-                if (searchTag) {
-                    const matcher = new RegExp(searchTag, 'ig');
-                    this.matchedTags = _.filter(this.tags, t => matcher.test(t.id));
-                } else {
-                    this.matchedTags = this.tags;
-                }
-              },
-              error: err => {
-                GlobalBroadcast.error('Failed to load tags', err);
-              }
-          });
-    }
-
-    public getValues() {
-        return this.options.value;
-    }
-
-    pageEvt(evt: PageEvent) {
-        console.log("Event", evt, this.searchTags.value);
-        let offset = evt.pageIndex * evt.pageSize;
-        let limit = evt.pageSize;
     }
 }

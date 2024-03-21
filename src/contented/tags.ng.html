@@ -1,34 +1,4 @@
 <div class="tags-cmp">
-  <form #tagsForm [formGroup]="options" >
-    <div class="search-paginator">
-
-      <mat-form-field apperance="fill" floatLabel="true" class="search-field">
-        <input type="text" name="searchTags" 
-          matInput
-          aria-label="Search"
-          placeholder="Find Tags"
-          [formControl]="searchTags"
-          (keypress)="$event.stopPropagation()"
-        >
-        <mat-icon matSuffix>tag</mat-icon>
-      </mat-form-field>
-  
-      I think VSCode type completion would be the best option for the search with the 'current token'
-      being used to try and determine what the tag should be?
-
-      <ul>
-        <li>Typing should causes it top pop up</li>
-        <li>Clicking something should add it to the list?</li>
-        <li>Use the set of tags in the editor to populate the query (OR)</li>
-      </ul>
-
-      <mat-paginator
-        [length]="total"
-        [pageSize]="pageSize"
-        (page)="pageEvt($event)"
-      ></mat-paginator>
-    </div>
-  </form>
 
   <div class="tag-search-editor" *ngIf="tags?.length > 0">
     VSCODE EDITOR {{tags.length}}
@@ -43,10 +13,12 @@
       [mode]="'indeterminate'">
     </mat-progress-spinner>
 
+    <!--
     <div *ngIf="searchTags?.value?.length > 0">
       <div *ngFor="let tag of matchedTags">
         {{tag.id}}
       </div>
     </div>
+    -->
   </div>
   
