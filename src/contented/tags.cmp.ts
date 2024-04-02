@@ -1,19 +1,62 @@
-import {Subscription} from 'rxjs';
-import {debounceTime, distinctUntilChanged, } from 'rxjs/operators';
-
 import {
     OnInit,
     Component,
     Input,
+    Output,
     ViewChild,
+    EventEmitter,
 } from '@angular/core';
 import { Tag } from './content';
 import {ContentedService} from './contented_service';
-import {FormBuilder, FormControl, FormGroup} from '@angular/forms';
 
-import {PageEvent} from '@angular/material/paginator';
 import * as _ from 'lodash';
 import { GlobalBroadcast } from './global_message';
+
+
+const editorOptions = {
+    theme: 'vs-dark',
+    renderLineHighlight: "none",
+    //quickSuggestions: false,
+    glyphMargin: false,
+    lineDecorationsWidth: 0,
+    folding: false,
+    fixedOverflowWidgets: true,
+    acceptSuggestionOnEnter: "on",
+    placeholder: 'Search',
+    hover: {
+      delay: 100,
+    },
+    roundedSelection: false,
+    contextmenu: false,
+    cursorStyle: "line-thin",
+    occurrencesHighlight: false,
+    links: false,
+    minimap: { enabled: false },
+    // see: https://github.com/microsoft/monaco-editor/issues/1746
+    wordBasedSuggestions: false,
+    // disable `Find`
+    find: {
+      addExtraSpaceOnTop: false,
+      autoFindInSelection: "never",
+      seedSearchStringFromSelection: "never",
+    },
+    fontSize: 14,
+    fontWeight: "normal",
+    wordWrap: "off",
+    lineNumbers: "off",
+    lineNumbersMinChars: 0,
+    overviewRulerLanes: 0,
+    overviewRulerBorder: false,
+    hideCursorInOverviewRuler: true,
+    scrollBeyondLastColumn: 0,
+    scrollbar: {
+      horizontal: "hidden",
+      vertical: "hidden",
+      // avoid can not scroll page when hover monaco
+      alwaysConsumeMouseWheel: false,
+    },
+    language: 'tagging',
+};
 
 @Component({
     selector: 'tags-cmp',
@@ -28,6 +71,9 @@ export class TagsCmp implements OnInit{
 
     @Input() tags: Array<Tag>;
     @Input() loadTags = false;
+    @Input() editorOptions;
+
+    @Output() tagsChanged = new EventEmitter<Array<Tag>>;
 
     matchedTags: Array<Tag>;
 
@@ -39,6 +85,7 @@ export class TagsCmp implements OnInit{
     constructor(
         public _contentedService: ContentedService,
     ) {
+        this.editorOptions = this.editorOptions || editorOptions;
     }
 
     public ngOnInit() {
@@ -64,6 +111,6 @@ export class TagsCmp implements OnInit{
     // Change the event to provide both the value and the parsed tags
     public changedTags(evt) {
         console.log("Changed Tags", evt);
-        //this.search(evt)
+        this.tagsChanged.emit(evt);
     }
 }

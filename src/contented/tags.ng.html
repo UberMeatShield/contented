@@ -1,10 +1,12 @@
 <div class="tags-cmp">
 
   <div class="tag-search-editor" *ngIf="tags?.length > 0">
-    VSCODE EDITOR {{tags.length}}
-   <vscode-editor-cmp 
+   <vscode-editor-cmp
      (changeEmitter)="changedTags($event)"
+     [editorOptions]="editorOptions"
+     [showTagging]="true"
      [tags]="tags"
+     [fixedLineCount]="3"
    ></vscode-editor-cmp>
   </div>
   
@@ -12,13 +14,5 @@
       [diameter]="32"
       [mode]="'indeterminate'">
     </mat-progress-spinner>
-
-    <!--
-    <div *ngIf="searchTags?.value?.length > 0">
-      <div *ngFor="let tag of matchedTags">
-        {{tag.id}}
-      </div>
-    </div>
-    -->
   </div>
   

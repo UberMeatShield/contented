@@ -10,6 +10,7 @@ import {EditorComponent} from 'ngx-monaco-editor-v2';
 import {ContentedService} from './contented_service';
 import { GlobalBroadcast } from './global_message';
 
+import $ from 'jquery';
 import * as _ from 'lodash-es';
 import { Tag } from './content';
 
@@ -33,6 +34,7 @@ export class VSCodeEditorCmp implements OnInit {
   @Input() showTagging: boolean = false;
   @Input() readOnly: boolean = true;
   @Input() language: string = "tagging";
+  @Input() fixedLineCount: number = -1;
 
   @Input() tags: Array<Tag> = [];
   @Input() editorOptions = {
@@ -55,7 +57,7 @@ export class VSCodeEditorCmp implements OnInit {
 
   // Subscribe to options changes, if the definition changes make the call
   public ngOnInit() {
-    this.editorOptions.language = this.language;
+    this.editorOptions.language = this.language || this.editorOptions.language;
 
     if (!this.editForm) {
       this.editForm = this.fb.group({});
@@ -162,7 +164,13 @@ export class VSCodeEditorCmp implements OnInit {
       _.each(tokenArr, (tokens, lineIdx) => {
 
         if (!tokens) return;
-        const line = m.getLineContent(lineIdx + 1)
+        let line;
+        try {
+          line = m.getLineContent(lineIdx + 1)
+        } catch (e) {
+          // console.error("A delete can trigger an event and the model updates under you", lineIdx);
+        }
+        if (line === undefined) return;
 
         _.each(tokens, token => {
           //console.log("token.type", token.type)
@@ -238,33 +246,34 @@ export class VSCodeEditorCmp implements OnInit {
     }
     _.delay(() => {
       this.fitContent();
-    }, 500);
+    }, 50);
   }
 
 
   // TODO:  This also needs to handle a window resize event to actually check the content 
-  // and do a redraw.
+  // and do a redraw. Might also be better to hide till the first redraw event.
+  // https://github.com/microsoft/monaco-editor/issues/568
   fitContent() {
     let el = this.container.nativeElement;
     let width = el.offsetWidth;
 
     let updateHeight = () => {
       let editor = this.monacoEditor;
-      const lineCount = Math.max(editor.getModel()?.getLineCount(), 8);
+      const max = this.fixedLineCount > 0 ? this.fixedLineCount : 8;
+      const lineCount = Math.max(editor.getModel()?.getLineCount(), max);
 
       // You would think this would work but unfortunately the height of content is altered
       // by the spacing of the render so it expands forever.
       //const contentHeight = Math.min(2000, this.monacoEditor.getContentHeight());
-
-      let contentHeight = 19 * (lineCount + 2);
+      let contentHeight = 19 * lineCount;
       el.style.width = `${width}px`;
       el.style.height = `${contentHeight}px`;
       editor.layout({width, height: contentHeight });
     };
 
-    _.delay(() => {
-      updateHeight();
-    }, 100);
+    // Already delayed after the initialization
+    updateHeight();
+
     let changed = _.debounce(updateHeight, 150);
     this.monacoEditor.onDidChangeModelDecorations(changed);
   }
