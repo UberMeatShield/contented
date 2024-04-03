@@ -30,6 +30,8 @@ interface VSCodeChange {
 })
 export class VSCodeEditorCmp implements OnInit {
 
+  // The mix of actual M$ monaco types and the ngx-monaco-editor-v2 is a little hard to
+  // grok. The M$ types are nice to have in for complex things but the naming gets confusing.
   @ViewChild('vseditor') editor?: EditorComponent;
   @ViewChild('container') container?: ElementRef<HTMLDivElement>;
 
@@ -124,9 +126,9 @@ export class VSCodeEditorCmp implements OnInit {
   }
 
   // The pure Monaco part is definitely worth an indepenent component (I think)
-  afterMonacoInit(monaco: any) {
-    this.monacoEditor = monaco;
-    (window as any).M = monaco;
+  afterMonacoInit(editorInstance: MonacoEditor.IStandaloneCodeEditor) {
+    this.monacoEditor = editorInstance;
+
       // This is a little awkward but we need to be able to change the form control
     if (this.editor) {
       this.changeEmitter.pipe(
