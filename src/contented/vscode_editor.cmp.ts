@@ -10,6 +10,9 @@ import {EditorComponent} from 'ngx-monaco-editor-v2';
 import {ContentedService} from './contented_service';
 import { GlobalBroadcast } from './global_message';
 
+// Why is it importing api.d?  Because Monaco does a bunch of css importing in the 
+// javascript which breaks the hell out of angular tooling, so just get the 'shapes'
+// correct when doing a compile and move along.
 import { editor as MonacoEditor } from 'monaco-editor/esm/vs/editor/editor.api.d';
 
 import $ from 'jquery';
