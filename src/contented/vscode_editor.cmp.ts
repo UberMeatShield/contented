@@ -10,6 +10,8 @@ import {EditorComponent} from 'ngx-monaco-editor-v2';
 import {ContentedService} from './contented_service';
 import { GlobalBroadcast } from './global_message';
 
+import { editor as MonacoEditor } from 'monaco-editor/esm/vs/editor/editor.api.d';
+
 import $ from 'jquery';
 import * as _ from 'lodash-es';
 import { Tag } from './content';
@@ -35,6 +37,7 @@ export class VSCodeEditorCmp implements OnInit {
   @Input() readOnly: boolean = true;
   @Input() language: string = "tagging";
   @Input() fixedLineCount: number = -1;
+  @Input() placeholder: string;
 
   @Input() tags: Array<Tag> = [];
   @Input() editorOptions = {
@@ -47,7 +50,7 @@ export class VSCodeEditorCmp implements OnInit {
 
 
   // Reference to the raw Microsoft component, allows for
-  public monacoEditor?: any;
+  public monacoEditor?: MonacoEditor.IStandaloneCodeEditor; // StandAlone?
   public initialized = false;
   public problemTags: Array<Tag> = [];
   public tagLookup: {[id: string]: Tag} = {};
@@ -161,7 +164,7 @@ export class VSCodeEditorCmp implements OnInit {
       // console.log("currentLanguage", currentLang, monaco.languages.getLanguages());
 
       let match = `${tokenType}.${language}`;
-      _.each(tokenArr, (tokens, lineIdx) => {
+      _.each(tokenArr, (tokens, lineIdx: number) => {
 
         if (!tokens) return;
         let line;
@@ -247,6 +250,17 @@ export class VSCodeEditorCmp implements OnInit {
     _.delay(() => {
       this.fitContent();
     }, 50);
+
+    _.delay(() => {
+      this.createPlaceholder(this.placeholder, this.monacoEditor);
+    }, 200);
+  }
+
+  // hate
+  createPlaceholder(placeholder: string, editor: MonacoEditor.ICodeEditor) {
+    // Need to make it so the placeholder cannot be clicked
+    console.log("Placeholder", placeholder, editor, "TS Wrapper", this.editor);
+    new PlaceholderContentWidget(this.placeholder, editor);
   }
 
 
@@ -276,5 +290,64 @@ export class VSCodeEditorCmp implements OnInit {
 
     let changed = _.debounce(updateHeight, 150);
     this.monacoEditor.onDidChangeModelDecorations(changed);
+  }
+}
+
+
+/*
+ * Represents an placeholder renderer for monaco editor
+ * Roughly based on https://github.com/microsoft/vscode/blob/main/src/vs/workbench/contrib/codeEditor/browser/untitledTextEditorHint/untitledTextEditorHint.ts
+ */
+class PlaceholderContentWidget implements MonacoEditor.IContentWidget {
+  private static readonly ID = 'editor.widget.placeholderHint';
+
+  private domNode: HTMLElement | undefined;
+
+  constructor(
+      private readonly placeholder: string,
+      private readonly editor: MonacoEditor.ICodeEditor,
+  ) {
+      // register a listener for editor code changes
+      editor.onDidChangeModelContent(() => this.onDidChangeModelContent());
+      // ensure that on initial load the placeholder is shown
+      this.onDidChangeModelContent();
+  }
+
+  private onDidChangeModelContent(): void {
+      if (this.editor.getValue() === '') {
+          this.editor.addContentWidget(this);
+      } else {
+          this.editor.removeContentWidget(this);
+      }
+  }
+
+  getId(): string {
+      return PlaceholderContentWidget.ID;
+  }
+
+  getDomNode(): HTMLElement {
+      if (!this.domNode) {
+          this.domNode = document.createElement('div');
+          this.domNode.style.width = 'max-content';
+          this.domNode.style.pointerEvents = 'none';
+          this.domNode.textContent = this.placeholder;
+          this.domNode.style.fontStyle = 'italic';
+          this.editor.applyFontInfo(this.domNode);
+      }
+
+      return this.domNode;
+  }
+
+  getPosition(): MonacoEditor.IContentWidgetPosition | null {
+      return {
+          position: { lineNumber: 1, column: 1 },
+          preference: [
+            MonacoEditor?.ContentWidgetPositionPreference?.EXACT
+          ],
+      };
+  }
+
+  dispose(): void {
+      this.editor.removeContentWidget(this);
   }
 }
