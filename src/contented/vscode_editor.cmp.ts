@@ -49,8 +49,9 @@ export class VSCodeEditorCmp implements OnInit {
     theme: 'vs-dark',
     language: this.language,
   };
-  // These are values for the Monaco Editors, change events are passed down into
-  // the form event via the AfterInit and set the v7_definition & suricata_definition.
+
+  // These are values for the Monaco Editors, change events are passed down int the form event 
+  // via the AfterInit. Then it can be read by other applications (after init should broadcast?).
   @Output() changeEmitter = new EventEmitter<VSCodeChange>();
 
 
@@ -261,7 +262,6 @@ export class VSCodeEditorCmp implements OnInit {
     }, 200);
   }
 
-  // hate
   createPlaceholder(placeholder: string, editor: MonacoEditor.ICodeEditor) {
     // Need to make it so the placeholder cannot be clicked
     console.log("Placeholder", placeholder, editor, "TS Wrapper", this.editor);
@@ -278,15 +278,17 @@ export class VSCodeEditorCmp implements OnInit {
 
     let updateHeight = () => {
       let editor = this.monacoEditor;
-      const max = this.fixedLineCount > 0 ? this.fixedLineCount : 8;
-      const lineCount = Math.max(editor.getModel()?.getLineCount(), max);
+      let lineCount = this.fixedLineCount;
+      if (lineCount < 1) {
+        lineCount = Math.max(editor.getModel()?.getLineCount(), 8);
+      }
 
       // You would think this would work but unfortunately the height of content is altered
       // by the spacing of the render so it expands forever.
       //const contentHeight = Math.min(2000, this.monacoEditor.getContentHeight());
       let contentHeight = 19 * lineCount;
-      el.style.width = `${width}px`;
-      el.style.height = `${contentHeight}px`;
+      el.style.height = `${contentHeight}px `;
+      el.style.width = `${width}px `;
       editor.layout({width, height: contentHeight });
     };
 
@@ -335,7 +337,7 @@ class PlaceholderContentWidget implements MonacoEditor.IContentWidget {
           this.domNode = document.createElement('div');
           this.domNode.style.width = 'max-content';
           this.domNode.style.pointerEvents = 'none';
-          this.domNode.textContent = this.placeholder;
+          this.domNode.textContent = this.placeholder; // Could update with image
           this.domNode.style.fontStyle = 'italic';
           this.editor.applyFontInfo(this.domNode);
       }
@@ -344,10 +346,13 @@ class PlaceholderContentWidget implements MonacoEditor.IContentWidget {
   }
 
   getPosition(): MonacoEditor.IContentWidgetPosition | null {
+      // The whole typing import vs loading async via M$ is super messy.
+      const editor = MonacoEditor || (document as any).monaco?.editor;
+
       return {
           position: { lineNumber: 1, column: 1 },
           preference: [
-            MonacoEditor?.ContentWidgetPositionPreference?.EXACT
+            editor?.ContentWidgetPositionPreference?.EXACT
           ],
       };
   }
