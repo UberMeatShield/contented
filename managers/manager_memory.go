@@ -57,7 +57,8 @@ func (cm ContentManagerMemory) GetCfg() *utils.DirConfigEntry {
 // On a first time load / use we will pull back content information from dist and from
 // then on continue to use already loaded information.
 func (cm *ContentManagerMemory) Initialize() {
-	// TODO: Should we allow for a timeout or rescan option?
+
+	// mem_storage.go
 	memStorage := cm.GetStore()
 	if memStorage.Initialized == false {
 		// Might need to instead throw if it is not initialized

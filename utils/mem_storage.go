@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"testing"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -18,6 +19,7 @@ import (
 // GoLang is just making this awkward
 type MemoryStorage struct {
 	Initialized     bool
+	Loading         bool
 	ValidContent    models.ContentMap
 	ValidContainers models.ContainerMap
 	ValidScreens    models.ScreenMap
@@ -25,22 +27,32 @@ type MemoryStorage struct {
 	ValidTasks      models.TaskRequests // Not a Map as we want the order to matter
 }
 
-var memStorage MemoryStorage = MemoryStorage{Initialized: false}
+var memStorage MemoryStorage = MemoryStorage{Initialized: false, Loading: false}
 
 func GetMemStorage() *MemoryStorage {
 	return &memStorage
 }
 
-func InitializeMemory(dir_root string) *MemoryStorage {
-	log.Printf("Initializing Memory Storage %s\n", dir_root)
-	containers, files, screens, tags := PopulateMemoryView(dir_root)
+/**
+ * Sketchy initialization based on test or non-test mode.
+ */
+func InitializeMemory(dirRoot string) *MemoryStorage {
+	log.Printf("Initializing Memory Storage %s\n", dirRoot)
+	if memStorage.Loading && !testing.Testing() {
+		log.Printf("Still loading up memory storage")
+		return &memStorage
+	}
+	memStorage.Loading = true
+	containers, files, screens, tags := PopulateMemoryView(dirRoot)
 
-	memStorage.Initialized = true
 	memStorage.ValidContainers = containers
 	memStorage.ValidContent = files
 	memStorage.ValidScreens = screens
 	memStorage.ValidTags = tags
 	memStorage.ValidTasks = models.TaskRequests{}
+
+	memStorage.Initialized = true
+	memStorage.Loading = false
 	return &memStorage
 }
 
