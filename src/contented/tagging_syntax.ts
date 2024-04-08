@@ -198,7 +198,6 @@ export class TagLang {
   // Would be nice to get these imported properly with typing
   // TODO: Should this only suggest lower case?
   getSuggestionsForType(kind: number, tags: Array<string>) {
-    console.log(typeof kind);
     return tags.map((val: string, _idx) => {
       return {
         label: val,

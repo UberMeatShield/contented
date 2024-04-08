@@ -17,12 +17,7 @@ import { editor as MonacoEditor } from 'monaco-editor/esm/vs/editor/editor.api.d
 
 import $ from 'jquery';
 import * as _ from 'lodash-es';
-import { Tag } from './content';
-
-interface VSCodeChange {
-  value: string;
-  tags: Array<string>;
-}
+import { Tag, VSCodeChange } from './content';
 
 @Component({
   selector: 'vscode-editor-cmp',

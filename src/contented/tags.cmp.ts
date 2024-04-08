@@ -6,7 +6,7 @@ import {
     ViewChild,
     EventEmitter,
 } from '@angular/core';
-import { Tag } from './content';
+import { Tag, VSCodeChange } from './content';
 import {ContentedService} from './contented_service';
 
 import * as _ from 'lodash';
@@ -73,7 +73,7 @@ export class TagsCmp implements OnInit{
     @Input() loadTags = false;
     @Input() editorOptions;
 
-    @Output() tagsChanged = new EventEmitter<Array<Tag>>;
+    @Output() tagsChanged = new EventEmitter<VSCodeChange>;
 
     matchedTags: Array<Tag>;
 
@@ -109,7 +109,7 @@ export class TagsCmp implements OnInit{
     }
 
     // Change the event to provide both the value and the parsed tags
-    public changedTags(evt) {
+    public changedTags(evt: VSCodeChange) {
         console.log("Changed Tags", evt);
         this.tagsChanged.emit(evt);
     }

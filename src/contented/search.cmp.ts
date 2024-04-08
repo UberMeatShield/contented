@@ -10,7 +10,7 @@ import {
     Inject
 } from '@angular/core';
 import {ContentedService} from './contented_service';
-import {Content} from './content';
+import {Content, VSCodeChange} from './content';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 import {FormBuilder, FormControl, FormGroup} from '@angular/forms';
 
@@ -56,7 +56,6 @@ export class SearchCmp implements OnInit{
     }
 
     public ngOnInit() {
-        this.resetForm();
         this.route.queryParams.pipe().subscribe({
             next: (res: ParamMap) => {
                 let st = res['searchText'];
@@ -64,19 +63,16 @@ export class SearchCmp implements OnInit{
                 console.log("Search text from url", text, res);
                 this.searchText.setValue(text);
                 this.search(text); 
-                this.setupFilterEvts();
             }
         });
         this.calculateDimensions();
     }
 
-    public resetForm(setupFilterEvents: boolean = false) {
-        this.options = this.fb.group({
-            searchText: this.searchText,
-        });
-        if (setupFilterEvents) {
-            this.setupFilterEvts();
-        }
+    /*
+     * Should reset the pagination utils?
+     */
+    public changeSearch(evt: VSCodeChange) {
+        this.search(evt.value)
     }
 
     public setupFilterEvts() {
@@ -91,16 +87,14 @@ export class SearchCmp implements OnInit{
           )
           .subscribe({
               next: (formData: FormData) => {
+
+                  // Eventually the form probably will have some data
                   this.search(formData['searchText'] || '');
               },
               error: err => {
                 GlobalBroadcast.error("Failed to search", err);
               }
           });
-    }
-
-    public getValues() {
-        return this.options.value;
     }
 
     pageEvt(evt: PageEvent) {
@@ -134,7 +128,7 @@ export class SearchCmp implements OnInit{
         return this.content;
     }
 
-    // TODO: Being called abusively in the cntective rather than on page resize events
+    // TODO: Being called abusively in the content rather than on page resize events
     @HostListener('window:resize', ['$event'])
     public calculateDimensions() {
         let width = !window['jasmine'] ? window.innerWidth : 800;
