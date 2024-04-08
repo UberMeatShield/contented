@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"testing"
 
 	"github.com/gobuffalo/buffalo"
 	"github.com/gofrs/uuid"
@@ -31,8 +32,23 @@ func SetupContented(app *buffalo.App, contentDir string, numToPreview int, limit
 	// TODO: Somehow need to move the dir into App, but first we want to validate the dir...
 	app.ServeFiles("/static", http.Dir(cfg.Dir))
 
-	// TODO: When should this get setup
+	// Initialize workers that will listen for encoding tasks
 	SetupWorkers(app)
+
+	// If we are not using databases load up the memory view
+	if !cfg.UseDatabase {
+		SetupMemory(cfg.Dir)
+	}
+
+}
+
+func SetupMemory(dir string) {
+	// Database we should assume that it should start loading memory
+	if testing.Testing() {
+		utils.InitializeMemory(dir)
+	} else {
+		go utils.InitializeMemory(dir)
+	}
 }
 
 // TODO: Determine if these should be registered by config (don't use normal workers basically)
