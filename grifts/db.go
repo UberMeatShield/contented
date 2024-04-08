@@ -126,6 +126,8 @@ var _ = grift.Namespace("db", func() {
 			fmt.Printf("Memory Manager looking for duplicates.\n")
 			dupes, err := managers.FindDuplicateVideos(man)
 			if len(dupes) > 0 {
+
+				fmt.Println("==============DUPES BELOW===============")
 				for _, dupe := range dupes {
 					fmt.Printf("%s\n", dupe.FqPath)
 				}

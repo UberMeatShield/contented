@@ -163,7 +163,7 @@ func FindDuplicateVideos(cm ContentManager) (models.Contents, error) {
 	for _, cnt := range *containers {
 		dupes := FindDuplicateContents(cm, &cnt, "video")
 		if len(dupes) > 0 {
-			log.Printf("Found duplicates %d", len(dupes))
+			log.Printf("Found duplicates %d in cnt %s", len(dupes), cnt.Name)
 			duplicates = append(duplicates, dupes...)
 		}
 	}

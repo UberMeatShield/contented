@@ -27,7 +27,7 @@
   <div class="search-results" *ngIf="!!content">
      <div class="preview-content search-result"
        [class.video-overlay]="mc?.content_type?.match('video')"
-       style="width:{{previewWidth}}px; height: {{previewHeight}}px;"
+       style="width: {{previewWidth}}px; height: {{previewHeight}}px;"
        *ngFor="let mc of getVisibleSet()"
        (click)="contentClicked(mc)"
        >

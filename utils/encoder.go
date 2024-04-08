@@ -265,10 +265,10 @@ func VideoDiffFrames(encodedFile string, dupeFile string, screenTime int) (bool,
 	// Use func CustomSimilar for different precision.
 	if images4.Similar(icon1, icon2) {
 		// TODO: We can remove this after a little more experimentation
-		log.Printf("Images are similar at time %d", screenTime)
+		// log.Printf("Images are similar at time %d", screenTime)
 		return true, nil
 	} else {
-		log.Printf("Images are different at time %d", screenTime)
+		// log.Printf("Images are different at time %d", screenTime)
 		return false, nil
 	}
 }
