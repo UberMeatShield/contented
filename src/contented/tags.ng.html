@@ -1,29 +1,16 @@
 <div class="tags-cmp">
-  <form #tagsForm [formGroup]="options" >
-    <div class="search-paginator">
-      <mat-form-field apperance="fill" floatLabel="true" class="search-field">
-        <input type="text" name="searchTags" 
-          matInput
-          aria-label="Search"
-          placeholder="Find Tags"
-          [formControl]="searchTags"
-          (keypress)="$event.stopPropagation()"
-        >
-        <mat-icon matSuffix>Find Tags</mat-icon>
-      </mat-form-field>
-  
-      Type ahead tags?
-      Just click to add tag?
-      Find one tag at a time?
-      Get the VSCode editor working as a tag search input?
 
-      <mat-paginator
-        [length]="total"
-        [pageSize]="pageSize"
-        (page)="pageEvt($event)"
-      ></mat-paginator>
-    </div>
-  </form>
+  <div class="tag-search-editor" *ngIf="tags?.length > 0">
+   <vscode-editor-cmp
+     [editorOptions]="editorOptions"
+     [editorValue]="editorValue"
+     [showTagging]="true"
+     [tags]="tags"
+     [fixedLineCount]="3"
+     [placeholder]="'Search by tag or full string'"
+     (changeEmitter)="changedTags($event)"
+   ></vscode-editor-cmp>
+  </div>
   
     <mat-progress-spinner *ngIf="loading"
       [diameter]="32"

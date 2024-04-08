@@ -319,6 +319,18 @@ body {
     border-radius: 2px;
 }
 
+.tag-search-editor {
+    width: 60%;
+    height: 3rem;
+
+    .editor-container {
+        height: 57px !important;
+    }
+}
+vs-container {
+    width: 100%;
+}
+
 .content-tag {
     margin-right: 0.25rem;
 }

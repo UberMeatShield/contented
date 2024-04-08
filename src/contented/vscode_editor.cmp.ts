@@ -10,8 +10,14 @@ import {EditorComponent} from 'ngx-monaco-editor-v2';
 import {ContentedService} from './contented_service';
 import { GlobalBroadcast } from './global_message';
 
+// Why is it importing api.d?  Because Monaco does a bunch of css importing in the 
+// javascript which breaks the hell out of angular tooling, so just get the 'shapes'
+// correct when doing a compile and move along.
+import { editor as MonacoEditor } from 'monaco-editor/esm/vs/editor/editor.api.d';
+
+import $ from 'jquery';
 import * as _ from 'lodash-es';
-import { Tag } from './content';
+import { Tag, VSCodeChange } from './content';
 
 @Component({
   selector: 'vscode-editor-cmp',
@@ -19,6 +25,8 @@ import { Tag } from './content';
 })
 export class VSCodeEditorCmp implements OnInit {
 
+  // The mix of actual M$ monaco types and the ngx-monaco-editor-v2 is a little hard to
+  // grok. The M$ types are nice to have in for complex things but the naming gets confusing.
   @ViewChild('vseditor') editor?: EditorComponent;
   @ViewChild('container') container?: ElementRef<HTMLDivElement>;
 
@@ -28,20 +36,23 @@ export class VSCodeEditorCmp implements OnInit {
   @Input() showTagging: boolean = false;
   @Input() readOnly: boolean = true;
   @Input() language: string = "tagging";
+  @Input() fixedLineCount: number = -1;
+  @Input() placeholder: string;
 
+  @Input() tags: Array<Tag> = [];
   @Input() editorOptions = {
     theme: 'vs-dark',
     language: this.language,
   };
-  // These are values for the Monaco Editors, change events are passed down into
-  // the form event via the AfterInit and set the v7_definition & suricata_definition.
-  @Output() changeEmitter = new EventEmitter<string>();
+
+  // These are values for the Monaco Editors, change events are passed down int the form event 
+  // via the AfterInit. Then it can be read by other applications (after init should broadcast?).
+  @Output() changeEmitter = new EventEmitter<VSCodeChange>();
 
 
   // Reference to the raw Microsoft component, allows for
-  public monacoEditor?: any;
+  public monacoEditor?: MonacoEditor.IStandaloneCodeEditor; // StandAlone?
   public initialized = false;
-  public tags: Array<Tag> = [];
   public problemTags: Array<Tag> = [];
   public tagLookup: {[id: string]: Tag} = {};
 
@@ -50,7 +61,7 @@ export class VSCodeEditorCmp implements OnInit {
 
   // Subscribe to options changes, if the definition changes make the call
   public ngOnInit() {
-    this.editorOptions.language = this.language;
+    this.editorOptions.language = this.language || this.editorOptions.language;
 
     if (!this.editForm) {
       this.editForm = this.fb.group({});
@@ -60,23 +71,26 @@ export class VSCodeEditorCmp implements OnInit {
     this.editorValue = this.editorValue || control.value;
     this.descriptionControl = (control as FormControl<string>);  // Sketchy...
 
-    this.monacoDigestHackery()
-    this.loadTags();
+    this.monacoDigestHackery();
+    this.tags?.length > 0 ? this.assignTagLookup(this.tags) : this.loadTags();
   }
 
   loadTags() {
     this._service.getTags().subscribe({
       next: (tagRes: {total: number, results: Tag[]}) => {
-        this.tags = tagRes.results;
-        this.tagLookup = _.keyBy(this.tags, 'id');
-        this.problemTags = _.filter(this.tags, t => {
-          return t.isProblem()
-        });
-
+        this.assignTagLookup(tagRes.results || []);
       }, 
       error: err => { 
         GlobalBroadcast.error('Failed to load tags', err);
       }
+    });
+  }
+
+  assignTagLookup(tags: Array<Tag>) {
+    this.tags = tags;
+    this.tagLookup = _.keyBy(this.tags, 'id');
+    this.problemTags = _.filter(this.tags, t => {
+      return t.isProblem();
     });
   }
 
@@ -108,24 +122,28 @@ export class VSCodeEditorCmp implements OnInit {
   }
 
   // The pure Monaco part is definitely worth an indepenent component (I think)
-  afterMonacoInit(monaco: any) {
-    this.monacoEditor = monaco;
-    (window as any).M = monaco;
+  afterMonacoInit(editorInstance: MonacoEditor.IStandaloneCodeEditor) {
+    this.monacoEditor = editorInstance;
+
       // This is a little awkward but we need to be able to change the form control
     if (this.editor) {
       this.changeEmitter.pipe(
         distinctUntilChanged(),
         debounceTime(10)
       ).subscribe({
-        next: (val: string) => {
-            this.editForm.get("description").setValue(val);
+        next: (evt: VSCodeChange) => {
+            this.editForm.get("description").setValue(evt.value);
         },
         error: (err) => {
           GlobalBroadcast.error('Monaco init failed', err);
         }
       });
+
       this.editor.registerOnChange((val: string) => {
-        this.changeEmitter.emit(val);
+        this.changeEmitter.emit({
+          tags: this.getTokens(),
+          value: val
+        });
       });
     }
     this.afterMonaco();
@@ -147,8 +165,17 @@ export class VSCodeEditorCmp implements OnInit {
       // console.log("currentLanguage", currentLang, monaco.languages.getLanguages());
 
       let match = `${tokenType}.${language}`;
-      _.each(tokenArr, (tokens, lineIdx) => {
-        let line = m.getLineContent(lineIdx + 1)
+      _.each(tokenArr, (tokens, lineIdx: number) => {
+
+        if (!tokens) return;
+        let line;
+        try {
+          line = m.getLineContent(lineIdx + 1)
+        } catch (e) {
+          // console.error("A delete can trigger an event and the model updates under you", lineIdx);
+        }
+        if (line === undefined) return;
+
         _.each(tokens, token => {
           //console.log("token.type", token.type)
           if (token.type == match) {
@@ -223,34 +250,109 @@ export class VSCodeEditorCmp implements OnInit {
     }
     _.delay(() => {
       this.fitContent();
-    }, 500);
+    }, 50);
+
+    _.delay(() => {
+      this.createPlaceholder(this.placeholder, this.monacoEditor);
+    }, 200);
+  }
+
+  createPlaceholder(placeholder: string, editor: MonacoEditor.ICodeEditor) {
+    // Need to make it so the placeholder cannot be clicked
+    //console.log("Placeholder", placeholder, editor, "TS Wrapper", this.editor);
+    new PlaceholderContentWidget(this.placeholder, editor);
   }
 
 
   // TODO:  This also needs to handle a window resize event to actually check the content 
-  // and do a redraw.
+  // and do a redraw. Might also be better to hide till the first redraw event.
+  // https://github.com/microsoft/monaco-editor/issues/568
   fitContent() {
     let el = this.container.nativeElement;
     let width = el.offsetWidth;
 
     let updateHeight = () => {
       let editor = this.monacoEditor;
-      const lineCount = Math.max(editor.getModel()?.getLineCount(), 8);
+      let lineCount = this.fixedLineCount;
+      if (lineCount < 1) {
+        lineCount = Math.max(editor.getModel()?.getLineCount(), 8);
+      }
 
       // You would think this would work but unfortunately the height of content is altered
       // by the spacing of the render so it expands forever.
       //const contentHeight = Math.min(2000, this.monacoEditor.getContentHeight());
-
-      let contentHeight = 19 * (lineCount + 2);
-      el.style.width = `${width}px`;
-      el.style.height = `${contentHeight}px`;
+      let contentHeight = 19 * lineCount;
+      el.style.height = `${contentHeight}px `;
+      el.style.width = `${width}px `;
       editor.layout({width, height: contentHeight });
     };
 
-    _.delay(() => {
-      updateHeight();
-    }, 100);
+    // Already delayed after the initialization
+    updateHeight();
+
     let changed = _.debounce(updateHeight, 150);
     this.monacoEditor.onDidChangeModelDecorations(changed);
+  }
+}
+
+
+/*
+ * Represents an placeholder renderer for monaco editor
+ * Roughly based on https://github.com/microsoft/vscode/blob/main/src/vs/workbench/contrib/codeEditor/browser/untitledTextEditorHint/untitledTextEditorHint.ts
+ */
+class PlaceholderContentWidget implements MonacoEditor.IContentWidget {
+  private static readonly ID = 'editor.widget.placeholderHint';
+
+  private domNode: HTMLElement | undefined;
+
+  constructor(
+      private readonly placeholder: string,
+      private readonly editor: MonacoEditor.ICodeEditor,
+  ) {
+      // register a listener for editor code changes
+      editor.onDidChangeModelContent(() => this.onDidChangeModelContent());
+      // ensure that on initial load the placeholder is shown
+      this.onDidChangeModelContent();
+  }
+
+  private onDidChangeModelContent(): void {
+      if (this.editor.getValue() === '') {
+          this.editor.addContentWidget(this);
+      } else {
+          this.editor.removeContentWidget(this);
+      }
+  }
+
+  getId(): string {
+      return PlaceholderContentWidget.ID;
+  }
+
+  getDomNode(): HTMLElement {
+      if (!this.domNode) {
+          this.domNode = document.createElement('div');
+          this.domNode.style.width = 'max-content';
+          this.domNode.style.pointerEvents = 'none';
+          this.domNode.textContent = this.placeholder; // Could update with image
+          this.domNode.style.fontStyle = 'italic';
+          this.editor.applyFontInfo(this.domNode);
+      }
+
+      return this.domNode;
+  }
+
+  getPosition(): MonacoEditor.IContentWidgetPosition | null {
+      // The whole typing import vs loading async via M$ is super messy.
+      const editor = MonacoEditor || (document as any).monaco?.editor;
+
+      return {
+          position: { lineNumber: 1, column: 1 },
+          preference: [
+            editor?.ContentWidgetPositionPreference?.EXACT
+          ],
+      };
+  }
+
+  dispose(): void {
+      this.editor.removeContentWidget(this);
   }
 }

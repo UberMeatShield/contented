@@ -24,6 +24,12 @@ export class Tag {
     }
 }
 
+export interface VSCodeChange {
+    value: string;
+    tags: Array<string>;
+}
+
+
 export class Content {
     public id: string;
     public src: string;
