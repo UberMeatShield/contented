@@ -60,16 +60,9 @@ func (cm *ContentManagerMemory) Initialize() {
 	// TODO: Should we allow for a timeout or rescan option?
 	memStorage := cm.GetStore()
 	if memStorage.Initialized == false {
+		// Might need to instead throw if it is not initialized
 		memStorage = utils.InitializeMemory(cm.cfg.Dir)
 	}
-	// Remove this extra reference
-	/*
-		cm.ValidContainers = memStorage.ValidContainers
-		cm.ValidContent = memStorage.ValidContent
-		cm.ValidScreens = memStorage.ValidScreens
-		cm.ValidTags = memStorage.ValidTags
-		cm.ValidTasks = memStorage.ValidTasks
-	*/
 }
 
 func (cm ContentManagerMemory) GetStore() *utils.MemoryStorage {

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"testing"
 
 	"github.com/gobuffalo/buffalo"
 	"github.com/gofrs/uuid"
@@ -33,6 +34,11 @@ func SetupContented(app *buffalo.App, contentDir string, numToPreview int, limit
 
 	// TODO: When should this get setup
 	SetupWorkers(app)
+
+	// Database we should assume that it should start loading memory
+	if !cfg.UseDatabase && !testing.Testing() {
+		go utils.InitializeMemory(cfg.Dir)
+	}
 }
 
 // TODO: Determine if these should be registered by config (don't use normal workers basically)
