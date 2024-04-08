@@ -31,7 +31,6 @@ export class SearchCmp implements OnInit{
     // Debounce the search
     @ViewChild('videoForm', { static: true }) searchControl;
     throttleSearch: Subscription;
-    searchText = new FormControl<string>("");
     options: FormGroup;
     fb: FormBuilder;
 
@@ -44,6 +43,7 @@ export class SearchCmp implements OnInit{
     public total = 0;
     public pageSize = 50;
     public loading: boolean = false;
+    public searchText: string;
 
     constructor(
         public _contentedService: ContentedService,
@@ -58,11 +58,9 @@ export class SearchCmp implements OnInit{
     public ngOnInit() {
         this.route.queryParams.pipe().subscribe({
             next: (res: ParamMap) => {
-                let st = res['searchText'];
-                let text = st !== undefined ? st : '';
-                console.log("Search text from url", text, res);
-                this.searchText.setValue(text);
-                this.search(text); 
+                this.searchText = res['searchText'] || "";
+                // Set a value on the tagsCmp?
+                this.search(this.searchText); 
             }
         });
         this.calculateDimensions();
@@ -72,7 +70,13 @@ export class SearchCmp implements OnInit{
      * Should reset the pagination utils?
      */
     public changeSearch(evt: VSCodeChange) {
-        this.search(evt.value)
+        // TODO: Be able to clear this
+
+        // TODO: This could probably use a debounce of > 10ms
+        if (evt.value !== this.searchText) {
+            this.search(evt.value)
+        }
+        this.searchText = evt.value;
     }
 
     public setupFilterEvts() {
@@ -80,6 +84,8 @@ export class SearchCmp implements OnInit{
         if (this.throttleSearch) {
             this.throttleSearch.unsubscribe();
         }
+
+        // This will need to be implemented once there are more controls in place.
         this.throttleSearch = this.options.valueChanges
           .pipe(
             debounceTime(500),
@@ -87,7 +93,6 @@ export class SearchCmp implements OnInit{
           )
           .subscribe({
               next: (formData: FormData) => {
-
                   // Eventually the form probably will have some data
                   this.search(formData['searchText'] || '');
               },
@@ -98,10 +103,10 @@ export class SearchCmp implements OnInit{
     }
 
     pageEvt(evt: PageEvent) {
-        console.log("Event", evt, this.searchText.value);
+        console.log("Event", evt, this.searchText);
         let offset = evt.pageIndex * evt.pageSize;
         let limit = evt.pageSize;
-        this.search(this.searchText.value, offset, limit);
+        this.search(this.searchText, offset, limit);
     }
 
     public search(text: string, offset: number = 0, limit: number = 50) {

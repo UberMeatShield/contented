@@ -69,6 +69,7 @@ export class TagsCmp implements OnInit{
     // Debounce the search
     @ViewChild('searchForm', { static: true }) searchControl;
 
+    @Input() editorValue: string = "";
     @Input() tags: Array<Tag>;
     @Input() loadTags = false;
     @Input() editorOptions;

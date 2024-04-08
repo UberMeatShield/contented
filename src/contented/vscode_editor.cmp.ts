@@ -259,7 +259,7 @@ export class VSCodeEditorCmp implements OnInit {
 
   createPlaceholder(placeholder: string, editor: MonacoEditor.ICodeEditor) {
     // Need to make it so the placeholder cannot be clicked
-    console.log("Placeholder", placeholder, editor, "TS Wrapper", this.editor);
+    //console.log("Placeholder", placeholder, editor, "TS Wrapper", this.editor);
     new PlaceholderContentWidget(this.placeholder, editor);
   }
 

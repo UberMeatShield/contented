@@ -65,20 +65,21 @@ describe('TestingSearchCmp', () => {
     });
 
     it('Should create a contented component', () => {
-        expect(comp).toBeDefined("We should have the Contented comp");
-        expect(el).toBeDefined("We should have a top level element");
+        expect(comp).withContext("We should have the Contented comp").toBeDefined();
+        expect(el).withContext('We should have a top level element').toBeDefined();
     });
 
     it('It can setup all eventing without exploding', fakeAsync(() => {
         let st = "Cthulhu";
         router.navigate(["/ui/search/"], {queryParams: {searchText: st}}); 
         tick(100);
-        console.log("navigate is done");
         fixture.detectChanges();
-        let vals = comp.getValues();
-        console.log(vals);
+        const tagReq = httpMock.expectOne(r => r.url.includes(ApiDef.contented.tags));
+        tagReq.flush(MockData.tags());
+        tick(1000);
+
         tick(100);
-        expect(vals['searchText']).withContext("It should default via route params").toBe(st);
+        expect(comp.searchText).withContext("It should default via route params").toBe(st);
 
         let req = httpMock.expectOne(req => req.url === ApiDef.contented.search);
         let sr = MockData.getSearch()
@@ -86,6 +87,7 @@ describe('TestingSearchCmp', () => {
         req.flush(sr);
         fixture.detectChanges();
         expect($('.search-result').length).withContext("It should render dom results").toEqual(sr.results.length);
+        tick(10000);
     }));
 });
 

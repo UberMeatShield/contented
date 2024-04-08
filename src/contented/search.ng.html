@@ -4,8 +4,12 @@
   <form>
       <tags-cmp
        [loadTags]="true" 
+       [editorValue]="searchText"
        (tagsChanged)="changeSearch($event)"
       ></tags-cmp>
+
+
+      WAT {{ searchText }}
 
   <!-- <form #searchForm [formGroup]="options" > -->
     <div class="search-paginator">
