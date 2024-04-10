@@ -83,7 +83,7 @@ func (as *ActionSuite) Test_MemoryManagerPaginate() {
 	containers, count, err := man.ListContainers(ContainerQuery{Page: 1, PerPage: 1})
 	as.NoError(err, "It should list with pagination")
 	as.Equal(1, len(*containers), "It should respect paging")
-	as.Equal(test_common.TOTAL_CONTAINERS, count, "Paging check that count is still correct")
+	as.Equal(test_common.TOTAL_CONTAINERS_WITH_CONTENT, count, "Paging check that count is still correct")
 
 	cnt := (*containers)[0]
 	as.NotNil(cnt, "There should be a container with 12 entries")
@@ -101,7 +101,7 @@ func (as *ActionSuite) Test_MemoryManagerPaginate() {
 	// Last container pagination check
 	l_cnts, count, _ := man.ListContainers(ContainerQuery{Page: 4, PerPage: 1})
 	as.Equal(1, len(*l_cnts), "It should still return only as we are on the last page")
-	as.Equal(test_common.TOTAL_CONTAINERS, count, "The count should be consistent")
+	as.Equal(test_common.TOTAL_CONTAINERS_WITH_CONTENT, count, "The count should be consistent")
 	l_cnt := (*l_cnts)[0]
 	as.Equal(test_common.EXPECT_CNT_COUNT[l_cnt.Name], l_cnt.Total, "There are 3 entries in the ordered test data last container")
 }
@@ -116,7 +116,7 @@ func (as *ActionSuite) Test_ManagerInitialize() {
 	containers, _, err := man.ListContainersContext()
 	as.NoError(err, "It should list all containers")
 	as.NotNil(containers, "It should have containers")
-	as.Equal(len(*containers), test_common.TOTAL_CONTAINERS, "Unexpected container count")
+	as.Equal(len(*containers), test_common.TOTAL_CONTAINERS_WITH_CONTENT, "Unexpected container count")
 
 	// Memory test working
 	for _, c := range *containers {
@@ -143,7 +143,7 @@ func (as *ActionSuite) Test_MemoryManagerSearch() {
 	containers, _, err := man.ListContainersContext()
 	as.NoError(err, "It should list all containers")
 	as.NotNil(containers, "It should have containers")
-	as.Equal(len(*containers), test_common.TOTAL_CONTAINERS, "Wrong number of containers found")
+	as.Equal(test_common.TOTAL_CONTAINERS_WITH_CONTENT, len(*containers), "Wrong number of containers found")
 
 	s_cnts, count, s_err := man.SearchContainers(ContainerQuery{Search: "dir2", Page: 1, PerPage: 2})
 	as.NoError(s_err, "Error searching memory containers")
@@ -235,7 +235,6 @@ func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
 
 func (as *ActionSuite) Test_MemoryPreviewInitialization() {
 	cfg := test_common.ResetConfig()
-	cfg.MaxSearchDepth = 1
 	utils.SetupContentMatchers(cfg, "", "video", "DS_Store", "")
 	utils.SetCfg(*cfg)
 

@@ -21,8 +21,9 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-const TOTAL_CONTAINERS = 6
-const TOTAL_MEDIA = 34
+const TOTAL_CONTAINERS = 9
+const TOTAL_CONTAINERS_WITH_CONTENT = 7
+const TOTAL_MEDIA = 35
 const TOTAL_TAGS = 49
 const TOTAL_VIDEO = 3
 const VIDEO_FILENAME = "donut_[special( gunk.mp4"
@@ -34,6 +35,7 @@ var EXPECT_CNT_COUNT = map[string]int{
 	"screens":         4,
 	"screens_sub_dir": 2,
 	"test_encoding":   2,
+	"not_empty":       1,
 }
 
 // Helper for a common block of video test code (duplicated in internals)
@@ -93,6 +95,7 @@ func ResetConfig() *utils.DirConfigEntry {
 	cfg := utils.GetCfgDefaults()
 	dir, _ := envy.MustGet("DIR")
 	cfg.Dir = dir
+	cfg.MaxSearchDepth = 3
 	utils.InitConfig(dir, &cfg)
 	utils.SetupContainerMatchers(&cfg, "", "DS_Store|container_previews")
 	utils.SetupContentMatchers(&cfg, "", "image|video|text", "DS_Store", "")

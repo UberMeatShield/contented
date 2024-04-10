@@ -13,7 +13,6 @@ import (
 	"image/jpeg"
 	"image/png"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -665,7 +664,12 @@ func AssignScreensFromSet(c *models.Container, mc *models.Content, maybeScreens 
 
 func GetPotentialScreens(c *models.Container) (*[]os.FileInfo, error) {
 	previewPath := GetPreviewDst(c.GetFqPath())
-	dirEntries, err := ioutil.ReadDir(previewPath)
+
+	if _, e_err := os.Stat(previewPath); os.IsNotExist(e_err) {
+		empty := []os.FileInfo{}
+		return &empty, nil
+	}
+	dirEntries, err := os.ReadDir(previewPath)
 	if err != nil {
 		log.Printf("Couldn't list for path %s err %s", previewPath, err)
 		return nil, err
@@ -673,7 +677,8 @@ func GetPotentialScreens(c *models.Container) (*[]os.FileInfo, error) {
 	maybeScreens := []os.FileInfo{}
 	for _, fRef := range dirEntries {
 		if !fRef.IsDir() { // Quick check to ensure screens is in the filename?
-			maybeScreens = append(maybeScreens, fRef)
+			info, _ := fRef.Info()
+			maybeScreens = append(maybeScreens, info)
 		}
 	}
 	return &maybeScreens, nil

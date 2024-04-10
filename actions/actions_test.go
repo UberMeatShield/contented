@@ -38,7 +38,7 @@ func (as *ActionSuite) Test_ContentList() {
 	as.Equal(http.StatusOK, res.Code)
 	resObj := ContainersResponse{}
 	json.NewDecoder(res.Body).Decode(&resObj)
-	as.Equal(test_common.TOTAL_CONTAINERS, len(resObj.Results), "We should have this many dirs present")
+	as.Equal(test_common.TOTAL_CONTAINERS_WITH_CONTENT, len(resObj.Results), "We should have this many dirs present")
 }
 
 func (as *ActionSuite) Test_ContentDirLoad() {
@@ -48,7 +48,7 @@ func (as *ActionSuite) Test_ContentDirLoad() {
 	as.Equal(http.StatusOK, res.Code)
 	cnts := ContainersResponse{}
 	json.NewDecoder(res.Body).Decode(&cnts)
-	as.Equal(test_common.TOTAL_CONTAINERS, len(cnts.Results), "We should have this many dirs present")
+	as.Equal(test_common.TOTAL_CONTAINERS_WITH_CONTENT, len(cnts.Results), "We should have this many dirs present")
 
 	for _, c := range cnts.Results {
 		res := as.JSON("/containers/" + c.ID.String() + "/contents").Get()

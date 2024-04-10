@@ -136,7 +136,7 @@ func Test_ContentType(t *testing.T) {
 func TestCreateStructure(t *testing.T) {
 	var testDir, _ = envy.MustGet("DIR")
 	cfg := GetCfg()
-	cfg.MaxSearchDepth = 1
+	cfg.MaxSearchDepth = 3
 	cfg.Dir = testDir
 	SetupContentMatchers(cfg, "", "", "DS_Store", "")
 
@@ -149,16 +149,43 @@ func TestCreateStructure(t *testing.T) {
 		t.Errorf("Container tree was set to nil")
 	}
 	lenTree := len(*tree)
-	if lenTree != 6 {
-		t.Errorf("The Tree should have 6 containers %d", lenTree)
+	TOTAL_CONTAINERS := 9
+	if lenTree != TOTAL_CONTAINERS {
+		t.Errorf("The Tree should have %d containers but had %d", TOTAL_CONTAINERS, lenTree)
 	}
 
 	cfg.MaxSearchDepth = 0
 	restricted := ContentTree{}
 	restrictTree, err := CreateStructure(testDir, cfg, &restricted, 0)
 	lenRestricted := len(*restrictTree)
-	if lenRestricted != 5 {
-		t.Errorf("We should have restricted it to top level 5 vs %d", lenRestricted)
+	if lenRestricted != 6 {
+		t.Errorf("We should have restricted it to top level 6 vs %d", lenRestricted)
+	}
+}
+
+func TestEmptyInitial(t *testing.T) {
+	var testDir, _ = envy.MustGet("DIR")
+	cfg := GetCfg()
+	cfg.Dir = testDir
+	cfg.MaxSearchDepth = 3
+	SetupContainerMatchers(cfg, "empty", "")
+
+	cTree := ContentTree{}
+	tree, err := CreateStructure(testDir, cfg, &cTree, 0)
+	if err != nil {
+		t.Errorf("Could not create a proper tree %s", err)
+	}
+	if tree == nil {
+		t.Errorf("Container tree was set to nil")
+	}
+	lenTree := len(*tree)
+	if lenTree != 3 {
+		t.Errorf("The tree should match only an initial empty container")
+	}
+
+	memStorage := InitializeMemory(testDir)
+	if len(memStorage.ValidContent) != 1 {
+		t.Errorf("Did not initialize with an empty chain of directories %s", memStorage.ValidContent)
 	}
 }
 
