@@ -253,6 +253,7 @@ func CreateStructure(dir string, cfg *DirConfigEntry, results *ContentTree, dept
 		return results, nil
 	}
 
+	log.Printf("Starting search in %s", dir)
 	// Find all the containers under the specified directory (is directory)
 	// Could specify the cfg to use with the matching?
 	cnts := FindContainersMatcher(dir, cfg.IncContainer, cfg.ExcContainer)

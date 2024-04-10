@@ -1,0 +1,1 @@
+A directory that is empty containing only a non-empty directory should not get culled.

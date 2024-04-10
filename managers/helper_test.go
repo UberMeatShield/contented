@@ -56,7 +56,7 @@ func (as *ActionSuite) Test_InitialCreation() {
 
 	cnts := models.Containers{}
 	as.DB.All(&cnts)
-	as.Equal(test_common.TOTAL_CONTAINERS, len(cnts), "The mocks have a specific expected number of items")
+	as.Equal(test_common.TOTAL_CONTAINERS_WITH_CONTENT, len(cnts), "The mocks have a specific expected number of items")
 
 	content := models.Contents{}
 	as.DB.All(&content)
