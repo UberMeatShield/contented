@@ -14,9 +14,9 @@ import { GlobalBroadcast } from './global_message';
 
 import * as _ from 'lodash';
 import z from 'zod';
-import { Z as ZodClass } from 'zod-class';
+import { Z } from 'zod-class';
 
-const searchSchema = z.object({
+export const ContentSearch = z.object({
     cId: z.string().optional(), // Container Id
     text: z.string().optional(),
     offset: z.number().default(0),
@@ -24,9 +24,12 @@ const searchSchema = z.object({
     contentType: z.string().optional(),
     tags: z.string().array().optional(),
 });
-export class ContentSearch extends ZodClass.class({
-    ...searchSchema._def.shape(),
+
+/* This should work but doesn't for some ng build reason
+export class ContentSearch extends Z.class({
+    ...ContentSearchSchema._def.shape(),
 }) {}
+*/
 
 @Injectable()
 export class ContentedService {
@@ -198,7 +201,7 @@ export class ContentedService {
     }
 
     // Could definitely use Zod here as a search type.  Maybe it is worth pulling in at this point.
-    public searchContent(cs: ContentSearch) {
+    public searchContent(cs: any) {
 
         let params = this.getPaginationParams(cs.offset, cs.limit);
         params = params.set("search", cs.text);

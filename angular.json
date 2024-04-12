@@ -78,21 +78,21 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "contented:build"
+            "buildTarget": "contented:build"
           },
           "configurations": {
             "dev": {
-              "browserTarget": "contented:build:dev"
+              "buildTarget": "contented:build:dev"
             },
             "production": {
-              "browserTarget": "contented:build:production"
+              "buildTarget": "contented:build:production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "contented:build"
+            "buildTarget": "contented:build"
           }
         },
         "test": {

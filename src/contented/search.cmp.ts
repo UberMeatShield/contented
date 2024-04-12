@@ -9,7 +9,7 @@ import {
     ViewChild,
     Inject
 } from '@angular/core';
-import {ContentedService, ContentSearch} from './contented_service';
+import {ContentedService} from './contented_service';
 import {Content, VSCodeChange} from './content';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 import {FormBuilder, FormGroup} from '@angular/forms';
@@ -114,8 +114,8 @@ export class SearchCmp implements OnInit{
         // TODO: Wrap the content into a fake container
         this.content = [];
         this.loading = true;
-        const cs = new ContentSearch({text, offset, limit});
-        this._contentedService.searchContent(cs).pipe(
+        //const cs = new ContentSearch({text, offset, limit});
+        this._contentedService.searchContent({}).pipe(
             finalize(() => this.loading = false)
         ).subscribe({
             next: (res) => {
