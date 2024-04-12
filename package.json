@@ -28,6 +28,8 @@
     "ngx-monaco-editor-v2": "^17.0.1",
     "rxjs": "~7.5.0",
     "tslib": "^2.3.0",
+    "zod": "^3.22.4",
+    "zod-class": "^0.0.13",
     "zone.js": "~0.13.0"
   },
   "devDependencies": {

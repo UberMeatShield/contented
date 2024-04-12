@@ -13,6 +13,21 @@ import {catchError, map} from 'rxjs/operators';
 import { GlobalBroadcast } from './global_message';
 
 import * as _ from 'lodash';
+import z from 'zod';
+import { Z as ZodClass } from 'zod-class';
+
+const searchSchema = z.object({
+    cId: z.string().optional(), // Container Id
+    text: z.string().optional(),
+    offset: z.number().default(0),
+    limit: z.number().optional(),
+    contentType: z.string().optional(),
+    tags: z.string().array().optional(),
+});
+export class ContentSearch extends ZodClass.class({
+    ...searchSchema._def.shape(),
+}) {}
+
 @Injectable()
 export class ContentedService {
 
@@ -182,14 +197,16 @@ export class ContentedService {
         }
     }
 
-    public searchContent(text: string, offset: number = 0, limit: number = 0, contentType: string = "", cId: string = "") {
-        let params = this.getPaginationParams(offset, limit);
-        params = params.set("search", text);
-        if (contentType) {
-            params = params.set("contentType", contentType);
+    // Could definitely use Zod here as a search type.  Maybe it is worth pulling in at this point.
+    public searchContent(cs: ContentSearch) {
+
+        let params = this.getPaginationParams(cs.offset, cs.limit);
+        params = params.set("search", cs.text);
+        if (cs.contentType) {
+            params = params.set("contentType", cs.contentType);
         }
-        if (cId) {
-            params = params.set("cID", cId);
+        if (cs.cId) {
+            params = params.set("cId", cs.cId);
         }
         return this.http.get(ApiDef.contented.search, {
             params: params

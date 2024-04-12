@@ -9,10 +9,10 @@ import {
     ViewChild,
     Inject
 } from '@angular/core';
-import {ContentedService} from './contented_service';
+import {ContentedService, ContentSearch} from './contented_service';
 import {Content, VSCodeChange} from './content';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
-import {FormBuilder, FormControl, FormGroup} from '@angular/forms';
+import {FormBuilder, FormGroup} from '@angular/forms';
 
 import {PageEvent} from '@angular/material/paginator';
 import {MatDialog, MAT_DIALOG_DATA} from '@angular/material/dialog';
@@ -114,19 +114,21 @@ export class SearchCmp implements OnInit{
         // TODO: Wrap the content into a fake container
         this.content = [];
         this.loading = true;
-        this._contentedService.searchContent(text, offset, limit).pipe(
+        const cs = new ContentSearch({text, offset, limit});
+        this._contentedService.searchContent(cs).pipe(
             finalize(() => this.loading = false)
-        ).subscribe(
-            (res) => {
+        ).subscribe({
+            next: (res) => {
                 let content = _.map((res.results || []), m => new Content(m));
                 let total = res['total'] || 0;
                 // console.log("Search results", content, total);
                 this.content = content;
                 this.total = total;
-            }, err => {
+            }, 
+            error: err => {
                 console.error("Failed to search", err);
             }
-        );
+        });
     }
 
     public getVisibleSet() {
