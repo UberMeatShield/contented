@@ -9,7 +9,7 @@ import {
     ViewChild,
     Inject
 } from '@angular/core';
-import {ContentedService} from './contented_service';
+import {ContentedService, ContentSearchSchema} from './contented_service';
 import {Content, VSCodeChange} from './content';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 import {FormBuilder, FormGroup} from '@angular/forms';
@@ -43,7 +43,9 @@ export class SearchCmp implements OnInit{
     public total = 0;
     public pageSize = 50;
     public loading: boolean = false;
+
     public searchText: string;
+    public searchTags: Array<string>; // Just the actual tag name (id)
 
     constructor(
         public _contentedService: ContentedService,
@@ -77,6 +79,7 @@ export class SearchCmp implements OnInit{
             this.search(evt.value)
         }
         this.searchText = evt.value;
+        this.searchTags = evt.tags;
     }
 
     public setupFilterEvts() {
@@ -114,8 +117,11 @@ export class SearchCmp implements OnInit{
         // TODO: Wrap the content into a fake container
         this.content = [];
         this.loading = true;
-        //const cs = new ContentSearch({text, offset, limit});
-        this._contentedService.searchContent({}).pipe(
+        const tags = this.searchTags;
+
+        // TODO: Make the tags optional
+        const cs = ContentSearchSchema.parse({text, offset, limit, tags});
+        this._contentedService.searchContent(cs).pipe(
             finalize(() => this.loading = false)
         ).subscribe({
             next: (res) => {
