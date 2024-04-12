@@ -44,8 +44,8 @@ export class SearchCmp implements OnInit{
     public pageSize = 50;
     public loading: boolean = false;
 
-    public searchText: string;
-    public searchTags: Array<string>; // Just the actual tag name (id)
+    public searchText: string; // Initial searchText value if passed in the url
+    public currentTextChange: VSCodeChange = {value: "", tags: []};
 
     constructor(
         public _contentedService: ContentedService,
@@ -60,8 +60,16 @@ export class SearchCmp implements OnInit{
     public ngOnInit() {
         this.route.queryParams.pipe().subscribe({
             next: (res: ParamMap) => {
+                // Note you do NOT want searchText to be updated by changes
+                // in this component except possibly a 'clear'
                 this.searchText = res['searchText'] || "";
-                // Set a value on the tagsCmp?
+
+                // Used for paging with search text and tags, needs reset functions
+                // but that should happen on changeSearch
+                this.currentTextChange = {
+                    value: this.searchText,
+                    tags: [],
+                }
                 this.search(this.searchText); 
             }
         });
@@ -76,14 +84,19 @@ export class SearchCmp implements OnInit{
 
         // TODO: This could probably use a debounce of > 10ms
         if (evt.value !== this.searchText) {
-            this.search(evt.value)
+            this.search(evt.value, 0, 50, evt.tags)
         }
+
+        this.currentTextChange = evt;
+        /* DO NOT re-assign searchText or it will reassign the VSCode variable
         this.searchText = evt.value;
         this.searchTags = evt.tags;
+        */
     }
 
+    // TODO: Need to throttle the changes to the changeSearch from VSCode and
+    // remove some of this form based data (or create a hidden form with other settings)
     public setupFilterEvts() {
-        // Kicks off a search
         if (this.throttleSearch) {
             this.throttleSearch.unsubscribe();
         }
@@ -109,15 +122,14 @@ export class SearchCmp implements OnInit{
         console.log("Event", evt, this.searchText);
         let offset = evt.pageIndex * evt.pageSize;
         let limit = evt.pageSize;
-        this.search(this.searchText, offset, limit);
+        this.search(this.currentTextChange.value, offset, limit, this.currentTextChange.tags);
     }
 
-    public search(text: string, offset: number = 0, limit: number = 50) {
+    public search(text: string, offset: number = 0, limit: number = 50, tags: Array<string> = []) {
         console.log("Get the information from the input and search on it", text); 
         // TODO: Wrap the content into a fake container
         this.content = [];
         this.loading = true;
-        const tags = this.searchTags;
 
         // TODO: Make the tags optional
         const cs = ContentSearchSchema.parse({text, offset, limit, tags});
