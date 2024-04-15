@@ -211,10 +211,15 @@ export class ContentedService {
         if (cs.cId) {
             params = params.set("cId", cs.cId);
         }
+
+        // GoBuffalo is being DUMB on the array parsing :(
         if (cs.tags?.length > 0) {
+            /*
             for (const tag of cs.tags) {
                params = params.append('tags[]', tag); 
             }
+            */
+           params = params.set('tags', JSON.stringify(cs.tags))
         }
         return this.http.get(ApiDef.contented.search, {
             params: params

@@ -104,7 +104,7 @@ func (cm ContentManagerDB) UpdateContainer(cnt *models.Container) (*models.Conta
 		log.Printf("Path does not exist on disk under the config directory err %s", pErr)
 		return nil, pErr
 	}
-	if pathOk == false {
+	if !pathOk {
 		msg := fmt.Sprintf("The path was not under a valid container %s", pErr)
 		return nil, errors.New(msg)
 	}
@@ -119,17 +119,16 @@ func (cm ContentManagerDB) UpdateContainer(cnt *models.Container) (*models.Conta
 func (cm ContentManagerDB) UpdateContent(content *models.Content) error {
 	// Check if file exists or allow content to be 'empty'?
 	tx := cm.GetConnection()
-	if content.NoFile == false {
+	if !content.NoFile {
 		cnt, cErr := cm.GetContainer(content.ContainerID.UUID)
 		if cErr != nil {
-			msg := fmt.Sprintf("Parent container %s not found", content.ContainerID.UUID.String())
-			return errors.New(msg)
+			return fmt.Errorf("parent container %s not found", content.ContainerID.UUID.String())
 		}
 
 		exists, pErr := utils.HasContent(content.Src, cnt.GetFqPath())
-		if exists == false || pErr != nil {
+		if !exists || pErr != nil {
 			log.Printf("Content not in container %s", pErr)
-			return errors.New(fmt.Sprintf("Invalid content src %s for container %s", content.Src, cnt.Name))
+			return fmt.Errorf("invalid content src %s for container %s", content.Src, cnt.Name)
 		}
 	}
 	err := tx.Eager().Update(content)

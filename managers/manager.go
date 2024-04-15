@@ -302,11 +302,29 @@ func ContextToContentQuery(params pop.PaginationParams, cfg *utils.DirConfigEntr
 		IncludeHidden: false,
 		Order:         StringDefault(params.Get("order"), ""),
 	}
+	tags, err := GetTagsFromParam(params.Get("tags"))
+	if err == nil {
+		// BAIL / reject
+		sReq.Tags = tags
+	} else {
+		log.Printf("FAILED OT PARSE TAGS %s", err)
+	}
+	//	log.Printf("TAGS TAGS TAGS TAGS TAGS TAGS TAGS TAGS %s", sReq.Tags)
 	tagStr := StringDefault(params.Get("tags"), "")
 	if tagStr != "" {
 		sReq.Tags = strings.Split(tagStr, ",")
 	}
 	return sReq
+}
+
+// Hate
+func GetTagsFromParam(val string) ([]string, error) {
+	tags := []string{}
+	if val != "" {
+		err := json.Unmarshal([]byte(val), &tags)
+		return tags, err
+	}
+	return tags, nil
 }
 
 func GetContentAndContainer(cm ContentManager, contentID uuid.UUID) (*models.Content, *models.Container, error) {
