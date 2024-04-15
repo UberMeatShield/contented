@@ -12,7 +12,7 @@ import {
 import {ContentedService, ContentSearchSchema} from './contented_service';
 import {Content, VSCodeChange} from './content';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
-import {FormBuilder, FormGroup} from '@angular/forms';
+import {FormBuilder, FormGroup, FormControl} from '@angular/forms';
 
 import {PageEvent} from '@angular/material/paginator';
 import {MatDialog, MAT_DIALOG_DATA} from '@angular/material/dialog';
@@ -45,6 +45,7 @@ export class SearchCmp implements OnInit{
     public loading: boolean = false;
 
     public searchText: string; // Initial searchText value if passed in the url
+    public searchType = new FormControl("text");
     public currentTextChange: VSCodeChange = {value: "", tags: []};
     public changedSearch: (evt: VSCodeChange) => void;
 
@@ -56,6 +57,9 @@ export class SearchCmp implements OnInit{
         fb: FormBuilder,
     ) {
         this.fb = fb;
+        this.options = fb.group({
+            searchType: this.searchType,
+        });
     }
 
     public ngOnInit() {
@@ -64,14 +68,6 @@ export class SearchCmp implements OnInit{
                 // Note you do NOT want searchText to be updated by changes
                 // in this component except possibly a 'clear'
                 this.searchText = res['searchText'] || "";
-
-                // Used for paging with search text and tags, needs reset functions
-                // but that should happen on changeSearch
-                this.currentTextChange = {
-                    value: this.searchText,
-                    tags: [],
-                }
-                this.search(this.searchText); 
             }
         });
         this.calculateDimensions();
@@ -79,12 +75,15 @@ export class SearchCmp implements OnInit{
         // We don't want to call search ever keypress and changeSearch is being called
         // by an event emitter with a different debounce & distinct timing.
         this.changedSearch = _.debounce((evt: VSCodeChange) => {
-            // Do not change this.searchText it will re-assign
+            // Do not change this.searchText it will re-assign the VS-Code editor in a
+            // bad way and muck with the cursor.
             if (evt.value !== this.currentTextChange.value) {
                 this.search(evt.value, 0, 50, evt.tags)
             }
             this.currentTextChange = evt;
         }, 500);
+
+        this.setupFilterEvts();
     }
 
     /*
@@ -96,7 +95,6 @@ export class SearchCmp implements OnInit{
         this.searchTags = evt.tags;
         */
         this.changedSearch(evt);
-
     }
 
     // TODO: Need to throttle the changes to the changeSearch from VSCode and
@@ -109,13 +107,14 @@ export class SearchCmp implements OnInit{
         // This will need to be implemented once there are more controls in place.
         this.throttleSearch = this.options.valueChanges
           .pipe(
-            debounceTime(500),
+            debounceTime(250),
             distinctUntilChanged()
           )
           .subscribe({
               next: (formData: FormData) => {
                   // Eventually the form probably will have some data
-                  this.search(formData['searchText'] || '');
+                  const evt = this.currentTextChange;
+                  this.search(evt?.value, 0, 50, evt?.tags);
               },
               error: err => {
                 GlobalBroadcast.error("Failed to search", err);
@@ -136,6 +135,13 @@ export class SearchCmp implements OnInit{
         this.content = [];
         this.loading = true;
 
+        // TODO: Make this a bit less sketchy after I work on the actual data tagging.
+        const searchType = this.options.get('searchType').value;
+        if (searchType === 'tags') {
+            text = '';
+        } else {
+            tags = [];
+        }
         // TODO: Make the tags optional
         const cs = ContentSearchSchema.parse({text, offset, limit, tags});
         this._contentedService.searchContent(cs).pipe(

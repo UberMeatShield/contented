@@ -211,6 +211,11 @@ export class ContentedService {
         if (cs.cId) {
             params = params.set("cId", cs.cId);
         }
+        if (cs.tags?.length > 0) {
+            for (const tag of cs.tags) {
+               params = params.append('tags[]', tag); 
+            }
+        }
         return this.http.get(ApiDef.contented.search, {
             params: params
         }).pipe(

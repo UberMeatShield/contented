@@ -20,6 +20,7 @@ import {MatTableModule} from '@angular/material/table';
 import {MatSelectModule} from '@angular/material/select';
 import {MatSnackBarModule} from '@angular/material/snack-bar';
 import {MatMenuModule} from '@angular/material/menu';
+import {MatRadioModule} from '@angular/material/radio';
 
 import {ContentBrowserCmp} from './content_browser.cmp';
 import {ContentedNavCmp} from './contented_nav.cmp';
@@ -129,6 +130,7 @@ const monacoConfig: NgxMonacoEditorConfig = {
       MatSelectModule,
       MatSnackBarModule,
       MatMenuModule,
+      MatRadioModule,
   ],
   declarations: [
       ContentBrowserCmp,

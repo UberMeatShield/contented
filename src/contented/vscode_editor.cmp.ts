@@ -139,6 +139,7 @@ export class VSCodeEditorCmp implements OnInit {
         }
       });
 
+      // Probably need a post render or other change modifier manually if there is a value
       this.editor.registerOnChange((val: string) => {
         // This is awkward... the on change can call BEFORE the token / model is 
         // fully updated so the tokens do not get updated correctly.
@@ -198,6 +199,7 @@ export class VSCodeEditorCmp implements OnInit {
         })
       });
     }
+    console.log("TAGS FOUND in VSCODE", tags);
     return Array.from(tags);
   }
 
@@ -258,6 +260,13 @@ export class VSCodeEditorCmp implements OnInit {
     _.delay(() => {
       this.createPlaceholder(this.placeholder, this.monacoEditor);
     }, 200);
+
+    _.delay(() => {
+      this.changeEmitter.emit({
+        tags: this.getTokens(),
+        value: this.editorValue,
+      });
+    }, 20);
   }
 
   createPlaceholder(placeholder: string, editor: MonacoEditor.ICodeEditor) {
