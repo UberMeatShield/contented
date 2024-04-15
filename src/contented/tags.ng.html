@@ -1,12 +1,11 @@
 <div class="tags-cmp">
-
   <div class="tag-search-editor" *ngIf="tags?.length > 0">
    <vscode-editor-cmp
      [editorOptions]="editorOptions"
      [editorValue]="editorValue"
-     [showTagging]="true"
+     [showTagging]="false"
      [tags]="tags"
-     [fixedLineCount]="3"
+     [fixedLineCount]="2"
      [placeholder]="'Search by tag or full string'"
      (changeEmitter)="changedTags($event)"
    ></vscode-editor-cmp>

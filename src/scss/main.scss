@@ -117,6 +117,16 @@ body {
     width: 60%;
 }
 
+.search-form {
+    display: flex;
+    .search-tags {
+        width: 60%;
+    }
+    .search-paginator {
+        width: 35%;
+    }
+}
+
 .search-paginator {
     display: flex;
     width: 100%;
@@ -320,8 +330,8 @@ body {
 }
 
 .tag-search-editor {
-    width: 60%;
-    height: 3rem;
+    width: 100%;
+    height: 2rem;
 
     .editor-container {
         height: 57px !important;

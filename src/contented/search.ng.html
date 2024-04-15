@@ -1,12 +1,14 @@
 <div class="search-cmp">
   <contented-nav [loading]="loading"></contented-nav>
 
-  <form>
+  <form class="search-form">
+    <div class="search-tags">
       <tags-cmp
        [loadTags]="true" 
        [editorValue]="searchText"
        (tagsChanged)="changeSearch($event)"
       ></tags-cmp>
+    </div>
 
   <!-- <form #searchForm [formGroup]="options" > -->
     <div class="search-paginator">

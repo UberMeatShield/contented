@@ -140,10 +140,14 @@ export class VSCodeEditorCmp implements OnInit {
       });
 
       this.editor.registerOnChange((val: string) => {
-        this.changeEmitter.emit({
-          tags: this.getTokens(),
-          value: val
-        });
+        // This is awkward... the on change can call BEFORE the token / model is 
+        // fully updated so the tokens do not get updated correctly.
+        _.delay(() => {
+          this.changeEmitter.emit({
+            tags: this.getTokens(),
+            value: val
+          });
+        }, 20);
       });
     }
     this.afterMonaco();
@@ -166,7 +170,6 @@ export class VSCodeEditorCmp implements OnInit {
 
       let match = `${tokenType}.${language}`;
       _.each(tokenArr, (tokens, lineIdx: number) => {
-
         if (!tokens) return;
         let line;
         try {

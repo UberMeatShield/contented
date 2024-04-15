@@ -46,6 +46,7 @@ export class SearchCmp implements OnInit{
 
     public searchText: string; // Initial searchText value if passed in the url
     public currentTextChange: VSCodeChange = {value: "", tags: []};
+    public changedSearch: (evt: VSCodeChange) => void;
 
     constructor(
         public _contentedService: ContentedService,
@@ -74,24 +75,28 @@ export class SearchCmp implements OnInit{
             }
         });
         this.calculateDimensions();
+
+        // We don't want to call search ever keypress and changeSearch is being called
+        // by an event emitter with a different debounce & distinct timing.
+        this.changedSearch = _.debounce((evt: VSCodeChange) => {
+            // Do not change this.searchText it will re-assign
+            if (evt.value !== this.currentTextChange.value) {
+                this.search(evt.value, 0, 50, evt.tags)
+            }
+            this.currentTextChange = evt;
+        }, 500);
     }
 
     /*
      * Should reset the pagination utils?
      */
     public changeSearch(evt: VSCodeChange) {
-        // TODO: Be able to clear this
-
-        // TODO: This could probably use a debounce of > 10ms
-        if (evt.value !== this.searchText) {
-            this.search(evt.value, 0, 50, evt.tags)
-        }
-
-        this.currentTextChange = evt;
         /* DO NOT re-assign searchText or it will reassign the VSCode variable
         this.searchText = evt.value;
         this.searchTags = evt.tags;
         */
+        this.changedSearch(evt);
+
     }
 
     // TODO: Need to throttle the changes to the changeSearch from VSCode and

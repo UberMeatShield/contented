@@ -111,7 +111,6 @@ export class TagsCmp implements OnInit{
 
     // Change the event to provide both the value and the parsed tags
     public changedTags(evt: VSCodeChange) {
-        console.log("Changed Tags", evt);
         this.tagsChanged.emit(evt);
     }
 }
