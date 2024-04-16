@@ -1,14 +1,22 @@
 <div class="search-cmp">
   <contented-nav [loading]="loading"></contented-nav>
 
-  <form>
+  <form class="search-form" [formGroup]="options" *ngIf="options">
+
+    <div class="search-tags">
       <tags-cmp
        [loadTags]="true" 
        [editorValue]="searchText"
        (tagsChanged)="changeSearch($event)"
       ></tags-cmp>
+    </div>
 
-  <!-- <form #searchForm [formGroup]="options" > -->
+    <div class="form-group">
+      <mat-radio-group [formControl]="searchType" aria-label="Select to modify the search type">
+        <mat-radio-button value="text">By Text</mat-radio-button>
+        <mat-radio-button value="tags">By Tags</mat-radio-button>
+      </mat-radio-group>
+    </div>
     <div class="search-paginator">
       <mat-paginator
         [length]="total"

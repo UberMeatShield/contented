@@ -16,8 +16,6 @@ import {NoopAnimationsModule} from '@angular/platform-browser/animations';
 import * as _ from 'lodash';
 import {MockData} from '../test/mock/mock_data';
 
-declare var $;
-
 describe('Testing TagsCmp', () => {
     let fixture: ComponentFixture<TagsCmp>;
     let service: ContentedService;

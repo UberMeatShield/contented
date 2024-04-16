@@ -9,10 +9,10 @@ import {
     ViewChild,
     Inject
 } from '@angular/core';
-import {ContentedService} from './contented_service';
+import {ContentedService, ContentSearchSchema} from './contented_service';
 import {Content, VSCodeChange} from './content';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
-import {FormBuilder, FormControl, FormGroup} from '@angular/forms';
+import {FormBuilder, FormGroup, FormControl} from '@angular/forms';
 
 import {PageEvent} from '@angular/material/paginator';
 import {MatDialog, MAT_DIALOG_DATA} from '@angular/material/dialog';
@@ -43,7 +43,11 @@ export class SearchCmp implements OnInit{
     public total = 0;
     public pageSize = 50;
     public loading: boolean = false;
-    public searchText: string;
+
+    public searchText: string; // Initial searchText value if passed in the url
+    public searchType = new FormControl("text");
+    public currentTextChange: VSCodeChange = {value: "", tags: []};
+    public changedSearch: (evt: VSCodeChange) => void;
 
     constructor(
         public _contentedService: ContentedService,
@@ -53,34 +57,49 @@ export class SearchCmp implements OnInit{
         fb: FormBuilder,
     ) {
         this.fb = fb;
+        this.options = fb.group({
+            searchType: this.searchType,
+        });
     }
 
     public ngOnInit() {
         this.route.queryParams.pipe().subscribe({
             next: (res: ParamMap) => {
+                // Note you do NOT want searchText to be updated by changes
+                // in this component except possibly a 'clear'
                 this.searchText = res['searchText'] || "";
-                // Set a value on the tagsCmp?
-                this.search(this.searchText); 
             }
         });
         this.calculateDimensions();
+
+        // We don't want to call search ever keypress and changeSearch is being called
+        // by an event emitter with a different debounce & distinct timing.
+        this.changedSearch = _.debounce((evt: VSCodeChange) => {
+            // Do not change this.searchText it will re-assign the VS-Code editor in a
+            // bad way and muck with the cursor.
+            if (evt.value !== this.currentTextChange.value) {
+                this.search(evt.value, 0, 50, evt.tags)
+            }
+            this.currentTextChange = evt;
+        }, 500);
+
+        this.setupFilterEvts();
     }
 
     /*
      * Should reset the pagination utils?
      */
     public changeSearch(evt: VSCodeChange) {
-        // TODO: Be able to clear this
-
-        // TODO: This could probably use a debounce of > 10ms
-        if (evt.value !== this.searchText) {
-            this.search(evt.value)
-        }
+        /* DO NOT re-assign searchText or it will reassign the VSCode variable
         this.searchText = evt.value;
+        this.searchTags = evt.tags;
+        */
+        this.changedSearch(evt);
     }
 
+    // TODO: Need to throttle the changes to the changeSearch from VSCode and
+    // remove some of this form based data (or create a hidden form with other settings)
     public setupFilterEvts() {
-        // Kicks off a search
         if (this.throttleSearch) {
             this.throttleSearch.unsubscribe();
         }
@@ -88,13 +107,14 @@ export class SearchCmp implements OnInit{
         // This will need to be implemented once there are more controls in place.
         this.throttleSearch = this.options.valueChanges
           .pipe(
-            debounceTime(500),
+            debounceTime(250),
             distinctUntilChanged()
           )
           .subscribe({
               next: (formData: FormData) => {
                   // Eventually the form probably will have some data
-                  this.search(formData['searchText'] || '');
+                  const evt = this.currentTextChange;
+                  this.search(evt?.value, 0, 50, evt?.tags);
               },
               error: err => {
                 GlobalBroadcast.error("Failed to search", err);
@@ -106,27 +126,38 @@ export class SearchCmp implements OnInit{
         console.log("Event", evt, this.searchText);
         let offset = evt.pageIndex * evt.pageSize;
         let limit = evt.pageSize;
-        this.search(this.searchText, offset, limit);
+        this.search(this.currentTextChange.value, offset, limit, this.currentTextChange.tags);
     }
 
-    public search(text: string, offset: number = 0, limit: number = 50) {
+    public search(text: string, offset: number = 0, limit: number = 50, tags: Array<string> = []) {
         console.log("Get the information from the input and search on it", text); 
         // TODO: Wrap the content into a fake container
         this.content = [];
         this.loading = true;
-        this._contentedService.searchContent(text, offset, limit).pipe(
+
+        // TODO: Make this a bit less sketchy after I work on the actual data tagging.
+        const searchType = this.options.get('searchType').value;
+        if (searchType === 'tags') {
+            text = '';
+        } else {
+            tags = [];
+        }
+        // TODO: Make the tags optional
+        const cs = ContentSearchSchema.parse({text, offset, limit, tags});
+        this._contentedService.searchContent(cs).pipe(
             finalize(() => this.loading = false)
-        ).subscribe(
-            (res) => {
+        ).subscribe({
+            next: (res) => {
                 let content = _.map((res.results || []), m => new Content(m));
                 let total = res['total'] || 0;
                 // console.log("Search results", content, total);
                 this.content = content;
                 this.total = total;
-            }, err => {
+            }, 
+            error: err => {
                 console.error("Failed to search", err);
             }
-        );
+        });
     }
 
     public getVisibleSet() {

@@ -7,7 +7,7 @@ import {
     Component,
     ViewChild,
 } from '@angular/core';
-import {ContentedService} from './contented_service';
+import {ContentedService, ContentSearchSchema} from './contented_service';
 import {Content} from './content';
 import {Container} from './container';
 import {GlobalNavEvents, NavTypes, NavEventMessage} from './nav_events';
@@ -234,7 +234,8 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
         this.selectedContent = null;
         this.content = [];
         this.loading = true;
-        this._contentedService.searchContent(text, offset, limit, "video", cntId).pipe(
+        const cs = ContentSearchSchema.parse({text, offset, limit, contentType: "video", cId: cntId})
+        this._contentedService.searchContent(cs).pipe(
             finalize(() => this.loading = false)
         ).subscribe({
             next: (res) => {

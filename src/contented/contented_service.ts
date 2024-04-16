@@ -13,6 +13,25 @@ import {catchError, map} from 'rxjs/operators';
 import { GlobalBroadcast } from './global_message';
 
 import * as _ from 'lodash';
+import z from 'zod';
+//import { Z } from 'zod-class';
+
+
+export const ContentSearchSchema = z.object({
+    cId: z.string().optional(), // Container Id
+    text: z.string().optional(),
+    offset: z.number().default(0),
+    limit: z.number().optional(),
+    contentType: z.string().optional(),
+    tags: z.string().array().optional(),
+});
+export type ContentSearch = z.infer<typeof ContentSearchSchema>
+/* This should work but doesn't because of node vs web issues.
+export class ContentSearch extends Z.class({
+    ...ContentSearchSchema._def.shape(),
+}) {}
+*/
+
 @Injectable()
 export class ContentedService {
 
@@ -182,14 +201,26 @@ export class ContentedService {
         }
     }
 
-    public searchContent(text: string, offset: number = 0, limit: number = 0, contentType: string = "", cId: string = "") {
-        let params = this.getPaginationParams(offset, limit);
-        params = params.set("search", text);
-        if (contentType) {
-            params = params.set("contentType", contentType);
+    // Could definitely use Zod here as a search type.  Maybe it is worth pulling in at this point.
+    public searchContent(cs: ContentSearch) {
+        let params = this.getPaginationParams(cs.offset, cs.limit);
+        params = params.set("search", cs.text);
+        if (cs.contentType) {
+            params = params.set("contentType", cs.contentType);
         }
-        if (cId) {
-            params = params.set("cID", cId);
+        if (cs.cId) {
+            params = params.set("cId", cs.cId);
+        }
+
+        // GoBuffalo is being DUMB on the array parsing :(
+        // params.get("tags[]") just returns the first entry if there are multiple
+        if (cs.tags?.length > 0) {
+            /*
+            for (const tag of cs.tags) {
+               params = params.append('tags[]', tag); 
+            }
+            */
+           params = params.set('tags', JSON.stringify(cs.tags))
         }
         return this.http.get(ApiDef.contented.search, {
             params: params
