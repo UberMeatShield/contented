@@ -213,6 +213,7 @@ export class ContentedService {
         }
 
         // GoBuffalo is being DUMB on the array parsing :(
+        // params.get("tags[]") just returns the first entry if there are multiple
         if (cs.tags?.length > 0) {
             /*
             for (const tag of cs.tags) {
