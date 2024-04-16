@@ -307,7 +307,7 @@ func ContextToContentQuery(params pop.PaginationParams, cfg *utils.DirConfigEntr
 		// BAIL / reject
 		sReq.Tags = tags
 	} else {
-		log.Printf("FAILED OT PARSE TAGS %s", err)
+		log.Printf("Failed to parse query tags, ignoring %s", err)
 	}
 	//	log.Printf("TAGS TAGS TAGS TAGS TAGS TAGS TAGS TAGS %s", sReq.Tags)
 	tagStr := StringDefault(params.Get("tags"), "")
@@ -317,7 +317,7 @@ func ContextToContentQuery(params pop.PaginationParams, cfg *utils.DirConfigEntr
 	return sReq
 }
 
-// Hate
+// Should this check if it is single non-array thing and then make it an array?
 func GetTagsFromParam(val string) ([]string, error) {
 	tags := []string{}
 	if val != "" {
