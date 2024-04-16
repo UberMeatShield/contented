@@ -71,9 +71,7 @@ export class SearchCmp implements OnInit{
         this.changedSearch = _.debounce((evt: VSCodeChange) => {
             // Do not change this.searchText it will re-assign the VS-Code editor in a
             // bad way and muck with the cursor.
-            if (evt.value !== this.currentTextChange?.value) {
-                this.search(evt.value, 0, 50, evt.tags)
-            }
+            this.search(evt.value, 0, 50, evt.tags)
             this.currentTextChange = evt;
         }, 250);
 
@@ -82,12 +80,9 @@ export class SearchCmp implements OnInit{
                 // Note you do NOT want searchText to be updated by changes
                 // in this component except possibly a 'clear'
                 this.searchText = res['searchText'] || "";
-                this.changedSearch({value: this.searchText, tags: []});
             }
         });
         this.calculateDimensions();
-
-
         this.setupFilterEvts();
     }
 

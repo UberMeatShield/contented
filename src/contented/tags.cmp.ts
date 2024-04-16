@@ -70,7 +70,6 @@ export class TagsCmp implements OnInit{
     @ViewChild('searchForm', { static: true }) searchControl;
 
     @Input() editorValue: string = "";
-    @Input() loadTags = false;
     @Input() editorOptions;
 
     @Output() tagsChanged = new EventEmitter<VSCodeChange>;
@@ -92,14 +91,8 @@ export class TagsCmp implements OnInit{
     }
 
     public ngOnInit() {
-        if (this.loadTags) {
-            this.search('');
-        }
     }
 
-    // TODO: Get the current input token
-    // TODO: Suggest input tokens
-    // TODO: Provide the ability to select tokens and also remove a token from VSCode
     public search(searchText: string) {
         this._contentedService.getTags().subscribe({
             next: (res: any ) => {
