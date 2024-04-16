@@ -66,8 +66,10 @@ describe('Testing TagsCmp', () => {
         comp.loadTags = true;
         fixture.detectChanges();
 
-        const req = httpMock.expectOne(r => r.url.includes('/tags/'));
-        req.flush(MockData.tags());
+        const reqs = httpMock.match(r => r.url.includes('/tags/'));
+        for (const req of reqs) {
+            req.flush(MockData.tags());
+        }
         tick(1000);
 
         expect(comp.tags?.length).toBeGreaterThan(10);

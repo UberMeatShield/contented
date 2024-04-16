@@ -4,8 +4,9 @@
   <form class="search-form" [formGroup]="options" *ngIf="options">
 
     <div class="search-tags">
+      WHAT THE FUCK
       <tags-cmp
-       [loadTags]="true" 
+       [tags]="tags"
        [editorValue]="searchText"
        (tagsChanged)="changeSearch($event)"
       ></tags-cmp>

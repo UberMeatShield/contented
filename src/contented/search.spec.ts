@@ -70,6 +70,15 @@ describe('TestingSearchCmp', () => {
     });
 
     it('It can setup all eventing without exploding', fakeAsync(() => {
+        /*
+        comp.tags = [{
+            id: 'a',
+            tag_type: '',
+            isProblem: function (): boolean {
+                return false;
+            }
+        }];
+        */
         let st = "Cthulhu";
         router.navigate(["/ui/search/"], {queryParams: {searchText: st}}); 
         tick(100);
