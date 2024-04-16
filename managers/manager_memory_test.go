@@ -97,6 +97,7 @@ func (as *ActionSuite) Test_MemoryManagerPaginate() {
 	content_page_3, count, _ := man.ListContent(ContentQuery{ContainerID: cnt.ID.String(), Page: 3, PerPage: 4})
 	as.Equal(len(*content_page_3), 4, "It should respect page size and get the last page")
 	as.NotEqual((*content_page_3)[3].ID, (*content_page_1)[3].ID, "Ensure it actually paged")
+	as.Greater(count, 0, "We should still have a count")
 
 	// Last container pagination check
 	l_cnts, count, _ := man.ListContainers(ContainerQuery{Page: 4, PerPage: 1})

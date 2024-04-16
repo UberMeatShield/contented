@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"image"
+	"io"
 	"os"
 	"strings"
 
@@ -17,14 +18,13 @@ import (
 	"contented/models"
 	"crypto/sha256"
 	"encoding/hex"
-	"io"
-	"io/ioutil"
 	"log"
 	"mime"
 	"net/http"
 	"path/filepath"
 
 	"github.com/tidwall/gjson"
+	"golang.org/x/exp/maps"
 
 	"github.com/gobuffalo/nulls"
 	"github.com/gofrs/uuid"
@@ -47,7 +47,7 @@ func FindContainers(dir_root string) models.Containers {
 func FindContainersMatcher(dir_root string, incCnt ContainerMatcher, excCnt ContainerMatcher) models.Containers {
 	//log.Printf("FindContainers Reading from: %s", dir_root)
 	var listings = models.Containers{}
-	files, err := ioutil.ReadDir(dir_root)
+	files, err := os.ReadDir(dir_root)
 	if err != nil {
 		log.Printf("Could not read from the directory %s", dir_root)
 	}
@@ -86,14 +86,15 @@ func FindContentMatcher(cnt models.Container, limit int, start_offset int, yup C
 	var arr = models.Contents{}
 
 	fqDirPath := filepath.Join(cnt.Path, cnt.Name)
-	maybe_content, _ := ioutil.ReadDir(fqDirPath)
+	maybe_content, _ := os.ReadDir(fqDirPath)
 
 	// TODO: Move away from "img" into something else
 	total := 0
 	imgs := []os.FileInfo{} // To get indexing 'right' you have to exlcude directories
 	for _, img := range maybe_content {
 		if !img.IsDir() {
-			imgs = append(imgs, img)
+			info, _ := img.Info()
+			imgs = append(imgs, info)
 		}
 	}
 
@@ -310,13 +311,13 @@ func PathIsOk(path string, name string, ensureUnder string) (bool, error) {
 	dest := filepath.Join(path, name)
 
 	if strings.Contains(dest, up) || strings.Contains(dest, "~") {
-		return false, errors.New("Path includes possible up directory access, denied")
+		return false, errors.New("path includes possible up directory access, denied")
 	}
 
 	// Optional, ensure the path is under some configured root.
 	if ensureUnder != "" && path != ensureUnder {
 		ok, nope := SubPath(ensureUnder, path)
-		if ok == false || nope != nil {
+		if !ok || nope != nil {
 			return ok, nope
 		}
 	}
@@ -325,10 +326,10 @@ func PathIsOk(path string, name string, ensureUnder string) (bool, error) {
 	if err != nil {
 		return false, err // No access potentially
 	}
-	if f.IsDir() == true {
+	if f.IsDir() {
 		return true, nil
 	}
-	return false, errors.New(fmt.Sprintf("%s is not a directory under the path", name))
+	return false, fmt.Errorf("%s is not a directory under the path", name)
 }
 
 func ReadTagsFromFile(tagFile string) (*models.Tags, error) {
@@ -340,7 +341,9 @@ func ReadTagsFromFile(tagFile string) (*models.Tags, error) {
 	log.Printf("Processing Tags Attempting to read tags from %s", tagFile)
 	if _, err := os.Stat(tagFile); !os.IsNotExist(err) {
 		f, fErr := os.OpenFile(tagFile, os.O_RDONLY, os.ModePerm)
-		defer f.Close()
+		if fErr == nil {
+			defer f.Close()
+		}
 		if fErr != nil {
 			log.Printf("Processing Tags Error reading file %s", fErr)
 			return nil, fErr
@@ -372,4 +375,35 @@ func ReadTagsFromFile(tagFile string) (*models.Tags, error) {
 		log.Printf("No tagfile found at %s", tagFile)
 	}
 	return &tags, nil
+}
+
+func AssignTags(content models.Content, tags models.Tags) []string {
+	tagsMap := models.TagsMap{}
+	if content.Src != "" {
+		// Loop over the tags and check if the string contains the tag
+		for _, tag := range tags {
+			if TagMatches(content.Src, tag) {
+				tagsMap[tag.ID] = tag
+			}
+		}
+	}
+
+	// len of description could do it from a tag optimization
+	if content.Description != "" {
+		for _, tag := range tags {
+			if _, ok := tagsMap[tag.ID]; !ok {
+				if TagMatches(content.Description, tag) {
+					tagsMap[tag.ID] = tag
+				}
+			}
+		}
+	}
+	return maps.Keys(tagsMap)
+}
+
+// Really just here to add possible complexity to the tag matching?
+// To lower case?
+func TagMatches(val string, tag models.Tag) bool {
+	// Tag should maybe support case?
+	return strings.Contains(strings.ToLower(val), strings.ToLower(tag.ID))
 }

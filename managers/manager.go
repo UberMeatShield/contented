@@ -528,7 +528,7 @@ func CreateContentAfterEncoding(man ContentManager, originalContent *models.Cont
 		log.Printf("Created a new content element after encoding %s", newContent)
 		return &newContent, nil
 	}
-	return nil, errors.New(fmt.Sprintf("The %s file did not exist", newFile))
+	return nil, fmt.Errorf("%s file did not exist", newFile)
 }
 
 func TakeContentTask(man ContentManager, id uuid.UUID, operation string) (*models.TaskRequest, *models.Content, error) {
@@ -563,7 +563,7 @@ func ChangeTaskState(man ContentManager, task *models.TaskRequest, newStatus mod
 	log.Printf("Changing Task State %s to %s", task, newStatus)
 	status := task.Status.Copy()
 	if status == newStatus {
-		return nil, errors.New(fmt.Sprintf("Task %s Already in state %s", task, newStatus))
+		return nil, fmt.Errorf("task %s already in state %s", task, newStatus)
 	}
 	if newStatus == models.TaskStatus.IN_PROGRESS {
 		task.StartedAt = time.Now().UTC()
@@ -574,11 +574,11 @@ func ChangeTaskState(man ContentManager, task *models.TaskRequest, newStatus mod
 }
 
 func FailTask(man ContentManager, task *models.TaskRequest, errMsg string) (*models.TaskRequest, error) {
-	log.Printf(errMsg)
+	log.Print(errMsg)
 
 	status := task.Status.Copy()
 	if status == models.TaskStatus.ERROR {
-		return nil, errors.New(fmt.Sprintf("Task %s Already in state %s", task, models.TaskStatus.ERROR))
+		return nil, fmt.Errorf("task %s already in state %s", task, models.TaskStatus.ERROR)
 	}
 	task.Status = models.TaskStatus.ERROR
 	task.ErrMsg = strings.ReplaceAll(errMsg, man.GetCfg().Dir, "")
