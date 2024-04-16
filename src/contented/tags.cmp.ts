@@ -70,11 +70,13 @@ export class TagsCmp implements OnInit{
     @ViewChild('searchForm', { static: true }) searchControl;
 
     @Input() editorValue: string = "";
-    @Input() tags: Array<Tag>;
     @Input() loadTags = false;
     @Input() editorOptions;
 
     @Output() tagsChanged = new EventEmitter<VSCodeChange>;
+
+    // I don't think I need to load the tags, the monaco editor should get them.
+    @Input() tags: Array<Tag>;
 
     matchedTags: Array<Tag>;
 
