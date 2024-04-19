@@ -13,7 +13,7 @@ import { Router } from '@angular/router';
 
 import {SearchCmp} from '../contented/search.cmp';
 import {ContentedService} from '../contented/contented_service';
-import {ContentedModule} from '../contented/contented_module';
+import {ContentedModule, WaitForMonacoLoad} from '../contented/contented_module';
 import {Container} from '../contented/container';
 import {ApiDef} from '../contented/api_def';
 
@@ -70,22 +70,30 @@ describe('TestingSearchCmp', () => {
     });
 
     it('It can setup all eventing without exploding', fakeAsync(() => {
+        comp.tags = [{
+            id: 'a',
+            tag_type: '',
+            isProblem: function (): boolean {
+                return false;
+            }
+        }];
         let st = "Cthulhu";
         router.navigate(["/ui/search/"], {queryParams: {searchText: st}}); 
-        tick(100);
-        fixture.detectChanges();
-        const tagReq = httpMock.expectOne(r => r.url.includes(ApiDef.contented.tags));
-        tagReq.flush(MockData.tags());
         tick(1000);
-
-        tick(100);
+        fixture.detectChanges();
+        tick(3000);
         expect(comp.searchText).withContext("It should default via route params").toBe(st);
+        fixture.detectChanges();
+
+        // TODO: Configure the language...
 
         let req = httpMock.expectOne(req => req.url === ApiDef.contented.search);
         let sr = MockData.getSearch()
         expect(sr.results.length).withContext("We need some search results.").toBeGreaterThan(0);
         req.flush(sr);
+        tick(1000);
         fixture.detectChanges();
+
         expect($('.search-result').length).withContext("It should render dom results").toEqual(sr.results.length);
         tick(10000);
     }));

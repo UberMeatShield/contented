@@ -2,6 +2,7 @@ import {Subscription} from 'rxjs';
 import {finalize, debounceTime, distinctUntilChanged} from 'rxjs/operators';
 
 import {
+    Input,
     OnInit,
     AfterViewInit,
     Component,
@@ -10,7 +11,7 @@ import {
     Inject
 } from '@angular/core';
 import {ContentedService, ContentSearchSchema} from './contented_service';
-import {Content, VSCodeChange} from './content';
+import {Content, Tag, VSCodeChange} from './content';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 import {FormBuilder, FormGroup, FormControl} from '@angular/forms';
 
@@ -21,7 +22,7 @@ import * as _ from 'lodash';
 
 
 @Component({
-    selector: 'earcearch-cmp',
+    selector: 'search-cmp',
     templateUrl: './search.ng.html'
 })
 export class SearchCmp implements OnInit{
@@ -30,6 +31,8 @@ export class SearchCmp implements OnInit{
     // Take in the search text route param
     // Debounce the search
     @ViewChild('videoForm', { static: true }) searchControl;
+    @Input() tags: Array<Tag>;
+
     throttleSearch: Subscription;
     options: FormGroup;
     fb: FormBuilder;
@@ -63,6 +66,15 @@ export class SearchCmp implements OnInit{
     }
 
     public ngOnInit() {
+        // We don't want to call search ever keypress and changeSearch is being called
+        // by an event emitter with a different debounce & distinct timing.
+        this.changedSearch = _.debounce((evt: VSCodeChange) => {
+            // Do not change this.searchText it will re-assign the VS-Code editor in a
+            // bad way and muck with the cursor.
+            this.search(evt.value, 0, 50, evt.tags)
+            this.currentTextChange = evt;
+        }, 250);
+
         this.route.queryParams.pipe().subscribe({
             next: (res: ParamMap) => {
                 // Note you do NOT want searchText to be updated by changes
@@ -71,18 +83,6 @@ export class SearchCmp implements OnInit{
             }
         });
         this.calculateDimensions();
-
-        // We don't want to call search ever keypress and changeSearch is being called
-        // by an event emitter with a different debounce & distinct timing.
-        this.changedSearch = _.debounce((evt: VSCodeChange) => {
-            // Do not change this.searchText it will re-assign the VS-Code editor in a
-            // bad way and muck with the cursor.
-            if (evt.value !== this.currentTextChange.value) {
-                this.search(evt.value, 0, 50, evt.tags)
-            }
-            this.currentTextChange = evt;
-        }, 500);
-
         this.setupFilterEvts();
     }
 

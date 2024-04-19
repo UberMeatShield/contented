@@ -27,6 +27,7 @@ export class Tag {
 export interface VSCodeChange {
     value: string;
     tags: Array<string>;
+    force?: boolean;
 }
 
 

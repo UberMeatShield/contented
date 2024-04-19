@@ -18,9 +18,9 @@ import z from 'zod';
 
 
 export const ContentSearchSchema = z.object({
-    cId: z.string().optional(), // Container Id
+    cId: z.string().optional().nullable(), // Container Id
     text: z.string().optional(),
-    offset: z.number().default(0),
+    offset: z.number().optional().default(0),
     limit: z.number().optional(),
     contentType: z.string().optional(),
     tags: z.string().array().optional(),

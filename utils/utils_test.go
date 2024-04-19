@@ -8,15 +8,21 @@ import (
 	"github.com/gobuffalo/envy"
 )
 
-// Possibly make this some sort of global test helper function (harder to do in GoLang?)
+// Test common has these but we cannot circle import
+var dirs = []string{"dir1", "dir2", "dir3", "screens", "test_encoding", "empty"}
+
 func TestFindContainers(t *testing.T) {
 	var testDir, _ = envy.MustGet("DIR")
+
 	containers := FindContainers(testDir)
-	if len(containers) != 5 {
-		t.Fatal("There should be 5 containers in the mock")
+	if len(containers) != len(dirs) {
+		t.Fatalf("There should be %d containers in the mock found %d", len(dirs), len(containers))
+	}
+	var known_dirs = map[string]bool{}
+	for _, dir := range dirs {
+		known_dirs[dir] = true
 	}
 
-	var known_dirs = map[string]bool{"dir1": true, "dir2": true, "dir3": true, "screens": true, "test_encoding": true}
 	count := 0
 	for _, c := range containers {
 		if _, ok := known_dirs[c.Name]; ok {
@@ -25,7 +31,7 @@ func TestFindContainers(t *testing.T) {
 			t.Errorf("Failed to get a lookup for this dir %s", c.Name)
 		}
 	}
-	if count != 5 {
+	if count != len(dirs) {
 		t.Errorf("Failed to pull in the known / expected directories %d", count)
 	}
 }
@@ -37,7 +43,7 @@ func Test_FindContent(t *testing.T) {
 	containers := FindContainers(testDir)
 	for _, c := range containers {
 		content := FindContent(c, 42, 0)
-		if len(content) == 0 {
+		if c.Name != "empty" && len(content) == 0 {
 			t.Errorf("Failed to lookup content in container %s", c.Name)
 		}
 	}
@@ -54,11 +60,11 @@ func Test_SetupContainerMatchers(t *testing.T) {
 		t.Errorf("We should only have matched two directories")
 	}
 	all_containers := FindContainersMatcher(testDir, IncludeAllContainers, cfg.ExcContainer)
-	if len(all_containers) != 5 {
+	if len(all_containers) != len(dirs) {
 		t.Errorf("We should have excluded the .DS_Store")
 	}
 	exclude_none := FindContainersMatcher(testDir, IncludeAllContainers, ExcludeNoContainers)
-	if len(exclude_none) != 6 { // Prove we excluded some containers
+	if len(exclude_none) != len(dirs)+1 { // Prove we excluded some containers
 		t.Errorf("The DS_Store exists, if nothing is excluded then it should count")
 	}
 }

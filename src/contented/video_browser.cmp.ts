@@ -228,13 +228,24 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
 
 
     // TODO: Add in optional filter params like the container (filter by container in search?)
-    public search(text: string, offset: number = 0, limit: number = 50, cntId: string = null) {
+    public search(text: string = '', offset: number = 0, limit: number = 50, cntId: string = null) {
         console.log("Get the information from the input and search on it", text, offset, limit, cntId); 
 
         this.selectedContent = null;
         this.content = [];
         this.loading = true;
-        const cs = ContentSearchSchema.parse({text, offset, limit, contentType: "video", cId: cntId})
+
+        const tags = [];
+        const cs = ContentSearchSchema.parse({
+            text,
+            cId: cntId,
+            offset,
+            limit,
+            contentType: "video",
+            tags,
+        });
+
+
         this._contentedService.searchContent(cs).pipe(
             finalize(() => this.loading = false)
         ).subscribe({

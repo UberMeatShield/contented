@@ -76,7 +76,7 @@ describe('TestingVideoBrowserCmp', () => {
         fixture.detectChanges();
         let vals = comp.getValues();
         tick(100);
-        expect(vals['videoText']).toBe(st, "It should default via route params");
+        expect(vals['videoText']).withContext("It should default via route params").toBe(st);
 
         MockData.handleContainerLoad(httpMock);
         let req = httpMock.expectOne(req => req.url === ApiDef.contented.search);
