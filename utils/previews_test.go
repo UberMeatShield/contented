@@ -52,7 +52,7 @@ func WriteScreenFile(dstPath string, fileName string, count int) (string, error)
 func Test_ImageMetaLookup(t *testing.T) {
 	var testDir, _ = envy.MustGet("DIR")
 	srcDir := filepath.Join(testDir, "dir2")
-	testFile := "fff&text=00-dir2.png"
+	testFile := "typescript_nginx_ci_dir2.png"
 
 	srcFile := filepath.Join(srcDir, testFile)
 	meta, corrupt := GetImageMeta(srcFile)
