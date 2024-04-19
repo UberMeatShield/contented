@@ -236,11 +236,13 @@ func ActionsTagSearchValidation(as *ActionSuite) {
 	as.Equal(http.StatusCreated, bRes.Code)
 
 	params := url.Values{}
-	params.Add("tags", "Zug")
+
+	tagParam, _ := json.Marshal([]string{"Zug"})
+	params.Add("tags", string(tagParam))
 	res := as.JSON("/search?%s", params.Encode()).Get()
 	as.Equal(http.StatusOK, res.Code, fmt.Sprintf("Search failed %s", res.Body.String()))
 
 	validate := SearchResult{}
 	json.NewDecoder(res.Body).Decode(&validate)
-	as.Equal(1, len(*validate.Results), fmt.Sprintf("Searching tags return content"))
+	as.Equal(1, len(*validate.Results), "Searching tags return content")
 }
