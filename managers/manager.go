@@ -309,11 +309,6 @@ func ContextToContentQuery(params pop.PaginationParams, cfg *utils.DirConfigEntr
 	} else {
 		log.Printf("Failed to parse query tags, ignoring %s", err)
 	}
-	//	log.Printf("TAGS TAGS TAGS TAGS TAGS TAGS TAGS TAGS %s", sReq.Tags)
-	tagStr := StringDefault(params.Get("tags"), "")
-	if tagStr != "" {
-		sReq.Tags = strings.Split(tagStr, ",")
-	}
 	return sReq
 }
 

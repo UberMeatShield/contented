@@ -136,6 +136,7 @@ var _ = grift.Namespace("db", func() {
 		}
 	})
 
+    // Adds a tag task but this does not tag the content itself
 	grift.Add("tags", func(c *grift.Context) error {
 		cfg := utils.GetCfg()
 		utils.InitConfigEnvy(cfg)

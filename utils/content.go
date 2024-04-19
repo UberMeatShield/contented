@@ -297,7 +297,7 @@ func SubPath(parent string, sub string) (bool, error) {
 func HasContent(src string, path string) (bool, error) {
 	up := ".." + string(os.PathSeparator)
 	if strings.Contains(src, up) || strings.Contains(src, "~") {
-		return false, errors.New("Filename includes possible up directory access, denied")
+		return false, errors.New("filename includes possible up directory access, denied")
 	}
 	_, err := GetFilePathInContainer(src, path)
 	if err != nil {
@@ -377,7 +377,24 @@ func ReadTagsFromFile(tagFile string) (*models.Tags, error) {
 	return &tags, nil
 }
 
-func AssignTags(content models.Content, tags models.Tags) []string {
+/**
+ * Assign tags to content as we go.
+ */
+func AssignTagsToContent(contentMap models.ContentMap, tagMap models.TagsMap) models.ContentMap {
+	contents := maps.Values(contentMap)
+	tags := maps.Values(tagMap)
+	for _, content := range contents {
+		matchedTags := AssignTags(content, tags)
+		content.Tags = maps.Values(matchedTags)
+		contentMap[content.ID] = content
+	}
+	return contentMap
+}
+
+/**
+ * Try and assign some tag content
+ */
+func AssignTags(content models.Content, tags models.Tags) models.TagsMap {
 	tagsMap := models.TagsMap{}
 	if content.Src != "" {
 		// Loop over the tags and check if the string contains the tag
@@ -398,12 +415,14 @@ func AssignTags(content models.Content, tags models.Tags) []string {
 			}
 		}
 	}
-	return maps.Keys(tagsMap)
+	// Do we want the keys or the values of these elements?
+	return tagsMap
 }
 
 // Really just here to add possible complexity to the tag matching?
 // To lower case?
 func TagMatches(val string, tag models.Tag) bool {
 	// Tag should maybe support case?
+	// Case on tags should maybe be a config setting (ANOTHER ONE??!?!)
 	return strings.Contains(strings.ToLower(val), strings.ToLower(tag.ID))
 }

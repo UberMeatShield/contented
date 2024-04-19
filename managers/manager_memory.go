@@ -56,14 +56,15 @@ func (cm ContentManagerMemory) GetCfg() *utils.DirConfigEntry {
 
 // On a first time load / use we will pull back content information from dist and from
 // then on continue to use already loaded information.
-func (cm *ContentManagerMemory) Initialize() {
+func (cm *ContentManagerMemory) Initialize() *utils.MemoryStorage {
 
 	// mem_storage.go
 	memStorage := cm.GetStore()
-	if memStorage.Initialized == false {
+	if !memStorage.Initialized {
 		// Might need to instead throw if it is not initialized
 		memStorage = utils.InitializeMemory(cm.cfg.Dir)
 	}
+	return memStorage
 }
 
 func (cm ContentManagerMemory) GetStore() *utils.MemoryStorage {
@@ -109,6 +110,7 @@ func (cm ContentManagerMemory) SearchContent(sr ContentQuery) (*models.Contents,
 	}
 
 	if len(sr.Tags) > 0 {
+		log.Printf("Searching using tags query %s", sr.Tags)
 		filteredContent = cm.tagSearch(filteredContent, sr.Tags)
 	}
 
@@ -134,10 +136,15 @@ func (cm ContentManagerMemory) tagSearch(contents *models.Contents, tags []strin
 
 	// Hmmm, unsafe in some ways because the data may not be loaded so know that this works for memory
 	// manager because the tags are associated by the API / testing.
-	for _, content := range *contents {
-		for _, tag := range tags {
-			if content.HasTag(tag) {
-				filteredContents = append(filteredContents, content)
+	if contents != nil {
+		cArr := *contents
+		var content models.Content
+		for _, el := range cArr {
+			content = el
+			for _, tag := range tags {
+				if content.HasTag(tag) {
+					filteredContents = append(filteredContents, content)
+				}
 			}
 		}
 	}
@@ -205,10 +212,10 @@ func (cm ContentManagerMemory) getContentFiltered(cs ContentQuery) (*models.Cont
 		mcArr = contentArr
 	}
 
-	if cs.IncludeHidden == false {
+	if !cs.IncludeHidden {
 		visibleArr := models.Contents{}
 		for _, mc := range mcArr {
-			if mc.Hidden != true {
+			if !mc.Hidden {
 				visibleArr = append(visibleArr, mc)
 			}
 		}

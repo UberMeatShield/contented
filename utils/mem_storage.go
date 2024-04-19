@@ -43,10 +43,16 @@ func InitializeMemory(dirRoot string) *MemoryStorage {
 		return &memStorage
 	}
 	memStorage.Loading = true
-	containers, files, screens, tags := PopulateMemoryView(dirRoot)
+	containers, contents, screens, tags := PopulateMemoryView(dirRoot)
+
+	// Should I tag the container?
+	if contents != nil && tags != nil {
+		log.Printf("Attempting to assign tags to content")
+		contents = AssignTagsToContent(contents, tags)
+	}
 
 	memStorage.ValidContainers = containers
-	memStorage.ValidContent = files
+	memStorage.ValidContent = contents
 	memStorage.ValidScreens = screens
 	memStorage.ValidTags = tags
 	memStorage.ValidTasks = models.TaskRequests{}
@@ -221,7 +227,6 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.ContentMap
 		containers[c.ID] = c
 	}
 
-	// log.Printf("LOADING TAGS %s", cfg.TagFile)
 	// Only will work if TAG_FILE is actually set to something
 	tags, tErr := ReadTagsFromFile(cfg.TagFile)
 	tagsMap := models.TagsMap{}

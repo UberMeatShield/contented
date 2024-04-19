@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"contented/models"
 	"path/filepath"
 	"testing"
 	"time"
@@ -153,6 +154,7 @@ func TestCreateStructure(t *testing.T) {
 	}
 	if tree == nil {
 		t.Errorf("Container tree was set to nil")
+		return
 	}
 	lenTree := len(*tree)
 	TOTAL_CONTAINERS := 9
@@ -163,6 +165,9 @@ func TestCreateStructure(t *testing.T) {
 	cfg.MaxSearchDepth = 0
 	restricted := ContentTree{}
 	restrictTree, err := CreateStructure(testDir, cfg, &restricted, 0)
+	if err != nil {
+		t.Errorf("Failed to create structure %s", err)
+	}
 	lenRestricted := len(*restrictTree)
 	if lenRestricted != 6 {
 		t.Errorf("We should have restricted it to top level 6 vs %d", lenRestricted)
@@ -288,11 +293,8 @@ func Test_TagFileRead(t *testing.T) {
 	if err != nil {
 		t.Errorf("It should not have an issue reading the tag file %s", err)
 	}
-	if tags == nil {
-		t.Errorf("No tags were found %s", err)
-	}
-	if len(*tags) < 5 {
-		t.Errorf("There were not enough tags found")
+	if tags == nil || len(*tags) < 5 {
+		t.Errorf("No tags or not enough were found %s", err)
 	}
 
 	actorCount := 0
@@ -322,5 +324,55 @@ func Test_TagFileRead(t *testing.T) {
 	if keywordExpect != keywordCount {
 		t.Errorf("keywords count should be %d but was %d", keywordExpect, keywordCount)
 	}
+}
 
+func Test_AssignTagContent(t *testing.T) {
+	var testDir, _ = envy.MustGet("DIR")
+
+	cfg := GetCfg()
+	cfg.Dir = testDir
+	cfg.MaxSearchDepth = 1
+	cfg.Dir = testDir
+	SetupContainerMatchers(cfg, "dir2", "DS_Store")
+	SetupContentMatchers(cfg, "", "", "DS_Store", "")
+
+	tagFile := filepath.Join(testDir, "dir2", "tags.txt")
+	tags, err := ReadTagsFromFile(tagFile)
+	if err != nil {
+		t.Errorf("It should not have an issue reading the tag file %s", err)
+	}
+
+	// Just find dir2
+	containers := FindContainersMatcher(testDir, cfg.IncContainer, cfg.ExcContainer)
+	if len(containers) != 1 {
+		t.Errorf("Found the wrong number of containers %s", containers)
+	}
+
+	var contents models.Contents
+	for _, c := range containers {
+		if c.Name == "dir2" {
+			contents = FindContentMatcher(c, 42, 0, cfg.IncContent, cfg.ExcContent)
+			for _, content := range contents {
+				matched := AssignTags(content, *tags)
+
+				// The tags themselves do not have any matches
+				if content.Src != "tags.txt" && len(matched) == 0 {
+					t.Errorf("Did not properly tag %s", content.Src)
+				}
+				if content.Src == "typescript_nginx_ci_dir2.png" && len(matched) != 3 {
+					t.Errorf("%s Invalid number of matched tags %s", content.Src, matched)
+				}
+
+				// Potentially a tag block should have a setting on case insensitive or not (ie: Go)
+				// Matches Javascript and javascript tags because we compare with no case (for now)
+				if content.Src == "aws_javascript_text_dir2.png" && len(matched) != 4 {
+					t.Errorf("%s Invalid number of matched tags %s", content.Src, matched)
+				}
+			}
+			break
+		}
+	}
+	if len(contents) == 0 {
+		t.Errorf("No content was found in dir2 %s", containers)
+	}
 }
