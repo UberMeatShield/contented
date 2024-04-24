@@ -378,17 +378,20 @@ func ReadTagsFromFile(tagFile string) (*models.Tags, error) {
 }
 
 /**
- * Assign tags to content as we go.
+ * Return the content with newly associated tags.
  */
 func AssignTagsToContent(contentMap models.ContentMap, tagMap models.TagsMap) models.ContentMap {
 	contents := maps.Values(contentMap)
 	tags := maps.Values(tagMap)
+	updatedContent := models.ContentMap{}
 	for _, content := range contents {
 		matchedTags := AssignTags(content, tags)
-		content.Tags = maps.Values(matchedTags)
-		contentMap[content.ID] = content
+		if len(matchedTags) > 0 {
+			content.Tags = maps.Values(matchedTags)
+			updatedContent[content.ID] = content
+		}
 	}
-	return contentMap
+	return updatedContent
 }
 
 /**

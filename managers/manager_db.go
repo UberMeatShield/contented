@@ -142,6 +142,22 @@ func (cm ContentManagerDB) UpdateContent(content *models.Content) error {
 	return nil
 }
 
+/**
+ * TODO: Make this a batch update using the Go DB layer (should work maybe?)
+ */
+func (cm ContentManagerDB) UpdateContents(contents models.Contents) error {
+	if contents == nil {
+		return nil
+	}
+	for _, content := range contents {
+		err := cm.UpdateContent(&content)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (cm ContentManagerDB) UpdateScreen(s *models.Screen) error {
 	tx := cm.GetConnection()
 	return tx.Update(s)
