@@ -148,6 +148,37 @@ func (as *ActionSuite) Test_ManagerTagsDB() {
 	as.Equal(len(*tags), 2, "We should have two tags")
 }
 
+func (as *ActionSuite) Test_ManagerTagsAssignment() {
+	models.DB.TruncateAll()
+	cfg := test_common.InitFakeApp(true)
+	man := GetManagerActionSuite(cfg, as)
+
+	// TODO: Break up between DB and memory (check that it can ignore tags maybe)
+	as.NoError(man.CreateTag(&models.Tag{ID: "aws"}), "couldn't create tag aws")
+	as.NoError(man.CreateTag(&models.Tag{ID: "donut"}), "couldn't create tag donut")
+
+	cnt, content := test_common.GetContentByDirName("dir2")
+	as.Greater(len(content), 0, "There should be content")
+	c_err := models.DB.Create(cnt)
+	as.NoError(c_err)
+	for _, mc := range content {
+		models.DB.Create(&mc)
+	}
+
+	tags, total, err := man.ListAllTags(TagQuery{})
+	as.NoError(err)
+	as.Equal(total, 2, fmt.Sprintf("And only two tags %s", tags))
+	as.Greater(len(*tags), 0, "We should have tags")
+	assignmentErr := AssignTagsAndUpdate(man, *tags)
+	as.NoError(assignmentErr, fmt.Sprintf("Error %s", assignmentErr))
+
+	cq := ContentQuery{Tags: []string{"aws", "donut"}}
+	contentsMatching, total, err := man.SearchContent(cq)
+	as.NoError(err)
+	as.Equal(len(*contentsMatching), 2, fmt.Sprintf("Found content but not the right amount %s", contentsMatching))
+	as.Equal(total, 2)
+}
+
 func (as *ActionSuite) Test_ManagerTagsDB_CRUD() {
 	models.DB.TruncateAll()
 	cfg := test_common.InitFakeApp(true)

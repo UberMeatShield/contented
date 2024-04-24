@@ -321,7 +321,7 @@ func (cm ContentManagerMemory) GetContent(mcID uuid.UUID) (*models.Content, erro
 	if mc, ok := mem.ValidContent[mcID]; ok {
 		return &mc, nil
 	}
-	return nil, errors.New("Content was not found in memory")
+	return nil, errors.New("content was not found in memory")
 }
 
 // If you already updated the container in memory you are done
