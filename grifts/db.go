@@ -136,7 +136,7 @@ var _ = grift.Namespace("db", func() {
 		}
 	})
 
-    // Adds a tag task but this does not tag the content itself
+	// Adds a tag task but this does not tag the content itself
 	grift.Add("tags", func(c *grift.Context) error {
 		cfg := utils.GetCfg()
 		utils.InitConfigEnvy(cfg)
@@ -154,6 +154,10 @@ var _ = grift.Namespace("db", func() {
 				tags, err := managers.CreateTagsFromFile(man)
 				if tags != nil {
 					fmt.Printf("Created a set of tags %d", len(*tags))
+				}
+				tErr := managers.AssignTagsAndUpdate(man, *tags)
+				if tErr != nil {
+					fmt.Printf("Failed to assign tags %s", tErr)
 				}
 				return err
 			})

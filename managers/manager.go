@@ -29,6 +29,7 @@ import (
 	"github.com/gobuffalo/nulls"
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
+	"golang.org/x/exp/maps"
 )
 
 type GetConnType func() *pop.Connection
@@ -121,6 +122,7 @@ type ContentManager interface {
 	SearchContainers(cs ContainerQuery) (*models.Containers, int, error)
 
 	UpdateContent(content *models.Content) error
+	UpdateContents(content models.Contents) error
 	DestroyContent(id string) (*models.Content, error)
 	CreateContent(mc *models.Content) error
 	GetPreviewForMC(mc *models.Content) (string, error)
@@ -578,4 +580,52 @@ func FailTask(man ContentManager, task *models.TaskRequest, errMsg string) (*mod
 	task.Status = models.TaskStatus.ERROR
 	task.ErrMsg = strings.ReplaceAll(errMsg, man.GetCfg().Dir, "")
 	return man.UpdateTask(task, status)
+}
+
+/**
+ * Do it ugly.  TODO: Make it less ugly.
+ */
+func AssignTagsAndUpdate(man ContentManager, tags models.Tags) error {
+	cfg := man.GetCfg()
+	cs := ContentQuery{PerPage: 0}
+	_, total, err := man.SearchContent(cs)
+	if err != nil {
+		return err
+	}
+
+	tagMap := models.TagsMap{}
+	for _, tag := range tags {
+		tagMap[tag.ID] = tag
+	}
+
+	// Do a loop if total > limit
+	offset := 0
+	page := 0
+	for offset < total {
+		offset += cfg.Limit
+		page += 1
+		cs.Page = page
+		cs.PerPage = cfg.Limit
+		contents, _, pageErr := man.SearchContent(cs)
+		if pageErr != nil {
+			log.Printf("Failed to page over content %s", pageErr)
+			return pageErr
+		}
+
+		if contents != nil {
+			contentMap := models.ContentMap{}
+			for _, content := range *contents {
+				contentMap[content.ID] = content
+			}
+			updatedMap := utils.AssignTagsToContent(contentMap, tagMap)
+
+			// Ugly but at least allows for a batch update statement
+			updatedContent := maps.Values(updatedMap)
+			upErr := man.UpdateContents(updatedContent)
+			if upErr != nil {
+				return upErr
+			}
+		}
+	}
+	return nil
 }

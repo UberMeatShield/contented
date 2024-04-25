@@ -321,7 +321,7 @@ func (cm ContentManagerMemory) GetContent(mcID uuid.UUID) (*models.Content, erro
 	if mc, ok := mem.ValidContent[mcID]; ok {
 		return &mc, nil
 	}
-	return nil, errors.New("Content was not found in memory")
+	return nil, errors.New("content was not found in memory")
 }
 
 // If you already updated the container in memory you are done
@@ -329,7 +329,7 @@ func (cm ContentManagerMemory) UpdateContainer(cnt *models.Container) (*models.C
 	// TODO: Validate that this updates the actual reference in mem storage
 	cfg := cm.GetCfg()
 	pathOk, err := utils.PathIsOk(cnt.Path, cnt.Name, cfg.Dir)
-	if err != nil || pathOk == false {
+	if err != nil || !pathOk {
 		log.Printf("Path does not exist on disk under the config directory err %s", err)
 		return nil, err
 	}
@@ -340,22 +340,35 @@ func (cm ContentManagerMemory) UpdateContainer(cnt *models.Container) (*models.C
 // No updates should be allowed for memory management.
 func (cm ContentManagerMemory) UpdateContent(content *models.Content) error {
 	// TODO: Should I be able to ignore being in a container if there is no file?
-	if content.NoFile == false {
+	if !content.NoFile {
 		cnt, cErr := cm.GetContainer(content.ContainerID.UUID)
 		if cErr != nil {
-			msg := fmt.Sprintf("Parent container %s not found", content.ContainerID.UUID.String())
-			log.Printf(msg)
+			msg := fmt.Sprintf("parent container %s not found", content.ContainerID.UUID.String())
+			log.Print(msg)
 			return errors.New(msg)
 		}
 		// Check if file exists or allow content to be 'empty'?
 		exists, pErr := utils.HasContent(content.Src, cnt.GetFqPath())
-		if exists == false || pErr != nil {
+		if !exists || pErr != nil {
 			log.Printf("Content not in container %s", pErr)
-			return errors.New(fmt.Sprintf("Invalid content src %s for container %s", content.Src, cnt.Name))
+			return fmt.Errorf("invalid content src %s for container %s", content.Src, cnt.Name)
 		}
 	}
 	_, err := cm.GetStore().UpdateContent(content)
 	return err
+}
+
+func (cm ContentManagerMemory) UpdateContents(contents models.Contents) error {
+	if contents == nil {
+		return nil
+	}
+	for _, content := range contents {
+		err := cm.UpdateContent(&content)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Could use some extra validation (ensure there is content for the screen?)
