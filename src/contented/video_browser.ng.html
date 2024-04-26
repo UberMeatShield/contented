@@ -17,10 +17,10 @@
         </mat-form-field>
       -->
 
-        <div class="search-tags">
+        <div class="search-tags" *ngIf="this.options">
           <tags-cmp
            [tags]="tags"
-           [editorValue]="videoText"
+           [editorValue]="searchText"
            (tagsChanged)="changedSearch($event)"
           ></tags-cmp>
         </div>

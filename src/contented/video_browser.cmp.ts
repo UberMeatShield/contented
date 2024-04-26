@@ -33,7 +33,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     @Input() tags: Array<Tag>;
     throttleSearch: Subscription;
 
-    videoText: string; // Initial value
+    searchText: string; // Initial value
     searchType = new FormControl("text");
     currentTextChange: VSCodeChange = {value: "", tags: []};
     changedSearch: (evt: VSCodeChange) => void;
@@ -64,7 +64,6 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     }
 
     public ngOnInit() {
-        this.resetForm();
 
         this.changedSearch = _.debounce((evt: VSCodeChange) => {
             // Do not change this.searchText it will re-assign the VS-Code editor in a
@@ -74,17 +73,17 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
         }, 250);
 
         // This should also preserve the current page we have selected and restore it.
+        this.resetForm();
+        this.setupEvtListener();
         this.route.queryParams.pipe().subscribe({
             next: (res: ParamMap) => {
-                this.videoText = res['searchText'] || "";
+                this.searchText = res['searchText'] || "";
 
                 // Add in a param for container_id ?
-                this.search(this.videoText, this.offset, this.pageSize, this.getCntId()); 
-                this.setupFilterEvts();
+                this.search(this.searchText, this.offset, this.pageSize, this.getCntId()); 
                 this.loadContainers();
             }
         });
-        this.setupEvtListener();
     }
 
     ngOnDestroy() {
@@ -193,7 +192,8 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
 
     public resetForm(setupFilterEvents: boolean = false) {
         this.options = this.fb.group({
-            videoText: this.videoText,
+            // searchText: this.searchText,
+            searchType: this.searchType,
         });
         if (setupFilterEvents) {
             this.setupFilterEvts();
@@ -207,15 +207,21 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
         }
         this.throttleSearch = this.options.valueChanges
           .pipe(
-            debounceTime(500),
+            debounceTime(250),
             distinctUntilChanged()
             // Prevent bubble on keypress
           )
           .subscribe({
               next: formData => {
-                  console.log("Form data changing");
-                  // If the text changes do we reset the search offset etc.
-                  this.search(formData['videoText'] || '', 0, this.pageSize, this.getCntId());
+                console.log("Form data changing");
+                // If the text changes do we reset the search offset etc.
+                this.search(
+                  this.currentTextChange.value,
+                  0,
+                  this.pageSize,
+                  this.getCntId(),
+                  this.currentTextChange.tags
+                );
               },
               error: error => {
                 GlobalBroadcast.error('Failed to search', error);

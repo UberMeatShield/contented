@@ -56,8 +56,18 @@ describe('TestingVideoBrowserCmp', () => {
 
         de = fixture.debugElement.query(By.css('.video-browser-cmp'));
         el = de.nativeElement;
-        router = TestBed.get(Router);
+        router = TestBed.inject(Router);
         router.initialNavigation();
+
+        // Annoying hack
+        comp.tags = [{
+            id: 'a',
+            tag_type: '',
+            isProblem: function (): boolean {
+                return false;
+            }
+        }];
+
     }));
 
     afterEach(() => {
@@ -65,28 +75,32 @@ describe('TestingVideoBrowserCmp', () => {
     });
 
     it('Should create a contented component', () => {
-        expect(comp).toBeDefined("We should have the Contented comp");
-        expect(el).toBeDefined("We should have a top level element");
+        expect(comp).withContext("We should have the VideoBrowser comp").toBeDefined();
+        expect(el).withContext("We should have a top level element").toBeDefined();
     });
 
     it('It can setup all eventing without exploding', fakeAsync(() => {
         let st = "Cthulhu";
-        router.navigate(["/ui/video/"], {queryParams: {videoText: st}}); 
-        tick(100);
+        router.navigate(["/ui/video/"], {queryParams: {searchText: st}}); 
+        tick(1000);
         fixture.detectChanges();
-        let vals = comp.getValues();
-        tick(100);
-        expect(vals['videoText']).withContext("It should default via route params").toBe(st);
+        tick(1000);
+        expect(comp.searchText).toEqual(st);
+        const values = comp.getValues();
+        expect(values['searchType']).toBe('text');
+        fixture.detectChanges();
+        tick(1000);
 
         MockData.handleContainerLoad(httpMock);
-        let req = httpMock.expectOne(req => req.url === ApiDef.contented.search);
+        let req = httpMock.expectOne(req => req.url === ApiDef.contented.search, "Failed to find search");
         let sr = MockData.getVideos()
 
         expect(sr.results.length).withContext("We need some search results.").toBeGreaterThan(0);
         req.flush(sr);
         fixture.detectChanges();
         expect($('.video-view-card').length).toEqual(sr.results.length);
-        tick(100);
+        tick(1000);
+        tick(1000);
     }));
 
     it("Will load up screens if they are not provided", fakeAsync(() => {
@@ -96,8 +110,10 @@ describe('TestingVideoBrowserCmp', () => {
         });
         fixture.detectChanges();
         MockData.handleContainerLoad(httpMock);
+        tick(1000);
+        tick(1000);
 
-        let req = httpMock.expectOne(req => req.url === ApiDef.contented.search);
+        let req = httpMock.expectOne(req => req.url === ApiDef.contented.search, "Failed to find search");
         req.flush(vRes);
         fixture.detectChanges();
         tick(1000);
@@ -110,6 +126,8 @@ describe('TestingVideoBrowserCmp', () => {
         tick(1000);
         fixture.detectChanges();
         expect($(".video-details").length).withContext("Should show 4 details sections").toEqual(4);
+        tick(10000);
+        tick(10000);
     }));
 });
 
