@@ -3,7 +3,8 @@
   <contented-nav [loading]="loading" [containers]="containers"></contented-nav>
 
   <form #videoForm [formGroup]="options" (keypress)="$event.stopPropagation()">
-  <div class="search-paginator">
+  <div class="search-form">
+    <!--
         <mat-form-field apperance="fill" floatLabel="true" class="search-field">
           <input type="text" name="videoText"
             [formControl]="videoText"
@@ -14,6 +15,21 @@
           >
           <mat-icon matSuffix>search</mat-icon>
         </mat-form-field>
+      -->
+
+        <div class="search-tags">
+          <tags-cmp
+           [tags]="tags"
+           [editorValue]="videoText"
+           (tagsChanged)="changedSearch($event)"
+          ></tags-cmp>
+        </div>
+        <div class="form-group">
+          <mat-radio-group [formControl]="searchType" aria-label="Select to modify the search type">
+            <mat-radio-button value="text">By Text</mat-radio-button>
+            <mat-radio-button value="tags">By Tags</mat-radio-button>
+          </mat-radio-group>
+        </div>
 
         <mat-paginator
           [length]="total"
