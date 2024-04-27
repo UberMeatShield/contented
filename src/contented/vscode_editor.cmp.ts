@@ -13,9 +13,8 @@ import { GlobalBroadcast } from './global_message';
 // Why is it importing api.d?  Because Monaco does a bunch of css importing in the 
 // javascript which breaks the hell out of angular tooling, so just get the 'shapes'
 // correct when doing a compile and move along.
-import { editor as MonacoEditor } from 'monaco-editor/esm/vs/editor/editor.api.d';
+import { KeyCode, editor as MonacoEditor } from 'monaco-editor/esm/vs/editor/editor.api.d';
 
-import $ from 'jquery';
 import * as _ from 'lodash-es';
 import { Tag, VSCodeChange } from './content';
 
@@ -149,6 +148,15 @@ export class VSCodeEditorCmp implements OnInit {
             value: val
           });
         }, 20);
+      });
+
+      // Allow Escape to unfocus. KeyCode.Escape === 9, the typing import
+      // is not defined when actually running the code itself as it is just
+      // type definition. Importing actual code == css compilation hell
+      this.monacoEditor.addCommand(KeyCode?.Escape || 9, function() {
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
       });
     }
     this.afterMonaco();
