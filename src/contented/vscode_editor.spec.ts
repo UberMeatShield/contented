@@ -33,8 +33,8 @@ describe('VSCodeEditorCmp', () => {
   let httpMock: HttpTestingController;
   let tagLang: TagLang;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
+  beforeEach(fakeAsync(() => {
+    TestBed.configureTestingModule({
       imports: [
         RouterTestingModule,
         HttpClientTestingModule,
@@ -55,7 +55,7 @@ describe('VSCodeEditorCmp', () => {
     httpMock = TestBed.inject(HttpTestingController);
 
     tagLang = new TagLang();
-  });
+  }));
 
   afterEach(() => {
       httpMock.verify();
@@ -67,7 +67,7 @@ describe('VSCodeEditorCmp', () => {
   });
 
   // TODO: The ajax load of tags is still not working right.
-  it("Should be able to render the monaco editor and process tokens", waitForAsync(() => {
+  it("Should be able to render the monaco editor and process tokens", fakeAsync(() => {
     cmp.language = "test";
     cmp.editorValue = editorValue;
     fixture.detectChanges()
@@ -83,28 +83,29 @@ describe('VSCodeEditorCmp', () => {
       total: 4,
       results: keywords
     }
-
     WaitForMonacoLoad();
+    tick(1000);
+
     httpMock.expectOne(r => r.url.includes(ApiDef.contented.tags)).flush(tags);
     expect(cmp.problemTags.length).withContext("We should consider Google Earth a problem").toBe(1);
+    fixture.detectChanges();
+    tick(1000);
 
-    fixture.whenStable().then(() => {
-      expect((window as any).monaco).toBeDefined()
-      let ids = _.map(keywords, 'id').slice(0, keywords.length - 2)
-      let types = _.map(keywords, 'id').slice(keywords.length - 2, keywords.length)
-      tagLang.setMonacoLanguage(cmp.language, ids, types);
+    expect((window as any).monaco?.languages).toBeDefined()
+    let ids = _.map(keywords, 'id').slice(0, keywords.length - 2)
+    let types = _.map(keywords, 'id').slice(keywords.length - 2, keywords.length)
+    tagLang.setMonacoLanguage(cmp.language, ids, types);
+    tick(1000);
 
-      expect(cmp.descriptionControl.value).toEqual(editorValue);
-      let tokens = cmp.getTokens();
+    expect(cmp.descriptionControl.value).toEqual(editorValue);
+    let tokens = cmp.getTokens();
 
+    expect(cmp.editor).withContext("It should have initialized").toBeDefined();
+    expect(tokens.sort()).toEqual(ids.sort())
+    expect(cmp.monacoEditor).toBeDefined();
 
-      expect(cmp.editor).withContext("It should have initialized").toBeDefined();
-      expect(tokens.sort()).toEqual(ids.sort())
-      expect(cmp.monacoEditor).toBeDefined();
-
-      // Qoutes in the string can still be a problem
-      let tokenTypes = cmp.getTokens("type");
-      expect(tokenTypes.sort()).toEqual(types);
-    })
+    // Qoutes in the string can still be a problem
+    let tokenTypes = cmp.getTokens("type");
+    expect(tokenTypes.sort()).toEqual(types);
   }));
 });

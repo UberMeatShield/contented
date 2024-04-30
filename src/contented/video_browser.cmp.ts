@@ -80,7 +80,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
                 this.searchText = res['searchText'] || "";
 
                 // Add in a param for container_id ?
-                this.search(this.searchText, this.offset, this.pageSize, this.getCntId()); 
+                // this.search(this.searchText, this.offset, this.pageSize, this.getCntId()); 
                 this.loadContainers();
             }
         });
