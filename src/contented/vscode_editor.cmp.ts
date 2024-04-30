@@ -207,7 +207,6 @@ export class VSCodeEditorCmp implements OnInit {
         })
       });
     }
-    console.log("TAGS FOUND in VSCODE", tags);
     return Array.from(tags);
   }
 

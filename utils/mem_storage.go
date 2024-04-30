@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"golang.org/x/exp/maps"
 )
 
 // GoLang is just making this awkward
@@ -48,7 +49,12 @@ func InitializeMemory(dirRoot string) *MemoryStorage {
 	// Should I tag the container?
 	if contents != nil && tags != nil {
 		log.Printf("Attempting to assign tags to content")
-		contents = AssignTagsToContent(contents, tags)
+		taggedContent := AssignTagsToContent(contents, tags)
+
+		// Update the tagged content
+		for _, content := range maps.Values(taggedContent) {
+			contents[content.ID] = content
+		}
 	}
 
 	memStorage.ValidContainers = containers

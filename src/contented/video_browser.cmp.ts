@@ -6,9 +6,10 @@ import {
     OnDestroy,
     Component,
     ViewChild,
+    Input,
 } from '@angular/core';
 import {ContentedService, ContentSearchSchema} from './contented_service';
-import {Content} from './content';
+import {Content, Tag, VSCodeChange} from './content';
 import {Container} from './container';
 import {GlobalNavEvents, NavTypes, NavEventMessage} from './nav_events';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
@@ -29,8 +30,14 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     // Take in the search text route param
     // Debounce the search
     @ViewChild('searchForm', { static: true }) searchControl;
+    @Input() tags: Array<Tag>;
     throttleSearch: Subscription;
-    videoText = new FormControl<string>("");
+
+    searchText: string; // Initial value
+    searchType = new FormControl("text");
+    currentTextChange: VSCodeChange = {value: "", tags: []};
+    changedSearch: (evt: VSCodeChange) => void;
+
     options: FormGroup;
     fb: FormBuilder;
 
@@ -57,23 +64,26 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     }
 
     public ngOnInit() {
-        this.resetForm();
+
+        this.changedSearch = _.debounce((evt: VSCodeChange) => {
+            // Do not change this.searchText it will re-assign the VS-Code editor in a
+            // bad way and muck with the cursor.
+            this.search(evt.value, 0, 50, this.getCntId(), evt.tags);
+            this.currentTextChange = evt;
+        }, 250);
 
         // This should also preserve the current page we have selected and restore it.
+        this.resetForm();
+        this.setupEvtListener();
         this.route.queryParams.pipe().subscribe({
             next: (res: ParamMap) => {
-                let st = res['videoText'];
-                let text = st !== undefined ? st : '';
+                this.searchText = res['searchText'] || "";
 
                 // Add in a param for container_id ?
-
-                this.videoText.setValue(text);
-                this.search(text, this.offset, this.pageSize, this.getCntId()); 
-                this.setupFilterEvts();
+                // this.search(this.searchText, this.offset, this.pageSize, this.getCntId()); 
                 this.loadContainers();
             }
         });
-        this.setupEvtListener();
     }
 
     ngOnDestroy() {
@@ -132,7 +142,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
             this.offset = 0;
         }
         this.selectedContainer = cnt;
-        this.search(this.videoText.value, this.offset, this.pageSize, this.getCntId());
+        this.search(this.currentTextChange.value, this.offset, this.pageSize, this.getCntId());
     }
 
     public next() {
@@ -145,7 +155,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
                     GlobalNavEvents.selectContent(m, new Container({id: m.container_id}));
                 }       
             } else if ((this.offset + this.pageSize) < this.total) {
-                this.search(this.videoText.value, (this.offset + this.pageSize), this.pageSize, this.getCntId());
+                this.search(this.currentTextChange.value, (this.offset + this.pageSize), this.pageSize, this.getCntId());
             }
         }
     }
@@ -159,7 +169,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
                     GlobalNavEvents.selectContent(m, new Container({id: m.container_id}));
                 }
             } else if ((this.offset - this.pageSize) >= 0) {
-                this.search(this.videoText.value, (this.offset - this.pageSize), this.pageSize, this.getCntId());
+                this.search(this.currentTextChange.value, (this.offset - this.pageSize), this.pageSize, this.getCntId());
             }
         }
     }
@@ -171,9 +181,10 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
              let id = `view_content_${content.id}`;
              let el = document.getElementById(id)
 
+             // Might want to debounce this as well
              if (el) {
                  el.scrollIntoView(true);
-                 window.scrollBy(0, -30);
+                 window.scrollBy(0, -60);
              }
          }, 50);
     }
@@ -181,7 +192,8 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
 
     public resetForm(setupFilterEvents: boolean = false) {
         this.options = this.fb.group({
-            videoText: this.videoText,
+            // searchText: this.searchText,
+            searchType: this.searchType,
         });
         if (setupFilterEvents) {
             this.setupFilterEvts();
@@ -195,15 +207,21 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
         }
         this.throttleSearch = this.options.valueChanges
           .pipe(
-            debounceTime(500),
+            debounceTime(250),
             distinctUntilChanged()
             // Prevent bubble on keypress
           )
           .subscribe({
               next: formData => {
-                  console.log("Form data changing");
-                  // If the text changes do we reset the search offset etc.
-                  this.search(formData['videoText'] || '', 0, this.pageSize, this.getCntId());
+                console.log("Form data changing");
+                // If the text changes do we reset the search offset etc.
+                this.search(
+                  this.currentTextChange.value,
+                  0,
+                  this.pageSize,
+                  this.getCntId(),
+                  this.currentTextChange.tags
+                );
               },
               error: error => {
                 GlobalBroadcast.error('Failed to search', error);
@@ -216,10 +234,10 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     }
 
     pageEvt(evt: PageEvent) {
-        console.log("Event", evt, this.videoText.value);
+        console.log("Event", evt, this.currentTextChange.value);
         let offset = evt.pageIndex * evt.pageSize;
         let limit = evt.pageSize;
-        this.search(this.videoText.value, offset, limit, this.getCntId());
+        this.search(this.currentTextChange.value, offset, limit, this.getCntId());
     }
 
     public getCntId() {
@@ -228,14 +246,19 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
 
 
     // TODO: Add in optional filter params like the container (filter by container in search?)
-    public search(text: string = '', offset: number = 0, limit: number = 50, cntId: string = null) {
+    public search(
+        text: string = '',
+        offset: number = 0,
+        limit: number = 50,
+        cntId: string = null,
+        tags: Array<string> = [],
+        ) {
         console.log("Get the information from the input and search on it", text, offset, limit, cntId); 
 
         this.selectedContent = null;
         this.content = [];
         this.loading = true;
 
-        const tags = [];
         const cs = ContentSearchSchema.parse({
             text,
             cId: cntId,
@@ -244,7 +267,6 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
             contentType: "video",
             tags,
         });
-
 
         this._contentedService.searchContent(cs).pipe(
             finalize(() => this.loading = false)

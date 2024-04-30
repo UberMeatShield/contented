@@ -29,7 +29,10 @@ module.exports = function (config) {
     ],
     client:{
       clearContext: false, // leave Jasmine Spec Runner output visible in browser
-      captureConsole: true
+      captureConsole: true,
+      jasmine: {
+          random: false
+      }
     },
     coverageIstanbulReporter: {
       reports: [ 'html', 'lcovonly' ],

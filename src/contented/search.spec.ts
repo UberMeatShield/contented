@@ -56,7 +56,7 @@ describe('TestingSearchCmp', () => {
 
         de = fixture.debugElement.query(By.css('.search-cmp'));
         el = de.nativeElement;
-        router = TestBed.get(Router);
+        router = TestBed.inject(Router);
         router.initialNavigation();
     }));
 
@@ -86,8 +86,7 @@ describe('TestingSearchCmp', () => {
         fixture.detectChanges();
 
         // TODO: Configure the language...
-
-        let req = httpMock.expectOne(req => req.url === ApiDef.contented.search);
+        let req = httpMock.expectOne(req => req.url === ApiDef.contented.search, "Expect a search");
         let sr = MockData.getSearch()
         expect(sr.results.length).withContext("We need some search results.").toBeGreaterThan(0);
         req.flush(sr);
