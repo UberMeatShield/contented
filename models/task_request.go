@@ -82,10 +82,12 @@ var TaskOperation = struct {
 	ENCODING TaskOperationType
 	SCREENS  TaskOperationType
 	WEBP     TaskOperationType
+	TAGGING  TaskOperationType
 }{
 	ENCODING: "video_encoding",
 	SCREENS:  "screen_capture",
 	WEBP:     "webp_from_screens",
+	TAGGING:  "tag_content",
 }
 
 func (to TaskOperationType) String() string {
@@ -96,6 +98,8 @@ func (to TaskOperationType) String() string {
 		return "screen_capture"
 	case TaskOperation.WEBP:
 		return "webp_from_screens"
+	case TaskOperation.TAGGING:
+		return "tag_content"
 	}
 	return "unknown"
 }
