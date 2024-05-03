@@ -215,7 +215,6 @@ func ValidateWebpCode(as *ActionSuite, content *models.Content) {
 	as.Equal("/container_previews/donut_[special( gunk.mp4.webp", checkContent.Preview)
 }
 
-// Hate
 func (as *ActionSuite) Test_DBTagHandler() {
 	cfg := test_common.InitFakeApp(true)
 	utils.SetCfg(*cfg)
@@ -236,8 +235,10 @@ func ValidateTaggingCode(as *ActionSuite, content *models.Content) {
 
 	tag1 := models.Tag{ID: "donut"}
 	tag2 := models.Tag{ID: "mp4"}
+	badTag := models.Tag{ID: "THIS_WILL_NOT_MATCH"}
 	man.CreateTag(&tag1)
 	man.CreateTag(&tag2)
+	man.CreateTag(&badTag)
 
 	tr := models.TaskRequest{Operation: models.TaskOperation.TAGGING, ContentID: content.ID}
 	task, err := man.CreateTask(&tr)
