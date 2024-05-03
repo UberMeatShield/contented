@@ -57,6 +57,19 @@
       </mat-card-content>
     </mat-card>
 
+    <mat-card class="tagging-form">
+      <mat-card-header>
+        <mat-card-title>Attempt to Tag content (filename and description)</mat-card-title>
+        <mat-card-subtitle>This will attempt to tag the content with all tags in the system
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <button type="button" mat-raised-button 
+          (click)="tagContent(content)"
+        >Tag Content</button>
+      </mat-card-content>
+    </mat-card>
+
     <mat-card class="video-encoding-form" *ngIf="content?.isVideo()">
       <mat-card-header>
         Re-Encode Video Content to H265

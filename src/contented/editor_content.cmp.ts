@@ -144,6 +144,21 @@ export class EditorContentCmp implements OnInit {
     });
   }
 
+  tagContent(content: Content) {
+    this.taskLoading = true; 
+    this._service.createTagContentTask(content).pipe(
+      finalize(() => this.taskLoading = false)
+    ).subscribe({
+      next: (task: TaskRequest) => {
+        console.log("Created a tagging task", content, task);
+        this.watchTask(task);
+      },
+      error: err => {
+        GlobalBroadcast.error('Failed to start tagging tasks', err);
+      },
+    })
+  }
+
   createPreviewFromScreens(content: Content) {
     console.log("Create a preview")
     this.taskLoading = true;

@@ -12,9 +12,6 @@ import (
 	"contented/models"
 
 	"github.com/gobuffalo/buffalo"
-
-	//"github.com/gobuffalo/pop/v5"
-
 	"github.com/gofrs/uuid"
 )
 

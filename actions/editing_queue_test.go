@@ -16,6 +16,7 @@ import (
 	"github.com/gobuffalo/nulls"
 )
 
+// Make something that does this in a cleaner fashion
 func CreateVideoContainer(as *ActionSuite) (*models.Container, *models.Content) {
 	cntToCreate, contents := test_common.GetContentByDirName("dir2")
 
@@ -44,6 +45,7 @@ func (as *ActionSuite) Test_TaskRelatedObjects() {
 	as.Equal(models.TaskOperation.SCREENS.String(), "screen_capture")
 	as.Equal(models.TaskOperation.ENCODING.String(), "video_encoding")
 	as.Equal(models.TaskOperation.WEBP.String(), "webp_from_screens")
+	as.Equal(models.TaskOperation.TAGGING.String(), "tag_content")
 }
 
 // Do the screen grab in memory
@@ -211,4 +213,52 @@ func ValidateWebpCode(as *ActionSuite, content *models.Content) {
 	checkContent := models.Content{}
 	json.NewDecoder(check.Body).Decode(&checkContent)
 	as.Equal("/container_previews/donut_[special( gunk.mp4.webp", checkContent.Preview)
+}
+
+func (as *ActionSuite) Test_DBTagHandler() {
+	cfg := test_common.InitFakeApp(true)
+	utils.SetCfg(*cfg)
+	_, content := CreateVideoContainer(as)
+	ValidateTaggingCode(as, content)
+}
+
+func (as *ActionSuite) Test_MemoryTagHandler() {
+	cfg := test_common.InitFakeApp(false)
+	utils.SetCfg(*cfg)
+	_, content := CreateVideoContainer(as)
+	ValidateTaggingCode(as, content)
+}
+
+func ValidateTaggingCode(as *ActionSuite, content *models.Content) {
+	ctx := test_common.GetContext(as.App)
+	man := managers.GetManager(&ctx)
+
+	tag1 := models.Tag{ID: "donut"}
+	tag2 := models.Tag{ID: "mp4"}
+	badTag := models.Tag{ID: "THIS_WILL_NOT_MATCH"}
+	man.CreateTag(&tag1)
+	man.CreateTag(&tag2)
+	man.CreateTag(&badTag)
+
+	tr := models.TaskRequest{Operation: models.TaskOperation.TAGGING, ContentID: content.ID}
+	task, err := man.CreateTask(&tr)
+	as.NoError(err, "Failed to create Task to do tagging")
+	as.NotZero(task.ID)
+
+	tagErr := managers.TaggingContentTask(man, task.ID)
+	as.NoError(tagErr, "It should not have a problem doing the tagging")
+
+	contentTagged, errLoad := man.GetContent(content.ID)
+	as.NoError(errLoad, "It should be able to get the content back")
+
+	as.Equal(2, len(contentTagged.Tags), fmt.Sprintf("There should be tags now %s", contentTagged))
+
+	taskCheck, taskErr := man.GetTask(task.ID)
+	as.NoError(taskErr, "We should still have a task")
+	as.Equal(models.TaskStatus.DONE, taskCheck.Status)
+
+	url := fmt.Sprintf("/editing_queue/%s/tagging", content.ID.String())
+	res := as.JSON(url).Post(&content)
+	as.Equal(http.StatusCreated, res.Code, fmt.Sprintf("Failed to queue tagging task %s", res.Body.String()))
+
 }

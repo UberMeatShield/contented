@@ -422,10 +422,41 @@ func WebpFromScreensTask(man ContentManager, id uuid.UUID) error {
 		return err
 	}
 
-	// Assign it to the content (probably)
-
 	// Should strip the path information out of the task state
 	ChangeTaskState(man, task, models.TaskStatus.DONE, fmt.Sprintf("Successfully created webp %s", webp))
+	return err
+}
+
+/**
+ * Tag a piece of content, get this working on one item and then consider some other operation.
+ */
+func TaggingContentTask(man ContentManager, id uuid.UUID) error {
+	log.Printf("Managers Tagging taskID attempting to start %s", id)
+	task, content, err := TakeContentTask(man, id, "TaggingContentTask")
+	if err != nil {
+		return err
+	}
+
+	// Get all the tags (this is expensive if I am kicking off a lot of them)
+	tq := TagQuery{PerPage: 90001}
+	tags, total, tErr := man.ListAllTags(tq)
+	if tErr != nil || total == 0 || tags == nil {
+		failMsg := fmt.Sprintf("Failed to tag content %s", err)
+		FailTask(man, task, failMsg)
+		return err
+	}
+
+	// TODO: Make it so this can work on a single piece of content (refactor AssignTagsAndUpdate)
+	contents := models.Contents{*content}
+	assignmentError := AssignTagsToContents(man, &contents, tags)
+	if assignmentError != nil {
+		failMsg := fmt.Sprintf("Failed to tag content %s", err)
+		FailTask(man, task, failMsg)
+		return err
+	}
+
+	// Should strip the path information out of the task state
+	ChangeTaskState(man, task, models.TaskStatus.DONE, fmt.Sprintf("successfully tagged content %s", content.ID))
 	return err
 }
 
@@ -586,16 +617,16 @@ func FailTask(man ContentManager, task *models.TaskRequest, errMsg string) (*mod
  * Do it ugly.  TODO: Make it less ugly.
  */
 func AssignTagsAndUpdate(man ContentManager, tags models.Tags) error {
+	if len(tags) == 0 {
+		log.Printf("No tags in the system, nothing to do")
+	}
+
+	// Get the total count of content
 	cfg := man.GetCfg()
 	cs := ContentQuery{PerPage: 0}
 	_, total, err := man.SearchContent(cs)
 	if err != nil {
 		return err
-	}
-
-	tagMap := models.TagsMap{}
-	for _, tag := range tags {
-		tagMap[tag.ID] = tag
 	}
 
 	// Do a loop if total > limit
@@ -611,21 +642,42 @@ func AssignTagsAndUpdate(man ContentManager, tags models.Tags) error {
 			log.Printf("Failed to page over content %s", pageErr)
 			return pageErr
 		}
-
-		if contents != nil {
-			contentMap := models.ContentMap{}
-			for _, content := range *contents {
-				contentMap[content.ID] = content
-			}
-			updatedMap := utils.AssignTagsToContent(contentMap, tagMap)
-
-			// Ugly but at least allows for a batch update statement
-			updatedContent := maps.Values(updatedMap)
-			upErr := man.UpdateContents(updatedContent)
-			if upErr != nil {
-				return upErr
-			}
+		tagErr := AssignTagsToContents(man, contents, &tags)
+		if tagErr != nil {
+			return tagErr
 		}
+	}
+	return nil
+}
+
+/**
+ * Used to assign a bunch of tags and then do an update to that content.
+ */
+func AssignTagsToContents(man ContentManager, contents *models.Contents, tags *models.Tags) error {
+	if contents == nil || len(*contents) == 0 {
+		log.Printf("No content to tag")
+		return nil
+	}
+	if tags == nil || len(*tags) == 0 {
+		log.Printf("No tags to match against")
+		return nil
+	}
+
+	tagMap := models.TagsMap{}
+	for _, tag := range *tags {
+		tagMap[tag.ID] = tag
+	}
+
+	contentMap := models.ContentMap{}
+	for _, content := range *contents {
+		contentMap[content.ID] = content
+	}
+	// Ugly but at least allows for a batch update statement later
+	updatedMap := utils.AssignTagsToContent(contentMap, tagMap)
+	updatedContent := maps.Values(updatedMap)
+	upErr := man.UpdateContents(updatedContent)
+	if upErr != nil {
+		return upErr
 	}
 	return nil
 }

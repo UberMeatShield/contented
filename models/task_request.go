@@ -82,10 +82,12 @@ var TaskOperation = struct {
 	ENCODING TaskOperationType
 	SCREENS  TaskOperationType
 	WEBP     TaskOperationType
+	TAGGING  TaskOperationType
 }{
 	ENCODING: "video_encoding",
 	SCREENS:  "screen_capture",
 	WEBP:     "webp_from_screens",
+	TAGGING:  "tag_content",
 }
 
 func (to TaskOperationType) String() string {
@@ -96,6 +98,8 @@ func (to TaskOperationType) String() string {
 		return "screen_capture"
 	case TaskOperation.WEBP:
 		return "webp_from_screens"
+	case TaskOperation.TAGGING:
+		return "tag_content"
 	}
 	return "unknown"
 }
@@ -104,6 +108,10 @@ func (to TaskOperationType) String() string {
 type TaskRequest struct {
 	ID        uuid.UUID `json:"id" db:"id"`
 	ContentID uuid.UUID `json:"content_id" db:"content_id"`
+
+	// TODO: Make it optional on ContentId so things cna work on a container?
+	// ContainerID nulls.UUID `json:"container_id" db:"container_id" default:"nil"`
+
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 	StartedAt time.Time `json:"started_at" db:"started_at"`

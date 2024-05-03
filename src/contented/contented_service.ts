@@ -314,6 +314,16 @@ export class ContentedService {
         );
     }
 
+    // Determine what kinds of args we can provide
+    createTagContentTask(content: Content) {
+        let url = ApiDef.contented.createTagContentTask.replace("{id}", content.id);
+        return this.http.post(url, {}).pipe(
+            map(res => {
+                return new TaskRequest(res);
+            })
+        );
+    }
+
 
     getTags(page: number = 1, perPage: number = 1000, tagType: string = "") {
         if (TAGS_RESPONSE.initialized) {

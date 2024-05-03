@@ -13,12 +13,14 @@ export let ApiDef = {
         content: "/contents/{id}/",
         contentScreens: base + 'contents/{mcID}/screens',
         screens: base + 'screens/',
-        requestScreens: "/editing_queue/{id}/screens/{count}/{startTimeSeconds}",
-        encodeVideoContent: "/editing_queue/{id}/encoding",
-        createPreviewFromScreens: "/editing_queue/{id}/webp",
         contentAll: base + 'content/',
         search: base + "search",
 
+        // Task Related APIs
+        requestScreens: "/editing_queue/{id}/screens/{count}/{startTimeSeconds}",
+        encodeVideoContent: "/editing_queue/{id}/encoding",
+        createPreviewFromScreens: "/editing_queue/{id}/webp",
+        createTagContentTask: "/editing_queue/{id}/tagging",
         tags: base + "tags/",
     },
     tasks: {
