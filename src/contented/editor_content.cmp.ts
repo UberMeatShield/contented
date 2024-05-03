@@ -146,7 +146,7 @@ export class EditorContentCmp implements OnInit {
 
   tagContent(content: Content) {
     this.taskLoading = true; 
-    this._service.tagContent(content).pipe(
+    this._service.createTagContentTask(content).pipe(
       finalize(() => this.taskLoading = false)
     ).subscribe({
       next: (task: TaskRequest) => {
