@@ -256,4 +256,9 @@ func ValidateTaggingCode(as *ActionSuite, content *models.Content) {
 	taskCheck, taskErr := man.GetTask(task.ID)
 	as.NoError(taskErr, "We should still have a task")
 	as.Equal(models.TaskStatus.DONE, taskCheck.Status)
+
+	url := fmt.Sprintf("/editing_queue/%s/tagging", content.ID.String())
+	res := as.JSON(url).Post(&content)
+	as.Equal(http.StatusCreated, res.Code, fmt.Sprintf("Failed to queue tagging task %s", res.Body.String()))
+
 }

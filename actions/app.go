@@ -50,6 +50,7 @@ func App(UseDatabase bool) *buffalo.App {
 		app.POST("/editing_queue/{contentID}/screens/{count}/{startTimeSeconds}", TaskScreensHandler)
 		app.POST("/editing_queue/{contentID}/encoding", VideoEncodingHandler)
 		app.POST("/editing_queue/{contentID}/webp", WebpFromScreensHandler)
+		app.POST("/editing_queue/{contentID}/tagging", TaggingHandler)
 		// app.DELETE("/editing_queue/{taskID}/", TaskDeleteHandler)
 
 		// Allow for the creation of new content
