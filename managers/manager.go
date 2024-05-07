@@ -445,7 +445,10 @@ func DetectDuplicatesTask(man ContentManager, id uuid.UUID) error {
 	}
 
 	// Should strip the path information out of the task state
-	ChangeTaskState(man, task, models.TaskStatus.DONE, fmt.Sprintf("Searching for duplicates %s", dupes))
+	summary := fmt.Sprintf("Found Duplicates %s", dupes)
+
+	// TODO: This should actually generate something semi useful for the UI
+	ChangeTaskState(man, task, models.TaskStatus.DONE, summary)
 	return err
 }
 

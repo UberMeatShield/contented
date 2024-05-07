@@ -47,6 +47,7 @@ func Test_ManagerSuite(t *testing.T) {
 	suite.Run(t, as)
 }
 
+// Called by the various manager tests
 func ManagersTagSearchValidation(as *ActionSuite, man ContentManager) {
 	as.NoError(man.CreateTag(&models.Tag{ID: "A"}))
 	as.NoError(man.CreateTag(&models.Tag{ID: "B"}))
