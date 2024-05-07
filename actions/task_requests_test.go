@@ -10,12 +10,13 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gobuffalo/nulls"
 	"github.com/gofrs/uuid"
 )
 
 func CreateTask(contentID uuid.UUID, as *ActionSuite, man managers.ContentManager) *models.TaskRequest {
 	tr := &models.TaskRequest{
-		ContentID: contentID,
+		ContentID: nulls.NewUUID(contentID),
 		Status:    models.TaskStatus.NEW,
 	}
 	t, err := man.CreateTask(tr)

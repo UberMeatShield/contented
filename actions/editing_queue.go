@@ -18,6 +18,7 @@ import (
 
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/worker"
+	"github.com/gobuffalo/nulls"
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 )
@@ -171,7 +172,7 @@ func WebpFromScreensHandler(c buffalo.Context) error {
 		return nil
 	}
 	tr := models.TaskRequest{
-		ContentID: content.ID,
+		ContentID: nulls.NewUUID(content.ID),
 		Operation: models.TaskOperation.WEBP,
 	}
 	return QueueTaskRequest(c, man, &tr)
@@ -196,7 +197,7 @@ func VideoEncodingHandler(c buffalo.Context) error {
 	codec := managers.StringDefault(c.Param("codec"), cfg.CodecForConversion)
 	log.Printf("Requesting a re-encode %s with codec %s for contentID %s", content.Src, codec, content.ID.String())
 	tr := models.TaskRequest{
-		ContentID:        content.ID,
+		ContentID:        nulls.NewUUID(content.ID),
 		Operation:        models.TaskOperation.ENCODING,
 		NumberOfScreens:  0,
 		StartTimeSeconds: 0,
@@ -221,7 +222,7 @@ func TaggingHandler(c buffalo.Context) error {
 
 	// Probably should at least sanity check the codecs
 	tr := models.TaskRequest{
-		ContentID: content.ID,
+		ContentID: nulls.NewUUID(content.ID),
 		Operation: models.TaskOperation.TAGGING,
 	}
 	return QueueTaskRequest(c, man, &tr)
@@ -256,7 +257,7 @@ func TaskScreensHandler(c buffalo.Context) error {
 	}
 	log.Printf("Requesting screens be built out %s start %d count %d", content.Src, startTimeSeconds, numberOfScreens)
 	tr := models.TaskRequest{
-		ContentID:        content.ID,
+		ContentID:        nulls.NewUUID(content.ID),
 		Operation:        models.TaskOperation.SCREENS,
 		NumberOfScreens:  numberOfScreens,
 		StartTimeSeconds: startTimeSeconds,

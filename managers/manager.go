@@ -393,7 +393,7 @@ func ScreenCaptureTask(man ContentManager, id uuid.UUID) error {
 	if err != nil {
 		return err
 	}
-	screens, sErr, pattern := CreateScreensForContent(man, task.ContentID, task.NumberOfScreens, task.StartTimeSeconds)
+	screens, sErr, pattern := CreateScreensForContent(man, task.ContentID.UUID, task.NumberOfScreens, task.StartTimeSeconds)
 	if sErr != nil {
 		failMsg := fmt.Sprintf("Failing to create screen %s", sErr)
 		FailTask(man, task, failMsg)
@@ -571,9 +571,9 @@ func TakeContentTask(man ContentManager, id uuid.UUID, operation string) (*model
 		FailTask(man, task, msg)
 		return task, nil, pErr
 	}
-	content, cErr := man.GetContent(task.ContentID)
+	content, cErr := man.GetContent(task.ContentID.UUID)
 	if cErr != nil {
-		msg := fmt.Sprintf("%s Content not found %s %s", operation, task.ContentID, cErr)
+		msg := fmt.Sprintf("%s Content not found %s %s", operation, task.ContentID.UUID, cErr)
 		FailTask(man, task, msg)
 		return task, content, cErr
 	}

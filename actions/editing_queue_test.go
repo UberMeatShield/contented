@@ -240,7 +240,7 @@ func ValidateTaggingCode(as *ActionSuite, content *models.Content) {
 	man.CreateTag(&tag2)
 	man.CreateTag(&badTag)
 
-	tr := models.TaskRequest{Operation: models.TaskOperation.TAGGING, ContentID: content.ID}
+	tr := models.TaskRequest{Operation: models.TaskOperation.TAGGING, ContentID: nulls.NewUUID(content.ID)}
 	task, err := man.CreateTask(&tr)
 	as.NoError(err, "Failed to create Task to do tagging")
 	as.NotZero(task.ID)

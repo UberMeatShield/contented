@@ -770,7 +770,7 @@ func (cm ContentManagerMemory) ListTasks(query TaskQuery) (*models.TaskRequests,
 			return nil, 0, err
 		}
 		for _, task := range task_arr {
-			if task.ContentID == contentID {
+			if task.ContentID.UUID == contentID {
 				filtered_tasks = append(filtered_tasks, task)
 			}
 		}

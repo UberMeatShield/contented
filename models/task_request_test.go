@@ -1,5 +1,7 @@
 package models
 
+import "github.com/gobuffalo/nulls"
+
 func (ms *ModelSuite) Test_TaskRequests() {
 	content := Content{Src: "A"}
 	err := ms.DB.Save(&content)
@@ -8,9 +10,9 @@ func (ms *ModelSuite) Test_TaskRequests() {
 	tr := TaskRequest{
 		Status:    TaskStatus.PENDING,
 		Operation: TaskOperation.ENCODING,
-		ContentID: content.ID,
+		ContentID: nulls.NewUUID(content.ID),
 	}
-	ms.NoError(ms.DB.Create(&tr), "It should be able to create a Task Request")
+	ms.NoError(ms.DB.Create(&tr), "it should be able to create a Task Request")
 	ms.NotZero(tr.ID, "It should have inserted a uuid")
 
 	// Validate it did the right thing with the 'enum'
