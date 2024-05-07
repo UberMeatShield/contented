@@ -428,6 +428,28 @@ func WebpFromScreensTask(man ContentManager, id uuid.UUID) error {
 }
 
 /**
+ * Capture a set of screens given a task
+ */
+func DetectDuplicatesTask(man ContentManager, id uuid.UUID) error {
+	log.Printf("Managers duplicate content taskID attempting to start %s", id)
+	task, container, err := TakeContainerTask(man, id, "DetectDuplicatesTask")
+	if err != nil {
+		return err
+	}
+
+	dupes := FindDuplicateContents(man, container, "video")
+	if err != nil {
+		failMsg := fmt.Sprintf("Failing to detect duplicates %s", err)
+		FailTask(man, task, failMsg)
+		return err
+	}
+
+	// Should strip the path information out of the task state
+	ChangeTaskState(man, task, models.TaskStatus.DONE, fmt.Sprintf("Searching for duplicates %s", dupes))
+	return err
+}
+
+/**
  * Tag a piece of content, get this working on one item and then consider some other operation.
  */
 func TaggingContentTask(man ContentManager, id uuid.UUID) error {
@@ -559,6 +581,9 @@ func CreateContentAfterEncoding(man ContentManager, originalContent *models.Cont
 	return nil, fmt.Errorf("%s file did not exist", newFile)
 }
 
+/**
+ * Grab a content related task
+ */
 func TakeContentTask(man ContentManager, id uuid.UUID, operation string) (*models.TaskRequest, *models.Content, error) {
 	task, tErr := man.GetTask(id)
 	if tErr != nil {
@@ -584,6 +609,36 @@ func TakeContentTask(man ContentManager, id uuid.UUID, operation string) (*model
 		return task, content, upErr
 	}
 	return task, content, nil
+}
+
+/**
+ * Grab a container related task
+ */
+func TakeContainerTask(man ContentManager, id uuid.UUID, operation string) (*models.TaskRequest, *models.Container, error) {
+	task, tErr := man.GetTask(id)
+	if tErr != nil {
+		log.Printf("%s Could not look up the task successfully %s", operation, tErr)
+		return task, nil, tErr
+	}
+	task, pErr := ChangeTaskState(man, task, models.TaskStatus.PENDING, "Starting to execute task")
+	if pErr != nil {
+		msg := fmt.Sprintf("%s Couldn't move task into pending %s", operation, pErr)
+		FailTask(man, task, msg)
+		return task, nil, pErr
+	}
+	container, cErr := man.GetContainer(task.ContainerID.UUID)
+	if cErr != nil {
+		msg := fmt.Sprintf("%s Container not found %s %s", operation, task.ContainerID.UUID, cErr)
+		FailTask(man, task, msg)
+		return task, container, cErr
+	}
+	task, upErr := ChangeTaskState(man, task, models.TaskStatus.IN_PROGRESS, fmt.Sprintf("Container was found %s", container.Name))
+	if upErr != nil {
+		msg := fmt.Sprintf("%s Failed to update task state to in progress %s", operation, upErr)
+		FailTask(man, task, msg)
+		return task, container, upErr
+	}
+	return task, container, nil
 }
 
 // This is a little sketchy because the memory version already does a lookup on status
