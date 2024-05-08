@@ -86,7 +86,22 @@ type TagQuery struct {
 	TagType string `json:"tag_type" default:""`
 }
 
-type QueryInterface struct {
+/**
+ * TODO: Move all the editing queue tasks into a new file.
+ */
+type DuplicateContent struct {
+	KeepContentID uuid.UUID `json:"keep_id"`
+	ContainerID   uuid.UUID `json:"container_id"`
+	ContainerName string    `json:"container_name"`
+	DuplicateID   uuid.UUID `json:"duplicate_id"`
+	KeepSrc       string    `json:"keep_src"`
+	DuplicateSrc  string    `json:"duplicate_src"`
+}
+type DuplicateContents []DuplicateContent
+
+func (dupe DuplicateContent) String() string {
+	s, _ := json.MarshalIndent(dupe, "", "  ")
+	return string(s)
 }
 
 func (sr ContentQuery) String() string {
@@ -205,16 +220,16 @@ func GetAppManager(app *buffalo.App, getConnection GetConnType) ContentManager {
 func ManagerCanCUD(c *buffalo.Context) (*ContentManager, *pop.Connection, error) {
 	man := GetManager(c)
 	ctx := *c
-	if man.CanEdit() == false {
+	if !man.CanEdit() {
 		return &man, nil, ctx.Error(
 			http.StatusNotImplemented,
-			errors.New("Edit not supported by this manager"),
+			errors.New("edit not supported by this manager"),
 		)
 	}
 	if man.GetCfg().UseDatabase {
 		tx, ok := ctx.Value("tx").(*pop.Connection)
 		if !ok {
-			return &man, nil, fmt.Errorf("No transaction found")
+			return &man, nil, fmt.Errorf("no transaction found")
 		}
 		return &man, tx, nil
 	}
@@ -371,7 +386,7 @@ func CreateScreensForContent(cm ContentManager, contentID uuid.UUID, count int, 
 	return screens, err, ptrn
 }
 
-// Should get a bunch of crap here
+// Should get a bunch of crap here (TODO: Error should always come last)
 func EncodeVideoContent(man ContentManager, content *models.Content, codec string) (string, error, bool, string) {
 	content, cnt, err := GetContentAndContainer(man, content.ID)
 	if err != nil {
@@ -444,8 +459,8 @@ func DetectDuplicatesTask(man ContentManager, id uuid.UUID) error {
 		return err
 	}
 
-	// Should strip the path information out of the task state
-	summary := fmt.Sprintf("Found Duplicates %s", dupes)
+	// JSON encode the duplicate information into the summary
+	summary := fmt.Sprintf("%s", dupes)
 
 	// TODO: This should actually generate something semi useful for the UI
 	ChangeTaskState(man, task, models.TaskStatus.DONE, summary)
@@ -494,7 +509,7 @@ func WebpFromContent(man ContentManager, content *models.Content) (string, error
 	}
 
 	if screens == nil || count <= 0 {
-		return "", errors.New("Not enough screens to create a preview")
+		return "", errors.New("not enough screens to create a preview")
 	}
 	_, cnt, err := GetContentAndContainer(man, content.ID)
 	if err != nil {

@@ -313,5 +313,13 @@ func ValidateDuplicatesTask(as *ActionSuite, container *models.Container) {
 	dupeErr := managers.DetectDuplicatesTask(man, task.ID)
 	as.NoError(dupeErr, "It should be able to run the duplicates task")
 
-	// TODO: Check the task for our nice pretty format result for the task.
+	taskCheck, errCheck := man.GetTask(task.ID)
+	as.NoError(errCheck)
+	as.Equal(taskCheck.Status, models.TaskStatus.DONE)
+	as.NotEqual(taskCheck.Message, "")
+
+	dupes := managers.DuplicateContents{}
+	json.Unmarshal([]byte(taskCheck.Message), &dupes)
+	as.Equal(1, len(dupes), fmt.Sprintf("There should be a duplicate %s", dupes))
+	as.Equal(dupes[0].DuplicateSrc, "SampleVideo_1280x720_1mb.mp4")
 }
