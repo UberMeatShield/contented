@@ -70,6 +70,7 @@ type ContentQuery struct {
 	PerPage       int      `json:"per_page" default:"1000"`
 	ContentType   string   `json:"content_type" default:""`
 	ContainerID   string   `json:"container_id" default:""`
+	ContentID     string   `json:"content_id" default:""`
 	IncludeHidden bool     `json:"hidden" default:"false"`
 	Order         string   `json:"order" default:"created_at"`
 	Tags          []string `json:"tags" default:"[]"`

@@ -116,7 +116,7 @@ func WebpFromScreensWrapper(args worker.Args) error {
 }
 
 /*
- * Attempt to tag a piece of content
+ * Attempt to tag a piece of content (tempting to just make this a switch)
  */
 func TaggingContentWrapper(args worker.Args) error {
 	log.Printf("Tagging content element () Starting Task args %s", args)
@@ -143,6 +143,33 @@ func TaggingContentWrapper(args worker.Args) error {
 	// Memory manager version
 	man := managers.GetAppManager(app, getConnection)
 	return managers.TaggingContentTask(man, taskId)
+}
+
+func DuplicatesWrapper(args worker.Args) error {
+	log.Printf("Finding Duplicates %s", args)
+	cfg := utils.GetCfg()
+	getConnection := func() *pop.Connection {
+		return nil
+	}
+	app := App(cfg.UseDatabase)
+	taskId, err := GetTaskId(args)
+	if err != nil {
+		return err
+	}
+	// Note this is extra complicated by the fact it SHOULD be able to run with NO connections
+	// or DB sessions made.
+	if cfg.UseDatabase {
+		return models.DB.Transaction(func(tx *pop.Connection) error {
+			getConnection = func() *pop.Connection {
+				return tx
+			}
+			man := managers.GetAppManager(app, getConnection)
+			return managers.DetectDuplicatesTask(man, taskId)
+		})
+	}
+	// Memory manager version
+	man := managers.GetAppManager(app, getConnection)
+	return managers.DetectDuplicatesTask(man, taskId)
 }
 
 func GetTaskId(args worker.Args) (uuid.UUID, error) {
@@ -224,6 +251,54 @@ func TaggingHandler(c buffalo.Context) error {
 	tr := models.TaskRequest{
 		ContentID: nulls.NewUUID(content.ID),
 		Operation: models.TaskOperation.TAGGING,
+	}
+	return QueueTaskRequest(c, man, &tr)
+}
+
+// Should deny quickly if the media content type is incorrect for the action
+func DupesHandler(c buffalo.Context) error {
+
+	// Get content search from params
+	man := managers.GetManager(&c)
+
+	params := c.Params()
+	cId := managers.StringDefault(params.Get("containerID"), "")
+	id := managers.StringDefault(params.Get("contentID"), "")
+
+	// It could just take 'nothing' and run against ALL video I guess.
+	tr := models.TaskRequest{
+		Operation: models.TaskOperation.DUPES,
+	}
+	query := managers.ContentQuery{
+		ContentType: "video",
+		PerPage:     1,
+	}
+
+	// This is kinda ugly, might want to make it just two handlers
+	if cId != "" {
+		if containerID, err := uuid.FromString(cId); err == nil {
+			tr.ContainerID = nulls.NewUUID(containerID)
+			query.ContainerID = cId
+		} else {
+			return c.Error(http.StatusBadRequest, fmt.Errorf("Invalid containerID %s", cId))
+		}
+	} else if id != "" {
+		if contentID, err := uuid.FromString(id); err == nil {
+			tr.ContentID = nulls.NewUUID(contentID)
+			query.ContentID = id
+		} else {
+			return c.Error(http.StatusBadRequest, fmt.Errorf("Invalid containerID %s", cId))
+		}
+	} else {
+		return c.Error(http.StatusBadRequest, errors.New("containerID or contentID are required"))
+	}
+
+	_, total, err := man.SearchContent(query)
+	if err == nil {
+		return c.Error(http.StatusInternalServerError, err)
+	}
+	if total < 1 {
+		return c.Error(http.StatusBadRequest, fmt.Errorf("Could not find content to check %s", query))
 	}
 	return QueueTaskRequest(c, man, &tr)
 }

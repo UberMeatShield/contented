@@ -178,7 +178,16 @@ func DetectDuplicatesTask(man ContentManager, id uuid.UUID) error {
 		return err
 	}
 
-	dupes := FindDuplicateContents(man, container, "video")
+	// ContainerID is currently required
+	cs := ContentQuery{
+		ContainerID: task.ContainerID.UUID.String(),
+		ContentType: "video",
+		PerPage:     9001, // TODO: Seriously come up with a better paging method...
+	}
+	if task.ContentID.Valid {
+		cs.ContentID = task.ContentID.UUID.String()
+	}
+	dupes := FindDuplicateContents(man, container, cs)
 	if err != nil {
 		failMsg := fmt.Sprintf("Failing to detect duplicates %s", err)
 		FailTask(man, task, failMsg)

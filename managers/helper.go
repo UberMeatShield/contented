@@ -161,7 +161,7 @@ func FindDuplicateVideos(cm ContentManager) (DuplicateContents, error) {
 	log.Printf("Looking in %d containers", len(*containers))
 	duplicates := DuplicateContents{}
 	for _, cnt := range *containers {
-		dupes := FindDuplicateContents(cm, &cnt, "video")
+		dupes := FindContainerDuplicates(cm, &cnt, "video", "")
 		if len(dupes) > 0 {
 			log.Printf("Found duplicates %d in cnt %s", len(dupes), cnt.Name)
 			duplicates = append(duplicates, dupes...)
@@ -170,13 +170,21 @@ func FindDuplicateVideos(cm ContentManager) (DuplicateContents, error) {
 	return duplicates, nil
 }
 
-func FindDuplicateContents(cm ContentManager, cnt *models.Container, contentType string) DuplicateContents {
-	cfg := utils.GetCfg()
+func FindContainerDuplicates(cm ContentManager, cnt *models.Container, contentType string, contentID string) DuplicateContents {
 	cs := ContentQuery{
 		ContentType: contentType,
-		PerPage:     90001, // TODO: just page it better
+		PerPage:     9001, // TODO Page content in a sane fashion
 		ContainerID: cnt.ID.String(),
 	}
+	if contentID != "" {
+		cs.ContentID = contentID
+	}
+	return FindDuplicateContents(cm, cnt, cs)
+
+}
+
+func FindDuplicateContents(cm ContentManager, cnt *models.Container, cs ContentQuery) DuplicateContents {
+	cfg := utils.GetCfg()
 	contents, total, err := cm.ListContent(cs)
 	if total == 0 || err != nil {
 		log.Printf("Could not find any content under %s", cnt.GetFqPath())
