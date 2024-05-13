@@ -51,7 +51,7 @@ func App(UseDatabase bool) *buffalo.App {
 		app.POST("/editing_queue/{contentID}/encoding", VideoEncodingHandler)
 		app.POST("/editing_queue/{contentID}/webp", WebpFromScreensHandler)
 		app.POST("/editing_queue/{contentID}/tagging", TaggingHandler)
-		app.POST("/editing_queue/{contentID}/duplicates", TaggingHandler)
+		app.POST("/editing_queue/{contentID}/duplicates", DupesHandler)
 
 		//
 		app.POST("/editing_container_queue/{containerID}/duplicates", DupesHandler)

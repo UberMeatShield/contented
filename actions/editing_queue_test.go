@@ -302,6 +302,25 @@ func (as *ActionSuite) Test_DuplicateHandlerDB() {
 	ValidateDuplicatesTask(as, cnt)
 }
 
+func (as *ActionSuite) Test_DuplicateHandlerMemory() {
+	cfg := test_common.InitFakeApp(false)
+	utils.SetCfg(*cfg)
+
+	ctx := test_common.GetContext(as.App)
+	man := managers.GetManager(&ctx)
+
+	query := managers.ContainerQuery{Name: "test_encoding", PerPage: 1}
+	containers, total, err := man.SearchContainers(query)
+	as.NoError(err)
+	as.Equal(1, total, "There should only be one container matching")
+	as.Equal(1, len(*containers), "There should be one container")
+
+	// Create the directory with the duplicate test
+	cnt := (*containers)[0]
+	as.NotNil(cnt)
+	ValidateDuplicatesTask(as, &cnt)
+}
+
 func ValidateDuplicatesTask(as *ActionSuite, container *models.Container) {
 	ctx := test_common.GetContext(as.App)
 	man := managers.GetManager(&ctx)

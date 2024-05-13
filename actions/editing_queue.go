@@ -257,7 +257,6 @@ func TaggingHandler(c buffalo.Context) error {
 
 // Should deny quickly if the media content type is incorrect for the action
 func DupesHandler(c buffalo.Context) error {
-
 	// Get content search from params
 	man := managers.GetManager(&c)
 
@@ -280,14 +279,14 @@ func DupesHandler(c buffalo.Context) error {
 			tr.ContainerID = nulls.NewUUID(containerID)
 			query.ContainerID = cId
 		} else {
-			return c.Error(http.StatusBadRequest, fmt.Errorf("Invalid containerID %s", cId))
+			return c.Error(http.StatusBadRequest, fmt.Errorf("invalid containerID %s", cId))
 		}
 	} else if id != "" {
 		if contentID, err := uuid.FromString(id); err == nil {
 			tr.ContentID = nulls.NewUUID(contentID)
 			query.ContentID = id
 		} else {
-			return c.Error(http.StatusBadRequest, fmt.Errorf("Invalid containerID %s", cId))
+			return c.Error(http.StatusBadRequest, fmt.Errorf("invalid containerID %s", cId))
 		}
 	} else {
 		return c.Error(http.StatusBadRequest, errors.New("containerID or contentID are required"))
@@ -298,7 +297,7 @@ func DupesHandler(c buffalo.Context) error {
 		return c.Error(http.StatusInternalServerError, err)
 	}
 	if total < 1 {
-		return c.Error(http.StatusBadRequest, fmt.Errorf("Could not find content to check %s", query))
+		return c.Error(http.StatusBadRequest, fmt.Errorf("could not find content to check %s", query))
 	}
 	return QueueTaskRequest(c, man, &tr)
 }
