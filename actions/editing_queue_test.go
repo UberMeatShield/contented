@@ -287,7 +287,6 @@ func ValidateTaggingCode(as *ActionSuite, content *models.Content) {
 	url := fmt.Sprintf("/editing_queue/%s/tagging", content.ID.String())
 	res := as.JSON(url).Post(&content)
 	as.Equal(http.StatusCreated, res.Code, fmt.Sprintf("Failed to queue tagging task %s", res.Body.String()))
-
 }
 
 func (as *ActionSuite) Test_DuplicateHandlerDB() {
@@ -319,6 +318,7 @@ func (as *ActionSuite) Test_DuplicateHandlerMemory() {
 	cnt := (*containers)[0]
 	as.NotNil(cnt)
 	ValidateDuplicatesTask(as, &cnt)
+	ValidateDuplicateApiCalls(as, &cnt)
 }
 
 func ValidateDuplicatesTask(as *ActionSuite, container *models.Container) {
@@ -341,4 +341,24 @@ func ValidateDuplicatesTask(as *ActionSuite, container *models.Container) {
 	json.Unmarshal([]byte(taskCheck.Message), &dupes)
 	as.Equal(1, len(dupes), fmt.Sprintf("There should be a duplicate %s", dupes))
 	as.Equal(dupes[0].DuplicateSrc, "SampleVideo_1280x720_1mb.mp4")
+}
+
+func ValidateDuplicateApiCalls(as *ActionSuite, container *models.Container) {
+	ctx := test_common.GetContext(as.App)
+	man := managers.GetManager(&ctx)
+
+	url := fmt.Sprintf("/editing_container_queue/%s/duplicates", container.ID.String())
+	res := as.JSON(url).Post(container)
+	as.Equal(http.StatusCreated, res.Code, fmt.Sprintf("Failed to queue dupe container task %s", res.Body.String()))
+
+	cq := managers.ContentQuery{Text: "SampleVideo_1280x720_1mb_h265.mp4"}
+	contents, total, contentErr := man.SearchContent(cq)
+	as.Equal(total, 1, "It should have found the content")
+	as.NoError(contentErr)
+
+	mc := (*contents)[0]
+	urlContent := fmt.Sprintf("/editing_queue/%s/duplicates", mc.ID.String())
+	resContent := as.JSON(urlContent).Post(mc)
+	as.Equal(http.StatusCreated, resContent.Code, fmt.Sprintf("Failed to queue dupe content task %s", resContent.Body.String()))
+
 }

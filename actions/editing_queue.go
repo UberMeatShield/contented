@@ -293,12 +293,14 @@ func DupesHandler(c buffalo.Context) error {
 	}
 
 	_, total, err := man.SearchContent(query)
-	if err == nil {
+	if err != nil {
+		log.Printf("Cannot queue dupe task %s err: %s", query, err)
 		return c.Error(http.StatusInternalServerError, err)
 	}
 	if total < 1 {
 		return c.Error(http.StatusBadRequest, fmt.Errorf("could not find content to check %s", query))
 	}
+	log.Printf("Attempting to queue task %s", tr)
 	return QueueTaskRequest(c, man, &tr)
 }
 

@@ -158,6 +158,17 @@ func (cm ContentManagerMemory) getContentFiltered(cs ContentQuery) (*models.Cont
 	cidArr := models.Contents{}
 	mem := cm.GetStore()
 
+	if !cs.IncludeHidden {
+		log.Printf("Made it to the hidden include")
+		visibleArr := models.Contents{}
+		for _, mc := range mcArr {
+			if !mc.Hidden {
+				visibleArr = append(visibleArr, mc)
+			}
+		}
+		mcArr = visibleArr
+	}
+
 	if cs.ContainerID != "" {
 		cID, cErr := uuid.FromString(cs.ContainerID)
 		if cErr == nil {
@@ -188,8 +199,8 @@ func (cm ContentManagerMemory) getContentFiltered(cs ContentQuery) (*models.Cont
 		mcArr = idArr
 	}
 
-	log.Printf("It should be searching the contents %s", cs.Search)
 	if cs.Search != "" && cs.Search != "*" {
+		log.Printf("It should be searching the contents %s", cs.Search)
 		searchStr := regexp.QuoteMeta(cs.Search)
 		searcher := regexp.MustCompile("(?i)" + searchStr)
 		searchArr := models.Contents{}
@@ -220,16 +231,6 @@ func (cm ContentManagerMemory) getContentFiltered(cs ContentQuery) (*models.Cont
 			}
 		}
 		mcArr = contentArr
-	}
-
-	if !cs.IncludeHidden {
-		visibleArr := models.Contents{}
-		for _, mc := range mcArr {
-			if !mc.Hidden {
-				visibleArr = append(visibleArr, mc)
-			}
-		}
-		mcArr = visibleArr
 	}
 	return &mcArr, nil
 }
