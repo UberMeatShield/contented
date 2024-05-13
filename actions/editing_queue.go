@@ -18,6 +18,7 @@ import (
 
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/worker"
+	"github.com/gobuffalo/nulls"
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 )
@@ -115,7 +116,7 @@ func WebpFromScreensWrapper(args worker.Args) error {
 }
 
 /*
- * Attempt to tag a piece of content
+ * Attempt to tag a piece of content (tempting to just make this a switch)
  */
 func TaggingContentWrapper(args worker.Args) error {
 	log.Printf("Tagging content element () Starting Task args %s", args)
@@ -142,6 +143,33 @@ func TaggingContentWrapper(args worker.Args) error {
 	// Memory manager version
 	man := managers.GetAppManager(app, getConnection)
 	return managers.TaggingContentTask(man, taskId)
+}
+
+func DuplicatesWrapper(args worker.Args) error {
+	log.Printf("Finding Duplicates %s", args)
+	cfg := utils.GetCfg()
+	getConnection := func() *pop.Connection {
+		return nil
+	}
+	app := App(cfg.UseDatabase)
+	taskId, err := GetTaskId(args)
+	if err != nil {
+		return err
+	}
+	// Note this is extra complicated by the fact it SHOULD be able to run with NO connections
+	// or DB sessions made.
+	if cfg.UseDatabase {
+		return models.DB.Transaction(func(tx *pop.Connection) error {
+			getConnection = func() *pop.Connection {
+				return tx
+			}
+			man := managers.GetAppManager(app, getConnection)
+			return managers.DetectDuplicatesTask(man, taskId)
+		})
+	}
+	// Memory manager version
+	man := managers.GetAppManager(app, getConnection)
+	return managers.DetectDuplicatesTask(man, taskId)
 }
 
 func GetTaskId(args worker.Args) (uuid.UUID, error) {
@@ -171,7 +199,7 @@ func WebpFromScreensHandler(c buffalo.Context) error {
 		return nil
 	}
 	tr := models.TaskRequest{
-		ContentID: content.ID,
+		ContentID: nulls.NewUUID(content.ID),
 		Operation: models.TaskOperation.WEBP,
 	}
 	return QueueTaskRequest(c, man, &tr)
@@ -196,7 +224,7 @@ func VideoEncodingHandler(c buffalo.Context) error {
 	codec := managers.StringDefault(c.Param("codec"), cfg.CodecForConversion)
 	log.Printf("Requesting a re-encode %s with codec %s for contentID %s", content.Src, codec, content.ID.String())
 	tr := models.TaskRequest{
-		ContentID:        content.ID,
+		ContentID:        nulls.NewUUID(content.ID),
 		Operation:        models.TaskOperation.ENCODING,
 		NumberOfScreens:  0,
 		StartTimeSeconds: 0,
@@ -221,9 +249,58 @@ func TaggingHandler(c buffalo.Context) error {
 
 	// Probably should at least sanity check the codecs
 	tr := models.TaskRequest{
-		ContentID: content.ID,
+		ContentID: nulls.NewUUID(content.ID),
 		Operation: models.TaskOperation.TAGGING,
 	}
+	return QueueTaskRequest(c, man, &tr)
+}
+
+// Should deny quickly if the media content type is incorrect for the action
+func DupesHandler(c buffalo.Context) error {
+	// Get content search from params
+	man := managers.GetManager(&c)
+
+	params := c.Params()
+	cId := managers.StringDefault(params.Get("containerID"), "")
+	id := managers.StringDefault(params.Get("contentID"), "")
+
+	// It could just take 'nothing' and run against ALL video I guess.
+	tr := models.TaskRequest{
+		Operation: models.TaskOperation.DUPES,
+	}
+	query := managers.ContentQuery{
+		ContentType: "video",
+		PerPage:     1,
+	}
+
+	// This is kinda ugly, might want to make it just two handlers
+	if cId != "" {
+		if containerID, err := uuid.FromString(cId); err == nil {
+			tr.ContainerID = nulls.NewUUID(containerID)
+			query.ContainerID = cId
+		} else {
+			return c.Error(http.StatusBadRequest, fmt.Errorf("invalid containerID %s", cId))
+		}
+	} else if id != "" {
+		if contentID, err := uuid.FromString(id); err == nil {
+			tr.ContentID = nulls.NewUUID(contentID)
+			query.ContentID = id
+		} else {
+			return c.Error(http.StatusBadRequest, fmt.Errorf("invalid containerID %s", cId))
+		}
+	} else {
+		return c.Error(http.StatusBadRequest, errors.New("containerID or contentID are required"))
+	}
+
+	_, total, err := man.SearchContent(query)
+	if err != nil {
+		log.Printf("Cannot queue dupe task %s err: %s", query, err)
+		return c.Error(http.StatusInternalServerError, err)
+	}
+	if total < 1 {
+		return c.Error(http.StatusBadRequest, fmt.Errorf("could not find content to check %s", query))
+	}
+	log.Printf("Attempting to queue task %s", tr)
 	return QueueTaskRequest(c, man, &tr)
 }
 
@@ -256,7 +333,7 @@ func TaskScreensHandler(c buffalo.Context) error {
 	}
 	log.Printf("Requesting screens be built out %s start %d count %d", content.Src, startTimeSeconds, numberOfScreens)
 	tr := models.TaskRequest{
-		ContentID:        content.ID,
+		ContentID:        nulls.NewUUID(content.ID),
 		Operation:        models.TaskOperation.SCREENS,
 		NumberOfScreens:  numberOfScreens,
 		StartTimeSeconds: startTimeSeconds,

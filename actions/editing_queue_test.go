@@ -16,9 +16,32 @@ import (
 	"github.com/gobuffalo/nulls"
 )
 
-// Make something that does this in a cleaner fashion
+/**
+ * Grab the known donut file.
+ */
 func CreateVideoContainer(as *ActionSuite) (*models.Container, *models.Content) {
-	cntToCreate, contents := test_common.GetContentByDirName("dir2")
+	cnt, contents := CreateVideoContents(as, "dir2", "donut")
+	as.NotNil(contents, "No donut video found in dir2!")
+	ref := *contents
+	return cnt, &ref[0]
+}
+
+/*
+ * TODO: Add to test common and actually do a full video validation.
+ */
+func IsVideoMatch(content models.Content, contentMatch string) bool {
+	if !strings.Contains(content.ContentType, "video") {
+		return false
+	}
+	if contentMatch == "" || strings.Contains(content.Src, contentMatch) {
+		return true
+	}
+	return false
+}
+
+// Make something that does this in a cleaner fashion
+func CreateVideoContents(as *ActionSuite, containerName string, contentMatch string) (*models.Container, *models.Contents) {
+	cntToCreate, contents := test_common.GetContentByDirName(containerName)
 
 	cRes := as.JSON("/containers/").Post(&cntToCreate)
 	as.Equal(http.StatusCreated, cRes.Code, fmt.Sprintf("It should create the container %s", cRes.Body.String()))
@@ -27,18 +50,21 @@ func CreateVideoContainer(as *ActionSuite) (*models.Container, *models.Content) 
 	json.NewDecoder(cRes.Body).Decode(&cnt)
 	as.NotZero(cnt.ID, "It should create a valid container")
 
-	content := models.Content{}
+	contentsCreated := models.Contents{}
 	for _, contentToCreate := range contents {
-		if strings.Contains(contentToCreate.Src, "donut") {
+
+		if IsVideoMatch(contentToCreate, contentMatch) {
 			contentToCreate.ContainerID = nulls.NewUUID(cnt.ID)
 			contentRes := as.JSON("/contents").Post(&contentToCreate)
 			as.Equal(http.StatusCreated, contentRes.Code, fmt.Sprintf("Error %s", contentRes.Body.String()))
+
+			content := models.Content{}
 			json.NewDecoder(contentRes.Body).Decode(&content)
-			break
+			as.NotZero(content.ID, fmt.Sprintf("It should have created content %s", content))
+			contentsCreated = append(contentsCreated, content)
 		}
 	}
-	as.NotZero(content.ID, fmt.Sprintf("It should have created a donut content %s", content))
-	return &cnt, &content
+	return &cnt, &contentsCreated
 }
 
 func (as *ActionSuite) Test_TaskRelatedObjects() {
@@ -46,6 +72,7 @@ func (as *ActionSuite) Test_TaskRelatedObjects() {
 	as.Equal(models.TaskOperation.ENCODING.String(), "video_encoding")
 	as.Equal(models.TaskOperation.WEBP.String(), "webp_from_screens")
 	as.Equal(models.TaskOperation.TAGGING.String(), "tag_content")
+	as.Equal(models.TaskOperation.DUPES.String(), "detect_duplicates")
 }
 
 // Do the screen grab in memory
@@ -240,7 +267,7 @@ func ValidateTaggingCode(as *ActionSuite, content *models.Content) {
 	man.CreateTag(&tag2)
 	man.CreateTag(&badTag)
 
-	tr := models.TaskRequest{Operation: models.TaskOperation.TAGGING, ContentID: content.ID}
+	tr := models.TaskRequest{Operation: models.TaskOperation.TAGGING, ContentID: nulls.NewUUID(content.ID)}
 	task, err := man.CreateTask(&tr)
 	as.NoError(err, "Failed to create Task to do tagging")
 	as.NotZero(task.ID)
@@ -260,5 +287,78 @@ func ValidateTaggingCode(as *ActionSuite, content *models.Content) {
 	url := fmt.Sprintf("/editing_queue/%s/tagging", content.ID.String())
 	res := as.JSON(url).Post(&content)
 	as.Equal(http.StatusCreated, res.Code, fmt.Sprintf("Failed to queue tagging task %s", res.Body.String()))
+}
+
+func (as *ActionSuite) Test_DuplicateHandlerDB() {
+	cfg := test_common.InitFakeApp(true)
+	utils.SetCfg(*cfg)
+
+	// Create the directory with the duplicate test
+	cnt, contents := CreateVideoContents(as, "test_encoding", "")
+	as.NotNil(cnt)
+	as.NotNil(contents)
+
+	ValidateDuplicatesTask(as, cnt)
+}
+
+func (as *ActionSuite) Test_DuplicateHandlerMemory() {
+	cfg := test_common.InitFakeApp(false)
+	utils.SetCfg(*cfg)
+
+	ctx := test_common.GetContext(as.App)
+	man := managers.GetManager(&ctx)
+
+	query := managers.ContainerQuery{Name: "test_encoding", PerPage: 1}
+	containers, total, err := man.SearchContainers(query)
+	as.NoError(err)
+	as.Equal(1, total, "There should only be one container matching")
+	as.Equal(1, len(*containers), "There should be one container")
+
+	// Create the directory with the duplicate test
+	cnt := (*containers)[0]
+	as.NotNil(cnt)
+	ValidateDuplicatesTask(as, &cnt)
+	ValidateDuplicateApiCalls(as, &cnt)
+}
+
+func ValidateDuplicatesTask(as *ActionSuite, container *models.Container) {
+	ctx := test_common.GetContext(as.App)
+	man := managers.GetManager(&ctx)
+
+	tr := models.TaskRequest{Operation: models.TaskOperation.DUPES, ContainerID: nulls.NewUUID(container.ID)}
+	task, err := man.CreateTask(&tr)
+	as.NoError(err, "It should be able to create the duplicates task")
+
+	dupeErr := managers.DetectDuplicatesTask(man, task.ID)
+	as.NoError(dupeErr, "It should be able to run the duplicates task")
+
+	taskCheck, errCheck := man.GetTask(task.ID)
+	as.NoError(errCheck)
+	as.Equal(taskCheck.Status, models.TaskStatus.DONE)
+	as.NotEqual(taskCheck.Message, "")
+
+	dupes := managers.DuplicateContents{}
+	json.Unmarshal([]byte(taskCheck.Message), &dupes)
+	as.Equal(1, len(dupes), fmt.Sprintf("There should be a duplicate %s", dupes))
+	as.Equal(dupes[0].DuplicateSrc, "SampleVideo_1280x720_1mb.mp4")
+}
+
+func ValidateDuplicateApiCalls(as *ActionSuite, container *models.Container) {
+	ctx := test_common.GetContext(as.App)
+	man := managers.GetManager(&ctx)
+
+	url := fmt.Sprintf("/editing_container_queue/%s/duplicates", container.ID.String())
+	res := as.JSON(url).Post(container)
+	as.Equal(http.StatusCreated, res.Code, fmt.Sprintf("Failed to queue dupe container task %s", res.Body.String()))
+
+	cq := managers.ContentQuery{Text: "SampleVideo_1280x720_1mb_h265.mp4"}
+	contents, total, contentErr := man.SearchContent(cq)
+	as.Equal(total, 1, "It should have found the content")
+	as.NoError(contentErr)
+
+	mc := (*contents)[0]
+	urlContent := fmt.Sprintf("/editing_queue/%s/duplicates", mc.ID.String())
+	resContent := as.JSON(urlContent).Post(mc)
+	as.Equal(http.StatusCreated, resContent.Code, fmt.Sprintf("Failed to queue dupe content task %s", resContent.Body.String()))
 
 }

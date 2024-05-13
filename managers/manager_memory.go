@@ -158,6 +158,7 @@ func (cm ContentManagerMemory) getContentFiltered(cs ContentQuery) (*models.Cont
 	cidArr := models.Contents{}
 	mem := cm.GetStore()
 
+	// Most common initial filtering call
 	if cs.ContainerID != "" {
 		cID, cErr := uuid.FromString(cs.ContainerID)
 		if cErr == nil {
@@ -178,8 +179,28 @@ func (cm ContentManagerMemory) getContentFiltered(cs ContentQuery) (*models.Cont
 		mcArr = cidArr
 	}
 
-	log.Printf("It should be searching the contents %s", cs.Search)
+	if !cs.IncludeHidden {
+		visibleArr := models.Contents{}
+		for _, mc := range mcArr {
+			if !mc.Hidden {
+				visibleArr = append(visibleArr, mc)
+			}
+		}
+		mcArr = visibleArr
+	}
+
+	if id, err := uuid.FromString(cs.ContentID); err == nil {
+		idArr := models.Contents{}
+		for _, mc := range mcArr {
+			if mc.ID == id {
+				idArr = append(idArr, mc)
+			}
+		}
+		mcArr = idArr
+	}
+
 	if cs.Search != "" && cs.Search != "*" {
+		log.Printf("It should be searching the contents %s", cs.Search)
 		searchStr := regexp.QuoteMeta(cs.Search)
 		searcher := regexp.MustCompile("(?i)" + searchStr)
 		searchArr := models.Contents{}
@@ -210,16 +231,6 @@ func (cm ContentManagerMemory) getContentFiltered(cs ContentQuery) (*models.Cont
 			}
 		}
 		mcArr = contentArr
-	}
-
-	if !cs.IncludeHidden {
-		visibleArr := models.Contents{}
-		for _, mc := range mcArr {
-			if !mc.Hidden {
-				visibleArr = append(visibleArr, mc)
-			}
-		}
-		mcArr = visibleArr
 	}
 	return &mcArr, nil
 }
@@ -399,14 +410,20 @@ func (cm ContentManagerMemory) ListContainersFiltered(cs ContainerQuery) (*model
 	c_arr := models.Containers{}
 	mem := cm.GetStore()
 	for _, c := range mem.ValidContainers {
-		if cs.IncludeHidden == false {
-			if c.Hidden != true {
+
+		if cs.Name != "" && !strings.Contains(c.Name, cs.Name) {
+			continue
+		}
+
+		if !cs.IncludeHidden {
+			if !c.Hidden {
 				c_arr = append(c_arr, c)
 			}
 		} else {
 			c_arr = append(c_arr, c)
 		}
 	}
+
 	sort.SliceStable(c_arr, func(i, j int) bool {
 		return c_arr[i].Idx < c_arr[j].Idx
 	})
@@ -770,7 +787,7 @@ func (cm ContentManagerMemory) ListTasks(query TaskQuery) (*models.TaskRequests,
 			return nil, 0, err
 		}
 		for _, task := range task_arr {
-			if task.ContentID == contentID {
+			if task.ContentID.UUID == contentID {
 				filtered_tasks = append(filtered_tasks, task)
 			}
 		}

@@ -193,6 +193,9 @@ func (cm ContentManagerDB) SearchContent(sr ContentQuery) (*models.Contents, int
 		search := ("%" + sr.Search + "%")
 		q = q.Where(`src like ?`, search)
 	}
+	if sr.ContentID != "" {
+		q = q.Where("id = ?", sr.ContentID)
+	}
 	if sr.Text != "" {
 		q = q.Where(`src = ?`, sr.Text)
 	}

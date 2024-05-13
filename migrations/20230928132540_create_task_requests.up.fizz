@@ -1,7 +1,11 @@
 create_table("task_requests") {
 	t.Column("id", "uuid", {primary: true})
-	t.Column("content_id", "uuid", {"null": false})
-	t.ForeignKey("content_id", {"contents": ["id"]}, {"on_delete": "cascade"})
+	
+	t.Column("content_id", "uuid", {"null": true, "default": nil})
+	t.ForeignKey("content_id", {"contents": ["id"]}, {"on_delete": "cascade", "null": true})
+
+	t.Column("container_id", "uuid", {"null": true, "default": nil})
+	t.ForeignKey("container_id", {"containers": ["id"]}, {"on_delete": "cascade", "null": true})
 
     t.Column("created_id", "uuid", {"null": true, "default": nil})
     t.ForeignKey("created_id", {"contents": ["id"]}, {"null": true})

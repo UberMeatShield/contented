@@ -83,11 +83,13 @@ var TaskOperation = struct {
 	SCREENS  TaskOperationType
 	WEBP     TaskOperationType
 	TAGGING  TaskOperationType
+	DUPES    TaskOperationType
 }{
 	ENCODING: "video_encoding",
 	SCREENS:  "screen_capture",
 	WEBP:     "webp_from_screens",
 	TAGGING:  "tag_content",
+	DUPES:    "detect_duplicates",
 }
 
 func (to TaskOperationType) String() string {
@@ -100,18 +102,20 @@ func (to TaskOperationType) String() string {
 		return "webp_from_screens"
 	case TaskOperation.TAGGING:
 		return "tag_content"
+	case TaskOperation.DUPES:
+		return "detect_duplicates"
 	}
 	return "unknown"
 }
 
 // TaskRequest is used by pop to map your task_requests database table to your go code.
 type TaskRequest struct {
-	ID        uuid.UUID `json:"id" db:"id"`
-	ContentID uuid.UUID `json:"content_id" db:"content_id"`
+	ID          uuid.UUID  `json:"id" db:"id"`
+	ContentID   nulls.UUID `json:"content_id" db:"content_id" default:"nil"`
+	ContainerID nulls.UUID `json:"container_id" db:"container_id" default:"nil"`
 
 	// TODO: Make it optional on ContentId so things cna work on a container?
 	// ContainerID nulls.UUID `json:"container_id" db:"container_id" default:"nil"`
-
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 	StartedAt time.Time `json:"started_at" db:"started_at"`
