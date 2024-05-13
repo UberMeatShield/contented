@@ -158,17 +158,7 @@ func (cm ContentManagerMemory) getContentFiltered(cs ContentQuery) (*models.Cont
 	cidArr := models.Contents{}
 	mem := cm.GetStore()
 
-	if !cs.IncludeHidden {
-		log.Printf("Made it to the hidden include")
-		visibleArr := models.Contents{}
-		for _, mc := range mcArr {
-			if !mc.Hidden {
-				visibleArr = append(visibleArr, mc)
-			}
-		}
-		mcArr = visibleArr
-	}
-
+	// Most common initial filtering call
 	if cs.ContainerID != "" {
 		cID, cErr := uuid.FromString(cs.ContainerID)
 		if cErr == nil {
@@ -187,6 +177,16 @@ func (cm ContentManagerMemory) getContentFiltered(cs ContentQuery) (*models.Cont
 			cidArr = append(cidArr, mc)
 		}
 		mcArr = cidArr
+	}
+
+	if !cs.IncludeHidden {
+		visibleArr := models.Contents{}
+		for _, mc := range mcArr {
+			if !mc.Hidden {
+				visibleArr = append(visibleArr, mc)
+			}
+		}
+		mcArr = visibleArr
 	}
 
 	if id, err := uuid.FromString(cs.ContentID); err == nil {
