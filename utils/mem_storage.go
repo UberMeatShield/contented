@@ -160,7 +160,7 @@ func (ms MemoryStorage) UpdateTag(tag *models.Tag) (*models.Tag, error) {
 		memStorage.ValidTags[tag.ID] = *tag
 		return tag, nil
 	}
-	return nil, errors.New(fmt.Sprintf("Tag was not found %s", tag))
+	return nil, fmt.Errorf("Tag was not found %s", tag)
 }
 
 func (ms MemoryStorage) UpdateTask(t *models.TaskRequest, currentState models.TaskStatusType) (*models.TaskRequest, error) {
@@ -176,8 +176,9 @@ func (ms MemoryStorage) UpdateTask(t *models.TaskRequest, currentState models.Ta
 			break
 		}
 	}
-	if updated == false {
-		return nil, errors.New("Could not find Task to update")
+	log.Printf("Updated the task %s", t.ID.String())
+	if !updated {
+		return nil, errors.New("could not find Task to update")
 	}
 	return t, nil
 }

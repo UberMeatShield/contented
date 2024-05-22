@@ -160,17 +160,26 @@ func FindDuplicateVideos(cm ContentManager) (DuplicateContents, error) {
 
 	log.Printf("Looking in %d containers", len(*containers))
 	duplicates := DuplicateContents{}
+	errors := []string{}
 	for _, cnt := range *containers {
-		dupes := FindContainerDuplicates(cm, &cnt, "video", "")
+		dupes, cntErrors := FindContainerDuplicates(cm, &cnt, "video", "")
 		if len(dupes) > 0 {
 			log.Printf("Found duplicates %d in cnt %s", len(dupes), cnt.Name)
 			duplicates = append(duplicates, dupes...)
 		}
+
+		if len(cntErrors) > 0 {
+			errMsg := fmt.Sprintf("found errors in Container %s errors %s", cnt.ID.String(), cntErrors)
+			errors = append(errors, errMsg)
+		}
+	}
+	if len(errors) > 0 {
+		return duplicates, fmt.Errorf(strings.Join(errors, "\n"))
 	}
 	return duplicates, nil
 }
 
-func FindContainerDuplicates(cm ContentManager, cnt *models.Container, contentType string, contentID string) DuplicateContents {
+func FindContainerDuplicates(cm ContentManager, cnt *models.Container, contentType string, contentID string) (DuplicateContents, []string) {
 	cs := ContentQuery{
 		ContentType: contentType,
 		PerPage:     9001, // TODO Page content in a sane fashion
@@ -183,12 +192,13 @@ func FindContainerDuplicates(cm ContentManager, cnt *models.Container, contentTy
 
 }
 
-func FindDuplicateContents(cm ContentManager, cnt *models.Container, cs ContentQuery) DuplicateContents {
+func FindDuplicateContents(cm ContentManager, cnt *models.Container, cs ContentQuery) (DuplicateContents, []string) {
 	cfg := utils.GetCfg()
 	contents, total, err := cm.ListContent(cs)
+	errors := []string{}
 	if total == 0 || err != nil {
 		log.Printf("Could not find any content under %s", cnt.GetFqPath())
-		return DuplicateContents{}
+		return DuplicateContents{}, errors
 	}
 
 	// We are only going to look for dupes in the same folder initially
@@ -219,7 +229,10 @@ func FindDuplicateContents(cm ContentManager, cnt *models.Container, cs ContentQ
 
 				foundDupe, checkErr := utils.IsDuplicateVideo(encodedPath, dupePath)
 				if checkErr != nil {
-					log.Printf("Error attempting to determine if a video was a dupe %s", checkErr)
+					// TODO: not a failure case but maybe it should be or at least measured?
+					errMsg := fmt.Sprintf("Error attempting to determine if a video was a dupe %s", checkErr)
+					errors = append(errors, errMsg)
+					log.Printf(errMsg)
 				} else if foundDupe {
 					log.Printf("Found a duplicate at %s", dupePath)
 					dupe := DuplicateContent{
@@ -237,7 +250,7 @@ func FindDuplicateContents(cm ContentManager, cnt *models.Container, cs ContentQ
 			}
 		}
 	}
-	return duplicates
+	return duplicates, errors
 }
 
 // TODO: Should this return a total of previews created or something?

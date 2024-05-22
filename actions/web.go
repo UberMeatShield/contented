@@ -61,6 +61,7 @@ func SetupWorkers(app *buffalo.App) {
 		w.Register(models.TaskOperation.ENCODING.String(), VideoEncodingWrapper)
 		w.Register(models.TaskOperation.WEBP.String(), WebpFromScreensWrapper)
 		w.Register(models.TaskOperation.TAGGING.String(), TaggingContentWrapper)
+		w.Register(models.TaskOperation.DUPES.String(), DuplicatesWrapper)
 	}
 }
 
