@@ -324,6 +324,23 @@ export class ContentedService {
         );
     }
 
+    findDuplicateForContentTask(content: Content) {
+        let url = ApiDef.contented.duplicateContentTask.replace("{contentId}", content.id);
+        return this.http.post(url, content).pipe(
+            map(res => {
+                return new TaskRequest(res);
+            })
+        );
+    }
+
+    findDuplicateForContainerTask(cnt: Container) {
+        let url = ApiDef.contented.duplicateContentTask.replace("{containerId}", cnt.id);
+        return this.http.post(url, cnt).pipe(
+            map(res => {
+                return new TaskRequest(res);
+            })
+        );
+    }
 
     getTags(page: number = 1, perPage: number = 1000, tagType: string = "") {
         if (TAGS_RESPONSE.initialized) {

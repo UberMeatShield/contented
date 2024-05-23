@@ -15,13 +15,15 @@ export let ApiDef = {
         screens: base + 'screens/',
         contentAll: base + 'content/',
         search: base + "search",
+        tags: base + "tags/",
 
         // Task Related APIs
         requestScreens: "/editing_queue/{id}/screens/{count}/{startTimeSeconds}",
         encodeVideoContent: "/editing_queue/{id}/encoding",
         createPreviewFromScreens: "/editing_queue/{id}/webp",
         createTagContentTask: "/editing_queue/{id}/tagging",
-        tags: base + "tags/",
+        duplicateContentTask: "/editing_queue/{contentId}/duplicates",
+        duplicateContainerTask: "/editing_container_queue/{containerId}/duplicates",
     },
     tasks: {
         get: "/task_requests/{id}",

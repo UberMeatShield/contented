@@ -175,6 +175,22 @@ export class EditorContentCmp implements OnInit {
     });
   }
 
+  findDupesContent(content: Content) {
+    console.log("Create dupes")
+    this.taskLoading = true;
+    this._service.findDuplicateForContentTask(content).pipe(
+      finalize(() => this.taskLoading = false)
+    ).subscribe({
+      next: (task: TaskRequest) => {
+        console.log("Find dupes", content, task);
+        this.watchTask(task);
+      },
+      error: err => {
+        GlobalBroadcast.error('Failed to kick off dupe task', err);
+      }
+    });
+  }
+
   canCreatePreview(content: Content) {
     if (!this.taskLoading && content && content.screens && content.screens.length > 0) {
       return true;

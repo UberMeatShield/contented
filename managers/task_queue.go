@@ -96,33 +96,64 @@ func TakeContentTask(man ContentManager, id uuid.UUID, operation string) (*model
 }
 
 /**
- * Grab a container related task
+ * Grab a container related task that requires a container
  */
-func TakeContainerTask(man ContentManager, id uuid.UUID, operation string) (*models.TaskRequest, *models.Container, error) {
+func TakeContainerTask(man ContentManager, id uuid.UUID, operation string) (*models.TaskRequest, *models.Container, *models.Content, error) {
+	task, container, content, err := TakeTask(man, id, operation)
+	if err != nil {
+		return task, container, content, err
+	}
+
+	log.Printf("Took the task at least? %s container %s", task, container)
+
+	task, upErr := ChangeTaskState(man, task, models.TaskStatus.IN_PROGRESS, fmt.Sprintf("Container was found %s", container.Name))
+	if upErr != nil {
+		msg := fmt.Sprintf("%s Failed to update task state to in progress %s", operation, upErr)
+		FailTask(man, task, msg)
+		return task, container, content, upErr
+	}
+	return task, container, content, nil
+}
+
+func TakeTask(man ContentManager, id uuid.UUID, operation string) (*models.TaskRequest, *models.Container, *models.Content, error) {
 	task, tErr := man.GetTask(id)
 	if tErr != nil {
 		log.Printf("%s Could not look up the task successfully %s", operation, tErr)
-		return task, nil, tErr
+		return task, nil, nil, tErr
 	}
 	task, pErr := ChangeTaskState(man, task, models.TaskStatus.PENDING, "Starting to execute task")
 	if pErr != nil {
 		msg := fmt.Sprintf("%s Couldn't move task into pending %s", operation, pErr)
 		FailTask(man, task, msg)
-		return task, nil, pErr
+		return task, nil, nil, pErr
 	}
-	container, cErr := man.GetContainer(task.ContainerID.UUID)
-	if cErr != nil {
-		msg := fmt.Sprintf("%s Container not found %s %s", operation, task.ContainerID.UUID, cErr)
-		FailTask(man, task, msg)
-		return task, container, cErr
+
+	//TODO: Make this less ugly....
+	var container *models.Container = nil
+	if task.ContainerID.Valid {
+		cnt, cErr := man.GetContainer(task.ContainerID.UUID)
+		container = cnt
+		if cErr != nil {
+			msg := fmt.Sprintf("%s Container not found %s %s", operation, task.ContainerID.UUID, cErr)
+			FailTask(man, task, msg)
+			return task, container, nil, cErr
+		}
 	}
-	task, upErr := ChangeTaskState(man, task, models.TaskStatus.IN_PROGRESS, fmt.Sprintf("Container was found %s", container.Name))
-	if upErr != nil {
-		msg := fmt.Sprintf("%s Failed to update task state to in progress %s", operation, upErr)
-		FailTask(man, task, msg)
-		return task, container, upErr
+
+	var content *models.Content = nil
+	if task.ContentID.Valid {
+		content, cErr := man.GetContent(task.ContentID.UUID)
+		if cErr != nil {
+			msg := fmt.Sprintf("%s Content not found %s %s", operation, task.ContentID.UUID, cErr)
+			FailTask(man, task, msg)
+			return task, container, content, cErr
+		}
+		// Fallback to containerID lookup based on content
+		if content != nil && content.ContainerID.Valid && container == nil {
+			container, _ = man.GetContainer(content.ContainerID.UUID)
+		}
 	}
-	return task, container, nil
+	return task, container, content, nil
 }
 
 /**
@@ -173,23 +204,33 @@ func WebpFromScreensTask(man ContentManager, id uuid.UUID) error {
  */
 func DetectDuplicatesTask(man ContentManager, id uuid.UUID) error {
 	log.Printf("Managers duplicate content taskID attempting to start %s", id)
-	task, container, err := TakeContainerTask(man, id, "DetectDuplicatesTask")
+	task, container, content, err := TakeContainerTask(man, id, "DetectDuplicatesTask")
+
+	// Make it so the task has a contentId
+	// Maybe a take task should return the container AND the content if specified
+	// It should be smart enough to get a container or content
+	// TODO: Figure out how to get container vs content(if there is an error her)
 	if err != nil {
+		log.Printf("Error attempting to start a dupe task %s", err)
 		return err
 	}
 
 	// ContainerID is currently required
 	cs := ContentQuery{
-		ContainerID: task.ContainerID.UUID.String(),
 		ContentType: "video",
 		PerPage:     9001, // TODO: Seriously come up with a better paging method...
 	}
-	if task.ContentID.Valid {
-		cs.ContentID = task.ContentID.UUID.String()
+	if content != nil {
+		cs.ContentID = content.ID.String()
 	}
-	dupes := FindDuplicateContents(man, container, cs)
-	if err != nil {
-		failMsg := fmt.Sprintf("Failing to detect duplicates %s", err)
+	if container != nil {
+		cs.ContainerID = container.ID.String()
+	}
+
+	// Is this actually a full failure?
+	dupes, dupeErrors := FindDuplicateContents(man, container, cs)
+	if len(dupeErrors) > 0 {
+		failMsg := fmt.Sprintf("Failing to detect duplicates %s", dupeErrors)
 		FailTask(man, task, failMsg)
 		return err
 	}

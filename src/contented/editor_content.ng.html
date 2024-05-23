@@ -81,6 +81,17 @@
         </button>
       </mat-card-content>
     </mat-card>
+
+    <mat-card class="duplicate-detection-form" *ngIf="content?.isVideo()">
+      <mat-card-header>
+        Attempt to find duplicates for this media
+      </mat-card-header>
+      <mat-card-content>
+        <button class="video-encoding-btn" type="button" mat-raised-button (click)="findDupesContent(content)">
+          Find Duplicates
+        </button>
+      </mat-card-content>
+    </mat-card>
   </div>
 
   <mat-card class="primary-card" *ngIf="!!content">
