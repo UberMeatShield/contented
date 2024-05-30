@@ -54,7 +54,7 @@ const editorOptions = {
   selector: 'tags-cmp',
   templateUrl: './tags.ng.html',
 })
-export class TagsCmp implements OnInit {
+export class TagsCmp {
   // Route needs to exist
   // Take in the search text route param
   // Debounce the search
