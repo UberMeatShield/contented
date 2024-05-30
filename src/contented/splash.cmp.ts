@@ -2,26 +2,25 @@
  * Provide the ability to edit the descriptions of content and containers.  Also provide the ability
  * to quickly manage tags.
  */
-import { Component, OnInit, AfterViewInit, Input, Output, EventEmitter, ViewChild} from '@angular/core';
-import {ActivatedRoute, Router, ParamMap} from '@angular/router';
-import {FormBuilder, NgForm, FormControl, FormGroup, Validators} from '@angular/forms';
-import {finalize, debounceTime, distinctUntilChanged} from 'rxjs/operators';
-import {MatRipple} from '@angular/material/core';
-import {EditorComponent} from 'ngx-monaco-editor-v2';
-import {ContentedService} from './contented_service';
-import {Content} from './content';
-import {Container} from './container';
+import { Component, OnInit, AfterViewInit, Input, Output, EventEmitter, ViewChild } from '@angular/core';
+import { ActivatedRoute, Router, ParamMap } from '@angular/router';
+import { FormBuilder, NgForm, FormControl, FormGroup, Validators } from '@angular/forms';
+import { finalize, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { MatRipple } from '@angular/material/core';
+import { EditorComponent } from 'ngx-monaco-editor-v2';
+import { ContentedService } from './contented_service';
+import { Content } from './content';
+import { Container } from './container';
 
 import * as _ from 'lodash-es';
 
-import {RESUME} from './resume';
+import { RESUME } from './resume';
 
 @Component({
   selector: 'splash-cmp',
   templateUrl: './splash.ng.html',
 })
 export class SplashCmp implements OnInit {
-
   @ViewChild('EDITOR') editor?: EditorComponent;
 
   @Input() editForm?: FormGroup;
@@ -35,9 +34,9 @@ export class SplashCmp implements OnInit {
   };
   @Input() mc?: Content;
   @Input() c?: Container;
-  @Input() splashTitle: string = "";
-  @Input() splashContent: string = "";
-  @Input() rendererType: string = "";
+  @Input() splashTitle: string = '';
+  @Input() splashContent: string = '';
+  @Input() rendererType: string = '';
 
   // These are values for the Monaco Editors, change events are passed down into
   // the form event via the AfterInit and set the v7_definition & suricata_definition.
@@ -47,14 +46,17 @@ export class SplashCmp implements OnInit {
   // Reference to the raw Microsoft component, allows for
   public monacoEditor?: any;
 
-  constructor(public fb: FormBuilder, public route: ActivatedRoute, public _service: ContentedService) {
-  }
+  constructor(
+    public fb: FormBuilder,
+    public route: ActivatedRoute,
+    public _service: ContentedService
+  ) {}
 
   // Subscribe to options changes, if the definition changes make the call
   public ngOnInit() {
     if (!this.editForm) {
       this.editForm = this.fb.group({
-        "description": this.descriptionControl = (this.descriptionControl || new FormControl(this.editorValue || "")),
+        description: (this.descriptionControl = this.descriptionControl || new FormControl(this.editorValue || '')),
       });
     }
     if (!this.mc && !this.c) {
@@ -64,26 +66,23 @@ export class SplashCmp implements OnInit {
 
   // Load the splash page instead of a particular content id
   loadSplash() {
-      //this.loading = true;
-      console.log("Load splash media content");
-      this._service.splash().subscribe(
-        res => {
-          this.c = res.container;
-          this.mc = res.content;
-          this.splashTitle = res.splashTitle || "";
-          this.splashContent = res.splashContent || "";
-          this.rendererType = res.rendererType;
-        },
-         console.error
-      );
+    //this.loading = true;
+    console.log('Load splash media content');
+    this._service.splash().subscribe(res => {
+      this.c = res.container;
+      this.mc = res.content;
+      this.splashTitle = res.splashTitle || '';
+      this.splashContent = res.splashContent || '';
+      this.rendererType = res.rendererType;
+    }, console.error);
   }
 
   getVideos() {
     if (!this.c) {
-      return []
+      return [];
     }
     return _.filter(this.c.contents, mc => {
-        return mc.content_type.includes("video");
+      return mc.content_type.includes('video');
     });
   }
 }

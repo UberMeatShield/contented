@@ -1,12 +1,12 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import {NoopAnimationsModule} from '@angular/platform-browser/animations';
-import {HttpClientTestingModule, HttpTestingController} from '@angular/common/http/testing';
-import {By} from '@angular/platform-browser';
-import {DebugElement} from '@angular/core';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { By } from '@angular/platform-browser';
+import { DebugElement } from '@angular/core';
 
-import {ContentedModule} from '../contented/contented_module';
+import { ContentedModule } from '../contented/contented_module';
 import { TasksCmp } from './tasks.cmp';
-import {MockData} from '../test/mock/mock_data';
+import { MockData } from '../test/mock/mock_data';
 import { RouterTestingModule } from '@angular/router/testing';
 
 declare var $;
@@ -25,11 +25,9 @@ describe('TasksCmp', () => {
         NoopAnimationsModule,
         ContentedModule,
         HttpClientTestingModule,
-        RouterTestingModule.withRoutes(
-          [{path: 'admin_ui/tasks', component: TasksCmp}]
-        ),
+        RouterTestingModule.withRoutes([{ path: 'admin_ui/tasks', component: TasksCmp }]),
       ],
-      declarations: [TasksCmp]
+      declarations: [TasksCmp],
     });
     fixture = TestBed.createComponent(TasksCmp);
     component = fixture.componentInstance;
@@ -48,6 +46,5 @@ describe('TasksCmp', () => {
     let req = httpMock.expectOne(r => r.url.includes('/task_requests'));
     req.flush(MockData.taskRequests());
     tick(1000);
-
   }));
 });
