@@ -1,56 +1,52 @@
 /*
  * Class for representing the tasks in the background task queue.
- */ 
+ */
 import * as _ from 'lodash-es';
 
 export const TASK_STATES = {
-    NEW: "new",
-    PENDING: "pending",
-    IN_PROGRESS: "in_progress",
-    CANCELED: "canceled",
-    ERROR: "error",
-    DONE: "done",
-}
-export const COMPLETE_TASKS = [
-    TASK_STATES.CANCELED,
-    TASK_STATES.ERROR,
-    TASK_STATES.DONE,
-];
+  NEW: 'new',
+  PENDING: 'pending',
+  IN_PROGRESS: 'in_progress',
+  CANCELED: 'canceled',
+  ERROR: 'error',
+  DONE: 'done',
+};
+export const COMPLETE_TASKS = [TASK_STATES.CANCELED, TASK_STATES.ERROR, TASK_STATES.DONE];
 
 export class TaskRequest {
-    id: string;
-    content_id: string;
-    created_at: Date|undefined;
-    updated_at: Date|undefined;
-    started_at: Date|undefined;
-    status: string;
-    operation: string;
-    number_of_screens: number;
-    start_time_seconds: number;
+  id: string;
+  content_id: string;
+  created_at: Date | undefined;
+  updated_at: Date | undefined;
+  started_at: Date | undefined;
+  status: string;
+  operation: string;
+  number_of_screens: number;
+  start_time_seconds: number;
 
-    codec: string;
-    width: number;
-    height: number;
+  codec: string;
+  width: number;
+  height: number;
 
-    message: string;
-    err_msg: string;
+  message: string;
+  err_msg: string;
 
-    uxLoading = false;
+  uxLoading = false;
 
-    constructor(obj: any) {
-        this.update(obj);        
+  constructor(obj: any) {
+    this.update(obj);
+  }
+
+  update(obj: any) {
+    if (obj) {
+      Object.assign(this, obj);
+      this.created_at = obj.created_at ? new Date(obj.created_at) : undefined;
+      this.updated_at = obj.created_at ? new Date(obj.updated_at) : undefined;
+      this.started_at = obj.created_at ? new Date(obj.started_at) : undefined;
     }
+  }
 
-    update(obj: any) {
-        if (obj) {
-            Object.assign(this, obj);
-            this.created_at = obj.created_at ? new Date(obj.created_at) : undefined;
-            this.updated_at = obj.created_at ? new Date(obj.updated_at) : undefined;
-            this.started_at = obj.created_at ? new Date(obj.started_at) : undefined;
-        }
-    }
-
-    isComplete() {
-        return COMPLETE_TASKS.includes(this.status);
-    }
+  isComplete() {
+    return COMPLETE_TASKS.includes(this.status);
+  }
 }

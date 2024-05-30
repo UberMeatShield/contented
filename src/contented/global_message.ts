@@ -1,37 +1,30 @@
 import { Observable } from 'rxjs';
 import { EventEmitter } from '@angular/core';
 
-
 export class Message {
-    constructor(
-        public msg: string,
-        public category: string,
-        public info: any,
-        public channel: string,
-        public uxVisible = false,
-    ) {
-
-    }
+  constructor(
+    public msg: string,
+    public category: string,
+    public info: any,
+    public channel: string,
+    public uxVisible = false
+  ) {}
 }
 
 export class MessageBroadcast {
+  public evts: EventEmitter<Message> = new EventEmitter<Message>();
 
-    public evts: EventEmitter<Message> =  new EventEmitter<Message>()
+  constructor(public channelName: string) {}
 
-    constructor(public channelName: string) {
+  evt(msg: string = '', obj: any) {
+    console.info(msg, obj);
+    this.evts.emit(new Message(msg, 'evt', obj, this.channelName));
+  }
 
-    }
-
-    evt(msg: string = '', obj: any) {
-        console.info(msg, obj);
-        this.evts.emit(new Message(msg, 'evt', obj, this.channelName));
-    }
-
-    error(msg: string, err: any = {}) {
-        console.error(msg, err);
-        this.evts.emit(new Message(msg, 'error', err, this.channelName));
-    }
+  error(msg: string, err: any = {}) {
+    console.error(msg, err);
+    this.evts.emit(new Message(msg, 'error', err, this.channelName));
+  }
 }
-
 
 export const GlobalBroadcast = new MessageBroadcast('global');

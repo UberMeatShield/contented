@@ -1,12 +1,12 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import {NoopAnimationsModule} from '@angular/platform-browser/animations';
-import {HttpClientTestingModule, HttpTestingController} from '@angular/common/http/testing';
-import {By} from '@angular/platform-browser';
-import {DebugElement} from '@angular/core';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { By } from '@angular/platform-browser';
+import { DebugElement } from '@angular/core';
 
-import {ContentedModule} from '../contented/contented_module';
+import { ContentedModule } from '../contented/contented_module';
 import { TaskRequestCmp } from './taskrequest.cmp';
-import {MockData} from '../test/mock/mock_data';
+import { MockData } from '../test/mock/mock_data';
 import { RouterTestingModule } from '@angular/router/testing';
 
 declare var $;
@@ -25,11 +25,9 @@ describe('TaskRequestCmp', () => {
         NoopAnimationsModule,
         ContentedModule,
         HttpClientTestingModule,
-        RouterTestingModule.withRoutes(
-          [{path: 'admin_ui/tasks', component: TaskRequestCmp}]
-        ),
+        RouterTestingModule.withRoutes([{ path: 'admin_ui/tasks', component: TaskRequestCmp }]),
       ],
-      declarations: [TaskRequestCmp]
+      declarations: [TaskRequestCmp],
     });
     fixture = TestBed.createComponent(TaskRequestCmp);
     component = fixture.componentInstance;
@@ -44,14 +42,14 @@ describe('TaskRequestCmp', () => {
   });
 
   it('On create we should query for tasks', () => {
-    const contentID = 'abc'
+    const contentID = 'abc';
     component.contentID = contentID;
     expect(component).toBeTruthy();
     fixture.detectChanges();
 
     let req = httpMock.expectOne(r => {
-      return r.url.includes('/task_requests') && r.params.get('content_id') === contentID
-    })
+      return r.url.includes('/task_requests') && r.params.get('content_id') === contentID;
+    });
     req.flush(MockData.taskRequests());
     fixture.detectChanges();
 
@@ -65,10 +63,10 @@ describe('TaskRequestCmp', () => {
     req.flush(MockData.taskRequests());
     tick(1000);
 
-    expect(component.tasks?.length).withContext("The tasks should be set").toEqual(6);
+    expect(component.tasks?.length).withContext('The tasks should be set').toEqual(6);
 
     fixture.detectChanges();
-    expect($(".task-operation").length).withContext("Render the tasks.").toEqual(6)
+    expect($('.task-operation').length).withContext('Render the tasks.').toEqual(6);
     tick(1000);
   }));
 });
