@@ -1,15 +1,16 @@
 package managers
 
+/*
+ * These functions help with the grift encoding of content.  Some of this
+ * could all be done via task and maybe should be.
+ */
+
 import (
+	"contented/models"
+	"contented/utils"
 	"fmt"
 	"log"
 
-	//  "strings"
-	"contented/models"
-	"contented/utils"
-
-	//"github.com/gobuffalo/nulls"
-	//"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 )
 
@@ -44,7 +45,7 @@ func EncodeVideos(cm ContentManager) error {
 			log.Print(msg)
 		}
 	}
-	log.Printf(lineBreak)
+	log.Print(lineBreak)
 	log.Printf("Failures after this line %s", lineBreak)
 	err_cnt := 0
 	for _, res := range all_results {
@@ -103,7 +104,7 @@ func EncodeContainer(c *models.Container, cm ContentManager) (*utils.EncodingRes
 
 // Do encoding in parallel but many fewer processors.  It will be an interesting mix of
 // disk write and CPU use vs single process and heavy disk use.  Plus encoding video takes
-// some pretty serious memory use.
+// some pretty serious memory use. ffmpeg also uses multiple cores already.
 func EncodeContainerContent(toEncode *utils.EncodingRequests, cm ContentManager) (*utils.EncodingResults, error) {
 	expected := len(*toEncode)
 	log.Printf("Attempting to encode N(%d) video files", expected)
@@ -148,25 +149,19 @@ func StartEncoder(ew utils.EncodingWorker) {
 		mc := req.Mc
 
 		// Should check the on disk size and add a check to look at a post encode filesize
-		log.Printf("Worker %d Doing encoding for %s - %s\n", ew.Id, mc.ID.String(), mc.Src)
-
+		log.Printf("Worker %d doing encoding for %s - %s\n", ew.Id, mc.ID.String(), mc.Src)
 		msg, err, converted := utils.ConvertVideoToH265(req.SrcFile, req.DstFile)
-
-		if err == nil && converted == false {
-			err = errors.New(fmt.Sprintf("A request was made to convert %s but it did not encode %s", req.SrcFile, msg))
+		if err == nil && !converted {
+			err = fmt.Errorf("a request was made to convert %s but it did not encode %s", req.SrcFile, msg)
 		}
 
-		// TODO: Validate that the target file can be probed AND that it can be read and has the same
-		// playtime before determining if it is ok.
-
-		// Check that the destination is ACTUALLY a valid file
+		// ConvertVideoToH265 does a lot of the 'same size', is encoded tests.
 		encodedSize := int64(0)
 		if err == nil {
 			_, encodedSize, err, _ = utils.IsValidVideo(req.DstFile)
-			// TODO: Consider checking codec and duration here as well.
 		}
 
-		log.Printf("Size of the media %d and encoded %d", mc.SizeBytes, encodedSize)
+		log.Printf("Size of the media %d and encoded size %d", mc.SizeBytes, encodedSize)
 		req.Out <- utils.EncodingResult{
 			C_ID:        c.ID,
 			MC_ID:       mc.ID,
