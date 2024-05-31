@@ -122,7 +122,7 @@ func CreateAllPreviews(cm ContentManager) error {
 	}
 	if cnts == nil {
 		msg := "No Containers were found in the manager"
-		log.Printf(msg)
+		log.Print(msg)
 		return errors.New(msg)
 	}
 	log.Printf("Found a number of containers %d", len(*cnts))
@@ -232,7 +232,7 @@ func FindDuplicateContents(cm ContentManager, cnt *models.Container, cs ContentQ
 					// TODO: not a failure case but maybe it should be or at least measured?
 					errMsg := fmt.Sprintf("Error attempting to determine if a video was a dupe %s", checkErr)
 					errors = append(errors, errMsg)
-					log.Printf(errMsg)
+					log.Print(errMsg)
 				} else if foundDupe {
 					log.Printf("Found a duplicate at %s", dupePath)
 					dupe := DuplicateContent{
@@ -267,14 +267,18 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
 
 	// TODO: It should fix up the total count there (-1 for unlimited?)
 	cq := ContentQuery{ContainerID: c.ID.String(), PerPage: 90000, Direction: "asc", Order: "idx"}
-	content, _, q_err := cm.ListContent(cq)
+	content, total, q_err := cm.ListContent(cq)
 	if q_err != nil {
 		log.Fatal(q_err) // Also fatal if we can no longer list content
 	}
+	if total == 0 {
+		log.Printf("No content to create previews for")
+		return nil
+	}
 
 	// It would be nice to maybe abstract this into a better place?
-	log.Printf("Found a set of content to make previews for %d", len(*content))
 	if content != nil && len(*content) > 0 {
+		log.Printf("Found a set of content to make previews for %d", len(*content))
 		mcs := *content
 		c.PreviewUrl = "/preview/" + mcs[0].ID.String()
 		cm.UpdateContainer(c)
@@ -386,7 +390,6 @@ func CreateContentPreviews(c *models.Container, content models.Contents) (models
 func StartWorker(w utils.PreviewWorker) {
 	// sleepTime := time.Duration(w.Id) * time.Millisecond
 	// log.Printf("Worker %d with sleep %d\n", w.Id, sleepTime)
-	// Sleep before kicking off?  Kinda don't need to
 	for pr := range w.In {
 		c := pr.C
 		mc := pr.Mc
