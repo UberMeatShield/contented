@@ -88,6 +88,9 @@ describe('EditorContentCmp', () => {
     expect(btn.length).withContext('We should have an encoding button').toEqual(1);
     expect(btn.attr('disabled')).toEqual(undefined);
 
+    let dupeBtn = $('.duplicate-btn');
+    expect(dupeBtn.length).withContext('And be able to search for dupes').toEqual(1);
+
     let taskUrl = `${ApiDef.tasks.list}?page=1&per_page=100&content_id=${content.id}`;
     httpMock.expectOne(taskUrl).flush(MockData.taskRequests());
     httpMock.expectOne(r => r.url.includes(ApiDef.contented.tags)).flush(MockData.tags());

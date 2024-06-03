@@ -25,6 +25,7 @@ type DuplicateContent struct {
 	DuplicateID   uuid.UUID `json:"duplicate_id"`
 	KeepSrc       string    `json:"keep_src"`
 	DuplicateSrc  string    `json:"duplicate_src"`
+	FqPath        string    `json:"-"`
 }
 type DuplicateContents []DuplicateContent
 

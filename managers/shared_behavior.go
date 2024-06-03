@@ -242,6 +242,7 @@ func FindDuplicateContents(cm ContentManager, cnt *models.Container, cs ContentQ
 						ContainerName: cnt.Name,
 						DuplicateID:   mContent.ID,
 						DuplicateSrc:  mContent.Src,
+						FqPath:        dupePath,
 					}
 					duplicates = append(duplicates, dupe)
 				}
