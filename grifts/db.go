@@ -6,6 +6,7 @@ import (
 	"contented/utils"
 	"fmt"
 	"net/url"
+	"os"
 
 	"github.com/gobuffalo/envy"
 	"github.com/gobuffalo/grift/grift"
@@ -105,35 +106,51 @@ var _ = grift.Namespace("db", func() {
 		utils.InitConfigEnvy(cfg)
 		fmt.Printf("Configuration is loaded %s Looking for duplicates", cfg.Dir)
 
+		var dupes managers.DuplicateContents
+		var err error
 		if cfg.UseDatabase {
 			fmt.Printf("DB Manager is being used trying to find duplicates.")
-			return models.DB.Transaction(func(tx *pop.Connection) error {
+			models.DB.Transaction(func(tx *pop.Connection) error {
 				get_connection := func() *pop.Connection {
 					return tx
 				}
 				man := managers.CreateManager(cfg, get_connection, get_params)
-				dupes, err := managers.FindDuplicateVideos(man)
-				if len(dupes) > 0 {
-					for _, dupe := range dupes {
-						fmt.Printf("%s", dupe.FqPath)
-					}
-				}
-				return err
+				dupes, err = managers.FindDuplicateVideos(man)
+				return nil
 			})
 		} else {
 			get_connection := no_connection
 			man := managers.CreateManager(cfg, get_connection, get_params)
 			fmt.Printf("Memory Manager looking for duplicates.\n")
-			dupes, err := managers.FindDuplicateVideos(man)
-			if len(dupes) > 0 {
+			dupes, err = managers.FindDuplicateVideos(man)
+		}
 
-				fmt.Println("==============DUPES BELOW===============")
-				for _, dupe := range dupes {
-					fmt.Printf("%s\n", dupe.FqPath)
-				}
-			}
+		if err != nil {
 			return err
 		}
+		if len(dupes) > 0 {
+			output := ""
+			for _, dupe := range dupes {
+				output = fmt.Sprintf("%s\n", dupe.FqPath)
+			}
+
+			dupeFile := envy.Get("DUPE_FILE", "")
+			if dupeFile != "" {
+				fi, err := os.Create(dupeFile)
+				if err != nil {
+					fmt.Printf("Error creating duplicate output file %s", dupeFile)
+					panic(err)
+				}
+				defer fi.Close()
+				fi.WriteString(output)
+				fmt.Printf("Wrote duplicate information to %s", dupeFile)
+			} else {
+				fmt.Print(output)
+			}
+		} else {
+			fmt.Printf("No Duplicates were found.")
+		}
+		return nil
 	})
 
 	// Adds a tag task but this does not tag the content itself
