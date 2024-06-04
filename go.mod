@@ -24,6 +24,7 @@ require (
 	github.com/u2takey/ffmpeg-go v0.5.0
 	github.com/unrolled/secure v1.13.0
 	github.com/vitali-fedulov/images4 v1.3.0
+	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f
 )
 
 require (
@@ -92,7 +93,6 @@ require (
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/u2takey/go-utils v0.3.1 // indirect
 	golang.org/x/crypto v0.22.0 // indirect
-	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f // indirect
 	golang.org/x/image v0.11.0 // indirect
 	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/net v0.24.0 // indirect
