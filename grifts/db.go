@@ -129,11 +129,6 @@ var _ = grift.Namespace("db", func() {
 			return err
 		}
 		if len(dupes) > 0 {
-			output := ""
-			for _, dupe := range dupes {
-				output = fmt.Sprintf("%s\n", dupe.FqPath)
-			}
-
 			dupeFile := envy.Get("DUPE_FILE", "")
 			if dupeFile != "" {
 				fi, err := os.Create(dupeFile)
@@ -142,10 +137,14 @@ var _ = grift.Namespace("db", func() {
 					panic(err)
 				}
 				defer fi.Close()
-				fi.WriteString(output)
-				fmt.Printf("Wrote duplicate information to %s", dupeFile)
+				for _, dupe := range dupes {
+					fi.WriteString(dupe.FqPath)
+				}
+				fmt.Printf("Wrote duplicate information to %s\n", dupeFile)
 			} else {
-				fmt.Print(output)
+				for _, dupe := range dupes {
+					fmt.Printf("DUPLICATE FOUND %s", dupe.FqPath)
+				}
 			}
 		} else {
 			fmt.Printf("No Duplicates were found.")
