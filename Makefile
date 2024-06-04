@@ -95,7 +95,7 @@ encode:
 
 .PHONY: find-dupes
 find-dupes:
-	export DIR=$(DIR) && export DUPE_FILE=$(realpath ${DIR})/Duplicates.txt && buffalo task db:removeDuplicates
+	export DIR=$(DIR) && export DUPE_FILE=$(shell pwd)/duplicates.txt && buffalo task db:removeDuplicates
 
 
 # Read from a tag file and import the tags to the DB

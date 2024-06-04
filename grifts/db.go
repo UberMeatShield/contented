@@ -138,7 +138,7 @@ var _ = grift.Namespace("db", func() {
 				}
 				defer fi.Close()
 				for _, dupe := range dupes {
-					fi.WriteString(dupe.FqPath)
+					fi.WriteString(fmt.Sprintf("%s\n", dupe.FqPath))
 				}
 				fmt.Printf("Wrote duplicate information to %s\n", dupeFile)
 			} else {
