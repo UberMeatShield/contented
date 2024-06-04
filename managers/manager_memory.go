@@ -291,6 +291,15 @@ func (cm ContentManagerMemory) ListContentFiltered(cs ContentQuery) (*models.Con
 		}
 	}
 
+	if contentID, badIdErr := uuid.FromString(cs.ContentID); badIdErr == nil {
+		for _, content := range m_arr {
+			if content.ID == contentID {
+				m_arr = models.Contents{content}
+				break
+			}
+		}
+	}
+
 	if cs.ContentType != "" {
 		ct_arr := models.Contents{}
 		for _, content := range m_arr {
@@ -303,8 +312,8 @@ func (cm ContentManagerMemory) ListContentFiltered(cs ContentQuery) (*models.Con
 
 	h_arr := models.Contents{}
 	for _, m := range m_arr {
-		if cs.IncludeHidden == false {
-			if m.Hidden == false {
+		if !cs.IncludeHidden {
+			if !m.Hidden {
 				h_arr = append(h_arr, m)
 			}
 		} else {

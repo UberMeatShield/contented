@@ -72,9 +72,13 @@
 
             <!-- TODO: Figure out a better format for rendering task messages by type-->
             <div *ngIf="element.operation === 'detect_duplicates' && element.complexMessage">
-              <a class="duplicate-link" [routerLink]="['/ui/content/', element.complexMessage[0]?.duplicate_id]">
+              <a class="duplicate-link" 
+                *ngIf="!!element.complexMessage[0]?.duplicate_id"
+                [routerLink]="['/ui/content/', element.complexMessage[0]?.duplicate_id]"
+              >
                 Duplicate Found! {{ element.complexMessage[0]?.duplicate_src}}
               </a>
+              <span *ngIf="!element.complexMessage[0]">None Found</span>
             </div>
           </td>
         </ng-container>

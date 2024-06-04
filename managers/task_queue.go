@@ -143,7 +143,8 @@ func TakeTask(man ContentManager, id uuid.UUID, operation string) (*models.TaskR
 
 	var content *models.Content = nil
 	if task.ContentID.Valid {
-		content, cErr := man.GetContent(task.ContentID.UUID)
+		mc, cErr := man.GetContent(task.ContentID.UUID)
+		content = mc
 		if cErr != nil {
 			msg := fmt.Sprintf("%s Content not found %s %s", operation, task.ContentID.UUID, cErr)
 			FailTask(man, task, msg)
@@ -227,6 +228,7 @@ func DetectDuplicatesTask(man ContentManager, id uuid.UUID) error {
 	if container != nil {
 		cs.ContainerID = container.ID.String()
 	}
+	log.Printf("DetectDuplicates Output starting with query container %s and contentID %s", cs.ContentID, cs.ContainerID)
 
 	// Is this actually a full failure?
 	dupes, dupeErrors := FindDuplicateContents(man, container, cs)
