@@ -24,16 +24,16 @@
           <mat-card-content>
             <div>
                 <h5>Tasks</h5>
-                <button mat-raised-button [disabled]="creatingTask">
+                <button mat-raised-button [disabled]="creatingTask" (click)="createPreviews(container)">
                     Create Previews
                 </button>
-                <button mat-raised-button [disabled]="creatingTask">
+                <button mat-raised-button [disabled]="creatingTask" (click)="createWebp(container)">
                     Create Webp from Previews
                 </button>
-                <button mat-raised-button [disabled]="creatingTask">
+                <button mat-raised-button [disabled]="creatingTask" (click)="createTags(container)">
                     Assign Tags
                 </button>
-                <button mat-raised-button [disabled]="creatingTask">
+                <button mat-raised-button [disabled]="creatingTask" (click)="encodeVideos(container)">
                     Encode Video Contents
                 </button>
             </div>

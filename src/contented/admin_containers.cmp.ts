@@ -35,6 +35,29 @@ export class AdminContainersCmp implements OnInit {
           GlobalBroadcast.error("Failed to load containers", err);
         }
       })
+    }
 
+    createPreviews(cnt: Container) {
+      this.creatingTask = true;
+      console.log("Create Previews");
+      this.creatingTask = false;
+    }
+
+    createWebp(cnt: Container) {
+      this.creatingTask = true;
+      console.log("Create Webp");
+      this.creatingTask = false;
+    }
+
+    createTags(cnt: Container) {
+      this.creatingTask = true;
+      console.log("Create Tags");
+      this.creatingTask = false;
+    }
+
+    encodeVideos(cnt: Container) {
+      this.creatingTask = true;
+      console.log("Encode Videos");
+      this.creatingTask = false;
     }
 }
