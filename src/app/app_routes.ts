@@ -11,6 +11,7 @@ import { APP_BASE_HREF } from '@angular/common';
 import { RouterModule, Routes } from '@angular/router';
 import { TasksCmp } from '../contented/tasks.cmp';
 import { AdminSearchCmp } from '../contented/admin_search.cmp';
+import { AdminContainersCmp } from '../contented/admin_containers.cmp';
 import { EditorContentCmp } from './../contented/editor_content.cmp';
 
 // Hmm, should have made this route have a saner extension
@@ -29,11 +30,15 @@ const appRoutes: Routes = [
     data: { title: 'Content View' },
   },
   { path: 'ui/splash', component: SplashCmp, data: { title: 'Home' } },
-
   {
     path: 'admin_ui/editor_content/:id',
     component: EditorContentCmp,
     data: { title: 'Edit Content' },
+  },
+  {
+    path: 'admin_ui/containers',
+    component: AdminContainersCmp,
+    data: { title: 'Admin Containers' },
   },
   { path: 'admin_ui/tasks', component: TasksCmp, data: { title: 'Tasks' } },
   {

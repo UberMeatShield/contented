@@ -52,6 +52,17 @@
       <mat-icon>search</mat-icon>
       <span>Administrate Content</span>
     </button>
+
+    <button class="nav-link"
+      mat-menu-item
+      [routerLink]="['/admin_ui/containers']"
+      [routerLinkActive]="['active']"
+      href="/admin_ui/containers"
+    >
+      <mat-icon>folder</mat-icon>
+      <span>Administrate Containers</span>
+    </button>
+
     <button class="nav-link"
       mat-menu-item
       [routerLink]="['/admin_ui/tasks']"

@@ -131,7 +131,7 @@ func TaggingContentWrapper(args worker.Args) error {
 	}
 	// Note this is extra complicated by the fact it SHOULD be able to run with NO connections
 	// or DB sessions made.
-	if cfg.UseDatabase == true {
+	if cfg.UseDatabase {
 		return models.DB.Transaction(func(tx *pop.Connection) error {
 			getConnection = func() *pop.Connection {
 				return tx
