@@ -21,6 +21,12 @@ class MockLoader {
     return _.cloneDeep(require('./video_view.json'));
   }
 
+  // TODO: Get some generated data (for pagination tests)
+  public getContainers(total: number = 10) {
+    console.log("TODO: Make the containers paginate");
+    return _.cloneDeep(require('./containers.json'));
+  }
+
   public getScreens() {
     return _.clone(require('./screens.json'));
   }

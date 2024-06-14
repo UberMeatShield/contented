@@ -1,4 +1,50 @@
 <div class="admin-containers-cmp">
-    Containers
-    Loading{{loading}}
+    <div>Add top Nav</div>
+    <div>Container</div>
+    <div>Loading {{loading}}</div>
+    <ul>
+      <li>List each container (show preview)</li>
+      <li>Attempt to allow for preview Url selection</li>
+      <li>Provide a set of tasks we can generate (encode, preview, screens, etc)</li>
+    </ul>
+    <div class="admin-cnt" *ngFor="let container of containers">
+      <div class="container-contents">
+        <mat-card class="primary-card">
+          <mat-card-header>
+              <mat-card-title>
+                <span class="title">{{container.name}} </span>
+                <span class="pull-right">
+                  total({{container.total}})  
+               </span>
+              </mat-card-title>
+              <mat-card-subtitle>
+                  {{container.description}}
+              </mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div>
+                <h5>Tasks</h5>
+                <button mat-raised-button [disabled]="creatingTask">
+                    Create Previews
+                </button>
+                <button mat-raised-button [disabled]="creatingTask">
+                    Create Webp from Previews
+                </button>
+                <button mat-raised-button [disabled]="creatingTask">
+                    Assign Tags
+                </button>
+                <button mat-raised-button [disabled]="creatingTask">
+                    Encode Video Contents
+                </button>
+            </div>
+
+            <div>
+                <h5>Previous Tasks</h5>
+                Create a task component that relates to the container lookup
+            </div>
+
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
 </div>
