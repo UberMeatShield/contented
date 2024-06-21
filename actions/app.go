@@ -53,9 +53,12 @@ func App(UseDatabase bool) *buffalo.App {
 		app.POST("/editing_queue/{contentID}/tagging", TaggingHandler)
 		app.POST("/editing_queue/{contentID}/duplicates", DupesHandler)
 
-		//
+		// TODO: Check that we can still kick off a duplicates task for the container.
 		app.POST("/editing_container_queue/{containerID}/duplicates", DupesHandler)
-		// app.DELETE("/editing_queue/{taskID}/", TaskDeleteHandler)
+		app.POST("/editing_container_queue/{containerID}/encoding", DupesHandler)
+		//app.POST("/editing_container_queue/{containerID}/previews", DupesHandler)
+		//app.POST("/editing_container_queue/{containerID}/webp", DupesHandler)
+		//app.POST("/editing_container_queue/{containerID}/tagging", DupesHandler)
 
 		// Allow for the creation of new content
 		// app.POST("/uploading/contents/", TaskContentUploadHandler)

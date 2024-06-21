@@ -101,7 +101,7 @@ func WebpFromScreensWrapper(args worker.Args) error {
 	}
 	// Note this is extra complicated by the fact it SHOULD be able to run with NO connections
 	// or DB sessions made.
-	if cfg.UseDatabase == true {
+	if cfg.UseDatabase {
 		return models.DB.Transaction(func(tx *pop.Connection) error {
 			getConnection = func() *pop.Connection {
 				return tx
@@ -216,12 +216,54 @@ func VideoEncodingHandler(c buffalo.Context) error {
 	if err != nil {
 		return c.Error(http.StatusNotFound, err)
 	}
-	if !strings.Contains(content.ContentType, "video") && !content.NoFile {
-		return c.Error(http.StatusBadRequest, fmt.Errorf("content was not a video %s", content.ContentType))
+
+	task, badTask := CreateVideoEncodingTask(content, c.Param("codec"))
+	if badTask != nil {
+		return c.Error(http.StatusBadRequest, badTask)
 	}
+	return QueueTaskRequest(c, man, task)
+}
+
+func ContainerVideoEncoderHandler(c buffalo.Context) error {
+	containerID, bad_uuid := uuid.FromString(c.Param("containerID"))
+	if bad_uuid != nil {
+		return c.Error(http.StatusBadRequest, bad_uuid)
+	}
+
+	// A lot of these will follow a pretty simple pattern of load all the container content
+	// and then attempt to act on them.  Unify it?
+	man := managers.GetManager(&c)
+	contentQuery := managers.ContentQuery{
+		ContainerID: containerID.String(),
+		ContentType: "video",
+		PerPage:     man.GetCfg().Limit,
+	}
+	contents, total, err := man.ListContent(contentQuery)
+	if err != nil || total == 0 {
+		c.Error(http.StatusNoContent, err)
+	}
+
+	// TODO: Need to make it so that we get all the tasks created.
+	tasks := models.TaskRequests{}
+	for _, content := range *contents {
+		task, taskErr := CreateVideoEncodingTask(&content, c.Param("codec"))
+		if taskErr != nil {
+			return taskErr
+		}
+		tasks = append(tasks, *task)
+	}
+	return QueueTaskRequests(c, man, tasks)
+}
+
+func CreateVideoEncodingTask(content *models.Content, codecChoice string) (*models.TaskRequest, error) {
 	// Probably should at least sanity check the codecs
+	if !strings.Contains(content.ContentType, "video") && !content.NoFile {
+		return nil, fmt.Errorf("content %s was not a video %s", content.Src, content.ContentType)
+	}
 	cfg := utils.GetCfg()
-	codec := managers.StringDefault(c.Param("codec"), cfg.CodecForConversion)
+	codec := managers.StringDefault(codecChoice, cfg.CodecForConversion)
+
+	// Check codec seems valid?
 	log.Printf("Requesting a re-encode %s with codec %s for contentID %s", content.Src, codec, content.ID.String())
 	tr := models.TaskRequest{
 		ContentID:        nulls.NewUUID(content.ID),
@@ -230,7 +272,7 @@ func VideoEncodingHandler(c buffalo.Context) error {
 		StartTimeSeconds: 0,
 		Codec:            codec,
 	}
-	return QueueTaskRequest(c, man, &tr)
+	return &tr, nil
 }
 
 // Should deny quickly if the media content type is incorrect for the action
@@ -342,9 +384,30 @@ func TaskScreensHandler(c buffalo.Context) error {
 }
 
 func QueueTaskRequest(c buffalo.Context, man managers.ContentManager, tr *models.TaskRequest) error {
-	createdTR, tErr := man.CreateTask(tr)
+	taskCreated, queueErr := AddTaskRequest(man, tr)
+	if queueErr != nil {
+		return c.Error(http.StatusInternalServerError, queueErr)
+	}
+	return c.Render(http.StatusCreated, r.JSON(taskCreated))
+}
+
+// Hande a partial failure
+func QueueTaskRequests(c buffalo.Context, man managers.ContentManager, tasks models.TaskRequests) error {
+	tasksOk := models.TaskRequests{}
+	for _, task := range tasks {
+		taskCreated, queueErr := AddTaskRequest(man, &task)
+		if queueErr != nil {
+			return c.Error(http.StatusInternalServerError, queueErr)
+		}
+		tasksOk = append(tasksOk, *taskCreated)
+	}
+	return c.Render(http.StatusCreated, r.JSON(tasksOk))
+}
+
+func AddTaskRequest(man managers.ContentManager, tr *models.TaskRequest) (*models.TaskRequest, error) {
+	createdTask, tErr := man.CreateTask(tr)
 	if tErr != nil {
-		c.Error(http.StatusInternalServerError, tErr)
+		return nil, tErr
 	}
 	// This needs to delay a little before it starts
 	// It should probably not kick off the job task inside the manager
@@ -356,11 +419,13 @@ func QueueTaskRequest(c buffalo.Context, man managers.ContentManager, tr *models
 			"id": tr.ID.String(),
 		},
 	}
+
+	// This would be a good place to add in support for other task queues
 	err := App(cfg.UseDatabase).Worker.PerformIn(job, 2*time.Second)
 	if err != nil {
 		msg := fmt.Sprintf("Failed to enqueue task in the work queue %s", err)
 		log.Print(msg)
-		return c.Error(http.StatusInternalServerError, errors.New(msg))
+		return nil, err
 	}
-	return c.Render(http.StatusCreated, r.JSON(createdTR))
+	return createdTask, nil
 }
