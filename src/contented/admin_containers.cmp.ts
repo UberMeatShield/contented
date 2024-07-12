@@ -55,9 +55,32 @@ export class AdminContainersCmp implements OnInit {
       this.creatingTask = false;
     }
 
-    encodeVideos(cnt: Container) {
+    findDuplicates(cnt: Container) {
       this.creatingTask = true;
-      console.log("Encode Videos");
-      this.creatingTask = false;
+      this.service.containerDuplicatesTask(cnt)
+        .pipe(finalize(() => (this.creatingTask = false)))
+        .subscribe({
+          next: (response) => {
+            console.log("Queued", response);
+          },
+          error: (err) => {
+            GlobalBroadcast.error("Failed to start duplicates task", err);
+          }
+      });
+    }
+
+    encodeVideos(cnt: Container) {
+      console.log("Encode Videos", cnt);
+      this.creatingTask = true;
+      this.service.containerVideoEncodingTask(cnt)
+        .pipe(finalize(() => (this.creatingTask = false)))
+        .subscribe({
+          next: (response) => {
+            console.log("Queued", response);
+          },
+          error: (err) => {
+            GlobalBroadcast.error("Failed to start encoding tasks", err);
+          }
+        });
     }
 }

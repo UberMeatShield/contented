@@ -23,6 +23,11 @@ import (
 	"github.com/gofrs/uuid"
 )
 
+type TasksQueuedResponse struct {
+	Message string              `json:"message" default:""`
+	Results models.TaskRequests `json:"results" default:"[]"`
+}
+
 /**
  * Execute the task within the transaction middleware scope.
  * TODO: Can this work in a full unit test?
@@ -239,8 +244,15 @@ func ContainerVideoEncoderHandler(c buffalo.Context) error {
 		PerPage:     man.GetCfg().Limit,
 	}
 	contents, total, err := man.ListContent(contentQuery)
-	if err != nil || total == 0 {
-		c.Error(http.StatusNoContent, err)
+	if err != nil {
+		return c.Error(http.StatusInternalServerError, err)
+	}
+	if total == 0 {
+		queueResponse := TasksQueuedResponse{
+			Message: "No video content found to re-encode",
+			Results: models.TaskRequests{}, // hate
+		}
+		return c.Render(http.StatusOK, r.JSON(queueResponse))
 	}
 
 	// TODO: Need to make it so that we get all the tasks created.
@@ -338,6 +350,14 @@ func DupesHandler(c buffalo.Context) error {
 	if err != nil {
 		log.Printf("Cannot queue dupe task %s err: %s", query, err)
 		return c.Error(http.StatusInternalServerError, err)
+	}
+	// TODO: Always return this format from the task kick off (kind of a pain for tests but 'eh')
+	if total == 0 {
+		res := TasksQueuedResponse{
+			Message: "No duplicate videos found in this contianer",
+			Results: models.TaskRequests{},
+		}
+		return c.Render(http.StatusOK, r.JSON(res)) // hate
 	}
 	if total < 1 {
 		return c.Error(http.StatusBadRequest, fmt.Errorf("could not find content to check %s", query))
