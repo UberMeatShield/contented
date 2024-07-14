@@ -13,7 +13,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gobuffalo/buffalo"
@@ -203,11 +202,11 @@ func WebpFromScreensHandler(c buffalo.Context) error {
 	if err != nil {
 		return nil
 	}
-	tr := models.TaskRequest{
-		ContentID: nulls.NewUUID(content.ID),
-		Operation: models.TaskOperation.WEBP,
+	tr, tErr := CreateWebpTask(content)
+	if tErr != nil {
+		c.Error(http.StatusBadRequest, tErr)
 	}
-	return QueueTaskRequest(c, man, &tr)
+	return QueueTaskRequest(c, man, tr)
 }
 
 // Should deny quickly if the media content type is incorrect for the action
@@ -265,26 +264,6 @@ func ContainerVideoEncoderHandler(c buffalo.Context) error {
 		tasks = append(tasks, *task)
 	}
 	return QueueTaskRequests(c, man, tasks)
-}
-
-func CreateVideoEncodingTask(content *models.Content, codecChoice string) (*models.TaskRequest, error) {
-	// Probably should at least sanity check the codecs
-	if !strings.Contains(content.ContentType, "video") && !content.NoFile {
-		return nil, fmt.Errorf("content %s was not a video %s", content.Src, content.ContentType)
-	}
-	cfg := utils.GetCfg()
-	codec := managers.StringDefault(codecChoice, cfg.CodecForConversion)
-
-	// Check codec seems valid?
-	log.Printf("Requesting a re-encode %s with codec %s for contentID %s", content.Src, codec, content.ID.String())
-	tr := models.TaskRequest{
-		ContentID:        nulls.NewUUID(content.ID),
-		Operation:        models.TaskOperation.ENCODING,
-		NumberOfScreens:  0,
-		StartTimeSeconds: 0,
-		Codec:            codec,
-	}
-	return &tr, nil
 }
 
 // Should deny quickly if the media content type is incorrect for the action
@@ -390,17 +369,59 @@ func TaskScreensHandler(c buffalo.Context) error {
 	if err != nil {
 		return c.Error(404, err)
 	}
-	if !strings.Contains(content.ContentType, "video") && !content.NoFile {
-		return c.Error(http.StatusBadRequest, errors.New("content was not a video %s"))
+	tr, tErr := CreateScreensTask(content, numberOfScreens, startTimeSeconds)
+	if tErr != nil {
+		return c.Error(http.StatusBadRequest, tErr)
 	}
 	log.Printf("Requesting screens be built out %s start %d count %d", content.Src, startTimeSeconds, numberOfScreens)
+	return QueueTaskRequest(c, man, tr)
+}
+
+func CreateScreensTask(content *models.Content, numberOfScreens int, startTimeSeconds int) (*models.TaskRequest, error) {
+	if !content.IsVideo() {
+		return nil, fmt.Errorf("content was not a video %s", content.ContentType)
+	}
 	tr := models.TaskRequest{
 		ContentID:        nulls.NewUUID(content.ID),
 		Operation:        models.TaskOperation.SCREENS,
 		NumberOfScreens:  numberOfScreens,
 		StartTimeSeconds: startTimeSeconds,
 	}
-	return QueueTaskRequest(c, man, &tr)
+	return &tr, nil
+}
+
+func CreateVideoEncodingTask(content *models.Content, codecChoice string) (*models.TaskRequest, error) {
+	// Probably should at least sanity check the codecs
+	if !content.IsVideo() {
+		return nil, fmt.Errorf("content %s was not a video %s", content.Src, content.ContentType)
+	}
+	cfg := utils.GetCfg()
+	codec := managers.StringDefault(codecChoice, cfg.CodecForConversion)
+
+	// Check codec seems valid?
+	log.Printf("Requesting a re-encode %s with codec %s for contentID %s", content.Src, codec, content.ID.String())
+	tr := models.TaskRequest{
+		ContentID:        nulls.NewUUID(content.ID),
+		Operation:        models.TaskOperation.ENCODING,
+		NumberOfScreens:  0,
+		StartTimeSeconds: 0,
+		Codec:            codec,
+	}
+	return &tr, nil
+}
+
+func CreateWebpTask(content *models.Content) (*models.TaskRequest, error) {
+	// Check required since it was not a search
+	if !content.IsVideo() {
+		return nil, fmt.Errorf("cannot create screens content was not video %s", content.ContentType)
+	}
+
+	// TODO: The actual task processing should check if the entry has actual screens
+	tr := models.TaskRequest{
+		ContentID: nulls.NewUUID(content.ID),
+		Operation: models.TaskOperation.WEBP,
+	}
+	return &tr, nil
 }
 
 func QueueTaskRequest(c buffalo.Context, man managers.ContentManager, tr *models.TaskRequest) error {
@@ -421,7 +442,12 @@ func QueueTaskRequests(c buffalo.Context, man managers.ContentManager, tasks mod
 		}
 		tasksOk = append(tasksOk, *taskCreated)
 	}
-	return c.Render(http.StatusCreated, r.JSON(tasksOk))
+
+	queueResponse := TasksQueuedResponse{
+		Message: fmt.Sprintf("Queued %d tasks for", len(tasksOk)),
+		Results: tasksOk,
+	}
+	return c.Render(http.StatusCreated, r.JSON(queueResponse))
 }
 
 func AddTaskRequest(man managers.ContentManager, tr *models.TaskRequest) (*models.TaskRequest, error) {

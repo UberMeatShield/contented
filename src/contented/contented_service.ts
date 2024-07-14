@@ -343,7 +343,6 @@ export class ContentedService {
     let url = ApiDef.contented.containerDuplicatesTask.replace('{containerId}', cnt.id);
     return this.http.post(url, cnt).pipe(
       map(res => {
-        console.log("Duplicates per container task")
         return new TaskRequest(res);
       })
     );
@@ -355,7 +354,7 @@ export class ContentedService {
       map(res => {
         // Return an array of task requests I think
         console.log("Result was what", res);
-        return new TaskRequest(res);
+        return _.map(res['results'], task => new TaskRequest(task));
       })
     );
   }
