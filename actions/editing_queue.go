@@ -228,7 +228,7 @@ func VideoEncodingHandler(c buffalo.Context) error {
 	return QueueTaskRequest(c, man, task)
 }
 
-func ContainerVideoEncoderHandler(c buffalo.Context) error {
+func ContainerVideoEncodingHandler(c buffalo.Context) error {
 	containerID, bad_uuid := uuid.FromString(c.Param("containerID"))
 	if bad_uuid != nil {
 		return c.Error(http.StatusBadRequest, bad_uuid)
@@ -277,15 +277,53 @@ func TaggingHandler(c buffalo.Context) error {
 	if err != nil {
 		return c.Error(http.StatusNotFound, err)
 	}
-	// TODO: Make it so it can tag everything under a container
-	// TODO: Make it bail if there are no tags in the system
-
-	// Probably should at least sanity check the codecs
 	tr := models.TaskRequest{
 		ContentID: nulls.NewUUID(content.ID),
 		Operation: models.TaskOperation.TAGGING,
 	}
 	return QueueTaskRequest(c, man, &tr)
+}
+
+// Container tagging would probably be better as another single task or the managers just need to cache the tasks in redis.
+func ContainerTaggingHandler(c buffalo.Context) error {
+	containerID, bad_uuid := uuid.FromString(c.Param("containerID"))
+	if bad_uuid != nil {
+		return c.Error(http.StatusBadRequest, bad_uuid)
+	}
+
+	// A lot of these will follow a pretty simple pattern of load all the container content
+	// and then attempt to act on them.  Unify it?
+	man := managers.GetManager(&c)
+	contentQuery := managers.ContentQuery{
+		ContainerID: containerID.String(),
+		PerPage:     man.GetCfg().Limit,
+	}
+	_, total, tagErr := man.ListAllTags(managers.TagQuery{PerPage: 1})
+	if total == 0 || tagErr != nil {
+		return c.Error(http.StatusBadRequest, fmt.Errorf("no tags currently found in the system"))
+	}
+	contents, total, err := man.ListContent(contentQuery)
+	if err != nil {
+		return c.Error(http.StatusInternalServerError, err)
+	}
+	if total == 0 {
+		queueResponse := TasksQueuedResponse{
+			Message: "No content found to tag",
+			Results: models.TaskRequests{},
+		}
+		return c.Render(http.StatusOK, r.JSON(queueResponse))
+	}
+
+	// TODO: Need to make it so that we get all the tasks created.
+	tasks := models.TaskRequests{}
+	for _, content := range *contents {
+		task := models.TaskRequest{
+			ContentID: nulls.NewUUID(content.ID),
+			Operation: models.TaskOperation.TAGGING,
+		}
+		tasks = append(tasks, task)
+	}
+	return QueueTaskRequests(c, man, tasks)
 }
 
 // Should deny quickly if the media content type is incorrect for the action
@@ -336,7 +374,7 @@ func DupesHandler(c buffalo.Context) error {
 			Message: "No duplicate videos found in this contianer",
 			Results: models.TaskRequests{},
 		}
-		return c.Render(http.StatusOK, r.JSON(res)) // hate
+		return c.Render(http.StatusOK, r.JSON(res))
 	}
 	if total < 1 {
 		return c.Error(http.StatusBadRequest, fmt.Errorf("could not find content to check %s", query))
@@ -346,12 +384,14 @@ func DupesHandler(c buffalo.Context) error {
 }
 
 // Should deny quickly if the media content type is incorrect for the action
-func TaskScreensHandler(c buffalo.Context) error {
+func ContentTaskScreensHandler(c buffalo.Context) error {
 	cfg := utils.GetCfg()
 	contentID, bad_uuid := uuid.FromString(c.Param("contentID"))
 	if bad_uuid != nil {
 		return c.Error(400, bad_uuid)
 	}
+
+	// Duplicate logic
 	startTimeSeconds, startErr := strconv.Atoi(c.Param("startTimeSeconds"))
 	if startErr != nil || startTimeSeconds < 0 {
 		startTimeSeconds = cfg.PreviewFirstScreenOffset
@@ -367,7 +407,7 @@ func TaskScreensHandler(c buffalo.Context) error {
 	man := managers.GetManager(&c)
 	content, err := man.GetContent(contentID)
 	if err != nil {
-		return c.Error(404, err)
+		return c.Error(http.StatusNotFound, err)
 	}
 	tr, tErr := CreateScreensTask(content, numberOfScreens, startTimeSeconds)
 	if tErr != nil {
@@ -375,6 +415,54 @@ func TaskScreensHandler(c buffalo.Context) error {
 	}
 	log.Printf("Requesting screens be built out %s start %d count %d", content.Src, startTimeSeconds, numberOfScreens)
 	return QueueTaskRequest(c, man, tr)
+}
+
+func ContainerScreensHandler(c buffalo.Context) error {
+	cfg := utils.GetCfg()
+	cID, bad_uuid := uuid.FromString(c.Param("containerID"))
+	if bad_uuid != nil {
+		return c.Error(400, bad_uuid)
+	}
+
+	// Duplicate logic
+	startTimeSeconds, startErr := strconv.Atoi(c.Param("startTimeSeconds"))
+	if startErr != nil || startTimeSeconds < 0 {
+		startTimeSeconds = cfg.PreviewFirstScreenOffset
+	}
+	numberOfScreens, countErr := strconv.Atoi(c.Param("count"))
+	if countErr != nil {
+		numberOfScreens = cfg.PreviewCount
+	}
+	if numberOfScreens <= 0 || numberOfScreens > 300 {
+		return c.Error(http.StatusBadRequest, errors.New("too many or few screens requested"))
+	}
+	cQ := managers.ContentQuery{
+		ContainerID: cID.String(),
+		ContentType: "video",
+		PerPage:     cfg.Limit,
+	}
+	man := managers.GetManager(&c)
+	contents, total, err := man.SearchContent(cQ)
+	if err != nil {
+		return c.Error(http.StatusInternalServerError, err)
+	}
+	if total == 0 {
+		res := TasksQueuedResponse{
+			Message: "No videos found to create screens for",
+			Results: models.TaskRequests{},
+		}
+		return c.Render(http.StatusOK, r.JSON(res))
+	}
+
+	tasks := models.TaskRequests{}
+	for _, content := range *contents {
+		task, taskErr := CreateScreensTask(&content, numberOfScreens, startTimeSeconds)
+		if taskErr != nil {
+			return taskErr
+		}
+		tasks = append(tasks, *task)
+	}
+	return QueueTaskRequests(c, man, tasks)
 }
 
 func CreateScreensTask(content *models.Content, numberOfScreens int, startTimeSeconds int) (*models.TaskRequest, error) {

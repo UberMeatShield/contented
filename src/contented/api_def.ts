@@ -27,6 +27,8 @@ export let ApiDef = {
     // These will attempt to queue up tasks for ALL content in the container (but not in sub-containers)
     containerVideoEncodingTask: '/editing_container_queue/{containerId}/encoding',
     containerDuplicatesTask: '/editing_container_queue/{containerId}/duplicates',
+    containerTaggingTask: '/editing_container_queue/{containerId}/tagging',
+    containerPreviewsTask: '/editing_container_queue/{containerId}/screens/{count}/{startTimeSeconds}',
   },
   tasks: {
     get: '/task_requests/{id}',
