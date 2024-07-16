@@ -299,6 +299,7 @@ func (as *ActionSuite) Test_DuplicateHandlerDB() {
 	as.NotNil(contents)
 
 	ValidateDuplicatesTask(as, cnt)
+	ValidateDuplicateApiCalls(as, cnt)
 }
 
 func (as *ActionSuite) Test_DuplicateHandlerMemory() {

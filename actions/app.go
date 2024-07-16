@@ -52,14 +52,11 @@ func App(UseDatabase bool) *buffalo.App {
 		app.POST("/editing_queue/{contentID}/webp", WebpFromScreensHandler)
 		app.POST("/editing_queue/{contentID}/tagging", TaggingHandler)
 
-		// It should be able to generate a preview
-		//app.POST("/editing_container_queue/{containerID}/previews", ContainerPreviewsHandler)
-
 		// TODO: Check that we can still kick off a duplicates task for the container.
 		app.POST("/editing_container_queue/{containerID}/screens/{count}/{startTimeSeconds}", ContainerScreensHandler)
 		app.POST("/editing_container_queue/{containerID}/encoding", ContainerVideoEncodingHandler)
-		app.POST("/editing_container_queue/{containerID}/tagging", ContainerTaggingHandler)
 		//app.POST("/editing_container_queue/{containerID}/webp", ContainerWebpHandler)
+		app.POST("/editing_container_queue/{containerID}/tagging", ContainerTaggingHandler)
 
 		// Dupes is a special case where we do not need to create a task per content type right now
 		// the checks are fast enough that we can get a summary pretty quickly and probably faster with

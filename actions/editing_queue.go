@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -385,23 +386,13 @@ func DupesHandler(c buffalo.Context) error {
 
 // Should deny quickly if the media content type is incorrect for the action
 func ContentTaskScreensHandler(c buffalo.Context) error {
-	cfg := utils.GetCfg()
 	contentID, bad_uuid := uuid.FromString(c.Param("contentID"))
 	if bad_uuid != nil {
 		return c.Error(400, bad_uuid)
 	}
-
-	// Duplicate logic
-	startTimeSeconds, startErr := strconv.Atoi(c.Param("startTimeSeconds"))
-	if startErr != nil || startTimeSeconds < 0 {
-		startTimeSeconds = cfg.PreviewFirstScreenOffset
-	}
-	numberOfScreens, countErr := strconv.Atoi(c.Param("count"))
-	if countErr != nil {
-		numberOfScreens = cfg.PreviewCount
-	}
-	if numberOfScreens <= 0 || numberOfScreens > 300 {
-		return c.Error(http.StatusBadRequest, errors.New("too many or few screens requested"))
+	startTimeSeconds, numberOfScreens, err := ValidateScreensParams(c.Params().(url.Values))
+	if err != nil {
+		return c.Error(http.StatusBadRequest, err)
 	}
 
 	man := managers.GetManager(&c)
@@ -417,25 +408,34 @@ func ContentTaskScreensHandler(c buffalo.Context) error {
 	return QueueTaskRequest(c, man, tr)
 }
 
-func ContainerScreensHandler(c buffalo.Context) error {
+func ValidateScreensParams(params url.Values) (int, int, error) {
 	cfg := utils.GetCfg()
-	cID, bad_uuid := uuid.FromString(c.Param("containerID"))
-	if bad_uuid != nil {
-		return c.Error(400, bad_uuid)
-	}
 
-	// Duplicate logic
-	startTimeSeconds, startErr := strconv.Atoi(c.Param("startTimeSeconds"))
+	startTimeSeconds, startErr := strconv.Atoi(params.Get("startTimeSeconds"))
 	if startErr != nil || startTimeSeconds < 0 {
 		startTimeSeconds = cfg.PreviewFirstScreenOffset
 	}
-	numberOfScreens, countErr := strconv.Atoi(c.Param("count"))
+	numberOfScreens, countErr := strconv.Atoi(params.Get("count"))
 	if countErr != nil {
 		numberOfScreens = cfg.PreviewCount
 	}
 	if numberOfScreens <= 0 || numberOfScreens > 300 {
-		return c.Error(http.StatusBadRequest, errors.New("too many or few screens requested"))
+		return startTimeSeconds, numberOfScreens, errors.New("too many or few screens requested")
 	}
+	return startTimeSeconds, numberOfScreens, nil
+}
+
+func ContainerScreensHandler(c buffalo.Context) error {
+	cID, badUuid := uuid.FromString(c.Param("containerID"))
+	if badUuid != nil {
+		return c.Error(http.StatusBadRequest, badUuid)
+	}
+	cfg := utils.GetCfg()
+	startTimeSeconds, numberOfScreens, err := ValidateScreensParams(c.Params().(url.Values))
+	if err != nil {
+		return c.Error(http.StatusBadRequest, err)
+	}
+
 	cQ := managers.ContentQuery{
 		ContainerID: cID.String(),
 		ContentType: "video",

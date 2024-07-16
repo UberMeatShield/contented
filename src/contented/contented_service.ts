@@ -348,7 +348,7 @@ export class ContentedService {
     );
   }
 
-  containerPreviewsTask(cnt: Container, count: number = 12, startTimeSeconds: number = -1) {
+  containerPreviewsTask(cnt: Container, count: number = 16, startTimeSeconds: number = -1) {
     let url = ApiDef.contented.containerPreviewsTask.replace('{containerId}', cnt.id);
     url = url.replace('{count}', `${count}`).replace("{startTimeSeconds}", `${startTimeSeconds}`);
     return this.http.post(url, cnt).pipe(
