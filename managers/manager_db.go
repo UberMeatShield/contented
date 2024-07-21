@@ -45,10 +45,7 @@ func (cm ContentManagerDB) GetParams() *url.Values {
 
 func (cm ContentManagerDB) CanEdit() bool {
 	cfg := utils.GetCfg()
-	if cfg.ReadOnly == true {
-		return false
-	}
-	return true
+	return !cfg.ReadOnly
 }
 
 func (cm ContentManagerDB) ListContentContext() (*models.Contents, int, error) {
@@ -676,11 +673,12 @@ func (cm ContentManagerDB) ListTasksContext() (*models.TaskRequests, int, error)
 	params := cm.Params()
 	_, limit, page := GetPagination(params, cm.GetCfg().Limit)
 	query := TaskQuery{
-		Page:      page,
-		PerPage:   limit,
-		ContentID: StringDefault(params.Get("content_id"), ""),
-		Status:    StringDefault(params.Get("status"), ""), // Check it is in the Status values?
-		Search:    StringDefault(params.Get("search"), ""),
+		Page:        page,
+		PerPage:     limit,
+		ContentID:   StringDefault(params.Get("content_id"), ""),
+		ContainerID: StringDefault(params.Get("container_id"), ""),
+		Status:      StringDefault(params.Get("status"), ""), // Check it is in the Status values?
+		Search:      StringDefault(params.Get("search"), ""),
 	}
 	return cm.ListTasks(query)
 }
@@ -694,6 +692,9 @@ func (cm ContentManagerDB) ListTasks(query TaskQuery) (*models.TaskRequests, int
 	}
 	if query.ContentID != "" {
 		q = q.Where("content_id = ?", query.ContentID)
+	}
+	if query.ContainerID != "" {
+		q = q.Where("container_id = ?", query.ContainerID)
 	}
 	// TODO: Add in another search for searching errors potentially
 	if query.Search != "" {

@@ -25,11 +25,37 @@ export const ContentSearchSchema = z.object({
   tags: z.string().array().optional(),
 });
 export type ContentSearch = z.infer<typeof ContentSearchSchema>;
+
 /* This should work but doesn't because of node vs web issues.
 export class ContentSearch extends Z.class({
     ...ContentSearchSchema._def.shape(),
 }) {}
 */
+export const TaskStatusEnum = z.enum(['new', 'pending', 'in_progress', 'canceled', 'error', 'done', 'invalid', '']);
+export type TaskStatus = z.infer<typeof TaskStatusEnum>;
+
+export const TaskTypes = {
+  ENCODING: 'video_encoding',
+  SCREENS: 'screen_capture',
+  WEBP: 'webp_from_screens',
+  TAGGING: 'tag_content',
+  DUPES: 'detect_duplicates',
+} as const;
+
+// Odd but works because of a strange constant hackery found in the zod forums.
+export const TaskEnum = z.enum([TaskTypes.ENCODING, ...Object.values(TaskTypes)]);
+
+export const TaskSearchSchema = z.object({
+  id: z.string().optional().nullable(), // The task.ID
+  offset: z.number().optional().default(0),
+  limit: z.number().optional(),
+  contentID: z.string().optional(),
+  containerID: z.string().optional(),
+  search: z.string().optional(),
+  status: TaskStatusEnum.optional(),
+  operation: TaskEnum.optional(),
+});
+export type TaskSearch = z.infer<typeof TaskSearchSchema>;
 
 @Injectable()
 export class ContentedService {
@@ -350,10 +376,10 @@ export class ContentedService {
 
   containerPreviewsTask(cnt: Container, count: number = 16, startTimeSeconds: number = -1) {
     let url = ApiDef.contented.containerPreviewsTask.replace('{containerId}', cnt.id);
-    url = url.replace('{count}', `${count}`).replace("{startTimeSeconds}", `${startTimeSeconds}`);
+    url = url.replace('{count}', `${count}`).replace('{startTimeSeconds}', `${startTimeSeconds}`);
     return this.http.post(url, cnt).pipe(
       map(res => {
-        console.log("Created container previews response", res);
+        console.log('Created container previews response', res);
         return _.map(res['results'], task => new TaskRequest(task));
       })
     );
@@ -364,7 +390,7 @@ export class ContentedService {
     return this.http.post(url, cnt).pipe(
       map(res => {
         // Return an array of task requests I think
-        console.log("Container Encoding task", res);
+        console.log('Container Encoding task', res);
         return _.map(res['results'], task => new TaskRequest(task));
       })
     );
@@ -402,16 +428,24 @@ export class ContentedService {
     );
   }
 
-  getTasks(id: string, page: number = 1, perPage: number = 100, status = '', search = '') {
-    let params = new HttpParams();
-    params = params.set('page', '' + page);
-    params = params.set('per_page', '' + perPage);
-    params = params.set('content_id', id || '');
-    if (status != '') {
-      params = params.set('status', status);
+  // TODO: Update this to a query object
+  getTasks(query: TaskSearch) {
+    // TODO: make a toParam() ?
+    let params = this.getPaginationParams(query.offset, query.limit);
+    if (query.id) {
+      params = params.set('id', query.id);
     }
-    if (search != '') {
-      params = params.set('search', search);
+    if (query.contentID) {
+      params = params.set('content_id', query.contentID);
+    }
+    if (query.containerID) {
+      params = params.set('container_id', query.containerID);
+    }
+    if (query.status) {
+      params = params.set('status', query.status);
+    }
+    if (query.search) {
+      params = params.set('search', query.search);
     }
     return this.http.get(ApiDef.tasks.list, { params: params }).pipe(
       map((res: any) => {

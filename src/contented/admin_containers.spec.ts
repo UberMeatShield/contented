@@ -42,7 +42,7 @@ describe('TestingAdminAdminContainersCmp', () => {
 
   afterEach(() => {
     httpMock.verify();
-  })
+  });
 
   it('Should create a contented component', () => {
     expect(comp).withContext('We should have the Contented comp').toBeDefined();
@@ -53,7 +53,7 @@ describe('TestingAdminAdminContainersCmp', () => {
     fixture.detectChanges();
 
     const containers = MockData.getContainers();
-    const req = httpMock.expectOne(ApiDef.contented.containers)
+    const req = httpMock.expectOne(ApiDef.contented.containers);
     req.flush(containers);
     expect(containers?.results?.length).toBeGreaterThan(0);
 

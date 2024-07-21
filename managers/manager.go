@@ -35,13 +35,14 @@ type GetParamsType func() *url.Values
 type GetAppWorker func() worker.Worker
 
 type TaskQuery struct {
-	Page      int    `json:"page" default:"1"`
-	PerPage   int    `json:"per_page" default:"100"`
-	ContentID string `json:"content_id" default:""`
-	Order     string `json:"order" default:"created_at"`
-	Status    string `json:"status" default:""`
-	Direction string `json:"direction" default:"desc"`
-	Search    string `json:"search" default:""`
+	Page        int    `json:"page" default:"1"`
+	PerPage     int    `json:"per_page" default:"100"`
+	ContentID   string `json:"content_id" default:""`
+	ContainerID string `json:"container_id" default:""`
+	Order       string `json:"order" default:"created_at"`
+	Status      string `json:"status" default:""`
+	Direction   string `json:"direction" default:"desc"`
+	Search      string `json:"search" default:""`
 }
 
 type ScreensQuery struct {
