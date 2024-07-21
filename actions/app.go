@@ -47,15 +47,22 @@ func App(UseDatabase bool) *buffalo.App {
 		app.GET("/splash", SplashHandler)
 
 		// Allow for manipulation of content already on the server
-		app.POST("/editing_queue/{contentID}/screens/{count}/{startTimeSeconds}", TaskScreensHandler)
+		app.POST("/editing_queue/{contentID}/screens/{count}/{startTimeSeconds}", ContentTaskScreensHandler)
 		app.POST("/editing_queue/{contentID}/encoding", VideoEncodingHandler)
 		app.POST("/editing_queue/{contentID}/webp", WebpFromScreensHandler)
 		app.POST("/editing_queue/{contentID}/tagging", TaggingHandler)
-		app.POST("/editing_queue/{contentID}/duplicates", DupesHandler)
 
-		//
+		// TODO: Check that we can still kick off a duplicates task for the container.
+		app.POST("/editing_container_queue/{containerID}/screens/{count}/{startTimeSeconds}", ContainerScreensHandler)
+		app.POST("/editing_container_queue/{containerID}/encoding", ContainerVideoEncodingHandler)
+		//app.POST("/editing_container_queue/{containerID}/webp", ContainerWebpHandler)
+		app.POST("/editing_container_queue/{containerID}/tagging", ContainerTaggingHandler)
+
+		// Dupes is a special case where we do not need to create a task per content type right now
+		// the checks are fast enough that we can get a summary pretty quickly and probably faster with
+		// single lookups (for now).
+		app.POST("/editing_queue/{contentID}/duplicates", DupesHandler)
 		app.POST("/editing_container_queue/{containerID}/duplicates", DupesHandler)
-		// app.DELETE("/editing_queue/{taskID}/", TaskDeleteHandler)
 
 		// Allow for the creation of new content
 		// app.POST("/uploading/contents/", TaskContentUploadHandler)

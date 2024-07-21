@@ -143,6 +143,11 @@ func (m Contents) String() string {
 	return string(jm)
 }
 
+// String is not required by pop and may be deleted
+func (content Content) IsVideo() bool {
+	return strings.Contains(content.ContentType, "video")
+}
+
 // Validate gets run every time you call a "pop.Validate*" (pop.ValidateAndSave, pop.ValidateAndCreate, pop.ValidateAndUpdate) method.
 // This method is not required and may be deleted.
 func (m *Content) Validate(tx *pop.Connection) (*validate.Errors, error) {

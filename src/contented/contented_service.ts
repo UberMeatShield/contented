@@ -331,7 +331,7 @@ export class ContentedService {
   }
 
   findDuplicateForContentTask(content: Content) {
-    let url = ApiDef.contented.duplicateContentTask.replace('{contentId}', content.id);
+    let url = ApiDef.contented.contentDuplicatesTask.replace('{contentId}', content.id);
     return this.http.post(url, content).pipe(
       map(res => {
         return new TaskRequest(res);
@@ -339,11 +339,42 @@ export class ContentedService {
     );
   }
 
-  findDuplicateForContainerTask(cnt: Container) {
-    let url = ApiDef.contented.duplicateContentTask.replace('{containerId}', cnt.id);
+  containerDuplicatesTask(cnt: Container) {
+    let url = ApiDef.contented.containerDuplicatesTask.replace('{containerId}', cnt.id);
     return this.http.post(url, cnt).pipe(
       map(res => {
-        return new TaskRequest(res);
+        return [new TaskRequest(res)];
+      })
+    );
+  }
+
+  containerPreviewsTask(cnt: Container, count: number = 16, startTimeSeconds: number = -1) {
+    let url = ApiDef.contented.containerPreviewsTask.replace('{containerId}', cnt.id);
+    url = url.replace('{count}', `${count}`).replace("{startTimeSeconds}", `${startTimeSeconds}`);
+    return this.http.post(url, cnt).pipe(
+      map(res => {
+        console.log("Created container previews response", res);
+        return _.map(res['results'], task => new TaskRequest(task));
+      })
+    );
+  }
+
+  containerVideoEncodingTask(cnt: Container) {
+    let url = ApiDef.contented.containerVideoEncodingTask.replace('{containerId}', cnt.id);
+    return this.http.post(url, cnt).pipe(
+      map(res => {
+        // Return an array of task requests I think
+        console.log("Container Encoding task", res);
+        return _.map(res['results'], task => new TaskRequest(task));
+      })
+    );
+  }
+
+  containerTaggingTask(cnt: Container) {
+    let url = ApiDef.contented.containerTaggingTask.replace('{containerId}', cnt.id);
+    return this.http.post(url, cnt).pipe(
+      map(res => {
+        return _.map(res['results'], task => new TaskRequest(task));
       })
     );
   }

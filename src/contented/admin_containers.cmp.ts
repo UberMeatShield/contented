@@ -39,8 +39,16 @@ export class AdminContainersCmp implements OnInit {
 
     createPreviews(cnt: Container) {
       this.creatingTask = true;
-      console.log("Create Previews");
-      this.creatingTask = false;
+      this.service.containerPreviewsTask(cnt)
+        .pipe(finalize(() => (this.creatingTask = false)))
+        .subscribe({
+          next: (response) => {
+            console.log("Queued", response);
+          },
+          error: (err) => {
+            GlobalBroadcast.error("Failed to start previews task", err);
+          }
+        });
     }
 
     createWebp(cnt: Container) {
@@ -51,13 +59,44 @@ export class AdminContainersCmp implements OnInit {
 
     createTags(cnt: Container) {
       this.creatingTask = true;
-      console.log("Create Tags");
-      this.creatingTask = false;
+      this.service.containerTaggingTask(cnt)
+        .pipe(finalize(() => (this.creatingTask = false)))
+        .subscribe({
+          next: (response) => {
+            console.log("Queued", response);
+          },
+          error: (err) => {
+            GlobalBroadcast.error("Failed to start tagging task", err);
+          }
+        });
+    }
+
+    findDuplicates(cnt: Container) {
+      this.creatingTask = true;
+      this.service.containerDuplicatesTask(cnt)
+        .pipe(finalize(() => (this.creatingTask = false)))
+        .subscribe({
+          next: (response) => {
+            console.log("Queued", response);
+          },
+          error: (err) => {
+            GlobalBroadcast.error("Failed to start duplicates task", err);
+          }
+      });
     }
 
     encodeVideos(cnt: Container) {
+      console.log("Encode Videos", cnt);
       this.creatingTask = true;
-      console.log("Encode Videos");
-      this.creatingTask = false;
+      this.service.containerVideoEncodingTask(cnt)
+        .pipe(finalize(() => (this.creatingTask = false)))
+        .subscribe({
+          next: (response) => {
+            console.log("Queued", response);
+          },
+          error: (err) => {
+            GlobalBroadcast.error("Failed to start encoding tasks", err);
+          }
+        });
     }
 }
