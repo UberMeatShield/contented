@@ -300,7 +300,7 @@ export class VSCodeEditorCmp implements OnInit {
       // You would think this would work but unfortunately the height of content is altered
       // by the spacing of the render so it expands forever.
       //const contentHeight = Math.min(2000, this.monacoEditor.getContentHeight());
-      let contentHeight = 19 * lineCount;
+      let contentHeight = 19 * (lineCount + 1);
       el.style.height = `${contentHeight}px `;
       el.style.width = `${width}px `;
       editor.layout({ width, height: contentHeight });

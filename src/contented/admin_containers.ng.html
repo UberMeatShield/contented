@@ -11,12 +11,17 @@
       <div class="container-contents">
         <mat-card class="primary-card">
           <mat-card-header>
-              <mat-card-title>
-                <span class="title">{{container.name}} </span>
-                <span class="pull-right">
+              <mat-card-title >
+                <div class="container-bar-no-border">
+                <div class="container-preview-large">
+                 <img class="container-preview-img" [src]="container?.previewUrl">
+                </div>
+                <span class="title bar-spacer">{{container.name}}</span>
+                <span class="total-content bar-spacer">
                   total({{container.total}})  
                </span>
                {{container.description}}
+              </div>
               </mat-card-title>
               <mat-card-subtitle>
                 <div>

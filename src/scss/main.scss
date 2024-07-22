@@ -160,16 +160,26 @@ body {
     .container-bar-controls {
         display: flex;
     }
-
     .container-preview-loc {
         width: $thumbWidth;
         height: $thumbHeight;
     }
-    .container-preview-img {
-        object-fit: contain;
-        width: 100%;
-        height: 100%;
-    }
+}
+
+.container-bar-no-border {
+    @extend .container-bar;
+    border: 0px;
+}
+
+.container-preview-large {
+    width: $thumbWidth * 2;
+    height: $thumbHeight * 2;
+}
+
+.container-preview-img {
+    object-fit: contain;
+    width: 100%;
+    height: 100%;
 }
 
 .container-bar-info {                    
