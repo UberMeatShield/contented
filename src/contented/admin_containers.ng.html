@@ -13,18 +13,11 @@
           <mat-card-header>
               <mat-card-title >
                 <div class="container-bar-no-border">
-                <div class="container-preview-large">
-                 <img class="container-preview-img" [src]="container?.previewUrl">
-                </div>
-                <span class="title bar-spacer">{{container.name}}</span>
-                <span class="total-content bar-spacer">
-                  total({{container.total}})  
-               </span>
-               {{container.description}}
-              </div>
-              </mat-card-title>
-              <mat-card-subtitle>
-                <div>
+                  <span class="title bar-spacer">{{container.name}}</span>
+                  <span class="total-content bar-spacer">
+                    count({{container.total}})  
+                 </span>
+                <div class="bar-spacer">
                   <button mat-raised-button [disabled]="creatingTask" (click)="createPreviews(container)">
                       Create Previews
                   </button>
@@ -43,11 +36,18 @@
                       Encode Video Contents
                   </button>
                 </div>
+              </div>
+              </mat-card-title>
+              <mat-card-subtitle>
+                {{container.description}}
               </mat-card-subtitle>
           </mat-card-header>
 
           <!-- Or go to a single page editing container option and just provide a description text input -->
           <mat-card-content>
+            <div class="container-preview-large">
+             <img class="container-preview-img" [src]="container?.previewUrl">
+            </div>
             <div>Show content for the container (expand)</div>
             <div>Show previous tasks or pending (expand)</div>
             <div>Provide some level of editor support later (expand)</div>
