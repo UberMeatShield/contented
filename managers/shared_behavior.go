@@ -167,7 +167,6 @@ func FindDuplicateVideos(cm ContentManager) (DuplicateContents, error) {
 			log.Printf("Found duplicates %d in cnt %s", len(dupes), cnt.Name)
 			duplicates = append(duplicates, dupes...)
 		}
-
 		if len(cntErrors) > 0 {
 			errMsg := fmt.Sprintf("found errors in Container %s errors %s", cnt.ID.String(), cntErrors)
 			errors = append(errors, errMsg)
@@ -230,7 +229,7 @@ func FindDuplicateContents(cm ContentManager, cnt *models.Container, cs ContentQ
 				foundDupe, checkErr := utils.IsDuplicateVideo(encodedPath, dupePath)
 				if checkErr != nil {
 					// TODO: not a failure case but maybe it should be or at least measured?
-					errMsg := fmt.Sprintf("Error attempting to determine if a video was a dupe %s", checkErr)
+					errMsg := fmt.Sprintf("Error attempting to determine if a video was a dupe %s file %s", checkErr, originalName)
 					errors = append(errors, errMsg)
 					log.Print(errMsg)
 				} else if foundDupe {
