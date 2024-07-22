@@ -7,6 +7,15 @@
       <li>Attempt to allow for preview Url selection</li>
       <li>Provide a set of tasks we can generate (encode, preview, screens, etc)</li>
     </ul>
+    wat
+    <div class="search-tags" *ngIf="this.options">
+      <tags-cmp
+       [tags]="tags"
+       [editorValue]="searchText"
+       (tagsChanged)="changedSearch($event)"
+      ></tags-cmp>
+    </div>
+
     <div class="admin-cnt" *ngFor="let container of containers">
       <div class="container-contents">
         <mat-card class="primary-card">

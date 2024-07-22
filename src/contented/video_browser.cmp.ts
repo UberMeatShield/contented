@@ -182,7 +182,6 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
 
   public resetForm(setupFilterEvents: boolean = false) {
     this.options = this.fb.group({
-      // searchText: this.searchText,
       searchType: this.searchType,
     });
     if (setupFilterEvents) {

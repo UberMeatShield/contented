@@ -3,7 +3,10 @@ import { Container } from './container';
 import { ContentedService } from './contented_service';
 import { finalize } from 'rxjs/operators';
 import { GlobalBroadcast } from './global_message';
+import { Tag, VSCodeChange } from './content';
 
+import * as _ from 'lodash';
+import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 // TODO: When styling out the search add a hover and hover text to make it
 // more obvious when something can be clicked.
 @Component({
@@ -11,12 +14,20 @@ import { GlobalBroadcast } from './global_message';
   templateUrl: './admin_containers.ng.html',
 })
 export class AdminContainersCmp implements OnInit {
-  public loading = false;
-  public creatingTask = false;
-
+  @Input() tags: Array<Tag>;
   @Input() containers: Array<Container>;
 
-  constructor(private service: ContentedService) {}
+  public loading = false;
+  public creatingTask = false;
+  changedSearch: (evt: VSCodeChange) => void;
+  currentTextChange: VSCodeChange = { value: '', tags: [] };
+
+  options: FormGroup;
+  searchType = new FormControl('text');
+  searchText: string;
+
+
+  constructor(private service: ContentedService, private fb: FormBuilder) {}
 
   ngOnInit() {
     this.loading = true;
@@ -35,6 +46,21 @@ export class AdminContainersCmp implements OnInit {
           GlobalBroadcast.error('Failed to load containers', err);
         },
       });
+
+
+    this.resetForm();
+    this.changedSearch = _.debounce((evt: VSCodeChange) => {
+      // Do not change this.searchText it will re-assign the VS-Code editor in a
+      // bad way and muck with the cursor.
+      console.log("Changed the search", evt);
+    }, 250);
+
+  }
+
+  public resetForm(setupFilterEvents: boolean = false) {
+    this.options = this.fb.group({
+      searchType: this.searchType,
+    });
   }
 
   createPreviews(cnt: Container) {
