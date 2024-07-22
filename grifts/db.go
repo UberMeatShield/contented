@@ -125,9 +125,6 @@ var _ = grift.Namespace("db", func() {
 			dupes, err = managers.FindDuplicateVideos(man)
 		}
 
-		if err != nil {
-			return err
-		}
 		if len(dupes) > 0 {
 			dupeFile := envy.Get("DUPE_FILE", "")
 			if dupeFile != "" {
@@ -148,6 +145,10 @@ var _ = grift.Namespace("db", func() {
 			}
 		} else {
 			fmt.Printf("No Duplicates were found.")
+		}
+		if err != nil {
+			fmt.Printf("There were errors finding dupes %s", err)
+			return err
 		}
 		return nil
 	})
