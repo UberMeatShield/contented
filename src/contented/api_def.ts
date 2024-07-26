@@ -14,7 +14,8 @@ export let ApiDef = {
     contentScreens: base + 'contents/{mcID}/screens',
     screens: base + 'screens/',
     contentAll: base + 'content/',
-    search: base + 'search',
+    searchContents: base + 'api/search/contents',
+    searchContainers: base + 'api/search/containers',
     tags: base + 'tags/',
 
     // Task Related APIs

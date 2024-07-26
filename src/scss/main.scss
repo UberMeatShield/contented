@@ -119,11 +119,15 @@ body {
 
 .search-form {
     display: flex;
+
     .search-tags {
-        width: 60%;
+        width: 55%;
     }
     .search-paginator {
         width: 35%;
+    }
+    .search-type-selector {
+        margin-left: 1rem;
     }
 }
 

@@ -15,7 +15,7 @@ import * as $ from 'jquery';
 import { MockData } from '../test/mock/mock_data';
 import { ApiDef } from './api_def';
 
-describe('TestingAdminAdminContainersCmp', () => {
+describe('TestingAdminContainersCmp', () => {
   let fixture: ComponentFixture<AdminContainersCmp>;
   let service: ContentedService;
   let comp: AdminContainersCmp;
@@ -53,9 +53,12 @@ describe('TestingAdminAdminContainersCmp', () => {
     fixture.detectChanges();
 
     const containers = MockData.getContainers();
-    const req = httpMock.expectOne(ApiDef.contented.containers);
+    const req = httpMock.expectOne(r => r.url.includes(ApiDef.contented.searchContainers));
     req.flush(containers);
     expect(containers?.results?.length).toBeGreaterThan(0);
+
+    const tagReq = httpMock.expectOne(r => r.url.includes(ApiDef.contented.tags));
+    tagReq.flush(MockData.tags());
 
     fixture.detectChanges();
     expect($('.admin-cnt').length).toEqual(containers.results.length);

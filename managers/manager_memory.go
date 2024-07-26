@@ -235,6 +235,12 @@ func (cm ContentManagerMemory) getContentFiltered(cs ContentQuery) (*models.Cont
 	return &mcArr, nil
 }
 
+// It should probably be able to search the container too?
+func (cm ContentManagerMemory) SearchContainersContext() (*models.Containers, int, error) {
+	cq := ContextToContainerQuery(cm.Params(), cm.GetCfg())
+	return cm.SearchContainers(cq)
+}
+
 // TODO: Make it page but right now this will only be used in splash (regex it?)
 func (cm ContentManagerMemory) SearchContainers(cs ContainerQuery) (*models.Containers, int, error) {
 	limit := cs.PerPage
@@ -419,11 +425,9 @@ func (cm ContentManagerMemory) ListContainersFiltered(cs ContainerQuery) (*model
 	c_arr := models.Containers{}
 	mem := cm.GetStore()
 	for _, c := range mem.ValidContainers {
-
 		if cs.Name != "" && !strings.Contains(c.Name, cs.Name) {
 			continue
 		}
-
 		if !cs.IncludeHidden {
 			if !c.Hidden {
 				c_arr = append(c_arr, c)
@@ -432,7 +436,6 @@ func (cm ContentManagerMemory) ListContainersFiltered(cs ContainerQuery) (*model
 			c_arr = append(c_arr, c)
 		}
 	}
-
 	sort.SliceStable(c_arr, func(i, j int) bool {
 		return c_arr[i].Idx < c_arr[j].Idx
 	})
@@ -541,7 +544,7 @@ func (cm ContentManagerMemory) GetScreen(psID uuid.UUID) (*models.Screen, error)
 	if screen, ok := mem.ValidScreens[psID]; ok {
 		return &screen, nil
 	}
-	return nil, errors.New("Screen not found")
+	return nil, errors.New("screen not found")
 }
 
 // It really seems like it would be nicer to have a base class do this...

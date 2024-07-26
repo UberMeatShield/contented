@@ -16,15 +16,27 @@ import * as _ from 'lodash';
 import z from 'zod';
 //import { Z } from 'zod-class';
 
-export const ContentSearchSchema = z.object({
-  cId: z.string().optional().nullable(), // Container Id
-  text: z.string().optional(),
+export const DirectionEnum = z.enum(['asc', 'desc']);
+export const SearchSchema = z.object({
+  search: z.string().optional(), // Searches inside description
   offset: z.number().optional().default(0),
   limit: z.number().optional(),
-  contentType: z.string().optional(),
   tags: z.string().array().optional(),
+  order: DirectionEnum.optional(),
 });
+
+export const ContentSearchSchema = SearchSchema.extend({
+  cId: z.string().optional().nullable(), // Container Id
+  contentType: z.string().optional(),
+  text: z.string().optional(), // An exact search on file name
+});
+
+export const ContainerSearchSchema = SearchSchema.extend({
+  name: z.string().optional(), // Exact search on container name
+});
+
 export type ContentSearch = z.infer<typeof ContentSearchSchema>;
+export type ContainerSearch = z.infer<typeof ContainerSearchSchema>;
 
 /* This should work but doesn't because of node vs web issues.
 export class ContentSearch extends Z.class({
@@ -228,6 +240,27 @@ export class ContentedService {
     }
   }
 
+  public searchContainers(cntQ: ContainerSearch) {
+    let params = this.getPaginationParams(cntQ.offset, cntQ.limit);
+    if (cntQ.name) {
+      params = params.set('text', cntQ.name);
+    }
+    if (cntQ.search) {
+      params = params.set('search', cntQ.search);
+    }
+    if (cntQ.tags?.length > 0) {
+      params = params.set('tags', JSON.stringify(cntQ.tags));
+    }
+    return this.http.get(ApiDef.contented.searchContainers, { params }).pipe(
+      map((res: any) => {
+        return {
+          total: res.total,
+          results: _.map(res.results, r => new Container(r)),
+        };
+      })
+    );
+  }
+
   // Could definitely use Zod here as a search type.  Maybe it is worth pulling in at this point.
   public searchContent(cs: ContentSearch) {
     let params = this.getPaginationParams(cs.offset, cs.limit);
@@ -242,16 +275,11 @@ export class ContentedService {
     // GoBuffalo is being DUMB on the array parsing :(
     // params.get("tags[]") just returns the first entry if there are multiple
     if (cs.tags?.length > 0) {
-      /*
-            for (const tag of cs.tags) {
-               params = params.append('tags[]', tag); 
-            }
-            */
       params = params.set('tags', JSON.stringify(cs.tags));
     }
     return this.http
-      .get(ApiDef.contented.search, {
-        params: params,
+      .get(ApiDef.contented.searchContents, {
+        params,
       })
       .pipe(
         map((res: any) => {

@@ -1,20 +1,32 @@
 <div class="admin-containers-cmp">
-    <div>Add top Nav</div>
-    <div>Container</div>
-    <div>Loading {{loading}}</div>
-    <ul>
-      <li>List each container (show preview)</li>
-      <li>Attempt to allow for preview Url selection</li>
-      <li>Provide a set of tasks we can generate (encode, preview, screens, etc)</li>
-    </ul>
-    wat
-    <div class="search-tags" *ngIf="this.options">
-      <tags-cmp
-       [tags]="tags"
-       [editorValue]="searchText"
-       (tagsChanged)="changedSearch($event)"
-      ></tags-cmp>
-    </div>
+    <contented-nav [loading]="loading"></contented-nav>
+    <div></div>
+
+    <form #containerForm [formGroup]="options" (keypress)="$event.stopPropagation()">
+    <div class="search-form">
+      <div class="search-tags" *ngIf="this.options">
+        <tags-cmp
+         [tags]="tags"
+         [editorValue]="searchText"
+         (tagsChanged)="changedSearch($event)"
+        ></tags-cmp>
+      </div>
+
+        <!-- Center this would be nice -->
+        <div class="form-group search-selector">
+          <mat-radio-group [formControl]="searchType" aria-label="Select to modify the search type">
+            <mat-radio-button value="text">By Text</mat-radio-button>
+            <mat-radio-button value="tags">By Tags</mat-radio-button>
+          </mat-radio-group>
+        </div>
+
+        <mat-paginator
+          [length]="total"
+          [pageSize]="pageSize"
+          (page)="pageEvt($event)"
+        ></mat-paginator>
+      </div>
+    </form>
 
     <div class="admin-cnt" *ngFor="let container of containers">
       <div class="container-contents">

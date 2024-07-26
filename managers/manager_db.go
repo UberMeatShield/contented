@@ -177,6 +177,12 @@ func (cm ContentManagerDB) SearchContentContext() (*models.Contents, int, error)
 	return cm.SearchContent(sr)
 }
 
+// It should probably be able to search the container too?
+func (cm ContentManagerDB) SearchContainersContext() (*models.Containers, int, error) {
+	cq := ContextToContainerQuery(cm.Params(), cm.GetCfg())
+	return cm.SearchContainers(cq)
+}
+
 func (cm ContentManagerDB) SearchContent(sr ContentQuery) (*models.Contents, int, error) {
 	contentContainers := &models.Contents{}
 	tx := cm.GetConnection()
@@ -185,7 +191,7 @@ func (cm ContentManagerDB) SearchContent(sr ContentQuery) (*models.Contents, int
 	if len(sr.Tags) > 0 {
 		q = q.Join("contents_tags as ct", "ct.content_id = contents.id").Where("ct.tag_id IN (?)", sr.Tags)
 	}
-	// Could also search description (expand this)
+	// TODO: Could also search description (expand this)
 	if sr.Search != "*" && sr.Search != "" {
 		search := ("%" + sr.Search + "%")
 		q = q.Where(`src like ?`, search)
