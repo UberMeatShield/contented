@@ -83,9 +83,9 @@ func (as *ActionSuite) Test_ContentSubQuery_DB() {
 	// Add in a test that uses the search interface via the actions via DB
 	params := url.Values{}
 	params.Add("search", "donut")
-	res3 := as.JSON("/search?%s", params.Encode()).Get()
+	res3 := as.JSON("/api/search/contents?%s", params.Encode()).Get()
 	as.Equal(http.StatusOK, res3.Code)
-	validate3 := SearchResult{}
+	validate3 := SearchContentsResult{}
 	json.NewDecoder(res3.Body).Decode(&validate3)
 	as.Equal(1, len(*validate3.Results), "We have one donut that is not hidden")
 }
@@ -124,10 +124,10 @@ func (as *ActionSuite) Test_MemoryAPIBasics() {
 	as.Equal(test_common.TOTAL_MEDIA, len(validate.Results), "It should have a known set of mock data")
 
 	// I feel like this should be failing?
-	res_search := as.JSON("/search/?search=Large").Get()
+	res_search := as.JSON("/api/search/contents?search=Large").Get()
 	as.Equal(res_search.Code, http.StatusOK, "It should search")
 
-	validate_search := SearchResult{}
+	validate_search := SearchContentsResult{}
 	json.NewDecoder(res_search.Body).Decode(&validate_search)
 	as.Equal(5, len(*validate_search.Results), fmt.Sprintf("In memory should have these %s", res_search.Body.String()))
 }
@@ -239,10 +239,10 @@ func ActionsTagSearchValidation(as *ActionSuite) {
 
 	tagParam, _ := json.Marshal([]string{"Zug"})
 	params.Add("tags", string(tagParam))
-	res := as.JSON("/search?%s", params.Encode()).Get()
+	res := as.JSON("/api/search/contents?%s", params.Encode()).Get()
 	as.Equal(http.StatusOK, res.Code, fmt.Sprintf("Search failed %s", res.Body.String()))
 
-	validate := SearchResult{}
+	validate := SearchContentsResult{}
 	json.NewDecoder(res.Body).Decode(&validate)
 	as.Equal(1, len(*validate.Results), "Searching tags return content")
 }

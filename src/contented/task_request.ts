@@ -46,7 +46,7 @@ export class TaskRequest {
       this.created_at = obj.created_at ? new Date(obj.created_at) : undefined;
       this.updated_at = obj.created_at ? new Date(obj.updated_at) : undefined;
       this.started_at = obj.created_at ? new Date(obj.started_at) : undefined;
-      
+
       if (obj.operation === 'detect_duplicates' && obj.message) {
         this.complexMessage = JSON.parse(obj.message);
       }

@@ -93,7 +93,7 @@ describe('TestingVideoBrowserCmp', () => {
     tick(1000);
 
     MockData.handleContainerLoad(httpMock);
-    let req = httpMock.expectOne(req => req.url === ApiDef.contented.search, 'Failed to find search');
+    let req = httpMock.expectOne(req => req.url === ApiDef.contented.searchContents, 'Failed to find search');
     let sr = MockData.getVideos();
 
     expect(sr.results.length).withContext('We need some search results.').toBeGreaterThan(0);
@@ -115,7 +115,7 @@ describe('TestingVideoBrowserCmp', () => {
 
     let req = httpMock.expectOne(req => {
       console.log('What is the url', req.url);
-      return req.url === ApiDef.contented.search;
+      return req.url === ApiDef.contented.searchContents;
     }, 'Failed to find search');
     req.flush(vRes);
     fixture.detectChanges();

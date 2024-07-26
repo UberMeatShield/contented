@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { finalize, debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { ContentedService } from './contented_service';
+import { ContentedService, TaskSearch, TaskStatus } from './contented_service';
 import { TaskRequest, TASK_STATES } from './task_request';
 import { MatTableDataSource } from '@angular/material/table';
 // import {ActivatedRoute, Router, ParamMap} from '@angular/router';
@@ -88,10 +88,18 @@ export class TaskRequestCmp implements OnInit {
     }
   }
 
-  loadTasks(contentID: string, watching: Array<TaskRequest> = [], status = '', search = '') {
+  loadTasks(contentID: string, watching: Array<TaskRequest> = [], status: TaskStatus = '', search = '') {
     this.loading = true;
+
+    const query: TaskSearch = {
+      contentID,
+      status,
+      search,
+      offset: 0,
+      limit: this.pageSize,
+    };
     return this._service
-      .getTasks(this.contentID, 1, this.pageSize, status, search)
+      .getTasks(query)
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: taskResponse => {

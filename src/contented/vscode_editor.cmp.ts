@@ -36,6 +36,7 @@ export class VSCodeEditorCmp implements OnInit {
   @Input() language: string = 'tagging';
   @Input() fixedLineCount: number = -1;
   @Input() placeholder: string;
+  @Input() padLine: number = 1;
 
   @Input() tags: Array<Tag> = [];
   @Input() editorOptions = {
@@ -300,7 +301,7 @@ export class VSCodeEditorCmp implements OnInit {
       // You would think this would work but unfortunately the height of content is altered
       // by the spacing of the render so it expands forever.
       //const contentHeight = Math.min(2000, this.monacoEditor.getContentHeight());
-      let contentHeight = 19 * lineCount;
+      let contentHeight = 19 * (lineCount + this.padLine);
       el.style.height = `${contentHeight}px `;
       el.style.width = `${width}px `;
       editor.layout({ width, height: contentHeight });

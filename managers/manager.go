@@ -35,13 +35,14 @@ type GetParamsType func() *url.Values
 type GetAppWorker func() worker.Worker
 
 type TaskQuery struct {
-	Page      int    `json:"page" default:"1"`
-	PerPage   int    `json:"per_page" default:"100"`
-	ContentID string `json:"content_id" default:""`
-	Order     string `json:"order" default:"created_at"`
-	Status    string `json:"status" default:""`
-	Direction string `json:"direction" default:"desc"`
-	Search    string `json:"search" default:""`
+	Page        int    `json:"page" default:"1"`
+	PerPage     int    `json:"per_page" default:"100"`
+	ContentID   string `json:"content_id" default:""`
+	ContainerID string `json:"container_id" default:""`
+	Order       string `json:"order" default:"created_at"`
+	Status      string `json:"status" default:""`
+	Direction   string `json:"direction" default:"desc"`
+	Search      string `json:"search" default:""`
 }
 
 type ScreensQuery struct {
@@ -110,6 +111,7 @@ type ContentManager interface {
 
 	SearchContentContext() (*models.Contents, int, error)
 	SearchContent(cq ContentQuery) (*models.Contents, int, error)
+	SearchContainersContext() (*models.Containers, int, error)
 	SearchContainers(cs ContainerQuery) (*models.Containers, int, error)
 
 	UpdateContent(content *models.Content) error
@@ -242,6 +244,10 @@ func StringDefault(s1 string, s2 string) string {
 
 // Used when doing pagination on the arrays of memory manager
 func GetOffsetEnd(page int, per_page int, max int) (int, int) {
+	if max == 0 {
+		return 0, 0
+	}
+
 	if per_page <= 0 {
 		per_page = utils.DefaultLimit
 	}
@@ -302,6 +308,29 @@ func ContextToContentQuery(params pop.PaginationParams, cfg *utils.DirConfigEntr
 	} else {
 		log.Printf("Failed to parse query tags, ignoring %s", err)
 	}
+	return sReq
+}
+
+// TODO: Fill in tags if they are provided.
+func ContextToContainerQuery(params pop.PaginationParams, cfg *utils.DirConfigEntry) ContainerQuery {
+	_, per_page, page := GetPagination(params, cfg.Limit)
+	sReq := ContainerQuery{
+		Name:          StringDefault(params.Get("name"), ""),
+		Search:        StringDefault(params.Get("search"), ""),
+		PerPage:       per_page,
+		Page:          page,
+		IncludeHidden: false,
+		Order:         StringDefault(params.Get("order"), ""),
+	}
+	/*
+		tags, err := GetTagsFromParam(params.Get("tags"))
+		if err == nil {
+			// BAIL / reject
+			sReq.Tags = tags
+		} else {
+			log.Printf("Failed to parse query tags, ignoring %s", err)
+		}
+	*/
 	return sReq
 }
 

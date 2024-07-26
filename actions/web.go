@@ -19,9 +19,14 @@ type HttpError struct {
 	Debug string `json:"debug"`
 }
 
-type SearchResult struct {
+type SearchContentsResult struct {
 	Total   int              `json:"total"`
 	Results *models.Contents `json:"results"`
+}
+
+type SearchContainersResult struct {
+	Total   int                `json:"total"`
+	Results *models.Containers `json:"results"`
 }
 
 // Builds out information given the application and the content directory
@@ -94,7 +99,23 @@ func SearchHandler(c buffalo.Context) error {
 
 	// log.Printf("Search content returned %s", mcs)
 	// TODO: Hmmm, maybe it should always load the screens in a sane fashion?
-	sr := SearchResult{
+	sr := SearchContentsResult{
+		Results: mcs,
+		Total:   count,
+	}
+	return c.Render(200, r.JSON(sr))
+}
+
+func SearchContainersHandler(c buffalo.Context) error {
+	man := managers.GetManager(&c)
+	mcs, count, err := man.SearchContainersContext()
+	if err != nil {
+		return c.Error(400, err)
+	}
+
+	// log.Printf("Search content returned %s", mcs)
+	// TODO: Hmmm, maybe it should always load the screens in a sane fashion?
+	sr := SearchContainersResult{
 		Results: mcs,
 		Total:   count,
 	}

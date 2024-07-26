@@ -3,20 +3,7 @@
   <contented-nav [loading]="loading" [containers]="containers"></contented-nav>
 
   <form #videoForm [formGroup]="options" (keypress)="$event.stopPropagation()">
-  <div class="search-form">
-    <!--
-        <mat-form-field apperance="fill" floatLabel="true" class="search-field">
-          <input type="text" name="videoText"
-            [formControl]="videoText"
-            matInput
-            aria-label="Video search"
-            placeholder="Searches within only video content and prioritize screens"
-            (keypress)="$event.stopPropagation()"
-          >
-          <mat-icon matSuffix>search</mat-icon>
-        </mat-form-field>
-      -->
-
+    <div class="search-form">
         <div class="search-tags" *ngIf="this.options">
           <tags-cmp
            [tags]="tags"
@@ -24,7 +11,7 @@
            (tagsChanged)="changedSearch($event)"
           ></tags-cmp>
         </div>
-        <div class="form-group">
+        <div class="form-group search-selector">
           <mat-radio-group [formControl]="searchType" aria-label="Select to modify the search type">
             <mat-radio-button value="text">By Text</mat-radio-button>
             <mat-radio-button value="tags">By Tags</mat-radio-button>
@@ -43,7 +30,7 @@
             <mat-icon aria-label="Stop filtering on container">close</mat-icon>
           </button>
         </span>
-  </div>
+    </div>
   </form>
 
   <!-- Hidden unless the user expands it -->

@@ -43,7 +43,8 @@ func App(UseDatabase bool) *buffalo.App {
 		app.GET("/preview/{mcID}", PreviewHandler)
 		app.GET("/view/{mcID}", FullHandler)
 		app.GET("/download/{mcID}", DownloadHandler)
-		app.GET("/search", SearchHandler)
+		app.GET("/api/search/contents", SearchHandler)
+		app.GET("/api/search/containers", SearchContainersHandler)
 		app.GET("/splash", SplashHandler)
 
 		// Allow for manipulation of content already on the server

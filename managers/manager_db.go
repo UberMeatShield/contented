@@ -45,10 +45,7 @@ func (cm ContentManagerDB) GetParams() *url.Values {
 
 func (cm ContentManagerDB) CanEdit() bool {
 	cfg := utils.GetCfg()
-	if cfg.ReadOnly == true {
-		return false
-	}
-	return true
+	return !cfg.ReadOnly
 }
 
 func (cm ContentManagerDB) ListContentContext() (*models.Contents, int, error) {
@@ -180,6 +177,12 @@ func (cm ContentManagerDB) SearchContentContext() (*models.Contents, int, error)
 	return cm.SearchContent(sr)
 }
 
+// It should probably be able to search the container too?
+func (cm ContentManagerDB) SearchContainersContext() (*models.Containers, int, error) {
+	cq := ContextToContainerQuery(cm.Params(), cm.GetCfg())
+	return cm.SearchContainers(cq)
+}
+
 func (cm ContentManagerDB) SearchContent(sr ContentQuery) (*models.Contents, int, error) {
 	contentContainers := &models.Contents{}
 	tx := cm.GetConnection()
@@ -188,7 +191,7 @@ func (cm ContentManagerDB) SearchContent(sr ContentQuery) (*models.Contents, int
 	if len(sr.Tags) > 0 {
 		q = q.Join("contents_tags as ct", "ct.content_id = contents.id").Where("ct.tag_id IN (?)", sr.Tags)
 	}
-	// Could also search description (expand this)
+	// TODO: Could also search description (expand this)
 	if sr.Search != "*" && sr.Search != "" {
 		search := ("%" + sr.Search + "%")
 		q = q.Where(`src like ?`, search)
@@ -676,11 +679,12 @@ func (cm ContentManagerDB) ListTasksContext() (*models.TaskRequests, int, error)
 	params := cm.Params()
 	_, limit, page := GetPagination(params, cm.GetCfg().Limit)
 	query := TaskQuery{
-		Page:      page,
-		PerPage:   limit,
-		ContentID: StringDefault(params.Get("content_id"), ""),
-		Status:    StringDefault(params.Get("status"), ""), // Check it is in the Status values?
-		Search:    StringDefault(params.Get("search"), ""),
+		Page:        page,
+		PerPage:     limit,
+		ContentID:   StringDefault(params.Get("content_id"), ""),
+		ContainerID: StringDefault(params.Get("container_id"), ""),
+		Status:      StringDefault(params.Get("status"), ""), // Check it is in the Status values?
+		Search:      StringDefault(params.Get("search"), ""),
 	}
 	return cm.ListTasks(query)
 }
@@ -694,6 +698,9 @@ func (cm ContentManagerDB) ListTasks(query TaskQuery) (*models.TaskRequests, int
 	}
 	if query.ContentID != "" {
 		q = q.Where("content_id = ?", query.ContentID)
+	}
+	if query.ContainerID != "" {
+		q = q.Where("container_id = ?", query.ContainerID)
 	}
 	// TODO: Add in another search for searching errors potentially
 	if query.Search != "" {

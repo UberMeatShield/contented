@@ -169,7 +169,10 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     this.selectedContent = content;
     console.log('Select content is executing.');
     _.delay(() => {
-      let id = `view_content_${content.id}`;
+      if (!content) {
+        return;
+      }
+      let id = `view_content_${content?.id}`;
       let el = document.getElementById(id);
 
       // Might want to debounce this as well
@@ -182,7 +185,6 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
 
   public resetForm(setupFilterEvents: boolean = false) {
     this.options = this.fb.group({
-      // searchText: this.searchText,
       searchType: this.searchType,
     });
     if (setupFilterEvents) {
