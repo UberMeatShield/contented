@@ -3,6 +3,7 @@ package actions
 import (
 	"contented/internals"
 	"contented/utils"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -91,9 +92,19 @@ func App(UseDatabase bool) *buffalo.App {
 }
 
 func GinApp(r *gin.Engine) {
+
+	cfg := utils.GetCfg()
+	// Provide the ability to load static resources
+	r.LoadHTMLGlob(fmt.Sprintf("%s/*.html", cfg.StaticResourcePath))
+	r.StaticFS("/public/build", http.Dir(cfg.StaticResourcePath))
+	r.StaticFS("/public/css", http.Dir(cfg.StaticResourcePath))
+	r.StaticFS("/public/static", http.Dir(cfg.StaticLibraryPath))
+
+	// For LB pings etc.
+	r.GET("/alive", StatusHandler)
+
 	// Host the index.html, also assume that all angular UI routes are going to be under contented
 	// Cannot figure out how to just let AngularIndex handle EVERYTHING under ui/*/*
-	r.GET("/status", HomeHandler)
 	r.GET("/", AngularIndex)
 	r.GET("/ui/browse/{path}", AngularIndex)
 	r.GET("/ui/browse/{path}/{idx}", AngularIndex)
@@ -105,6 +116,7 @@ func GinApp(r *gin.Engine) {
 	r.GET("/admin_ui/tasks", AngularIndex)
 	r.GET("/admin_ui/containers", AngularIndex)
 	r.GET("/admin_ui/search", AngularIndex)
+
 }
 
 // forceSSL will return a middleware that will redirect an incoming request

@@ -10,7 +10,7 @@ import (
 
 // HomeHandler is a default handler to serve up
 // a home page.
-func HomeHandler(c *gin.Context) {
+func StatusHandler(c *gin.Context) {
 	obj := gin.H{"message": "Contented Is Up"}
 	c.JSON(http.StatusOK, obj)
 }

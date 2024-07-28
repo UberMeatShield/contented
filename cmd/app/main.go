@@ -3,7 +3,6 @@ package main
 import (
 	"contented/actions"
 	"contented/utils"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -29,11 +28,6 @@ func main() {
 
 	})
 
-	r.LoadHTMLGlob(fmt.Sprintf("%s/*.html", cfg.StaticResourcePath))
-
-	r.StaticFS("/public/build", http.Dir(cfg.StaticResourcePath))
-	r.StaticFS("/public/css", http.Dir(cfg.StaticResourcePath))
-	r.StaticFS("/public/static", http.Dir(cfg.StaticLibraryPath))
 	//r.LoadHTMLGlob(fmt.Sprintf("%s/*", cfg.StaticResourcePath))
 	actions.GinApp(r)
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
