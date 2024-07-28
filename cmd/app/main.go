@@ -4,7 +4,6 @@ import (
 	"contented/actions"
 	"contented/utils"
 	"log"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,29 +20,24 @@ func main() {
 
 	// Set them up side by side?
 	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
-		})
-
-	})
-
-	//r.LoadHTMLGlob(fmt.Sprintf("%s/*", cfg.StaticResourcePath))
 	actions.GinApp(r)
-	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 
-	log.Printf("What hmmm shouldnt' this work")
-
-	utils.InitConfigEnvy(cfg)
-	app := actions.App(cfg.UseDatabase)
-
-	// TODO: Update or delete this method as it is not really doing anything
-	// Potentially just do the static hosting in the actions.App bit.
-	actions.SetupContented(app, "", 0, 0)
-	if err := app.Serve(); err != nil {
-		log.Fatal(err)
+	actions.SetupContented(r, "", 0, 0)
+	// listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	if err := r.Run(); err != nil {
+		log.Fatalf("Crashed out %s", err)
 	}
 
+	/*
+		utils.InitConfigEnvy(cfg)
+		app := actions.App(cfg.UseDatabase)
+
+		// TODO: Update or delete this method as it is not really doing anything
+		// Potentially just do the static hosting in the actions.App bit.
+		if err := app.Serve(); err != nil {
+			log.Fatal(err)
+		}
+	*/
 }
 
 /*

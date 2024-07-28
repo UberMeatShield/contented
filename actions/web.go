@@ -10,6 +10,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gofrs/uuid"
 )
@@ -30,21 +31,17 @@ type SearchContainersResult struct {
 }
 
 // Builds out information given the application and the content directory
-func SetupContented(app *buffalo.App, contentDir string, numToPreview int, limit int) {
+func SetupContented(r *gin.Engine, contentDir string, numToPreview int, limit int) {
 	cfg := utils.GetCfg()
 
-	// TODO: Check DIR exists
-	// TODO: Somehow need to move the dir into App, but first we want to validate the dir...
-	app.ServeFiles("/static", http.Dir(cfg.Dir))
-
-	// Initialize workers that will listen for encoding tasks
-	SetupWorkers(app)
+	// Initialize workers that will listen for encoding tasks (GoBuffalo has some Gin does not)
+	log.Printf("TODO: The job processors are busted without GoBuffalo")
+	// TODO: SetupWorkers(app)
 
 	// If we are not using databases load up the memory view
 	if !cfg.UseDatabase {
 		SetupMemory(cfg.Dir)
 	}
-
 }
 
 func SetupMemory(dir string) {

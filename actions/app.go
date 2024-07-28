@@ -67,11 +67,6 @@ func App(UseDatabase bool) *buffalo.App {
 		app.POST("/editing_queue/{contentID}/duplicates", DupesHandler)
 		app.POST("/editing_container_queue/{containerID}/duplicates", DupesHandler)
 
-		// Allow for the creation of new content
-		// app.POST("/uploading/contents/", TaskContentUploadHandler)
-		// app.POST("/uploading/previews/{mcID}", TaskPreviewUploadHandler)
-		// app.POST("/uploading/screen/{mcID}", TaskScreenUploadHandler)
-
 		// The DIR env environment is then served under /static (see actions.SetupContented)
 		cr := app.Resource("/containers", ContainersResource{})
 		cr.Resource("/contents", ContentsResource{})
@@ -81,12 +76,6 @@ func App(UseDatabase bool) *buffalo.App {
 		app.Resource("/screens", ScreensResource{})
 		app.Resource("/tags", TagsResource{})
 		app.Resource("/task_requests", TaskRequestResource{})
-
-		// Need to make the file serving location smarter (serve the dir + serve static?)
-		cfg := utils.GetCfg()
-		app.ServeFiles("/public/build", http.Dir(cfg.StaticResourcePath))
-		app.ServeFiles("/public/css", http.Dir(cfg.StaticResourcePath))
-		app.ServeFiles("/public/static", http.Dir(cfg.StaticLibraryPath))
 	}
 	return app
 }
@@ -101,7 +90,7 @@ func GinApp(r *gin.Engine) {
 	r.StaticFS("/public/static", http.Dir(cfg.StaticLibraryPath))
 
 	// For LB pings etc.
-	r.GET("/alive", StatusHandler)
+	r.GET("/status", StatusHandler)
 
 	// Host the index.html, also assume that all angular UI routes are going to be under contented
 	// Cannot figure out how to just let AngularIndex handle EVERYTHING under ui/*/*
