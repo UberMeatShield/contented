@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/envy"
 	forcessl "github.com/gobuffalo/mw-forcessl"
@@ -80,20 +81,6 @@ func App(UseDatabase bool) *buffalo.App {
 		app.Resource("/tags", TagsResource{})
 		app.Resource("/task_requests", TaskRequestResource{})
 
-		// Host the index.html, also assume that all angular UI routes are going to be under contented
-		// Cannot figure out how to just let AngularIndex handle EVERYTHING under ui/*/*
-		app.GET("/", AngularIndex)
-		app.GET("/ui/browse/{path}", AngularIndex)
-		app.GET("/ui/browse/{path}/{idx}", AngularIndex)
-		app.GET("/ui/content/{id}", AngularIndex)
-		app.GET("/ui/search", AngularIndex)
-		app.GET("/ui/video", AngularIndex)
-		app.GET("/ui/splash", AngularIndex)
-		app.GET("/admin_ui/editor_content/{id}", AngularIndex)
-		app.GET("/admin_ui/tasks", AngularIndex)
-		app.GET("/admin_ui/containers", AngularIndex)
-		app.GET("/admin_ui/search", AngularIndex)
-
 		// Need to make the file serving location smarter (serve the dir + serve static?)
 		cfg := utils.GetCfg()
 		app.ServeFiles("/public/build", http.Dir(cfg.StaticResourcePath))
@@ -101,6 +88,23 @@ func App(UseDatabase bool) *buffalo.App {
 		app.ServeFiles("/public/static", http.Dir(cfg.StaticLibraryPath))
 	}
 	return app
+}
+
+func GinApp(r *gin.Engine) {
+	// Host the index.html, also assume that all angular UI routes are going to be under contented
+	// Cannot figure out how to just let AngularIndex handle EVERYTHING under ui/*/*
+	r.GET("/status", HomeHandler)
+	r.GET("/", AngularIndex)
+	r.GET("/ui/browse/{path}", AngularIndex)
+	r.GET("/ui/browse/{path}/{idx}", AngularIndex)
+	r.GET("/ui/content/{id}", AngularIndex)
+	r.GET("/ui/search", AngularIndex)
+	r.GET("/ui/video", AngularIndex)
+	r.GET("/ui/splash", AngularIndex)
+	r.GET("/admin_ui/editor_content/{id}", AngularIndex)
+	r.GET("/admin_ui/tasks", AngularIndex)
+	r.GET("/admin_ui/containers", AngularIndex)
+	r.GET("/admin_ui/search", AngularIndex)
 }
 
 // forceSSL will return a middleware that will redirect an incoming request
