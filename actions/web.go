@@ -6,7 +6,6 @@ import (
 	"contented/utils"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"testing"
 
@@ -67,56 +66,57 @@ func SetupWorkers(app *buffalo.App) {
 	}
 }
 
-func FullHandler(c buffalo.Context) error {
+func FullHandler(c *gin.Context) {
 	mcID, bad_uuid := uuid.FromString(c.Param("mcID"))
 	if bad_uuid != nil {
-		return c.Error(400, bad_uuid)
+		c.AbortWithError(400, bad_uuid)
+		return
 	}
-	man := managers.GetManager(&c)
+	man := managers.GetManager(c)
 	mc, err := man.GetContent(mcID)
 	if err != nil {
-		return c.Error(404, err)
+		c.AbortWithError(404, err)
+		return
 	}
 	fq_path, fq_err := man.FindActualFile(mc)
 	if fq_err != nil {
 		log.Printf("File to full view not found on disk %s with err %s", fq_path, fq_err)
-		return c.Error(http.StatusUnprocessableEntity, fq_err)
+		c.AbortWithError(http.StatusUnprocessableEntity, fq_err)
+		return
 	}
 	log.Printf("Full preview: %s for %s", fq_path, mc.ID.String())
-	http.ServeFile(c.Response(), c.Request(), fq_path)
-	return nil
+	c.File(fq_path)
 }
 
-func SearchHandler(c buffalo.Context) error {
-	man := managers.GetManager(&c)
+func SearchHandler(c *gin.Context) {
+	man := managers.GetManager(c)
 	mcs, count, err := man.SearchContentContext()
 	if err != nil {
-		return c.Error(400, err)
+		c.AbortWithError(400, err)
+		return
 	}
-
 	// log.Printf("Search content returned %s", mcs)
-	// TODO: Hmmm, maybe it should always load the screens in a sane fashion?
 	sr := SearchContentsResult{
 		Results: mcs,
 		Total:   count,
 	}
-	return c.Render(200, r.JSON(sr))
+	c.JSON(200, r.JSON(sr))
 }
 
-func SearchContainersHandler(c buffalo.Context) error {
-	man := managers.GetManager(&c)
+func SearchContainersHandler(c *gin.Context) {
+	man := managers.GetManager(c)
 	mcs, count, err := man.SearchContainersContext()
 	if err != nil {
-		return c.Error(400, err)
+		c.AbortWithError(400, err)
+		return
 	}
-
 	// log.Printf("Search content returned %s", mcs)
 	// TODO: Hmmm, maybe it should always load the screens in a sane fashion?
 	sr := SearchContainersResult{
 		Results: mcs,
 		Total:   count,
 	}
-	return c.Render(200, r.JSON(sr))
+	c.JSON(200, r.JSON(sr))
 }
 
 type SplashResponse struct {
@@ -127,9 +127,9 @@ type SplashResponse struct {
 	Container     *models.Container `json:"container"`
 }
 
-func SplashHandler(c buffalo.Context) error {
+func SplashHandler(c *gin.Context) {
 	cfg := utils.GetCfg()
-	man := managers.GetManager(&c)
+	man := managers.GetManager(c)
 
 	sr := SplashResponse{}
 	if cfg.SplashContainerName != "" {
@@ -167,66 +167,67 @@ func SplashHandler(c buffalo.Context) error {
 		sr.SplashTitle = cfg.SplashTitle
 	}
 	sr.RendererType = cfg.SplashRendererType
-
-	return c.Render(200, r.JSON(sr))
+	c.JSON(200, r.JSON(sr))
 }
 
 // Find the preview of a file (if applicable currently it is just returning the full path)
-func PreviewHandler(c buffalo.Context) error {
+func PreviewHandler(c *gin.Context) {
 	mcID, bad_uuid := uuid.FromString(c.Param("mcID"))
 	if bad_uuid != nil {
-		return c.Error(400, bad_uuid)
+		c.AbortWithError(400, bad_uuid)
+		return
 	}
 
-	man := managers.GetManager(&c)
+	man := managers.GetManager(c)
 	mc, err := man.GetContent(mcID)
 	if err != nil {
-		return c.Error(404, err)
+		c.AbortWithError(404, err)
+		return
 	}
 
 	fq_path, fq_err := man.GetPreviewForMC(mc)
 	if fq_err != nil {
 		log.Printf("File to preview not found on disk %s with err %s", fq_path, fq_err)
-		return c.Error(http.StatusUnprocessableEntity, fq_err)
+		c.AbortWithError(http.StatusUnprocessableEntity, fq_err)
+		return
 	}
 	log.Printf("Found this preview filename to view: %s for %s", fq_path, mc.ID.String())
-	http.ServeFile(c.Response(), c.Request(), fq_path)
-	return nil
+	c.File(fq_path)
 }
 
 // Provides a download handler by directory id and file id
-func DownloadHandler(c buffalo.Context) error {
+func DownloadHandler(c *gin.Context) {
 	mcID, bad_uuid := uuid.FromString(c.Param("mcID"))
 	if bad_uuid != nil {
-		return c.Error(400, bad_uuid)
+		c.AbortWithError(400, bad_uuid)
+		return
 	}
-	man := managers.GetManager(&c)
+	man := managers.GetManager(c)
 	mc, err := man.GetContent(mcID)
 	if err != nil {
-		return c.Error(404, err)
+		c.AbortWithError(404, err)
+		return
 	}
 	// Some content is not actually real
 	if mc.NoFile == true {
-		return c.Render(200, r.JSON(mc))
+		c.JSON(200, r.JSON(mc))
+		return
 	}
 	fq_path, fq_err := man.FindActualFile(mc)
 	if fq_err != nil {
 		log.Printf("Cannot download file not on disk %s with err %s", fq_path, fq_err)
-		return c.Error(http.StatusUnprocessableEntity, fq_err)
+		c.AbortWithError(http.StatusUnprocessableEntity, fq_err)
+		return
 	}
 	finfo, _ := os.Stat(fq_path)
-	file_contents := utils.GetFileContentsByFqName(fq_path)
-	return c.Render(200, r.Download(c, finfo.Name(), file_contents))
+	c.FileAttachment(fq_path, finfo.Name())
 }
 
 // This was the code provided to look up params... this seems cumbersome but "eh?"
-func GetKeyVal(c buffalo.Context, key string, defaultVal string) string {
-	if m, ok := c.Params().(url.Values); ok {
-		for k, v := range m {
-			if k == key && v != nil {
-				return v[0]
-			}
-		}
+func GetKeyVal(c *gin.Context, key string, defaultVal string) string {
+	val := c.Request.URL.Query().Get(key)
+	if val != "" {
+		return val
 	}
 	return defaultVal
 }

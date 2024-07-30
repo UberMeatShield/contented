@@ -23,7 +23,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gobuffalo/buffalo"
+	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/buffalo/worker"
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
@@ -152,9 +152,8 @@ type ContentManager interface {
 
 // Dealing with buffalo.Context vs grift.Context is kinda annoying, this handles the
 // buffalo context which handles tests or runtime but doesn't work in grifts.
-func GetManager(c *buffalo.Context) ContentManager {
+func GetManager(c *gin.Context) ContentManager {
 	cfg := utils.GetCfg()
-	ctx := *c
 
 	// The get connection might need an async channel or it potentially locks
 	// the dev server :(.   Need to only do this if use database is setup and connects
@@ -163,7 +162,7 @@ func GetManager(c *buffalo.Context) ContentManager {
 		var conn *pop.Connection
 		get_connection = func() *pop.Connection {
 			if conn == nil {
-				tx, ok := ctx.Value("tx").(*pop.Connection)
+				tx, ok := c.Value("tx").(*pop.Connection)
 				if !ok {
 					log.Fatalf("Failed to get a connection")
 					return nil
@@ -179,14 +178,14 @@ func GetManager(c *buffalo.Context) ContentManager {
 		}
 	}
 	get_params := func() *url.Values {
-		params := ctx.Params().(url.Values)
+		params := c.Request.URL.Query()
 		return &params
 	}
 	return CreateManager(cfg, get_connection, get_params)
 }
 
 // this is sketchy because of the connection scope closing on us
-func GetAppManager(app *buffalo.App, getConnection GetConnType) ContentManager {
+func GetAppManager(getConnection GetConnType) ContentManager {
 	cfg := utils.GetCfg()
 	getParams := func() *url.Values {
 		return &url.Values{}
@@ -195,23 +194,21 @@ func GetAppManager(app *buffalo.App, getConnection GetConnType) ContentManager {
 }
 
 // can this manager create, update or destroy
-func ManagerCanCUD(c *buffalo.Context) (*ContentManager, *pop.Connection, error) {
+func ManagerCanCUD(c *gin.Context) (ContentManager, *pop.Connection, error) {
 	man := GetManager(c)
-	ctx := *c
 	if !man.CanEdit() {
-		return &man, nil, ctx.Error(
-			http.StatusNotImplemented,
-			errors.New("edit not supported by this manager"),
-		)
+		err := errors.New("edit not supported by this manager")
+		c.AbortWithError(http.StatusNotImplemented, err)
+		return man, nil, err
 	}
 	if man.GetCfg().UseDatabase {
-		tx, ok := ctx.Value("tx").(*pop.Connection)
+		tx, ok := c.Value("tx").(*pop.Connection)
 		if !ok {
-			return &man, nil, fmt.Errorf("no transaction found")
+			return man, nil, fmt.Errorf("no transaction found")
 		}
-		return &man, tx, nil
+		return man, tx, nil
 	}
-	return &man, nil, nil
+	return man, nil, nil
 }
 
 // Provides the ability to pass a connection function and get params function to the manager so we can handle

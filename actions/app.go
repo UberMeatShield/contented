@@ -42,40 +42,36 @@ func App(UseDatabase bool) *buffalo.App {
 
 		// Need to move all the things under /api
 		// TODO: Clean this up to always use content_id
-		app.GET("/preview/{mcID}", PreviewHandler)
-		app.GET("/view/{mcID}", FullHandler)
-		app.GET("/download/{mcID}", DownloadHandler)
-		app.GET("/api/search/contents", SearchHandler)
-		app.GET("/api/search/containers", SearchContainersHandler)
-		app.GET("/splash", SplashHandler)
+		/*
+			app.GET("/preview/{mcID}", PreviewHandler)
+			app.GET("/view/{mcID}", FullHandler)
+			app.GET("/download/{mcID}", DownloadHandler)
+			app.GET("/api/search/contents", SearchHandler)
+			app.GET("/api/search/containers", SearchContainersHandler)
+			app.GET("/splash", SplashHandler)
 
-		// Allow for manipulation of content already on the server
-		app.POST("/editing_queue/{contentID}/screens/{count}/{startTimeSeconds}", ContentTaskScreensHandler)
-		app.POST("/editing_queue/{contentID}/encoding", VideoEncodingHandler)
-		app.POST("/editing_queue/{contentID}/webp", WebpFromScreensHandler)
-		app.POST("/editing_queue/{contentID}/tagging", TaggingHandler)
+			// Allow for manipulation of content already on the server
+					app.POST("/editing_queue/{contentID}/screens/{count}/{startTimeSeconds}", ContentTaskScreensHandler)
+					app.POST("/editing_queue/{contentID}/encoding", VideoEncodingHandler)
+					app.POST("/editing_queue/{contentID}/webp", WebpFromScreensHandler)
+					app.POST("/editing_queue/{contentID}/tagging", TaggingHandler)
 
-		// TODO: Check that we can still kick off a duplicates task for the container.
-		app.POST("/editing_container_queue/{containerID}/screens/{count}/{startTimeSeconds}", ContainerScreensHandler)
-		app.POST("/editing_container_queue/{containerID}/encoding", ContainerVideoEncodingHandler)
-		//app.POST("/editing_container_queue/{containerID}/webp", ContainerWebpHandler)
-		app.POST("/editing_container_queue/{containerID}/tagging", ContainerTaggingHandler)
+					// TODO: Check that we can still kick off a duplicates task for the container.
+					app.POST("/editing_container_queue/{containerID}/screens/{count}/{startTimeSeconds}", ContainerScreensHandler)
+					app.POST("/editing_container_queue/{containerID}/encoding", ContainerVideoEncodingHandler)
+					//app.POST("/editing_container_queue/{containerID}/webp", ContainerWebpHandler)
+					app.POST("/editing_container_queue/{containerID}/tagging", ContainerTaggingHandler)
 
-		// Dupes is a special case where we do not need to create a task per content type right now
-		// the checks are fast enough that we can get a summary pretty quickly and probably faster with
-		// single lookups (for now).
-		app.POST("/editing_queue/{contentID}/duplicates", DupesHandler)
-		app.POST("/editing_container_queue/{containerID}/duplicates", DupesHandler)
+					// Dupes is a special case where we do not need to create a task per content type right now
+					// the checks are fast enough that we can get a summary pretty quickly and probably faster with
+					// single lookups (for now).
+					app.POST("/editing_queue/{contentID}/duplicates", DupesHandler)
+					app.POST("/editing_container_queue/{containerID}/duplicates", DupesHandler)
 
-		// The DIR env environment is then served under /static (see actions.SetupContented)
-		cr := app.Resource("/containers", ContainersResource{})
-		cr.Resource("/contents", ContentsResource{})
-
-		mc_r := app.Resource("/contents", ContentsResource{})
-		mc_r.Resource("/screens", ScreensResource{})
-		app.Resource("/screens", ScreensResource{})
-		app.Resource("/tags", TagsResource{})
-		app.Resource("/task_requests", TaskRequestResource{})
+				app.Resource("/screens", ScreensResource{})
+				app.Resource("/tags", TagsResource{})
+				app.Resource("/task_requests", TaskRequestResource{})
+		*/
 	}
 	return app
 }
@@ -105,6 +101,19 @@ func GinApp(r *gin.Engine) {
 	r.GET("/admin_ui/tasks", AngularIndex)
 	r.GET("/admin_ui/containers", AngularIndex)
 	r.GET("/admin_ui/search", AngularIndex)
+
+	// Content API
+	r.GET("/api/contents/{content_id}", ContentsResourceShow)
+	r.DELETE("/api/contents/{content_id}", ContentsResourceDestroy)
+	r.PUT("/api/contents/{content_id}", ContentsResourceUpdate)
+	r.GET("/api/contents", ContentsResourceList)
+	r.POST("/api/contents", ContentsResourceCreate)
+	// Need to make these all work, start slow.
+	// The DIR env environment is then served under /static (see actions.SetupContented)
+	//cr := app.Resource("/containers", ContainersResource{})
+	//cr.Resource("/contents", ContentsResource{})
+	//mc_r := app.Resource("/contents", ContentsResource{})
+	//mc_r.Resource("/screens", ScreensResource{})
 
 }
 

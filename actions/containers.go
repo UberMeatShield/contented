@@ -7,6 +7,7 @@ import (
 
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gofrs/uuid"
 )
@@ -35,45 +36,47 @@ type ContainersResource struct {
 
 // List gets all Containers. This function is mapped to the path
 // GET /containers
-func (v ContainersResource) List(c buffalo.Context) error {
+func (v ContainersResource) List(c *gin.Context) error {
 	// Get the DB connection from the context
 
-	man := managers.GetManager(&c)
+	man := managers.GetManager(c)
 	containers, total, err := man.ListContainersContext()
 	if err != nil {
-		return c.Error(http.StatusBadRequest, err)
+		return c.AbortWithError(http.StatusBadRequest, err)
 	}
 	log.Printf("Found %d containers", total)
 	cr := ContainersResponse{
 		Total:   total,
 		Results: *containers,
 	}
-	return c.Render(200, r.JSON(cr))
+	c.JSON(200, cr)
+	return nil
 }
 
 // Show gets the data for one Container. This function is mapped to
 // the path GET /containers/{container_id}
-func (v ContainersResource) Show(c buffalo.Context) error {
+func (v ContainersResource) Show(c *gin.Context) error {
 
 	cID, err := uuid.FromString(c.Param("container_id"))
 	if err != nil {
-		return c.Error(http.StatusBadRequest, err)
+		return c.AbortWithError(http.StatusBadRequest, err)
 	}
 
 	// Get the DB connection from the context
-	man := managers.GetManager(&c)
+	man := managers.GetManager(c)
 	container, err := man.GetContainer(cID)
 	if err != nil {
-		return c.Error(http.StatusNotFound, err)
+		return c.AbortWithError(http.StatusNotFound, err)
 	}
-	return c.Render(200, r.JSON(container))
+	c.JSON(200, container)
+	return nil
 }
 
 // Create adds a Container to the DB. This function is mapped to the
 // path POST /containers
-func (v ContainersResource) Create(c buffalo.Context) error {
+func (v ContainersResource) Create(c *gin.Context) error {
 	// Allocate an empty Container
-	_, _, err := managers.ManagerCanCUD(&c)
+	man, _, err := managers.ManagerCanCUD(c)
 	if err != nil {
 		return err
 	}
@@ -84,7 +87,6 @@ func (v ContainersResource) Create(c buffalo.Context) error {
 		return err
 	}
 
-	man := managers.GetManager(&c)
 	cfg := man.GetCfg()
 	// IS-327 Reset the path for now
 	container.Path = cfg.Dir
@@ -97,56 +99,57 @@ func (v ContainersResource) Create(c buffalo.Context) error {
 	if vErr != nil {
 		return vErr
 	}
-	return c.Render(http.StatusCreated, r.JSON(validate))
+	c.JSON(http.StatusCreated, validate)
+	return nil
 }
 
 // Update changes a Container in the DB. This function is mapped to
 // the path PUT /containers/{container_id}
-func (v ContainersResource) Update(c buffalo.Context) error {
+func (v ContainersResource) Update(c *gin.Context) error {
 	// Get the DB connection from the context
-	_, _, err := managers.ManagerCanCUD(&c)
+	man, _, err := managers.ManagerCanCUD(c)
 	if err != nil {
-		return c.Error(http.StatusNotImplemented, err)
+		return c.AbortWithError(http.StatusNotImplemented, err)
 	}
 
 	// Allocate an empty Container
-	man := managers.GetManager(&c)
 	id, idErr := uuid.FromString(c.Param("container_id"))
 	if idErr != nil {
-		return c.Error(http.StatusBadRequest, idErr)
+		return c.AbortWithError(http.StatusBadRequest, idErr)
 	}
 	// Bind Container to the html form elements (could toss the context into the manager)
 	cnt, notFoundErr := man.GetContainer(id)
 	if notFoundErr != nil {
-		return c.Error(http.StatusNotFound, notFoundErr)
+		return c.AbortWithError(http.StatusNotFound, notFoundErr)
 	}
 	if err := c.Bind(cnt); err != nil {
-		return c.Error(http.StatusBadRequest, err)
+		return c.AbortWithError(http.StatusBadRequest, err)
 	}
 	upCnt, upErr := man.UpdateContainer(cnt)
 	if upErr != nil {
-		return c.Error(http.StatusInternalServerError, upErr)
+		return c.AbortWithError(http.StatusInternalServerError, upErr)
 	}
-	return c.Render(http.StatusOK, r.JSON(upCnt))
+	c.JSON(http.StatusOK, upCnt)
+	return nil
 }
 
 // Destroy deletes a Container from the DB. This function is mapped
 // to the path DELETE /containers/{container_id}
-func (v ContainersResource) Destroy(c buffalo.Context) error {
+func (v ContainersResource) Destroy(c *gin.Context) error {
 	// Get the DB connection from the context
-	_, _, err := managers.ManagerCanCUD(&c)
+	man, _, err := managers.ManagerCanCUD(c)
 	if err != nil {
 		return err
 	}
-	man := managers.GetManager(&c)
 	id := c.Param("container_id")
 	cnt, dErr := man.DestroyContainer(id)
 	if dErr != nil {
 		if cnt == nil {
-			return c.Error(http.StatusNotFound, dErr)
+			return c.AbortWithError(http.StatusNotFound, dErr)
 		} else {
-			return c.Error(http.StatusUnprocessableEntity, dErr)
+			return c.AbortWithError(http.StatusUnprocessableEntity, dErr)
 		}
 	}
-	return c.Render(http.StatusOK, r.JSON(cnt))
+	c.JSON(http.StatusOK, cnt)
+	return nil
 }
