@@ -4,6 +4,8 @@ import (
 	"contented/actions"
 	"contented/utils"
 	"log"
+
+	"github.com/gin-gonic/gin"
 )
 
 // main is the starting point for your Buffalo application.
@@ -13,16 +15,29 @@ import (
 // call `app.Serve()`, unless you don't want to start your
 // application that is. :)
 func main() {
-	appCfg := utils.GetCfg()
-	utils.InitConfigEnvy(appCfg)
-	app := actions.App(appCfg.UseDatabase)
+	cfg := utils.GetCfg()
+	utils.InitConfigEnvy(cfg)
 
-	// TODO: Update or delete this method as it is not really doing anything
-	// Potentially just do the static hosting in the actions.App bit.
-	actions.SetupContented(app, "", 0, 0)
-	if err := app.Serve(); err != nil {
-		log.Fatal(err)
+	// Set them up side by side?
+	r := gin.Default()
+	actions.GinApp(r)
+
+	actions.SetupContented(r, "", 0, 0)
+	// listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	if err := r.Run(); err != nil {
+		log.Fatalf("Crashed out %s", err)
 	}
+
+	/*
+		utils.InitConfigEnvy(cfg)
+		app := actions.App(cfg.UseDatabase)
+
+		// TODO: Update or delete this method as it is not really doing anything
+		// Potentially just do the static hosting in the actions.App bit.
+		if err := app.Serve(); err != nil {
+			log.Fatal(err)
+		}
+	*/
 }
 
 /*
