@@ -68,9 +68,6 @@ func App(UseDatabase bool) *buffalo.App {
 					app.POST("/editing_queue/{contentID}/duplicates", DupesHandler)
 					app.POST("/editing_container_queue/{containerID}/duplicates", DupesHandler)
 
-				app.Resource("/screens", ScreensResource{})
-				app.Resource("/tags", TagsResource{})
-				app.Resource("/task_requests", TaskRequestResource{})
 		*/
 	}
 	return app
@@ -103,18 +100,47 @@ func GinApp(r *gin.Engine) {
 	r.GET("/admin_ui/search", AngularIndex)
 
 	// Content API
-	r.GET("/api/contents/{content_id}", ContentsResourceShow)
-	r.DELETE("/api/contents/{content_id}", ContentsResourceDestroy)
-	r.PUT("/api/contents/{content_id}", ContentsResourceUpdate)
 	r.GET("/api/contents", ContentsResourceList)
+	r.GET("/api/contents/{content_id}", ContentsResourceShow)
 	r.POST("/api/contents", ContentsResourceCreate)
-	// Need to make these all work, start slow.
+	r.PUT("/api/contents/{content_id}", ContentsResourceUpdate)
+	r.DELETE("/api/contents/{content_id}", ContentsResourceDestroy)
+
+	// Containers
+	r.GET("/api/containers", ContainersResourceList)
+	r.GET("/api/containers/{container_id}", ContainersResourceShow)
+	r.POST("/api/containers", ContainersResourceCreate)
+	r.PUT("/api/containers/{container_id}", ContainersResourceUpdate)
+	r.DELETE("/api/containers/{container_id}", ContainersResourceDestroy)
+
+	// Screens
+	r.GET("/api/screens", ScreensResourceList)
+	r.GET("/api/screens/{screen_id}", ScreensResourceShow)
+	r.POST("/api/screens", ScreensResourceCreate)
+	r.PUT("/api/screens/{screen_id}", ScreensResourceUpdate)
+	r.DELETE("/api/screens/{screen_id}", ScreensResourceDestroy)
+
+	// Tasks
+	r.GET("/api/task_requests", TaskRequestsResourceList)
+	r.GET("/api/task_requests/{task_request_id}", TaskRequestsResourceShow)
+	r.POST("/api/task_requests", TaskRequestsResourceCreate)
+	r.PUT("/api/task_requests/{task_request_id}", TaskRequestsResourceUpdate)
+	r.DELETE("/api/task_requests/{screen_id}", TaskRequestsResourceDestroy)
+
+	// Tags
+	r.GET("/api/tags", TagsResourceList)
+	r.GET("/api/tags/{tag_id}", TagsResourceShow)
+	r.POST("/api/tags", TagsResourceCreate)
+	r.PUT("/api/tags/{tag_id}", TagsResourceUpdate)
+	r.DELETE("/api/tags/{tag_id}", TagsResourceDestroy)
+	/*
+		app.Resource("/tags", TagsResource{})
+	*/
 	// The DIR env environment is then served under /static (see actions.SetupContented)
 	//cr := app.Resource("/containers", ContainersResource{})
 	//cr.Resource("/contents", ContentsResource{})
 	//mc_r := app.Resource("/contents", ContentsResource{})
 	//mc_r.Resource("/screens", ScreensResource{})
-
 }
 
 // forceSSL will return a middleware that will redirect an incoming request

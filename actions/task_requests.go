@@ -23,8 +23,8 @@ import (
 // Path: Plural (/task_request)
 // View Template Folder: Plural (/templates/task_request/)
 
-// TaskRequestResource is the resource for the TaskRequest model
-type TaskRequestResource struct {
+// TaskRequestsResource is the resource for the TaskRequest model
+type TaskRequestsResource struct {
 	buffalo.Resource
 }
 
@@ -35,7 +35,7 @@ type TaskRequestResponse struct {
 
 // List gets all TaskRequest. This function is mapped to the path
 // GET /task_request
-func (v TaskRequestResource) List(c *gin.Context) {
+func TaskRequestsResourceList(c *gin.Context) {
 	// Get the DB connection from the context
 	man := managers.GetManager(c)
 	tasks, total, err := man.ListTasksContext()
@@ -43,17 +43,19 @@ func (v TaskRequestResource) List(c *gin.Context) {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
+	if tasks == nil {
+		tasks = &models.TaskRequests{}
+	}
 	tres := TaskRequestResponse{
 		Total:   total,
 		Results: *tasks,
 	}
-	c.JSON(200, r.JSON(tres))
+	c.JSON(200, tres)
 }
 
 // Show gets the data for one TaskRequest. This function is mapped to
 // the path GET /task_request/{task_request_id} ?
-func (v TaskRequestResource) Show(c *gin.Context) {
-	// TODO: Test this (not sure what the ID comes in as)
+func TaskRequestsResourceShow(c *gin.Context) {
 	tStrID := c.Param("task_request_id")
 	tID, badUUID := uuid.FromString(tStrID)
 	if badUUID != nil {
@@ -66,16 +68,16 @@ func (v TaskRequestResource) Show(c *gin.Context) {
 		c.AbortWithError(404, err)
 		return
 	}
-	c.JSON(http.StatusOK, r.JSON(task))
+	c.JSON(http.StatusOK, task)
 }
 
 // Currently this is a private setup not accessible from the UI
-func (v TaskRequestResource) Create(c *gin.Context) {
-	c.AbortWithError(http.StatusNotImplemented, errors.New("Not implemented"))
+func TaskRequestsResourceCreate(c *gin.Context) {
+	c.AbortWithError(http.StatusNotImplemented, errors.New("restricted to editing queue requests"))
 }
 
 // Another private method, might be opened to just canceling a task (if possible)
-func (v TaskRequestResource) Update(c *gin.Context) {
+func TaskRequestsResourceUpdate(c *gin.Context) {
 	_, _, err := managers.ManagerCanCUD(c)
 	if err != nil {
 		c.AbortWithError(http.StatusForbidden, err)
@@ -94,7 +96,7 @@ func (v TaskRequestResource) Update(c *gin.Context) {
 	taskUp := models.TaskRequest{}
 	if err := c.Bind(&taskUp); err != nil {
 		msg := fmt.Sprintf("Bad TaskRequest passed %s", taskUp)
-		log.Printf(msg)
+		log.Print(msg)
 		c.AbortWithError(http.StatusBadRequest, errors.New(msg))
 		return
 	}
@@ -102,14 +104,14 @@ func (v TaskRequestResource) Update(c *gin.Context) {
 	state := taskUp.Status
 	if state == models.TaskStatus.INVALID {
 		msg := fmt.Sprintf("Invalid state passed %s to task update", state)
-		log.Printf(msg)
+		log.Print(msg)
 		c.AbortWithError(http.StatusBadRequest, errors.New(msg))
 		return
 	}
 
 	if state != models.TaskStatus.CANCELED {
 		msg := fmt.Sprintf("Currently only supports canceled. %s", state)
-		log.Printf(msg)
+		log.Print(msg)
 		c.AbortWithError(http.StatusBadRequest, errors.New(msg))
 		return
 	}
@@ -118,7 +120,7 @@ func (v TaskRequestResource) Update(c *gin.Context) {
 	task := *exists
 	if !(task.Status == models.TaskStatus.NEW || task.Status == models.TaskStatus.PENDING) {
 		msg := fmt.Sprintf("Cannot change state from current (%s) to %s", task.Status, state)
-		log.Printf(msg)
+		log.Print(msg)
 		c.AbortWithError(http.StatusBadRequest, errors.New(msg))
 		return
 	}
@@ -131,10 +133,10 @@ func (v TaskRequestResource) Update(c *gin.Context) {
 		c.AbortWithError(http.StatusInternalServerError, upErr)
 		return
 	}
-	c.JSON(http.StatusOK, r.JSON(taskUpdated))
+	c.JSON(http.StatusOK, taskUpdated)
 }
 
 // Also a private setup, it is saner to not have somebody messing with the task queue.
-func (v TaskRequestResource) Destroy(c *gin.Context) {
-	c.AbortWithError(http.StatusNotImplemented, errors.New("Not implemented"))
+func TaskRequestsResourceDestroy(c *gin.Context) {
+	c.AbortWithError(http.StatusNotImplemented, errors.New("not available"))
 }

@@ -31,7 +31,7 @@ type ScreensResource struct {
 
 // List gets all Screens. This function is mapped to the path
 // GET /screens
-func (v ScreensResource) List(c *gin.Context) {
+func ScreensResourceList(c *gin.Context) {
 	// Get the DB connection from the context
 	mcStrID := managers.StringDefault(c.Param("content_id"), "")
 	log.Printf("Content ID specified %s", mcStrID)
@@ -56,12 +56,13 @@ func (v ScreensResource) List(c *gin.Context) {
 		Total:   total,
 		Results: *screens,
 	}
-	c.JSON(200, r.JSON(res))
+	log.Printf("WHAT THE HELL %s", res)
+	c.JSON(200, res)
 }
 
 // Show gets the data for one Screen. This function is mapped to
 // the path GET /screens/{screen_id}
-func (v ScreensResource) Show(c *gin.Context) {
+func ScreensResourceShow(c *gin.Context) {
 	psStrID := c.Param("screen_id")
 	psID, badUUID := uuid.FromString(psStrID)
 	if badUUID != nil {
@@ -92,7 +93,7 @@ func (v ScreensResource) Show(c *gin.Context) {
 
 // Create adds a Screen to the DB. This function is mapped to the
 // path POST /screens
-func (v ScreensResource) Create(c *gin.Context) {
+func ScreensResourceCreate(c *gin.Context) {
 	_, _, err := managers.ManagerCanCUD(c)
 	if err != nil {
 		c.AbortWithError(http.StatusForbidden, err)
@@ -107,15 +108,15 @@ func (v ScreensResource) Create(c *gin.Context) {
 	man := managers.GetManager(c)
 	cErr := man.CreateScreen(screen)
 	if cErr != nil {
-		c.JSON(http.StatusUnprocessableEntity, r.JSON(cErr))
+		c.AbortWithError(http.StatusUnprocessableEntity, cErr)
 		return
 	}
-	c.JSON(http.StatusCreated, r.JSON(screen))
+	c.JSON(http.StatusCreated, screen)
 }
 
 // Update changes a Screen in the DB. This function is mapped to
 // the path PUT /screens/{screen_id}
-func (v ScreensResource) Update(c *gin.Context) {
+func ScreensResourceUpdate(c *gin.Context) {
 	// Get the DB connection from the context
 	_, _, err := managers.ManagerCanCUD(c)
 	if err != nil {
@@ -144,7 +145,7 @@ func (v ScreensResource) Update(c *gin.Context) {
 
 // Destroy deletes a Screen from the DB. This function is mapped
 // to the path DELETE /screens/{screen_id}
-func (v ScreensResource) Destroy(c *gin.Context) {
+func ScreensResourceDestroy(c *gin.Context) {
 	// Get the DB connection from the context
 	_, _, err := managers.ManagerCanCUD(c)
 	if err != nil {

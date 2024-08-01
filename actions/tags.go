@@ -23,7 +23,7 @@ type TagResponse struct {
 
 // List gets all Tags. This function is mapped to the path
 // GET /tags
-func (v TagsResource) List(c *gin.Context) {
+func TagsResourceList(c *gin.Context) {
 	// Get the DB connection from the context
 	man := managers.GetManager(c)
 	previewTags, total, err := man.ListAllTagsContext()
@@ -31,33 +31,36 @@ func (v TagsResource) List(c *gin.Context) {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
+	if previewTags == nil {
+		previewTags = &models.Tags{}
+	}
 	tr := TagResponse{
 		Total:   total,
 		Results: *previewTags,
 	}
-	c.JSON(200, r.JSON(tr))
+	c.JSON(200, tr)
 }
 
 // Show gets the data for one Tag. This function is mapped to
 // the path GET /tags/{tag_id}
-func (v TagsResource) Show(c *gin.Context) {
+func TagsResourceShow(c *gin.Context) {
 	tagID := c.Param("tag_id")
 	if tagID == "" {
-		c.AbortWithError(400, errors.New("Requires ID"))
+		c.AbortWithError(http.StatusBadRequest, errors.New("requires ID"))
 		return
 	}
 	man := managers.GetManager(c)
 	tag, err := man.GetTag(tagID)
 	if err != nil {
-		c.AbortWithError(404, err)
+		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
-	c.JSON(200, r.JSON(tag))
+	c.JSON(200, tag)
 }
 
 // Create adds a Tag to the DB. This function is mapped to the
 // path POST /tags
-func (v TagsResource) Create(c *gin.Context) {
+func TagsResourceCreate(c *gin.Context) {
 	_, _, err := managers.ManagerCanCUD(c)
 	if err != nil {
 		c.AbortWithError(http.StatusForbidden, err)
@@ -72,15 +75,15 @@ func (v TagsResource) Create(c *gin.Context) {
 	man := managers.GetManager(c)
 	cErr := man.CreateTag(tag)
 	if cErr != nil {
-		c.JSON(http.StatusUnprocessableEntity, r.JSON(cErr))
+		c.AbortWithError(http.StatusUnprocessableEntity, cErr)
 		return
 	}
-	c.JSON(http.StatusCreated, r.JSON(tag))
+	c.JSON(http.StatusCreated, tag)
 }
 
 // Update changes a Tag in the DB. This function is mapped to
 // the path PUT /tags/{tag_id}
-func (v TagsResource) Update(c *gin.Context) {
+func TagsResourceUpdate(c *gin.Context) {
 	// Get the DB connection from the context
 	man, _, err := managers.ManagerCanCUD(c)
 	if err != nil {
@@ -95,21 +98,21 @@ func (v TagsResource) Update(c *gin.Context) {
 		return
 	}
 	if err := c.Bind(tag); err != nil {
-		c.JSON(http.StatusUnprocessableEntity, r.JSON(err))
+		c.AbortWithError(http.StatusUnprocessableEntity, err)
 		return
 	}
 	upErr := man.UpdateTag(tag)
 	if upErr != nil {
-		c.JSON(http.StatusUnprocessableEntity, r.JSON(upErr))
+		c.AbortWithError(http.StatusUnprocessableEntity, upErr)
 		return
 	}
 	checkTag, _ := man.GetTag(id)
-	c.JSON(http.StatusOK, r.JSON(checkTag))
+	c.JSON(http.StatusOK, checkTag)
 }
 
 // Destroy deletes a Tag from the DB. This function is mapped
 // to the path DELETE /tags/{tag_id}
-func (v TagsResource) Destroy(c *gin.Context) {
+func TagsResourceDestroy(c *gin.Context) {
 	// Get the DB connection from the context
 	man, _, err := managers.ManagerCanCUD(c)
 	if err != nil {
@@ -118,8 +121,8 @@ func (v TagsResource) Destroy(c *gin.Context) {
 	}
 	tag, dErr := man.DestroyTag(c.Param("tag_id"))
 	if dErr != nil {
-		c.JSON(http.StatusBadRequest, r.JSON(dErr))
+		c.AbortWithError(http.StatusBadRequest, dErr)
 		return
 	}
-	c.JSON(http.StatusOK, r.JSON(tag))
+	c.JSON(http.StatusOK, tag)
 }
