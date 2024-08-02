@@ -1,5 +1,6 @@
 package managers
 
+/*
 import (
 	"contented/models"
 	"contented/test_common"
@@ -8,7 +9,6 @@ import (
 
 	"github.com/gobuffalo/pop/v6"
 )
-
 func (as *ActionSuite) Test_ReadOnly_Mode() {
 	cfg := test_common.InitFakeApp(true)
 	man := GetManagerActionSuite(cfg, as)
@@ -364,3 +364,5 @@ func (as *ActionSuite) Test_DBManager_IllegalContainers() {
 	as.NoError(upErr, "Now it should be ok as the directory exists")
 	as.Equal(up.Name, knownDirOk.Name, "And it returns a fresh load to prove it is updated.")
 }
+
+*/

@@ -16,7 +16,7 @@ import (
 func (as *ActionSuite) Test_ManagerContainers() {
 	test_common.InitFakeApp(false)
 	ctx := test_common.GetContext(as.App)
-	man := GetManager(&ctx)
+	man := GetManager(ctx)
 	containers, count, err := man.ListContainersContext()
 	as.NoError(err)
 	as.Greater(count, 1, "There should be containers")
@@ -33,7 +33,7 @@ func (as *ActionSuite) Test_ManagerContainers() {
 func (as *ActionSuite) Test_ManagerContent() {
 	test_common.InitFakeApp(false)
 	ctx := test_common.GetContext(as.App)
-	man := GetManager(&ctx)
+	man := GetManager(ctx)
 	contents, count, err := man.ListContent(ContentQuery{})
 	as.NoError(err)
 	as.Greater(count, 0, "It should have contents")
@@ -65,7 +65,7 @@ func (as *ActionSuite) Test_AssignManager() {
 
 	cfg.UseDatabase = false
 	ctx := test_common.GetContext(as.App)
-	man := GetManager(&ctx) // New Reference but should have the same count of content
+	man := GetManager(ctx) // New Reference but should have the same count of content
 	mcs_2, _, _ := man.ListContent(ContentQuery{})
 
 	as.Equal(len(*mcs), len(*mcs_2), "A new instance should use the same storage")
@@ -76,8 +76,8 @@ func (as *ActionSuite) Test_MemoryManagerPaginate() {
 	cfg.UseDatabase = false
 	cfg.ReadOnly = true
 
-	ctx := test_common.GetContextParams(as.App, "/containers", "1", "2")
-	man := GetManager(&ctx)
+	ctx := test_common.GetContextParams("/containers", "1", "2")
+	man := GetManager(ctx)
 	as.Equal(man.CanEdit(), false, "Memory manager should not allow editing")
 
 	containers, count, err := man.ListContainers(ContainerQuery{Page: 1, PerPage: 1})
@@ -111,7 +111,7 @@ func (as *ActionSuite) Test_ManagerInitialize() {
 	test_common.InitFakeApp(false)
 
 	ctx := test_common.GetContext(as.App)
-	man := GetManager(&ctx)
+	man := GetManager(ctx)
 	as.NotNil(man, "It should have a manager defined after init")
 
 	containers, _, err := man.ListContainersContext()
@@ -138,7 +138,7 @@ func (as *ActionSuite) Test_MemoryManagerSearch() {
 	test_common.InitFakeApp(false)
 
 	ctx := test_common.GetContext(as.App)
-	man := GetManager(&ctx)
+	man := GetManager(ctx)
 	as.NotNil(man, "It should have a manager defined after init")
 
 	containers, _, err := man.ListContainersContext()
@@ -174,7 +174,7 @@ func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
 	cfg := test_common.InitFakeApp(false)
 	cfg.ReadOnly = false
 	ctx := test_common.GetContext(as.App)
-	man := GetManager(&ctx)
+	man := GetManager(ctx)
 
 	// Ensure we initialized with a known search
 	as.Equal(man.CanEdit(), true)
@@ -362,7 +362,7 @@ func (as *ActionSuite) Test_ManagerMemoryScreens() {
 func (as *ActionSuite) Test_ManagerMemoryCRU() {
 	cfg := test_common.InitFakeApp(false)
 	ctx := test_common.GetContext(as.App)
-	man := GetManager(&ctx)
+	man := GetManager(ctx)
 
 	// Only valid paths now allow for creation even in tests.
 	c := models.Container{Path: cfg.Dir, Name: "A"}
@@ -407,7 +407,7 @@ func (as *ActionSuite) Test_ManagerMemoryCRU() {
 func (as *ActionSuite) Test_MemoryManagerTags() {
 	test_common.InitFakeApp(false)
 	ctx := test_common.GetContext(as.App)
-	man := GetManager(&ctx)
+	man := GetManager(ctx)
 
 	aTag := models.Tag{ID: "A"}
 	bTag := models.Tag{ID: "B"}
@@ -433,7 +433,7 @@ func (as *ActionSuite) Test_MemoryManager_IllegalContainers() {
 	cfg := test_common.ResetConfig()
 	test_common.InitFakeApp(false)
 	ctx := test_common.GetContext(as.App)
-	man := GetManager(&ctx)
+	man := GetManager(ctx)
 
 	notUnderDir := models.Container{Name: "ssl", Path: "/etc"}
 	as.Error(man.CreateContainer(&notUnderDir), "Not under the configured directory, rejected")

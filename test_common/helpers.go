@@ -7,14 +7,15 @@ package test_common
 import (
 	"contented/models"
 	"contented/utils"
-	"context"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/envy"
 	"github.com/gobuffalo/nulls"
@@ -55,23 +56,19 @@ func Get_VideoAndSetupPaths(cfg *utils.DirConfigEntry) (string, string, string) 
 	return srcDir, dstDir, testFile
 }
 
-func GetContext(app *buffalo.App) buffalo.Context {
-	return GetContextParams(app, "/containers", "1", "10")
+func GetContext(*buffalo.App) *gin.Context {
+	return GetContextParams("/containers", "1", "10")
 }
 
-func GetContextParams(app *buffalo.App, url string, page string, per_page string) buffalo.Context {
-	req, _ := http.NewRequest("GET", url, nil)
-
-	// Setting a value here like this doesn't seem to work correctly.  The context will NOT
-	// Actually keep the param.  GoLang made this a huge pain to test vs a nice simple SetParam
-	ctx := req.Context()
-	ctx = context.WithValue(ctx, "page", page)
-	ctx = context.WithValue(ctx, "per_page", per_page)
-	ctx = context.WithValue(ctx, "tx", models.DB)
-
-	return &buffalo.DefaultContext{
-		Context: ctx,
+func GetContextParams(url string, page string, per_page string) *gin.Context {
+	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	c.Params = []gin.Param{
+		{Key: "page", Value: page},
+		{Key: "per_page", Value: per_page},
 	}
+	req, _ := http.NewRequest(http.MethodGet, url, nil)
+	c.Request = req
+	return c
 }
 
 // TODO validate octet/stream

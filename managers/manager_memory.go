@@ -32,9 +32,7 @@ type ContentManagerMemory struct {
 		ValidTasks      models.TaskRequests
 	*/
 	validate string
-
-	params *url.Values
-	Params GetParamsType
+	Params   GetParamsType
 }
 
 // We do not allow editing in a memory manager
@@ -406,6 +404,9 @@ func (cm ContentManagerMemory) UpdateScreen(s *models.Screen) error {
 }
 
 // Given the current parameters in the buffalo context return a list of matching containers.
+// TODO: Probably port all Context interfaces to pass in a url.Values element.
+// TODO: On the actions layer make a gin.Context to the Gin params
+// TODO: Remove all Gin or buffalo from the manager layer, it is just not good
 func (cm ContentManagerMemory) ListContainersContext() (*models.Containers, int, error) {
 	params := cm.Params()
 	_, limit, page := GetPagination(params, cm.cfg.Limit)

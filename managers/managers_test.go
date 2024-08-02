@@ -18,9 +18,10 @@ import (
 func GetManagerActionSuite(cfg *utils.DirConfigEntry, as *ActionSuite) ContentManager {
 	ctx := test_common.GetContext(as.App)
 	get_params := func() *url.Values {
-		vals := ctx.Params().(url.Values)
-		return &vals
+		return GinParamsToUrlValues(ctx.Params, url.Values{})
 	}
+
+	// Likely need to get the url values into a better places as well.
 	get_conn := func() *pop.Connection {
 		// as.DB should work, but it is of a type pop.v5.Connection instead of pop.Connection
 		return models.DB
