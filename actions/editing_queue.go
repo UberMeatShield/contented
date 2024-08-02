@@ -395,7 +395,7 @@ func DupesHandler(c *gin.Context) {
 			Message: "No duplicate videos found in this contianer",
 			Results: models.TaskRequests{},
 		}
-		c.JSON(http.StatusOK, r.JSON(res))
+		c.JSON(http.StatusOK, res)
 		return
 	}
 	if total < 1 {

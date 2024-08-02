@@ -42,14 +42,8 @@ func App(UseDatabase bool) *buffalo.App {
 
 		// Need to move all the things under /api
 		// TODO: Clean this up to always use content_id
-		/*
-			app.GET("/preview/{mcID}", PreviewHandler)
-			app.GET("/view/{mcID}", FullHandler)
-			app.GET("/download/{mcID}", DownloadHandler)
-			app.GET("/api/search/contents", SearchHandler)
-			app.GET("/api/search/containers", SearchContainersHandler)
-			app.GET("/splash", SplashHandler)
 
+		/*
 			// Allow for manipulation of content already on the server
 					app.POST("/editing_queue/{contentID}/screens/{count}/{startTimeSeconds}", ContentTaskScreensHandler)
 					app.POST("/editing_queue/{contentID}/encoding", VideoEncodingHandler)
@@ -85,6 +79,16 @@ func GinApp(r *gin.Engine) {
 	// For LB pings etc.
 	r.GET("/status", StatusHandler)
 
+	// Search endpoints
+	r.GET("/api/search/contents", SearchHandler)
+	r.GET("/api/search/containers", SearchContainersHandler)
+
+	// Downloads and
+	r.GET("/api/preview/{mcID}", PreviewHandler)
+	r.GET("/api/view/{mcID}", FullHandler)
+	r.GET("/api/download/{mcID}", DownloadHandler)
+	r.GET("/api/splash", SplashHandler)
+
 	// Host the index.html, also assume that all angular UI routes are going to be under contented
 	// Cannot figure out how to just let AngularIndex handle EVERYTHING under ui/*/*
 	r.GET("/", AngularIndex)
@@ -99,40 +103,43 @@ func GinApp(r *gin.Engine) {
 	r.GET("/admin_ui/containers", AngularIndex)
 	r.GET("/admin_ui/search", AngularIndex)
 
-	// Content API
-	r.GET("/api/contents", ContentsResourceList)
-	r.GET("/api/contents/{content_id}", ContentsResourceShow)
-	r.POST("/api/contents", ContentsResourceCreate)
-	r.PUT("/api/contents/{content_id}", ContentsResourceUpdate)
-	r.DELETE("/api/contents/{content_id}", ContentsResourceDestroy)
-
+	// CRUD
 	// Containers
 	r.GET("/api/containers", ContainersResourceList)
-	r.GET("/api/containers/{container_id}", ContainersResourceShow)
+	r.GET("/api/containers/:container_id", ContainersResourceShow)
+	r.GET("/api/containers/:container_id/contents", ContentsResourceList)
 	r.POST("/api/containers", ContainersResourceCreate)
-	r.PUT("/api/containers/{container_id}", ContainersResourceUpdate)
-	r.DELETE("/api/containers/{container_id}", ContainersResourceDestroy)
+	r.PUT("/api/containers/:container_id", ContainersResourceUpdate)
+	r.DELETE("/api/containers/:container_id", ContainersResourceDestroy)
+
+	// Content API
+	r.GET("/api/contents", ContentsResourceList)
+	r.GET("/api/contents/:content_id", ContentsResourceShow)
+	r.GET("/api/contents/:content_id/screens", ScreensResourceList)
+	r.POST("/api/contents", ContentsResourceCreate)
+	r.PUT("/api/contents/:content_id", ContentsResourceUpdate)
+	r.DELETE("/api/contents/:content_id", ContentsResourceDestroy)
 
 	// Screens
 	r.GET("/api/screens", ScreensResourceList)
-	r.GET("/api/screens/{screen_id}", ScreensResourceShow)
+	r.GET("/api/screens/:screen_id", ScreensResourceShow)
 	r.POST("/api/screens", ScreensResourceCreate)
-	r.PUT("/api/screens/{screen_id}", ScreensResourceUpdate)
-	r.DELETE("/api/screens/{screen_id}", ScreensResourceDestroy)
+	r.PUT("/api/screens/:screen_id", ScreensResourceUpdate)
+	r.DELETE("/api/screens/:screen_id", ScreensResourceDestroy)
 
 	// Tasks
 	r.GET("/api/task_requests", TaskRequestsResourceList)
-	r.GET("/api/task_requests/{task_request_id}", TaskRequestsResourceShow)
+	r.GET("/api/task_requests/:task_request_id", TaskRequestsResourceShow)
 	r.POST("/api/task_requests", TaskRequestsResourceCreate)
-	r.PUT("/api/task_requests/{task_request_id}", TaskRequestsResourceUpdate)
-	r.DELETE("/api/task_requests/{screen_id}", TaskRequestsResourceDestroy)
+	r.PUT("/api/task_requests/:task_request_id", TaskRequestsResourceUpdate)
+	r.DELETE("/api/task_requests/:screen_id", TaskRequestsResourceDestroy)
 
 	// Tags
 	r.GET("/api/tags", TagsResourceList)
-	r.GET("/api/tags/{tag_id}", TagsResourceShow)
+	r.GET("/api/tags/:tag_id", TagsResourceShow)
 	r.POST("/api/tags", TagsResourceCreate)
-	r.PUT("/api/tags/{tag_id}", TagsResourceUpdate)
-	r.DELETE("/api/tags/{tag_id}", TagsResourceDestroy)
+	r.PUT("/api/tags/:tag_id", TagsResourceUpdate)
+	r.DELETE("/api/tags/:tag_id", TagsResourceDestroy)
 	/*
 		app.Resource("/tags", TagsResource{})
 	*/

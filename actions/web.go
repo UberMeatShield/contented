@@ -95,12 +95,15 @@ func SearchHandler(c *gin.Context) {
 		c.AbortWithError(400, err)
 		return
 	}
+	if mcs == nil {
+		mcs = &models.Contents{}
+	}
 	// log.Printf("Search content returned %s", mcs)
 	sr := SearchContentsResult{
 		Results: mcs,
 		Total:   count,
 	}
-	c.JSON(200, r.JSON(sr))
+	c.JSON(200, sr)
 }
 
 func SearchContainersHandler(c *gin.Context) {
@@ -116,7 +119,7 @@ func SearchContainersHandler(c *gin.Context) {
 		Results: mcs,
 		Total:   count,
 	}
-	c.JSON(200, r.JSON(sr))
+	c.JSON(200, sr)
 }
 
 type SplashResponse struct {
@@ -167,7 +170,7 @@ func SplashHandler(c *gin.Context) {
 		sr.SplashTitle = cfg.SplashTitle
 	}
 	sr.RendererType = cfg.SplashRendererType
-	c.JSON(200, r.JSON(sr))
+	c.JSON(200, sr)
 }
 
 // Find the preview of a file (if applicable currently it is just returning the full path)
@@ -209,8 +212,8 @@ func DownloadHandler(c *gin.Context) {
 		return
 	}
 	// Some content is not actually real
-	if mc.NoFile == true {
-		c.JSON(200, r.JSON(mc))
+	if mc.NoFile {
+		c.JSON(http.StatusOK, mc)
 		return
 	}
 	fq_path, fq_err := man.FindActualFile(mc)

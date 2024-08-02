@@ -177,9 +177,20 @@ func GetManager(c *gin.Context) ContentManager {
 			return nil
 		}
 	}
+
+	// Annoying differences between url values and the param option.  Another GoLang bit where it isn't
+	// handling ?id=1&id=2 and instead just allows for a single param (ie: The tags hack is still required in Gin)
 	get_params := func() *url.Values {
-		params := c.Request.URL.Query()
-		return &params
+		vals := url.Values{}
+		for _, param := range c.Params {
+			val := c.Param(param.Key)
+			vals[param.Key] = []string{val}
+		}
+		for key, val := range c.Request.URL.Query() {
+			vals[key] = val
+		}
+		// Probably have to check that post body gets in here somehow as well.
+		return &vals
 	}
 	return CreateManager(cfg, get_connection, get_params)
 }

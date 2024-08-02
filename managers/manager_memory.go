@@ -81,10 +81,11 @@ func (cm ContentManagerMemory) ListContentContext() (*models.Contents, int, erro
 	params := cm.Params()
 	_, limit, page := GetPagination(params, cm.cfg.Limit)
 
+	cID := StringDefault(params.Get("container_id"), "")
 	// Note text is an exact match, search is a regex or partial
 	cs := ContentQuery{
 		Text:        StringDefault(params.Get("text"), ""),
-		ContainerID: StringDefault(params.Get("container_id"), ""),
+		ContainerID: cID,
 		Page:        page,
 		PerPage:     limit,
 		Order:       StringDefault(params.Get("order"), ""),
@@ -238,6 +239,7 @@ func (cm ContentManagerMemory) getContentFiltered(cs ContentQuery) (*models.Cont
 // It should probably be able to search the container too?
 func (cm ContentManagerMemory) SearchContainersContext() (*models.Containers, int, error) {
 	cq := ContextToContainerQuery(cm.Params(), cm.GetCfg())
+	log.Printf("What the shit %s", cm.Params())
 	return cm.SearchContainers(cq)
 }
 
