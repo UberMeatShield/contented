@@ -155,6 +155,7 @@ type ContentManager interface {
 func GetManager(c *gin.Context) ContentManager {
 	cfg := utils.GetCfg()
 
+	// TODO: This will need to be nuked and cleaned up to use GORM
 	// The get connection might need an async channel or it potentially locks
 	// the dev server :(.   Need to only do this if use database is setup and connects
 	var get_connection GetConnType

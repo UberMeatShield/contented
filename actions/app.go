@@ -131,17 +131,17 @@ func GinApp(r *gin.Engine) {
 	r.DELETE("/api/task_requests/:screen_id", TaskRequestsResourceDestroy)
 
 	// Available tasks that can be added ot the system
-	r.POST("/editing_queue/{contentID}/screens/{count}/{startTimeSeconds}", ContentTaskScreensHandler)
-	r.POST("/editing_queue/{contentID}/encoding", VideoEncodingHandler)
-	r.POST("/editing_queue/{contentID}/webp", WebpFromScreensHandler)
-	r.POST("/editing_queue/{contentID}/tagging", TaggingHandler)
-	r.POST("/editing_queue/{contentID}/duplicates", DupesHandler)
+	r.POST("/api/editing_queue/:content_id/screens/:count/:startTimeSeconds", ContentTaskScreensHandler)
+	r.POST("/api/editing_queue/:content_id/encoding", VideoEncodingHandler)
+	r.POST("/api/editing_queue/:content_id/webp", WebpFromScreensHandler)
+	r.POST("/api/editing_queue/:content_id/tagging", TaggingHandler)
+	r.POST("/api/editing_queue/:content_id/duplicates", DupesHandler)
 
 	// TODO: Check that we can still kick off a duplicates task for the container.
-	r.POST("/editing_container_queue/{containerID}/screens/{count}/{startTimeSeconds}", ContainerScreensHandler)
-	r.POST("/editing_container_queue/{containerID}/encoding", ContainerVideoEncodingHandler)
-	r.POST("/editing_container_queue/{containerID}/tagging", ContainerTaggingHandler)
-	r.POST("/editing_container_queue/{containerID}/duplicates", DupesHandler)
+	r.POST("/api/editing_container_queue/:container_id/screens/:count/:startTimeSeconds", ContainerScreensHandler)
+	r.POST("/api/editing_container_queue/:container_id/encoding", ContainerVideoEncodingHandler)
+	r.POST("/api/editing_container_queue/:container_id/tagging", ContainerTaggingHandler)
+	r.POST("/api/editing_container_queue/:container_id/duplicates", DupesHandler)
 	//TODO: app.POST("/editing_container_queue/{containerID}/webp", ContainerWebpHandler)
 }
 
