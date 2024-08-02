@@ -67,7 +67,7 @@ func SetupWorkers(app *buffalo.App) {
 }
 
 func FullHandler(c *gin.Context) {
-	mcID, bad_uuid := uuid.FromString(c.Param("mcID"))
+	mcID, bad_uuid := uuid.FromString(c.Param("id"))
 	if bad_uuid != nil {
 		c.AbortWithError(400, bad_uuid)
 		return
@@ -175,7 +175,7 @@ func SplashHandler(c *gin.Context) {
 
 // Find the preview of a file (if applicable currently it is just returning the full path)
 func PreviewHandler(c *gin.Context) {
-	mcID, bad_uuid := uuid.FromString(c.Param("mcID"))
+	mcID, bad_uuid := uuid.FromString(c.Param("id"))
 	if bad_uuid != nil {
 		c.AbortWithError(400, bad_uuid)
 		return
@@ -200,7 +200,7 @@ func PreviewHandler(c *gin.Context) {
 
 // Provides a download handler by directory id and file id
 func DownloadHandler(c *gin.Context) {
-	mcID, bad_uuid := uuid.FromString(c.Param("mcID"))
+	mcID, bad_uuid := uuid.FromString(c.Param("id"))
 	if bad_uuid != nil {
 		c.AbortWithError(400, bad_uuid)
 		return

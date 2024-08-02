@@ -202,7 +202,7 @@ func (as *ActionSuite) Test_CreateContainerPreviews() {
 		as.NoError(mc_err)
 		as.Equal(mc.Preview, "", "There should be no preview at this point")
 		if expect_c_preview == "" {
-			expect_c_preview = "/preview/" + mc.ID.String()
+			expect_c_preview = "/api/preview/" + mc.ID.String()
 		}
 	}
 

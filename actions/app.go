@@ -45,22 +45,10 @@ func App(UseDatabase bool) *buffalo.App {
 
 		/*
 			// Allow for manipulation of content already on the server
-					app.POST("/editing_queue/{contentID}/screens/{count}/{startTimeSeconds}", ContentTaskScreensHandler)
-					app.POST("/editing_queue/{contentID}/encoding", VideoEncodingHandler)
-					app.POST("/editing_queue/{contentID}/webp", WebpFromScreensHandler)
-					app.POST("/editing_queue/{contentID}/tagging", TaggingHandler)
 
-					// TODO: Check that we can still kick off a duplicates task for the container.
-					app.POST("/editing_container_queue/{containerID}/screens/{count}/{startTimeSeconds}", ContainerScreensHandler)
-					app.POST("/editing_container_queue/{containerID}/encoding", ContainerVideoEncodingHandler)
-					//app.POST("/editing_container_queue/{containerID}/webp", ContainerWebpHandler)
-					app.POST("/editing_container_queue/{containerID}/tagging", ContainerTaggingHandler)
 
 					// Dupes is a special case where we do not need to create a task per content type right now
 					// the checks are fast enough that we can get a summary pretty quickly and probably faster with
-					// single lookups (for now).
-					app.POST("/editing_queue/{contentID}/duplicates", DupesHandler)
-					app.POST("/editing_container_queue/{containerID}/duplicates", DupesHandler)
 
 		*/
 	}
@@ -79,29 +67,29 @@ func GinApp(r *gin.Engine) {
 	// For LB pings etc.
 	r.GET("/status", StatusHandler)
 
+	// Host the index.html, also assume that all angular UI routes are going to be under contented
+	// Cannot figure out how to just let AngularIndex handle EVERYTHING under ui/*/*
+	r.GET("/", AngularIndex)
+	r.GET("/ui/browse/:path", AngularIndex)
+	r.GET("/ui/browse/:path/:idx", AngularIndex)
+	r.GET("/ui/content/:id", AngularIndex)
+	r.GET("/ui/search", AngularIndex)
+	r.GET("/ui/video", AngularIndex)
+	r.GET("/ui/splash", AngularIndex)
+	r.GET("/admin_ui/editor_content/:id", AngularIndex)
+	r.GET("/admin_ui/tasks", AngularIndex)
+	r.GET("/admin_ui/containers", AngularIndex)
+	r.GET("/admin_ui/search", AngularIndex)
+
 	// Search endpoints
 	r.GET("/api/search/contents", SearchHandler)
 	r.GET("/api/search/containers", SearchContainersHandler)
 
-	// Downloads and
-	r.GET("/api/preview/{mcID}", PreviewHandler)
-	r.GET("/api/view/{mcID}", FullHandler)
-	r.GET("/api/download/{mcID}", DownloadHandler)
+	// Downloads and basic rendering of content
+	r.GET("/api/preview/:id", PreviewHandler)
+	r.GET("/api/view/:id", FullHandler)
+	r.GET("/api/download/:id", DownloadHandler)
 	r.GET("/api/splash", SplashHandler)
-
-	// Host the index.html, also assume that all angular UI routes are going to be under contented
-	// Cannot figure out how to just let AngularIndex handle EVERYTHING under ui/*/*
-	r.GET("/", AngularIndex)
-	r.GET("/ui/browse/{path}", AngularIndex)
-	r.GET("/ui/browse/{path}/{idx}", AngularIndex)
-	r.GET("/ui/content/{id}", AngularIndex)
-	r.GET("/ui/search", AngularIndex)
-	r.GET("/ui/video", AngularIndex)
-	r.GET("/ui/splash", AngularIndex)
-	r.GET("/admin_ui/editor_content/{id}", AngularIndex)
-	r.GET("/admin_ui/tasks", AngularIndex)
-	r.GET("/admin_ui/containers", AngularIndex)
-	r.GET("/admin_ui/search", AngularIndex)
 
 	// CRUD
 	// Containers
@@ -116,6 +104,7 @@ func GinApp(r *gin.Engine) {
 	r.GET("/api/contents", ContentsResourceList)
 	r.GET("/api/contents/:content_id", ContentsResourceShow)
 	r.GET("/api/contents/:content_id/screens", ScreensResourceList)
+	//r.GET("/api/contents/:content_id/tags", TagsResourceList) Needs updates in the ListAllTagsContext
 	r.POST("/api/contents", ContentsResourceCreate)
 	r.PUT("/api/contents/:content_id", ContentsResourceUpdate)
 	r.DELETE("/api/contents/:content_id", ContentsResourceDestroy)
@@ -127,6 +116,13 @@ func GinApp(r *gin.Engine) {
 	r.PUT("/api/screens/:screen_id", ScreensResourceUpdate)
 	r.DELETE("/api/screens/:screen_id", ScreensResourceDestroy)
 
+	// Tags
+	r.GET("/api/tags", TagsResourceList)
+	r.GET("/api/tags/:tag_id", TagsResourceShow)
+	r.POST("/api/tags", TagsResourceCreate)
+	r.PUT("/api/tags/:tag_id", TagsResourceUpdate)
+	r.DELETE("/api/tags/:tag_id", TagsResourceDestroy)
+
 	// Tasks
 	r.GET("/api/task_requests", TaskRequestsResourceList)
 	r.GET("/api/task_requests/:task_request_id", TaskRequestsResourceShow)
@@ -134,20 +130,19 @@ func GinApp(r *gin.Engine) {
 	r.PUT("/api/task_requests/:task_request_id", TaskRequestsResourceUpdate)
 	r.DELETE("/api/task_requests/:screen_id", TaskRequestsResourceDestroy)
 
-	// Tags
-	r.GET("/api/tags", TagsResourceList)
-	r.GET("/api/tags/:tag_id", TagsResourceShow)
-	r.POST("/api/tags", TagsResourceCreate)
-	r.PUT("/api/tags/:tag_id", TagsResourceUpdate)
-	r.DELETE("/api/tags/:tag_id", TagsResourceDestroy)
-	/*
-		app.Resource("/tags", TagsResource{})
-	*/
-	// The DIR env environment is then served under /static (see actions.SetupContented)
-	//cr := app.Resource("/containers", ContainersResource{})
-	//cr.Resource("/contents", ContentsResource{})
-	//mc_r := app.Resource("/contents", ContentsResource{})
-	//mc_r.Resource("/screens", ScreensResource{})
+	// Available tasks that can be added ot the system
+	r.POST("/editing_queue/{contentID}/screens/{count}/{startTimeSeconds}", ContentTaskScreensHandler)
+	r.POST("/editing_queue/{contentID}/encoding", VideoEncodingHandler)
+	r.POST("/editing_queue/{contentID}/webp", WebpFromScreensHandler)
+	r.POST("/editing_queue/{contentID}/tagging", TaggingHandler)
+	r.POST("/editing_queue/{contentID}/duplicates", DupesHandler)
+
+	// TODO: Check that we can still kick off a duplicates task for the container.
+	r.POST("/editing_container_queue/{containerID}/screens/{count}/{startTimeSeconds}", ContainerScreensHandler)
+	r.POST("/editing_container_queue/{containerID}/encoding", ContainerVideoEncodingHandler)
+	r.POST("/editing_container_queue/{containerID}/tagging", ContainerTaggingHandler)
+	r.POST("/editing_container_queue/{containerID}/duplicates", DupesHandler)
+	//TODO: app.POST("/editing_container_queue/{containerID}/webp", ContainerWebpHandler)
 }
 
 // forceSSL will return a middleware that will redirect an incoming request

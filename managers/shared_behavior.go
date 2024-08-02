@@ -57,7 +57,7 @@ func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
 
 		// Assign a default preview (maybe move this into create Structure?)
 		if len(ct.Content) > 0 {
-			c.PreviewUrl = "/preview/" + ct.Content[0].ID.String()
+			c.PreviewUrl = "/api/preview/" + ct.Content[0].ID.String()
 		}
 
 		// TODO: Port to using the manager somehow (note this is called from a grift)
@@ -280,7 +280,7 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
 	if content != nil && len(*content) > 0 {
 		log.Printf("Found a set of content to make previews for %d", len(*content))
 		mcs := *content
-		c.PreviewUrl = "/preview/" + mcs[0].ID.String()
+		c.PreviewUrl = "/api/preview/" + mcs[0].ID.String() // TODO: make this configurable in case we have a edge cache
 		cm.UpdateContainer(c)
 	}
 

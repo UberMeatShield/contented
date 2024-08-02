@@ -136,7 +136,7 @@ func (ms MemoryStorage) UpdateContainer(cnt *models.Container) (*models.Containe
 		memStorage.ValidContainers[cnt.ID] = *cnt
 		return cnt, nil
 	}
-	return nil, errors.New(fmt.Sprintf("Container was not found with ID %s", cnt))
+	return nil, fmt.Errorf("container was not found with ID %s", cnt)
 }
 
 func (ms MemoryStorage) CreateTask(tr *models.TaskRequest) (*models.TaskRequest, error) {
@@ -160,7 +160,7 @@ func (ms MemoryStorage) UpdateTag(tag *models.Tag) (*models.Tag, error) {
 		memStorage.ValidTags[tag.ID] = *tag
 		return tag, nil
 	}
-	return nil, fmt.Errorf("Tag was not found %s", tag)
+	return nil, fmt.Errorf("tag was not found %s", tag)
 }
 
 func (ms MemoryStorage) UpdateTask(t *models.TaskRequest, currentState models.TaskStatusType) (*models.TaskRequest, error) {
@@ -208,7 +208,7 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.ContentMap
 		// Careful as sometimes we do want containers even if there is no content
 		c := ct.Cnt
 		if len(ct.Content) > 0 {
-			c.PreviewUrl = "/preview/" + ct.Content[0].ID.String()
+			c.PreviewUrl = "/api/preview/" + ct.Content[0].ID.String()
 			log.Printf("Assigning a preview to %s as %s", c.Name, c.PreviewUrl)
 
 			maybeScreens, screenErr := GetPotentialScreens(&c)
