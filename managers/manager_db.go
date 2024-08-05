@@ -83,7 +83,7 @@ func (cm ContentManagerDB) ListContent(cs ContentQuery) (*models.Contents, int, 
 }
 
 // Note this DOES allow for loading hidden content
-func (cm ContentManagerDB) GetContent(mcID uint) (*models.Content, error) {
+func (cm ContentManagerDB) GetContent(mcID int) (*models.Content, error) {
 	log.Printf("Get a single content object %s", mcID)
 	tx := cm.GetConnection()
 	mc := &models.Content{}
@@ -330,7 +330,7 @@ func (cm ContentManagerDB) ListContainersFiltered(cs ContainerQuery) (*models.Co
 }
 
 // TODO: Need a preview test using the database where we do NOT have a preview created
-func (cm ContentManagerDB) GetContainer(cID uint) (*models.Container, error) {
+func (cm ContentManagerDB) GetContainer(cID int) (*models.Container, error) {
 	log.Printf("Get a single container %s", cID)
 	tx := cm.GetConnection()
 
@@ -399,7 +399,7 @@ func (cm ContentManagerDB) ListScreens(sr ScreensQuery) (*models.Screens, int, e
 }
 
 // Need to make it use the manager and just show the file itself
-func (cm ContentManagerDB) GetScreen(psID uint) (*models.Screen, error) {
+func (cm ContentManagerDB) GetScreen(psID int) (*models.Screen, error) {
 	previewScreen := &models.Screen{}
 	tx := cm.GetConnection()
 	err := tx.Find(previewScreen, psID)
@@ -584,7 +584,7 @@ func (cm ContentManagerDB) AssociateTag(t *models.Tag, mc *models.Content) error
 	return nil
 }
 
-func (cm ContentManagerDB) AssociateTagByID(tagId string, mcID uint) error {
+func (cm ContentManagerDB) AssociateTagByID(tagId string, mcID int) error {
 	mc, m_err := cm.GetContent(mcID)
 	t, t_err := cm.GetTag(tagId)
 	if m_err != nil || t_err != nil {
@@ -651,7 +651,7 @@ func (cm ContentManagerDB) UpdateTask(t *models.TaskRequest, currentState models
 	return cm.GetTask(t.ID)
 }
 
-func (cm ContentManagerDB) GetTask(id uint) (*models.TaskRequest, error) {
+func (cm ContentManagerDB) GetTask(id int) (*models.TaskRequest, error) {
 	task := models.TaskRequest{}
 	tx := cm.GetConnection()
 	err := tx.Find(&task, id)

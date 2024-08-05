@@ -95,7 +95,7 @@ type ContentManager interface {
 	FindActualFile(mc *models.Content) (string, error)
 
 	// Container Management
-	GetContainer(cID uint) (*models.Container, error)
+	GetContainer(cID int) (*models.Container, error)
 	ListContainers(cq ContainerQuery) (*models.Containers, int, error)
 	ListContainersFiltered(cq ContainerQuery) (*models.Containers, int, error)
 	ListContainersContext() (*models.Containers, int, error)
@@ -104,7 +104,7 @@ type ContentManager interface {
 	DestroyContainer(id string) (*models.Container, error)
 
 	// Content listing (why did I name it Content vs Media?)
-	GetContent(content_id uint) (*models.Content, error)
+	GetContent(content_id int) (*models.Content, error)
 	ListContent(cs ContentQuery) (*models.Contents, int, error)
 	ListContentContext() (*models.Contents, int, error)
 
@@ -123,7 +123,7 @@ type ContentManager interface {
 	ListScreensContext() (*models.Screens, int, error)
 	ListScreens(sr ScreensQuery) (*models.Screens, int, error)
 
-	GetScreen(psID uint) (*models.Screen, error)
+	GetScreen(psID int) (*models.Screen, error)
 	CreateScreen(s *models.Screen) error
 	UpdateScreen(s *models.Screen) error
 	DestroyScreen(id string) (*models.Screen, error)
@@ -136,7 +136,7 @@ type ContentManager interface {
 	UpdateTag(tag *models.Tag) error
 	DestroyTag(id string) (*models.Tag, error)
 	AssociateTag(tag *models.Tag, c *models.Content) error
-	AssociateTagByID(tagID string, mcID uint) error
+	AssociateTagByID(tagID string, mcID int) error
 
 	// For processing encoding requests
 	CreateTask(task *models.TaskRequest) (*models.TaskRequest, error)
@@ -146,7 +146,7 @@ type ContentManager interface {
 	// For the API exposed
 	ListTasksContext() (*models.TaskRequests, int, error)
 	ListTasks(query TaskQuery) (*models.TaskRequests, int, error)
-	GetTask(id uint) (*models.TaskRequest, error)
+	GetTask(id int) (*models.TaskRequest, error)
 }
 
 // Dealing with buffalo.Context vs grift.Context is kinda annoying, this handles the
@@ -357,7 +357,7 @@ func GetTagsFromParam(val string) ([]string, error) {
 	return tags, nil
 }
 
-func GetContentAndContainer(cm ContentManager, contentID uint) (*models.Content, *models.Container, error) {
+func GetContentAndContainer(cm ContentManager, contentID int) (*models.Content, *models.Container, error) {
 	content, cErr := cm.GetContent(contentID)
 	if cErr != nil {
 		return nil, nil, cErr
@@ -369,7 +369,7 @@ func GetContentAndContainer(cm ContentManager, contentID uint) (*models.Content,
 	return content, cnt, nil
 }
 
-func CreateScreensForContent(cm ContentManager, contentID uint, count int, offset int) ([]string, error, string) {
+func CreateScreensForContent(cm ContentManager, contentID int, count int, offset int) ([]string, error, string) {
 	// It would be good to have the screens element take a few more params and have a wrapper on the
 	// Content manager level.
 	content, cnt, err := GetContentAndContainer(cm, contentID)

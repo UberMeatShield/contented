@@ -108,9 +108,9 @@ func (to TaskOperationType) String() string {
 
 // TaskRequest is used by pop to map your task_requests database table to your go code.
 type TaskRequest struct {
-	ID          uint `json:"id" db:"id"`
-	ContentID   uint `json:"content_id" db:"content_id" default:"nil"`
-	ContainerID uint `json:"container_id" db:"container_id" default:"nil"`
+	ID          int `json:"id" db:"id"`
+	ContentID   int `json:"content_id" db:"content_id" default:"nil"`
+	ContainerID int `json:"container_id" db:"container_id" default:"nil"`
 
 	// TODO: Make it optional on ContentId so things cna work on a container?
 	// ContainerID nulls.UUID `json:"container_id" db:"container_id" default:"nil"`
@@ -120,7 +120,7 @@ type TaskRequest struct {
 
 	Status    TaskStatusType    `json:"status" db:"status" default:"new" `
 	Operation TaskOperationType `json:"operation" db:"operation"`
-	CreatedID uint              `json:"created_id" db:"created_id"`
+	CreatedID int              `json:"created_id" db:"created_id"`
 
 	// Initial default time would be nice
 	Message string `json:"message" default:"" db:"message"`
@@ -143,7 +143,7 @@ func (t TaskRequest) String() string {
 
 // TaskRequests is not required by pop and may be deleted
 type TaskRequests []TaskRequest
-type TaskRequestMap map[uint]TaskRequest
+type TaskRequestMap map[int]TaskRequest
 
 // String is not required by pop and may be deleted
 func (t TaskRequests) String() string {

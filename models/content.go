@@ -16,14 +16,14 @@ import (
 
 // Content is used by pop to map your contents database table to your go code.
 type Content struct {
-	ID          uint      `json:"id" gorm:"primaryKey"`
+	ID          int      `json:"id" gorm:"primaryKey"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
 	Src         string         `json:"src" db:"src"`
 	ContentType string         `json:"content_type" db:"content_type"`
 	Preview     string         `json:"preview" db:"preview"`
-	ContainerID uint           `json:"container_id" db:"container_id" default:"nil"`
+	ContainerID int           `json:"container_id" db:"container_id" default:"nil"`
 	Idx         int            `json:"idx" db:"idx" default:"0"`
 	Active      bool           `json:"active" db:"active" default:"true"`
 	Corrupt     bool           `json:"corrupt" db:"corrupt" default:"false"`
@@ -63,7 +63,7 @@ var VALID_CONTENT_ORDERS = []string{
 
 // Contents is not required by pop and may be deleted
 type Contents []Content
-type ContentMap map[uint]Content
+type ContentMap map[int]Content
 type ContentMapBySrc map[string]Content
 
 func GetContentSort(arr Contents, jsonFieldName string) ContentJsonSort {

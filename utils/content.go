@@ -172,7 +172,7 @@ func SniffFileType(content *os.File) (string, error) {
 }
 
 // This is a little slow so the video info might need to be a lazy load
-func GetContent(id uint, fileInfo os.FileInfo, path string) models.Content {
+func GetContent(id int, fileInfo os.FileInfo, path string) models.Content {
 	// https://golangcode.com/get-the-content-type-of-file/
 	contentType, err := GetMimeType(path, fileInfo.Name())
 	if err != nil {

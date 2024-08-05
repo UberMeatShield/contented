@@ -16,7 +16,7 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-type SequenceMap map[string]uint
+type SequenceMap map[string]int
 
 // GoLang is just making this awkward
 type MemoryStorage struct {
@@ -91,7 +91,7 @@ func StringDefault(s1 string, s2 string) string {
 	return s1
 }
 
-func AssignNumerical(id uint, tablename string) uint {
+func AssignNumerical(id int, tablename string) int {
 	// TODO: If This is using DB potentially just return 0
 	memStorage.Sequences[tablename] += 1
 	log.Printf("What the shit %s id %d", tablename, memStorage.Sequences[tablename])

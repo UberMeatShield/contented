@@ -67,13 +67,13 @@ func SetupWorkers(app *buffalo.App) {
 }
 
 func FullHandler(c *gin.Context) {
-	mcID, badId := strconv.ParseUint(c.Param("id"), 10, 32)
+	mcID, badId := strconv.ParseInt(c.Param("id"), 10, 32)
 	if badId != nil {
 		c.AbortWithError(400, badId)
 		return
 	}
 	man := managers.GetManager(c)
-	mc, err := man.GetContent(uint(mcID))
+	mc, err := man.GetContent(int(mcID))
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
@@ -154,11 +154,11 @@ func SplashHandler(c *gin.Context) {
 	}
 	if cfg.SplashContentID != "" {
 		log.Printf("It should look up %s", cfg.SplashContentID)
-		splashId, badId := strconv.ParseUint(cfg.SplashContentID, 10, 32)
+		splashId, badId := strconv.ParseInt(cfg.SplashContentID, 10, 32)
 		if badId != nil {
 			c.AbortWithError(http.StatusBadRequest, badId)
 		}
-		mc, err := man.GetContent(uint(splashId))
+		mc, err := man.GetContent(int(splashId))
 		if err == nil {
 			sr.Content = mc
 		}
@@ -178,14 +178,14 @@ func SplashHandler(c *gin.Context) {
 
 // Find the preview of a file (if applicable currently it is just returning the full path)
 func PreviewHandler(c *gin.Context) {
-	mcID, badId := strconv.ParseUint(c.Param("id"), 10, 32)
+	mcID, badId := strconv.ParseInt(c.Param("id"), 10, 32)
 	if badId != nil {
 		c.AbortWithError(400, badId)
 		return
 	}
 
 	man := managers.GetManager(c)
-	mc, err := man.GetContent(uint(mcID))
+	mc, err := man.GetContent(int(mcID))
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
@@ -203,13 +203,13 @@ func PreviewHandler(c *gin.Context) {
 
 // Provides a download handler by directory id and file id
 func DownloadHandler(c *gin.Context) {
-	mcID, badId := strconv.ParseUint(c.Param("id"), 10, 32)
+	mcID, badId := strconv.ParseInt(c.Param("id"), 10, 32)
 	if badId != nil {
 		c.AbortWithError(400, badId)
 		return
 	}
 	man := managers.GetManager(c)
-	mc, err := man.GetContent(uint(mcID))
+	mc, err := man.GetContent(int(mcID))
 	if err != nil {
 		c.AbortWithError(404, err)
 		return

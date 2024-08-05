@@ -12,7 +12,7 @@ import (
 
 // Container is used by pop to map your containers database table to your go code.
 type Container struct {
-	ID          uint      `json:"id" gorm:"primaryKey"`
+	ID          int      `json:"id" gorm:"primaryKey"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
@@ -87,7 +87,7 @@ func (c Container) String() string {
 
 // Containers is not required by pop and may be deleted
 type Containers []Container
-type ContainerMap map[uint]Container
+type ContainerMap map[int]Container
 
 func (arr Containers) Reverse() Containers {
 	for i, j := 0, len(arr)-1; i < j; i, j = i+1, j-1 {

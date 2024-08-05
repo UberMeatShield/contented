@@ -54,7 +54,7 @@ func ContainersResourceList(c *gin.Context) {
 // Show gets the data for one Container. This function is mapped to
 // the path GET /containers/{container_id}
 func ContainersResourceShow(c *gin.Context) {
-	cID, err := strconv.ParseUint(c.Param("container_id"), 10, 32)
+	cID, err := strconv.ParseInt(c.Param("container_id"), 10, 32)
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
@@ -62,7 +62,7 @@ func ContainersResourceShow(c *gin.Context) {
 
 	// Get the DB connection from the context
 	man := managers.GetManager(c)
-	container, err := man.GetContainer(uint(cID))
+	container, err := man.GetContainer(int(cID))
 	if err != nil {
 		c.AbortWithError(http.StatusNotFound, err)
 		return
@@ -114,13 +114,13 @@ func ContainersResourceUpdate(c *gin.Context) {
 	}
 
 	// Allocate an empty Container
-	id, idErr := strconv.ParseUint(c.Param("container_id"), 10, 32)
+	id, idErr := strconv.ParseInt(c.Param("container_id"), 10, 32)
 	if idErr != nil {
 		c.AbortWithError(http.StatusBadRequest, idErr)
 		return
 	}
 	// Bind Container to the html form elements (could toss the context into the manager)
-	cnt, notFoundErr := man.GetContainer(uint(id))
+	cnt, notFoundErr := man.GetContainer(int(id))
 	if notFoundErr != nil {
 		c.AbortWithError(http.StatusNotFound, notFoundErr)
 		return

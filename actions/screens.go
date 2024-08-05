@@ -36,7 +36,7 @@ func ScreensResourceList(c *gin.Context) {
 	mcStrID := managers.StringDefault(c.Param("content_id"), "")
 	log.Printf("Content ID specified %s", mcStrID)
 	if mcStrID != "" {
-		_, err := strconv.ParseUint(mcStrID, 10, 32)
+		_, err := strconv.ParseInt(mcStrID, 10, 32)
 		if err != nil {
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
@@ -63,14 +63,14 @@ func ScreensResourceList(c *gin.Context) {
 // the path GET /screens/{screen_id}
 func ScreensResourceShow(c *gin.Context) {
 	psStrID := c.Param("screen_id")
-	psID, badUUID := strconv.ParseUint(psStrID, 10, 32)
+	psID, badUUID := strconv.ParseInt(psStrID, 10, 32)
 	if badUUID != nil {
 		c.AbortWithError(400, badUUID)
 		return
 	}
 
 	man := managers.GetManager(c)
-	screen, err := man.GetScreen(uint(psID))
+	screen, err := man.GetScreen(int(psID))
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
@@ -124,12 +124,12 @@ func ScreensResourceUpdate(c *gin.Context) {
 	}
 
 	man := managers.GetManager(c)
-	id, idErr := strconv.ParseUint(c.Param("screen_id"), 10, 32)
+	id, idErr := strconv.ParseInt(c.Param("screen_id"), 10, 32)
 	if idErr != nil {
 		c.AbortWithError(http.StatusBadRequest, idErr)
 		return
 	}
-	screen, notFoundErr := man.GetScreen(uint(id))
+	screen, notFoundErr := man.GetScreen(int(id))
 	if notFoundErr != nil {
 		c.AbortWithError(http.StatusNotFound, err)
 		return
@@ -138,7 +138,7 @@ func ScreensResourceUpdate(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, err)
 		return
 	}
-	checkScreen, _ := man.GetScreen(uint(id))
+	checkScreen, _ := man.GetScreen(int(id))
 	c.JSON(http.StatusOK, checkScreen)
 }
 

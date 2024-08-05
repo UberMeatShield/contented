@@ -158,10 +158,10 @@ func (cm ContentManagerMemory) getContentFiltered(cs ContentQuery) (*models.Cont
 
 	// Most common initial filtering call
 	if cs.ContainerID != "" {
-		cID, cErr := strconv.ParseUint(cs.ContainerID, 10, 64)
+		cID, cErr := strconv.ParseInt(cs.ContainerID, 10, 64)
 		if cErr == nil {
 			for _, mc := range mem.ValidContent {
-				if mc.ContainerID == uint(cID) {
+				if mc.ContainerID == int(cID) {
 					cidArr = append(cidArr, mc)
 				}
 			}
@@ -187,10 +187,10 @@ func (cm ContentManagerMemory) getContentFiltered(cs ContentQuery) (*models.Cont
 		mcArr = visibleArr
 	}
 
-	if id, err := strconv.ParseUint(cs.ContentID, 10, 32); err == nil {
+	if id, err := strconv.ParseInt(cs.ContentID, 10, 32); err == nil {
 		idArr := models.Contents{}
 		for _, mc := range mcArr {
-			if mc.ID == uint(id) {
+			if mc.ID == int(id) {
 				idArr = append(idArr, mc)
 			}
 		}
@@ -283,10 +283,10 @@ func (cm ContentManagerMemory) ListContentFiltered(cs ContentQuery) (*models.Con
 	mem := cm.GetStore()
 
 	// Need to test invalid / empty ""
-	containerID, invalid := strconv.ParseUint(cs.ContainerID, 10, 32)
+	containerID, invalid := strconv.ParseInt(cs.ContainerID, 10, 32)
 	if invalid == nil {
 		for _, content := range mem.ValidContent {
-			if content.ContainerID == uint(containerID) {
+			if content.ContainerID == int(containerID) {
 				m_arr = append(m_arr, content)
 			}
 		}
@@ -296,9 +296,9 @@ func (cm ContentManagerMemory) ListContentFiltered(cs ContentQuery) (*models.Con
 		}
 	}
 
-	if contentID, badIdErr := strconv.ParseUint(cs.ContentID, 10, 32); badIdErr == nil {
+	if contentID, badIdErr := strconv.ParseInt(cs.ContentID, 10, 32); badIdErr == nil {
 		for _, content := range m_arr {
-			if content.ID == uint(contentID) {
+			if content.ID == int(contentID) {
 				m_arr = models.Contents{content}
 				break
 			}
@@ -340,7 +340,7 @@ func (cm ContentManagerMemory) ListContentFiltered(cs ContentQuery) (*models.Con
 }
 
 // Get a content element by the ID
-func (cm ContentManagerMemory) GetContent(mcID uint) (*models.Content, error) {
+func (cm ContentManagerMemory) GetContent(mcID int) (*models.Content, error) {
 	// log.Printf("Memory Get a single content %s", mcID)
 	mem := cm.GetStore()
 	if mc, ok := mem.ValidContent[mcID]; ok {
@@ -448,7 +448,7 @@ func (cm ContentManagerMemory) ListContainersFiltered(cs ContainerQuery) (*model
 }
 
 // Get a single container given the primary key
-func (cm ContentManagerMemory) GetContainer(cID uint) (*models.Container, error) {
+func (cm ContentManagerMemory) GetContainer(cID int) (*models.Container, error) {
 	// log.Printf("Get a single container %s", cID)
 	mem := cm.GetStore()
 	if c, ok := mem.ValidContainers[cID]; ok {
@@ -512,12 +512,12 @@ func (cm ContentManagerMemory) ListScreens(sq ScreensQuery) (*models.Screens, in
 	mem := cm.GetStore()
 	s_arr := models.Screens{}
 	if sq.ContentID != "" {
-		contentID, idErr := strconv.ParseUint(sq.ContentID, 10, 32)
+		contentID, idErr := strconv.ParseInt(sq.ContentID, 10, 32)
 		if idErr != nil {
 			return nil, -1, idErr
 		}
 		for _, s := range mem.ValidScreens {
-			if s.ContentID == uint(contentID) {
+			if s.ContentID == int(contentID) {
 				s_arr = append(s_arr, s)
 			}
 		}
@@ -540,7 +540,7 @@ func (cm ContentManagerMemory) ListScreens(sq ScreensQuery) (*models.Screens, in
 	return &s_arr, count, nil
 }
 
-func (cm ContentManagerMemory) GetScreen(psID uint) (*models.Screen, error) {
+func (cm ContentManagerMemory) GetScreen(psID int) (*models.Screen, error) {
 	// Need to build out a memory setup and look the damn thing up :(
 	mem := cm.GetStore()
 	if screen, ok := mem.ValidScreens[psID]; ok {
@@ -649,7 +649,7 @@ func (cm ContentManagerMemory) AssociateTag(t *models.Tag, mc *models.Content) e
 	return errors.New(fmt.Sprintf("Tag %s not in the list of valid tags", t))
 }
 
-func (cm ContentManagerMemory) AssociateTagByID(tagId string, mcID uint) error {
+func (cm ContentManagerMemory) AssociateTagByID(tagId string, mcID int) error {
 	t, err := cm.GetTag(tagId)
 	if err == nil && t != nil {
 		content, cErr := cm.GetContent(mcID)
@@ -740,7 +740,7 @@ func (cm ContentManagerMemory) UpdateTask(t *models.TaskRequest, currentState mo
 	return cm.GetTask(t.ID)
 }
 
-func (cm ContentManagerMemory) GetTask(id uint) (*models.TaskRequest, error) {
+func (cm ContentManagerMemory) GetTask(id int) (*models.TaskRequest, error) {
 	mem := cm.GetStore()
 	for idx, task := range mem.ValidTasks {
 		if task.ID == id {
@@ -786,13 +786,13 @@ func (cm ContentManagerMemory) ListTasks(query TaskQuery) (*models.TaskRequests,
 	mem := cm.GetStore()
 	task_arr := mem.ValidTasks
 	if query.ContentID != "" {
-		contentID, err := strconv.ParseUint(query.ContentID, 10, 32)
+		contentID, err := strconv.ParseInt(query.ContentID, 10, 32)
 		filtered_tasks := models.TaskRequests{}
 		if err != nil {
 			return nil, 0, err
 		}
 		for _, task := range task_arr {
-			if task.ContentID == uint(contentID) {
+			if task.ContentID == int(contentID) {
 				filtered_tasks = append(filtered_tasks, task)
 			}
 		}

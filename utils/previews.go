@@ -30,8 +30,8 @@ const PREVIEW_DIRECTORY = "container_previews"
 
 // Used in the case of async processing when creating Preview results
 type PreviewResult struct {
-	C_ID    uint
-	MC_ID   uint
+	C_ID    int
+	MC_ID   int
 	Preview string
 	Err     error
 }

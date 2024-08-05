@@ -22,7 +22,7 @@ func ContentsResourceList(c *gin.Context) {
 	// Optional params suuuuck in GoLang
 	cIDStr := c.Param("container_id")
 	if cIDStr != "" {
-		_, err := strconv.ParseUint(cIDStr, 10, 32)
+		_, err := strconv.ParseInt(cIDStr, 10, 32)
 		if err != nil {
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
@@ -51,13 +51,13 @@ func ContentsResourceShow(c *gin.Context) {
 	man := managers.GetManager(c)
 
 	// TODO: Make it actually just handle /content (page, number)
-	id, err := strconv.ParseUint(c.Param("content_id"), 10, 32)
+	id, err := strconv.ParseInt(c.Param("content_id"), 10, 32)
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
-	contentContainer, missing_err := man.GetContent(uint(id))
+	contentContainer, missing_err := man.GetContent(int(id))
 	if missing_err != nil {
 		c.AbortWithError(http.StatusNotFound, missing_err)
 		return
@@ -103,8 +103,8 @@ func ContentsResourceUpdate(c *gin.Context) {
 		return
 	}
 
-	id, _ := strconv.ParseUint(c.Param("content_id"), 10, 32)
-	exists, err := man.GetContent(uint(id))
+	id, _ := strconv.ParseInt(c.Param("content_id"), 10, 32)
+	exists, err := man.GetContent(int(id))
 	if err != nil || exists == nil {
 		c.AbortWithError(http.StatusNotFound, err)
 		return
