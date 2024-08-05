@@ -10,7 +10,6 @@ func (ms *ModelSuite) Test_Content() {
 	if count > 0 {
 		ms.Fail("The DB was not reset")
 	}
-
 	tags := Tags{
 		Tag{ID: "A"},
 		Tag{ID: "B"},

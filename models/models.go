@@ -3,7 +3,6 @@ package models
 import (
 	"log"
 
-	"github.com/gobuffalo/envy"
 	"github.com/gobuffalo/pop/v6"
 
 	"gorm.io/driver/postgres"
@@ -14,6 +13,7 @@ import (
 // throughout your application.
 var DB *pop.Connection
 
+/*
 func init() {
 	var err error
 	env := envy.Get("GO_ENV", "development")
@@ -23,6 +23,7 @@ func init() {
 	}
 	pop.Debug = env == "development"
 }
+*/
 
 /**
  * Build out a set of gorm related connections

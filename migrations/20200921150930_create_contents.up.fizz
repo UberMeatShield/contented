@@ -1,10 +1,8 @@
 create_table("contents") {
-	t.Column("id", "uuid", {primary: true})
+	t.Column("id", "int", {primary: true})
 	t.Column("src", "string", {"default": ""})
 	t.Column("content_type", "string", {"default": ""})
 	t.Column("preview", "string", {"default": ""})
-	t.Column("container_id", "uuid", {"null": true, "default": nil})
-    t.ForeignKey("container_id", {"containers": ["id"]}, {"on_delete": "cascade", "null": true})
 	t.Column("active", "bool", {"default": true})
 	t.Column("meta", "text", {"default": ""})
 	t.Column("corrupt", "bool", {"default": false})
@@ -14,5 +12,7 @@ create_table("contents") {
 	t.Column("description", "text", {"default": ""})
 	t.Column("hidden", "bool", {"default": false})
 	t.Column("no_file", "bool", {"default": false})
+	t.Column("container_id", "int", {"null": true, "default": nil})
+    t.ForeignKey("container_id", {"containers": ["id"]}, {"on_delete": "cascade", "null": true})
 	t.Timestamps()
 }

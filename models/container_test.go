@@ -35,7 +35,10 @@ func (ms *ModelSuite) Test_Container_Query() {
 		Src:         "second",
 		ContainerID: c.ID,
 	}
-	ms.DB.Create(&mc1)
+	m1Err := ms.DB.Create(&mc1)
+	if m1Err != nil {
+		ms.Fail("Failed to create a content element %s", m1Err)
+	}
 	ms.DB.Create(&mc2)
 
 	load_back := Container{}

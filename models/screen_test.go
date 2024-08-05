@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 )
 
-func (ms *ModelSuite) Test_ContentScreens() {
+func (ms *ModelSuite) Test_ScreensContent() {
 	count, err := ms.DB.Count("contents")
 	ms.NoError(err)
 	if count > 0 {

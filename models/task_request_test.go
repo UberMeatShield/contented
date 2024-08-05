@@ -24,7 +24,7 @@ func (ms *ModelSuite) Test_TaskRequests() {
 	ms.NoError(ms.DB.Update(&check))
 }
 
-func (ms *ModelSuite) Test_ContainerTaskRequests() {
+func (ms *ModelSuite) Test_TaskRequestsContainer() {
 	container := Container{Name: "ContainerPath"}
 	err := ms.DB.Save(&container)
 	ms.NoError(err, "It should create a container")

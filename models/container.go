@@ -7,23 +7,22 @@ import (
 
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gobuffalo/validate/v3"
-	"gorm.io/gorm"
 )
 
 // Container is used by pop to map your containers database table to your go code.
 type Container struct {
-	ID          int      `json:"id" gorm:"primaryKey"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time
-	DeletedAt   gorm.DeletedAt `gorm:"index"`
-	Total       int            `json:"total" db:"total" default:"0"`
-	Path        string         `json:"-" db:"path"`
-	Name        string         `json:"name" db:"name"`
-	Description string         `json:"description" db:"description" default:""`
-	Active      bool           `json:"active" db:"active" default:"true"`
-	Idx         int            `json:"idx" db:"idx" default:"0"`
-	Contents    Contents       `json:"contents" has_many:"contents" db:"-"`
-	Hidden      bool           `json:"-" db:"hidden" default:"false"`
+	ID        int       `json:"id" gorm:"primaryKey" db:"id"`
+	CreatedAt time.Time `json:"created" db:"created_at"`
+	UpdatedAt time.Time `json:"updated" db:"updated_at"`
+	//DeletedAt   gorm.DeletedAt `gorm:"index"`
+	Total       int      `json:"total" db:"total" default:"0"`
+	Path        string   `json:"-" db:"path"`
+	Name        string   `json:"name" db:"name"`
+	Description string   `json:"description" db:"description" default:""`
+	Active      bool     `json:"active" db:"active" default:"true"`
+	Idx         int      `json:"idx" db:"idx" default:"0"`
+	Contents    Contents `json:"contents" has_many:"contents" db:"-"`
+	Hidden      bool     `json:"-" db:"hidden" default:"false"`
 
 	// This is expected to be a URL where often a configured /preview/{mcID} is going
 	// to be assigned by default.  However you should be able to use any link but it is
