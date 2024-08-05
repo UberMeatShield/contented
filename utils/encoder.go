@@ -14,7 +14,6 @@ import (
 	"strings"
 
 	"github.com/disintegration/imaging"
-	"github.com/gofrs/uuid"
 	"github.com/tidwall/gjson"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 	"github.com/vitali-fedulov/images4"
@@ -23,8 +22,8 @@ import (
 // Used in the case of async processing when encoding.
 // Pretty much identical to previews but I might have to tweak this a lot
 type EncodingResult struct {
-	C_ID     uuid.UUID
-	MC_ID    uuid.UUID
+	C_ID     uint
+	MC_ID    uint
 	NewVideo string
 	Err      error
 

@@ -13,9 +13,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gofrs/uuid"
 	"golang.org/x/exp/maps"
 )
+
+type SequenceMap map[string]uint
 
 // GoLang is just making this awkward
 type MemoryStorage struct {
@@ -26,6 +27,7 @@ type MemoryStorage struct {
 	ValidScreens    models.ScreenMap
 	ValidTags       models.TagsMap
 	ValidTasks      models.TaskRequests // Not a Map as we want the order to matter
+	Sequences       SequenceMap
 }
 
 var memStorage MemoryStorage = MemoryStorage{Initialized: false, Loading: false}
@@ -38,11 +40,13 @@ func GetMemStorage() *MemoryStorage {
  * Sketchy initialization based on test or non-test mode.
  */
 func InitializeMemory(dirRoot string) *MemoryStorage {
+
 	log.Printf("Initializing Memory Storage %s\n", dirRoot)
 	if memStorage.Loading && !testing.Testing() {
 		log.Printf("Still loading up memory storage")
 		return &memStorage
 	}
+	memStorage.Sequences = SequenceMap{"screens": 0, "contents": 0, "containers": 0, "taskrequests": 0}
 	memStorage.Loading = true
 	containers, contents, screens, tags := PopulateMemoryView(dirRoot)
 
@@ -65,6 +69,7 @@ func InitializeMemory(dirRoot string) *MemoryStorage {
 
 	memStorage.Initialized = true
 	memStorage.Loading = false
+
 	return &memStorage
 }
 
@@ -78,17 +83,23 @@ func InitializeEmptyMemory() *MemoryStorage {
 	return &memStorage
 }
 
-func AssignID(id uuid.UUID) uuid.UUID {
-	emptyID, _ := uuid.FromString("00000000-0000-0000-0000-000000000000")
-	if id == emptyID {
-		newID, _ := uuid.NewV4()
-		return newID
+// How is it that GoLang doesn't have a more sensible default fallback?
+func StringDefault(s1 string, s2 string) string {
+	if s1 == "" {
+		return s2
 	}
-	return id
+	return s1
+}
+
+func AssignNumerical(id uint, tablename string) uint {
+	// TODO: If This is using DB potentially just return 0
+	memStorage.Sequences[tablename] += 1
+	log.Printf("What the shit %s id %d", tablename, memStorage.Sequences[tablename])
+	return memStorage.Sequences[tablename]
 }
 
 func (ms MemoryStorage) CreateScreen(screen *models.Screen) (*models.Screen, error) {
-	screen.ID = AssignID(screen.ID)
+	screen.ID = AssignNumerical(screen.ID, "screens")
 	screen.CreatedAt = time.Now()
 	screen.UpdatedAt = time.Now()
 	memStorage.ValidScreens[screen.ID] = *screen
@@ -105,7 +116,7 @@ func (ms MemoryStorage) UpdateScreen(s *models.Screen) (*models.Screen, error) {
 }
 
 func (ms MemoryStorage) CreateContent(content *models.Content) (*models.Content, error) {
-	content.ID = AssignID(content.ID)
+	content.ID = AssignNumerical(content.ID, "contents")
 	content.CreatedAt = time.Now()
 	content.UpdatedAt = time.Now()
 	memStorage.ValidContent[content.ID] = *content
@@ -123,7 +134,7 @@ func (ms MemoryStorage) UpdateContent(content *models.Content) (*models.Content,
 }
 
 func (ms MemoryStorage) CreateContainer(c *models.Container) (*models.Container, error) {
-	c.ID = AssignID(c.ID)
+	c.ID = AssignNumerical(c.ID, "containers")
 	c.CreatedAt = time.Now()
 	c.UpdatedAt = time.Now()
 	memStorage.ValidContainers[c.ID] = *c
@@ -140,7 +151,7 @@ func (ms MemoryStorage) UpdateContainer(cnt *models.Container) (*models.Containe
 }
 
 func (ms MemoryStorage) CreateTask(tr *models.TaskRequest) (*models.TaskRequest, error) {
-	tr.ID = AssignID(tr.ID)
+	tr.ID = AssignNumerical(tr.ID, "taskrequests")
 	tr.CreatedAt = time.Now()
 	tr.UpdatedAt = time.Now()
 	tr.Status = models.TaskStatus.NEW
@@ -168,7 +179,7 @@ func (ms MemoryStorage) UpdateTask(t *models.TaskRequest, currentState models.Ta
 	for idx, task := range memStorage.ValidTasks {
 		// Check to ensure the state is known before the updated which should
 		// prevent MOST update errors in the memory view.
-		log.Printf("Looking at %s trying to find id(%s) in state %s", task, t.ID.String(), currentState)
+		log.Printf("Looking at %s trying to find id(%d) in state %s", task, t.ID, currentState)
 		if task.ID == t.ID && (currentState == task.Status || task.Status == t.Status) {
 			t.UpdatedAt = time.Now()
 			memStorage.ValidTasks[idx] = *t
@@ -176,7 +187,7 @@ func (ms MemoryStorage) UpdateTask(t *models.TaskRequest, currentState models.Ta
 			break
 		}
 	}
-	log.Printf("Updated the task %s", t.ID.String())
+	log.Printf("Updated the task %d", t.ID)
 	if !updated {
 		return nil, errors.New("could not find Task to update")
 	}
@@ -208,7 +219,7 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.ContentMap
 		// Careful as sometimes we do want containers even if there is no content
 		c := ct.Cnt
 		if len(ct.Content) > 0 {
-			c.PreviewUrl = "/api/preview/" + ct.Content[0].ID.String()
+			c.PreviewUrl = fmt.Sprintf("/api/preview/%d", ct.Content[0].ID)
 			log.Printf("Assigning a preview to %s as %s", c.Name, c.PreviewUrl)
 
 			maybeScreens, screenErr := GetPotentialScreens(&c)

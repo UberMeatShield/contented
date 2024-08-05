@@ -3,12 +3,12 @@ package actions
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	"contented/managers"
 	"contented/models"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gofrs/uuid"
 )
 
 type ContentsResponse struct {
@@ -22,7 +22,7 @@ func ContentsResourceList(c *gin.Context) {
 	// Optional params suuuuck in GoLang
 	cIDStr := c.Param("container_id")
 	if cIDStr != "" {
-		_, err := uuid.FromString(cIDStr)
+		_, err := strconv.ParseUint(cIDStr, 10, 32)
 		if err != nil {
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
@@ -51,13 +51,13 @@ func ContentsResourceShow(c *gin.Context) {
 	man := managers.GetManager(c)
 
 	// TODO: Make it actually just handle /content (page, number)
-	uuid, err := uuid.FromString(c.Param("content_id"))
+	id, err := strconv.ParseUint(c.Param("content_id"), 10, 32)
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
-	contentContainer, missing_err := man.GetContent(uuid)
+	contentContainer, missing_err := man.GetContent(uint(id))
 	if missing_err != nil {
 		c.AbortWithError(http.StatusNotFound, missing_err)
 		return
@@ -103,8 +103,8 @@ func ContentsResourceUpdate(c *gin.Context) {
 		return
 	}
 
-	id, _ := uuid.FromString(c.Param("content_id"))
-	exists, err := man.GetContent(id)
+	id, _ := strconv.ParseUint(c.Param("content_id"), 10, 32)
+	exists, err := man.GetContent(uint(id))
 	if err != nil || exists == nil {
 		c.AbortWithError(http.StatusNotFound, err)
 		return

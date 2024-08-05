@@ -25,9 +25,6 @@ import (
 
 	"github.com/tidwall/gjson"
 	"golang.org/x/exp/maps"
-
-	"github.com/gobuffalo/nulls"
-	"github.com/gofrs/uuid"
 )
 
 // Content Information is used as an array to dfs from a directory
@@ -59,7 +56,7 @@ func FindContainersMatcher(dir_root string, incCnt ContainerMatcher, excCnt Cont
 			if !incCnt(dir_name) || excCnt(dir_name) {
 				continue
 			}
-			id, _ := uuid.NewV4()
+			id := AssignNumerical(0, "containers")
 			c := models.Container{
 				ID:     id,
 				Name:   dir_name,
@@ -101,9 +98,9 @@ func FindContentMatcher(cnt models.Container, limit int, start_offset int, yup C
 	for idx, img := range imgs {
 		if !img.IsDir() {
 			if len(arr) < limit && idx >= start_offset {
-				id, _ := uuid.NewV4()
+				id := AssignNumerical(0, "contents")
 				content := GetContent(id, img, fqDirPath)
-				content.ContainerID = nulls.NewUUID(cnt.ID)
+				content.ContainerID = cnt.ID
 				content.Idx = idx
 
 				if yup(content.Src, content.ContentType) && !nope(content.Src, content.ContentType) {
@@ -175,7 +172,7 @@ func SniffFileType(content *os.File) (string, error) {
 }
 
 // This is a little slow so the video info might need to be a lazy load
-func GetContent(id uuid.UUID, fileInfo os.FileInfo, path string) models.Content {
+func GetContent(id uint, fileInfo os.FileInfo, path string) models.Content {
 	// https://golangcode.com/get-the-content-type-of-file/
 	contentType, err := GetMimeType(path, fileInfo.Name())
 	if err != nil {
@@ -204,8 +201,7 @@ func GetContent(id uuid.UUID, fileInfo os.FileInfo, path string) models.Content 
 		}
 	}
 
-	// TODO: Need to add the unique ID for each content (are they uniq?)
-	// TODO: Should I get a Hash onto the content as well?
+	id = AssignNumerical(id, "contents")
 	content := models.Content{
 		ID:          id,
 		Src:         fileInfo.Name(),

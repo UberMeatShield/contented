@@ -7,11 +7,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"testing"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/buffalo"
-	"github.com/gofrs/uuid"
 )
 
 type HttpError struct {
@@ -67,13 +67,13 @@ func SetupWorkers(app *buffalo.App) {
 }
 
 func FullHandler(c *gin.Context) {
-	mcID, bad_uuid := uuid.FromString(c.Param("id"))
-	if bad_uuid != nil {
-		c.AbortWithError(400, bad_uuid)
+	mcID, badId := strconv.ParseUint(c.Param("id"), 10, 32)
+	if badId != nil {
+		c.AbortWithError(400, badId)
 		return
 	}
 	man := managers.GetManager(c)
-	mc, err := man.GetContent(mcID)
+	mc, err := man.GetContent(uint(mcID))
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
@@ -84,7 +84,7 @@ func FullHandler(c *gin.Context) {
 		c.AbortWithError(http.StatusUnprocessableEntity, fq_err)
 		return
 	}
-	log.Printf("Full preview: %s for %s", fq_path, mc.ID.String())
+	log.Printf("Full preview: %s for %s", fq_path, mc.ID)
 	c.File(fq_path)
 }
 
@@ -144,7 +144,7 @@ func SplashHandler(c *gin.Context) {
 
 				// Limit the amount loaded for splash, could make it search based on render
 				// type but that is pretty over optimized.
-				contents, _, load_err := man.ListContent(managers.ContentQuery{ContainerID: cnt.ID.String(), PerPage: 100})
+				contents, _, load_err := man.ListContent(managers.ContentQuery{ContainerID: string(cnt.ID), PerPage: 100})
 				if load_err == nil {
 					cnt.Contents = *contents
 				}
@@ -154,8 +154,11 @@ func SplashHandler(c *gin.Context) {
 	}
 	if cfg.SplashContentID != "" {
 		log.Printf("It should look up %s", cfg.SplashContentID)
-		mc_id, _ := uuid.FromString(cfg.SplashContentID)
-		mc, err := man.GetContent(mc_id)
+		splashId, badId := strconv.ParseUint(cfg.SplashContentID, 10, 32)
+		if badId != nil {
+			c.AbortWithError(http.StatusBadRequest, badId)
+		}
+		mc, err := man.GetContent(uint(splashId))
 		if err == nil {
 			sr.Content = mc
 		}
@@ -175,14 +178,14 @@ func SplashHandler(c *gin.Context) {
 
 // Find the preview of a file (if applicable currently it is just returning the full path)
 func PreviewHandler(c *gin.Context) {
-	mcID, bad_uuid := uuid.FromString(c.Param("id"))
-	if bad_uuid != nil {
-		c.AbortWithError(400, bad_uuid)
+	mcID, badId := strconv.ParseUint(c.Param("id"), 10, 32)
+	if badId != nil {
+		c.AbortWithError(400, badId)
 		return
 	}
 
 	man := managers.GetManager(c)
-	mc, err := man.GetContent(mcID)
+	mc, err := man.GetContent(uint(mcID))
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
@@ -194,19 +197,19 @@ func PreviewHandler(c *gin.Context) {
 		c.AbortWithError(http.StatusUnprocessableEntity, fq_err)
 		return
 	}
-	log.Printf("Found this preview filename to view: %s for %s", fq_path, mc.ID.String())
+	log.Printf("Found this preview filename to view: %s for %s", fq_path, mc.ID)
 	c.File(fq_path)
 }
 
 // Provides a download handler by directory id and file id
 func DownloadHandler(c *gin.Context) {
-	mcID, bad_uuid := uuid.FromString(c.Param("id"))
-	if bad_uuid != nil {
-		c.AbortWithError(400, bad_uuid)
+	mcID, badId := strconv.ParseUint(c.Param("id"), 10, 32)
+	if badId != nil {
+		c.AbortWithError(400, badId)
 		return
 	}
 	man := managers.GetManager(c)
-	mc, err := man.GetContent(mcID)
+	mc, err := man.GetContent(uint(mcID))
 	if err != nil {
 		c.AbortWithError(404, err)
 		return

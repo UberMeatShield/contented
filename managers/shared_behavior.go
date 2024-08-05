@@ -16,8 +16,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/gobuffalo/nulls"
-	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 )
 
@@ -51,13 +49,9 @@ func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
 		content := ct.Content
 		log.Printf("Adding Content to %s with total content %d \n", c.Name, len(content))
 
-		// Use the database version of uuid generation (minimize the miniscule conflict)
-		unset_uuid, _ := uuid.FromString("00000000-0000-0000-0000-000000000000")
-		c.ID = unset_uuid
-
 		// Assign a default preview (maybe move this into create Structure?)
 		if len(ct.Content) > 0 {
-			c.PreviewUrl = "/api/preview/" + ct.Content[0].ID.String()
+			c.PreviewUrl = fmt.Sprintf("/api/preview/%d", ct.Content[0].ID)
 		}
 
 		// TODO: Port to using the manager somehow (note this is called from a grift)
@@ -66,7 +60,7 @@ func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
 
 		// There MUST be a way to do this as a single commit
 		for _, mc := range content {
-			mc.ContainerID = nulls.NewUUID(c.ID)
+			mc.ContainerID = c.ID
 			c_err := models.DB.Create(&mc)
 			// This is pretty damn fatal so we want it to die if the DB bails.
 			if c_err != nil {
@@ -131,7 +125,7 @@ func CreateAllPreviews(cm ContentManager) error {
 	for _, cnt := range *cnts {
 		err := CreateContainerPreviews(&cnt, cm)
 		if err != nil {
-			msg := fmt.Sprintf("Error creating previews in cnt %s - %s err: %s\n", cnt.ID.String(), cnt.Name, err)
+			msg := fmt.Sprintf("Error creating previews in cnt %d - %s err: %s\n", cnt.ID, cnt.Name, err)
 			err_msg = append(err_msg, msg)
 		}
 	}
@@ -168,7 +162,7 @@ func FindDuplicateVideos(cm ContentManager) (DuplicateContents, error) {
 			duplicates = append(duplicates, dupes...)
 		}
 		if len(cntErrors) > 0 {
-			errMsg := fmt.Sprintf("found errors in Container %s errors %s", cnt.ID.String(), cntErrors)
+			errMsg := fmt.Sprintf("found errors in Container %s errors %s", cnt.ID, cntErrors)
 			errors = append(errors, errMsg)
 		}
 	}
@@ -182,7 +176,7 @@ func FindContainerDuplicates(cm ContentManager, cnt *models.Container, contentTy
 	cs := ContentQuery{
 		ContentType: contentType,
 		PerPage:     9001, // TODO Page content in a sane fashion
-		ContainerID: cnt.ID.String(),
+		ContainerID: string(cnt.ID),
 	}
 	if contentID != "" {
 		cs.ContentID = contentID
@@ -255,7 +249,7 @@ func FindDuplicateContents(cm ContentManager, cnt *models.Container, cs ContentQ
 
 // TODO: Should this return a total of previews created or something?
 func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
-	log.Printf("About to try and create previews for %s:%s\n", c.Name, c.ID.String())
+	log.Printf("About to try and create previews for %s:%d\n", c.Name, c.ID)
 	// Reset the preview directory, then create it fresh (update tests if this changes)
 	c_err := utils.ClearContainerPreviews(c)
 	if c_err == nil {
@@ -266,7 +260,7 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
 	}
 
 	// TODO: It should fix up the total count there (-1 for unlimited?)
-	cq := ContentQuery{ContainerID: c.ID.String(), PerPage: 90000, Direction: "asc", Order: "idx"}
+	cq := ContentQuery{ContainerID: string(c.ID), PerPage: 90000, Direction: "asc", Order: "idx"}
 	content, total, q_err := cm.ListContent(cq)
 	if q_err != nil {
 		log.Fatal(q_err) // Also fatal if we can no longer list content
@@ -280,7 +274,7 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
 	if content != nil && len(*content) > 0 {
 		log.Printf("Found a set of content to make previews for %d", len(*content))
 		mcs := *content
-		c.PreviewUrl = "/api/preview/" + mcs[0].ID.String() // TODO: make this configurable in case we have a edge cache
+		c.PreviewUrl = fmt.Sprintf("/api/preview/%d", mcs[0].ID) // TODO: make this configurable in case we have a edge cache
 		cm.UpdateContainer(c)
 	}
 
@@ -292,7 +286,7 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
 	maybeScreens, _ := utils.GetPotentialScreens(c)
 	for _, mc := range update_list {
 		if mc.Preview != "" {
-			log.Printf("Created a preview %s for mc %s", mc.Preview, mc.ID.String())
+			log.Printf("Created a preview %s for mc %d", mc.Preview, mc.ID)
 			screens := utils.AssignScreensFromSet(c, &mc, maybeScreens)
 			if screens != nil {
 				log.Printf("Found new screens we should create %d", len(*screens))
@@ -362,7 +356,7 @@ func CreateContentPreviews(c *models.Container, content models.Contents) (models
 		}
 
 		// Get a list of just the preview items?  Or just update by reference?
-		log.Printf("Found a result for %s\n", result.MC_ID.String())
+		log.Printf("Found a result for %d\n", result.MC_ID)
 		if mc_update, ok := contentMap[result.MC_ID]; ok {
 			if result.Preview != "" {
 				log.Printf("We found a reply around this %s id was %s \n", result.Preview, result.MC_ID)
@@ -393,7 +387,7 @@ func StartWorker(w utils.PreviewWorker) {
 	for pr := range w.In {
 		c := pr.C
 		mc := pr.Mc
-		log.Printf("Worker %d Doing a preview for %s\n", w.Id, mc.ID.String())
+		log.Printf("Worker %d Doing a preview for %s\n", w.Id, mc.ID)
 		preview, err := utils.CreateContentPreview(c, mc)
 		pr.Out <- utils.PreviewResult{
 			C_ID:    c.ID,

@@ -26,7 +26,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/buffalo/worker"
 	"github.com/gobuffalo/pop/v6"
-	"github.com/gofrs/uuid"
 	"golang.org/x/exp/maps"
 )
 
@@ -96,7 +95,7 @@ type ContentManager interface {
 	FindActualFile(mc *models.Content) (string, error)
 
 	// Container Management
-	GetContainer(cID uuid.UUID) (*models.Container, error)
+	GetContainer(cID uint) (*models.Container, error)
 	ListContainers(cq ContainerQuery) (*models.Containers, int, error)
 	ListContainersFiltered(cq ContainerQuery) (*models.Containers, int, error)
 	ListContainersContext() (*models.Containers, int, error)
@@ -105,7 +104,7 @@ type ContentManager interface {
 	DestroyContainer(id string) (*models.Container, error)
 
 	// Content listing (why did I name it Content vs Media?)
-	GetContent(content_id uuid.UUID) (*models.Content, error)
+	GetContent(content_id uint) (*models.Content, error)
 	ListContent(cs ContentQuery) (*models.Contents, int, error)
 	ListContentContext() (*models.Contents, int, error)
 
@@ -124,7 +123,7 @@ type ContentManager interface {
 	ListScreensContext() (*models.Screens, int, error)
 	ListScreens(sr ScreensQuery) (*models.Screens, int, error)
 
-	GetScreen(psID uuid.UUID) (*models.Screen, error)
+	GetScreen(psID uint) (*models.Screen, error)
 	CreateScreen(s *models.Screen) error
 	UpdateScreen(s *models.Screen) error
 	DestroyScreen(id string) (*models.Screen, error)
@@ -137,7 +136,7 @@ type ContentManager interface {
 	UpdateTag(tag *models.Tag) error
 	DestroyTag(id string) (*models.Tag, error)
 	AssociateTag(tag *models.Tag, c *models.Content) error
-	AssociateTagByID(tagID string, mcID uuid.UUID) error
+	AssociateTagByID(tagID string, mcID uint) error
 
 	// For processing encoding requests
 	CreateTask(task *models.TaskRequest) (*models.TaskRequest, error)
@@ -147,7 +146,7 @@ type ContentManager interface {
 	// For the API exposed
 	ListTasksContext() (*models.TaskRequests, int, error)
 	ListTasks(query TaskQuery) (*models.TaskRequests, int, error)
-	GetTask(id uuid.UUID) (*models.TaskRequest, error)
+	GetTask(id uint) (*models.TaskRequest, error)
 }
 
 // Dealing with buffalo.Context vs grift.Context is kinda annoying, this handles the
@@ -358,19 +357,19 @@ func GetTagsFromParam(val string) ([]string, error) {
 	return tags, nil
 }
 
-func GetContentAndContainer(cm ContentManager, contentID uuid.UUID) (*models.Content, *models.Container, error) {
+func GetContentAndContainer(cm ContentManager, contentID uint) (*models.Content, *models.Container, error) {
 	content, cErr := cm.GetContent(contentID)
 	if cErr != nil {
 		return nil, nil, cErr
 	}
-	cnt, cntErr := cm.GetContainer(content.ContainerID.UUID)
+	cnt, cntErr := cm.GetContainer(content.ContainerID)
 	if cntErr != nil {
 		return nil, nil, cntErr
 	}
 	return content, cnt, nil
 }
 
-func CreateScreensForContent(cm ContentManager, contentID uuid.UUID, count int, offset int) ([]string, error, string) {
+func CreateScreensForContent(cm ContentManager, contentID uint, count int, offset int) ([]string, error, string) {
 	// It would be good to have the screens element take a few more params and have a wrapper on the
 	// Content manager level.
 	content, cnt, err := GetContentAndContainer(cm, contentID)
@@ -489,7 +488,7 @@ func AssignTagsToContents(man ContentManager, contents *models.Contents, tags *m
 
 // HMMMM, should this be smarter?
 func WebpFromContent(man ContentManager, content *models.Content) (string, error) {
-	sr := ScreensQuery{ContentID: content.ID.String()}
+	sr := ScreensQuery{ContentID: string(content.ID)}
 	screens, count, err := man.ListScreens(sr)
 	if err != nil {
 		return "", err
@@ -530,7 +529,7 @@ func CreateContentAfterEncoding(man ContentManager, originalContent *models.Cont
 	if f, ok := os.Stat(newFile); ok == nil {
 
 		// Check if we already have a content object for this.
-		sr := ContentQuery{Text: f.Name(), ContainerID: originalContent.ContainerID.UUID.String()}
+		sr := ContentQuery{Text: f.Name(), ContainerID: string(originalContent.ContainerID)}
 		contents, _, err := man.SearchContent(sr)
 		if err != nil {
 			return nil, err
@@ -540,7 +539,7 @@ func CreateContentAfterEncoding(man ContentManager, originalContent *models.Cont
 			return &cnts[0], nil
 		}
 
-		newId, _ := uuid.NewV4()
+		newId := utils.AssignNumerical(0, "contents")
 		newContent := utils.GetContent(newId, f, path)
 		newContent.Description = originalContent.Description
 		newContent.Tags = originalContent.Tags

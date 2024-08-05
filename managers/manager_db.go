@@ -83,7 +83,7 @@ func (cm ContentManagerDB) ListContent(cs ContentQuery) (*models.Contents, int, 
 }
 
 // Note this DOES allow for loading hidden content
-func (cm ContentManagerDB) GetContent(mcID uuid.UUID) (*models.Content, error) {
+func (cm ContentManagerDB) GetContent(mcID uint) (*models.Content, error) {
 	log.Printf("Get a single content object %s", mcID)
 	tx := cm.GetConnection()
 	mc := &models.Content{}
@@ -117,9 +117,9 @@ func (cm ContentManagerDB) UpdateContent(content *models.Content) error {
 	// Check if file exists or allow content to be 'empty'?
 	tx := cm.GetConnection()
 	if !content.NoFile {
-		cnt, cErr := cm.GetContainer(content.ContainerID.UUID)
+		cnt, cErr := cm.GetContainer(content.ContainerID)
 		if cErr != nil {
-			return fmt.Errorf("parent container %s not found", content.ContainerID.UUID.String())
+			return fmt.Errorf("parent container %d not found", content.ContainerID)
 		}
 
 		exists, pErr := utils.HasContent(content.Src, cnt.GetFqPath())
@@ -266,7 +266,7 @@ func (cm ContentManagerDB) LoadRelatedScreens(content *models.Contents) (models.
 	videoIds := []string{}
 	for _, mc := range *content {
 		if strings.Contains(mc.ContentType, "video") {
-			videoIds = append(videoIds, mc.ID.String())
+			videoIds = append(videoIds, string(mc.ID))
 		}
 	}
 	if len(videoIds) == 0 {
@@ -282,7 +282,7 @@ func (cm ContentManagerDB) LoadRelatedScreens(content *models.Contents) (models.
 
 	screenMap := models.ScreenCollection{}
 	for _, screen := range *screens {
-		log.Printf("Found screen for %s", screen.ContentID.String())
+		log.Printf("Found screen for %s", screen.ContentID)
 		if _, ok := screenMap[screen.ContentID]; ok {
 			screenMap[screen.ContentID] = append(screenMap[screen.ContentID], screen)
 			log.Printf("Screen count %s %s", screen.ContentID, screenMap[screen.ContentID])
@@ -330,7 +330,7 @@ func (cm ContentManagerDB) ListContainersFiltered(cs ContainerQuery) (*models.Co
 }
 
 // TODO: Need a preview test using the database where we do NOT have a preview created
-func (cm ContentManagerDB) GetContainer(cID uuid.UUID) (*models.Container, error) {
+func (cm ContentManagerDB) GetContainer(cID uint) (*models.Container, error) {
 	log.Printf("Get a single container %s", cID)
 	tx := cm.GetConnection()
 
@@ -348,7 +348,7 @@ func (cm *ContentManagerDB) Initialize() {
 }
 
 func (cm ContentManagerDB) GetPreviewForMC(mc *models.Content) (string, error) {
-	cnt, err := cm.GetContainer(mc.ContainerID.UUID)
+	cnt, err := cm.GetContainer(mc.ContainerID)
 	if err != nil {
 		return "DB Manager Preview no Parent Found", err
 	}
@@ -356,16 +356,16 @@ func (cm ContentManagerDB) GetPreviewForMC(mc *models.Content) (string, error) {
 	if mc.Preview != "" {
 		src = mc.Preview
 	}
-	log.Printf("DB Manager loading %s preview %s\n", mc.ID.String(), src)
+	log.Printf("DB Manager loading %s preview %s\n", mc.ID, src)
 	return utils.GetFilePathInContainer(src, cnt.GetFqPath())
 }
 
 func (cm ContentManagerDB) FindActualFile(mc *models.Content) (string, error) {
-	cnt, err := cm.GetContainer(mc.ContainerID.UUID)
+	cnt, err := cm.GetContainer(mc.ContainerID)
 	if err != nil {
 		return "DB Manager View no Parent Found", err
 	}
-	log.Printf("DB Manager View %s loading up %s\n", mc.ID.String(), mc.Src)
+	log.Printf("DB Manager View %s loading up %d\n", mc.ID, mc.Src)
 	return utils.GetFilePathInContainer(mc.Src, cnt.GetFqPath())
 }
 
@@ -399,7 +399,7 @@ func (cm ContentManagerDB) ListScreens(sr ScreensQuery) (*models.Screens, int, e
 }
 
 // Need to make it use the manager and just show the file itself
-func (cm ContentManagerDB) GetScreen(psID uuid.UUID) (*models.Screen, error) {
+func (cm ContentManagerDB) GetScreen(psID uint) (*models.Screen, error) {
 	previewScreen := &models.Screen{}
 	tx := cm.GetConnection()
 	err := tx.Find(previewScreen, psID)
@@ -584,7 +584,7 @@ func (cm ContentManagerDB) AssociateTag(t *models.Tag, mc *models.Content) error
 	return nil
 }
 
-func (cm ContentManagerDB) AssociateTagByID(tagId string, mcID uuid.UUID) error {
+func (cm ContentManagerDB) AssociateTagByID(tagId string, mcID uint) error {
 	mc, m_err := cm.GetContent(mcID)
 	t, t_err := cm.GetTag(tagId)
 	if m_err != nil || t_err != nil {
@@ -651,7 +651,7 @@ func (cm ContentManagerDB) UpdateTask(t *models.TaskRequest, currentState models
 	return cm.GetTask(t.ID)
 }
 
-func (cm ContentManagerDB) GetTask(id uuid.UUID) (*models.TaskRequest, error) {
+func (cm ContentManagerDB) GetTask(id uint) (*models.TaskRequest, error) {
 	task := models.TaskRequest{}
 	tx := cm.GetConnection()
 	err := tx.Find(&task, id)

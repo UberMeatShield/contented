@@ -3,6 +3,7 @@ package actions
 import (
 	"log"
 	"os"
+	"strconv"
 
 	"contented/managers"
 	"contented/models"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/buffalo"
-	"github.com/gofrs/uuid"
 )
 
 // Following naming logic is implemented in Buffalo:
@@ -36,7 +36,7 @@ func ScreensResourceList(c *gin.Context) {
 	mcStrID := managers.StringDefault(c.Param("content_id"), "")
 	log.Printf("Content ID specified %s", mcStrID)
 	if mcStrID != "" {
-		_, err := uuid.FromString(mcStrID)
+		_, err := strconv.ParseUint(mcStrID, 10, 32)
 		if err != nil {
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
@@ -56,7 +56,6 @@ func ScreensResourceList(c *gin.Context) {
 		Total:   total,
 		Results: *screens,
 	}
-	log.Printf("WHAT THE HELL %s", res)
 	c.JSON(200, res)
 }
 
@@ -64,14 +63,14 @@ func ScreensResourceList(c *gin.Context) {
 // the path GET /screens/{screen_id}
 func ScreensResourceShow(c *gin.Context) {
 	psStrID := c.Param("screen_id")
-	psID, badUUID := uuid.FromString(psStrID)
+	psID, badUUID := strconv.ParseUint(psStrID, 10, 32)
 	if badUUID != nil {
 		c.AbortWithError(400, badUUID)
 		return
 	}
 
 	man := managers.GetManager(c)
-	screen, err := man.GetScreen(psID)
+	screen, err := man.GetScreen(uint(psID))
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
@@ -125,12 +124,12 @@ func ScreensResourceUpdate(c *gin.Context) {
 	}
 
 	man := managers.GetManager(c)
-	id, idErr := uuid.FromString(c.Param("screen_id"))
+	id, idErr := strconv.ParseUint(c.Param("screen_id"), 10, 32)
 	if idErr != nil {
 		c.AbortWithError(http.StatusBadRequest, idErr)
 		return
 	}
-	screen, notFoundErr := man.GetScreen(id)
+	screen, notFoundErr := man.GetScreen(uint(id))
 	if notFoundErr != nil {
 		c.AbortWithError(http.StatusNotFound, err)
 		return
@@ -139,7 +138,7 @@ func ScreensResourceUpdate(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, err)
 		return
 	}
-	checkScreen, _ := man.GetScreen(id)
+	checkScreen, _ := man.GetScreen(uint(id))
 	c.JSON(http.StatusOK, checkScreen)
 }
 

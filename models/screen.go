@@ -8,19 +8,20 @@ import (
 
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gobuffalo/validate/v3"
-	"github.com/gofrs/uuid"
+	"gorm.io/gorm"
 )
 
 // A set of previews for a particular content element.
 type Screen struct {
-	ID        uuid.UUID `json:"id" db:"id"`
-	ContentID uuid.UUID `json:"content_id" db:"content_id"`
-	CreatedAt time.Time `json:"created" db:"created_at"`
-	UpdatedAt time.Time `json:"updated" db:"updated_at"`
-	Path      string    `json:"-" db:"path"`
-	Src       string    `json:"src" db:"src"`
-	Idx       int       `json:"idx" db:"idx"`
-	SizeBytes int64     `json:"size_bytes" db:"size_bytes"`
+	ID        uint      `json:"id" gorm:"primaryKey"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
+	ContentID uint           `json:"content_id" db:"content_id"`
+	Path      string         `json:"-" db:"path"`
+	Src       string         `json:"src" db:"src"`
+	Idx       int            `json:"idx" db:"idx"`
+	SizeBytes int64          `json:"size_bytes" db:"size_bytes"`
 }
 
 type ScreensJsonSort func(i, j int) bool
@@ -40,7 +41,7 @@ func GetScreensSort(arr Screens, jsonFieldName string) ContentJsonSort {
 		}
 	case "content_id":
 		theSort = func(i, j int) bool {
-			return arr[i].ContentID.String() < arr[j].ContentID.String()
+			return arr[i].ContentID < arr[j].ContentID
 		}
 	case "size":
 		theSort = func(i, j int) bool {
@@ -74,8 +75,8 @@ func GetScreensOrder(order string, direction string) string {
 
 // Screens is not required by pop and may be deleted
 type Screens []Screen
-type ScreenMap map[uuid.UUID]Screen
-type ScreenCollection map[uuid.UUID]Screens
+type ScreenMap map[uint]Screen
+type ScreenCollection map[uint]Screens
 
 func (arr Screens) Reverse() Screens {
 	if len(arr) > 1 {

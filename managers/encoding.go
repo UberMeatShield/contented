@@ -41,7 +41,7 @@ func EncodeVideos(cm ContentManager) error {
 	log.Printf("Encoding complete\n%s\n", lineBreak)
 	for _, res := range all_results {
 		if res.Err == nil {
-			msg := fmt.Sprintf("Encoding Success %s media ID %s\n", res.NewVideo, res.MC_ID.String())
+			msg := fmt.Sprintf("Encoding Success %s media ID %d\n", res.NewVideo, res.MC_ID)
 			log.Print(msg)
 		}
 	}
@@ -56,7 +56,7 @@ func EncodeVideos(cm ContentManager) error {
 				msg := fmt.Sprintf("Failure encoding %s failure was %s id %s", res.Err, content.Src, content.ID)
 				log.Print(msg)
 			} else {
-				msg := fmt.Sprintf("Failure encoding %s failure was %s (deleted?)", res.Err, res.MC_ID.String())
+				msg := fmt.Sprintf("Failure encoding %s failure was %d (deleted?)", res.Err, res.MC_ID)
 				log.Print(msg)
 			}
 			err_cnt++
@@ -69,7 +69,7 @@ func EncodeVideos(cm ContentManager) error {
 }
 
 func EncodeContainer(c *models.Container, cm ContentManager) (*utils.EncodingResults, error) {
-	content, _, q_err := cm.ListContent(ContentQuery{ContainerID: c.ID.String(), PerPage: 90000})
+	content, _, q_err := cm.ListContent(ContentQuery{ContainerID: string(c.ID), PerPage: 90000})
 	if q_err != nil {
 		log.Fatal(q_err) // Also fatal if we can no longer list content (empty is just [])
 	}
@@ -149,7 +149,7 @@ func StartEncoder(ew utils.EncodingWorker) {
 		mc := req.Mc
 
 		// Should check the on disk size and add a check to look at a post encode filesize
-		log.Printf("Worker %d doing encoding for %s - %s\n", ew.Id, mc.ID.String(), mc.Src)
+		log.Printf("Worker %d doing encoding for %s - %d\n", ew.Id, mc.ID, mc.Src)
 		msg, err, converted := utils.ConvertVideoToH265(req.SrcFile, req.DstFile)
 		if err == nil && !converted {
 			err = fmt.Errorf("a request was made to convert %s but it did not encode %s", req.SrcFile, msg)

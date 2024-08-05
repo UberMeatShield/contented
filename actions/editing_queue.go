@@ -18,9 +18,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/buffalo/worker"
-	"github.com/gobuffalo/nulls"
 	"github.com/gobuffalo/pop/v6"
-	"github.com/gofrs/uuid"
 )
 
 type TasksQueuedResponse struct {
@@ -177,30 +175,29 @@ func DuplicatesWrapper(args worker.Args) error {
 	return managers.DetectDuplicatesTask(man, taskId)
 }
 
-func GetTaskId(args worker.Args) (uuid.UUID, error) {
+func GetTaskId(args worker.Args) (uint, error) {
 	taskId := ""
 	for k, v := range args {
 		if k == "id" {
 			taskId = v.(string)
 		}
 	}
-	id, err := uuid.FromString(taskId)
+	id, err := strconv.ParseUint(taskId, 10, 32)
 	if err != nil {
 		log.Printf("Failed to load task bad id %s", err)
-		bad, _ := uuid.NewV4()
-		return bad, err
+		return 0, err
 	}
-	return id, err
+	return uint(id), err
 }
 
 func WebpFromScreensHandler(c *gin.Context) {
-	contentID, bad_uuid := uuid.FromString(c.Param("content_id"))
-	if bad_uuid != nil {
-		c.AbortWithError(http.StatusBadRequest, bad_uuid)
+	contentID, bad_id := strconv.ParseUint(c.Param("content_id"), 10, 32)
+	if bad_id != nil {
+		c.AbortWithError(http.StatusBadRequest, bad_id)
 		return
 	}
 	man := managers.GetManager(c)
-	content, err := man.GetContent(contentID)
+	content, err := man.GetContent(uint(contentID))
 	if err != nil {
 		c.AbortWithError(http.StatusNotFound, err)
 		return
@@ -215,13 +212,13 @@ func WebpFromScreensHandler(c *gin.Context) {
 
 // Should deny quickly if the media content type is incorrect for the action
 func VideoEncodingHandler(c *gin.Context) {
-	contentID, bad_uuid := uuid.FromString(c.Param("content_id"))
-	if bad_uuid != nil {
-		c.AbortWithError(http.StatusBadRequest, bad_uuid)
+	contentID, bad_id := strconv.ParseUint(c.Param("content_id"), 10, 32)
+	if bad_id != nil {
+		c.AbortWithError(http.StatusBadRequest, bad_id)
 		return
 	}
 	man := managers.GetManager(c)
-	content, err := man.GetContent(contentID)
+	content, err := man.GetContent(uint(contentID))
 	if err != nil {
 		c.AbortWithError(http.StatusNotFound, err)
 		return
@@ -236,9 +233,9 @@ func VideoEncodingHandler(c *gin.Context) {
 }
 
 func ContainerVideoEncodingHandler(c *gin.Context) {
-	containerID, bad_uuid := uuid.FromString(c.Param("container_id"))
-	if bad_uuid != nil {
-		c.AbortWithError(http.StatusBadRequest, bad_uuid)
+	containerID, bad_id := strconv.ParseUint(c.Param("container_id"), 10, 32)
+	if bad_id != nil {
+		c.AbortWithError(http.StatusBadRequest, bad_id)
 		return
 	}
 
@@ -246,7 +243,7 @@ func ContainerVideoEncodingHandler(c *gin.Context) {
 	// and then attempt to act on them.  Unify it?
 	man := managers.GetManager(c)
 	contentQuery := managers.ContentQuery{
-		ContainerID: containerID.String(),
+		ContainerID: string(containerID),
 		ContentType: "video",
 		PerPage:     man.GetCfg().Limit,
 	}
@@ -279,19 +276,19 @@ func ContainerVideoEncodingHandler(c *gin.Context) {
 
 // Should deny quickly if the media content type is incorrect for the action
 func TaggingHandler(c *gin.Context) {
-	contentID, bad_uuid := uuid.FromString(c.Param("content_id"))
-	if bad_uuid != nil {
-		c.AbortWithError(http.StatusBadRequest, bad_uuid)
+	contentID, bad_id := strconv.ParseUint(c.Param("content_id"), 10, 32)
+	if bad_id != nil {
+		c.AbortWithError(http.StatusBadRequest, bad_id)
 		return
 	}
 	man := managers.GetManager(c)
-	content, err := man.GetContent(contentID)
+	content, err := man.GetContent(uint(contentID))
 	if err != nil {
 		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
 	tr := models.TaskRequest{
-		ContentID: nulls.NewUUID(content.ID),
+		ContentID: content.ID,
 		Operation: models.TaskOperation.TAGGING,
 	}
 	QueueTaskRequest(c, man, &tr)
@@ -299,9 +296,9 @@ func TaggingHandler(c *gin.Context) {
 
 // Container tagging would probably be better as another single task or the managers just need to cache the tasks in redis.
 func ContainerTaggingHandler(c *gin.Context) {
-	containerID, bad_uuid := uuid.FromString(c.Param("container_id"))
-	if bad_uuid != nil {
-		c.AbortWithError(http.StatusBadRequest, bad_uuid)
+	containerID, badId := strconv.ParseUint(c.Param("container_id"), 10, 32)
+	if badId != nil {
+		c.AbortWithError(http.StatusBadRequest, badId)
 		return
 	}
 
@@ -309,7 +306,7 @@ func ContainerTaggingHandler(c *gin.Context) {
 	// and then attempt to act on them.  Unify it?
 	man := managers.GetManager(c)
 	contentQuery := managers.ContentQuery{
-		ContainerID: containerID.String(),
+		ContainerID: string(containerID),
 		PerPage:     man.GetCfg().Limit,
 	}
 	_, total, tagErr := man.ListAllTags(managers.TagQuery{PerPage: 1})
@@ -335,7 +332,7 @@ func ContainerTaggingHandler(c *gin.Context) {
 	tasks := models.TaskRequests{}
 	for _, content := range *contents {
 		task := models.TaskRequest{
-			ContentID: nulls.NewUUID(content.ID),
+			ContentID: content.ID,
 			Operation: models.TaskOperation.TAGGING,
 		}
 		tasks = append(tasks, task)
@@ -363,16 +360,16 @@ func DupesHandler(c *gin.Context) {
 
 	// This is kinda ugly, might want to make it just two handlers
 	if cId != "" {
-		if containerID, err := uuid.FromString(cId); err == nil {
-			tr.ContainerID = nulls.NewUUID(containerID)
+		if containerID, err := strconv.ParseUint(cId, 10, 32); err == nil {
+			tr.ContainerID = uint(containerID)
 			query.ContainerID = cId
 		} else {
 			c.AbortWithError(http.StatusBadRequest, fmt.Errorf("invalid containerID %s", cId))
 			return
 		}
 	} else if id != "" {
-		if contentID, err := uuid.FromString(id); err == nil {
-			tr.ContentID = nulls.NewUUID(contentID)
+		if contentID, err := strconv.ParseUint(id, 10, 32); err == nil {
+			tr.ContentID = uint(contentID)
 			query.ContentID = id
 		} else {
 			c.AbortWithError(http.StatusBadRequest, fmt.Errorf("invalid containerID %s", cId))
@@ -408,9 +405,9 @@ func DupesHandler(c *gin.Context) {
 
 // Should deny quickly if the media content type is incorrect for the action
 func ContentTaskScreensHandler(c *gin.Context) {
-	contentID, bad_uuid := uuid.FromString(c.Param("content_id"))
-	if bad_uuid != nil {
-		c.AbortWithError(400, bad_uuid)
+	contentID, bad_id := strconv.ParseUint(c.Param("content_id"), 10, 32)
+	if bad_id != nil {
+		c.AbortWithError(400, bad_id)
 	}
 	startTimeSeconds, numberOfScreens, err := ValidateScreensParams(c.Request.URL.Query())
 	if err != nil {
@@ -419,7 +416,7 @@ func ContentTaskScreensHandler(c *gin.Context) {
 	}
 
 	man := managers.GetManager(c)
-	content, cErr := man.GetContent(contentID)
+	content, cErr := man.GetContent(uint(contentID))
 	if cErr != nil {
 		c.AbortWithError(http.StatusNotFound, cErr)
 		return
@@ -451,9 +448,9 @@ func ValidateScreensParams(params url.Values) (int, int, error) {
 }
 
 func ContainerScreensHandler(c *gin.Context) {
-	cID, badUuid := uuid.FromString(c.Param("container_id"))
-	if badUuid != nil {
-		c.AbortWithError(http.StatusBadRequest, badUuid)
+	cID, badId := strconv.ParseUint(c.Param("container_id"), 10, 32)
+	if badId != nil {
+		c.AbortWithError(http.StatusBadRequest, badId)
 		return
 	}
 	cfg := utils.GetCfg()
@@ -464,7 +461,7 @@ func ContainerScreensHandler(c *gin.Context) {
 	}
 
 	cQ := managers.ContentQuery{
-		ContainerID: cID.String(),
+		ContainerID: string(cID),
 		ContentType: "video",
 		PerPage:     cfg.Limit,
 	}
@@ -500,7 +497,7 @@ func CreateScreensTask(content *models.Content, numberOfScreens int, startTimeSe
 		return nil, fmt.Errorf("content was not a video %s", content.ContentType)
 	}
 	tr := models.TaskRequest{
-		ContentID:        nulls.NewUUID(content.ID),
+		ContentID:        content.ID,
 		Operation:        models.TaskOperation.SCREENS,
 		NumberOfScreens:  numberOfScreens,
 		StartTimeSeconds: startTimeSeconds,
@@ -517,9 +514,9 @@ func CreateVideoEncodingTask(content *models.Content, codecChoice string) (*mode
 	codec := managers.StringDefault(codecChoice, cfg.CodecForConversion)
 
 	// Check codec seems valid?
-	log.Printf("Requesting a re-encode %s with codec %s for contentID %s", content.Src, codec, content.ID.String())
+	log.Printf("Requesting a re-encode %s with codec %s for contentID %s", content.Src, codec, content.ID)
 	tr := models.TaskRequest{
-		ContentID:        nulls.NewUUID(content.ID),
+		ContentID:        content.ID,
 		Operation:        models.TaskOperation.ENCODING,
 		NumberOfScreens:  0,
 		StartTimeSeconds: 0,
@@ -536,7 +533,7 @@ func CreateWebpTask(content *models.Content) (*models.TaskRequest, error) {
 
 	// TODO: The actual task processing should check if the entry has actual screens
 	tr := models.TaskRequest{
-		ContentID: nulls.NewUUID(content.ID),
+		ContentID: content.ID,
 		Operation: models.TaskOperation.WEBP,
 	}
 	return &tr, nil
@@ -582,7 +579,7 @@ func AddTaskRequest(man managers.ContentManager, tr *models.TaskRequest) (*model
 		Queue:   "default",
 		Handler: tr.Operation.String(),
 		Args: worker.Args{
-			"id": tr.ID.String(),
+			"id": tr.ID,
 		},
 	}
 

@@ -10,12 +10,13 @@ import (
 
 // Tag is used by pop to map your taggings database table to your go code.
 type Tag struct {
-	ID          string    `json:"id" db:"id"`
-	Description string    `json:"description" db:"description"`
-	TagType     string    `json:"tag_type" db:"tag_type" default:"keyword"`
-	CreatedAt   time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
-	Contents    Contents  `json:"contents,omitempty" many_to_many:"contents_tags"`
+	ID        string    `json:"id" db:"id"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+
+	Description string   `json:"description" db:"description"`
+	TagType     string   `json:"tag_type" db:"tag_type" default:"keyword"`
+	Contents    Contents `json:"contents,omitempty" many_to_many:"contents_tags"`
 }
 
 // String is not required by pop and may be deleted

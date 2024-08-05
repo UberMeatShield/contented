@@ -14,9 +14,8 @@ import (
 	"net/url"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
-
-	"github.com/gofrs/uuid"
 )
 
 // Provides the support for looking up content by ID while only using memory
@@ -159,10 +158,10 @@ func (cm ContentManagerMemory) getContentFiltered(cs ContentQuery) (*models.Cont
 
 	// Most common initial filtering call
 	if cs.ContainerID != "" {
-		cID, cErr := uuid.FromString(cs.ContainerID)
+		cID, cErr := strconv.ParseUint(cs.ContainerID, 10, 64)
 		if cErr == nil {
 			for _, mc := range mem.ValidContent {
-				if mc.ContainerID.Valid && mc.ContainerID.UUID == cID {
+				if mc.ContainerID == uint(cID) {
 					cidArr = append(cidArr, mc)
 				}
 			}
@@ -188,10 +187,10 @@ func (cm ContentManagerMemory) getContentFiltered(cs ContentQuery) (*models.Cont
 		mcArr = visibleArr
 	}
 
-	if id, err := uuid.FromString(cs.ContentID); err == nil {
+	if id, err := strconv.ParseUint(cs.ContentID, 10, 32); err == nil {
 		idArr := models.Contents{}
 		for _, mc := range mcArr {
-			if mc.ID == id {
+			if mc.ID == uint(id) {
 				idArr = append(idArr, mc)
 			}
 		}
@@ -284,10 +283,10 @@ func (cm ContentManagerMemory) ListContentFiltered(cs ContentQuery) (*models.Con
 	mem := cm.GetStore()
 
 	// Need to test invalid / empty ""
-	containerID, invalid := uuid.FromString(cs.ContainerID)
+	containerID, invalid := strconv.ParseUint(cs.ContainerID, 10, 32)
 	if invalid == nil {
 		for _, content := range mem.ValidContent {
-			if content.ContainerID.Valid && content.ContainerID.UUID == containerID {
+			if content.ContainerID == uint(containerID) {
 				m_arr = append(m_arr, content)
 			}
 		}
@@ -297,9 +296,9 @@ func (cm ContentManagerMemory) ListContentFiltered(cs ContentQuery) (*models.Con
 		}
 	}
 
-	if contentID, badIdErr := uuid.FromString(cs.ContentID); badIdErr == nil {
+	if contentID, badIdErr := strconv.ParseUint(cs.ContentID, 10, 32); badIdErr == nil {
 		for _, content := range m_arr {
-			if content.ID == contentID {
+			if content.ID == uint(contentID) {
 				m_arr = models.Contents{content}
 				break
 			}
@@ -341,7 +340,7 @@ func (cm ContentManagerMemory) ListContentFiltered(cs ContentQuery) (*models.Con
 }
 
 // Get a content element by the ID
-func (cm ContentManagerMemory) GetContent(mcID uuid.UUID) (*models.Content, error) {
+func (cm ContentManagerMemory) GetContent(mcID uint) (*models.Content, error) {
 	// log.Printf("Memory Get a single content %s", mcID)
 	mem := cm.GetStore()
 	if mc, ok := mem.ValidContent[mcID]; ok {
@@ -367,9 +366,9 @@ func (cm ContentManagerMemory) UpdateContainer(cnt *models.Container) (*models.C
 func (cm ContentManagerMemory) UpdateContent(content *models.Content) error {
 	// TODO: Should I be able to ignore being in a container if there is no file?
 	if !content.NoFile {
-		cnt, cErr := cm.GetContainer(content.ContainerID.UUID)
+		cnt, cErr := cm.GetContainer(content.ContainerID)
 		if cErr != nil {
-			msg := fmt.Sprintf("parent container %s not found", content.ContainerID.UUID.String())
+			msg := fmt.Sprintf("parent container %s not found", content.ContainerID)
 			log.Print(msg)
 			return errors.New(msg)
 		}
@@ -449,17 +448,17 @@ func (cm ContentManagerMemory) ListContainersFiltered(cs ContainerQuery) (*model
 }
 
 // Get a single container given the primary key
-func (cm ContentManagerMemory) GetContainer(cID uuid.UUID) (*models.Container, error) {
+func (cm ContentManagerMemory) GetContainer(cID uint) (*models.Container, error) {
 	// log.Printf("Get a single container %s", cID)
 	mem := cm.GetStore()
 	if c, ok := mem.ValidContainers[cID]; ok {
 		return &c, nil
 	}
-	return nil, errors.New("Memory manager did not find this container id: " + cID.String())
+	return nil, fmt.Errorf("Memory manager did not find this container id: %d", cID)
 }
 
 func (cm ContentManagerMemory) GetPreviewForMC(mc *models.Content) (string, error) {
-	cnt, err := cm.GetContainer(mc.ContainerID.UUID)
+	cnt, err := cm.GetContainer(mc.ContainerID)
 	if err != nil {
 		return "Memory Manager Preview no Parent Found", err
 	}
@@ -467,23 +466,23 @@ func (cm ContentManagerMemory) GetPreviewForMC(mc *models.Content) (string, erro
 	if mc.Preview != "" {
 		src = mc.Preview
 	}
-	log.Printf("Memory Manager loading %s preview %s\n", mc.ID.String(), src)
+	log.Printf("Memory Manager loading %s preview %s\n", mc.ID, src)
 	return utils.GetFilePathInContainer(src, cnt.GetFqPath())
 }
 
 func (cm ContentManagerMemory) FindActualFile(mc *models.Content) (string, error) {
-	cnt, err := cm.GetContainer(mc.ContainerID.UUID)
+	cnt, err := cm.GetContainer(mc.ContainerID)
 	if err != nil {
 		return "Memory Manager View no Parent Found", err
 	}
-	log.Printf("Memory Manager View %s loading up %s\n", mc.ID.String(), mc.Src)
+	log.Printf("Memory Manager View %d loading up %s\n", mc.ID, mc.Src)
 	return utils.GetFilePathInContainer(mc.Src, cnt.GetFqPath())
 }
 
 // If you want to do in memory testing and already manually created previews this will
 // then try and use the previews for the in memory manager.
 func (cm ContentManagerMemory) SetPreviewIfExists(mc *models.Content) (string, error) {
-	c, err := cm.GetContainer(mc.ContainerID.UUID)
+	c, err := cm.GetContainer(mc.ContainerID)
 	if err != nil {
 		log.Fatal(err)
 		return "", err
@@ -513,12 +512,12 @@ func (cm ContentManagerMemory) ListScreens(sq ScreensQuery) (*models.Screens, in
 	mem := cm.GetStore()
 	s_arr := models.Screens{}
 	if sq.ContentID != "" {
-		contentID, idErr := uuid.FromString(sq.ContentID)
+		contentID, idErr := strconv.ParseUint(sq.ContentID, 10, 32)
 		if idErr != nil {
 			return nil, -1, idErr
 		}
 		for _, s := range mem.ValidScreens {
-			if s.ContentID == contentID {
+			if s.ContentID == uint(contentID) {
 				s_arr = append(s_arr, s)
 			}
 		}
@@ -541,7 +540,7 @@ func (cm ContentManagerMemory) ListScreens(sq ScreensQuery) (*models.Screens, in
 	return &s_arr, count, nil
 }
 
-func (cm ContentManagerMemory) GetScreen(psID uuid.UUID) (*models.Screen, error) {
+func (cm ContentManagerMemory) GetScreen(psID uint) (*models.Screen, error) {
 	// Need to build out a memory setup and look the damn thing up :(
 	mem := cm.GetStore()
 	if screen, ok := mem.ValidScreens[psID]; ok {
@@ -650,7 +649,7 @@ func (cm ContentManagerMemory) AssociateTag(t *models.Tag, mc *models.Content) e
 	return errors.New(fmt.Sprintf("Tag %s not in the list of valid tags", t))
 }
 
-func (cm ContentManagerMemory) AssociateTagByID(tagId string, mcID uuid.UUID) error {
+func (cm ContentManagerMemory) AssociateTagByID(tagId string, mcID uint) error {
 	t, err := cm.GetTag(tagId)
 	if err == nil && t != nil {
 		content, cErr := cm.GetContent(mcID)
@@ -662,15 +661,6 @@ func (cm ContentManagerMemory) AssociateTagByID(tagId string, mcID uuid.UUID) er
 	msg := fmt.Sprintf("Failed to find either the tag %s or error %s", t, err)
 	log.Printf(msg)
 	return errors.New(msg)
-}
-
-func AssignID(id uuid.UUID) uuid.UUID {
-	emptyID, _ := uuid.FromString("00000000-0000-0000-0000-000000000000")
-	if id == emptyID {
-		newID, _ := uuid.NewV4()
-		return newID
-	}
-	return id
 }
 
 // TODO: Fix this so that the screen must be under the
@@ -750,7 +740,7 @@ func (cm ContentManagerMemory) UpdateTask(t *models.TaskRequest, currentState mo
 	return cm.GetTask(t.ID)
 }
 
-func (cm ContentManagerMemory) GetTask(id uuid.UUID) (*models.TaskRequest, error) {
+func (cm ContentManagerMemory) GetTask(id uint) (*models.TaskRequest, error) {
 	mem := cm.GetStore()
 	for idx, task := range mem.ValidTasks {
 		if task.ID == id {
@@ -796,13 +786,13 @@ func (cm ContentManagerMemory) ListTasks(query TaskQuery) (*models.TaskRequests,
 	mem := cm.GetStore()
 	task_arr := mem.ValidTasks
 	if query.ContentID != "" {
-		contentID, err := uuid.FromString(query.ContentID)
+		contentID, err := strconv.ParseUint(query.ContentID, 10, 32)
 		filtered_tasks := models.TaskRequests{}
 		if err != nil {
 			return nil, 0, err
 		}
 		for _, task := range task_arr {
-			if task.ContentID.UUID == contentID {
+			if task.ContentID == uint(contentID) {
 				filtered_tasks = append(filtered_tasks, task)
 			}
 		}

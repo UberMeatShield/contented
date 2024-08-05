@@ -5,6 +5,9 @@ import (
 
 	"github.com/gobuffalo/envy"
 	"github.com/gobuffalo/pop/v6"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 // DB is a connection to your database to be used
@@ -19,4 +22,19 @@ func init() {
 		log.Fatal(err)
 	}
 	pop.Debug = env == "development"
+}
+
+/**
+ * Build out a set of gorm related connections
+ */
+var GormDB *gorm.DB
+
+func InitGorm() {
+	GormDB, err := gorm.Open(postgres.Open("db"), &gorm.Config{})
+	if err != nil {
+		panic("failed to connect database")
+	}
+	if GormDB != nil {
+		log.Printf("Conected to the db")
+	}
 }
