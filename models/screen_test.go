@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"path/filepath"
 )
 
@@ -41,18 +42,18 @@ func (ms *ModelSuite) Test_ContentScreens() {
 	}
 	perr2 := ms.DB.Create(&p2)
 	if perr2 != nil {
-		ms.Fail("Couldn't create preview screen 2 %s", perr2)
+		ms.Fail(fmt.Sprintf("Couldn't create preview screen 2 %s", perr2))
 	}
 
 	check := Content{}
 	q_err := ms.DB.Eager().Find(&check, mc.ID)
 	if q_err != nil {
-		ms.Fail("Could not query for this id %s"+mc.ID.String(), q_err)
+		ms.Fail(fmt.Sprintf("Could not query for this id %d %s", mc.ID, q_err))
 	}
 	if check.Screens == nil {
-		ms.Fail("Failed to load screens" + mc.ID.String())
+		ms.Fail(fmt.Sprintf("Failed to load screens %d", mc.ID))
 	}
 	if len(check.Screens) != 2 {
-		ms.Fail("The screens did not load back: " + mc.ID.String())
+		ms.Fail(fmt.Sprintf("The screens did not load back: %d", mc.ID))
 	}
 }

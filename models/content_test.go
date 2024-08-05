@@ -55,7 +55,7 @@ func (ms *ModelSuite) Test_Content() {
 	fmt.Printf("Loaded tags %s \n", tags_check)
 
 	if q_err != nil {
-		ms.Fail("Could not query for this id" + mc.ID.String())
+		ms.Fail(fmt.Sprintf("Could not query for this id %d", mc.ID))
 	}
 	if len(check.Tags) == 0 {
 		ms.Fail("None of the tags have been loaded")

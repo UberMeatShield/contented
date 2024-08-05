@@ -1,7 +1,5 @@
 package models
 
-import "github.com/gobuffalo/nulls"
-
 func (ms *ModelSuite) Test_TaskRequests() {
 	content := Content{Src: "A"}
 	err := ms.DB.Save(&content)
@@ -10,7 +8,7 @@ func (ms *ModelSuite) Test_TaskRequests() {
 	tr := TaskRequest{
 		Status:    TaskStatus.PENDING,
 		Operation: TaskOperation.ENCODING,
-		ContentID: nulls.NewUUID(content.ID),
+		ContentID: content.ID,
 	}
 	ms.NoError(ms.DB.Create(&tr), "it should be able to create a Task Request")
 	ms.NotZero(tr.ID, "It should have inserted a uuid")
@@ -34,7 +32,7 @@ func (ms *ModelSuite) Test_ContainerTaskRequests() {
 	tr := TaskRequest{
 		Status:      TaskStatus.PENDING,
 		Operation:   TaskOperation.DUPES,
-		ContainerID: nulls.NewUUID(container.ID),
+		ContainerID: container.ID,
 	}
 	ms.NoError(ms.DB.Create(&tr), "it should be able to create a Task Request")
 	ms.NotZero(tr.ID, "It should have inserted a uuid")

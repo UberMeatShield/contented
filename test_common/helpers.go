@@ -18,8 +18,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/envy"
-	"github.com/gobuffalo/nulls"
-	"github.com/gofrs/uuid"
 )
 
 const TOTAL_CONTAINERS = 9
@@ -128,17 +126,15 @@ func InitFakeApp(use_db bool) *utils.DirConfigEntry {
 		}
 
 		// Fake somehidden content (put int on disk maybe?)
-		cID, _ := uuid.NewV4()
 		hiddenContainer := models.Container{
-			ID:     cID,
+			ID:     utils.AssignNumerical(0, "containers"),
 			Name:   "hide",
 			Hidden: true,
 		}
 
-		mcID, _ := uuid.NewV4()
 		hiddenContent := models.Content{
-			ID:          mcID,
-			ContainerID: nulls.NewUUID(hiddenContainer.ID),
+			ID:          utils.AssignNumerical(0, "contents"),
+			ContainerID: hiddenContainer.ID,
 			Hidden:      true,
 			Src:         "hidden.txt",
 		}
@@ -170,7 +166,7 @@ func CreateContentByDirName(test_dir_name string) (*models.Container, models.Con
 		return nil, nil, c_err
 	}
 	for _, mc := range content {
-		mc.ContainerID = nulls.NewUUID(cnt.ID)
+		mc.ContainerID = cnt.ID
 		m_err := models.DB.Create(&mc)
 		if m_err != nil {
 			return nil, nil, m_err
@@ -207,7 +203,7 @@ func CleanupContainer(c *models.Container) error {
 	fqPath := filepath.Join(cfg.Dir, c.Name)
 	fmt.Printf("CleanupContent() Test trying to cleanup %s", fqPath)
 	if f, err := os.Stat(fqPath); !os.IsNotExist(err) {
-		if f.IsDir() == true {
+		if f.IsDir() {
 			err := os.Remove(fqPath)
 			if err != nil {
 				fmt.Printf("CleanupContent() Failed to cleanup test %s", err)

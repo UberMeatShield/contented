@@ -1,9 +1,5 @@
 package models
 
-import (
-	"github.com/gobuffalo/nulls"
-)
-
 func (ms *ModelSuite) Test_Container() {
 	// ms.LoadFixture("Container")
 	// ms.LoadFixture("Content")
@@ -33,11 +29,11 @@ func (ms *ModelSuite) Test_Container_Query() {
 
 	mc1 := Content{
 		Src:         "first",
-		ContainerID: nulls.NewUUID(c.ID),
+		ContainerID: c.ID,
 	}
 	mc2 := Content{
 		Src:         "second",
-		ContainerID: nulls.NewUUID(c.ID),
+		ContainerID: c.ID,
 	}
 	ms.DB.Create(&mc1)
 	ms.DB.Create(&mc2)
