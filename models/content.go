@@ -22,7 +22,6 @@ type Content struct {
 	Src         string `json:"src" db:"src"`
 	ContentType string `json:"content_type" db:"content_type"`
 	Preview     string `json:"preview" db:"preview"`
-	ContainerID int    `json:"container_id" db:"container_id" default:"nil"`
 	Idx         int    `json:"idx" db:"idx" default:"0"`
 	Active      bool   `json:"active" db:"active" default:"true"`
 	Corrupt     bool   `json:"corrupt" db:"corrupt" default:"false"`
@@ -35,8 +34,11 @@ type Content struct {
 	Meta string `json:"meta" db:"meta" default:""`
 
 	// Joins (Eager loading is not working?)
-	Screens Screens `json:"screens" has_many:"preview_screens"`
-	Tags    Tags    `json:"tags" many_to_many:"contents_tags"`
+
+	Screens     Screens `json:"screens" has_many:"preview_screens"`
+	ContainerID int     `json:"container_id" db:"container_id" default:"nil"`
+
+	Tags Tags `json:"tags,omitempty" gorm:"many2many:contents_tags;"`
 
 	// TODO: Maybe, MAYBE drop this?  None of the code currently really looks at the encoding
 	// till actually creating a preview.

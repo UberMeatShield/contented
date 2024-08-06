@@ -6,17 +6,19 @@ import (
 
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gobuffalo/validate/v3"
+	"gorm.io/gorm"
 )
 
 // Tag is used by pop to map your taggings database table to your go code.
 type Tag struct {
-	ID        string    `json:"id" db:"id"`
+	ID        string    `json:"id" db:"id" gorm:"primaryKey"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	DeletedAt gorm.DeletedAt
 
-	Description string   `json:"description" db:"description"`
+	Description string   `json:"description" db:"description" default:""`
 	TagType     string   `json:"tag_type" db:"tag_type" default:"keyword"`
-	Contents    Contents `json:"contents,omitempty" many_to_many:"contents_tags"`
+	Contents    Contents `json:"contents,omitempty" gorm:"many2many:contents_tags;"`
 }
 
 // String is not required by pop and may be deleted

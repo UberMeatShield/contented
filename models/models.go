@@ -28,14 +28,20 @@ func init() {
 /**
  * Build out a set of gorm related connections
  */
-var GormDB *gorm.DB
+var GormDB *gorm.DB = nil
 
-func InitGorm() {
-	GormDB, err := gorm.Open(postgres.Open("db"), &gorm.Config{})
-	if err != nil {
-		panic("failed to connect database")
+func InitGorm(reset bool) *gorm.DB {
+	if GormDB == nil || reset {
+		dsn := "host=localhost user=postgres dbname=content_test port=5432 sslmode=disable"
+		db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+
+		if err != nil {
+			panic("Failed to connect database")
+		}
+		if db.Error == nil {
+			log.Printf("Conected to the db")
+			GormDB = db
+		}
 	}
-	if GormDB != nil {
-		log.Printf("Conected to the db")
-	}
+	return GormDB
 }

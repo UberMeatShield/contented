@@ -21,7 +21,7 @@ type Container struct {
 	Description string   `json:"description" db:"description" default:""`
 	Active      bool     `json:"active" db:"active" default:"true"`
 	Idx         int      `json:"idx" db:"idx" default:"0"`
-	Contents    Contents `json:"contents" has_many:"contents" db:"-"`
+	Contents    Contents `json:"contents" db:"-"`
 	Hidden      bool     `json:"-" db:"hidden" default:"false"`
 
 	// This is expected to be a URL where often a configured /preview/{mcID} is going
