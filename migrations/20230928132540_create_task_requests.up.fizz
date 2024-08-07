@@ -1,26 +1,27 @@
 create_table("task_requests") {
-	t.Column("id", "int", {primary: true})
+	t.Column("id", "bigint", {primary: true})
 	
-	t.Column("content_id", "int", {"null": true, "default": nil})
+	t.Column("content_id", "bigint", {"null": true, "default": nil})
 	t.ForeignKey("content_id", {"contents": ["id"]}, {"on_delete": "cascade", "null": true})
 
-	t.Column("container_id", "int", {"null": true, "default": nil})
+	t.Column("container_id", "bigint", {"null": true, "default": nil})
 	t.ForeignKey("container_id", {"containers": ["id"]}, {"on_delete": "cascade", "null": true})
 
-    t.Column("created_id", "int", {"null": true, "default": nil})
+    t.Column("created_id", "bigint", {"null": true, "default": nil})
     t.ForeignKey("created_id", {"contents": ["id"]}, {"null": true})
 
     t.Column("started_at", "datetime", {"null": true})
 	t.Column("status", "string", {"default": "new"})
 	t.Column("operation", "string", {"default": ""})
 	t.Column("message", "text", {"null": true, "default": ""})
-	t.Column("err_message", "text", {"null": true})
+	t.Column("err_msg", "text", {"null": true, "default": ""})
 
-    t.Column("number_of_screens", "integer", {"default": "12"})
-    t.Column("start_time_seconds", "integer", {"default": "0"})
+    t.Column("number_of_screens", "bigint", {"default": "12"})
+    t.Column("start_time_seconds", "bigint", {"default": "0"})
     t.Column("codec", "string", {"default": "libx265"})
-    t.Column("width", "integer", {"default": "-1"})
-    t.Column("height", "integer", {"default": "-1"})
+    t.Column("width", "bigint", {"default": "-1"})
+    t.Column("height", "bigint", {"default": "-1"})
 
 	t.Timestamps()
+	t.Column("deleted_at", "datetime", {"default": nil, "null": true})
 }

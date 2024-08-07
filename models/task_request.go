@@ -6,6 +6,7 @@ import (
 
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gobuffalo/validate/v3"
+	"gorm.io/gorm"
 )
 
 // This might move into a model
@@ -108,23 +109,25 @@ func (to TaskOperationType) String() string {
 
 // TaskRequest is used by pop to map your task_requests database table to your go code.
 type TaskRequest struct {
-	ID          int `json:"id" db:"id"`
-	ContentID   int `json:"content_id" db:"content_id" default:"nil"`
-	ContainerID int `json:"container_id" db:"container_id" default:"nil"`
+	ID        int64          `json:"id" gorm:"primaryKey"`
+	CreatedAt time.Time      `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time      `json:"updated" db:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index"`
+
+	// Need to get these all properly fk constrained
+	ContentID   *int64 `json:"content_id" db:"content_id" gorm:"default:null"`
+	ContainerID *int64 `json:"container_id" db:"container_id" gorm:"default:null"`
+	CreatedID   *int64 `json:"created_id" db:"created_id" gorm:"default:null"`
 
 	// TODO: Make it optional on ContentId so things cna work on a container?
-	// ContainerID nulls.UUID `json:"container_id" db:"container_id" default:"nil"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 	StartedAt time.Time `json:"started_at" db:"started_at"`
 
 	Status    TaskStatusType    `json:"status" db:"status" default:"new" `
 	Operation TaskOperationType `json:"operation" db:"operation"`
-	CreatedID int              `json:"created_id" db:"created_id"`
 
 	// Initial default time would be nice
 	Message string `json:"message" default:"" db:"message"`
-	ErrMsg  string `json:"err_msg" default:"" db:"err_message"`
+	ErrMsg  string `json:"err_msg" default:"" db:"err_msg"`
 
 	// Is it worth having two different queues for this?  Probably not, both use ffmpeg resource
 	// Add once I have the basic processor in place

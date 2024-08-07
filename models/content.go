@@ -11,14 +11,16 @@ import (
 
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gobuffalo/validate/v3"
+	"gorm.io/gorm"
 )
 
 // Content is used by pop to map your contents database table to your go code.
 type Content struct {
-	ID        int       `json:"id" gorm:"primaryKey"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time `json:"updated" db:"updated_at"`
-	//DeletedAt   gorm.DeletedAt `gorm:"index"`
+	ID        int64          `json:"id" gorm:"primaryKey"`
+	CreatedAt time.Time      `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time      `json:"updated" db:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index"`
+
 	Src         string `json:"src" db:"src"`
 	ContentType string `json:"content_type" db:"content_type"`
 	Preview     string `json:"preview" db:"preview"`
@@ -36,7 +38,7 @@ type Content struct {
 	// Joins (Eager loading is not working?)
 
 	Screens     Screens `json:"screens" has_many:"preview_screens"`
-	ContainerID int     `json:"container_id" db:"container_id" default:"nil"`
+	ContainerID *int64  `json:"container_id" db:"container_id" gorm:"default:null"`
 
 	Tags Tags `json:"tags,omitempty" gorm:"many2many:contents_tags;"`
 
@@ -45,7 +47,7 @@ type Content struct {
 	Encoding string `json:"encoding" db:"encoding"`
 
 	// Useful for when we built out media in a container and want to associate it.
-	FqPath string `json:"-" db:"-" default:""` // NOT SET BY DEFAULT
+	FqPath string `json:"-" db:"-" default:"" gorm:"-"` // NOT SET BY DEFAULT
 }
 
 // It seems odd there is no arbitrary json field => proper sort on the struct but then many of
@@ -84,7 +86,7 @@ func GetContentSort(arr Contents, jsonFieldName string) ContentJsonSort {
 		}
 	case "container_id":
 		theSort = func(i, j int) bool {
-			return arr[i].ContainerID < arr[j].ContainerID
+			return *arr[i].ContainerID < *arr[j].ContainerID
 		}
 	case "size":
 		theSort = func(i, j int) bool {

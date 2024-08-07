@@ -11,7 +11,7 @@ import (
 
 // Container is used by pop to map your containers database table to your go code.
 type Container struct {
-	ID        int       `json:"id" gorm:"primaryKey" db:"id"`
+	ID        int64     `json:"id" gorm:"primaryKey" db:"id"`
 	CreatedAt time.Time `json:"created" db:"created_at"`
 	UpdatedAt time.Time `json:"updated" db:"updated_at"`
 	//DeletedAt   gorm.DeletedAt `gorm:"index"`

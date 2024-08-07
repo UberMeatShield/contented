@@ -1,10 +1,11 @@
 create_table("screens") {
-	t.Column("id", "int", {primary: true})
+	t.Column("id", "bigint", {primary: true})
     t.Column("src", "string", {"default": ""})
     t.Column("path", "string", {"default": ""})
-    t.Column("idx", "integer", {"default": 0})
-    t.Column("size_bytes", "integer", {"default": 0})
-    t.Column("content_id", "int", {})
+    t.Column("idx", "bigint", {"default": 0})
+    t.Column("size_bytes", "bigint", {"default": 0})
+    t.Column("content_id", "bigint", {"null": true})
     t.ForeignKey("content_id", {"contents": ["id"]}, {"on_delete": "cascade",})
 	t.Timestamps()
+    t.Column("deleted_at", "datetime", {default: nil, null: true})
 }

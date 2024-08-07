@@ -13,15 +13,16 @@ import (
 
 // A set of previews for a particular content element.
 type Screen struct {
-	ID        int      `json:"id" gorm:"primaryKey"`
+	ID        int       `json:"id" gorm:"primaryKey"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
-	ContentID int           `json:"content_id" db:"content_id"`
-	Path      string         `json:"-" db:"path"`
-	Src       string         `json:"src" db:"src"`
-	Idx       int            `json:"idx" db:"idx"`
-	SizeBytes int64          `json:"size_bytes" db:"size_bytes"`
+
+	ContentID int64  `json:"content_id" db:"content_id"`
+	Path      string `json:"-" db:"path"`
+	Src       string `json:"src" db:"src"`
+	Idx       int    `json:"idx" db:"idx"`
+	SizeBytes int64  `json:"size_bytes" db:"size_bytes"`
 }
 
 type ScreensJsonSort func(i, j int) bool
