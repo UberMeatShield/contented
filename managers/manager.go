@@ -27,9 +27,10 @@ import (
 	"github.com/gobuffalo/buffalo/worker"
 	"github.com/gobuffalo/pop/v6"
 	"golang.org/x/exp/maps"
+	"gorm.io/gorm"
 )
 
-type GetConnType func() *pop.Connection
+type GetConnType func() *gorm.DB
 type GetParamsType func() *url.Values
 type GetAppWorker func() worker.Worker
 
@@ -159,21 +160,20 @@ func GetManager(c *gin.Context) ContentManager {
 	// the dev server :(.   Need to only do this if use database is setup and connects
 	var get_connection GetConnType
 	if cfg.UseDatabase {
-		var conn *pop.Connection
-		get_connection = func() *pop.Connection {
+		var conn *gorm.DB
+		get_connection = func() *gorm.DB {
 			if conn == nil {
-				tx, ok := c.Value("tx").(*pop.Connection)
-				if !ok {
-					log.Fatalf("Failed to get a connection")
+				conn = models.InitGorm(false)
+				if conn == nil || conn.Error == nil {
+					log.Fatalf("Failed to get a db connection %s", conn.Error)
 					return nil
 				}
-				conn = tx
 			}
 			return conn
 		}
 	} else {
 		// Just required for the memory version create statement
-		get_connection = func() *pop.Connection {
+		get_connection = func() *gorm.DB {
 			return nil
 		}
 	}

@@ -88,8 +88,8 @@ func (cm ContentManagerDB) GetContent(mcID int64) (*models.Content, error) {
 	log.Printf("Get a single content object %s", mcID)
 	tx := cm.GetConnection()
 	mc := &models.Content{}
-	if err := tx.Eager().Find(mc, mcID); err != nil {
-		return nil, err
+	if res := tx.Preload("Screens").Preload("Tags").Find(mc, mcID); res.Error != nil {
+		return nil, res.Error
 	}
 	return mc, nil
 }
@@ -107,9 +107,9 @@ func (cm ContentManagerDB) UpdateContainer(cnt *models.Container) (*models.Conta
 		return nil, errors.New(msg)
 	}
 	tx := cm.GetConnection()
-	err := tx.Update(cnt)
-	if err != nil {
-		return cnt, err
+	res := tx.Save(cnt)
+	if res.Error != nil {
+		return cnt, res.Error
 	}
 	return cm.GetContainer(cnt.ID)
 }
@@ -129,9 +129,11 @@ func (cm ContentManagerDB) UpdateContent(content *models.Content) error {
 			return fmt.Errorf("invalid content src %s for container %s", content.Src, cnt.Name)
 		}
 	}
-	err := tx.Eager().Update(content)
-	if err != nil {
-		return err
+
+	// Crap, this might be really broken depending on how we use it
+	res := tx.Save(content)
+	if res.Error != nil {
+		return res.Error
 	}
 	// Just trust we will associate all valid tags to the content.
 	if content.Tags != nil {
@@ -158,7 +160,8 @@ func (cm ContentManagerDB) UpdateContents(contents models.Contents) error {
 
 func (cm ContentManagerDB) UpdateScreen(s *models.Screen) error {
 	tx := cm.GetConnection()
-	return tx.Update(s)
+	res := tx.Save(s)
+	return res.Error
 }
 
 func (cm ContentManagerDB) ListAllContent(page int, per_page int) (*models.Contents, error) {
@@ -274,11 +277,13 @@ func (cm ContentManagerDB) LoadRelatedScreens(content *models.Contents) (models.
 		log.Printf("None of these content were a video, skipping")
 		return nil, nil
 	}
-	q := cm.GetConnection().Q().Where(`content_id = any($1)`, pq.Array(videoIds))
+	tx := cm.GetConnection()
+
 	screens := &models.Screens{}
-	if q_err := q.All(screens); q_err != nil {
-		log.Printf("Error loading video screens %s", q_err)
-		return nil, q_err
+	q := tx.Where(`content_id = any($1)`, pq.Array(videoIds)).Find(screens)
+	if q.Error != nil {
+		log.Printf("Error loading video screens %s", q.Error)
+		return nil, q.Error
 	}
 
 	screenMap := models.ScreenCollection{}
@@ -337,8 +342,8 @@ func (cm ContentManagerDB) GetContainer(cID int64) (*models.Container, error) {
 
 	// Allocate an empty Container p := cm.Params()
 	container := &models.Container{}
-	if err := tx.Find(container, cID); err != nil {
-		return nil, err
+	if res := tx.Find(container, cID); res.Error != nil {
+		return nil, res.Error
 	}
 	return container, nil
 }
@@ -403,17 +408,17 @@ func (cm ContentManagerDB) ListScreens(sr ScreensQuery) (*models.Screens, int, e
 func (cm ContentManagerDB) GetScreen(psID int64) (*models.Screen, error) {
 	previewScreen := &models.Screen{}
 	tx := cm.GetConnection()
-	err := tx.Find(previewScreen, psID)
-	if err != nil {
-		return nil, err
+	res := tx.Find(previewScreen, psID)
+	if res.Error != nil {
+		return nil, res.Error
 	}
 	return previewScreen, nil
 
 }
 
 func (cm ContentManagerDB) CreateScreen(screen *models.Screen) error {
-	tx := cm.GetConnection()
-	return tx.Create(screen)
+	tx := cm.GetConnection().Create(screen)
+	return tx.Error
 }
 
 func (cm ContentManagerDB) CreateContent(content *models.Content) error {
@@ -426,11 +431,11 @@ func (cm ContentManagerDB) CreateContent(content *models.Content) error {
 	}
 	content.Tags = *validTags
 
-	_, err := tx.Eager().ValidateAndCreate(content)
-	if err != nil {
-		return err
+	res := tx.Save(content)
+	if res.Error != nil {
+		return res.Error
 	}
-	return err
+	return res.Error
 }
 
 // Note we very intentionally are NOT destroying items on disk.
@@ -440,8 +445,9 @@ func (cm ContentManagerDB) DestroyContent(id int64) (*models.Content, error) {
 	if err := tx.Find(content, id); err != nil {
 		return nil, errors.New(fmt.Sprintf("Could not find content with id %s", id))
 	}
-	if err := tx.Destroy(content); err != nil {
-		return content, err
+
+	if res := tx.Delete(content); res.Error != nil {
+		return content, res.Error
 	}
 	return content, nil
 }
@@ -452,8 +458,8 @@ func (cm ContentManagerDB) DestroyContainer(id string) (*models.Container, error
 	if err := tx.Find(cnt, id); err != nil {
 		return nil, errors.New(fmt.Sprintf("Could not find container with id %s", id))
 	}
-	if err := tx.Destroy(cnt); err != nil {
-		return cnt, err
+	if res := tx.Delete(cnt); res.Error != nil {
+		return cnt, res.Error
 	}
 	return cnt, nil
 }
@@ -464,8 +470,8 @@ func (cm ContentManagerDB) DestroyScreen(id string) (*models.Screen, error) {
 	if err := tx.Find(screen, id); err != nil {
 		return nil, errors.New(fmt.Sprintf("Could not find screen with id %s", id))
 	}
-	if err := tx.Destroy(screen); err != nil {
-		return screen, err
+	if res := tx.Delete(screen); res.Error != nil {
+		return screen, res.Error
 	}
 	return screen, nil
 }
@@ -498,13 +504,13 @@ func (cm ContentManagerDB) ListAllTagsContext() (*models.Tags, int, error) {
 }
 
 func (cm ContentManagerDB) CreateTag(tag *models.Tag) error {
-	tx := cm.GetConnection()
-	return tx.Create(tag)
+	tx := cm.GetConnection().Create(tag)
+	return tx.Error
 }
 
 func (cm ContentManagerDB) UpdateTag(tag *models.Tag) error {
-	tx := cm.GetConnection()
-	return tx.Update(tag)
+	tx := cm.GetConnection().Save(tag)
+	return tx.Error
 }
 
 func (cm ContentManagerDB) DestroyTag(id string) (*models.Tag, error) {
@@ -513,15 +519,15 @@ func (cm ContentManagerDB) DestroyTag(id string) (*models.Tag, error) {
 		return nil, err
 	}
 	tx := cm.GetConnection()
-	return tag, tx.Destroy(tag)
+	return tag, tx.Delete(tag).Error
 }
 
 func (cm ContentManagerDB) GetTag(tagID string) (*models.Tag, error) {
 	// log.Printf("DB Get a tag %s", tagID)
 	tx := cm.GetConnection()
 	t := &models.Tag{}
-	if err := tx.Find(t, tagID); err != nil {
-		return nil, err
+	if res := tx.Find(t, tagID); res.Error != nil {
+		return nil, res.Error
 	}
 	return t, nil
 }
@@ -537,11 +543,10 @@ func (cm ContentManagerDB) GetValidTags(tags *models.Tags) (*models.Tags, error)
 		return &validTags, nil
 	}
 
-	q := tx.Q().Where("id in (?)", ids)
-	q_err := q.All(&validTags)
-	if q_err != nil {
-		log.Printf("Error validating tags %s", q_err)
-		return nil, q_err
+	q := tx.Where("id in (?)", ids).Find(&validTags)
+	if q.Error != nil {
+		log.Printf("Error validating tags %s", q.Error)
+		return nil, q.Error
 	}
 	return &validTags, nil
 }
@@ -565,10 +570,10 @@ func (cm ContentManagerDB) AssociateTag(t *models.Tag, mc *models.Content) error
 	}
 	tags = *validTags
 
-	err := tx.RawQuery("delete from contents_tags where content_id = ?", mc.ID).Exec()
-	if err != nil {
-		log.Printf("Could not associate tag %s", err)
-		return err
+	res := tx.Exec("delete from contents_tags where content_id = ?", mc.ID)
+	if res.Error != nil {
+		log.Printf("Could not associate tag %s", res.Error)
+		return res.Error
 	}
 
 	// I really don't love this but Buffalo many_to_many associations do NOT handle updates.  In addition an integer
@@ -576,10 +581,11 @@ func (cm ContentManagerDB) AssociateTag(t *models.Tag, mc *models.Content) error
 	sql_str := "insert into contents_tags (id, tag_id, content_id, created_at, updated_at) values (?, ?, ?, current_timestamp, current_timestamp)"
 	for _, t := range tags {
 		linkID, _ := uuid.NewV4()
-		link_err := tx.RawQuery(sql_str, linkID, t.ID, mc.ID).Exec()
-		if link_err != nil {
-			log.Printf("Failed to re-link %s", link_err)
-			return link_err
+		res := tx.Exec(sql_str, linkID, t.ID, mc.ID)
+
+		if res.Error != nil {
+			log.Printf("Failed to re-link %s", res.Error)
+			return res.Error
 		}
 	}
 	return nil
@@ -608,7 +614,7 @@ func (cm ContentManagerDB) CreateContainer(c *models.Container) error {
 	}
 	tx := cm.GetConnection()
 	if ok == true {
-		return tx.Create(c)
+		return tx.Create(c).Error
 	}
 	msg := fmt.Sprintf("The directory was not under the config path %s", c.Name)
 	return errors.New(msg)
@@ -621,11 +627,11 @@ func (cm ContentManagerDB) CreateTask(t *models.TaskRequest) (*models.TaskReques
 	}
 	tx := cm.GetConnection()
 	t.Status = models.TaskStatus.NEW // The defaults do not seem to work right...
-	err := tx.Create(t)
-	if err != nil {
-		return nil, err
+	res := tx.Create(t)
+	if res.Error != nil {
+		return nil, res.Error
 	}
-	return t, err
+	return t, nil
 }
 
 func (cm ContentManagerDB) UpdateTask(t *models.TaskRequest, currentState models.TaskStatusType) (*models.TaskRequest, error) {
@@ -640,9 +646,9 @@ func (cm ContentManagerDB) UpdateTask(t *models.TaskRequest, currentState models
 	// update (there isn't a conditional add into the sql for some reason)
 	if checkStatus.Status == currentState {
 		tx := cm.GetConnection()
-		upErr := tx.Update(t)
-		if upErr != nil {
-			return nil, upErr
+		res := tx.Save(t)
+		if res.Error != nil {
+			return nil, res.Error
 		}
 	} else {
 		msg := fmt.Sprintf("The current DB status %s != exec status %s", checkStatus.Status, currentState)
@@ -655,8 +661,8 @@ func (cm ContentManagerDB) UpdateTask(t *models.TaskRequest, currentState models
 func (cm ContentManagerDB) GetTask(id int64) (*models.TaskRequest, error) {
 	task := models.TaskRequest{}
 	tx := cm.GetConnection()
-	err := tx.Find(&task, id)
-	return &task, err
+	res := tx.Find(&task, id)
+	return &task, res.Error
 }
 
 // Get the next task for processing (not super thread safe but enough for mem manager)
