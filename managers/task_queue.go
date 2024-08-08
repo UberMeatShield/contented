@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -220,10 +221,10 @@ func DetectDuplicatesTask(man ContentManager, id int64) error {
 		PerPage:     9001, // TODO: Seriously come up with a better paging method...
 	}
 	if content != nil {
-		cs.ContentID = string(content.ID)
+		cs.ContentID = strconv.FormatInt(content.ID, 10)
 	}
 	if container != nil {
-		cs.ContainerID = string(container.ID)
+		cs.ContainerID = strconv.FormatInt(container.ID, 10)
 	}
 	log.Printf("DetectDuplicates Output starting with query container %s and contentID %s", cs.ContentID, cs.ContainerID)
 

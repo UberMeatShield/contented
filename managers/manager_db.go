@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/gobuffalo/buffalo"
@@ -266,7 +267,7 @@ func (cm ContentManagerDB) LoadRelatedScreens(content *models.Contents) (models.
 	videoIds := []string{}
 	for _, mc := range *content {
 		if strings.Contains(mc.ContentType, "video") {
-			videoIds = append(videoIds, string(mc.ID))
+			videoIds = append(videoIds, strconv.FormatInt(mc.ID, 10))
 		}
 	}
 	if len(videoIds) == 0 {
@@ -313,7 +314,7 @@ func (cm ContentManagerDB) ListContainers(cs ContainerQuery) (*models.Containers
 func (cm ContentManagerDB) ListContainersFiltered(cs ContainerQuery) (*models.Containers, int, error) {
 	tx := cm.GetConnection()
 	q := tx.Paginate(cs.Page, cs.PerPage)
-	if cs.IncludeHidden == false {
+	if !cs.IncludeHidden {
 		q = q.Where("hidden = ?", false)
 	}
 	q.Order(models.GetContainerOrder(cs.Order, cs.Direction))
@@ -629,7 +630,7 @@ func (cm ContentManagerDB) CreateTask(t *models.TaskRequest) (*models.TaskReques
 
 func (cm ContentManagerDB) UpdateTask(t *models.TaskRequest, currentState models.TaskStatusType) (*models.TaskRequest, error) {
 	if t == nil {
-		return t, errors.New("No task to update")
+		return t, errors.New("no task to update")
 	}
 	checkStatus, cErr := cm.GetTask(t.ID)
 	if cErr != nil {
@@ -645,7 +646,7 @@ func (cm ContentManagerDB) UpdateTask(t *models.TaskRequest, currentState models
 		}
 	} else {
 		msg := fmt.Sprintf("The current DB status %s != exec status %s", checkStatus.Status, currentState)
-		log.Printf(msg)
+		log.Print(msg)
 		return nil, errors.New(msg)
 	}
 	return cm.GetTask(t.ID)

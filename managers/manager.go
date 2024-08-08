@@ -488,7 +488,7 @@ func AssignTagsToContents(man ContentManager, contents *models.Contents, tags *m
 
 // HMMMM, should this be smarter?
 func WebpFromContent(man ContentManager, content *models.Content) (string, error) {
-	sr := ScreensQuery{ContentID: string(content.ID)}
+	sr := ScreensQuery{ContentID: strconv.FormatInt(content.ID, 10)}
 	screens, count, err := man.ListScreens(sr)
 	if err != nil {
 		return "", err
@@ -529,7 +529,10 @@ func CreateContentAfterEncoding(man ContentManager, originalContent *models.Cont
 	if f, ok := os.Stat(newFile); ok == nil {
 
 		// Check if we already have a content object for this.
-		sr := ContentQuery{Text: f.Name(), ContainerID: string(*originalContent.ContainerID)}
+		sr := ContentQuery{Text: f.Name()}
+		if originalContent.ContainerID != nil {
+			sr.ContainerID = strconv.FormatInt(*originalContent.ContainerID, 10)
+		}
 		contents, _, err := man.SearchContent(sr)
 		if err != nil {
 			return nil, err

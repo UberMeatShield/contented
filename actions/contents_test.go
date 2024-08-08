@@ -149,7 +149,7 @@ func (as *ActionSuite) Test_ContentsResource_Show() {
 	test_common.InitFakeApp(true)
 	src := "test_query"
 	mc := CreateResource(src, nulls.UUID{}, as)
-	check := as.JSON("/contents/" + mc.ID.String()).Get()
+	check := as.JSON(fmt.Sprintf("/contents/%d", mc.ID)).Get()
 	as.Equal(http.StatusOK, check.Code)
 
 	validate := models.Content{}
@@ -226,8 +226,8 @@ func ActionsTagSearchValidation(as *ActionSuite) {
 	tRes := as.JSON("/tags/").Post(&t)
 	as.Equal(http.StatusCreated, tRes.Code, fmt.Sprintf("Tags Failed %s", tRes.Body.String()))
 
-	a := models.Content{ContainerID: nulls.NewUUID(cntCheck.ID), Src: "AFile"}
-	b := models.Content{ContainerID: nulls.NewUUID(cntCheck.ID), Src: "BFile"}
+	a := models.Content{ContainerID: &cntCheck.ID, Src: "AFile"}
+	b := models.Content{ContainerID: &cntCheck.ID, Src: "BFile"}
 	b.Tags = models.Tags{t}
 
 	aRes := as.JSON("/contents/").Post(&a)

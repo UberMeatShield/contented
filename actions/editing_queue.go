@@ -243,7 +243,7 @@ func ContainerVideoEncodingHandler(c *gin.Context) {
 	// and then attempt to act on them.  Unify it?
 	man := managers.GetManager(c)
 	contentQuery := managers.ContentQuery{
-		ContainerID: string(containerID),
+		ContainerID: strconv.FormatInt(containerID, 10),
 		ContentType: "video",
 		PerPage:     man.GetCfg().Limit,
 	}
@@ -255,7 +255,7 @@ func ContainerVideoEncodingHandler(c *gin.Context) {
 	if total == 0 {
 		queueResponse := TasksQueuedResponse{
 			Message: "No video content found to re-encode",
-			Results: models.TaskRequests{}, // hate
+			Results: models.TaskRequests{},
 		}
 		c.JSON(http.StatusOK, queueResponse)
 		return
@@ -306,7 +306,7 @@ func ContainerTaggingHandler(c *gin.Context) {
 	// and then attempt to act on them.  Unify it?
 	man := managers.GetManager(c)
 	contentQuery := managers.ContentQuery{
-		ContainerID: string(containerID),
+		ContainerID: strconv.FormatInt(containerID, 64),
 		PerPage:     man.GetCfg().Limit,
 	}
 	_, total, tagErr := man.ListAllTags(managers.TagQuery{PerPage: 1})
@@ -461,7 +461,7 @@ func ContainerScreensHandler(c *gin.Context) {
 	}
 
 	cQ := managers.ContentQuery{
-		ContainerID: string(cID),
+		ContainerID: strconv.FormatInt(cID, 10),
 		ContentType: "video",
 		PerPage:     cfg.Limit,
 	}

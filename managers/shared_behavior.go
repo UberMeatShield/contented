@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -176,7 +177,7 @@ func FindContainerDuplicates(cm ContentManager, cnt *models.Container, contentTy
 	cs := ContentQuery{
 		ContentType: contentType,
 		PerPage:     9001, // TODO Page content in a sane fashion
-		ContainerID: string(cnt.ID),
+		ContainerID: strconv.FormatInt(cnt.ID, 10),
 	}
 	if contentID != "" {
 		cs.ContentID = contentID
@@ -260,7 +261,7 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
 	}
 
 	// TODO: It should fix up the total count there (-1 for unlimited?)
-	cq := ContentQuery{ContainerID: string(c.ID), PerPage: 90000, Direction: "asc", Order: "idx"}
+	cq := ContentQuery{ContainerID: strconv.FormatInt(c.ID, 10), PerPage: 90000, Direction: "asc", Order: "idx"}
 	content, total, q_err := cm.ListContent(cq)
 	if q_err != nil {
 		log.Fatal(q_err) // Also fatal if we can no longer list content
