@@ -95,7 +95,7 @@ type ContentManager interface {
 	FindActualFile(mc *models.Content) (string, error)
 
 	// Container Management
-	GetContainer(cID int) (*models.Container, error)
+	GetContainer(cID int64) (*models.Container, error)
 	ListContainers(cq ContainerQuery) (*models.Containers, int, error)
 	ListContainersFiltered(cq ContainerQuery) (*models.Containers, int, error)
 	ListContainersContext() (*models.Containers, int, error)
@@ -104,7 +104,7 @@ type ContentManager interface {
 	DestroyContainer(id string) (*models.Container, error)
 
 	// Content listing (why did I name it Content vs Media?)
-	GetContent(content_id int) (*models.Content, error)
+	GetContent(content_id int64) (*models.Content, error)
 	ListContent(cs ContentQuery) (*models.Contents, int, error)
 	ListContentContext() (*models.Contents, int, error)
 
@@ -115,7 +115,7 @@ type ContentManager interface {
 
 	UpdateContent(content *models.Content) error
 	UpdateContents(content models.Contents) error
-	DestroyContent(id string) (*models.Content, error)
+	DestroyContent(id int64) (*models.Content, error)
 	CreateContent(mc *models.Content) error
 	GetPreviewForMC(mc *models.Content) (string, error)
 
@@ -123,7 +123,7 @@ type ContentManager interface {
 	ListScreensContext() (*models.Screens, int, error)
 	ListScreens(sr ScreensQuery) (*models.Screens, int, error)
 
-	GetScreen(psID int) (*models.Screen, error)
+	GetScreen(psID int64) (*models.Screen, error)
 	CreateScreen(s *models.Screen) error
 	UpdateScreen(s *models.Screen) error
 	DestroyScreen(id string) (*models.Screen, error)
@@ -136,7 +136,7 @@ type ContentManager interface {
 	UpdateTag(tag *models.Tag) error
 	DestroyTag(id string) (*models.Tag, error)
 	AssociateTag(tag *models.Tag, c *models.Content) error
-	AssociateTagByID(tagID string, mcID int) error
+	AssociateTagByID(tagID string, mcID int64) error
 
 	// For processing encoding requests
 	CreateTask(task *models.TaskRequest) (*models.TaskRequest, error)
@@ -146,7 +146,7 @@ type ContentManager interface {
 	// For the API exposed
 	ListTasksContext() (*models.TaskRequests, int, error)
 	ListTasks(query TaskQuery) (*models.TaskRequests, int, error)
-	GetTask(id int) (*models.TaskRequest, error)
+	GetTask(id int64) (*models.TaskRequest, error)
 }
 
 // Dealing with buffalo.Context vs grift.Context is kinda annoying, this handles the
@@ -357,19 +357,19 @@ func GetTagsFromParam(val string) ([]string, error) {
 	return tags, nil
 }
 
-func GetContentAndContainer(cm ContentManager, contentID int) (*models.Content, *models.Container, error) {
+func GetContentAndContainer(cm ContentManager, contentID int64) (*models.Content, *models.Container, error) {
 	content, cErr := cm.GetContent(contentID)
 	if cErr != nil {
 		return nil, nil, cErr
 	}
-	cnt, cntErr := cm.GetContainer(content.ContainerID)
+	cnt, cntErr := cm.GetContainer(*content.ContainerID)
 	if cntErr != nil {
 		return nil, nil, cntErr
 	}
 	return content, cnt, nil
 }
 
-func CreateScreensForContent(cm ContentManager, contentID int, count int, offset int) ([]string, error, string) {
+func CreateScreensForContent(cm ContentManager, contentID int64, count int, offset int) ([]string, error, string) {
 	// It would be good to have the screens element take a few more params and have a wrapper on the
 	// Content manager level.
 	content, cnt, err := GetContentAndContainer(cm, contentID)
@@ -529,7 +529,7 @@ func CreateContentAfterEncoding(man ContentManager, originalContent *models.Cont
 	if f, ok := os.Stat(newFile); ok == nil {
 
 		// Check if we already have a content object for this.
-		sr := ContentQuery{Text: f.Name(), ContainerID: string(originalContent.ContainerID)}
+		sr := ContentQuery{Text: f.Name(), ContainerID: string(*originalContent.ContainerID)}
 		contents, _, err := man.SearchContent(sr)
 		if err != nil {
 			return nil, err

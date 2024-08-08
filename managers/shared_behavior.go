@@ -60,7 +60,7 @@ func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
 
 		// There MUST be a way to do this as a single commit
 		for _, mc := range content {
-			mc.ContainerID = c.ID
+			mc.ContainerID = &c.ID
 			c_err := models.DB.Create(&mc)
 			// This is pretty damn fatal so we want it to die if the DB bails.
 			if c_err != nil {
@@ -231,7 +231,7 @@ func FindDuplicateContents(cm ContentManager, cnt *models.Container, cs ContentQ
 					dupe := DuplicateContent{
 						KeepContentID: content.ID,
 						KeepSrc:       content.Src,
-						ContainerID:   cnt.ID,
+						ContainerID:   &cnt.ID,
 						ContainerName: cnt.Name,
 						DuplicateID:   mContent.ID,
 						DuplicateSrc:  mContent.Src,

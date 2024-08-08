@@ -86,7 +86,7 @@ func (c Container) String() string {
 
 // Containers is not required by pop and may be deleted
 type Containers []Container
-type ContainerMap map[int]Container
+type ContainerMap map[int64]Container
 
 func (arr Containers) Reverse() Containers {
 	for i, j := 0, len(arr)-1; i < j; i, j = i+1, j-1 {

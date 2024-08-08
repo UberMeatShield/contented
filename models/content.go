@@ -66,7 +66,7 @@ var VALID_CONTENT_ORDERS = []string{
 
 // Contents is not required by pop and may be deleted
 type Contents []Content
-type ContentMap map[int]Content
+type ContentMap map[int64]Content
 type ContentMapBySrc map[string]Content
 
 func GetContentSort(arr Contents, jsonFieldName string) ContentJsonSort {

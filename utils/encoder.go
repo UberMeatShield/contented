@@ -22,8 +22,8 @@ import (
 // Used in the case of async processing when encoding.
 // Pretty much identical to previews but I might have to tweak this a lot
 type EncodingResult struct {
-	C_ID     int
-	MC_ID    int
+	C_ID     int64
+	MC_ID    int64
 	NewVideo string
 	Err      error
 

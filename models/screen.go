@@ -13,7 +13,7 @@ import (
 
 // A set of previews for a particular content element.
 type Screen struct {
-	ID        int       `json:"id" gorm:"primaryKey"`
+	ID        int64     `json:"id" gorm:"primaryKey"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
@@ -76,8 +76,8 @@ func GetScreensOrder(order string, direction string) string {
 
 // Screens is not required by pop and may be deleted
 type Screens []Screen
-type ScreenMap map[int]Screen
-type ScreenCollection map[int]Screens
+type ScreenMap map[int64]Screen
+type ScreenCollection map[int64]Screens
 
 func (arr Screens) Reverse() Screens {
 	if len(arr) > 1 {

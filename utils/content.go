@@ -100,7 +100,7 @@ func FindContentMatcher(cnt models.Container, limit int, start_offset int, yup C
 			if len(arr) < limit && idx >= start_offset {
 				id := AssignNumerical(0, "contents")
 				content := GetContent(id, img, fqDirPath)
-				content.ContainerID = cnt.ID
+				content.ContainerID = &cnt.ID
 				content.Idx = idx
 
 				if yup(content.Src, content.ContentType) && !nope(content.Src, content.ContentType) {
@@ -172,7 +172,7 @@ func SniffFileType(content *os.File) (string, error) {
 }
 
 // This is a little slow so the video info might need to be a lazy load
-func GetContent(id int, fileInfo os.FileInfo, path string) models.Content {
+func GetContent(id int64, fileInfo os.FileInfo, path string) models.Content {
 	// https://golangcode.com/get-the-content-type-of-file/
 	contentType, err := GetMimeType(path, fileInfo.Name())
 	if err != nil {

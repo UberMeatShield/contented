@@ -57,13 +57,13 @@ func TaskRequestsResourceList(c *gin.Context) {
 // the path GET /task_request/{task_request_id} ?
 func TaskRequestsResourceShow(c *gin.Context) {
 	tStrID := c.Param("task_request_id")
-	tID, badId := strconv.ParseInt(tStrID, 10, 32)
+	tID, badId := strconv.ParseInt(tStrID, 10, 64)
 	if badId != nil {
 		c.AbortWithError(400, badId)
 		return
 	}
 	man := managers.GetManager(c)
-	task, err := man.GetTask(int(tID))
+	task, err := man.GetTask(tID)
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
@@ -85,12 +85,12 @@ func TaskRequestsResourceUpdate(c *gin.Context) {
 	}
 
 	man := managers.GetManager(c)
-	id, badId := strconv.ParseInt(c.Param("task_request_id"), 10, 32)
+	id, badId := strconv.ParseInt(c.Param("task_request_id"), 10, 64)
 	if badId != nil {
 		c.AbortWithError(http.StatusBadRequest, badId)
 	}
 
-	exists, err := man.GetTask(int(id))
+	exists, err := man.GetTask(id)
 	if err != nil || exists == nil {
 		c.AbortWithError(http.StatusNotFound, err)
 		return

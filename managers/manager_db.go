@@ -83,7 +83,7 @@ func (cm ContentManagerDB) ListContent(cs ContentQuery) (*models.Contents, int, 
 }
 
 // Note this DOES allow for loading hidden content
-func (cm ContentManagerDB) GetContent(mcID int) (*models.Content, error) {
+func (cm ContentManagerDB) GetContent(mcID int64) (*models.Content, error) {
 	log.Printf("Get a single content object %s", mcID)
 	tx := cm.GetConnection()
 	mc := &models.Content{}
@@ -117,7 +117,7 @@ func (cm ContentManagerDB) UpdateContent(content *models.Content) error {
 	// Check if file exists or allow content to be 'empty'?
 	tx := cm.GetConnection()
 	if !content.NoFile {
-		cnt, cErr := cm.GetContainer(content.ContainerID)
+		cnt, cErr := cm.GetContainer(*content.ContainerID)
 		if cErr != nil {
 			return fmt.Errorf("parent container %d not found", content.ContainerID)
 		}
@@ -330,7 +330,7 @@ func (cm ContentManagerDB) ListContainersFiltered(cs ContainerQuery) (*models.Co
 }
 
 // TODO: Need a preview test using the database where we do NOT have a preview created
-func (cm ContentManagerDB) GetContainer(cID int) (*models.Container, error) {
+func (cm ContentManagerDB) GetContainer(cID int64) (*models.Container, error) {
 	log.Printf("Get a single container %s", cID)
 	tx := cm.GetConnection()
 
@@ -348,7 +348,7 @@ func (cm *ContentManagerDB) Initialize() {
 }
 
 func (cm ContentManagerDB) GetPreviewForMC(mc *models.Content) (string, error) {
-	cnt, err := cm.GetContainer(mc.ContainerID)
+	cnt, err := cm.GetContainer(*mc.ContainerID)
 	if err != nil {
 		return "DB Manager Preview no Parent Found", err
 	}
@@ -361,7 +361,7 @@ func (cm ContentManagerDB) GetPreviewForMC(mc *models.Content) (string, error) {
 }
 
 func (cm ContentManagerDB) FindActualFile(mc *models.Content) (string, error) {
-	cnt, err := cm.GetContainer(mc.ContainerID)
+	cnt, err := cm.GetContainer(*mc.ContainerID)
 	if err != nil {
 		return "DB Manager View no Parent Found", err
 	}
@@ -399,7 +399,7 @@ func (cm ContentManagerDB) ListScreens(sr ScreensQuery) (*models.Screens, int, e
 }
 
 // Need to make it use the manager and just show the file itself
-func (cm ContentManagerDB) GetScreen(psID int) (*models.Screen, error) {
+func (cm ContentManagerDB) GetScreen(psID int64) (*models.Screen, error) {
 	previewScreen := &models.Screen{}
 	tx := cm.GetConnection()
 	err := tx.Find(previewScreen, psID)
@@ -433,7 +433,7 @@ func (cm ContentManagerDB) CreateContent(content *models.Content) error {
 }
 
 // Note we very intentionally are NOT destroying items on disk.
-func (cm ContentManagerDB) DestroyContent(id string) (*models.Content, error) {
+func (cm ContentManagerDB) DestroyContent(id int64) (*models.Content, error) {
 	tx := cm.GetConnection()
 	content := &models.Content{}
 	if err := tx.Find(content, id); err != nil {
@@ -584,7 +584,7 @@ func (cm ContentManagerDB) AssociateTag(t *models.Tag, mc *models.Content) error
 	return nil
 }
 
-func (cm ContentManagerDB) AssociateTagByID(tagId string, mcID int) error {
+func (cm ContentManagerDB) AssociateTagByID(tagId string, mcID int64) error {
 	mc, m_err := cm.GetContent(mcID)
 	t, t_err := cm.GetTag(tagId)
 	if m_err != nil || t_err != nil {
@@ -651,7 +651,7 @@ func (cm ContentManagerDB) UpdateTask(t *models.TaskRequest, currentState models
 	return cm.GetTask(t.ID)
 }
 
-func (cm ContentManagerDB) GetTask(id int) (*models.TaskRequest, error) {
+func (cm ContentManagerDB) GetTask(id int64) (*models.TaskRequest, error) {
 	task := models.TaskRequest{}
 	tx := cm.GetConnection()
 	err := tx.Find(&task, id)

@@ -67,13 +67,13 @@ func SetupWorkers(app *buffalo.App) {
 }
 
 func FullHandler(c *gin.Context) {
-	mcID, badId := strconv.ParseInt(c.Param("id"), 10, 32)
+	mcID, badId := strconv.ParseInt(c.Param("id"), 10, 64)
 	if badId != nil {
 		c.AbortWithError(400, badId)
 		return
 	}
 	man := managers.GetManager(c)
-	mc, err := man.GetContent(int(mcID))
+	mc, err := man.GetContent(mcID)
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
@@ -138,13 +138,16 @@ func SplashHandler(c *gin.Context) {
 	if cfg.SplashContainerName != "" {
 		cs := managers.ContainerQuery{Search: cfg.SplashContainerName, PerPage: 1, Page: 1, IncludeHidden: true}
 		if cnts, _, err := man.SearchContainers(cs); err == nil {
+
 			if cnts != nil && len(*cnts) == 1 {
 				refs := *cnts // Ok, seriously why is the de-ref so annoying
 				cnt := refs[0]
 
+				log.Printf("What did we search for %s and results %s", cs, cnt)
 				// Limit the amount loaded for splash, could make it search based on render
 				// type but that is pretty over optimized.
-				contents, _, load_err := man.ListContent(managers.ContentQuery{ContainerID: string(cnt.ID), PerPage: 100})
+
+				contents, _, load_err := man.ListContent(managers.ContentQuery{ContainerID: strconv.FormatInt(cnt.ID, 10), PerPage: 100})
 				if load_err == nil {
 					cnt.Contents = *contents
 				}
@@ -152,13 +155,14 @@ func SplashHandler(c *gin.Context) {
 			}
 		}
 	}
+
 	if cfg.SplashContentID != "" {
 		log.Printf("It should look up %s", cfg.SplashContentID)
-		splashId, badId := strconv.ParseInt(cfg.SplashContentID, 10, 32)
+		splashId, badId := strconv.ParseInt(cfg.SplashContentID, 10, 64)
 		if badId != nil {
 			c.AbortWithError(http.StatusBadRequest, badId)
 		}
-		mc, err := man.GetContent(int(splashId))
+		mc, err := man.GetContent(splashId)
 		if err == nil {
 			sr.Content = mc
 		}
@@ -178,14 +182,14 @@ func SplashHandler(c *gin.Context) {
 
 // Find the preview of a file (if applicable currently it is just returning the full path)
 func PreviewHandler(c *gin.Context) {
-	mcID, badId := strconv.ParseInt(c.Param("id"), 10, 32)
+	mcID, badId := strconv.ParseInt(c.Param("id"), 10, 64)
 	if badId != nil {
 		c.AbortWithError(400, badId)
 		return
 	}
 
 	man := managers.GetManager(c)
-	mc, err := man.GetContent(int(mcID))
+	mc, err := man.GetContent(mcID)
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
@@ -203,13 +207,13 @@ func PreviewHandler(c *gin.Context) {
 
 // Provides a download handler by directory id and file id
 func DownloadHandler(c *gin.Context) {
-	mcID, badId := strconv.ParseInt(c.Param("id"), 10, 32)
+	mcID, badId := strconv.ParseInt(c.Param("id"), 10, 64)
 	if badId != nil {
 		c.AbortWithError(400, badId)
 		return
 	}
 	man := managers.GetManager(c)
-	mc, err := man.GetContent(int(mcID))
+	mc, err := man.GetContent(mcID)
 	if err != nil {
 		c.AbortWithError(404, err)
 		return

@@ -16,10 +16,10 @@ import (
  * TODO: Move all the editing queue tasks into a new file.
  */
 type DuplicateContent struct {
-	KeepContentID int   `json:"keep_id"`
-	ContainerID   int   `json:"container_id"`
+	KeepContentID int64  `json:"keep_id"`
+	ContainerID   *int64 `json:"container_id"`
 	ContainerName string `json:"container_name"`
-	DuplicateID   int   `json:"duplicate_id"`
+	DuplicateID   int64  `json:"duplicate_id"`
 	KeepSrc       string `json:"keep_src"`
 	DuplicateSrc  string `json:"duplicate_src"`
 	FqPath        string `json:"-"`
@@ -66,7 +66,7 @@ func FailTask(man ContentManager, task *models.TaskRequest, errMsg string) (*mod
 /**
  * Grab a content related task
  */
-func TakeContentTask(man ContentManager, id int, operation string) (*models.TaskRequest, *models.Content, error) {
+func TakeContentTask(man ContentManager, id int64, operation string) (*models.TaskRequest, *models.Content, error) {
 	task, tErr := man.GetTask(id)
 	if tErr != nil {
 		log.Printf("%s Could not look up the task successfully %s", operation, tErr)
@@ -78,7 +78,7 @@ func TakeContentTask(man ContentManager, id int, operation string) (*models.Task
 		FailTask(man, task, msg)
 		return task, nil, pErr
 	}
-	content, cErr := man.GetContent(task.ContentID)
+	content, cErr := man.GetContent(*task.ContentID)
 	if cErr != nil {
 		msg := fmt.Sprintf("%s Content not found %s %s", operation, task.ContentID, cErr)
 		FailTask(man, task, msg)
@@ -96,7 +96,7 @@ func TakeContentTask(man ContentManager, id int, operation string) (*models.Task
 /**
  * Grab a container related task that requires a container
  */
-func TakeContainerTask(man ContentManager, id int, operation string) (*models.TaskRequest, *models.Container, *models.Content, error) {
+func TakeContainerTask(man ContentManager, id int64, operation string) (*models.TaskRequest, *models.Container, *models.Content, error) {
 	task, container, content, err := TakeTask(man, id, operation)
 	if err != nil {
 		return task, container, content, err
@@ -113,7 +113,7 @@ func TakeContainerTask(man ContentManager, id int, operation string) (*models.Ta
 	return task, container, content, nil
 }
 
-func TakeTask(man ContentManager, id int, operation string) (*models.TaskRequest, *models.Container, *models.Content, error) {
+func TakeTask(man ContentManager, id int64, operation string) (*models.TaskRequest, *models.Container, *models.Content, error) {
 	task, tErr := man.GetTask(id)
 	if tErr != nil {
 		log.Printf("%s Could not look up the task successfully %s", operation, tErr)
@@ -128,8 +128,8 @@ func TakeTask(man ContentManager, id int, operation string) (*models.TaskRequest
 
 	//TODO: Make this less ugly....
 	var container *models.Container = nil
-	if task.ContainerID > 0 {
-		cnt, cErr := man.GetContainer(task.ContainerID)
+	if task.ContainerID != nil && *task.ContainerID > 0 {
+		cnt, cErr := man.GetContainer(*task.ContainerID)
 		container = cnt
 		if cErr != nil {
 			msg := fmt.Sprintf("%s Container not found %s %d", operation, task.ContainerID, cErr)
@@ -139,8 +139,8 @@ func TakeTask(man ContentManager, id int, operation string) (*models.TaskRequest
 	}
 
 	var content *models.Content = nil
-	if task.ContentID > 0 {
-		mc, cErr := man.GetContent(task.ContentID)
+	if task.ContentID != nil && *task.ContentID > 0 {
+		mc, cErr := man.GetContent(*task.ContentID)
 		content = mc
 		if cErr != nil {
 			msg := fmt.Sprintf("%s Content not found %s %s", operation, task.ContentID, cErr)
@@ -148,8 +148,8 @@ func TakeTask(man ContentManager, id int, operation string) (*models.TaskRequest
 			return task, container, content, cErr
 		}
 		// Fallback to containerID lookup based on content (nulls.uint is ANNOYING)
-		if content != nil && content.ContainerID > 0 && container == nil {
-			container, _ = man.GetContainer(content.ContainerID)
+		if content != nil && content.ContainerID != nil && *content.ContainerID > 0 && container == nil {
+			container, _ = man.GetContainer(*content.ContainerID)
 		}
 	}
 	return task, container, content, nil
@@ -158,13 +158,13 @@ func TakeTask(man ContentManager, id int, operation string) (*models.TaskRequest
 /**
  * Capture a set of screens given a task
  */
-func ScreenCaptureTask(man ContentManager, id int) error {
+func ScreenCaptureTask(man ContentManager, id int64) error {
 	log.Printf("Managers Screen Tasks taskID attempting to start %s", id)
 	task, _, err := TakeContentTask(man, id, "Screenshots")
 	if err != nil {
 		return err
 	}
-	screens, sErr, pattern := CreateScreensForContent(man, task.ContentID, task.NumberOfScreens, task.StartTimeSeconds)
+	screens, sErr, pattern := CreateScreensForContent(man, *task.ContentID, task.NumberOfScreens, task.StartTimeSeconds)
 	if sErr != nil {
 		failMsg := fmt.Sprintf("Failing to create screen %s", sErr)
 		FailTask(man, task, failMsg)
@@ -179,7 +179,7 @@ func ScreenCaptureTask(man ContentManager, id int) error {
 /**
  * Capture a set of screens given a task
  */
-func WebpFromScreensTask(man ContentManager, id int) error {
+func WebpFromScreensTask(man ContentManager, id int64) error {
 	log.Printf("Managers WebP taskID attempting to start %s", id)
 	task, content, err := TakeContentTask(man, id, "WebpFromScreensTask")
 	if err != nil {
@@ -201,7 +201,7 @@ func WebpFromScreensTask(man ContentManager, id int) error {
 /**
  * Capture a set of screens given a task
  */
-func DetectDuplicatesTask(man ContentManager, id int) error {
+func DetectDuplicatesTask(man ContentManager, id int64) error {
 	log.Printf("Managers duplicate content taskID attempting to start %s", id)
 	task, container, content, err := TakeContainerTask(man, id, "DetectDuplicatesTask")
 
@@ -246,7 +246,7 @@ func DetectDuplicatesTask(man ContentManager, id int) error {
 /**
  * Tag a piece of content, get this working on one item and then consider some other operation.
  */
-func TaggingContentTask(man ContentManager, id int) error {
+func TaggingContentTask(man ContentManager, id int64) error {
 	log.Printf("Managers Tagging taskID attempting to start %s", id)
 	task, content, err := TakeContentTask(man, id, "TaggingContentTask")
 	if err != nil {
@@ -279,7 +279,7 @@ func TaggingContentTask(man ContentManager, id int) error {
 /**
  * Could definitely make this a method assuming the next task uses the same logic.
  */
-func EncodingVideoTask(man ContentManager, id int) error {
+func EncodingVideoTask(man ContentManager, id int64) error {
 	log.Printf("Managers Video encoding taskID attempting to start %s", id)
 	task, content, err := TakeContentTask(man, id, "VideoEncoding")
 	if err != nil {
@@ -300,7 +300,7 @@ func EncodingVideoTask(man ContentManager, id int) error {
 		return eErr
 	}
 
-	task.CreatedID = encodedContent.ID // Note that this could already have existed.
+	task.CreatedID = &encodedContent.ID // Note that this could already have existed.
 	taskMsg := fmt.Sprintf("Completed video encoding %s and had to encode %t", msg, shouldEncode)
 	_, doneErr := ChangeTaskState(man, task, models.TaskStatus.DONE, taskMsg)
 	return doneErr

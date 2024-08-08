@@ -51,13 +51,13 @@ func ContentsResourceShow(c *gin.Context) {
 	man := managers.GetManager(c)
 
 	// TODO: Make it actually just handle /content (page, number)
-	id, err := strconv.ParseInt(c.Param("content_id"), 10, 32)
+	id, err := strconv.ParseInt(c.Param("content_id"), 10, 64)
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
-	contentContainer, missing_err := man.GetContent(int(id))
+	contentContainer, missing_err := man.GetContent(id)
 	if missing_err != nil {
 		c.AbortWithError(http.StatusNotFound, missing_err)
 		return
@@ -103,8 +103,8 @@ func ContentsResourceUpdate(c *gin.Context) {
 		return
 	}
 
-	id, _ := strconv.ParseInt(c.Param("content_id"), 10, 32)
-	exists, err := man.GetContent(int(id))
+	id, _ := strconv.ParseInt(c.Param("content_id"), 10, 64)
+	exists, err := man.GetContent(id)
 	if err != nil || exists == nil {
 		c.AbortWithError(http.StatusNotFound, err)
 		return
@@ -141,7 +141,10 @@ func ContentsResourceDestroy(c *gin.Context) {
 	// Allocate an empty Content
 	contentContainer := &models.Content{}
 
-	id := c.Param("content_id")
+	id, argErr := strconv.ParseInt(c.Param("content_id"), 10, 64)
+	if argErr != nil {
+		c.AbortWithError(http.StatusBadRequest, argErr)
+	}
 	content, err := man.DestroyContent(id)
 	if err != nil {
 		if content == nil {
