@@ -14,10 +14,12 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"testing"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/envy"
+	"gorm.io/gorm"
 )
 
 const TOTAL_CONTAINERS = 9
@@ -134,16 +136,31 @@ func InitFakeApp(use_db bool) *utils.DirConfigEntry {
 
 		hiddenContent := models.Content{
 			ID:          utils.AssignNumerical(0, "contents"),
-			ContainerID: hiddenContainer.ID,
+			ContainerID: &hiddenContainer.ID,
 			Hidden:      true,
 			Src:         "hidden.txt",
 		}
 		memStorage.ValidContainers[hiddenContainer.ID] = hiddenContainer
 		memStorage.ValidContent[hiddenContent.ID] = hiddenContent
 	} else {
-		models.DB.TruncateAll()
+		SetupTests(models.InitGorm(false))
 	}
 	return cfg
+}
+
+func NoError(tx *gorm.DB, msg string, t *testing.T) {
+	if tx.Error != nil {
+		t.Errorf("%s error: %s", msg, tx.Error)
+	}
+}
+
+func SetupTests(db *gorm.DB) {
+	NoError(db.Exec("DELETE FROM contents_tags"), "Failed contents tags delete", t)
+	NoError(db.Exec("DELETE FROM tags"), "Failed tags delete", t)
+	NoError(db.Exec("DELETE FROM screens"), "Failed screens delete", t)
+	NoError(db.Exec("DELETE FROM task_requests"), "Failed task request delete", t)
+	NoError(db.Exec("DELETE FROM contents"), "Failed contents delete", t)
+	NoError(db.Exec("DELETE FROM containers"), "Failed containers delete", t)
 }
 
 // For loading up the memory app but not searching directories checking content etc.
@@ -166,7 +183,7 @@ func CreateContentByDirName(test_dir_name string) (*models.Container, models.Con
 		return nil, nil, c_err
 	}
 	for _, mc := range content {
-		mc.ContainerID = cnt.ID
+		mc.ContainerID = &cnt.ID
 		m_err := models.DB.Create(&mc)
 		if m_err != nil {
 			return nil, nil, m_err

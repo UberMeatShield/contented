@@ -5,11 +5,9 @@ package internals
  * mock data counts and information.
  */
 import (
-	"contented/models"
 	"log"
 
 	"github.com/gobuffalo/buffalo"
-	"github.com/gobuffalo/buffalo-pop/v3/pop/popmw"
 
 	contenttype "github.com/gobuffalo/mw-contenttype"
 	paramlogger "github.com/gobuffalo/mw-paramlogger"
@@ -33,7 +31,7 @@ func CreateBuffaloApp(UseDatabase bool, env string) *buffalo.App {
 	// Wraps each request in a transaction. Remove to disable this.
 	if UseDatabase == true {
 		log.Printf("Connecting to the database\n")
-		app.Use(popmw.Transaction(models.DB))
+		//app.Use(popmw.Transaction(models.DB))
 	} else {
 		log.Printf("This code will attempt to use memory management \n")
 	}

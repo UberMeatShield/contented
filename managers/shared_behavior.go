@@ -25,17 +25,18 @@ import (
 func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
 
 	contentTree, err := utils.CreateStructure(cfg.Dir, cfg, &utils.ContentTree{}, 0)
+	if err != nil {
+		log.Fatalf("Failed to create initial structure %s", err)
+		return err
+	}
 	content := *contentTree
 	if len(content) == 0 {
 		return errors.New("No subdirectories found under path: " + cfg.Dir)
 	}
 	log.Printf("Found %d sub-directories.\n", len(content))
 
-	// TODO: Optional?  Some sort of crazy merge for later?
-	db_err := models.DB.TruncateAll()
-	if db_err != nil {
-		return errors.WithStack(err)
-	}
+	db := models.InitGorm(false)
+	models.ResetDB(db)
 
 	// TODO: Need to do this in a single transaction vs partial
 	for idx, ct := range content {
@@ -56,13 +57,13 @@ func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
 		}
 
 		// TODO: Port to using the manager somehow (note this is called from a grift)
-		models.DB.Create(&c)
+		db.Create(&c)
 		log.Printf("Created %s with id %s\n", c.Name, c.ID)
 
 		// There MUST be a way to do this as a single commit
 		for _, mc := range content {
 			mc.ContainerID = &c.ID
-			c_err := models.DB.Create(&mc)
+			c_err := db.Create(&mc)
 			// This is pretty damn fatal so we want it to die if the DB bails.
 			if c_err != nil {
 				log.Fatal(c_err)
