@@ -19,14 +19,14 @@ func TestFindContainers(t *testing.T) {
 	if len(containers) != len(dirs) {
 		t.Fatalf("There should be %d containers in the mock found %d", len(dirs), len(containers))
 	}
-	var known_dirs = map[string]bool{}
+	var knownDirs = map[string]bool{}
 	for _, dir := range dirs {
-		known_dirs[dir] = true
+		knownDirs[dir] = true
 	}
 
 	count := 0
 	for _, c := range containers {
-		if _, ok := known_dirs[c.Name]; ok {
+		if _, ok := knownDirs[c.Name]; ok {
 			count++
 		} else {
 			t.Errorf("Failed to get a lookup for this dir %s", c.Name)
@@ -37,7 +37,7 @@ func TestFindContainers(t *testing.T) {
 	}
 }
 
-func Test_FindContent(t *testing.T) {
+func TestFindContent(t *testing.T) {
 	var testDir, _ = envy.MustGet("DIR")
 	cfg := GetCfg()
 	cfg.Dir = testDir
@@ -199,6 +199,7 @@ func TestEmptyInitial(t *testing.T) {
 
 	memStorage := InitializeMemory(testDir)
 	if len(memStorage.ValidContent) != 1 {
+
 		t.Errorf("did not initialize with an empty chain of directories %s", memStorage.ValidContent)
 	}
 }

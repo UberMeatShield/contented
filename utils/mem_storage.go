@@ -31,6 +31,7 @@ type MemoryStorage struct {
 }
 
 var memStorage MemoryStorage = MemoryStorage{Initialized: false, Loading: false}
+var sequenceMaps SequenceMap = ResetSequences()
 
 func GetMemStorage() *MemoryStorage {
 	return &memStorage
@@ -46,7 +47,8 @@ func InitializeMemory(dirRoot string) *MemoryStorage {
 		log.Printf("Still loading up memory storage")
 		return &memStorage
 	}
-	memStorage.Sequences = SequenceMap{"screens": 0, "contents": 0, "containers": 0, "taskrequests": 0}
+	sequenceMaps = ResetSequences()
+	memStorage.Sequences = sequenceMaps
 	memStorage.Loading = true
 	containers, contents, screens, tags := PopulateMemoryView(dirRoot)
 
@@ -91,10 +93,13 @@ func StringDefault(s1 string, s2 string) string {
 	return s1
 }
 
+func ResetSequences() SequenceMap {
+	return SequenceMap{"screens": 0, "contents": 0, "containers": 0, "taskrequests": 0}
+}
+
 func AssignNumerical(id int64, tablename string) int64 {
-	// TODO: If This is using DB potentially just return 0
-	memStorage.Sequences[tablename] += 1
-	return memStorage.Sequences[tablename]
+	sequenceMaps[tablename] += 1
+	return sequenceMaps[tablename]
 }
 
 func (ms MemoryStorage) CreateScreen(screen *models.Screen) (*models.Screen, error) {
