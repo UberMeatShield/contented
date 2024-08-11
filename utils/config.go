@@ -22,7 +22,7 @@ const DefaultLimit int = 10000 // The max limit set by environment variable
 const DefaultPreviewCount int = 8
 const DefaultUseDatabase bool = false
 const DefaultMaxSearchDepth int = 1
-const DefaultMaxContentPerContainer int = 90001
+const DefaultMaxContentPerContainer = int64(90001)
 const DefaultExcludeEmptyContainers bool = true
 const DefeaultTotalScreens = 12
 const DefaultPreviewFirstScreenOffset = 5
@@ -124,9 +124,9 @@ type DirConfigEntry struct {
 	IncContainer ContainerMatcher
 	ExcContainer ContainerMatcher
 
-	MaxSearchDepth         int  // When we search for data how far down the filesystem to search
-	MaxContentPerContainer int  // When we search for data how far down the filesystem to search
-	ExcludeEmptyContainers bool // If there is no content, should we list the container default true
+	MaxSearchDepth         int   // When we search for data how far down the filesystem to search
+	MaxContentPerContainer int64 // When we search for data how far down the filesystem to search
+	ExcludeEmptyContainers bool  // If there is no content, should we list the container default true
 
 	// Splash Endpoint configuration for the 'home' page
 	SplashContainerName string // A Container you would like to load and send back
@@ -235,7 +235,7 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
 	// There must be a cleaner way to do some of this default loading...
 	excludeEmpty, emptyErr := strconv.ParseBool(envy.Get("EXCLUDE_EMPTY_CONTAINER", strconv.FormatBool(DefaultExcludeEmptyContainers)))
 	maxSearchDepth, depthErr := strconv.Atoi(envy.Get("MAX_SEARCH_DEPTH", strconv.Itoa(DefaultMaxSearchDepth)))
-	maxContentPerContainer, medErr := strconv.Atoi(envy.Get("MAX_MEDIA_PER_CONTAINER", strconv.Itoa(DefaultMaxContentPerContainer)))
+	maxContentPerContainer, medErr := strconv.ParseInt(envy.Get("MAX_MEDIA_PER_CONTAINER", strconv.FormatInt(DefaultMaxContentPerContainer, 10)), 10, 64)
 
 	psize, perr := strconv.ParseInt(envy.Get("CREATE_PREVIEW_SIZE", "1024000"), 10, 64)
 	useSeekScreenSize, seekErr := strconv.ParseInt(envy.Get("SEEK_SCREEN_OVER_SIZE", "7168000"), 10, 64)

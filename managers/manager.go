@@ -36,6 +36,7 @@ type GetAppWorker func() worker.Worker
 
 type TaskQuery struct {
 	Page        int    `json:"page" default:"1"`
+	Offset      int    `json:"-" default:"0"`
 	PerPage     int    `json:"per_page" default:"100"`
 	ContentID   string `json:"content_id" default:""`
 	ContainerID string `json:"container_id" default:""`
@@ -48,6 +49,7 @@ type TaskQuery struct {
 type ScreensQuery struct {
 	Text      string `json:"text" default:""`
 	Page      int    `json:"page" default:"1"`
+	Offset    int    `json:"-" default:"0"`
 	PerPage   int    `json:"per_page" default:"100"`
 	ContentID string `json:"content_id" default:""`
 	Order     string `json:"order" default:"created_at"`
@@ -58,6 +60,7 @@ type ContainerQuery struct {
 	Name          string `json:"name" default:""`
 	Search        string `json:"search" default:""`
 	Page          int    `json:"page" default:"1"`
+	Offset        int    `json:"-" default:"0"`
 	PerPage       int    `json:"per_page" default:"100"`
 	IncludeHidden bool   `json:"hidden" default:"false"`
 	Order         string `json:"order" default:"created_at"`
@@ -68,6 +71,7 @@ type ContentQuery struct {
 	Search        string   `json:"search" default:""`
 	Text          string   `json:"text" default:""`
 	Page          int      `json:"page" default:"1"`
+	Offset        int      `json:"-" default:"0"`
 	PerPage       int      `json:"per_page" default:"1000"`
 	ContentType   string   `json:"content_type" default:""`
 	ContainerID   string   `json:"container_id" default:""`
@@ -82,6 +86,7 @@ type TagQuery struct {
 	Search  string `json:"search" default:""`
 	Text    string `json:"text" default:""`
 	Page    int    `json:"page" default:"1"`
+	Offset  int    `json:"-" default:"0"`
 	PerPage int    `json:"per_page" default:"1000"` // Doesn't work on create?
 	TagType string `json:"tag_type" default:""`
 }
@@ -97,22 +102,22 @@ type ContentManager interface {
 
 	// Container Management
 	GetContainer(cID int64) (*models.Container, error)
-	ListContainers(cq ContainerQuery) (*models.Containers, int, error)
-	ListContainersFiltered(cq ContainerQuery) (*models.Containers, int, error)
-	ListContainersContext() (*models.Containers, int, error)
+	ListContainers(cq ContainerQuery) (*models.Containers, int64, error)
+	ListContainersFiltered(cq ContainerQuery) (*models.Containers, int64, error)
+	ListContainersContext() (*models.Containers, int64, error)
 	UpdateContainer(c *models.Container) (*models.Container, error)
 	CreateContainer(c *models.Container) error
 	DestroyContainer(id string) (*models.Container, error)
 
 	// Content listing (why did I name it Content vs Media?)
 	GetContent(content_id int64) (*models.Content, error)
-	ListContent(cs ContentQuery) (*models.Contents, int, error)
-	ListContentContext() (*models.Contents, int, error)
+	ListContent(cs ContentQuery) (*models.Contents, int64, error)
+	ListContentContext() (*models.Contents, int64, error)
 
-	SearchContentContext() (*models.Contents, int, error)
-	SearchContent(cq ContentQuery) (*models.Contents, int, error)
-	SearchContainersContext() (*models.Containers, int, error)
-	SearchContainers(cs ContainerQuery) (*models.Containers, int, error)
+	SearchContentContext() (*models.Contents, int64, error)
+	SearchContent(cq ContentQuery) (*models.Contents, int64, error)
+	SearchContainersContext() (*models.Containers, int64, error)
+	SearchContainers(cs ContainerQuery) (*models.Containers, int64, error)
 
 	UpdateContent(content *models.Content) error
 	UpdateContents(content models.Contents) error
@@ -121,8 +126,8 @@ type ContentManager interface {
 	GetPreviewForMC(mc *models.Content) (string, error)
 
 	// Functions that help with viewing movie screens if found.
-	ListScreensContext() (*models.Screens, int, error)
-	ListScreens(sr ScreensQuery) (*models.Screens, int, error)
+	ListScreensContext() (*models.Screens, int64, error)
+	ListScreens(sr ScreensQuery) (*models.Screens, int64, error)
 
 	GetScreen(psID int64) (*models.Screen, error)
 	CreateScreen(s *models.Screen) error
@@ -131,8 +136,8 @@ type ContentManager interface {
 
 	// Tags listing (oy do I need to deal with this?)
 	GetTag(id string) (*models.Tag, error)
-	ListAllTags(tq TagQuery) (*models.Tags, int, error)
-	ListAllTagsContext() (*models.Tags, int, error)
+	ListAllTags(tq TagQuery) (*models.Tags, int64, error)
+	ListAllTagsContext() (*models.Tags, int64, error)
 	CreateTag(tag *models.Tag) error
 	UpdateTag(tag *models.Tag) error
 	DestroyTag(id string) (*models.Tag, error)
@@ -145,8 +150,8 @@ type ContentManager interface {
 	NextTask() (*models.TaskRequest, error) // Assigns it (not really required yet)
 
 	// For the API exposed
-	ListTasksContext() (*models.TaskRequests, int, error)
-	ListTasks(query TaskQuery) (*models.TaskRequests, int, error)
+	ListTasksContext() (*models.TaskRequests, int64, error)
+	ListTasks(query TaskQuery) (*models.TaskRequests, int64, error)
 	GetTask(id int64) (*models.TaskRequest, error)
 }
 
@@ -204,6 +209,8 @@ func GinParamsToUrlValues(params gin.Params, queryValues url.Values) *url.Values
 func GetAppManager(getConnection GetConnType) ContentManager {
 	cfg := utils.GetCfg()
 	getParams := func() *url.Values {
+
+		// Need to fix this up as well or change the worker model.
 		return &url.Values{}
 	}
 	return CreateManager(cfg, getConnection, getParams)
@@ -303,7 +310,7 @@ func GetPagination(params pop.PaginationParams, DefaultLimit int) (int, int, int
 
 // TODO: Fill in tags if they are provided.
 func ContextToContentQuery(params pop.PaginationParams, cfg *utils.DirConfigEntry) ContentQuery {
-	_, per_page, page := GetPagination(params, cfg.Limit)
+	offset, per_page, page := GetPagination(params, cfg.Limit)
 	sReq := ContentQuery{
 		Text:          StringDefault(params.Get("text"), ""),
 		Search:        StringDefault(params.Get("search"), ""),
@@ -313,6 +320,7 @@ func ContextToContentQuery(params pop.PaginationParams, cfg *utils.DirConfigEntr
 		Page:          page,
 		IncludeHidden: false,
 		Order:         StringDefault(params.Get("order"), ""),
+		Offset:        offset,
 	}
 	tags, err := GetTagsFromParam(params.Get("tags"))
 	if err == nil {
@@ -326,12 +334,13 @@ func ContextToContentQuery(params pop.PaginationParams, cfg *utils.DirConfigEntr
 
 // TODO: Fill in tags if they are provided.
 func ContextToContainerQuery(params pop.PaginationParams, cfg *utils.DirConfigEntry) ContainerQuery {
-	_, per_page, page := GetPagination(params, cfg.Limit)
+	offset, per_page, page := GetPagination(params, cfg.Limit)
 	sReq := ContainerQuery{
 		Name:          StringDefault(params.Get("name"), ""),
 		Search:        StringDefault(params.Get("search"), ""),
 		PerPage:       per_page,
 		Page:          page,
+		Offset:        offset,
 		IncludeHidden: false,
 		Order:         StringDefault(params.Get("order"), ""),
 	}
@@ -436,7 +445,7 @@ func AssignTagsAndUpdate(man ContentManager, tags models.Tags) error {
 	// Do a loop if total > limit
 	offset := 0
 	page := 0
-	for offset < total {
+	for int64(offset) < total {
 		offset += cfg.Limit
 		page += 1
 		cs.Page = page

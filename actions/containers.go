@@ -25,7 +25,7 @@ import (
 // View Template Folder: Plural (/templates/containers/)
 
 type ContainersResponse struct {
-	Total   int               `json:"total"`
+	Total   int64             `json:"total"`
 	Results models.Containers `json:"results"`
 }
 

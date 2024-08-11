@@ -20,17 +20,17 @@ type HttpError struct {
 }
 
 type SearchContentsResult struct {
-	Total   int              `json:"total"`
+	Total   int64            `json:"total"`
 	Results *models.Contents `json:"results"`
 }
 
 type SearchContainersResult struct {
-	Total   int                `json:"total"`
+	Total   int64              `json:"total"`
 	Results *models.Containers `json:"results"`
 }
 
 // Builds out information given the application and the content directory
-func SetupContented(r *gin.Engine, contentDir string, numToPreview int, limit int) {
+func SetupContented(r *gin.Engine, contentDir string, numToPreview int64, limit int) {
 	cfg := utils.GetCfg()
 
 	// Initialize workers that will listen for encoding tasks (GoBuffalo has some Gin does not)

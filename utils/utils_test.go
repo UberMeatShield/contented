@@ -263,7 +263,7 @@ func Test_CreateContentMatcher(t *testing.T) {
 	}
 }
 
-func example(sleep int, msg string, reply chan string) {
+func example(sleep int64, msg string, reply chan string) {
 	sleepTime := time.Duration(sleep) * time.Millisecond
 	time.Sleep(sleepTime)
 	// fmt.Printf("Done sleeping %d with msg %s \n", sleep, msg)

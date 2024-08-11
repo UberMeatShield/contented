@@ -54,3 +54,7 @@ func TestContent(t *testing.T) {
 		t.Errorf("Failed to get the correct tags back %d", len(check.Tags))
 	}
 }
+
+func TestContentPagination(t *testing.T) {
+	t.Errorf("IMPLEMENT AND THEN FIX DB Manager")
+}

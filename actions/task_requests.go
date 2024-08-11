@@ -29,7 +29,7 @@ type TaskRequestsResource struct {
 }
 
 type TaskRequestResponse struct {
-	Total   int                 `json:"total"`
+	Total   int64               `json:"total"`
 	Results models.TaskRequests `json:"results"`
 }
 

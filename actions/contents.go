@@ -12,7 +12,7 @@ import (
 )
 
 type ContentsResponse struct {
-	Total   int             `json:"total"`
+	Total   int64           `json:"total"`
 	Results models.Contents `json:"results"`
 }
 
@@ -22,7 +22,7 @@ func ContentsResourceList(c *gin.Context) {
 	// Optional params suuuuck in GoLang
 	cIDStr := c.Param("container_id")
 	if cIDStr != "" {
-		_, err := strconv.ParseInt(cIDStr, 10, 32)
+		_, err := strconv.ParseInt(cIDStr, 10, 64)
 		if err != nil {
 			c.AbortWithError(http.StatusBadRequest, err)
 			return

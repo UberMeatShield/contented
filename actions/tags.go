@@ -17,7 +17,7 @@ type TagsResource struct {
 }
 
 type TagResponse struct {
-	Total   int         `json:"total"`
+	Total   int64       `json:"total"`
 	Results models.Tags `json:"results"`
 }
 

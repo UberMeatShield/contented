@@ -74,7 +74,7 @@ func (cm ContentManagerMemory) GetParams() *url.Values {
 	return cm.Params()
 }
 
-func (cm ContentManagerMemory) ListContentContext() (*models.Contents, int, error) {
+func (cm ContentManagerMemory) ListContentContext() (*models.Contents, int64, error) {
 	params := cm.Params()
 	_, limit, page := GetPagination(params, cm.cfg.Limit)
 
@@ -91,13 +91,13 @@ func (cm ContentManagerMemory) ListContentContext() (*models.Contents, int, erro
 }
 
 // It should probably be able to search the container too?
-func (cm ContentManagerMemory) SearchContentContext() (*models.Contents, int, error) {
+func (cm ContentManagerMemory) SearchContentContext() (*models.Contents, int64, error) {
 	sr := ContextToContentQuery(cm.Params(), cm.GetCfg())
 	return cm.SearchContent(sr)
 }
 
 // Memory version is going to be extra annoying to tag search more than one tag on an or, or AND...
-func (cm ContentManagerMemory) SearchContent(sr ContentQuery) (*models.Contents, int, error) {
+func (cm ContentManagerMemory) SearchContent(sr ContentQuery) (*models.Contents, int64, error) {
 	filteredContent, cErr := cm.getContentFiltered(sr)
 	if cErr != nil {
 		return nil, 0, cErr
@@ -123,9 +123,9 @@ func (cm ContentManagerMemory) SearchContent(sr ContentQuery) (*models.Contents,
 	}
 	if end > 0 { // If it is empty a slice ending in 0 = boom
 		mc_arr = mc_arr[offset:end]
-		return &mc_arr, count, nil
+		return &mc_arr, int64(count), nil
 	}
-	return &mc_arr, count, nil
+	return &mc_arr, int64(count), nil
 }
 
 // This is not great but there isn't a lookup of tag => contents
@@ -234,13 +234,13 @@ func (cm ContentManagerMemory) getContentFiltered(cs ContentQuery) (*models.Cont
 }
 
 // It should probably be able to search the container too?
-func (cm ContentManagerMemory) SearchContainersContext() (*models.Containers, int, error) {
+func (cm ContentManagerMemory) SearchContainersContext() (*models.Containers, int64, error) {
 	cq := ContextToContainerQuery(cm.Params(), cm.GetCfg())
 	return cm.SearchContainers(cq)
 }
 
 // TODO: Make it page but right now this will only be used in splash (regex it?)
-func (cm ContentManagerMemory) SearchContainers(cs ContainerQuery) (*models.Containers, int, error) {
+func (cm ContentManagerMemory) SearchContainers(cs ContainerQuery) (*models.Containers, int64, error) {
 	limit := cs.PerPage
 	cs.PerPage = 90000 // Search everything in the filtered section
 	cnts, _, cErr := cm.ListContainersFiltered(cs)
@@ -263,7 +263,7 @@ func (cm ContentManagerMemory) SearchContainers(cs ContainerQuery) (*models.Cont
 	if cs.Direction == "desc" {
 		cArr = cArr.Reverse()
 	}
-	count := len(cArr)
+	count := int64(len(cArr))
 	if end > 0 { // If it is empty a slice ending in 0 = boom
 		cArr = cArr[offset:end]
 		return &cArr, count, nil
@@ -272,12 +272,12 @@ func (cm ContentManagerMemory) SearchContainers(cs ContainerQuery) (*models.Cont
 }
 
 // Awkard GoLang interface support is awkward
-func (cm ContentManagerMemory) ListContent(cs ContentQuery) (*models.Contents, int, error) {
+func (cm ContentManagerMemory) ListContent(cs ContentQuery) (*models.Contents, int64, error) {
 	cs.IncludeHidden = false
 	return cm.ListContentFiltered(cs)
 }
 
-func (cm ContentManagerMemory) ListContentFiltered(cs ContentQuery) (*models.Contents, int, error) {
+func (cm ContentManagerMemory) ListContentFiltered(cs ContentQuery) (*models.Contents, int64, error) {
 	m_arr := models.Contents{}
 	mem := cm.GetStore()
 
@@ -296,7 +296,7 @@ func (cm ContentManagerMemory) ListContentFiltered(cs ContentQuery) (*models.Con
 		}
 	}
 
-	if contentID, badIdErr := strconv.ParseInt(cs.ContentID, 10, 32); badIdErr == nil {
+	if contentID, badIdErr := strconv.ParseInt(cs.ContentID, 10, 64); badIdErr == nil {
 		for _, content := range m_arr {
 			if content.ID == contentID {
 				m_arr = models.Contents{content}
@@ -332,10 +332,10 @@ func (cm ContentManagerMemory) ListContentFiltered(cs ContentQuery) (*models.Con
 	offset, end := GetOffsetEnd(cs.Page, cs.PerPage, len(m_arr))
 	if end > 0 { // If it is empty a slice ending in 0 = boom
 		m_arr = m_arr[offset:end]
-		return &m_arr, count, nil
+		return &m_arr, int64(count), nil
 	}
 	// log.Printf("Get a list of content offset(%d), end(%d) we should have some %d", offset, end, len(m_arr))
-	return &m_arr, count, nil
+	return &m_arr, int64(count), nil
 
 }
 
@@ -406,7 +406,7 @@ func (cm ContentManagerMemory) UpdateScreen(s *models.Screen) error {
 // TODO: Probably port all Context interfaces to pass in a url.Values element.
 // TODO: On the actions layer make a gin.Context to the Gin params
 // TODO: Remove all Gin or buffalo from the manager layer, it is just not good
-func (cm ContentManagerMemory) ListContainersContext() (*models.Containers, int, error) {
+func (cm ContentManagerMemory) ListContainersContext() (*models.Containers, int64, error) {
 	params := cm.Params()
 	_, limit, page := GetPagination(params, cm.cfg.Limit)
 	cs := ContainerQuery{
@@ -419,11 +419,11 @@ func (cm ContentManagerMemory) ListContainersContext() (*models.Containers, int,
 }
 
 // Actually list containers using a page and per_page which is consistent with buffalo standard pagination
-func (cm ContentManagerMemory) ListContainers(cs ContainerQuery) (*models.Containers, int, error) {
+func (cm ContentManagerMemory) ListContainers(cs ContainerQuery) (*models.Containers, int64, error) {
 	return cm.ListContainersFiltered(cs)
 }
 
-func (cm ContentManagerMemory) ListContainersFiltered(cs ContainerQuery) (*models.Containers, int, error) {
+func (cm ContentManagerMemory) ListContainersFiltered(cs ContainerQuery) (*models.Containers, int64, error) {
 	c_arr := models.Containers{}
 	mem := cm.GetStore()
 	for _, c := range mem.ValidContainers {
@@ -442,9 +442,9 @@ func (cm ContentManagerMemory) ListContainersFiltered(cs ContainerQuery) (*model
 		return c_arr[i].Idx < c_arr[j].Idx
 	})
 	count := len(c_arr)
-	offset, end := GetOffsetEnd(cs.Page, cs.PerPage, len(c_arr))
+	offset, end := GetOffsetEnd(cs.Page, cs.PerPage, count)
 	c_arr = c_arr[offset:end]
-	return &c_arr, count, nil
+	return &c_arr, int64(count), nil
 }
 
 // Get a single container given the primary key
@@ -491,7 +491,7 @@ func (cm ContentManagerMemory) SetPreviewIfExists(mc *models.Content) (string, e
 	return pFile, nil
 }
 
-func (cm ContentManagerMemory) ListScreensContext() (*models.Screens, int, error) {
+func (cm ContentManagerMemory) ListScreensContext() (*models.Screens, int64, error) {
 	// Could add the context here correctly
 	params := cm.Params()
 	_, limit, page := GetPagination(params, cm.cfg.Limit)
@@ -506,7 +506,7 @@ func (cm ContentManagerMemory) ListScreensContext() (*models.Screens, int, error
 
 // TODO: Get a pattern for each MC, look at a preview Destination, then match against the pattern
 // And build out a set of screens.
-func (cm ContentManagerMemory) ListScreens(sq ScreensQuery) (*models.Screens, int, error) {
+func (cm ContentManagerMemory) ListScreens(sq ScreensQuery) (*models.Screens, int64, error) {
 
 	// Did I create this just to sort by Idx across all content?  Kinda strange
 	mem := cm.GetStore()
@@ -532,12 +532,12 @@ func (cm ContentManagerMemory) ListScreens(sq ScreensQuery) (*models.Screens, in
 		s_arr = s_arr.Reverse()
 	}
 	count := len(s_arr)
-	offset, end := GetOffsetEnd(sq.Page, sq.PerPage, len(s_arr))
+	offset, end := GetOffsetEnd(sq.Page, sq.PerPage, count)
 	if end > 0 { // If it is empty a slice ending in 0 = boom
 		s_arr = s_arr[offset:end]
-		return &s_arr, count, nil
+		return &s_arr, int64(count), nil
 	}
-	return &s_arr, count, nil
+	return &s_arr, int64(count), nil
 }
 
 func (cm ContentManagerMemory) GetScreen(psID int64) (*models.Screen, error) {
@@ -550,7 +550,7 @@ func (cm ContentManagerMemory) GetScreen(psID int64) (*models.Screen, error) {
 }
 
 // It really seems like it would be nicer to have a base class do this...
-func (cm ContentManagerMemory) ListAllTags(tq TagQuery) (*models.Tags, int, error) {
+func (cm ContentManagerMemory) ListAllTags(tq TagQuery) (*models.Tags, int64, error) {
 	log.Printf("Using memory manager for tag page %d perPage %d \n", tq.Page, tq.PerPage)
 	t_arr := models.Tags{}
 	mem := cm.GetStore()
@@ -566,14 +566,14 @@ func (cm ContentManagerMemory) ListAllTags(tq TagQuery) (*models.Tags, int, erro
 	sort.SliceStable(t_arr, func(i, j int) bool {
 		return t_arr[i].ID < t_arr[j].ID
 	})
-	offset, end := GetOffsetEnd(tq.Page, tq.PerPage, len(t_arr))
 	total := len(t_arr)
+	offset, end := GetOffsetEnd(tq.Page, tq.PerPage, total)
 
 	if end > 0 { // If it is empty a slice ending in 0 = boom
 		t_arr = t_arr[offset:end]
-		return &t_arr, total, nil
+		return &t_arr, int64(total), nil
 	}
-	return &t_arr, total, errors.New("Not implemented")
+	return &t_arr, int64(total), fmt.Errorf("Invalid Page end %s per page %s", tq.Page, tq.PerPage)
 }
 
 func (cm ContentManagerMemory) GetTag(id string) (*models.Tag, error) {
@@ -584,7 +584,7 @@ func (cm ContentManagerMemory) GetTag(id string) (*models.Tag, error) {
 	return nil, errors.New(fmt.Sprintf("Tag not found %s", id))
 }
 
-func (cm ContentManagerMemory) ListAllTagsContext() (*models.Tags, int, error) {
+func (cm ContentManagerMemory) ListAllTagsContext() (*models.Tags, int64, error) {
 	params := cm.Params()
 	_, limit, page := GetPagination(params, cm.cfg.Limit)
 	tq := TagQuery{
@@ -770,7 +770,7 @@ func (cm ContentManagerMemory) NextTask() (*models.TaskRequest, error) {
 /*
 *
  */
-func (cm ContentManagerMemory) ListTasksContext() (*models.TaskRequests, int, error) {
+func (cm ContentManagerMemory) ListTasksContext() (*models.TaskRequests, int64, error) {
 	params := cm.Params()
 	_, limit, page := GetPagination(params, cm.GetCfg().Limit)
 	query := TaskQuery{
@@ -782,7 +782,7 @@ func (cm ContentManagerMemory) ListTasksContext() (*models.TaskRequests, int, er
 	return cm.ListTasks(query)
 }
 
-func (cm ContentManagerMemory) ListTasks(query TaskQuery) (*models.TaskRequests, int, error) {
+func (cm ContentManagerMemory) ListTasks(query TaskQuery) (*models.TaskRequests, int64, error) {
 	mem := cm.GetStore()
 	task_arr := mem.ValidTasks
 	if query.ContentID != "" {
@@ -811,7 +811,7 @@ func (cm ContentManagerMemory) ListTasks(query TaskQuery) (*models.TaskRequests,
 	offset, end := GetOffsetEnd(query.Page, query.PerPage, total)
 	if end > 0 { // If it is empty a slice ending in 0 = boom
 		task_arr = task_arr[offset:end]
-		return &task_arr, total, nil
+		return &task_arr, int64(total), nil
 	}
-	return &task_arr, total, nil
+	return &task_arr, int64(total), nil
 }

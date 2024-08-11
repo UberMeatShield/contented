@@ -18,7 +18,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/buffalo/worker"
-	"github.com/gobuffalo/pop/v6"
+	"gorm.io/gorm"
 )
 
 type TasksQueuedResponse struct {
@@ -26,14 +26,11 @@ type TasksQueuedResponse struct {
 	Results models.TaskRequests `json:"results" default:"[]"`
 }
 
-/**
- * Execute the task within the transaction middleware scope.
- * TODO: Can this work in a full unit test?
- */
-func VideoEncodingWrapper(args worker.Args) error {
-	log.Printf("VideoEncodingWrapper () Starting Task args %s", args)
+type HandleTaskTypeFunc func(managers.ContentManager, int64) error
+
+func HandleTask(args worker.Args, taskFunc HandleTaskTypeFunc) error {
 	cfg := utils.GetCfg()
-	getConnection := func() *pop.Connection {
+	getConnection := func() *gorm.DB {
 		return nil
 	}
 	App(cfg.UseDatabase)
@@ -44,17 +41,38 @@ func VideoEncodingWrapper(args worker.Args) error {
 	// Note this is extra complicated by the fact it SHOULD be able to run with NO connections
 	// or DB sessions made.
 	if cfg.UseDatabase {
-		return models.DB.Transaction(func(tx *pop.Connection) error {
-			getConnection = func() *pop.Connection {
-				return tx
+
+		var conn *gorm.DB
+		getConnection = func() *gorm.DB {
+			if conn == nil {
+				conn = models.InitGorm(false)
+				if conn == nil || conn.Error == nil {
+					log.Fatalf("Failed to get a db connection %s", conn.Error)
+					return nil
+				}
 			}
-			man := managers.GetAppManager(getConnection)
-			return managers.EncodingVideoTask(man, taskId)
-		})
+			return conn
+		}
+
+		man := managers.GetAppManager(getConnection)
+		return taskFunc(man, taskId)
 	}
 	// Memory manager version
 	man := managers.GetAppManager(getConnection)
-	return managers.EncodingVideoTask(man, taskId)
+	return taskFunc(man, taskId)
+}
+
+/**
+ *
+ */
+
+/**
+ * Execute the task within the transaction middleware scope.
+ * TODO: Can this work in a full unit test?
+ */
+func VideoEncodingWrapper(args worker.Args) error {
+	log.Printf("VideoEncodingWrapper () Starting Task args %s", args)
+	return HandleTask(args, managers.EncodingVideoTask)
 }
 
 /*
@@ -63,59 +81,12 @@ func VideoEncodingWrapper(args worker.Args) error {
  */
 func ScreenCaptureWrapper(args worker.Args) error {
 	log.Printf("ScreenCaptureWrapper() Starting Task args %s", args)
-	cfg := utils.GetCfg()
-	getConnection := func() *pop.Connection {
-		return nil
-	}
-	App(cfg.UseDatabase)
-	taskId, err := GetTaskId(args)
-	if err != nil {
-		return err
-	}
-
-	// Note this is extra complicated by the fact it SHOULD be able to run with NO connections
-	// or DB sessions made.
-	if cfg.UseDatabase {
-		// There has to be a good way to have all transaction middleware commit and work
-		// without exploding and being fully wrapping the scope.
-		return models.DB.Transaction(func(tx *pop.Connection) error {
-			getConnection = func() *pop.Connection {
-				return tx
-			}
-			man := managers.GetAppManager(getConnection)
-			return managers.ScreenCaptureTask(man, taskId)
-		})
-	}
-	// Memory manager version
-	man := managers.GetAppManager(getConnection)
-	return managers.ScreenCaptureTask(man, taskId)
+	return HandleTask(args, managers.ScreenCaptureTask)
 }
 
 func WebpFromScreensWrapper(args worker.Args) error {
 	log.Printf("Web From Screens () Starting Task args %s", args)
-	cfg := utils.GetCfg()
-	getConnection := func() *pop.Connection {
-		return nil
-	}
-	App(cfg.UseDatabase)
-	taskId, err := GetTaskId(args)
-	if err != nil {
-		return err
-	}
-	// Note this is extra complicated by the fact it SHOULD be able to run with NO connections
-	// or DB sessions made.
-	if cfg.UseDatabase {
-		return models.DB.Transaction(func(tx *pop.Connection) error {
-			getConnection = func() *pop.Connection {
-				return tx
-			}
-			man := managers.GetAppManager(getConnection)
-			return managers.WebpFromScreensTask(man, taskId)
-		})
-	}
-	// Memory manager version
-	man := managers.GetAppManager(getConnection)
-	return managers.WebpFromScreensTask(man, taskId)
+	return HandleTask(args, managers.WebpFromScreensTask)
 }
 
 /*
@@ -123,56 +94,12 @@ func WebpFromScreensWrapper(args worker.Args) error {
  */
 func TaggingContentWrapper(args worker.Args) error {
 	log.Printf("Tagging content element () Starting Task args %s", args)
-	cfg := utils.GetCfg()
-	getConnection := func() *pop.Connection {
-		return nil
-	}
-	App(cfg.UseDatabase)
-	taskId, err := GetTaskId(args)
-	if err != nil {
-		return err
-	}
-	// Note this is extra complicated by the fact it SHOULD be able to run with NO connections
-	// or DB sessions made.
-	if cfg.UseDatabase {
-		return models.DB.Transaction(func(tx *pop.Connection) error {
-			getConnection = func() *pop.Connection {
-				return tx
-			}
-			man := managers.GetAppManager(getConnection)
-			return managers.TaggingContentTask(man, taskId)
-		})
-	}
-	// Memory manager version
-	man := managers.GetAppManager(getConnection)
-	return managers.TaggingContentTask(man, taskId)
+	return HandleTask(args, managers.TaggingContentTask)
 }
 
 func DuplicatesWrapper(args worker.Args) error {
 	log.Printf("Finding Duplicates %s", args)
-	cfg := utils.GetCfg()
-	getConnection := func() *pop.Connection {
-		return nil
-	}
-	App(cfg.UseDatabase)
-	taskId, err := GetTaskId(args)
-	if err != nil {
-		return err
-	}
-	// Note this is extra complicated by the fact it SHOULD be able to run with NO connections
-	// or DB sessions made.
-	if cfg.UseDatabase {
-		return models.DB.Transaction(func(tx *pop.Connection) error {
-			getConnection = func() *pop.Connection {
-				return tx
-			}
-			man := managers.GetAppManager(getConnection)
-			return managers.DetectDuplicatesTask(man, taskId)
-		})
-	}
-	// Memory manager version
-	man := managers.GetAppManager(getConnection)
-	return managers.DetectDuplicatesTask(man, taskId)
+	return HandleTask(args, managers.DetectDuplicatesTask)
 }
 
 func GetTaskId(args worker.Args) (int64, error) {
@@ -421,7 +348,7 @@ func ContentTaskScreensHandler(c *gin.Context) {
 		c.AbortWithError(http.StatusNotFound, cErr)
 		return
 	}
-	tr, tErr := CreateScreensTask(content, numberOfScreens, startTimeSeconds)
+	tr, tErr := CreateScreensTask(content, int(numberOfScreens), int(startTimeSeconds))
 	if tErr != nil {
 		c.AbortWithError(http.StatusBadRequest, tErr)
 		return
@@ -448,7 +375,7 @@ func ValidateScreensParams(params url.Values) (int, int, error) {
 }
 
 func ContainerScreensHandler(c *gin.Context) {
-	cID, badId := strconv.ParseInt(c.Param("container_id"), 10, 32)
+	cID, badId := strconv.ParseInt(c.Param("container_id"), 10, 64)
 	if badId != nil {
 		c.AbortWithError(http.StatusBadRequest, badId)
 		return

@@ -20,7 +20,7 @@ import (
 // Path: Plural (/screens)
 // View Template Folder: Plural (/templates/screens/)
 type ScreensResponse struct {
-	Total   int            `json:"total" default:"0"`
+	Total   int64          `json:"total" default:"0"`
 	Results models.Screens `json:"results" default:"[]"`
 }
 

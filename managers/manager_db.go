@@ -49,35 +49,38 @@ func (cm ContentManagerDB) CanEdit() bool {
 	return !cfg.ReadOnly
 }
 
-func (cm ContentManagerDB) ListContentContext() (*models.Contents, int, error) {
+func (cm ContentManagerDB) ListContentContext() (*models.Contents, int64, error) {
 	// Could add the context here correctly
 	params := cm.Params()
-	_, limit, page := GetPagination(params, cm.cfg.Limit)
+	offset, limit, page := GetPagination(params, cm.cfg.Limit)
 	cs := ContentQuery{
 		ContainerID: StringDefault(params.Get("container_id"), ""),
 		Page:        page,
+		Offset:      offset,
 		PerPage:     limit,
 	}
 	return cm.ListContent(cs)
 }
 
 // Awkard GoLang interface support is awkward
-func (cm ContentManagerDB) ListContent(cs ContentQuery) (*models.Contents, int, error) {
+func (cm ContentManagerDB) ListContent(cs ContentQuery) (*models.Contents, int64, error) {
 	log.Printf("Get a list of content from DB, we should have some %s", cs.ContainerID)
 	tx := cm.GetConnection()
 	contentContainers := &models.Contents{}
 
 	// Paginate results. Params "page" and "per_page" control pagination.
-	q := tx.Paginate(cs.Page, cs.PerPage)
+	q := tx.Offset(cs.Offset).Limit(cs.PerPage)
 	if cs.ContainerID != "" {
 		q = q.Where("container_id = ?", cs.ContainerID)
 	}
 	q = q.Order(models.GetContentOrder(cs.Order, cs.Direction))
 
-	count, _ := q.Count(&models.Contents{})
+	// Oy, have to count
+	var count int64
+	q.Count(&count)
 	if count > 0 {
-		if q_err := q.All(contentContainers); q_err != nil {
-			return nil, -1, q_err
+		if res := q.Find(contentContainers); res != nil {
+			return nil, -1, res.Error
 		}
 	}
 	return contentContainers, count, nil
@@ -164,36 +167,37 @@ func (cm ContentManagerDB) UpdateScreen(s *models.Screen) error {
 	return res.Error
 }
 
-func (cm ContentManagerDB) ListAllContent(page int, per_page int) (*models.Contents, error) {
+func (cm ContentManagerDB) ListAllContent(page int64, perPage int) (*models.Contents, error) {
 	log.Printf("List all content DB manager")
 	tx := cm.GetConnection()
-	q := tx.Paginate(page, per_page)
+
+	q := tx.Offset(int(page) - 1).Limit(perPage)
 	contentContainers := &models.Contents{}
-	if err := q.All(contentContainers); err != nil {
-		return nil, err
+	if res := q.Find(contentContainers); res.Error != nil {
+		return nil, res.Error
 	}
 	return contentContainers, nil
 }
 
 // It should probably be able to search the container too?
-func (cm ContentManagerDB) SearchContentContext() (*models.Contents, int, error) {
+func (cm ContentManagerDB) SearchContentContext() (*models.Contents, int64, error) {
 	sr := ContextToContentQuery(cm.Params(), cm.GetCfg())
 	return cm.SearchContent(sr)
 }
 
 // It should probably be able to search the container too?
-func (cm ContentManagerDB) SearchContainersContext() (*models.Containers, int, error) {
+func (cm ContentManagerDB) SearchContainersContext() (*models.Containers, int64, error) {
 	cq := ContextToContainerQuery(cm.Params(), cm.GetCfg())
 	return cm.SearchContainers(cq)
 }
 
-func (cm ContentManagerDB) SearchContent(sr ContentQuery) (*models.Contents, int, error) {
+func (cm ContentManagerDB) SearchContent(sr ContentQuery) (*models.Contents, int64, error) {
 	contentContainers := &models.Contents{}
 	tx := cm.GetConnection()
-	q := tx.Paginate(sr.Page, sr.PerPage)
+	q := tx.Offset(sr.Offset).Limit(sr.PerPage)
 
 	if len(sr.Tags) > 0 {
-		q = q.Join("contents_tags as ct", "ct.content_id = contents.id").Where("ct.tag_id IN (?)", sr.Tags)
+		q = q.Joins("contents_tags as ct", "ct.content_id = contents.id").Where("ct.tag_id IN (?)", sr.Tags)
 	}
 	// TODO: Could also search description (expand this)
 	if sr.Search != "*" && sr.Search != "" {
@@ -213,17 +217,21 @@ func (cm ContentManagerDB) SearchContent(sr ContentQuery) (*models.Contents, int
 	if sr.ContainerID != "" {
 		q = q.Where(`container_id = ?`, sr.ContainerID)
 	}
-	if sr.IncludeHidden == false {
+	if sr.IncludeHidden {
 		q = q.Where(`hidden = ?`, false)
 	}
 	q = q.Order(models.GetContentOrder(sr.Order, sr.Direction))
 
-	count, _ := q.Count(&models.Contents{})
-	log.Printf("Total count of search content %d using search (%s) and contentType (%s)", count, sr.Text, sr.ContentType)
+	var count int64
+	res := q.Model(models.Contents{}).Count(&count)
+	if res.Error != nil {
+		return nil, count, res.Error
+	}
 
+	log.Printf("Total count of search content %d using search (%s) and contentType (%s)", count, sr.Text, sr.ContentType)
 	if count > 0 {
-		if q_err := q.All(contentContainers); q_err != nil {
-			return contentContainers, -1, q_err
+		if res := q.Find(contentContainers); res.Error != nil {
+			return contentContainers, -1, res.Error
 		}
 		// Now need to get any screens and associate them in a lookup
 		screenMap, s_err := cm.LoadRelatedScreens(contentContainers)
@@ -242,22 +250,27 @@ func (cm ContentManagerDB) SearchContent(sr ContentQuery) (*models.Contents, int
 	return contentContainers, count, nil
 }
 
-func (cm ContentManagerDB) SearchContainers(cs ContainerQuery) (*models.Containers, int, error) {
+func (cm ContentManagerDB) SearchContainers(cs ContainerQuery) (*models.Containers, int64, error) {
 	if cs.Search == "" || cs.Search == "*" {
 		return cm.ListContainers(cs)
 	}
 	containers := &models.Containers{}
 	tx := cm.GetConnection()
-	q := tx.Paginate(cs.Page, cs.PerPage)
+	q := tx.Offset(cs.Offset).Limit(cs.PerPage)
 	q = q.Where("name ilike ?", cs.Search)
 	if cs.IncludeHidden == false {
 		q = q.Where(`hidden = ?`, false)
 	}
 	q = q.Order(models.GetContainerOrder(cs.Order, cs.Direction))
-	count, _ := q.Count(&models.Containers{})
+
+	var count int64
+	res := q.Model(&models.Containers{}).Count(&count)
+	if res.Error != nil {
+		return nil, count, res.Error
+	}
 	if count > 0 {
-		if q_err := q.All(containers); q_err != nil {
-			return containers, -1, q_err
+		if res := q.Find(containers); res.Error != nil {
+			return containers, -1, res.Error
 		}
 	}
 	return containers, count, nil
@@ -300,36 +313,41 @@ func (cm ContentManagerDB) LoadRelatedScreens(content *models.Contents) (models.
 }
 
 // The default list using the current manager configuration
-func (cm ContentManagerDB) ListContainersContext() (*models.Containers, int, error) {
+func (cm ContentManagerDB) ListContainersContext() (*models.Containers, int64, error) {
 	params := cm.Params()
-	_, limit, page := GetPagination(params, cm.cfg.Limit)
+	offset, limit, page := GetPagination(params, cm.cfg.Limit)
 	cs := ContainerQuery{
 		Name:    StringDefault(params.Get("name"), ""),
 		Page:    page,
+		Offset:  offset,
 		PerPage: limit,
 	}
 	return cm.ListContainers(cs)
 }
 
-func (cm ContentManagerDB) ListContainers(cs ContainerQuery) (*models.Containers, int, error) {
+func (cm ContentManagerDB) ListContainers(cs ContainerQuery) (*models.Containers, int64, error) {
 	return cm.ListContainersFiltered(cs)
 }
 
 // TODO: Add in support for actually doing the query using the current buffalo.Context
-func (cm ContentManagerDB) ListContainersFiltered(cs ContainerQuery) (*models.Containers, int, error) {
+func (cm ContentManagerDB) ListContainersFiltered(cs ContainerQuery) (*models.Containers, int64, error) {
 	tx := cm.GetConnection()
-	q := tx.Paginate(cs.Page, cs.PerPage)
+	q := tx.Offset(cs.Offset).Limit(cs.PerPage)
 	if !cs.IncludeHidden {
 		q = q.Where("hidden = ?", false)
 	}
 	q.Order(models.GetContainerOrder(cs.Order, cs.Direction))
 
 	// Retrieve all Containers from the DB (if there are any)
-	count, _ := q.Count(&models.Containers{})
+	var count int64
+	cRes := q.Model(&models.Containers{}).Count(&count)
+	if cRes.Error != nil {
+		return nil, count, cRes.Error
+	}
 	containers := &models.Containers{}
 	if count > 0 {
-		if err := q.All(containers); err != nil {
-			return nil, count, err
+		if res := q.Find(containers); res.Error != nil {
+			return nil, count, res.Error
 		}
 	}
 	return containers, count, nil
@@ -375,12 +393,13 @@ func (cm ContentManagerDB) FindActualFile(mc *models.Content) (string, error) {
 	return utils.GetFilePathInContainer(mc.Src, cnt.GetFqPath())
 }
 
-func (cm ContentManagerDB) ListScreensContext() (*models.Screens, int, error) {
+func (cm ContentManagerDB) ListScreensContext() (*models.Screens, int64, error) {
 	// Could add the context here correctly
 	params := cm.Params()
-	_, limit, page := GetPagination(params, cm.cfg.Limit)
+	offset, limit, page := GetPagination(params, cm.cfg.Limit)
 	sr := ScreensQuery{
 		Page:      page,
+		Offset:    offset,
 		PerPage:   limit,
 		ContentID: params.Get("content_id"),
 	}
@@ -388,17 +407,22 @@ func (cm ContentManagerDB) ListScreensContext() (*models.Screens, int, error) {
 }
 
 // TODO: Re-Assign the preview based on screen information
-func (cm ContentManagerDB) ListScreens(sr ScreensQuery) (*models.Screens, int, error) {
+func (cm ContentManagerDB) ListScreens(sr ScreensQuery) (*models.Screens, int64, error) {
 	tx := cm.GetConnection()
 	previews := &models.Screens{}
-	q := tx.Paginate(sr.Page, sr.PerPage)
+	q := tx.Offset(sr.Offset).Limit(sr.PerPage)
 	if sr.ContentID != "" {
 		q = q.Where("content_id = ?", sr.ContentID)
 	}
-	count, _ := q.Count(&models.Screens{})
+
+	var count int64
+	cRes := q.Model(&models.Screens{}).Count(&count)
+	if cRes != nil {
+		return nil, count, cRes.Error
+	}
 	if count > 0 {
-		if q_err := q.All(previews); q_err != nil {
-			return nil, -1, q_err
+		if res := q.Find(previews); res.Error != nil {
+			return nil, -1, res.Error
 		}
 	}
 	return previews, count, nil
@@ -476,29 +500,35 @@ func (cm ContentManagerDB) DestroyScreen(id string) (*models.Screen, error) {
 	return screen, nil
 }
 
-func (cm ContentManagerDB) ListAllTags(tq TagQuery) (*models.Tags, int, error) {
+func (cm ContentManagerDB) ListAllTags(tq TagQuery) (*models.Tags, int64, error) {
 	tx := cm.GetConnection()
-	q := tx.Paginate(tq.Page, tq.PerPage)
+	q := tx.Offset(tq.Offset).Limit(tq.PerPage)
 	if tq.TagType != "" {
 		q = q.Where("tag_type = ?", tq.TagType)
 	}
-	total, _ := q.Count(&models.Tags{})
+	var total int64
+	cRes := q.Model(&models.Tags{}).Count(&total)
+	if cRes.Error != nil {
+		return nil, total, cRes.Error
+	}
+
 	tags := &models.Tags{}
 	if total > 0 {
-		if q_err := q.All(tags); q_err != nil {
-			return nil, total, q_err
+		if res := q.Find(tags); res.Error != nil {
+			return nil, total, res.Error
 		}
 	}
 	return tags, total, nil
 }
 
-func (cm ContentManagerDB) ListAllTagsContext() (*models.Tags, int, error) {
+func (cm ContentManagerDB) ListAllTagsContext() (*models.Tags, int64, error) {
 	params := cm.Params()
-	_, limit, page := GetPagination(params, cm.cfg.Limit)
+	offset, limit, page := GetPagination(params, cm.cfg.Limit)
 	tq := TagQuery{
 		Page:    page,
 		PerPage: limit,
 		TagType: StringDefault(params.Get("tag_type"), ""),
+		Offset:  offset,
 	}
 	return cm.ListAllTags(tq)
 }
@@ -669,10 +699,9 @@ func (cm ContentManagerDB) GetTask(id int64) (*models.TaskRequest, error) {
 func (cm ContentManagerDB) NextTask() (*models.TaskRequest, error) {
 	tasks := models.TaskRequests{}
 	tx := cm.GetConnection()
-	q := tx.Paginate(1, 1)
-	err := q.Where("status = ?", models.TaskStatus.NEW).All(&tasks)
-	if err != nil {
-		return nil, err
+	res := tx.Limit(1).Where("status = ?", models.TaskStatus.NEW).Find(&tasks)
+	if res.Error != nil {
+		return nil, res.Error
 	}
 	if len(tasks) == 1 {
 		task := tasks[0]
@@ -682,11 +711,12 @@ func (cm ContentManagerDB) NextTask() (*models.TaskRequest, error) {
 	return nil, errors.New("No Tasks to pull off the queue")
 }
 
-func (cm ContentManagerDB) ListTasksContext() (*models.TaskRequests, int, error) {
+func (cm ContentManagerDB) ListTasksContext() (*models.TaskRequests, int64, error) {
 	params := cm.Params()
-	_, limit, page := GetPagination(params, cm.GetCfg().Limit)
+	offset, limit, page := GetPagination(params, cm.GetCfg().Limit)
 	query := TaskQuery{
 		Page:        page,
+		Offset:      offset,
 		PerPage:     limit,
 		ContentID:   StringDefault(params.Get("content_id"), ""),
 		ContainerID: StringDefault(params.Get("container_id"), ""),
@@ -696,10 +726,10 @@ func (cm ContentManagerDB) ListTasksContext() (*models.TaskRequests, int, error)
 	return cm.ListTasks(query)
 }
 
-func (cm ContentManagerDB) ListTasks(query TaskQuery) (*models.TaskRequests, int, error) {
+func (cm ContentManagerDB) ListTasks(query TaskQuery) (*models.TaskRequests, int64, error) {
 	tasks := models.TaskRequests{}
 	tx := cm.GetConnection()
-	q := tx.Paginate(query.Page, query.PerPage)
+	q := tx.Offset(query.Offset).Limit(query.PerPage)
 	if query.Status != "" {
 		q = q.Where("status = ?", query.Status)
 	}
@@ -714,11 +744,15 @@ func (cm ContentManagerDB) ListTasks(query TaskQuery) (*models.TaskRequests, int
 		search := ("%" + query.Search + "%")
 		q = q.Where("message ilike ?", search)
 	}
-	total, _ := q.Count(&models.TaskRequests{})
+
+	var total int64
+	cRes := q.Model(&models.TaskRequests{}).Count(&total)
+	if cRes.Error != nil {
+		return nil, total, cRes.Error
+	}
 	if total > 0 {
-		err := q.All(&tasks)
-		if err != nil {
-			return nil, total, err
+		if res := q.Find(&tasks); res.Error != nil {
+			return nil, total, res.Error
 		}
 	}
 	return &tasks, total, nil

@@ -73,13 +73,13 @@ func FindContainersMatcher(dir_root string, incCnt ContainerMatcher, excCnt Cont
 /**
  *  Get all the content in a particular directory (would be good to filter down to certain file types?)
  */
-func FindContent(cnt models.Container, limit int, start_offset int) models.Contents {
+func FindContent(cnt models.Container, limit int64, start_offset int) models.Contents {
 	return FindContentMatcher(cnt, limit, start_offset, IncludeAllFiles, ExcludeNoFiles)
 }
 
 // func yup(string, string) bool is a required positive check on the filename and content type (default .*)
 // func nope(string, string) bool is a negative check (ie no zip files) default (everything is fine)
-func FindContentMatcher(cnt models.Container, limit int, start_offset int, yup ContentMatcher, nope ContentMatcher) models.Contents {
+func FindContentMatcher(cnt models.Container, limit int64, start_offset int, yup ContentMatcher, nope ContentMatcher) models.Contents {
 	var arr = models.Contents{}
 
 	fqDirPath := filepath.Join(cnt.Path, cnt.Name)
@@ -97,7 +97,7 @@ func FindContentMatcher(cnt models.Container, limit int, start_offset int, yup C
 
 	for idx, img := range imgs {
 		if !img.IsDir() {
-			if len(arr) < limit && idx >= start_offset {
+			if int64(len(arr)) < limit && idx >= start_offset {
 				id := AssignNumerical(0, "contents")
 				content := GetContent(id, img, fqDirPath)
 				content.ContainerID = &cnt.ID
