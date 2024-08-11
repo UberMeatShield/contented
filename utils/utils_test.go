@@ -185,18 +185,21 @@ func TestEmptyInitial(t *testing.T) {
 	tree, err := CreateStructure(testDir, cfg, &cTree, 0)
 	if err != nil {
 		t.Errorf("Could not create a proper tree %s", err)
+		return
 	}
 	if tree == nil {
 		t.Errorf("Container tree was set to nil")
+		return
 	}
 	lenTree := len(*tree)
 	if lenTree != 3 {
 		t.Errorf("The tree should match only an initial empty container")
+		return
 	}
 
 	memStorage := InitializeMemory(testDir)
 	if len(memStorage.ValidContent) != 1 {
-		t.Errorf("Did not initialize with an empty chain of directories %s", memStorage.ValidContent)
+		t.Errorf("did not initialize with an empty chain of directories %s", memStorage.ValidContent)
 	}
 }
 

@@ -147,6 +147,11 @@ func (m Contents) String() string {
 	return string(jm)
 }
 
+func (m ContentMap) String() string {
+	jm, _ := json.Marshal(m)
+	return string(jm)
+}
+
 // String is not required by pop and may be deleted
 func (content Content) IsVideo() bool {
 	return strings.Contains(content.ContentType, "video")
