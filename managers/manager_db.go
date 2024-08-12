@@ -62,10 +62,10 @@ func (cm ContentManagerDB) ListContentContext() (*models.Contents, int64, error)
 func (cm ContentManagerDB) ListContent(cs ContentQuery) (*models.Contents, int64, error) {
 	log.Printf("Get a list of content from DB, we should have some %s", cs.ContainerID)
 	tx := cm.GetConnection()
-	contentContainers := &models.Contents{}
+	contents := &models.Contents{}
 
 	// Paginate results. Params "page" and "per_page" control pagination.
-	q := tx.Offset(cs.Offset).Limit(cs.PerPage)
+	q := tx.Model(&models.Contents{})
 	if cs.ContainerID != "" {
 		q = q.Where("container_id = ?", cs.ContainerID)
 	}
@@ -73,13 +73,19 @@ func (cm ContentManagerDB) ListContent(cs ContentQuery) (*models.Contents, int64
 
 	// Oy, have to count
 	var count int64
-	q.Count(&count)
+	countRes := q.Count(&count)
+	if countRes.Error != nil {
+		return nil, count, countRes.Error
+	}
+
+	// Throw error if the offset is too large?
+	q = q.Offset(cs.Offset).Limit(cs.PerPage)
 	if count > 0 {
-		if res := q.Find(contentContainers); res != nil {
+		if res := q.Find(contents); res.Error != nil {
 			return nil, -1, res.Error
 		}
 	}
-	return contentContainers, count, nil
+	return contents, count, nil
 }
 
 // Note this DOES allow for loading hidden content
@@ -251,9 +257,7 @@ func (cm ContentManagerDB) SearchContainers(cs ContainerQuery) (*models.Containe
 		return cm.ListContainers(cs)
 	}
 	containers := &models.Containers{}
-	tx := cm.GetConnection()
-	q := tx.Offset(cs.Offset).Limit(cs.PerPage)
-	q = q.Where("name ilike ?", cs.Search)
+	q := cm.GetConnection().Where("name ilike ?", cs.Search)
 	if !cs.IncludeHidden {
 		q = q.Where(`hidden = ?`, false)
 	}
@@ -264,6 +268,8 @@ func (cm ContentManagerDB) SearchContainers(cs ContainerQuery) (*models.Containe
 	if res.Error != nil {
 		return nil, count, res.Error
 	}
+
+	q = q.Offset(cs.Offset).Limit(cs.PerPage)
 	if count > 0 {
 		if res := q.Find(containers); res.Error != nil {
 			return containers, -1, res.Error
@@ -497,17 +503,18 @@ func (cm ContentManagerDB) DestroyScreen(id string) (*models.Screen, error) {
 }
 
 func (cm ContentManagerDB) ListAllTags(tq TagQuery) (*models.Tags, int64, error) {
-	tx := cm.GetConnection()
-	q := tx.Offset(tq.Offset).Limit(tq.PerPage)
+	q := cm.GetConnection()
 	if tq.TagType != "" {
 		q = q.Where("tag_type = ?", tq.TagType)
 	}
+
 	var total int64
 	cRes := q.Model(&models.Tags{}).Count(&total)
 	if cRes.Error != nil {
 		return nil, total, cRes.Error
 	}
 
+	q = q.Offset(tq.Offset).Limit(tq.PerPage)
 	tags := &models.Tags{}
 	if total > 0 {
 		if res := q.Find(tags); res.Error != nil {

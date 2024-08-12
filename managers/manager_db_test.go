@@ -23,7 +23,7 @@ func Test_ReadOnly_Mode(t *testing.T) {
 }
 
 // A basic DB search (ilike matching)
-func Test_DbManagerSearch(t *testing.T) {
+func TestDbManagerSearch(t *testing.T) {
 	models.ResetDB(models.InitGorm(false))
 	cfg := test_common.InitFakeApp(true)
 	man := GetManagerTestSuite(cfg)
@@ -39,7 +39,7 @@ func Test_DbManagerSearch(t *testing.T) {
 	cnts, count, s_err := man.SearchContainers(ContainerQuery{Search: "dir1", Page: 1, PerPage: 2})
 	assert.NoError(t, s_err, "Searching for dir1 caused an error")
 	assert.Equal(t, 1, len(*cnts), "We should only get one container back")
-	assert.Equal(t, 1, count, "It should get the count right")
+	assert.Equal(t, 1, int(count), "It should get the count right")
 
 	for _, mc := range content1 {
 		man.CreateContent(&mc)
@@ -61,24 +61,24 @@ func Test_DbManagerSearch(t *testing.T) {
 	sr = ContentQuery{Search: "donut", Page: 1, PerPage: 10}
 	mcs_d, vsTotal, vErr := man.SearchContent(sr)
 	assert.NoError(t, vErr, "Video error by name search failed")
-	assert.Equal(t, 1, vsTotal, "We should be able to find donut.mp4 with an ilike")
+	assert.Equal(t, 1, int(vsTotal), "We should be able to find donut.mp4 with an ilike")
 	mc_donut := (*mcs_d)[0]
 	assert.Equal(t, 2, len(mc_donut.Screens), fmt.Sprintf("It should load two screens %s", mc_donut.Screens))
 
 	sr = ContentQuery{Page: 1, PerPage: 40, ContentType: "video"}
 	vids, vidTotal, dbErr := man.SearchContent(sr)
 	assert.NoError(t, dbErr, "Should search content type")
-	assert.Equal(t, 1, vidTotal, "The total count for videos is 1")
+	assert.Equal(t, int64(1), vidTotal, "The total count for videos is 1")
 	assert.Equal(t, 1, len(*vids), "We should have one result")
 
 	sr = ContentQuery{Page: 1, PerPage: 10, ContainerID: strconv.FormatInt(cnt1.ID, 10)}
 	all_mcs, total, err := man.SearchContent(sr)
 	assert.NoError(t, err, "It should be able to empty search")
-	assert.Equal(t, 12, total, "The total count for this dir is 12")
+	assert.Equal(t, int64(12), total, "The total count for this dir is 12")
 	assert.Equal(t, 10, len(*all_mcs), "But we limited the pagination")
 }
 
-func Test_DbManagerMultiSearch(t *testing.T) {
+func TestDbManagerMultiSearch(t *testing.T) {
 	// Test that a search restricting containerID works
 	// Test that search restricting container and text works
 	models.ResetDB(models.InitGorm(false))
@@ -89,30 +89,30 @@ func Test_DbManagerMultiSearch(t *testing.T) {
 
 	cnt1, content1, err1 := test_common.CreateContentByDirName("dir1")
 	assert.NoError(t, err1)
-	assert.Greater(t, len(content1), 1)
+	assert.Greater(t, len(content1), 1, "Dir1 should have content")
 
 	cnt2, content2, err2 := test_common.CreateContentByDirName("dir2")
 	assert.NoError(t, err2)
-	assert.Greater(t, len(content2), 1)
+	assert.Greater(t, len(content2), 1, "Dir2 should also have content")
 
 	sr := ContentQuery{Search: content1[1].Src, PerPage: 10, ContainerID: strconv.FormatInt(cnt1.ID, 10)}
 	found, count, err := man.SearchContent(sr)
 	assert.Equal(t, len(*found), 1, "We should have found our item")
-	assert.Equal(t, count, 1)
+	assert.Equal(t, int64(1), count)
 	assert.NoError(t, err)
 
 	sr = ContentQuery{Search: "blah", ContainerID: strconv.FormatInt(cnt1.ID, 10)}
-	_, n_count, n_err := man.SearchContent(sr)
-	assert.Equal(t, n_count, 0, "It should not find this the content name is invalid")
+	_, nCount, n_err := man.SearchContent(sr)
+	assert.Equal(t, int64(0), nCount, "It should not find this the content name is invalid")
 	assert.NoError(t, n_err)
 	sr = ContentQuery{Search: content1[1].Src, ContainerID: strconv.FormatInt(cnt2.ID, 10)}
 
-	_, not_in_cnt_count, not_err := man.SearchContent(sr)
-	assert.Equal(t, not_in_cnt_count, 0, "It should not find this valid content as it is not in the container")
+	_, notInCntCount, not_err := man.SearchContent(sr)
+	assert.Equal(t, int64(0), notInCntCount, "It should not find this valid content as it is not in container")
 	assert.NoError(t, not_err)
 }
 
-func Test_ManagerDB(t *testing.T) {
+func TestManagerDBBasics(t *testing.T) {
 	db := models.ResetDB(models.InitGorm(false))
 	cfg := test_common.InitFakeApp(true)
 
@@ -129,17 +129,18 @@ func Test_ManagerDB(t *testing.T) {
 	}
 
 	man := GetManagerTestSuite(cfg)
-	q_content, count, err := man.ListContent(ContentQuery{PerPage: 14})
+	qContent, count, err := man.ListContent(ContentQuery{PerPage: 14})
 	assert.NoError(t, err, "We should be able to list")
-	assert.Equal(t, len(*q_content), 12, "there should be 12 results")
-	assert.Equal(t, count, 12, "Count should be the same")
+	assert.NotNil(t, qContent, "The content should be defined")
+	assert.Equal(t, len(*qContent), 12, "there should be 12 results")
+	assert.Equal(t, int64(12), count, "Count should be the same")
 
 	lim_content, count, _ := man.ListContent(ContentQuery{PerPage: 3})
 	assert.Equal(t, 3, len(*lim_content), "The DB should be setup with 10 items")
-	assert.Equal(t, 12, count, "The count does not care about the page")
+	assert.Equal(t, int64(12), count, "The count does not care about the page")
 }
 
-func Test_ManagerTagsDB(t *testing.T) {
+func TestManagerDBTags(t *testing.T) {
 	models.ResetDB(models.InitGorm(false))
 	cfg := test_common.InitFakeApp(true)
 	man := GetManagerTestSuite(cfg)
@@ -148,11 +149,11 @@ func Test_ManagerTagsDB(t *testing.T) {
 	assert.NoError(t, man.CreateTag(&models.Tag{ID: "B"}), "couldn't create tag B")
 	tags, total, err := man.ListAllTags(TagQuery{PerPage: 3})
 	assert.NoError(t, err, "It should be able to list tags")
-	assert.Greater(t, total, 0, "It should have a total")
+	assert.Greater(t, total, int64(0), "It should have a total")
 	assert.Equal(t, len(*tags), 2, "We should have two tags")
 }
 
-func Test_ManagerTagsAssignment(t *testing.T) {
+func TestManagerDBTagsAssignment(t *testing.T) {
 	db := models.ResetDB(models.InitGorm(false))
 	cfg := test_common.InitFakeApp(true)
 	man := GetManagerTestSuite(cfg)
