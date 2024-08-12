@@ -37,6 +37,7 @@ func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
 
 	db := models.InitGorm(false)
 	models.ResetDB(db)
+	log.Printf("Finished reseting the database")
 
 	// TODO: Need to do this in a single transaction vs partial
 	for idx, ct := range content {
@@ -52,7 +53,7 @@ func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
 		log.Printf("Adding Content to %s with total content %d \n", c.Name, len(content))
 
 		// Assign a default preview (maybe move this into create Structure?)
-		if len(ct.Content) > 0 {
+		if ct.Content != nil && len(ct.Content) > 0 {
 			c.PreviewUrl = fmt.Sprintf("/api/preview/%d", ct.Content[0].ID)
 		}
 
@@ -63,10 +64,10 @@ func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
 		// There MUST be a way to do this as a single commit
 		for _, mc := range content {
 			mc.ContainerID = &c.ID
-			c_err := db.Create(&mc)
+			cRes := db.Create(&mc)
 			// This is pretty damn fatal so we want it to die if the DB bails.
-			if c_err != nil {
-				log.Fatal(c_err)
+			if cRes.Error != nil {
+				log.Fatalf("Failed to create content %s", cRes.Error)
 			}
 		}
 	}

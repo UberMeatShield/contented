@@ -44,7 +44,7 @@ func SetupScreensPreview(t *testing.T) (*models.Container, models.Contents) {
 	return c_pt, content
 }
 
-func Test_InitialCreation(t *testing.T) {
+func TestInitialCreation(t *testing.T) {
 	db := models.ResetDB(models.InitGorm(false))
 
 	dir, _ := envy.MustGet("DIR")

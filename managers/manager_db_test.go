@@ -1,42 +1,45 @@
 package managers
 
-/*
 import (
 	"contented/models"
 	"contented/test_common"
 	"contented/utils"
 	"fmt"
+	"strconv"
+	"testing"
 
-	"github.com/gobuffalo/pop/v6"
+	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
-func (as *ActionSuite) Test_ReadOnly_Mode() {
+
+func Test_ReadOnly_Mode(t *testing.T) {
 	cfg := test_common.InitFakeApp(true)
-	man := GetManagerActionSuite(cfg, as)
-	as.Equal(man.CanEdit(), true, "It should be able to edit")
+	man := GetManagerTestSuite(cfg)
+	assert.Equal(t, man.CanEdit(), true, "It should be able to edit")
 
 	cfg.ReadOnly = true
 	utils.SetCfg(*cfg)
-	as.Equal(man.CanEdit(), false, "We should not be able to edit now")
+	assert.Equal(t, man.CanEdit(), false, "We should not be able to edit now")
 }
 
 // A basic DB search (ilike matching)
-func (as *ActionSuite) Test_DbManagerSearch() {
-	models.DB.TruncateAll()
+func Test_DbManagerSearch(t *testing.T) {
+	models.ResetDB(models.InitGorm(false))
 	cfg := test_common.InitFakeApp(true)
-	man := GetManagerActionSuite(cfg, as)
-	as.Equal(man.CanEdit(), true, "It should be a DB manager")
+	man := GetManagerTestSuite(cfg)
+	assert.Equal(t, man.CanEdit(), true, "It should be a DB manager")
 
 	cnt1, content1 := test_common.GetContentByDirName("dir1")
 	cnt2, content2 := test_common.GetContentByDirName("dir2")
 	c1_err := man.CreateContainer(cnt1)
-	as.NoError(c1_err)
+	assert.NoError(t, c1_err)
 	c2_err := man.CreateContainer(cnt2)
-	as.NoError(c2_err)
+	assert.NoError(t, c2_err)
 
 	cnts, count, s_err := man.SearchContainers(ContainerQuery{Search: "dir1", Page: 1, PerPage: 2})
-	as.NoError(s_err, "Searching for dir1 caused an error")
-	as.Equal(1, len(*cnts), "We should only get one container back")
-	as.Equal(1, count, "It should get the count right")
+	assert.NoError(t, s_err, "Searching for dir1 caused an error")
+	assert.Equal(t, 1, len(*cnts), "We should only get one container back")
+	assert.Equal(t, 1, count, "It should get the count right")
 
 	for _, mc := range content1 {
 		man.CreateContent(&mc)
@@ -51,156 +54,158 @@ func (as *ActionSuite) Test_DbManagerSearch() {
 
 	sr := ContentQuery{Search: "Large", Page: 1, PerPage: 20}
 	mcs, _, err := man.SearchContent(sr)
-	as.NoError(err, "It should be able to search")
-	as.NotNil(mcs, "It should be")
-	as.Equal(3, len(*mcs), fmt.Sprintf("We should have 3 large images with an ilike %s", mcs))
+	assert.NoError(t, err, "It should be able to search")
+	assert.NotNil(t, mcs, "It should be")
+	assert.Equal(t, 3, len(*mcs), fmt.Sprintf("We should have 3 large images with an ilike %s", mcs))
 
 	sr = ContentQuery{Search: "donut", Page: 1, PerPage: 10}
 	mcs_d, vsTotal, vErr := man.SearchContent(sr)
-	as.NoError(vErr, "Video error by name search failed")
-	as.Equal(1, vsTotal, "We should be able to find donut.mp4 with an ilike")
+	assert.NoError(t, vErr, "Video error by name search failed")
+	assert.Equal(t, 1, vsTotal, "We should be able to find donut.mp4 with an ilike")
 	mc_donut := (*mcs_d)[0]
-	as.Equal(2, len(mc_donut.Screens), fmt.Sprintf("It should load two screens %s", mc_donut.Screens))
+	assert.Equal(t, 2, len(mc_donut.Screens), fmt.Sprintf("It should load two screens %s", mc_donut.Screens))
 
 	sr = ContentQuery{Page: 1, PerPage: 40, ContentType: "video"}
 	vids, vidTotal, dbErr := man.SearchContent(sr)
-	as.NoError(dbErr, "Should search content type")
-	as.Equal(1, vidTotal, "The total count for videos is 1")
-	as.Equal(1, len(*vids), "We should have one result")
+	assert.NoError(t, dbErr, "Should search content type")
+	assert.Equal(t, 1, vidTotal, "The total count for videos is 1")
+	assert.Equal(t, 1, len(*vids), "We should have one result")
 
-	sr = ContentQuery{Page: 1, PerPage: 10, ContainerID: cnt1.ID.String()}
+	sr = ContentQuery{Page: 1, PerPage: 10, ContainerID: strconv.FormatInt(cnt1.ID, 10)}
 	all_mcs, total, err := man.SearchContent(sr)
-	as.NoError(err, "It should be able to empty search")
-	as.Equal(12, total, "The total count for this dir is 12")
-	as.Equal(10, len(*all_mcs), "But we limited the pagination")
+	assert.NoError(t, err, "It should be able to empty search")
+	assert.Equal(t, 12, total, "The total count for this dir is 12")
+	assert.Equal(t, 10, len(*all_mcs), "But we limited the pagination")
 }
 
-func (as *ActionSuite) Test_DbManagerMultiSearch() {
+func Test_DbManagerMultiSearch(t *testing.T) {
 	// Test that a search restricting containerID works
 	// Test that search restricting container and text works
-	models.DB.TruncateAll()
+	models.ResetDB(models.InitGorm(false))
 	cfg := test_common.InitFakeApp(true)
 
-	man := GetManagerActionSuite(cfg, as)
-	as.Equal(man.CanEdit(), true)
+	man := GetManagerTestSuite(cfg)
+	assert.Equal(t, man.CanEdit(), true)
 
 	cnt1, content1, err1 := test_common.CreateContentByDirName("dir1")
-	as.NoError(err1)
-	as.Greater(len(content1), 1)
+	assert.NoError(t, err1)
+	assert.Greater(t, len(content1), 1)
 
 	cnt2, content2, err2 := test_common.CreateContentByDirName("dir2")
-	as.NoError(err2)
-	as.Greater(len(content2), 1)
+	assert.NoError(t, err2)
+	assert.Greater(t, len(content2), 1)
 
-	sr := ContentQuery{Search: content1[1].Src, PerPage: 10, ContainerID: cnt1.ID.String()}
+	sr := ContentQuery{Search: content1[1].Src, PerPage: 10, ContainerID: strconv.FormatInt(cnt1.ID, 10)}
 	found, count, err := man.SearchContent(sr)
-	as.Equal(len(*found), 1, "We should have found our item")
-	as.Equal(count, 1)
-	as.NoError(err)
+	assert.Equal(t, len(*found), 1, "We should have found our item")
+	assert.Equal(t, count, 1)
+	assert.NoError(t, err)
 
-	sr = ContentQuery{Search: "blah", ContainerID: cnt1.ID.String()}
+	sr = ContentQuery{Search: "blah", ContainerID: strconv.FormatInt(cnt1.ID, 10)}
 	_, n_count, n_err := man.SearchContent(sr)
-	as.Equal(n_count, 0, "It should not find this the content name is invalid")
-	as.NoError(n_err)
-	sr = ContentQuery{Search: content1[1].Src, ContainerID: cnt2.ID.String()}
+	assert.Equal(t, n_count, 0, "It should not find this the content name is invalid")
+	assert.NoError(t, n_err)
+	sr = ContentQuery{Search: content1[1].Src, ContainerID: strconv.FormatInt(cnt2.ID, 10)}
 
 	_, not_in_cnt_count, not_err := man.SearchContent(sr)
-	as.Equal(not_in_cnt_count, 0, "It should not find this valid content as it is not in the container")
-	as.NoError(not_err)
+	assert.Equal(t, not_in_cnt_count, 0, "It should not find this valid content as it is not in the container")
+	assert.NoError(t, not_err)
 }
 
-func (as *ActionSuite) Test_ManagerDB() {
-	models.DB.TruncateAll()
+func Test_ManagerDB(t *testing.T) {
+	db := models.ResetDB(models.InitGorm(false))
 	cfg := test_common.InitFakeApp(true)
 
 	cnt, content := test_common.GetContentByDirName("dir1")
-	as.Equal("dir1", cnt.Name, "It should be the right dir")
-	as.Equal(12, cnt.Total, "The container total should be this for dir1")
-	as.Equal(12, len(content))
+	assert.Equal(t, "dir1", cnt.Name, "It should be the right dir")
+	assert.Equal(t, 12, cnt.Total, "The container total should be this for dir1")
+	assert.Equal(t, 12, len(content))
 
-	c_err := models.DB.Create(cnt)
-	as.NoError(c_err)
+	cntRes := db.Create(cnt)
+	assert.NoError(t, cntRes.Error, "It should create the container")
 	for _, mc := range content {
-		models.DB.Create(&mc)
+		cRes := db.Create(&mc)
+		assert.NoError(t, cRes.Error, "It should create contents")
 	}
 
-	man := GetManagerActionSuite(cfg, as)
+	man := GetManagerTestSuite(cfg)
 	q_content, count, err := man.ListContent(ContentQuery{PerPage: 14})
-	as.NoError(err, "We should be able to list")
-	as.Equal(len(*q_content), 12, "there should be 12 results")
-	as.Equal(count, 12, "Count should be the same")
+	assert.NoError(t, err, "We should be able to list")
+	assert.Equal(t, len(*q_content), 12, "there should be 12 results")
+	assert.Equal(t, count, 12, "Count should be the same")
 
 	lim_content, count, _ := man.ListContent(ContentQuery{PerPage: 3})
-	as.Equal(3, len(*lim_content), "The DB should be setup with 10 items")
-	as.Equal(12, count, "The count does not care about the page")
+	assert.Equal(t, 3, len(*lim_content), "The DB should be setup with 10 items")
+	assert.Equal(t, 12, count, "The count does not care about the page")
 }
 
-func (as *ActionSuite) Test_ManagerTagsDB() {
-	models.DB.TruncateAll()
+func Test_ManagerTagsDB(t *testing.T) {
+	models.ResetDB(models.InitGorm(false))
 	cfg := test_common.InitFakeApp(true)
-	man := GetManagerActionSuite(cfg, as)
+	man := GetManagerTestSuite(cfg)
 
-	as.NoError(man.CreateTag(&models.Tag{ID: "A"}), "couldn't create tag A")
-	as.NoError(man.CreateTag(&models.Tag{ID: "B"}), "couldn't create tag B")
+	assert.NoError(t, man.CreateTag(&models.Tag{ID: "A"}), "couldn't create tag A")
+	assert.NoError(t, man.CreateTag(&models.Tag{ID: "B"}), "couldn't create tag B")
 	tags, total, err := man.ListAllTags(TagQuery{PerPage: 3})
-	as.NoError(err, "It should be able to list tags")
-	as.Greater(total, 0, "It should have a total")
-	as.Equal(len(*tags), 2, "We should have two tags")
+	assert.NoError(t, err, "It should be able to list tags")
+	assert.Greater(t, total, 0, "It should have a total")
+	assert.Equal(t, len(*tags), 2, "We should have two tags")
 }
 
-func (as *ActionSuite) Test_ManagerTagsAssignment() {
-	models.DB.TruncateAll()
+func Test_ManagerTagsAssignment(t *testing.T) {
+	db := models.ResetDB(models.InitGorm(false))
 	cfg := test_common.InitFakeApp(true)
-	man := GetManagerActionSuite(cfg, as)
+	man := GetManagerTestSuite(cfg)
 
 	// TODO: Break up between DB and memory (check that it can ignore tags maybe)
-	as.NoError(man.CreateTag(&models.Tag{ID: "aws"}), "couldn't create tag aws")
-	as.NoError(man.CreateTag(&models.Tag{ID: "donut"}), "couldn't create tag donut")
+	assert.NoError(t, man.CreateTag(&models.Tag{ID: "aws"}), "couldn't create tag aws")
+	assert.NoError(t, man.CreateTag(&models.Tag{ID: "donut"}), "couldn't create tag donut")
 
 	cnt, content := test_common.GetContentByDirName("dir2")
-	as.Greater(len(content), 0, "There should be content")
-	c_err := models.DB.Create(cnt)
-	as.NoError(c_err)
+	assert.Greater(t, len(content), 0, "There should be content")
+	cntRes := db.Create(cnt)
+	assert.NoError(t, cntRes.Error, "It should create the container")
 	for _, mc := range content {
-		models.DB.Create(&mc)
+		cRes := db.Create(&mc)
+		assert.NoError(t, cRes.Error, "It should create content")
 	}
 
 	tags, total, err := man.ListAllTags(TagQuery{})
-	as.NoError(err)
-	as.Equal(total, 2, fmt.Sprintf("And only two tags %s", tags))
-	as.Greater(len(*tags), 0, "We should have tags")
+	assert.NoError(t, err)
+	assert.Equal(t, total, 2, fmt.Sprintf("And only two tags %s", tags))
+	assert.Greater(t, len(*tags), 0, "We should have tags")
 	assignmentErr := AssignTagsAndUpdate(man, *tags)
-	as.NoError(assignmentErr, fmt.Sprintf("Error %s", assignmentErr))
+	assert.NoError(t, assignmentErr, fmt.Sprintf("Error %s", assignmentErr))
 
 	cq := ContentQuery{Tags: []string{"aws", "donut"}}
 	contentsMatching, total, err := man.SearchContent(cq)
-	as.NoError(err)
-	as.Equal(len(*contentsMatching), 2, fmt.Sprintf("Found content but not the right amount %s", contentsMatching))
-	as.Equal(total, 2)
+	assert.NoError(t, err)
+	assert.Equal(t, len(*contentsMatching), 2, fmt.Sprintf("Found content but not the right amount %s", contentsMatching))
+	assert.Equal(t, total, 2)
 }
 
-func (as *ActionSuite) Test_ManagerTagsDB_CRUD() {
-	models.DB.TruncateAll()
+func Test_ManagerTagsDB_CRUD(t *testing.T) {
+	models.ResetDB(models.InitGorm(false))
 	cfg := test_common.InitFakeApp(true)
-	man := GetManagerActionSuite(cfg, as)
-	t := models.Tag{ID: "A"}
-	as.NoError(man.CreateTag(&t), "couldn't create tag A")
+	man := GetManagerTestSuite(cfg)
+	tag := models.Tag{ID: "A"}
+	assert.NoError(t, man.CreateTag(&tag), "couldn't create tag A")
 
 	tags, total, err := man.ListAllTags(TagQuery{PerPage: 3})
-	as.NoError(err)
-	as.Greater(total, 0, "A tag should exist")
-	as.Equal(len(*tags), 1, "We should have one tag")
-	man.DestroyTag(t.ID)
+	assert.NoError(t, err)
+	assert.Greater(t, total, 0, "A tag should exist")
+	assert.Equal(t, len(*tags), 1, "We should have one tag")
+	man.DestroyTag(tag.ID)
 	tags_gone, total_gone, err := man.ListAllTags(TagQuery{PerPage: 3})
-	as.NoError(err)
-	as.Equal(len(*tags_gone), 0, "No tags should be in the DB")
-	as.Equal(total_gone, 0, "It should have no tags")
+	assert.NoError(t, err)
+	assert.Equal(t, len(*tags_gone), 0, "No tags should be in the DB")
+	assert.Equal(t, total_gone, 0, "It should have no tags")
 }
 
-func (as *ActionSuite) Test_DbManager_AssociateTags() {
-	models.DB.TruncateAll()
+func Test_DbManager_AssociateTags(t *testing.T) {
+	models.ResetDB(models.InitGorm(false))
 	cfg := test_common.InitFakeApp(true)
-	man := GetManagerActionSuite(cfg, as)
+	man := GetManagerTestSuite(cfg)
 
 	// The Eager code just doesn't work in Buffalo?
 	t1 := models.Tag{ID: "A"}
@@ -217,41 +222,41 @@ func (as *ActionSuite) Test_DbManager_AssociateTags() {
 	man.UpdateContent(&mc)
 
 	tags, total, t_err := man.ListAllTags(TagQuery{PerPage: 10})
-	as.NoError(t_err, "We should be able to list tags.")
-	as.Equal(2, len(*tags), fmt.Sprintf("There should be two tags %s", mc))
-	as.Greater(total, 0, "It should have a total")
+	assert.NoError(t, t_err, "We should be able to list tags.")
+	assert.Equal(t, 2, len(*tags), fmt.Sprintf("There should be two tags %s", mc))
+	assert.Greater(t, total, 0, "It should have a total")
 
-	screens, count, s_err := man.ListScreens(ScreensQuery{ContentID: mc.ID.String()})
-	as.NoError(s_err, "Screens should list")
-	as.Equal(1, len(*screens), "We should have a screen associated")
-	as.Equal(1, count, "We should have a proper screen count")
+	screens, count, s_err := man.ListScreens(ScreensQuery{ContentID: strconv.FormatInt(mc.ID, 10)})
+	assert.NoError(t, s_err, "Screens should list")
+	assert.Equal(t, 1, len(*screens), "We should have a screen associated")
+	assert.Equal(t, 1, count, "We should have a proper screen count")
 
 	tCheck, _ := man.GetContent(mc.ID)
-	as.Equal(2, len(tCheck.Tags), fmt.Sprintf("It should eager load tags %s", tCheck))
+	assert.Equal(t, 2, len(tCheck.Tags), fmt.Sprintf("It should eager load tags %s", tCheck))
 
 	t3 := models.Tag{ID: "C"}
 	man.CreateTag(&t3)
 	err := man.AssociateTagByID(t3.ID, mc.ID)
-	as.NoError(err, fmt.Sprintf("We shouldn't have an issue associating this %s \n", err))
+	assert.NoError(t, err, fmt.Sprintf("We shouldn't have an issue associating this %s \n", err))
 	mcCheck, mc_err := man.GetContent(mc.ID)
-	as.NoError(mc_err, fmt.Sprintf("We should be able to load back the content %s", err))
-	as.Equal(3, len(mcCheck.Tags), fmt.Sprintf("There should be a new tag %s", mcCheck))
+	assert.NoError(t, mc_err, fmt.Sprintf("We should be able to load back the content %s", err))
+	assert.Equal(t, 3, len(mcCheck.Tags), fmt.Sprintf("There should be a new tag %s", mcCheck))
 }
 
 // A Lot more of these could be a test in manager that passes in the manager
 // TODO: Remove copy pasta and make it almost identical.
-func (as *ActionSuite) Test_DbManager_TagSearch() {
-	models.DB.TruncateAll()
+func Test_DbManager_TagSearch(t *testing.T) {
+	models.ResetDB(models.InitGorm(false))
 	cfg := test_common.InitFakeApp(true)
 
-	man := GetManagerActionSuite(cfg, as)
-	ManagersTagSearchValidation(as, man)
+	man := GetManagerTestSuite(cfg)
+	ManagersTagSearchValidation(t, man)
 }
 
-func (as *ActionSuite) Test_ManagerDBPreviews() {
-	models.DB.TruncateAll()
+func Test_ManagerDBPreviews(t *testing.T) {
+	models.ResetDB(models.InitGorm(false))
 	cfg := test_common.InitFakeApp(true)
-	man := GetManagerActionSuite(cfg, as)
+	man := GetManagerTestSuite(cfg)
 
 	mc1 := models.Content{Src: "A", Preview: "p", ContentType: "video"}
 	mc2 := models.Content{Src: "B", Preview: "p", ContentType: "video"}
@@ -259,7 +264,7 @@ func (as *ActionSuite) Test_ManagerDBPreviews() {
 	man.CreateContent(&mc1)
 	man.CreateContent(&mc2)
 	man.CreateContent(&mc3)
-	as.NotZero(mc1.ID)
+	assert.Greater(t, 0, mc1.ID)
 
 	p1 := models.Screen{Src: "fake1", Idx: 0, ContentID: mc1.ID}
 	p2 := models.Screen{Src: "fake2.png", Idx: 1, ContentID: mc1.ID}
@@ -269,32 +274,32 @@ func (as *ActionSuite) Test_ManagerDBPreviews() {
 	man.CreateScreen(&p2)
 	man.CreateScreen(&p3)
 
-	previewList, count1, err := man.ListScreens(ScreensQuery{ContentID: mc1.ID.String()})
-	as.NoError(err)
-	as.Equal(len(*previewList), 2, "We should have two previews")
-	as.Equal(count1, 2, "We should have two previews")
+	previewList, count1, err := man.ListScreens(ScreensQuery{ContentID: strconv.FormatInt(mc1.ID, 10)})
+	assert.NoError(t, err)
+	assert.Equal(t, len(*previewList), 2, "We should have two previews")
+	assert.Equal(t, count1, 2, "We should have two previews")
 
-	previewOne, count2, p_err := man.ListScreens(ScreensQuery{ContentID: mc2.ID.String()})
-	as.NoError(p_err)
-	as.Equal(len(*previewOne), 1, "Now there should be 1")
-	as.Equal(count2, 1, "Now there should be 1")
+	previewOne, count2, p_err := man.ListScreens(ScreensQuery{ContentID: strconv.FormatInt(mc2.ID, 10)})
+	assert.NoError(t, p_err)
+	assert.Equal(t, len(*previewOne), 1, "Now there should be 1")
+	assert.Equal(t, count2, 1, "Now there should be 1")
 
 	p4 := models.Screen{Src: "fake4.png", Idx: 1, ContentID: mc2.ID}
 	c_err := man.CreateScreen(&p4)
-	as.NoError(c_err)
+	assert.NoError(t, c_err)
 
 	p4_check, p4_err := man.GetScreen(p4.ID)
-	as.NoError(p4_err, "Failed to pull back the screen by ID"+p4.ID.String())
-	as.Equal(p4_check.Src, p4.Src)
+	assert.NoError(t, p4_err, fmt.Sprintf("Failed to pull back the screen by ID %d", p4.ID))
+	assert.Equal(t, p4_check.Src, p4.Src)
 }
 
-func (as *ActionSuite) Test_ManagerDBSearchScreens() {
-	models.DB.TruncateAll()
+func Test_ManagerDBSearchScreens(t *testing.T) {
+	db := models.ResetDB(models.InitGorm(false))
 	cfg := test_common.InitFakeApp(true)
 
 	man := ContentManagerDB{cfg: cfg}
-	man.GetConnection = func() *pop.Connection {
-		return models.DB
+	man.GetConnection = func() *gorm.DB {
+		return db
 	}
 
 	// Hmm, might want to make a wrapper for the create
@@ -323,46 +328,45 @@ func (as *ActionSuite) Test_ManagerDBSearchScreens() {
 	// Intentionally exclude mc2 to ensure we get some screens, include one with no screens
 	content := models.Contents{mc1, mc3, mc4, mc5}
 	screens, s_err := man.LoadRelatedScreens(&content)
-	as.NoError(s_err, "It shouldn't error out")
-	as.NotNil(screens, "No screens were returned")
-	as.Equal(2, len(screens), "It should load all the screens but only two of these have screens")
+	assert.NoError(t, s_err, "It shouldn't error out")
+	assert.NotNil(t, screens, "No screens were returned")
+	assert.Equal(t, 2, len(screens), "It should load all the screens but only two of these have screens")
 
-	as.Equal(1, len(screens[mc1.ID]), "MC1 has 1 screen")
-	as.Equal(2, len(screens[mc3.ID]), "MC3 has 2 screens")
+	assert.Equal(t, 1, len(screens[mc1.ID]), "MC1 has 1 screen")
+	assert.Equal(t, 2, len(screens[mc3.ID]), "MC3 has 2 screens")
 
 	// Test that an image will not load previews
 	content_2 := models.Contents{mc2, mc4}
 	screens_2, s2_err := man.LoadRelatedScreens(&content_2)
-	as.NoError(s2_err, "It shouldn't error out")
-	as.Equal(1, len(screens_2), "It should load all the screens for mc2 but EXCLUDE mc4")
+	assert.NoError(t, s2_err, "It shouldn't error out")
+	assert.Equal(t, 1, len(screens_2), "It should load all the screens for mc2 but EXCLUDE mc4")
 }
 
-func (as *ActionSuite) Test_DBManager_IllegalContainers() {
+func Test_DBManager_IllegalContainers(t *testing.T) {
+	models.ResetDB(models.InitGorm(false))
 	cfg := test_common.ResetConfig()
 	test_common.InitFakeApp(true)
-	ctx := test_common.GetContext(as.App)
-	man := GetManager(&ctx)
+	ctx := test_common.GetContext()
+	man := GetManager(ctx)
 
 	notUnderDir := models.Container{Name: "ssl", Path: "/etc"}
-	as.Error(man.CreateContainer(&notUnderDir), "Not under the configured directory, rejected")
+	assert.Error(t, man.CreateContainer(&notUnderDir), "Not under the configured directory, rejected")
 
 	upAccess := models.Container{Name: "../../.ssh/", Path: cfg.Dir}
-	as.Error(man.CreateContainer(&upAccess), "No up access allowed in names")
+	assert.Error(t, man.CreateContainer(&upAccess), "No up access allowed in names")
 
 	multiLevelDownOk := models.Container{Name: "screens/screens_sub_dir", Path: cfg.Dir}
-	as.NoError(man.CreateContainer(&multiLevelDownOk), "This should exist in the mock data")
+	assert.NoError(t, man.CreateContainer(&multiLevelDownOk), "This should exist in the mock data")
 
 	knownDirOk := models.Container{Name: "dir2", Path: cfg.Dir}
-	as.NoError(man.CreateContainer(&knownDirOk), "This directory should be ok")
+	assert.NoError(t, man.CreateContainer(&knownDirOk), "This directory should be ok")
 	knownDirOk.Name = "NowInvalid"
 	_, err := man.UpdateContainer(&knownDirOk)
-	as.Error(err, "It should not allow this invalid directory")
+	assert.Error(t, err, "It should not allow this invalid directory")
 
 	test_common.CreateContainerPath(&knownDirOk)
 	defer test_common.CleanupContainer(&knownDirOk)
 	up, upErr := man.UpdateContainer(&knownDirOk)
-	as.NoError(upErr, "Now it should be ok as the directory exists")
-	as.Equal(up.Name, knownDirOk.Name, "And it returns a fresh load to prove it is updated.")
+	assert.NoError(t, upErr, "Now it should be ok as the directory exists")
+	assert.Equal(t, up.Name, knownDirOk.Name, "And it returns a fresh load to prove it is updated.")
 }
-
-*/
