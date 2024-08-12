@@ -7,47 +7,48 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
+	"testing"
 
 	"github.com/gobuffalo/envy"
-	"github.com/gobuffalo/nulls"
-	"github.com/gofrs/uuid"
+	"github.com/stretchr/testify/assert"
 )
 
-func (as *ActionSuite) Test_ManagerContainers() {
+func Test_ManagerContainers(t *testing.T) {
 	test_common.InitFakeApp(false)
-	ctx := test_common.GetContext(as.App)
+	ctx := test_common.GetContext()
 	man := GetManager(ctx)
 	containers, count, err := man.ListContainersContext()
-	as.NoError(err)
-	as.Greater(count, 1, "There should be containers")
+	assert.NoError(t, err)
+	assert.Greater(t, count, 1, "There should be containers")
 
 	for _, c := range *containers {
 		c_mem, err := man.GetContainer(c.ID)
 		if err != nil {
-			as.Fail("It should not have an issue finding valid containers")
+			assert.Fail(t, "It should not have an issue finding valid containers")
 		}
-		as.Equal(c_mem.ID, c.ID)
+		assert.Equal(t, c_mem.ID, c.ID)
 	}
 }
 
-func (as *ActionSuite) Test_ManagerContent() {
+func Test_ManagerContent(t *testing.T) {
 	test_common.InitFakeApp(false)
-	ctx := test_common.GetContext(as.App)
+	ctx := test_common.GetContext()
 	man := GetManager(ctx)
 	contents, count, err := man.ListContent(ContentQuery{})
-	as.NoError(err)
-	as.Greater(count, 0, "It should have contents")
+	assert.NoError(t, err)
+	assert.Greater(t, count, 0, "It should have contents")
 
 	for _, content := range *contents {
 		cm, err := man.GetContent(content.ID)
 		if err != nil {
-			as.Fail("It should not have an issue finding valid content")
+			assert.Fail(t, "It should not have an issue finding valid content")
 		}
-		as.Equal(cm.ID, content.ID)
+		assert.Equal(t, cm.ID, content.ID)
 	}
 }
 
-func (as *ActionSuite) Test_AssignManager() {
+func (as *ActionSuite) Test_AssignManager(t *testing.T) {
 	cfg := test_common.ResetConfig()
 	cfg.UseDatabase = false
 	utils.InitConfig(cfg.Dir, cfg)
@@ -58,183 +59,183 @@ func (as *ActionSuite) Test_AssignManager() {
 	mem.Initialize()
 
 	memCfg := mem.GetCfg()
-	as.NotNil(memCfg, "It should be defined")
+	assert.NotNil(t, memCfg, "It should be defined")
 	mcs, _, err := mem.ListContent(ContentQuery{})
-	as.NoError(err)
-	as.Greater(len(*mcs), 0, "It should have valid files in the manager")
+	assert.NoError(t, err)
+	assert.Greater(t, len(*mcs), 0, "It should have valid files in the manager")
 
 	cfg.UseDatabase = false
-	ctx := test_common.GetContext(as.App)
+	ctx := test_common.GetContext()
 	man := GetManager(ctx) // New Reference but should have the same count of content
 	mcs_2, _, _ := man.ListContent(ContentQuery{})
 
-	as.Equal(len(*mcs), len(*mcs_2), "A new instance should use the same storage")
+	assert.Equal(t, len(*mcs), len(*mcs_2), "A new instance should use the same storage")
 }
 
-func (as *ActionSuite) Test_MemoryManagerPaginate() {
+func Test_MemoryManagerPaginate(t *testing.T) {
 	cfg := test_common.InitFakeApp(false)
 	cfg.UseDatabase = false
 	cfg.ReadOnly = true
 
 	ctx := test_common.GetContextParams("/containers", "1", "2")
 	man := GetManager(ctx)
-	as.Equal(man.CanEdit(), false, "Memory manager should not allow editing")
+	assert.Equal(t, man.CanEdit(), false, "Memory manager should not allow editing")
 
 	containers, count, err := man.ListContainers(ContainerQuery{Page: 1, PerPage: 1})
-	as.NoError(err, "It should list with pagination")
-	as.Equal(1, len(*containers), "It should respect paging")
-	as.Equal(test_common.TOTAL_CONTAINERS_WITH_CONTENT, count, "Paging check that count is still correct")
+	assert.NoError(t, err, "It should list with pagination")
+	assert.Equal(t, 1, len(*containers), "It should respect paging")
+	assert.Equal(t, test_common.TOTAL_CONTAINERS_WITH_CONTENT, count, "Paging check that count is still correct")
 
 	cnt := (*containers)[0]
-	as.NotNil(cnt, "There should be a container with 12 entries")
-	as.Equal(cnt.Total, 12, "There should be 12 test images in the first ORDERED containers")
-	as.NoError(err)
-	as.NotEqual("", cnt.PreviewUrl, "The previewUrl should be set")
-	content_page_1, count, _ := man.ListContent(ContentQuery{ContainerID: cnt.ID.String(), PerPage: 4})
-	as.Equal(len(*content_page_1), 4, "It should respect page size")
-	as.Equal(count, 12, "It should respect page size but get the total count")
+	assert.NotNil(t, cnt, "There should be a container with 12 entries")
+	assert.Equal(t, cnt.Total, 12, "There should be 12 test images in the first ORDERED containers")
+	assert.NoError(t, err)
+	assert.NotEqual(t, "", cnt.PreviewUrl, "The previewUrl should be set")
+	content_page_1, count, _ := man.ListContent(ContentQuery{ContainerID: strconv.FormatInt(cnt.ID, 10), PerPage: 4})
+	assert.Equal(t, len(*content_page_1), 4, "It should respect page size")
+	assert.Equal(t, count, 12, "It should respect page size but get the total count")
 
-	content_page_3, count, _ := man.ListContent(ContentQuery{ContainerID: cnt.ID.String(), Page: 3, PerPage: 4})
-	as.Equal(len(*content_page_3), 4, "It should respect page size and get the last page")
-	as.NotEqual((*content_page_3)[3].ID, (*content_page_1)[3].ID, "Ensure it actually paged")
-	as.Greater(count, 0, "We should still have a count")
+	content_page_3, count, _ := man.ListContent(ContentQuery{ContainerID: strconv.FormatInt(cnt.ID, 10), Page: 3, PerPage: 4})
+	assert.Equal(t, len(*content_page_3), 4, "It should respect page size and get the last page")
+	assert.NotEqual(t, (*content_page_3)[3].ID, (*content_page_1)[3].ID, "Ensure it actually paged")
+	assert.Greater(t, count, 0, "We should still have a count")
 
 	// Last container pagination check
 	l_cnts, count, _ := man.ListContainers(ContainerQuery{Page: 4, PerPage: 1})
-	as.Equal(1, len(*l_cnts), "It should still return only as we are on the last page")
-	as.Equal(test_common.TOTAL_CONTAINERS_WITH_CONTENT, count, "The count should be consistent")
+	assert.Equal(t, 1, len(*l_cnts), "It should still return only as we are on the last page")
+	assert.Equal(t, test_common.TOTAL_CONTAINERS_WITH_CONTENT, count, "The count should be consistent")
 	l_cnt := (*l_cnts)[0]
-	as.Equal(test_common.EXPECT_CNT_COUNT[l_cnt.Name], l_cnt.Total, "There are 3 entries in the ordered test data last container")
+	assert.Equal(t, test_common.EXPECT_CNT_COUNT[l_cnt.Name], l_cnt.Total, "There are 3 entries in the ordered test data last container")
 }
 
-func (as *ActionSuite) Test_ManagerInitialize() {
+func TestMemoryManagerInitialize(t *testing.T) {
 	test_common.InitFakeApp(false)
 
-	ctx := test_common.GetContext(as.App)
+	ctx := test_common.GetContext()
 	man := GetManager(ctx)
-	as.NotNil(man, "It should have a manager defined after init")
+	assert.NotNil(t, man, "It should have a manager defined after init")
 
 	containers, _, err := man.ListContainersContext()
-	as.NoError(err, "It should list all containers")
-	as.NotNil(containers, "It should have containers")
-	as.Equal(len(*containers), test_common.TOTAL_CONTAINERS_WITH_CONTENT, "Unexpected container count")
+	assert.NoError(t, err, "It should list all containers")
+	assert.NotNil(t, containers, "It should have containers")
+	assert.Equal(t, len(*containers), test_common.TOTAL_CONTAINERS_WITH_CONTENT, "Unexpected container count")
 
 	// Memory test working
 	for _, c := range *containers {
 		// fmt.Printf("Searching for this container %s with name %s\n", c.ID, c.Name)
-		content, _, err := man.ListContent(ContentQuery{ContainerID: c.ID.String()})
-		as.NoError(err)
-		as.NotNil(content)
+		content, _, err := man.ListContent(ContentQuery{ContainerID: strconv.FormatInt(c.ID, 10)})
+		assert.NoError(t, err)
+		assert.NotNil(t, content)
 
 		content_len := len(*content)
 		// fmt.Printf("Content length was %d\n", content_len)
-		as.Greater(content_len, 0, "There should be a number of content")
-		as.Equal(test_common.EXPECT_CNT_COUNT[c.Name], content_len, "It should have this many instances: "+c.Name)
-		as.Greater(c.Total, 0, "All of them should have a total assigned")
+		assert.Greater(t, content_len, 0, "There should be a number of content")
+		assert.Equal(t, test_common.EXPECT_CNT_COUNT[c.Name], content_len, "It should have this many instances: "+c.Name)
+		assert.Greater(t, c.Total, 0, "All of them should have a total assigned")
 	}
 }
 
-func (as *ActionSuite) Test_MemoryManagerSearch() {
+func Test_MemoryManagerSearch(t *testing.T) {
 	test_common.InitFakeApp(false)
 
-	ctx := test_common.GetContext(as.App)
+	ctx := test_common.GetContext()
 	man := GetManager(ctx)
-	as.NotNil(man, "It should have a manager defined after init")
+	assert.NotNil(t, man, "It should have a manager defined after init")
 
 	containers, _, err := man.ListContainersContext()
-	as.NoError(err, "It should list all containers")
-	as.NotNil(containers, "It should have containers")
-	as.Equal(test_common.TOTAL_CONTAINERS_WITH_CONTENT, len(*containers), "Wrong number of containers found")
+	assert.NoError(t, err, "It should list all containers")
+	assert.NotNil(t, containers, "It should have containers")
+	assert.Equal(t, test_common.TOTAL_CONTAINERS_WITH_CONTENT, len(*containers), "Wrong number of containers found")
 
 	s_cnts, count, s_err := man.SearchContainers(ContainerQuery{Search: "dir2", Page: 1, PerPage: 2})
-	as.NoError(s_err, "Error searching memory containers")
-	as.Equal(1, len(*s_cnts), "It should only filter to one directory")
-	as.Equal(1, count, "There should be one count")
+	assert.NoError(t, s_err, "Error searching memory containers")
+	assert.Equal(t, 1, len(*s_cnts), "It should only filter to one directory")
+	assert.Equal(t, 1, count, "There should be one count")
 
 	sr := ContentQuery{Search: "Donut", PerPage: 20}
 	mcs, total, err := man.SearchContent(sr)
-	as.NoError(err, "Can we search in the memory manager")
-	as.Equal(len(*mcs), 1, "One donut should be found")
-	as.Equal(total, len(*mcs), "It should get the total right")
+	assert.NoError(t, err, "Can we search in the memory manager")
+	assert.Equal(t, len(*mcs), 1, "One donut should be found")
+	assert.Equal(t, total, len(*mcs), "It should get the total right")
 
 	sr = ContentQuery{Search: "Large", PerPage: 6}
 	mcs_1, _, err_1 := man.SearchContent(sr)
-	as.NoError(err_1, "Can we search in the memory manager")
-	as.Equal(5, len(*mcs_1), "There are 5 images with 'large' in them ignoring case")
+	assert.NoError(t, err_1, "Can we search in the memory manager")
+	assert.Equal(t, 5, len(*mcs_1), "There are 5 images with 'large' in them ignoring case")
 
 	sr = ContentQuery{PerPage: 9001}
 	all_mc, _, err_all := man.SearchContent(sr)
-	as.NoError(err_all, "Can in search everything")
-	as.Equal(len(*all_mc), test_common.TOTAL_MEDIA, "The Kitchen sink")
+	assert.NoError(t, err_all, "Can in search everything")
+	assert.Equal(t, len(*all_mc), test_common.TOTAL_MEDIA, "The Kitchen sink")
 }
 
-func (as *ActionSuite) Test_MemoryManagerSearchMulti() {
+func Test_MemoryManagerSearchMulti(t *testing.T) {
 	// Test that a search restricting containerID works
 	// Test that search restricting container and text works
 	cfg := test_common.InitFakeApp(false)
 	cfg.ReadOnly = false
-	ctx := test_common.GetContext(as.App)
+	ctx := test_common.GetContext()
 	man := GetManager(ctx)
 
 	// Ensure we initialized with a known search
-	as.Equal(man.CanEdit(), true)
+	assert.Equal(t, man.CanEdit(), true)
 	sr := ContentQuery{Search: "donut"}
 	mcs, total, err := man.SearchContent(sr)
-	as.NoError(err, "Can we search in the memory manager")
-	as.Equal(len(*mcs), 1, "One donut should be found")
-	as.Equal(total, len(*mcs), "It should get the total right")
+	assert.NoError(t, err, "Can we search in the memory manager")
+	assert.Equal(t, len(*mcs), 1, "One donut should be found")
+	assert.Equal(t, total, len(*mcs), "It should get the total right")
 
 	cnts, _, eep := man.ListContainers(ContainerQuery{Page: 1, PerPage: 10})
-	as.NoError(eep, fmt.Sprintf("It should have 4 containers %s", eep))
-	as.Greater(len(*cnts), 1, "We should have containers")
+	assert.NoError(t, eep, fmt.Sprintf("It should have 4 containers %s", eep))
+	assert.Greater(t, len(*cnts), 1, "We should have containers")
 
 	allContent, count, errAll := man.ListContent(ContentQuery{PerPage: 50})
-	as.Greater(len(*allContent), 0, "We should have content")
-	as.Greater(count, 0, "We should have content")
-	as.NoError(errAll)
+	assert.Greater(t, len(*allContent), 0, "We should have content")
+	assert.Greater(t, count, 0, "We should have content")
+	assert.NoError(t, errAll)
 
 	sr = ContentQuery{Text: "", PerPage: 40}
 	all_content, wild_total, _ := man.SearchContent(sr)
-	as.Greater(wild_total, 0)
-	as.Equal(len(*all_content), wild_total)
+	assert.Greater(t, wild_total, 0)
+	assert.Equal(t, len(*all_content), wild_total)
 
 	sr = ContentQuery{ContentType: "video", Order: "src", Direction: "asc"}
 	video_content, vid_total, _ := man.SearchContent(sr)
-	as.Equal(test_common.TOTAL_VIDEO, vid_total)
-	as.Equal(len(*video_content), vid_total)
+	assert.Equal(t, test_common.TOTAL_VIDEO, vid_total)
+	assert.Equal(t, len(*video_content), vid_total)
 	vs := *video_content
-	as.Equal(test_common.VIDEO_FILENAME, vs[0].Src)
+	assert.Equal(t, test_common.VIDEO_FILENAME, vs[0].Src)
 
 	for _, cnt := range *cnts {
 		if cnt.Name == "dir1" {
-			sr = ContentQuery{Search: "donut", ContainerID: cnt.ID.String()}
+			sr = ContentQuery{Search: "donut", ContainerID: strconv.FormatInt(cnt.ID, 10)}
 			_, no_total, n_err := man.SearchContent(sr)
-			as.NoError(n_err)
-			as.Equal(no_total, 0, "It should not be in this directory")
+			assert.NoError(t, n_err)
+			assert.Equal(t, no_total, 0, "It should not be in this directory")
 		}
 		if cnt.Name == "dir2" {
-			sr = ContentQuery{Search: "donut", ContainerID: cnt.ID.String()}
+			sr = ContentQuery{Search: "donut", ContainerID: strconv.FormatInt(cnt.ID, 10)}
 			yes_match, y_total, r_err := man.SearchContent(sr)
-			as.NoError(r_err)
-			as.Equal(y_total, 1, "We did not find the expected content")
+			assert.NoError(t, r_err)
+			assert.Equal(t, y_total, 1, "We did not find the expected content")
 
 			movie := (*yes_match)[0]
-			as.Equal(movie.Src, test_common.VIDEO_FILENAME)
+			assert.Equal(t, movie.Src, test_common.VIDEO_FILENAME)
 
-			sr = ContentQuery{ContainerID: cnt.ID.String(), ContentType: "image"}
+			sr = ContentQuery{ContainerID: strconv.FormatInt(cnt.ID, 10), ContentType: "image"}
 			_, imgCount, _ := man.SearchContent(sr)
-			as.Equal(imgCount, 2, "It should filter out the donut this time")
+			assert.Equal(t, imgCount, 2, "It should filter out the donut this time")
 		}
 		if cnt.Name == "dir3" {
-			sr = ContentQuery{ContainerID: cnt.ID.String(), PerPage: 1}
+			sr = ContentQuery{ContainerID: strconv.FormatInt(cnt.ID, 10), PerPage: 1}
 			has_content, _, err := man.SearchContent(sr)
-			as.NoError(err, "We should have content")
-			as.Greater(len(*has_content), 0)
+			assert.NoError(t, err, "We should have content")
+			assert.Greater(t, len(*has_content), 0)
 		}
 	}
 }
 
-func (as *ActionSuite) Test_MemoryPreviewInitialization() {
+func Test_MemoryPreviewInitialization(t *testing.T) {
 	cfg := test_common.ResetConfig()
 	utils.SetupContentMatchers(cfg, "", "video", "DS_Store", "")
 	utils.SetCfg(*cfg)
@@ -250,86 +251,83 @@ func (as *ActionSuite) Test_MemoryPreviewInitialization() {
 
 	fqPath := utils.GetPreviewPathDestination(testFile, dstDir, "video/mp4")
 	f, err := os.Create(fqPath)
-	if err != nil {
-		as.T().Errorf("Could not create the file at %s", fqPath)
-	}
+	assert.NoError(t, err, fmt.Sprintf("Could not create the file at %s", fqPath))
 	_, wErr := f.WriteString("Now something exists in the file")
-	if wErr != nil {
-		as.T().Errorf("Could not write to the file at %s", fqPath)
-	}
-	as.Contains(fqPath, fmt.Sprintf("%s.png", test_common.VIDEO_FILENAME))
+	assert.NoError(t, wErr, fmt.Sprintf("Could not write to the file at %s", fqPath))
+	assert.Contains(t, fqPath, fmt.Sprintf("%s.png", test_common.VIDEO_FILENAME))
 	f.Sync()
 
 	// Checks that if a preview exists
 	cnts, content, _, _ := utils.PopulateMemoryView(cfg.Dir)
-	as.Equal(2, len(cnts), "We should only pull in containers that have video content")
-	as.Equal(test_common.TOTAL_VIDEO, len(content), fmt.Sprintf("There are %d videos", test_common.TOTAL_VIDEO))
+	assert.Equal(t, 2, len(cnts), "We should only pull in containers that have video content")
+	assert.Equal(t, test_common.TOTAL_VIDEO, len(content), fmt.Sprintf("There are %d videos", test_common.TOTAL_VIDEO))
 	foundDonut := false
 	for _, mc := range content {
 		if mc.Src == test_common.VIDEO_FILENAME {
 			expect := fmt.Sprintf("/container_previews/%s.png", test_common.VIDEO_FILENAME)
-			as.Equal(expect, mc.Preview)
+			assert.Equal(t, expect, mc.Preview)
 			foundDonut = true
 		}
 	}
-	as.Equal(true, foundDonut, "We should have a video preview for the donuts")
+	assert.Equal(t, true, foundDonut, "We should have a video preview for the donuts")
 
 	cfg.ExcludeEmptyContainers = false
 	all_cnts, one_content, _, _ := utils.PopulateMemoryView(cfg.Dir)
-	as.Equal(test_common.TOTAL_VIDEO, len(one_content), "Expect some videos")
-	as.Equal(test_common.TOTAL_CONTAINERS, len(all_cnts), "Allow it to pull in all containers")
+	assert.Equal(t, test_common.TOTAL_VIDEO, len(one_content), "Expect some videos")
+	assert.Equal(t, test_common.TOTAL_CONTAINERS, len(all_cnts), "Allow it to pull in all containers")
 }
 
-func (as *ActionSuite) Test_ManagerTagsMemory() {
+func TestManagerMemoryTags(t *testing.T) {
 	cfg := test_common.InitMemoryFakeAppEmpty()
-	man := GetManagerActionSuite(cfg, as)
-	as.NoError(man.CreateTag(&models.Tag{ID: "A"}), "couldn't create tag A")
-	as.NoError(man.CreateTag(&models.Tag{ID: "B"}), "couldn't create tag B")
+	man := GetManagerTestSuite(cfg)
+	assert.NoError(t, man.CreateTag(&models.Tag{ID: "A"}), "couldn't create tag A")
+	assert.NoError(t, man.CreateTag(&models.Tag{ID: "B"}), "couldn't create tag B")
 	tags, total, err := man.ListAllTags(TagQuery{PerPage: 3})
-	as.NoError(err, "It should be able to list tags")
-	as.Equal(len(*tags), 2, "We should have two tags")
-	as.Equal(total, 2, "It should have a tag count")
+	assert.NoError(t, err, "It should be able to list tags")
+	assert.Equal(t, len(*tags), 2, "We should have two tags")
+	assert.Equal(t, total, 2, "It should have a tag count")
 }
 
 // A Lot more of these could be a test in manager that passes in the manager
 // TODO: Remove copy pasta and make it almost identical.
-func (as *ActionSuite) Test_MemoryManager_TagSearch() {
+func Test_MemoryManager_TagSearch(t *testing.T) {
 	cfg := test_common.InitMemoryFakeAppEmpty()
-	man := GetManagerActionSuite(cfg, as)
-	ManagersTagSearchValidation(as, man)
+	man := GetManagerTestSuite(cfg)
+	ManagersTagSearchValidation(t, man)
 }
 
-func (as *ActionSuite) Test_MangerTagsMemoryCRUD() {
+func Test_MangerTagsMemoryCRUD(t *testing.T) {
 	cfg := test_common.InitFakeApp(false)
-	man := GetManagerActionSuite(cfg, as)
+	man := GetManagerTestSuite(cfg)
 
-	t := models.Tag{ID: "A"}
-	as.NoError(man.CreateTag(&t), "couldn't create tag A")
-	as.NoError(man.UpdateTag(&t), "It should udpate")
+	tag := models.Tag{ID: "A"}
+	assert.NoError(t, man.CreateTag(&tag), "couldn't create tag A")
+	assert.NoError(t, man.UpdateTag(&tag), "It should udpate")
 
 	tags, total, err := man.ListAllTags(TagQuery{PerPage: 3})
-	as.NoError(err)
-	as.Equal(total, 1, "there should be one tag")
-	as.Equal(len(*tags), 1, "We should have one tag")
-	man.DestroyTag(t.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, total, 1, "there should be one tag")
+	assert.Equal(t, len(*tags), 1, "We should have one tag")
+	man.DestroyTag(tag.ID)
+
 	tags_gone, total_gone, _ := man.ListAllTags(TagQuery{PerPage: 3})
-	as.Equal(len(*tags_gone), 0, "Now there should be no tags")
-	as.Equal(total_gone, 0, "it should be empty")
+	assert.Equal(t, len(*tags_gone), 0, "Now there should be no tags")
+	assert.Equal(t, total_gone, 0, "it should be empty")
 }
 
-func (as *ActionSuite) Test_ManagerMemoryScreens() {
+func Test_ManagerMemoryScreens(t *testing.T) {
 	cfg := test_common.InitFakeApp(false)
 
-	man := GetManagerActionSuite(cfg, as)
+	man := GetManagerTestSuite(cfg)
 	content, count, err := man.ListContent(ContentQuery{PerPage: 100})
-	as.NoError(err)
-	as.Greater(len(*content), 0, "It should have content setup")
-	as.Greater(count, 0, "It should have content counted")
+	assert.NoError(t, err)
+	assert.Greater(t, len(*content), 0, "It should have content setup")
+	assert.Greater(t, count, 0, "It should have content counted")
 
 	contentArr := *content
 	mc := contentArr[0]
-	id1, _ := uuid.NewV4()
-	id2, _ := uuid.NewV4()
+	id1 := utils.AssignNumerical(0, "screens")
+	id2 := utils.AssignNumerical(0, "screens")
 
 	s1 := models.Screen{ID: id1, Path: "A", Src: "a.txt", ContentID: mc.ID}
 	s2 := models.Screen{ID: id2, Path: "B", Src: "b.txt", ContentID: mc.ID}
@@ -341,27 +339,27 @@ func (as *ActionSuite) Test_ManagerMemoryScreens() {
 	mem.ValidScreens[s1.ID] = s1
 	mem.ValidScreens[s2.ID] = s2
 
-	screens, count, err := man.ListScreens(ScreensQuery{ContentID: mc.ID.String()})
-	as.NoError(err)
-	as.NotNil(screens)
-	as.Equal(2, len(*screens), "We should have two screens")
-	as.Equal(2, count, "And the count should be right")
+	screens, count, err := man.ListScreens(ScreensQuery{ContentID: strconv.FormatInt(mc.ID, 10)})
+	assert.NoError(t, err)
+	assert.NotNil(t, screens)
+	assert.Equal(t, 2, len(*screens), "We should have two screens")
+	assert.Equal(t, 2, count, "And the count should be right")
 	// Check that our single lookup hash is also populated
 	for _, screen := range *screens {
 		obj, mia := man.GetScreen(screen.ID)
-		as.NoError(mia)
-		as.Equal(obj.ID, screen.ID)
+		assert.NoError(t, mia)
+		assert.Equal(t, obj.ID, screen.ID)
 	}
 
 	allScreens, all_count, all_err := man.ListScreens(ScreensQuery{})
-	as.NoError(all_err, "It should work out ok")
-	as.Equal(2, len(*allScreens), "We should have 2 screens")
-	as.Equal(2, all_count, "We should have 2 screens")
+	assert.NoError(t, all_err, "It should work out ok")
+	assert.Equal(t, 2, len(*allScreens), "We should have 2 screens")
+	assert.Equal(t, 2, all_count, "We should have 2 screens")
 }
 
-func (as *ActionSuite) Test_ManagerMemoryCRU() {
+func Test_ManagerMemoryCRU(t *testing.T) {
 	cfg := test_common.InitFakeApp(false)
-	ctx := test_common.GetContext(as.App)
+	ctx := test_common.GetContext()
 	man := GetManager(ctx)
 
 	// Only valid paths now allow for creation even in tests.
@@ -372,67 +370,67 @@ func (as *ActionSuite) Test_ManagerMemoryCRU() {
 	defer test_common.CleanupContainer(&c)
 	defer test_common.CleanupContainer(&c2)
 
-	as.NoError(man.CreateContainer(&c), "Did not create container")
-	as.NoError(man.CreateContainer(&c2), "Did not create container")
+	assert.NoError(t, man.CreateContainer(&c), "Did not create container")
+	assert.NoError(t, man.CreateContainer(&c2), "Did not create container")
 	c_check, c_err := man.GetContainer(c.ID)
-	as.NoError(c_err, "We should be able to get back the container")
-	as.Equal(c_check.Path, c.Path, "Ensure we are not stomping unset ID data")
+	assert.NoError(t, c_err, "We should be able to get back the container")
+	assert.Equal(t, c_check.Path, c.Path, "Ensure we are not stomping unset ID data")
 
-	mc := models.Content{Src: "content", ContainerID: nulls.NewUUID(c.ID), NoFile: true}
-	as.NoError(man.CreateContent(&mc), "Did not create content correctly")
-	mcUp := models.Content{Src: "updated", ID: mc.ID, ContainerID: nulls.NewUUID(c.ID), NoFile: true}
+	mc := models.Content{Src: "content", ContainerID: &c.ID, NoFile: true}
+	assert.NoError(t, man.CreateContent(&mc), "Did not create content correctly")
+	mcUp := models.Content{Src: "updated", ID: mc.ID, ContainerID: &c.ID, NoFile: true}
 	man.UpdateContent(&mcUp)
 	mc_check, m_err := man.GetContent(mc.ID)
-	as.NoError(m_err, "It should find this content")
-	as.Equal(mc_check.Src, "updated")
+	assert.NoError(t, m_err, "It should find this content")
+	assert.Equal(t, mc_check.Src, "updated")
 
-	id, _ := uuid.NewV4()
+	id := utils.AssignNumerical(0, "contents")
 	s1 := models.Screen{Path: "A", Src: "a.txt", ContentID: mc.ID}
 	s2 := models.Screen{Path: "B", Src: "b.txt", ContentID: id}
-	as.NoError(man.CreateScreen(&s1), "Did not associate screen correctly")
-	as.NoError(man.CreateScreen(&s2), "Did not associate screen correctly")
+	assert.NoError(t, man.CreateScreen(&s1), "Did not associate screen correctly")
+	assert.NoError(t, man.CreateScreen(&s2), "Did not associate screen correctly")
 
-	sCheck, count, sErr := man.ListScreens(ScreensQuery{ContentID: mc.ID.String()})
-	as.NoError(sErr, "Failed to list screens")
-	as.Equal(len(*sCheck), 1, "It should properly filter screens.")
-	as.Equal(count, 1, "Count should be correct")
+	sCheck, count, sErr := man.ListScreens(ScreensQuery{ContentID: strconv.FormatInt(mc.ID, 10)})
+	assert.NoError(t, sErr, "Failed to list screens")
+	assert.Equal(t, len(*sCheck), 1, "It should properly filter screens.")
+	assert.Equal(t, count, 1, "Count should be correct")
 
 	s1Update := models.Screen{ID: s1.ID, Path: "C", ContentID: mc.ID}
-	as.NoError(man.UpdateScreen(&s1Update))
+	assert.NoError(t, man.UpdateScreen(&s1Update))
 	s1Check, scErr := man.GetScreen(s1.ID)
-	as.NoError(scErr, "Failed to get the screen back")
-	as.Equal(s1Check.Path, "C")
+	assert.NoError(t, scErr, "Failed to get the screen back")
+	assert.Equal(t, s1Check.Path, "C")
 }
 
-func (as *ActionSuite) Test_MemoryManagerTags() {
+func TestMemoryManagerTags(t *testing.T) {
 	test_common.InitFakeApp(false)
-	ctx := test_common.GetContext(as.App)
+	ctx := test_common.GetContext()
 	man := GetManager(ctx)
 
 	aTag := models.Tag{ID: "A"}
 	bTag := models.Tag{ID: "B"}
-	as.NoError(man.CreateTag(&aTag))
-	as.NoError(man.CreateTag(&bTag))
+	assert.NoError(t, man.CreateTag(&aTag))
+	assert.NoError(t, man.CreateTag(&bTag))
 
 	content := models.Content{Src: "SomethingSomethingDarkside", NoFile: true}
-	as.NoError(man.CreateContent(&content))
+	assert.NoError(t, man.CreateContent(&content))
 
-	as.NoError(man.AssociateTagByID(aTag.ID, content.ID))
-	as.NoError(man.AssociateTagByID(bTag.ID, content.ID))
+	assert.NoError(t, man.AssociateTagByID(aTag.ID, content.ID))
+	assert.NoError(t, man.AssociateTagByID(bTag.ID, content.ID))
 	checkContent, err := man.GetContent(content.ID)
-	as.NoError(err)
-	as.NotEmpty(checkContent.Tags, "We should have tags")
-	as.Equal(len(checkContent.Tags), 2, "There should be two tags")
+	assert.NoError(t, err)
+	assert.NotEmpty(t, checkContent.Tags, "We should have tags")
+	assert.Equal(t, len(checkContent.Tags), 2, "There should be two tags")
 
 	// Not in the DB so should not associate
 	notExistsTag := models.Tag{ID: "NOPE"}
-	as.Error(man.AssociateTagByID(notExistsTag.ID, content.ID))
+	assert.Error(t, man.AssociateTagByID(notExistsTag.ID, content.ID))
 }
 
-func (as *ActionSuite) Test_MemoryManager_IllegalContainers() {
+func (as *ActionSuite) TestMemoryManagerIllegalContainers(t *testing.T) {
 	cfg := test_common.ResetConfig()
 	test_common.InitFakeApp(false)
-	ctx := test_common.GetContext(as.App)
+	ctx := test_common.GetContext()
 	man := GetManager(ctx)
 
 	notUnderDir := models.Container{Name: "ssl", Path: "/etc"}
@@ -443,11 +441,11 @@ func (as *ActionSuite) Test_MemoryManager_IllegalContainers() {
 
 	// Ensure that a container can create, but an invalid update is prevented.
 	knownDirOk := models.Container{Name: "dir2", Path: cfg.Dir}
-	as.NoError(man.CreateContainer(&knownDirOk), "This directory should be ok")
+	assert.NoError(t, man.CreateContainer(&knownDirOk), "This directory should be ok")
 	knownDirOk.Name = "INVALID"
 	_, err := man.UpdateContainer(&knownDirOk)
 	as.Error(err, "The Path is illegal")
 
 	multiLevelDownOk := models.Container{Name: "screens/screens_sub_dir", Path: cfg.Dir}
-	as.NoError(man.CreateContainer(&multiLevelDownOk), "This should exist in the mock data")
+	assert.NoError(t, man.CreateContainer(&multiLevelDownOk), "This should exist in the mock data")
 }

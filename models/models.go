@@ -44,13 +44,14 @@ func InitGorm(reset bool) *gorm.DB {
 	return GormDB
 }
 
-func ResetDB(db *gorm.DB) {
+func ResetDB(db *gorm.DB) *gorm.DB {
 	db.Exec("DELETE FROM contents_tags")
 	db.Exec("DELETE FROM tags")
 	db.Exec("DELETE FROM screens")
 	db.Exec("DELETE FROM task_requests")
 	db.Exec("DELETE FROM contents")
 	db.Exec("DELETE FROM containers")
+	return db
 }
 
 func CheckReset(tx *gorm.DB) {

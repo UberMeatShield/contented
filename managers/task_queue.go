@@ -81,7 +81,7 @@ func TakeContentTask(man ContentManager, id int64, operation string) (*models.Ta
 	}
 	content, cErr := man.GetContent(*task.ContentID)
 	if cErr != nil {
-		msg := fmt.Sprintf("%s Content not found %s %s", operation, task.ContentID, cErr)
+		msg := fmt.Sprintf("%s Content not found %d %s", operation, task.ContentID, cErr)
 		FailTask(man, task, msg)
 		return task, content, cErr
 	}
@@ -133,7 +133,7 @@ func TakeTask(man ContentManager, id int64, operation string) (*models.TaskReque
 		cnt, cErr := man.GetContainer(*task.ContainerID)
 		container = cnt
 		if cErr != nil {
-			msg := fmt.Sprintf("%s Container not found %s %d", operation, task.ContainerID, cErr)
+			msg := fmt.Sprintf("%s Container not found %d %s", operation, task.ContainerID, cErr)
 			FailTask(man, task, msg)
 			return task, container, nil, cErr
 		}
@@ -144,7 +144,7 @@ func TakeTask(man ContentManager, id int64, operation string) (*models.TaskReque
 		mc, cErr := man.GetContent(*task.ContentID)
 		content = mc
 		if cErr != nil {
-			msg := fmt.Sprintf("%s Content not found %s %s", operation, task.ContentID, cErr)
+			msg := fmt.Sprintf("%s Content not found %d %s", operation, task.ContentID, cErr)
 			FailTask(man, task, msg)
 			return task, container, content, cErr
 		}
@@ -160,7 +160,7 @@ func TakeTask(man ContentManager, id int64, operation string) (*models.TaskReque
  * Capture a set of screens given a task
  */
 func ScreenCaptureTask(man ContentManager, id int64) error {
-	log.Printf("Managers Screen Tasks taskID attempting to start %s", id)
+	log.Printf("Managers Screen Tasks taskID attempting to start %d", id)
 	task, _, err := TakeContentTask(man, id, "Screenshots")
 	if err != nil {
 		return err
@@ -181,7 +181,7 @@ func ScreenCaptureTask(man ContentManager, id int64) error {
  * Capture a set of screens given a task
  */
 func WebpFromScreensTask(man ContentManager, id int64) error {
-	log.Printf("Managers WebP taskID attempting to start %s", id)
+	log.Printf("Managers WebP taskID attempting to start %d", id)
 	task, content, err := TakeContentTask(man, id, "WebpFromScreensTask")
 	if err != nil {
 		return err
@@ -203,7 +203,7 @@ func WebpFromScreensTask(man ContentManager, id int64) error {
  * Capture a set of screens given a task
  */
 func DetectDuplicatesTask(man ContentManager, id int64) error {
-	log.Printf("Managers duplicate content taskID attempting to start %s", id)
+	log.Printf("Managers duplicate content taskID attempting to start %d", id)
 	task, container, content, err := TakeContainerTask(man, id, "DetectDuplicatesTask")
 
 	// Make it so the task has a contentId
@@ -248,7 +248,7 @@ func DetectDuplicatesTask(man ContentManager, id int64) error {
  * Tag a piece of content, get this working on one item and then consider some other operation.
  */
 func TaggingContentTask(man ContentManager, id int64) error {
-	log.Printf("Managers Tagging taskID attempting to start %s", id)
+	log.Printf("Managers Tagging taskID attempting to start %d", id)
 	task, content, err := TakeContentTask(man, id, "TaggingContentTask")
 	if err != nil {
 		return err
@@ -273,7 +273,7 @@ func TaggingContentTask(man ContentManager, id int64) error {
 	}
 
 	// Should strip the path information out of the task state
-	ChangeTaskState(man, task, models.TaskStatus.DONE, fmt.Sprintf("successfully tagged content %s", content.ID))
+	ChangeTaskState(man, task, models.TaskStatus.DONE, fmt.Sprintf("successfully tagged content %d", content.ID))
 	return err
 }
 
@@ -281,7 +281,7 @@ func TaggingContentTask(man ContentManager, id int64) error {
  * Could definitely make this a method assuming the next task uses the same logic.
  */
 func EncodingVideoTask(man ContentManager, id int64) error {
-	log.Printf("Managers Video encoding taskID attempting to start %s", id)
+	log.Printf("Managers Video encoding taskID attempting to start %d", id)
 	task, content, err := TakeContentTask(man, id, "VideoEncoding")
 	if err != nil {
 		return err

@@ -58,7 +58,7 @@ func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
 
 		// TODO: Port to using the manager somehow (note this is called from a grift)
 		db.Create(&c)
-		log.Printf("Created %s with id %s\n", c.Name, c.ID)
+		log.Printf("created %s with id %d\n", c.Name, c.ID)
 
 		// There MUST be a way to do this as a single commit
 		for _, mc := range content {
@@ -164,7 +164,7 @@ func FindDuplicateVideos(cm ContentManager) (DuplicateContents, error) {
 			duplicates = append(duplicates, dupes...)
 		}
 		if len(cntErrors) > 0 {
-			errMsg := fmt.Sprintf("found errors in Container %s errors %s", cnt.ID, cntErrors)
+			errMsg := fmt.Sprintf("found errors in container %d errors %s", cnt.ID, cntErrors)
 			errors = append(errors, errMsg)
 		}
 	}
@@ -361,20 +361,20 @@ func CreateContentPreviews(c *models.Container, content models.Contents) (models
 		log.Printf("Found a result for %d\n", result.MC_ID)
 		if mc_update, ok := contentMap[result.MC_ID]; ok {
 			if result.Preview != "" {
-				log.Printf("We found a reply around this %s id was %s \n", result.Preview, result.MC_ID)
+				log.Printf("we found a reply around this %s id was %d \n", result.Preview, result.MC_ID)
 				mc_update.Preview = result.Preview
 				previews = append(previews, mc_update)
 			} else if result.Err != nil {
-				log.Printf("ERROR: Failed to create a preview %s for %s \n", result.Err, mc_update.Src)
+				log.Printf("failed to create a preview %s for %s \n", result.Err, mc_update.Src)
 				error_list += "" + result.Err.Error()
 				mc_update.Preview = ""
 				mc_update.Corrupt = true
 				previews = append(previews, mc_update)
 			} else {
-				log.Printf("No preview was needed for content %s", result.MC_ID)
+				log.Printf("no preview was needed for content %d", result.MC_ID)
 			}
 		} else {
-			log.Printf("Missing Response ID, something went really wrong %s\n", result.MC_ID)
+			log.Printf("missing response id, something went really wrong %d\n", result.MC_ID)
 		}
 	}
 	if error_list != "" {
@@ -389,7 +389,7 @@ func StartWorker(w utils.PreviewWorker) {
 	for pr := range w.In {
 		c := pr.C
 		mc := pr.Mc
-		log.Printf("Worker %d Doing a preview for %s\n", w.Id, mc.ID)
+		log.Printf("worker %d doing a preview for %d", w.Id, mc.ID)
 		preview, err := utils.CreateContentPreview(c, mc)
 		pr.Out <- utils.PreviewResult{
 			C_ID:    c.ID,

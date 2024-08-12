@@ -10,6 +10,7 @@ import (
 	"contented/utils"
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/pkg/errors"
 )
@@ -53,7 +54,7 @@ func EncodeVideos(cm ContentManager) error {
 			// Might want get the full link to the original video but it should be in the error
 			content, miss_err := cm.GetContent(res.MC_ID)
 			if miss_err == nil {
-				msg := fmt.Sprintf("Failure encoding %s failure was %s id %s", res.Err, content.Src, content.ID)
+				msg := fmt.Sprintf("Failure encoding %s failure was %s id %d", res.Err, content.Src, content.ID)
 				log.Print(msg)
 			} else {
 				msg := fmt.Sprintf("Failure encoding %s failure was %d (deleted?)", res.Err, res.MC_ID)
@@ -69,7 +70,7 @@ func EncodeVideos(cm ContentManager) error {
 }
 
 func EncodeContainer(c *models.Container, cm ContentManager) (*utils.EncodingResults, error) {
-	content, _, q_err := cm.ListContent(ContentQuery{ContainerID: string(c.ID), PerPage: 90000})
+	content, _, q_err := cm.ListContent(ContentQuery{ContainerID: strconv.FormatInt(c.ID, 10), PerPage: 90000})
 	if q_err != nil {
 		log.Fatal(q_err) // Also fatal if we can no longer list content (empty is just [])
 	}
@@ -149,7 +150,7 @@ func StartEncoder(ew utils.EncodingWorker) {
 		mc := req.Mc
 
 		// Should check the on disk size and add a check to look at a post encode filesize
-		log.Printf("Worker %d doing encoding for %s - %d\n", ew.Id, mc.ID, mc.Src)
+		log.Printf("Worker %d doing encoding for %d - %s\n", ew.Id, mc.ID, mc.Src)
 		msg, err, converted := utils.ConvertVideoToH265(req.SrcFile, req.DstFile)
 		if err == nil && !converted {
 			err = fmt.Errorf("a request was made to convert %s but it did not encode %s", req.SrcFile, msg)

@@ -368,7 +368,7 @@ func (cm ContentManagerMemory) UpdateContent(content *models.Content) error {
 	if !content.NoFile {
 		cnt, cErr := cm.GetContainer(*content.ContainerID)
 		if cErr != nil {
-			msg := fmt.Sprintf("parent container %s not found", content.ContainerID)
+			msg := fmt.Sprintf("parent container %d not found", content.ContainerID)
 			log.Print(msg)
 			return errors.New(msg)
 		}
@@ -454,7 +454,7 @@ func (cm ContentManagerMemory) GetContainer(cID int64) (*models.Container, error
 	if c, ok := mem.ValidContainers[cID]; ok {
 		return &c, nil
 	}
-	return nil, fmt.Errorf("Memory manager did not find this container id: %d", cID)
+	return nil, fmt.Errorf("ContentMemoryManager did not find this container id: %d", cID)
 }
 
 func (cm ContentManagerMemory) GetPreviewForMC(mc *models.Content) (string, error) {
@@ -466,7 +466,7 @@ func (cm ContentManagerMemory) GetPreviewForMC(mc *models.Content) (string, erro
 	if mc.Preview != "" {
 		src = mc.Preview
 	}
-	log.Printf("Memory Manager loading %s preview %s\n", mc.ID, src)
+	log.Printf("ContentMemoryManager loading %d preview %s\n", mc.ID, src)
 	return utils.GetFilePathInContainer(src, cnt.GetFqPath())
 }
 
@@ -573,7 +573,7 @@ func (cm ContentManagerMemory) ListAllTags(tq TagQuery) (*models.Tags, int64, er
 		t_arr = t_arr[offset:end]
 		return &t_arr, int64(total), nil
 	}
-	return &t_arr, int64(total), fmt.Errorf("Invalid Page end %s per page %s", tq.Page, tq.PerPage)
+	return &t_arr, int64(total), fmt.Errorf("invalid page end %d per page %d", tq.Page, tq.PerPage)
 }
 
 func (cm ContentManagerMemory) GetTag(id string) (*models.Tag, error) {
@@ -581,7 +581,7 @@ func (cm ContentManagerMemory) GetTag(id string) (*models.Tag, error) {
 	if tag, ok := mem.ValidTags[id]; ok {
 		return &tag, nil
 	}
-	return nil, errors.New(fmt.Sprintf("Tag not found %s", id))
+	return nil, fmt.Errorf("tag not found %s", id)
 }
 
 func (cm ContentManagerMemory) ListAllTagsContext() (*models.Tags, int64, error) {
@@ -600,7 +600,7 @@ func (cm ContentManagerMemory) CreateTag(tag *models.Tag) error {
 		_, err := cm.GetStore().CreateTag(tag)
 		return err
 	}
-	return errors.New("ContentManagerMemory no tag provided.")
+	return errors.New("ContentManagerMemory no tag provided")
 }
 
 // If you already updated the container in memory you are done
@@ -619,12 +619,12 @@ func (cm ContentManagerMemory) DestroyTag(id string) (*models.Tag, error) {
 		delete(mem.ValidTags, t.ID)
 		return &t, nil
 	}
-	return nil, errors.New("ContentManagerMemory Destroy failed, no tag found.")
+	return nil, errors.New("ContentManagerMemory destroy failed, no tag found")
 }
 
 func (cm ContentManagerMemory) AssociateTag(t *models.Tag, mc *models.Content) error {
 	if t == nil || mc == nil {
-		return errors.New(fmt.Sprintf("Cannot associate missing tag %s or content %s", t, mc))
+		return fmt.Errorf("cannot associate missing tag %s or content %s", t, mc)
 	}
 	tag, err := cm.GetTag(t.ID)
 	content, cErr := cm.GetContent(mc.ID)
@@ -640,13 +640,13 @@ func (cm ContentManagerMemory) AssociateTag(t *models.Tag, mc *models.Content) e
 				found = true
 			}
 		}
-		if found == false {
+		if !found {
 			tags = append(tags, *tag)
 		}
 		content.Tags = tags
 		return cm.UpdateContent(content)
 	}
-	return errors.New(fmt.Sprintf("Tag %s not in the list of valid tags", t))
+	return fmt.Errorf("tag %s not in the list of valid tags", t)
 }
 
 func (cm ContentManagerMemory) AssociateTagByID(tagId string, mcID int64) error {
@@ -656,10 +656,10 @@ func (cm ContentManagerMemory) AssociateTagByID(tagId string, mcID int64) error 
 		if cErr == nil {
 			return cm.AssociateTag(t, content)
 		}
-		return errors.New(fmt.Sprintf("Did not find content %s or err %s", content, cErr))
+		return fmt.Errorf("did not find content %s or err %s", content, cErr)
 	}
 	msg := fmt.Sprintf("Failed to find either the tag %s or error %s", t, err)
-	log.Printf(msg)
+	log.Print(msg)
 	return errors.New(msg)
 }
 
@@ -686,15 +686,15 @@ func (cm ContentManagerMemory) CreateContent(content *models.Content) error {
 * Not a thing in the memory manager
  */
 func (cm ContentManagerMemory) DestroyContent(id int64) (*models.Content, error) {
-	return nil, errors.New("Not Implemented")
+	return nil, errors.New("not implemented")
 }
 
 func (cm ContentManagerMemory) DestroyContainer(id string) (*models.Container, error) {
-	return nil, errors.New("Not Implemented")
+	return nil, errors.New("not implemented")
 }
 
 func (cm ContentManagerMemory) DestroyScreen(id string) (*models.Screen, error) {
-	return nil, errors.New("Not Implemented")
+	return nil, errors.New("not implemented")
 }
 
 // Note that we need to lock this down so that it cannot just access arbitrary files
@@ -708,7 +708,7 @@ func (cm ContentManagerMemory) CreateContainer(c *models.Container) error {
 		log.Printf("Path does not exist on disk under the config directory err %s", err)
 		return err
 	}
-	if ok == true {
+	if ok {
 		_, err := cm.GetStore().CreateContainer(c)
 		return err
 	}
@@ -718,7 +718,7 @@ func (cm ContentManagerMemory) CreateContainer(c *models.Container) error {
 
 func (cm ContentManagerMemory) CreateTask(t *models.TaskRequest) (*models.TaskRequest, error) {
 	if t == nil {
-		return nil, errors.New("Requires a valid task")
+		return nil, errors.New("requires a valid task")
 	}
 	mem := cm.GetStore()
 	task, err := mem.CreateTask(t)
@@ -747,7 +747,7 @@ func (cm ContentManagerMemory) GetTask(id int64) (*models.TaskRequest, error) {
 			return &mem.ValidTasks[idx], nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("Task not found %s", id))
+	return nil, fmt.Errorf("task not found %d", id)
 }
 
 // Get the next task for processing (not super thread safe but enough for mem manager)

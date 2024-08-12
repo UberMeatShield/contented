@@ -17,7 +17,6 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/envy"
 	"gorm.io/gorm"
 )
@@ -56,7 +55,7 @@ func Get_VideoAndSetupPaths(cfg *utils.DirConfigEntry) (string, string, string) 
 	return srcDir, dstDir, testFile
 }
 
-func GetContext(*buffalo.App) *gin.Context {
+func GetContext() *gin.Context {
 	return GetContextParams("/containers", "1", "10")
 }
 
@@ -143,24 +142,22 @@ func InitFakeApp(use_db bool) *utils.DirConfigEntry {
 		memStorage.ValidContainers[hiddenContainer.ID] = hiddenContainer
 		memStorage.ValidContent[hiddenContent.ID] = hiddenContent
 	} else {
-		SetupTests(models.InitGorm(false))
+		db := models.InitGorm(false)
+		models.ResetDB(db)
 	}
 	return cfg
+}
+
+func NilError(err error, msg string, t *testing.T) {
+	if err != nil {
+		t.Errorf("%s error: %s", msg, err)
+	}
 }
 
 func NoError(tx *gorm.DB, msg string, t *testing.T) {
 	if tx.Error != nil {
 		t.Errorf("%s error: %s", msg, tx.Error)
 	}
-}
-
-func SetupTests(db *gorm.DB) {
-	NoError(db.Exec("DELETE FROM contents_tags"), "Failed contents tags delete", t)
-	NoError(db.Exec("DELETE FROM tags"), "Failed tags delete", t)
-	NoError(db.Exec("DELETE FROM screens"), "Failed screens delete", t)
-	NoError(db.Exec("DELETE FROM task_requests"), "Failed task request delete", t)
-	NoError(db.Exec("DELETE FROM contents"), "Failed contents delete", t)
-	NoError(db.Exec("DELETE FROM containers"), "Failed containers delete", t)
 }
 
 // For loading up the memory app but not searching directories checking content etc.
@@ -178,15 +175,17 @@ func InitMemoryFakeAppEmpty() *utils.DirConfigEntry {
 func CreateContentByDirName(test_dir_name string) (*models.Container, models.Contents, error) {
 	cnt, content := GetContentByDirName(test_dir_name)
 
-	c_err := models.DB.Create(cnt)
-	if c_err != nil {
-		return nil, nil, c_err
+	db := models.InitGorm(false)
+	res := db.Create(cnt)
+	if res.Error != nil {
+		return nil, nil, res.Error
 	}
+
 	for _, mc := range content {
 		mc.ContainerID = &cnt.ID
-		m_err := models.DB.Create(&mc)
-		if m_err != nil {
-			return nil, nil, m_err
+		mRes := db.Create(&mc)
+		if mRes.Error != nil {
+			return nil, nil, mRes.Error
 		}
 	}
 	return cnt, content, nil

@@ -13,8 +13,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gobuffalo/buffalo"
-	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 	"github.com/lib/pq"
 )
@@ -22,10 +20,8 @@ import (
 // DB version of content management
 type ContentManagerDB struct {
 	cfg *utils.DirConfigEntry
-	c   *buffalo.Context
 
 	/* Is this even useful ? */
-	conn   *pop.Connection
 	params *url.Values
 
 	GetConnection GetConnType   // Returns .conn or context.Value(tx)
@@ -88,7 +84,7 @@ func (cm ContentManagerDB) ListContent(cs ContentQuery) (*models.Contents, int64
 
 // Note this DOES allow for loading hidden content
 func (cm ContentManagerDB) GetContent(mcID int64) (*models.Content, error) {
-	log.Printf("Get a single content object %s", mcID)
+	log.Printf("get a single content object %d", mcID)
 	tx := cm.GetConnection()
 	mc := &models.Content{}
 	if res := tx.Preload("Screens").Preload("Tags").Find(mc, mcID); res.Error != nil {
@@ -258,7 +254,7 @@ func (cm ContentManagerDB) SearchContainers(cs ContainerQuery) (*models.Containe
 	tx := cm.GetConnection()
 	q := tx.Offset(cs.Offset).Limit(cs.PerPage)
 	q = q.Where("name ilike ?", cs.Search)
-	if cs.IncludeHidden == false {
+	if !cs.IncludeHidden {
 		q = q.Where(`hidden = ?`, false)
 	}
 	q = q.Order(models.GetContainerOrder(cs.Order, cs.Direction))
@@ -301,10 +297,10 @@ func (cm ContentManagerDB) LoadRelatedScreens(content *models.Contents) (models.
 
 	screenMap := models.ScreenCollection{}
 	for _, screen := range *screens {
-		log.Printf("Found screen for %s", screen.ContentID)
+		log.Printf("found screen for %d", screen.ContentID)
 		if _, ok := screenMap[screen.ContentID]; ok {
 			screenMap[screen.ContentID] = append(screenMap[screen.ContentID], screen)
-			log.Printf("Screen count %s %s", screen.ContentID, screenMap[screen.ContentID])
+			log.Printf("screen count %d %s", screen.ContentID, screenMap[screen.ContentID])
 		} else {
 			screenMap[screen.ContentID] = models.Screens{screen}
 		}
@@ -355,7 +351,7 @@ func (cm ContentManagerDB) ListContainersFiltered(cs ContainerQuery) (*models.Co
 
 // TODO: Need a preview test using the database where we do NOT have a preview created
 func (cm ContentManagerDB) GetContainer(cID int64) (*models.Container, error) {
-	log.Printf("Get a single container %s", cID)
+	log.Printf("get a single container %d", cID)
 	tx := cm.GetConnection()
 
 	// Allocate an empty Container p := cm.Params()
@@ -380,7 +376,7 @@ func (cm ContentManagerDB) GetPreviewForMC(mc *models.Content) (string, error) {
 	if mc.Preview != "" {
 		src = mc.Preview
 	}
-	log.Printf("DB Manager loading %s preview %s\n", mc.ID, src)
+	log.Printf("DB Manager loading %d preview %s\n", mc.ID, src)
 	return utils.GetFilePathInContainer(src, cnt.GetFqPath())
 }
 
@@ -389,7 +385,7 @@ func (cm ContentManagerDB) FindActualFile(mc *models.Content) (string, error) {
 	if err != nil {
 		return "DB Manager View no Parent Found", err
 	}
-	log.Printf("DB Manager View %s loading up %d\n", mc.ID, mc.Src)
+	log.Printf("DB Manager View %d loading up %s\n", mc.ID, mc.Src)
 	return utils.GetFilePathInContainer(mc.Src, cnt.GetFqPath())
 }
 
@@ -466,8 +462,8 @@ func (cm ContentManagerDB) CreateContent(content *models.Content) error {
 func (cm ContentManagerDB) DestroyContent(id int64) (*models.Content, error) {
 	tx := cm.GetConnection()
 	content := &models.Content{}
-	if err := tx.Find(content, id); err != nil {
-		return nil, errors.New(fmt.Sprintf("Could not find content with id %s", id))
+	if res := tx.Find(content, id); res.Error != nil {
+		return nil, fmt.Errorf("could not find content with id %d", id)
 	}
 
 	if res := tx.Delete(content); res.Error != nil {
@@ -479,8 +475,8 @@ func (cm ContentManagerDB) DestroyContent(id int64) (*models.Content, error) {
 func (cm ContentManagerDB) DestroyContainer(id string) (*models.Container, error) {
 	tx := cm.GetConnection()
 	cnt := &models.Container{}
-	if err := tx.Find(cnt, id); err != nil {
-		return nil, errors.New(fmt.Sprintf("Could not find container with id %s", id))
+	if res := tx.Find(cnt, id); res.Error != nil {
+		return nil, fmt.Errorf("could not find container with id %s", id)
 	}
 	if res := tx.Delete(cnt); res.Error != nil {
 		return cnt, res.Error
@@ -491,8 +487,8 @@ func (cm ContentManagerDB) DestroyContainer(id string) (*models.Container, error
 func (cm ContentManagerDB) DestroyScreen(id string) (*models.Screen, error) {
 	tx := cm.GetConnection()
 	screen := &models.Screen{}
-	if err := tx.Find(screen, id); err != nil {
-		return nil, errors.New(fmt.Sprintf("Could not find screen with id %s", id))
+	if res := tx.Find(screen, id); res.Error != nil {
+		return nil, fmt.Errorf("could not find screen with id %s", id)
 	}
 	if res := tx.Delete(screen); res.Error != nil {
 		return screen, res.Error
@@ -642,18 +638,17 @@ func (cm ContentManagerDB) CreateContainer(c *models.Container) error {
 		log.Printf("Path does not exist on disk under the config directory err %s", err)
 		return err
 	}
-	tx := cm.GetConnection()
-	if ok == true {
+	if ok {
+		tx := cm.GetConnection()
 		return tx.Create(c).Error
 	}
-	msg := fmt.Sprintf("The directory was not under the config path %s", c.Name)
-	return errors.New(msg)
+	return fmt.Errorf("the directory was not under the config path %s", c.Name)
 
 }
 
 func (cm ContentManagerDB) CreateTask(t *models.TaskRequest) (*models.TaskRequest, error) {
 	if t == nil {
-		return nil, errors.New("Requires a valid task")
+		return nil, errors.New("cannot create without a valid task")
 	}
 	tx := cm.GetConnection()
 	t.Status = models.TaskStatus.NEW // The defaults do not seem to work right...
@@ -708,7 +703,7 @@ func (cm ContentManagerDB) NextTask() (*models.TaskRequest, error) {
 		task.Status = models.TaskStatus.PENDING
 		return cm.UpdateTask(&task, models.TaskStatus.NEW)
 	}
-	return nil, errors.New("No Tasks to pull off the queue")
+	return nil, errors.New("no tasks to pull off the queue")
 }
 
 func (cm ContentManagerDB) ListTasksContext() (*models.TaskRequests, int64, error) {
