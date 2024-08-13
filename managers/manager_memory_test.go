@@ -295,7 +295,7 @@ func TestMemoryManagerTagSearch(t *testing.T) {
 	ManagersTagSearchValidation(t, man)
 }
 
-func Test_MangerTagsMemoryCRUD(t *testing.T) {
+func TestMemoryMangerTagsMemoryCRUD(t *testing.T) {
 	cfg := test_common.InitFakeApp(false)
 	man := GetManagerTestSuite(cfg)
 
@@ -304,14 +304,14 @@ func Test_MangerTagsMemoryCRUD(t *testing.T) {
 	assert.NoError(t, man.UpdateTag(&tag), "It should udpate")
 
 	tags, total, err := man.ListAllTags(TagQuery{PerPage: 3})
-	assert.NoError(t, err)
-	assert.Equal(t, total, 1, "there should be one tag")
-	assert.Equal(t, len(*tags), 1, "We should have one tag")
+	assert.NoError(t, err, "It should be able to list tags")
+	assert.Equal(t, int64(1), total, "there should be one tag")
+	assert.Equal(t, 1, len(*tags), "We should have one tag")
 	man.DestroyTag(tag.ID)
 
 	tags_gone, total_gone, _ := man.ListAllTags(TagQuery{PerPage: 3})
 	assert.Equal(t, len(*tags_gone), 0, "Now there should be no tags")
-	assert.Equal(t, total_gone, 0, "it should be empty")
+	assert.Equal(t, int64(0), total_gone, "it should be empty")
 }
 
 func TestManagerMemoryScreens(t *testing.T) {
