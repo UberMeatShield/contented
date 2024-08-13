@@ -13,7 +13,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gofrs/uuid"
 	"github.com/lib/pq"
 )
 
@@ -79,7 +78,7 @@ func (cm ContentManagerDB) ListContent(cs ContentQuery) (*models.Contents, int64
 	}
 
 	// Throw error if the offset is too large?
-	q = q.Offset(cs.Offset).Limit(cs.PerPage)
+	q = q.Offset(cs.Offset).Limit(GetPerPage(cs.PerPage))
 	if count > 0 {
 		if res := q.Find(contents); res.Error != nil {
 			return nil, -1, res.Error
@@ -123,21 +122,22 @@ func (cm ContentManagerDB) UpdateContent(content *models.Content) error {
 	// Check if file exists or allow content to be 'empty'?
 	tx := cm.GetConnection()
 	if !content.NoFile {
-		cnt, cErr := cm.GetContainer(*content.ContainerID)
-		if cErr != nil {
-			return fmt.Errorf("parent container %d not found", content.ContainerID)
-		}
+		if content.ContainerID != nil {
+			cnt, cErr := cm.GetContainer(*content.ContainerID)
+			if cErr != nil {
+				return fmt.Errorf("parent container %d not found", content.ContainerID)
+			}
 
-		exists, pErr := utils.HasContent(content.Src, cnt.GetFqPath())
-		if !exists || pErr != nil {
-			log.Printf("Content not in container %s", pErr)
-			return fmt.Errorf("invalid content src %s for container %s", content.Src, cnt.Name)
+			exists, pErr := utils.HasContent(content.Src, cnt.GetFqPath())
+			if !exists || pErr != nil {
+				log.Printf("Content not in container %s", pErr)
+				return fmt.Errorf("invalid content src %s for container %s", content.Src, cnt.Name)
+			}
 		}
 	}
 
 	// Crap, this might be really broken depending on how we use it
-	res := tx.Save(content)
-	if res.Error != nil {
+	if res := tx.Save(content); res.Error != nil {
 		return res.Error
 	}
 	// Just trust we will associate all valid tags to the content.
@@ -194,12 +194,11 @@ func (cm ContentManagerDB) SearchContainersContext() (*models.Containers, int64,
 }
 
 func (cm ContentManagerDB) SearchContent(sr ContentQuery) (*models.Contents, int64, error) {
-	contentContainers := &models.Contents{}
-	tx := cm.GetConnection()
-	q := tx.Offset(sr.Offset).Limit(sr.PerPage)
-
+	contents := &models.Contents{}
+	q := cm.GetConnection().Model(&contents)
 	if len(sr.Tags) > 0 {
-		q = q.Joins("contents_tags as ct", "ct.content_id = contents.id").Where("ct.tag_id IN (?)", sr.Tags)
+		// TODO: This is almost certainly the problem
+		q = q.Joins("JOIN contents_tags as ct ON ct.content_id = contents.id").Where("ct.tag_id IN (?)", sr.Tags)
 	}
 	// TODO: Could also search description (expand this)
 	if sr.Search != "*" && sr.Search != "" {
@@ -225,21 +224,22 @@ func (cm ContentManagerDB) SearchContent(sr ContentQuery) (*models.Contents, int
 	q = q.Order(models.GetContentOrder(sr.Order, sr.Direction))
 
 	var count int64
-	res := q.Model(models.Contents{}).Count(&count)
-	if res.Error != nil {
+	if res := q.Model(models.Contents{}).Count(&count); res.Error != nil {
 		return nil, count, res.Error
 	}
 
+	q = q.Offset(sr.Offset).Limit(GetPerPage(sr.PerPage))
 	log.Printf("Total count of search content %d using search (%s) and contentType (%s)", count, sr.Text, sr.ContentType)
 	if count > 0 {
-		if res := q.Find(contentContainers); res.Error != nil {
-			return contentContainers, -1, res.Error
+		if cRes := q.Find(contents); cRes.Error != nil {
+			return contents, -1, cRes.Error
 		}
+
 		// Now need to get any screens and associate them in a lookup
-		screenMap, s_err := cm.LoadRelatedScreens(contentContainers)
+		screenMap, s_err := cm.LoadRelatedScreens(contents)
 		contentWithScreens := models.Contents{}
 		if s_err == nil {
-			for _, mcPt := range *contentContainers {
+			for _, mcPt := range *contents {
 				mc := mcPt // GoLang... sometimes this just makes me sad.
 				if _, ok := screenMap[mc.ID]; ok {
 					mc.Screens = screenMap[mc.ID]
@@ -249,7 +249,7 @@ func (cm ContentManagerDB) SearchContent(sr ContentQuery) (*models.Contents, int
 		}
 		return &contentWithScreens, count, nil
 	}
-	return contentContainers, count, nil
+	return contents, count, nil
 }
 
 func (cm ContentManagerDB) SearchContainers(cs ContainerQuery) (*models.Containers, int64, error) {
@@ -269,7 +269,7 @@ func (cm ContentManagerDB) SearchContainers(cs ContainerQuery) (*models.Containe
 		return nil, count, res.Error
 	}
 
-	q = q.Offset(cs.Offset).Limit(cs.PerPage)
+	q = q.Offset(cs.Offset).Limit(GetPerPage(cs.PerPage))
 	if count > 0 {
 		if res := q.Find(containers); res.Error != nil {
 			return containers, -1, res.Error
@@ -317,7 +317,7 @@ func (cm ContentManagerDB) LoadRelatedScreens(content *models.Contents) (models.
 // The default list using the current manager configuration
 func (cm ContentManagerDB) ListContainersContext() (*models.Containers, int64, error) {
 	params := cm.Params()
-	offset, limit, page := GetPagination(params, cm.cfg.Limit)
+	offset, limit, page := GetPagination(params, GetPerPage(cm.cfg.Limit))
 	cs := ContainerQuery{
 		Name:    StringDefault(params.Get("name"), ""),
 		Page:    page,
@@ -334,7 +334,7 @@ func (cm ContentManagerDB) ListContainers(cs ContainerQuery) (*models.Containers
 // TODO: Add in support for actually doing the query using the current buffalo.Context
 func (cm ContentManagerDB) ListContainersFiltered(cs ContainerQuery) (*models.Containers, int64, error) {
 	tx := cm.GetConnection()
-	q := tx.Offset(cs.Offset).Limit(cs.PerPage)
+	q := tx.Offset(cs.Offset).Limit(GetPerPage(cs.PerPage))
 	if !cs.IncludeHidden {
 		q = q.Where("hidden = ?", false)
 	}
@@ -412,17 +412,17 @@ func (cm ContentManagerDB) ListScreensContext() (*models.Screens, int64, error) 
 func (cm ContentManagerDB) ListScreens(sr ScreensQuery) (*models.Screens, int64, error) {
 	tx := cm.GetConnection()
 	previews := &models.Screens{}
-	q := tx.Offset(sr.Offset).Limit(sr.PerPage)
+
+	q := tx.Model(previews)
 	if sr.ContentID != "" {
 		q = q.Where("content_id = ?", sr.ContentID)
 	}
-
 	var count int64
-	cRes := q.Model(&models.Screens{}).Count(&count)
-	if cRes != nil {
+	if cRes := q.Count(&count); cRes.Error != nil {
 		return nil, count, cRes.Error
 	}
-	if count > 0 {
+	if count > int64(0) {
+		q = q.Offset(sr.Offset).Limit(GetPerPage(sr.PerPage))
 		if res := q.Find(previews); res.Error != nil {
 			return nil, -1, res.Error
 		}
@@ -450,6 +450,10 @@ func (cm ContentManagerDB) CreateScreen(screen *models.Screen) error {
 func (cm ContentManagerDB) CreateContent(content *models.Content) error {
 	tx := cm.GetConnection()
 
+	if content.Tags == nil {
+		content.Tags = models.Tags{}
+	}
+
 	validTags, t_err := cm.GetValidTags(&content.Tags)
 	if t_err != nil {
 		log.Printf("Could not determine valid tags %s", t_err)
@@ -457,11 +461,10 @@ func (cm ContentManagerDB) CreateContent(content *models.Content) error {
 	}
 	content.Tags = *validTags
 
-	res := tx.Save(content)
-	if res.Error != nil {
+	if res := tx.Save(content); res.Error != nil {
 		return res.Error
 	}
-	return res.Error
+	return nil
 }
 
 // Note we very intentionally are NOT destroying items on disk.
@@ -514,9 +517,9 @@ func (cm ContentManagerDB) ListAllTags(tq TagQuery) (*models.Tags, int64, error)
 		return nil, total, cRes.Error
 	}
 
-	q = q.Offset(tq.Offset).Limit(tq.PerPage)
+	q = q.Offset(tq.Offset).Limit(GetPerPage(tq.PerPage))
 	tags := &models.Tags{}
-	if total > 0 {
+	if total > int64(0) {
 		if res := q.Find(tags); res.Error != nil {
 			return nil, total, res.Error
 		}
@@ -537,8 +540,8 @@ func (cm ContentManagerDB) ListAllTagsContext() (*models.Tags, int64, error) {
 }
 
 func (cm ContentManagerDB) CreateTag(tag *models.Tag) error {
-	tx := cm.GetConnection().Create(tag)
-	return tx.Error
+	res := cm.GetConnection().Create(tag)
+	return res.Error
 }
 
 func (cm ContentManagerDB) UpdateTag(tag *models.Tag) error {
@@ -559,13 +562,14 @@ func (cm ContentManagerDB) GetTag(tagID string) (*models.Tag, error) {
 	// log.Printf("DB Get a tag %s", tagID)
 	tx := cm.GetConnection()
 	t := &models.Tag{}
-	if res := tx.Find(t, tagID); res.Error != nil {
+	if res := tx.First(t, "id = ?", tagID); res.Error != nil {
 		return nil, res.Error
 	}
 	return t, nil
 }
 
 func (cm ContentManagerDB) GetValidTags(tags *models.Tags) (*models.Tags, error) {
+
 	tx := cm.GetConnection()
 	validTags := models.Tags{}
 	ids := []string{}
@@ -611,10 +615,9 @@ func (cm ContentManagerDB) AssociateTag(t *models.Tag, mc *models.Content) error
 
 	// I really don't love this but Buffalo many_to_many associations do NOT handle updates.  In addition an integer
 	// as the join table ID also doesn't seem to do the link even on a create.
-	sql_str := "insert into contents_tags (id, tag_id, content_id, created_at, updated_at) values (?, ?, ?, current_timestamp, current_timestamp)"
+	sql_str := "insert into contents_tags (tag_id, content_id, created_at, updated_at) values (?, ?, current_timestamp, current_timestamp)"
 	for _, t := range tags {
-		linkID, _ := uuid.NewV4()
-		res := tx.Exec(sql_str, linkID, t.ID, mc.ID)
+		res := tx.Exec(sql_str, t.ID, mc.ID)
 
 		if res.Error != nil {
 			log.Printf("Failed to re-link %s", res.Error)
@@ -731,7 +734,7 @@ func (cm ContentManagerDB) ListTasksContext() (*models.TaskRequests, int64, erro
 func (cm ContentManagerDB) ListTasks(query TaskQuery) (*models.TaskRequests, int64, error) {
 	tasks := models.TaskRequests{}
 	tx := cm.GetConnection()
-	q := tx.Offset(query.Offset).Limit(query.PerPage)
+	q := tx.Offset(query.Offset).Limit(GetPerPage(query.PerPage))
 	if query.Status != "" {
 		q = q.Where("status = ?", query.Status)
 	}

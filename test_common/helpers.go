@@ -142,8 +142,7 @@ func InitFakeApp(use_db bool) *utils.DirConfigEntry {
 		memStorage.ValidContainers[hiddenContainer.ID] = hiddenContainer
 		memStorage.ValidContent[hiddenContent.ID] = hiddenContent
 	} else {
-		db := models.InitGorm(false)
-		models.ResetDB(db)
+		models.ResetDB(models.InitGorm(false))
 	}
 	return cfg
 }

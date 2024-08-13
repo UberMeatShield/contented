@@ -171,21 +171,22 @@ func TestManagerDBTagsAssignment(t *testing.T) {
 		assert.NoError(t, cRes.Error, "It should create content")
 	}
 
-	tags, total, err := man.ListAllTags(TagQuery{})
-	assert.NoError(t, err)
-	assert.Equal(t, total, 2, fmt.Sprintf("And only two tags %s", tags))
-	assert.Greater(t, len(*tags), 0, "We should have tags")
+	tags, total, err := man.ListAllTags(TagQuery{PerPage: 10})
+	assert.NoError(t, err, "Listing tags should cause an error")
+	assert.Equal(t, int64(2), total, fmt.Sprintf("And only two tags %s", tags))
+	assert.Greater(t, len(*tags), 0, "We should have tags returned")
 	assignmentErr := AssignTagsAndUpdate(man, *tags)
 	assert.NoError(t, assignmentErr, fmt.Sprintf("Error %s", assignmentErr))
 
 	cq := ContentQuery{Tags: []string{"aws", "donut"}}
-	contentsMatching, total, err := man.SearchContent(cq)
+	contents, total, err := man.SearchContent(cq)
 	assert.NoError(t, err)
-	assert.Equal(t, len(*contentsMatching), 2, fmt.Sprintf("Found content but not the right amount %s", contentsMatching))
-	assert.Equal(t, total, 2)
+	assert.NotNil(t, contents, "It should return contents without error what the")
+	assert.Equal(t, 2, len(*contents), fmt.Sprintf("Found content but not the right amount %s", contents))
+	assert.Equal(t, int64(2), total)
 }
 
-func Test_ManagerTagsDB_CRUD(t *testing.T) {
+func TestManagerTagsDBCRUD(t *testing.T) {
 	models.ResetDB(models.InitGorm(false))
 	cfg := test_common.InitFakeApp(true)
 	man := GetManagerTestSuite(cfg)
@@ -194,16 +195,19 @@ func Test_ManagerTagsDB_CRUD(t *testing.T) {
 
 	tags, total, err := man.ListAllTags(TagQuery{PerPage: 3})
 	assert.NoError(t, err)
-	assert.Greater(t, total, 0, "A tag should exist")
-	assert.Equal(t, len(*tags), 1, "We should have one tag")
-	man.DestroyTag(tag.ID)
+	assert.Equal(t, int64(1), total, "A tag should exist")
+	assert.Equal(t, 1, len(*tags), "We should have one tag")
+	tDel, delErr := man.DestroyTag(tag.ID)
+	assert.NotNil(t, tDel)
+	assert.NoError(t, delErr, "It should delete")
+
 	tags_gone, total_gone, err := man.ListAllTags(TagQuery{PerPage: 3})
 	assert.NoError(t, err)
-	assert.Equal(t, len(*tags_gone), 0, "No tags should be in the DB")
-	assert.Equal(t, total_gone, 0, "It should have no tags")
+	assert.Equal(t, 0, len(*tags_gone), "No tags should be in the DB")
+	assert.Equal(t, int64(0), total_gone, "It should have no tags")
 }
 
-func Test_DbManager_AssociateTags(t *testing.T) {
+func TestDbManagerAssociateTags(t *testing.T) {
 	models.ResetDB(models.InitGorm(false))
 	cfg := test_common.InitFakeApp(true)
 	man := GetManagerTestSuite(cfg)
@@ -213,24 +217,27 @@ func Test_DbManager_AssociateTags(t *testing.T) {
 	t2 := models.Tag{ID: "B"}
 	man.CreateTag(&t1)
 	man.CreateTag(&t2)
-	mc := models.Content{Src: "A", Preview: "p", ContentType: "video"}
+	mc := models.Content{Src: "A", Preview: "p", ContentType: "video", ContainerID: nil, NoFile: true}
 	mc.Tags = models.Tags{t1, t2}
-	man.CreateContent(&mc)
+	mErr := man.CreateContent(&mc)
+	assert.NoError(t, mErr, "Creating the media failed")
+	assert.Greater(t, mc.ID, int64(0), "It should create the content")
 
 	s := models.Screen{Src: "screen1", ContentID: mc.ID}
-	man.CreateScreen(&s)
+	assert.NoError(t, man.CreateScreen(&s), "Creating the screen had an error")
 	mc.Screens = models.Screens{s}
-	man.UpdateContent(&mc)
+	assert.NoError(t, man.UpdateContent(&mc), "It should update successfully")
 
 	tags, total, t_err := man.ListAllTags(TagQuery{PerPage: 10})
 	assert.NoError(t, t_err, "We should be able to list tags.")
 	assert.Equal(t, 2, len(*tags), fmt.Sprintf("There should be two tags %s", mc))
-	assert.Greater(t, total, 0, "It should have a total")
+	assert.Greater(t, total, int64(0), "It should have a total")
 
 	screens, count, s_err := man.ListScreens(ScreensQuery{ContentID: strconv.FormatInt(mc.ID, 10)})
 	assert.NoError(t, s_err, "Screens should list")
+	assert.NotNil(t, screens, "It should have screens")
 	assert.Equal(t, 1, len(*screens), "We should have a screen associated")
-	assert.Equal(t, 1, count, "We should have a proper screen count")
+	assert.Equal(t, int64(1), count, "We should have a proper screen count")
 
 	tCheck, _ := man.GetContent(mc.ID)
 	assert.Equal(t, 2, len(tCheck.Tags), fmt.Sprintf("It should eager load tags %s", tCheck))
@@ -246,7 +253,7 @@ func Test_DbManager_AssociateTags(t *testing.T) {
 
 // A Lot more of these could be a test in manager that passes in the manager
 // TODO: Remove copy pasta and make it almost identical.
-func Test_DbManager_TagSearch(t *testing.T) {
+func TestDbManagerTagSearch(t *testing.T) {
 	models.ResetDB(models.InitGorm(false))
 	cfg := test_common.InitFakeApp(true)
 
@@ -254,7 +261,7 @@ func Test_DbManager_TagSearch(t *testing.T) {
 	ManagersTagSearchValidation(t, man)
 }
 
-func Test_ManagerDBPreviews(t *testing.T) {
+func TestManagerDBPreviews(t *testing.T) {
 	models.ResetDB(models.InitGorm(false))
 	cfg := test_common.InitFakeApp(true)
 	man := GetManagerTestSuite(cfg)
@@ -265,7 +272,7 @@ func Test_ManagerDBPreviews(t *testing.T) {
 	man.CreateContent(&mc1)
 	man.CreateContent(&mc2)
 	man.CreateContent(&mc3)
-	assert.Greater(t, 0, mc1.ID)
+	assert.Greater(t, mc1.ID, int64(0))
 
 	p1 := models.Screen{Src: "fake1", Idx: 0, ContentID: mc1.ID}
 	p2 := models.Screen{Src: "fake2.png", Idx: 1, ContentID: mc1.ID}
@@ -278,12 +285,12 @@ func Test_ManagerDBPreviews(t *testing.T) {
 	previewList, count1, err := man.ListScreens(ScreensQuery{ContentID: strconv.FormatInt(mc1.ID, 10)})
 	assert.NoError(t, err)
 	assert.Equal(t, len(*previewList), 2, "We should have two previews")
-	assert.Equal(t, count1, 2, "We should have two previews")
+	assert.Equal(t, int64(2), count1, "We should have two previews")
 
 	previewOne, count2, p_err := man.ListScreens(ScreensQuery{ContentID: strconv.FormatInt(mc2.ID, 10)})
 	assert.NoError(t, p_err)
 	assert.Equal(t, len(*previewOne), 1, "Now there should be 1")
-	assert.Equal(t, count2, 1, "Now there should be 1")
+	assert.Equal(t, int64(1), count2, "Now there should be 1")
 
 	p4 := models.Screen{Src: "fake4.png", Idx: 1, ContentID: mc2.ID}
 	c_err := man.CreateScreen(&p4)
@@ -294,7 +301,7 @@ func Test_ManagerDBPreviews(t *testing.T) {
 	assert.Equal(t, p4_check.Src, p4.Src)
 }
 
-func Test_ManagerDBSearchScreens(t *testing.T) {
+func TestManagerDBSearchScreens(t *testing.T) {
 	db := models.ResetDB(models.InitGorm(false))
 	cfg := test_common.InitFakeApp(true)
 
@@ -343,8 +350,8 @@ func Test_ManagerDBSearchScreens(t *testing.T) {
 	assert.Equal(t, 1, len(screens_2), "It should load all the screens for mc2 but EXCLUDE mc4")
 }
 
-func Test_DBManager_IllegalContainers(t *testing.T) {
-	models.ResetDB(models.InitGorm(false))
+func TestDBManagerIllegalContainers(t *testing.T) {
+	//models.ResetDB(models.InitGorm(false))
 	cfg := test_common.ResetConfig()
 	test_common.InitFakeApp(true)
 	ctx := test_common.GetContext()

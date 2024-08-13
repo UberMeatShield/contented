@@ -66,17 +66,17 @@ func ManagersTagSearchValidation(t *testing.T, man ContentManager) {
 
 	_, count, err := man.SearchContent(ContentQuery{})
 	assert.NoError(t, err, "It should search empty content")
-	assert.Equal(t, count, 2, "And return all the contents")
+	assert.Equal(t, int64(2), count, "And return all the contents")
 
 	_, tCount, tErr := man.SearchContent(ContentQuery{Tags: []string{"A"}, Search: "File"})
 	assert.NoError(t, tErr, "A tag join shouldn't explode")
-	assert.Equal(t, tCount, 1, "And it should only get A Back")
+	assert.Equal(t, int64(1), tCount, "And it should only get A Back")
 
 	_, orCount, orErr := man.SearchContent(ContentQuery{Tags: []string{"OR", "A"}})
 	assert.NoError(t, orErr, "A tag join shouldn't explode")
-	assert.Equal(t, orCount, 2, "And it should get both objects Back")
+	assert.Equal(t, int64(2), orCount, "And it should get both objects Back")
 
 	_, noCount, noErr := man.SearchContent(ContentQuery{Tags: []string{"A"}, Search: "YAAARG"})
 	assert.NoError(t, noErr, "It should not error")
-	assert.Equal(t, noCount, 0, "But it shouldn't match the text")
+	assert.Equal(t, int64(0), noCount, "But it shouldn't match the text")
 }

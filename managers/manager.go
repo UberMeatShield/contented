@@ -46,6 +46,11 @@ type TaskQuery struct {
 	Search      string `json:"search" default:""`
 }
 
+func (t TaskQuery) String() string {
+	jt, _ := json.Marshal(t)
+	return string(jt)
+}
+
 type ScreensQuery struct {
 	Text      string `json:"text" default:""`
 	Page      int    `json:"page" default:"1"`
@@ -54,6 +59,11 @@ type ScreensQuery struct {
 	ContentID string `json:"content_id" default:""`
 	Order     string `json:"order" default:"created_at"`
 	Direction string `json:"direction" default:"desc"`
+}
+
+func (t ScreensQuery) String() string {
+	jt, _ := json.Marshal(t)
+	return string(jt)
 }
 
 type ContainerQuery struct {
@@ -65,6 +75,11 @@ type ContainerQuery struct {
 	IncludeHidden bool   `json:"hidden" default:"false"`
 	Order         string `json:"order" default:"created_at"`
 	Direction     string `json:"direction" default:"desc"`
+}
+
+func (t ContainerQuery) String() string {
+	jt, _ := json.Marshal(t)
+	return string(jt)
 }
 
 type ContentQuery struct {
@@ -89,6 +104,11 @@ type TagQuery struct {
 	Offset  int    `json:"-" default:"0"`
 	PerPage int    `json:"per_page" default:"1000"` // Doesn't work on create?
 	TagType string `json:"tag_type" default:""`
+}
+
+func (t TagQuery) String() string {
+	jt, _ := json.Marshal(t)
+	return string(jt)
 }
 
 // This is the primary interface used by the Buffalo actions.
@@ -169,7 +189,7 @@ func GetManager(c *gin.Context) ContentManager {
 		get_connection = func() *gorm.DB {
 			if conn == nil {
 				conn = models.InitGorm(false)
-				if conn == nil || conn.Error == nil {
+				if conn == nil || conn.Error != nil {
 					log.Fatalf("Failed to get a db connection %s", conn.Error)
 					return nil
 				}
@@ -306,6 +326,14 @@ func GetPagination(params pop.PaginationParams, DefaultLimit int) (int, int, int
 	}
 	offset := (page - 1) * limit
 	return offset, limit, page
+}
+
+func GetPerPage(perPage int) int {
+	cfg := utils.GetCfg()
+	if perPage > cfg.Limit || perPage <= 0 {
+		return cfg.Limit
+	}
+	return perPage
 }
 
 // TODO: Fill in tags if they are provided.
