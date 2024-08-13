@@ -134,7 +134,7 @@ func CreateAllPreviews(cm ContentManager) error {
 	}
 	// TODO: Cut down how much spam is getting kicked out by this summary
 	if len(err_msg) > 0 {
-		return errors.New(strings.Join(err_msg, "\n"))
+		return errors.New(strings.Join(err_msg, " \n"))
 	}
 	return nil
 }
@@ -367,7 +367,7 @@ func CreateContentPreviews(c *models.Container, content models.Contents) (models
 				previews = append(previews, mc_update)
 			} else if result.Err != nil {
 				log.Printf("failed to create a preview %s for %s \n", result.Err, mc_update.Src)
-				error_list += "" + result.Err.Error()
+				error_list += result.Err.Error()
 				mc_update.Preview = ""
 				mc_update.Corrupt = true
 				previews = append(previews, mc_update)

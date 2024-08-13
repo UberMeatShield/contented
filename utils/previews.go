@@ -134,10 +134,13 @@ func CreateImagePreview(srcImg *os.File, dstFile string, contentType string) (st
 		img, dErr = png.Decode(srcImg)
 	} else if contentType == "image/jpeg" {
 		img, dErr = jpeg.Decode(srcImg)
+	} else if contentType == "image/webp" || contentType == "image/gif" {
+		log.Printf("No provided method for this file type %s", contentType)
+		return "", nil
 	} else {
 		log.Printf("No provided method for this file type %s", contentType)
 		fname, _ := srcImg.Stat()
-		return "", errors.New("Cannot handle type for file: " + fname.Name())
+		return "", fmt.Errorf("cannot handle preview for file: %s contentType %s", fname.Name(), contentType)
 	}
 	if dErr != nil {
 		log.Printf("Failed to determine image type %s for %s", dstFile, dErr)
@@ -615,6 +618,7 @@ func CreateContentPreview(c *models.Container, mc *models.Content) (string, erro
 	cntPath := filepath.Join(c.Path, c.Name)
 	dstPath := GetContainerPreviewDst(c)
 
+	log.Printf("What the fuck is going on %d", cfg.PreviewOverSize)
 	dstFqPath, err := GetImagePreview(cntPath, mc.Src, dstPath, cfg.PreviewOverSize)
 	if err != nil {
 		log.Printf("Failed to create a preview in %s for content %d err: %s", dstPath, mc.ID, err)
