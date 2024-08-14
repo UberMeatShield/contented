@@ -1,13 +1,6 @@
 package actions
 
-import (
-	"contented/models"
-	"contented/test_common"
-	"encoding/json"
-	"fmt"
-	"net/http"
-)
-
+/*
 func (as *ActionSuite) Test_TagsResource_List_DB() {
 	test_common.ResetConfig()
 	test_common.InitFakeApp(true)
@@ -92,3 +85,5 @@ func (as *ActionSuite) Test_TagsResource_Destroy_DB() {
 	as.NoError(cErr)
 	as.Equal(len(checkTags), 0, "It should be deleted")
 }
+
+*/

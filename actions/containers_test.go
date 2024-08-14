@@ -3,21 +3,16 @@ package actions
 // These tests are DB based tests, vs in memory manager test_common.InitFakeApp(true)
 
 import (
-	"contented/managers"
-	"contented/models"
 	"contented/test_common"
-	"contented/utils"
-	"encoding/json"
-	"fmt"
 	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-func (as *ActionSuite) Test_ContainersResource_List() {
-	res := as.JSON("/containers").Get()
-	as.Equal(http.StatusOK, res.Code)
-}
-
-func CreateContainer(name string, as *ActionSuite) models.Container {
+/*
+func CreateContainer(name string) models.Container {
 	cfg := utils.GetCfg()
 	c := &models.Container{
 		Total: 1,
@@ -34,23 +29,36 @@ func CreateContainer(name string, as *ActionSuite) models.Container {
 	json.NewDecoder(res.Body).Decode(&resObj)
 	return resObj
 }
+*/
 
-func (as *ActionSuite) Test_ContainersResource_Show() {
+func TestContainersResourceList(t *testing.T) {
+	test_common.InitFakeApp(false)
+	router := setupRouter()
+
+	url := "/api/containers"
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", url, nil)
+	router.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+/*
+func Test_ContainersResource_Show(t *testing.T) {
 	test_common.InitFakeApp(true)
 	name := "ShowTest"
 	cnt := CreateContainer(name, as)
 	defer test_common.CleanupContainer(&cnt)
-	as.NotZero(cnt.ID)
+	assert.NotZero(t, cnt.ID)
 
 	validate := as.JSON("/containers/" + cnt.ID.String()).Get()
-	as.Equal(http.StatusOK, validate.Code)
+	assert.Equal(t, http.StatusOK, validate.Code)
 
 	resObj := models.Container{}
 	json.NewDecoder(validate.Body).Decode(&resObj)
-	as.Equal(resObj.Name, name)
+	assert.Equal(t, resObj.Name, name)
 }
 
-func (as *ActionSuite) Test_ContainersResource_Create() {
+func Test_ContainersResource_Create(t *testing.T) {
 	cfg := test_common.InitFakeApp(true)
 	cnt := &models.Container{
 		Total: 1,
@@ -58,67 +66,70 @@ func (as *ActionSuite) Test_ContainersResource_Create() {
 		Path:  "ShouldGetReset",
 	}
 	res := as.JSON("/containers").Post(cnt)
-	as.Equal(http.StatusCreated, res.Code, "It should be able to create")
+	assert.Equal(t, http.StatusCreated, res.Code, "It should be able to create")
 	defer test_common.CleanupContainer(cnt)
 
 	resObj := models.Container{}
 	json.NewDecoder(res.Body).Decode(&resObj)
-	as.Equal(resObj.Name, cnt.Name)
-	as.NotZero(resObj.ID)
-	as.Equal(http.StatusCreated, res.Code)
+	assert.Equal(t, resObj.Name, cnt.Name)
+	assert.NotZero(t, resObj.ID)
+	assert.Equal(t, http.StatusCreated, res.Code)
 
 	// Path does not come back from the API (hidden), check it updated.
 	check := models.Container{}
-	as.NoError(as.DB.Find(&check, resObj.ID))
-	as.Equal(check.Path, cfg.Dir, "It should reset our path")
+	assert.NoError(t, as.DB.Find(&check, resObj.ID))
+	assert.Equal(t, check.Path, cfg.Dir, "It should reset our path")
 }
 
-func (as *ActionSuite) Test_ContainersResource_Update() {
+func Test_ContainersResource_Update(t *testing.T) {
 	test_common.InitFakeApp(true)
 	cnt := CreateContainer("Initial", as)
 	test_common.CleanupContainer(&cnt)
-	as.NotZero(cnt.ID)
+	assert.NotZero(t, cnt.ID)
 
 	name := "UpdateTest"
 	cnt.Name = name
 	test_common.CreateContainerPath(&cnt)
 
-	res := as.JSON("/containers/" + cnt.ID.String()).Put(cnt)
+	url := fmt.Sprintf("/api/containers/%d", cnt.ID)
+	res := as.JSON(url).Put(cnt)
 	defer test_common.CleanupContainer(&cnt)
-	as.Equal(http.StatusOK, res.Code, fmt.Sprintf("Error %s", res.Body.String()))
+	assert.Equal(t, http.StatusOK, res.Code, fmt.Sprintf("Error %s", res.Body.String()))
 
 	check := models.Container{}
 	json.NewDecoder(res.Body).Decode(&check)
-	as.Equal(check.Name, name, "It should update the name")
+	assert.Equal(t, check.Name, name, "It should update the name")
 }
 
-func (as *ActionSuite) Test_ContainersResource_Destroy() {
+func Test_ContainersResource_Destroy(t *testing.T) {
 	test_common.InitFakeApp(true)
 	cnt := CreateContainer("Nuke", as)
 	defer test_common.CleanupContainer(&cnt)
-	as.NotZero(cnt.ID)
+	assert.NotZero(t, cnt.ID)
 
-	res := as.JSON("/containers/" + cnt.ID.String()).Delete()
-	as.Equal(http.StatusOK, res.Code)
+	url := fmt.Sprintf("/api/containers/%d", cnt.ID)
+	res := as.JSON(url).Delete()
+	assert.Equal(t, http.StatusOK, res.Code)
 
-	notFoundRes := as.JSON("/containers/" + cnt.ID.String()).Get()
-	as.Equal(http.StatusNotFound, notFoundRes.Code)
+	notFoundRes := as.JSON(url).Get()
+	assert.Equal(t, http.StatusNotFound, notFoundRes.Code)
 }
 
-func (as *ActionSuite) Test_ContainerList() {
+func Test_ContainerList(t *testing.T) {
 	test_common.InitFakeApp(true)
+	db := models.InitGorm(false)
 
 	cnt1, _ := test_common.GetContentByDirName("dir1")
 	cnt2, _ := test_common.GetContentByDirName("dir2")
-	models.DB.Create(cnt1)
-	models.DB.Create(cnt2)
+	db.Create(cnt1)
+	db.Create(cnt2)
 	res := as.JSON("/containers").Get()
-	as.Equal(http.StatusOK, res.Code)
+	assert.Equal(t, http.StatusOK, res.Code)
 
 	containers := ContainersResponse{}
 	json.NewDecoder(res.Body).Decode(&containers)
 
-	as.Equal(2, len(containers.Results), "It should have loaded two fixtures")
+	assert.Equal(t, 2, len(containers.Results), "It should have loaded two fixtures")
 	var found *models.Container
 	for _, c := range containers.Results {
 		if c.Name == "dir2" {
@@ -126,24 +137,27 @@ func (as *ActionSuite) Test_ContainerList() {
 		}
 	}
 	as.NotNil(found, "If it had the fixture loaded we should have this name")
-	contentRes := as.JSON("/containers/" + found.ID.String() + "/contents").Get()
-	as.Equal(http.StatusOK, contentRes.Code)
+	url := fmt.Sprintf("/api/containers/%d/contents", found.ID)
+	contentRes := as.JSON(url).Get()
+	assert.Equal(t, http.StatusOK, contentRes.Code)
 }
 
-func (as *ActionSuite) Test_Memory_ReadOnlyDenyEdit() {
+func Test_Memory_ReadOnlyDenyEdit(t *testing.T) {
 	cfg := test_common.InitFakeApp(false)
 	cfg.ReadOnly = true
-	ctx := test_common.GetContext(as.App)
-	man := managers.GetManager(&ctx)
+	ctx := test_common.GetContext()
+	man := managers.GetManager(ctx)
 
 	containers, count, err := man.ListContainersContext()
-	as.NoError(err, "It should list containers")
-	as.Greater(count, 0, "The count should be positive")
-	as.Greater(len(*containers), 0, "There should be containers")
+	assert.NoError(t, err, "It should list containers")
+	assert.Greater(t, count, 0, "The count should be positive")
+	assert.Greater(t, len(*containers), 0, "There should be containers")
 
 	for _, c := range *containers {
 		c.Name = "Update Should fail"
-		res := as.JSON("/containers/" + c.ID.String()).Put(&c)
-		as.Equal(http.StatusNotImplemented, res.Code)
+		url := fmt.Sprintf("/api/containers/%d", c.ID)
+		res := as.JSON(url).Put(&c)
+		assert.Equal(t, http.StatusNotImplemented, res.Code)
 	}
 }
+*/

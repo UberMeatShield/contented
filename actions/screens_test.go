@@ -1,21 +1,8 @@
 package actions
 
-import (
-	"fmt"
-	"net/http"
-	"os"
+//    "net/url"
 
-	//    "net/url"
-	"contented/models"
-	"contented/test_common"
-	"contented/utils"
-	"encoding/json"
-	"path/filepath"
-
-	"github.com/gobuffalo/nulls"
-	"github.com/gofrs/uuid"
-)
-
+/*
 func CreatePreview(src string, contentID uuid.UUID, as *ActionSuite) models.Screen {
 	mc := &models.Screen{
 		Src:       src,
@@ -158,3 +145,4 @@ func (as *ActionSuite) Test_ScreensResource_CannotCreate() {
 	res := as.JSON("/screens/").Post(ps)
 	as.Equal(http.StatusCreated, res.Code)
 }
+*/

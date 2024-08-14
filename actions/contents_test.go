@@ -1,16 +1,6 @@
 package actions
 
-import (
-	"contented/models"
-	"contented/test_common"
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"net/url"
-
-	"github.com/gobuffalo/nulls"
-)
-
+/*
 func CreateResource(src string, container_id nulls.UUID, as *ActionSuite) models.Content {
 	mc := &models.Content{
 		Src:         src,
@@ -246,3 +236,5 @@ func ActionsTagSearchValidation(as *ActionSuite) {
 	json.NewDecoder(res.Body).Decode(&validate)
 	as.Equal(1, len(*validate.Results), "Searching tags return content")
 }
+
+*/

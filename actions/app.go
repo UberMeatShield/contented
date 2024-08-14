@@ -56,14 +56,20 @@ func App(UseDatabase bool) *buffalo.App {
 }
 
 func GinApp(r *gin.Engine) {
+	SetupRoutes(r)
+	SetupStatic(r)
+}
 
-	cfg := utils.GetCfg()
+func SetupStatic(r *gin.Engine) {
 	// Provide the ability to load static resources
+	cfg := utils.GetCfg()
 	r.LoadHTMLGlob(fmt.Sprintf("%s/*.html", cfg.StaticResourcePath))
 	r.StaticFS("/public/build", http.Dir(cfg.StaticResourcePath))
 	r.StaticFS("/public/css", http.Dir(cfg.StaticResourcePath))
 	r.StaticFS("/public/static", http.Dir(cfg.StaticLibraryPath))
+}
 
+func SetupRoutes(r *gin.Engine) {
 	// For LB pings etc.
 	r.GET("/status", StatusHandler)
 

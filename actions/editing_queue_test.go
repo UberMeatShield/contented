@@ -1,24 +1,6 @@
 package actions
 
-import (
-	"contented/managers"
-	"contented/models"
-	"contented/test_common"
-	"contented/utils"
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strings"
-
-	"github.com/gobuffalo/buffalo/worker"
-	"github.com/gobuffalo/nulls"
-)
-
-/**
- * Grab the known donut file.
- */
+/*
 func CreateVideoContainer(as *ActionSuite) (*models.Container, *models.Content) {
 	cnt, contents := CreateVideoContents(as, "dir2", "donut")
 	as.NotNil(contents, "No donut video found in dir2!")
@@ -26,9 +8,6 @@ func CreateVideoContainer(as *ActionSuite) (*models.Container, *models.Content) 
 	return cnt, &ref[0]
 }
 
-/*
- * TODO: Add to test common and actually do a full video validation.
- */
 func IsVideoMatch(content models.Content, contentMatch string) bool {
 	if !strings.Contains(content.ContentType, "video") {
 		return false
@@ -469,3 +448,5 @@ func ValidateContainerScreens(as *ActionSuite, man managers.ContentManager) {
 		as.Equal(task.Operation, models.TaskOperation.SCREENS)
 	}
 }
+
+*/

@@ -233,7 +233,7 @@ func ContainerTaggingHandler(c *gin.Context) {
 	// and then attempt to act on them.  Unify it?
 	man := managers.GetManager(c)
 	contentQuery := managers.ContentQuery{
-		ContainerID: strconv.FormatInt(containerID, 64),
+		ContainerID: strconv.FormatInt(containerID, 10),
 		PerPage:     man.GetCfg().Limit,
 	}
 	_, total, tagErr := man.ListAllTags(managers.TagQuery{PerPage: 1})
@@ -441,7 +441,7 @@ func CreateVideoEncodingTask(content *models.Content, codecChoice string) (*mode
 	codec := managers.StringDefault(codecChoice, cfg.CodecForConversion)
 
 	// Check codec seems valid?
-	log.Printf("Requesting a re-encode %s with codec %s for contentID %s", content.Src, codec, content.ID)
+	log.Printf("Requesting a re-encode %s with codec %s for contentID %d", content.Src, codec, content.ID)
 	tr := models.TaskRequest{
 		ContentID:        &content.ID,
 		Operation:        models.TaskOperation.ENCODING,

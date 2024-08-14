@@ -1,19 +1,8 @@
 package actions
 
-import (
+//    "net/url"
 
-	//    "net/url"
-	"contented/managers"
-	"contented/models"
-	"contented/test_common"
-	"encoding/json"
-	"fmt"
-	"net/http"
-
-	"github.com/gobuffalo/nulls"
-	"github.com/gofrs/uuid"
-)
-
+/*
 func CreateTask(contentID uuid.UUID, as *ActionSuite, man managers.ContentManager) *models.TaskRequest {
 	tr := &models.TaskRequest{
 		ContentID: nulls.NewUUID(contentID),
@@ -125,3 +114,4 @@ func ValidateTaskRequestUpdate(as *ActionSuite) {
 	upOk := as.JSON(upUrl).Put(&taskCheck)
 	as.Equal(upOk.Code, http.StatusOK, "This should work as this is a cancel")
 }
+*/

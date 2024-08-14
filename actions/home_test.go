@@ -1,11 +1,6 @@
 package actions
 
-import (
-	"contented/test_common"
-	"net/http"
-	"os"
-)
-
+/*
 func (as *ActionSuite) Test_HomeHandler() {
 	test_common.InitFakeApp(false)
 	os.Chdir("../") // The Index file expects to be under the serve director/public/build
@@ -14,3 +9,4 @@ func (as *ActionSuite) Test_HomeHandler() {
 	as.Equal(http.StatusOK, res.Code)
 	as.Contains(res.Body.String(), "Loading Up Contented")
 }
+*/

@@ -84,7 +84,7 @@ func FullHandler(c *gin.Context) {
 		c.AbortWithError(http.StatusUnprocessableEntity, fq_err)
 		return
 	}
-	log.Printf("Full preview: %s for %s", fq_path, mc.ID)
+	log.Printf("Full preview: %s for %d", fq_path, mc.ID)
 	c.File(fq_path)
 }
 
@@ -201,7 +201,7 @@ func PreviewHandler(c *gin.Context) {
 		c.AbortWithError(http.StatusUnprocessableEntity, fq_err)
 		return
 	}
-	log.Printf("Found this preview filename to view: %s for %s", fq_path, mc.ID)
+	log.Printf("Found this preview filename to view: %s for %d", fq_path, mc.ID)
 	c.File(fq_path)
 }
 
