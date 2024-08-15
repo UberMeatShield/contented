@@ -239,7 +239,7 @@ func CreateContainerPath(c *models.Container) (string, error) {
 		fqPath = c.GetFqPath() // Currently just ignore any path specified in the Container
 		// fmt.Printf("It should be trying to create %s\n", fqPath)
 		if _, err := os.Stat(fqPath); os.IsNotExist(err) {
-			return fqPath, os.Mkdir(fqPath, 0644)
+			return fqPath, os.Mkdir(fqPath, 0655)
 		}
 	}
 	return fqPath, nil

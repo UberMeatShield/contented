@@ -1,7 +1,15 @@
 package actions
 
 import (
+	"bytes"
+	"contented/test_common"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
 func setupRouter() *gin.Engine {
@@ -10,30 +18,42 @@ func setupRouter() *gin.Engine {
 	return r
 }
 
-/*
-func TestMain(m *testing.M) {
-	dir, err := envy.MustGet("DIR")
-	fmt.Printf("Using this test directory %s", dir)
-	if err != nil {
-		fmt.Println("DIR ENV REQUIRED$ export=DIR=`pwd`/mocks/content/ && buffalo test")
-		panic(err)
-	}
-	code := m.Run()
-	os.Exit(code)
+func setupStatic() *gin.Engine {
+	r := gin.Default()
+	SetupStatic(r)
+	SetupRoutes(r)
+	return r
+}
+
+func PostJson(url string, obj any, resObj any, router *gin.Engine) (int, error) {
+	w := httptest.NewRecorder()
+	userJson, _ := json.Marshal(obj)
+	req, _ := http.NewRequest("POST", "/api/containers", bytes.NewReader(userJson))
+	router.ServeHTTP(w, req)
+
+	err := json.NewDecoder(w.Body).Decode(&resObj)
+	defer req.Body.Close()
+
+	return w.Code, err
 }
 
 // Removing action suite for all the tests is going to suck pretty hard
 // Is there an AFTER all test option?  Just hard code the delete
-func (as *ActionSuite) Test_ContentList() {
+func TestContainersList(t *testing.T) {
 	test_common.InitFakeApp(false)
 
-	res := as.JSON("/containers").Get()
-	as.Equal(http.StatusOK, res.Code)
+	router := setupRouter()
+	req, _ := http.NewRequest("GET", "/api/containers", nil)
+	res := httptest.NewRecorder()
+	router.ServeHTTP(res, req)
+
+	assert.Equal(t, http.StatusOK, res.Code)
 	resObj := ContainersResponse{}
 	json.NewDecoder(res.Body).Decode(&resObj)
-	as.Equal(test_common.TOTAL_CONTAINERS_WITH_CONTENT, len(resObj.Results), "We should have this many dirs present")
+	assert.Equal(t, test_common.TOTAL_CONTAINERS_WITH_CONTENT, len(resObj.Results), "We should have this many dirs present")
 }
 
+/*
 func (as *ActionSuite) Test_ContentDirLoad() {
 	test_common.InitFakeApp(false)
 

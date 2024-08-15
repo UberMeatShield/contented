@@ -61,7 +61,8 @@ func GinApp(r *gin.Engine) {
 }
 
 func SetupStatic(r *gin.Engine) {
-	// Provide the ability to load static resources
+	// Provide the ability to load static resources, this can be a little annoying as the serve
+	// path in tests needs to be configured as ../ and running in prod needs just ./
 	cfg := utils.GetCfg()
 	r.LoadHTMLGlob(fmt.Sprintf("%s/*.html", cfg.StaticResourcePath))
 	r.StaticFS("/public/build", http.Dir(cfg.StaticResourcePath))

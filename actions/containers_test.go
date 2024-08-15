@@ -3,16 +3,21 @@ package actions
 // These tests are DB based tests, vs in memory manager test_common.InitFakeApp(true)
 
 import (
+	"contented/models"
 	"contented/test_common"
+	"contented/utils"
+	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
-/*
-func CreateContainer(name string) models.Container {
+func CreateContainer(name string, t *testing.T, router *gin.Engine) models.Container {
 	cfg := utils.GetCfg()
 	c := &models.Container{
 		Total: 1,
@@ -20,16 +25,25 @@ func CreateContainer(name string) models.Container {
 		Path:  cfg.Dir,
 	}
 	fqPath, err := test_common.CreateContainerPath(c)
+	log.Printf("What is the fqContainer path %s", fqPath)
 	if err != nil {
 		fmt.Printf("Failed to create path %s with err %s", fqPath, err)
 		panic(err)
 	}
-	res := as.JSON("/containers").Post(c)
-	resObj := models.Container{}
-	json.NewDecoder(res.Body).Decode(&resObj)
-	return resObj
+
+	resObj := &models.Container{}
+	code, err := PostJson("/api/containers", c, &resObj, router)
+
+	assert.NoError(t, err, "The Post was not a success")
+	assert.Greater(t, resObj.ID, int64(0), "A container ID should exist")
+	assert.Equal(t, resObj.Name, name, fmt.Sprintf("Did we get a valid object back %s", resObj))
+	assert.Equal(t, http.StatusCreated, code, "The http post call was successful")
+
+	if resObj.Name != name {
+		t.Fatalf("The container did not get created correctly %s", resObj)
+	}
+	return *resObj
 }
-*/
 
 func TestContainersResourceList(t *testing.T) {
 	test_common.InitFakeApp(false)
@@ -39,24 +53,35 @@ func TestContainersResourceList(t *testing.T) {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", url, nil)
 	router.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code, fmt.Sprintf("Failed to call %s", url))
+
+	containers := ContainersResponse{}
+	json.NewDecoder(w.Body).Decode(&containers)
+	assert.NotEmpty(t, containers.Results, "No containers returned from the call")
 }
 
-/*
-func Test_ContainersResource_Show(t *testing.T) {
+func TestContainersResourceShow(t *testing.T) {
 	test_common.InitFakeApp(true)
+	router := setupRouter()
 	name := "ShowTest"
-	cnt := CreateContainer(name, as)
+
+	cnt := CreateContainer(name, t, router)
 	defer test_common.CleanupContainer(&cnt)
 	assert.NotZero(t, cnt.ID)
 
-	validate := as.JSON("/containers/" + cnt.ID.String()).Get()
-	assert.Equal(t, http.StatusOK, validate.Code)
+	url := fmt.Sprintf("/api/containers/%d", cnt.ID)
+	req, _ := http.NewRequest("GET", url, nil)
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
 
 	resObj := models.Container{}
-	json.NewDecoder(validate.Body).Decode(&resObj)
+	json.NewDecoder(w.Body).Decode(&resObj)
 	assert.Equal(t, resObj.Name, name)
 }
+
+/*
 
 func Test_ContainersResource_Create(t *testing.T) {
 	cfg := test_common.InitFakeApp(true)

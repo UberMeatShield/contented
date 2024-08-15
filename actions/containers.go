@@ -82,8 +82,9 @@ func ContainersResourceCreate(c *gin.Context) {
 
 	// Bind container to the html form elements
 	container := &models.Container{}
-	if err := c.Bind(container); err != nil {
+	if err := c.BindJSON(container); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
+		return
 	}
 
 	cfg := man.GetCfg()

@@ -237,7 +237,7 @@ func GetAppManager(getConnection GetConnType) ContentManager {
 }
 
 // can this manager create, update or destroy
-func ManagerCanCUD(c *gin.Context) (ContentManager, *pop.Connection, error) {
+func ManagerCanCUD(c *gin.Context) (ContentManager, *gorm.DB, error) {
 	man := GetManager(c)
 	if !man.CanEdit() {
 		err := errors.New("edit not supported by this manager")
@@ -245,11 +245,11 @@ func ManagerCanCUD(c *gin.Context) (ContentManager, *pop.Connection, error) {
 		return man, nil, err
 	}
 	if man.GetCfg().UseDatabase {
-		tx, ok := c.Value("tx").(*pop.Connection)
-		if !ok {
-			return man, nil, fmt.Errorf("no transaction found")
+		db := models.InitGorm(false)
+		if db.Error == nil {
+			return man, db, nil
 		}
-		return man, tx, nil
+		return man, nil, fmt.Errorf("DB Connection error %s", db.Error)
 	}
 	return man, nil, nil
 }

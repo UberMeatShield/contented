@@ -1,12 +1,27 @@
 package actions
 
-/*
-func (as *ActionSuite) Test_HomeHandler() {
-	test_common.InitFakeApp(false)
-	os.Chdir("../") // The Index file expects to be under the serve director/public/build
-	res := as.HTML("/").Get()
+import (
+	"contented/test_common"
+	"contented/utils"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 
-	as.Equal(http.StatusOK, res.Code)
-	as.Contains(res.Body.String(), "Loading Up Contented")
+	"github.com/stretchr/testify/assert"
+)
+
+func TestHomeHandler(t *testing.T) {
+	cfg := test_common.InitFakeApp(false)
+	cfg.StaticResourcePath = fmt.Sprintf("../%s", cfg.StaticResourcePath)
+	utils.SetCfg(*cfg)
+
+	r := setupStatic()
+	url := "/"
+	req, _ := http.NewRequest("GET", url, nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code, fmt.Sprintf("Could not hit %s", url))
+	assert.Contains(t, w.Body.String(), "Loading Up Contented")
 }
-*/
