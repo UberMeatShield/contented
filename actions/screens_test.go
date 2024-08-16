@@ -6,6 +6,7 @@ import (
 	"contented/utils"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
@@ -78,78 +79,85 @@ func TestScreensResourceList(t *testing.T) {
 	assert.Equal(t, len(validate.Results), 2, "There should be two preview screens")
 }
 
-/*
-func (as *ActionSuite) Test_ScreensResource_ListMC() {
-	test_common.InitFakeApp(true)
+func TestScreensResourceListMedia(t *testing.T) {
+	_, db, router := InitFakeRouterApp(true)
 
 	// This creates a preview screen making the total 3 in the DB
 	// Note it also resets the container_preview dir right now
-	CreateScreen(as)
+	CreateScreen(t, db, router)
+	_, mc1, _ := CreateScreen(t, db, router)
 
-	_, mc1, _ := CreateScreen(as)
-	CreatePreview("A", mc1.ID, as)
-	res := as.JSON(fmt.Sprintf("/contents/%s/screens", mc1.ID.String())).Get()
-	as.Equal(http.StatusOK, res.Code)
+	CreatePreview("A", mc1.ID, t, router)
 
+	url := fmt.Sprintf("/api/contents/%d/screens", mc1.ID)
 	validate := ScreensResponse{}
-	json.NewDecoder(res.Body).Decode(&validate)
-	as.Equal(len(validate.Results), 2, "Note we should have only two screens")
-	as.Equal(validate.Total, 2, "Count should be correct")
+	code, err := GetJson(url, "", &validate, router)
+	assert.NoError(t, err, "It should load up screens")
+	assert.Equal(t, http.StatusOK, code, "It should get screens back")
+
+	assert.Equal(t, 2, len(validate.Results), 2, "Note we should have only two screens")
+	assert.Equal(t, int64(2), validate.Total, "Count should be correct")
+
 	for _, ps := range validate.Results {
-		as.Equal(ps.ContentID, mc1.ID)
-		as.Equal(ps.Path, "") // Path should not be visible in the API
+		assert.Equal(t, ps.ContentID, mc1.ID, fmt.Sprintf("Failed %s", ps))
+		assert.Equal(t, ps.Path, "", fmt.Sprintf("Path visible %s", ps)) // Path should not be visible in the API
 	}
 }
 
-func (as *ActionSuite) Test_ScreensResource_Show() {
-	test_common.InitFakeApp(true)
-	_, _, ps := CreateScreen(as)
+func TestScreensResourceShow(t *testing.T) {
+	_, db, router := InitFakeRouterApp(true)
+	_, _, ps := CreateScreen(t, db, router)
 
-	res := as.JSON(fmt.Sprintf("/screens/%s", ps.ID.String())).Get()
-	as.Equal(http.StatusOK, res.Code)
+	url := fmt.Sprintf("/api/screens/%d", ps.ID)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", url, nil)
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
 
 	// Need to make it host the file.
-	header := res.Header()
-	as.Equal("image/jpeg", header.Get("Content-Type"))
+	header := w.Header()
+	assert.Equal(t, "image/jpeg", header.Get("Content-Type"))
 }
 
+/*
 // TODO: Create a screen that is actually on disk.
 func (as *ActionSuite) Test_ScreensResource_Create() {
-	test_common.InitFakeApp(true)
+	InitFakeRouterApp(true)
 	_, mc, screenSrc := CreateTestContainerWithContent(as)
 	ps := CreatePreview(screenSrc, mc.ID, as)
-	as.Equal(ps.Src, screenSrc)
+	assert.Equal(t, ps.Src, screenSrc)
 
 	screens := models.Screens{}
 	as.DB.Where("content_id = ?", mc.ID).All(&screens)
-	as.Equal(len(screens), 1, "There should be a screen in the DB")
+	assert.Equal(t, len(screens), 1, "There should be a screen in the DB")
 }
 
 func (as *ActionSuite) Test_ScreensResource_Update() {
-	test_common.InitFakeApp(true)
+	InitFakeRouterApp(true)
 	_, mc, screenSrc := CreateTestContainerWithContent(as)
 	ps := CreatePreview(screenSrc, mc.ID, as)
 	ps.Src = "UP"
 	res := as.JSON(fmt.Sprintf("/screens/%s", ps.ID.String())).Put(ps)
-	as.Equal(http.StatusOK, res.Code)
+	assert.Equal(t, http.StatusOK, res.Code)
 }
 
 func (as *ActionSuite) Test_ScreensResource_Destroy() {
-	test_common.InitFakeApp(true)
+	InitFakeRouterApp(true)
 	_, mc, screenSrc := CreateTestContainerWithContent(as)
 	ps := CreatePreview(screenSrc, mc.ID, as)
 
 	del_res := as.JSON(fmt.Sprintf("/screens/%s", ps.ID.String())).Delete()
-	as.Equal(http.StatusOK, del_res.Code)
+	assert.Equal(t, http.StatusOK, del_res.Code)
 }
 
 func (as *ActionSuite) Test_ScreensResource_CannotCreate() {
-	test_common.InitFakeApp(false)
+	InitFakeRouterApp(false)
 	ps := &models.Screen{
 		Src: "Shouldn't Allow Create",
 		Idx: 1,
 	}
 	res := as.JSON("/screens/").Post(ps)
-	as.Equal(http.StatusCreated, res.Code)
+	assert.Equal(t, http.StatusCreated, res.Code)
 }
 */
