@@ -47,8 +47,7 @@ func CreateContainer(name string, t *testing.T, router *gin.Engine) models.Conta
 }
 
 func TestContainersResourceList(t *testing.T) {
-	test_common.InitFakeApp(false)
-	router := setupRouter()
+	_, _, router := InitFakeRouterApp(false)
 
 	url := "/api/containers"
 	w := httptest.NewRecorder()
@@ -62,8 +61,7 @@ func TestContainersResourceList(t *testing.T) {
 }
 
 func TestContainersResourceShow(t *testing.T) {
-	test_common.InitFakeApp(true)
-	router := setupRouter()
+	_, _, router := InitFakeRouterApp(false)
 	name := "ShowTest"
 
 	cnt := CreateContainer(name, t, router)
@@ -83,8 +81,7 @@ func TestContainersResourceShow(t *testing.T) {
 }
 
 func TestContainersResourceCreate(t *testing.T) {
-	cfg, db := test_common.InitFakeApp(true)
-	router := setupRouter()
+	cfg, db, router := InitFakeRouterApp(false)
 
 	cnt := &models.Container{
 		Total: 1,
@@ -107,8 +104,7 @@ func TestContainersResourceCreate(t *testing.T) {
 }
 
 func TestContainersResourceUpdate(t *testing.T) {
-	test_common.InitFakeApp(true)
-	router := setupRouter()
+	_, _, router := InitFakeRouterApp(false)
 	cnt := CreateContainer("Initial", t, router)
 	defer test_common.CleanupContainer(&cnt)
 	assert.NotZero(t, cnt.ID)
@@ -125,8 +121,7 @@ func TestContainersResourceUpdate(t *testing.T) {
 }
 
 func TestContainersResourceDestroy(t *testing.T) {
-	router := setupRouter() // move this into Fake App?
-	test_common.InitFakeApp(true)
+	_, _, router := InitFakeRouterApp(false)
 	cnt := CreateContainer("Nuke", t, router)
 	defer test_common.CleanupContainer(&cnt)
 	assert.Equal(t, cnt.Name, "Nuke")
@@ -144,8 +139,7 @@ func TestContainersResourceDestroy(t *testing.T) {
 }
 
 func TestContainerList(t *testing.T) {
-	router := setupRouter() // move this into Fake App?
-	_, db := test_common.InitFakeApp(true)
+	_, db, router := InitFakeRouterApp(false)
 
 	cnt1, _ := test_common.GetContentByDirName("dir1")
 	cnt2, _ := test_common.GetContentByDirName("dir2")
@@ -174,8 +168,7 @@ func TestContainerList(t *testing.T) {
 }
 
 func TestMemoryReadOnlyDenyEdit(t *testing.T) {
-	router := setupRouter() // move this into Fake App?
-	cfg, _ := test_common.InitFakeApp(false)
+	cfg, _, router := InitFakeRouterApp(false)
 	cfg.ReadOnly = true
 	ctx := test_common.GetContext()
 	man := managers.GetManager(ctx)

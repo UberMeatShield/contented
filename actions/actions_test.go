@@ -3,6 +3,7 @@ package actions
 import (
 	"bytes"
 	"contented/test_common"
+	"contented/utils"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
 
 func setupRouter() *gin.Engine {
@@ -25,6 +27,11 @@ func setupStatic() *gin.Engine {
 	SetupStatic(r)
 	SetupRoutes(r)
 	return r
+}
+
+func InitFakeRouterApp(useDb bool) (*utils.DirConfigEntry, *gorm.DB, *gin.Engine) {
+	cfg, db := test_common.InitFakeApp(useDb)
+	return cfg, db, setupRouter()
 }
 
 // resObj is a &models.Content|Container|Screen|etc
