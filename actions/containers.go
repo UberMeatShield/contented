@@ -126,7 +126,7 @@ func ContainersResourceUpdate(c *gin.Context) {
 		c.AbortWithError(http.StatusNotFound, notFoundErr)
 		return
 	}
-	if err := c.Bind(cnt); err != nil {
+	if err := c.BindJSON(cnt); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
@@ -145,6 +145,7 @@ func ContainersResourceDestroy(c *gin.Context) {
 	man, _, err := managers.ManagerCanCUD(c)
 	if err != nil {
 		c.AbortWithError(http.StatusForbidden, err)
+		return
 	}
 	id := c.Param("container_id")
 	cnt, dErr := man.DestroyContainer(id)

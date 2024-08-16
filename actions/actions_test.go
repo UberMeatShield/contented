@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"contented/test_common"
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -25,16 +27,52 @@ func setupStatic() *gin.Engine {
 	return r
 }
 
+// resObj is a &models.Content|Container|Screen|etc
+func GetJson(url string, obj any, resObj any, router *gin.Engine) (int, error) {
+	return HttpJson(url, obj, resObj, router, "GET")
+}
+
 func PostJson(url string, obj any, resObj any, router *gin.Engine) (int, error) {
+	return HttpJson(url, obj, resObj, router, "POST")
+}
+
+func PutJson(url string, obj any, resObj any, router *gin.Engine) (int, error) {
+	return HttpJson(url, obj, resObj, router, "PUT")
+}
+
+func DeleteJson(url string, router *gin.Engine) (int, error) {
 	w := httptest.NewRecorder()
-	userJson, _ := json.Marshal(obj)
-	req, _ := http.NewRequest("POST", "/api/containers", bytes.NewReader(userJson))
+	req, _ := http.NewRequest("DELETE", url, nil)
 	router.ServeHTTP(w, req)
 
-	err := json.NewDecoder(w.Body).Decode(&resObj)
+	result := w.Result()
+	if result.StatusCode != 200 {
+		return result.StatusCode, fmt.Errorf("Error on delete %s", w.Body)
+	}
+	return result.StatusCode, nil
+}
+
+func HttpJson(url string, obj any, resObj any, router *gin.Engine, method string) (int, error) {
+	w := httptest.NewRecorder()
+	userJson, _ := json.Marshal(obj)
+	req, _ := http.NewRequest(method, url, bytes.NewReader(userJson))
+	router.ServeHTTP(w, req)
+
+	result := w.Result()
+	if !(result.StatusCode == 200 || result.StatusCode == 201) {
+		log.Printf("Likely error getting data back from the server %s", w.Body)
+		return result.StatusCode, fmt.Errorf("%s, %s", url, w.Body)
+	}
 	defer req.Body.Close()
 
-	return w.Code, err
+	if result.ContentLength == 0 {
+		log.Printf("Probably something went really wrong as there is no content body %d", result.StatusCode)
+		return result.StatusCode, fmt.Errorf("No content from server %s", url)
+	} else {
+		log.Printf("%s response %s", url, w.Body)
+		err := json.NewDecoder(w.Body).Decode(resObj)
+		return result.StatusCode, err
+	}
 }
 
 // Removing action suite for all the tests is going to suck pretty hard

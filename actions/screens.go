@@ -100,7 +100,7 @@ func ScreensResourceCreate(c *gin.Context) {
 	}
 	// Bind previewScreen to the html form/JSON elements
 	screen := &models.Screen{}
-	if err := c.Bind(screen); err != nil {
+	if err := c.BindJSON(screen); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
@@ -134,7 +134,7 @@ func ScreensResourceUpdate(c *gin.Context) {
 		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
-	if err := c.Bind(screen); err != nil {
+	if err := c.BindJSON(screen); err != nil {
 		c.JSON(http.StatusUnprocessableEntity, err)
 		return
 	}

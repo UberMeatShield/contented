@@ -26,6 +26,7 @@ type TagResponse struct {
 func TagsResourceList(c *gin.Context) {
 	// Get the DB connection from the context
 	man := managers.GetManager(c)
+
 	previewTags, total, err := man.ListAllTagsContext()
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
@@ -68,7 +69,7 @@ func TagsResourceCreate(c *gin.Context) {
 	}
 	// Bind previewTag to the html form/JSON elements
 	tag := &models.Tag{}
-	if err := c.Bind(tag); err != nil {
+	if err := c.BindJSON(tag); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
@@ -97,7 +98,7 @@ func TagsResourceUpdate(c *gin.Context) {
 		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
-	if err := c.Bind(tag); err != nil {
+	if err := c.BindJSON(tag); err != nil {
 		c.AbortWithError(http.StatusUnprocessableEntity, err)
 		return
 	}

@@ -34,23 +34,11 @@ var app *buffalo.App
 // `ServeFiles` is a CATCH-ALL route, so it should always be
 // placed last in the route declarations, as it will prevent routes
 // declared after it to never be called.
-func App(UseDatabase bool) *buffalo.App {
+func App(UseDatabase bool) *buffalo.App { // This is now dead
 	log.Printf("App being created()\n")
 	if app == nil {
 		app = internals.CreateBuffaloApp(UseDatabase, ENV)
 		app.Use(forceSSL())
-
-		// Need to move all the things under /api
-		// TODO: Clean this up to always use content_id
-
-		/*
-			// Allow for manipulation of content already on the server
-
-
-					// Dupes is a special case where we do not need to create a task per content type right now
-					// the checks are fast enough that we can get a summary pretty quickly and probably faster with
-
-		*/
 	}
 	return app
 }

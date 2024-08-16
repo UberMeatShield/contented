@@ -95,6 +95,9 @@ func (cm ContentManagerDB) GetContent(mcID int64) (*models.Content, error) {
 	if res := tx.Preload("Screens").Preload("Tags").Find(mc, mcID); res.Error != nil {
 		return nil, res.Error
 	}
+	if mc.ID == 0 {
+		return nil, fmt.Errorf("content not found %d", mcID)
+	}
 	return mc, nil
 }
 
@@ -111,8 +114,7 @@ func (cm ContentManagerDB) UpdateContainer(cnt *models.Container) (*models.Conta
 		return nil, errors.New(msg)
 	}
 	tx := cm.GetConnection()
-	res := tx.Save(cnt)
-	if res.Error != nil {
+	if res := tx.Save(cnt); res.Error != nil {
 		return cnt, res.Error
 	}
 	return cm.GetContainer(cnt.ID)
@@ -365,6 +367,9 @@ func (cm ContentManagerDB) GetContainer(cID int64) (*models.Container, error) {
 	if res := tx.Find(container, cID); res.Error != nil {
 		return nil, res.Error
 	}
+	if container.ID == 0 {
+		return nil, fmt.Errorf("container not found %d", cID)
+	}
 	return container, nil
 }
 
@@ -438,6 +443,9 @@ func (cm ContentManagerDB) GetScreen(psID int64) (*models.Screen, error) {
 	if res.Error != nil {
 		return nil, res.Error
 	}
+	if previewScreen.ID == 0 {
+		return nil, fmt.Errorf("screen not found %d", psID)
+	}
 	return previewScreen, nil
 
 }
@@ -484,12 +492,14 @@ func (cm ContentManagerDB) DestroyContent(id int64) (*models.Content, error) {
 func (cm ContentManagerDB) DestroyContainer(id string) (*models.Container, error) {
 	tx := cm.GetConnection()
 	cnt := &models.Container{}
+	log.Printf("What the fuck Lookup %s", id)
 	if res := tx.Find(cnt, id); res.Error != nil {
 		return nil, fmt.Errorf("could not find container with id %s", id)
 	}
 	if res := tx.Delete(cnt); res.Error != nil {
 		return cnt, res.Error
 	}
+	log.Printf("What the fuck %s", cnt)
 	return cnt, nil
 }
 
@@ -564,6 +574,9 @@ func (cm ContentManagerDB) GetTag(tagID string) (*models.Tag, error) {
 	t := &models.Tag{}
 	if res := tx.First(t, "id = ?", tagID); res.Error != nil {
 		return nil, res.Error
+	}
+	if t.ID == "" {
+		return nil, fmt.Errorf("no tag found with %s", tagID)
 	}
 	return t, nil
 }
@@ -697,6 +710,9 @@ func (cm ContentManagerDB) GetTask(id int64) (*models.TaskRequest, error) {
 	task := models.TaskRequest{}
 	tx := cm.GetConnection()
 	res := tx.Find(&task, id)
+	if task.ID == 0 {
+		return nil, fmt.Errorf("no task found %d", id)
+	}
 	return &task, res.Error
 }
 

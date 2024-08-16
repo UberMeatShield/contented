@@ -102,7 +102,7 @@ func ResetConfig() *utils.DirConfigEntry {
 // This function is now how the init method should function till caching is implemented
 // As the internals / guts are functional using the new models the creation of models
 // can be removed.
-func InitFakeApp(use_db bool) *utils.DirConfigEntry {
+func InitFakeApp(use_db bool) (*utils.DirConfigEntry, *gorm.DB) {
 	dir, _ := envy.MustGet("DIR")
 	fmt.Printf("Using directory %s\n", dir)
 
@@ -142,9 +142,10 @@ func InitFakeApp(use_db bool) *utils.DirConfigEntry {
 		memStorage.ValidContainers[hiddenContainer.ID] = hiddenContainer
 		memStorage.ValidContent[hiddenContent.ID] = hiddenContent
 	} else {
-		models.ResetDB(models.InitGorm(false))
+		db := models.ResetDB(models.InitGorm(false))
+		return cfg, db
 	}
-	return cfg
+	return cfg, nil
 }
 
 func NilError(err error, msg string, t *testing.T) {

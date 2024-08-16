@@ -81,64 +81,68 @@ func TestContainersResourceShow(t *testing.T) {
 	assert.Equal(t, resObj.Name, name)
 }
 
-/*
+func TestContainersResourceCreate(t *testing.T) {
+	cfg, db := test_common.InitFakeApp(true)
+	router := setupRouter()
 
-func Test_ContainersResource_Create(t *testing.T) {
-	cfg := test_common.InitFakeApp(true)
 	cnt := &models.Container{
 		Total: 1,
 		Name:  "dir3",
 		Path:  "ShouldGetReset",
 	}
-	res := as.JSON("/containers").Post(cnt)
-	assert.Equal(t, http.StatusCreated, res.Code, "It should be able to create")
+	resObj := &models.Container{}
+	code, err := PostJson("/api/containers", cnt, resObj, router)
+	assert.NoError(t, err, "Failure in creating the container")
+	assert.Equal(t, http.StatusCreated, code, "It should be able to create")
 	defer test_common.CleanupContainer(cnt)
 
-	resObj := models.Container{}
-	json.NewDecoder(res.Body).Decode(&resObj)
 	assert.Equal(t, resObj.Name, cnt.Name)
 	assert.NotZero(t, resObj.ID)
-	assert.Equal(t, http.StatusCreated, res.Code)
 
 	// Path does not come back from the API (hidden), check it updated.
 	check := models.Container{}
-	assert.NoError(t, as.DB.Find(&check, resObj.ID))
+	assert.NoError(t, db.Find(&check, resObj.ID).Error, "Could not pull back a container from the DB")
 	assert.Equal(t, check.Path, cfg.Dir, "It should reset our path")
 }
 
-func Test_ContainersResource_Update(t *testing.T) {
+func TestContainersResourceUpdate(t *testing.T) {
 	test_common.InitFakeApp(true)
-	cnt := CreateContainer("Initial", as)
-	test_common.CleanupContainer(&cnt)
-	assert.NotZero(t, cnt.ID)
-
-	name := "UpdateTest"
-	cnt.Name = name
-	test_common.CreateContainerPath(&cnt)
-
-	url := fmt.Sprintf("/api/containers/%d", cnt.ID)
-	res := as.JSON(url).Put(cnt)
-	defer test_common.CleanupContainer(&cnt)
-	assert.Equal(t, http.StatusOK, res.Code, fmt.Sprintf("Error %s", res.Body.String()))
-
-	check := models.Container{}
-	json.NewDecoder(res.Body).Decode(&check)
-	assert.Equal(t, check.Name, name, "It should update the name")
-}
-
-func Test_ContainersResource_Destroy(t *testing.T) {
-	test_common.InitFakeApp(true)
-	cnt := CreateContainer("Nuke", as)
+	router := setupRouter()
+	cnt := CreateContainer("Initial", t, router)
 	defer test_common.CleanupContainer(&cnt)
 	assert.NotZero(t, cnt.ID)
+	assert.Equal(t, cnt.Name, "Initial")
+
+	description := "UpdateTest"
+	cnt.Description = description
 
 	url := fmt.Sprintf("/api/containers/%d", cnt.ID)
-	res := as.JSON(url).Delete()
-	assert.Equal(t, http.StatusOK, res.Code)
-
-	notFoundRes := as.JSON(url).Get()
-	assert.Equal(t, http.StatusNotFound, notFoundRes.Code)
+	check := &models.Container{}
+	code, err := PutJson(url, cnt, check, router)
+	assert.Equal(t, http.StatusOK, code, fmt.Sprintf("Error %s", err))
+	assert.Equal(t, description, check.Description, "It should update the description")
 }
+
+func TestContainersResourceDestroy(t *testing.T) {
+	router := setupRouter() // move this into Fake App?
+	test_common.InitFakeApp(true)
+	cnt := CreateContainer("Nuke", t, router)
+	defer test_common.CleanupContainer(&cnt)
+	assert.Equal(t, cnt.Name, "Nuke")
+	assert.NotZero(t, cnt.ID)
+
+	url := fmt.Sprintf("/api/containers/%d", cnt.ID)
+	deleteCode, err := DeleteJson(url, router)
+	assert.NoError(t, err, "It should delete")
+	assert.Equal(t, http.StatusOK, deleteCode, "The delete operation failed")
+
+	check := &models.Container{}
+	code, err := GetJson(url, cnt, check, router)
+	assert.Error(t, err, "It should be in an error state")
+	assert.Equal(t, http.StatusNotFound, code, "It should not get a container back")
+}
+
+/*
 
 func Test_ContainerList(t *testing.T) {
 	test_common.InitFakeApp(true)

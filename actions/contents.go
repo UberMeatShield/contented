@@ -76,7 +76,7 @@ func ContentsResourceCreate(c *gin.Context) {
 	// Allocate an empty Content
 	// Bind contentContainer to the html form elements (probably not required?)
 	content := &models.Content{}
-	if err := c.Bind(content); err != nil {
+	if err := c.BindJSON(content); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
@@ -111,7 +111,7 @@ func ContentsResourceUpdate(c *gin.Context) {
 	}
 	// Bind Content to the html form elements (Nuke this? or change to json)
 	content := *exists
-	if err := c.Bind(&content); err != nil {
+	if err := c.BindJSON(&content); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
