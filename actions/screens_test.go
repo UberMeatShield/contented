@@ -1,25 +1,35 @@
 package actions
 
-//    "net/url"
+import (
+	"contented/models"
+	"contented/test_common"
+	"contented/utils"
+	"fmt"
+	"net/http"
+	"os"
+	"path/filepath"
+	"testing"
 
-/*
-func CreatePreview(src string, contentID uuid.UUID, as *ActionSuite) models.Screen {
-	mc := &models.Screen{
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
+)
+
+func CreatePreview(src string, contentID int64, t *testing.T, router *gin.Engine) models.Screen {
+	screen := &models.Screen{
 		Src:       src,
 		ContentID: contentID,
 		Idx:       1,
 	}
-	res := as.JSON("/screens").Post(mc)
-	as.Equal(http.StatusCreated, res.Code)
-
-	resObj := models.Screen{}
-	json.NewDecoder(res.Body).Decode(&resObj)
-	return resObj
-
+	resObj := &models.Screen{}
+	code, err := PostJson("/api/screens", screen, resObj, router)
+	assert.NoError(t, err, "It should create a screen")
+	assert.Equal(t, http.StatusCreated, code)
+	return *resObj
 }
 
 // Kind of a pain in the ass to create all the way down to a valid preview screen
-func CreateTestContainerWithContent(as *ActionSuite) (*models.Container, *models.Content, string) {
+func CreateTestContainerWithContent(t *testing.T, db *gorm.DB) (*models.Container, *models.Content, string) {
 	cfg := utils.GetCfg()
 	srcDir, dstDir, testFile := test_common.Get_VideoAndSetupPaths(cfg)
 	c := &models.Container{
@@ -27,7 +37,7 @@ func CreateTestContainerWithContent(as *ActionSuite) (*models.Container, *models
 		Path:  filepath.Dir(srcDir),
 		Name:  filepath.Base(srcDir),
 	}
-	as.DB.Create(c)
+	assert.NoError(t, db.Create(c).Error, "Failed to create container")
 
 	// TODO: Ensure that this path is actually correct, should actually make a REAL jpeg copy
 	screenSrc := filepath.Join(dstDir, fmt.Sprintf("%s.screen.001.jpg", testFile))
@@ -35,43 +45,40 @@ func CreateTestContainerWithContent(as *ActionSuite) (*models.Container, *models
 		Src:         testFile,
 		ContentType: "video/mp4",
 		Preview:     screenSrc,
-		ContainerID: nulls.NewUUID(c.ID),
+		ContainerID: &c.ID,
 	}
-	as.DB.Create(mc)
+	assert.NoError(t, db.Create(mc).Error, "Failed to create content")
 
 	fmt.Printf("Screen src %s", screenSrc)
 	f, err := os.Create(screenSrc)
-	if err != nil {
-		as.T().Errorf("Couldn't write to %s", screenSrc)
-	}
+	assert.NoError(t, err, fmt.Sprintf("It could not create the screen on disk %s", screenSrc))
+
 	_, wErr := f.WriteString("Totally a screen")
-	if wErr != nil {
-		as.T().Errorf("Create a fake screen file on disk %s", screenSrc)
-	}
+	assert.NoError(t, wErr, fmt.Sprintf("And be able to write to it %s", screenSrc))
 	f.Sync()
 	f.Close()
 	return c, mc, screenSrc
 }
 
-func CreateScreen(as *ActionSuite) (*models.Container, *models.Content, *models.Screen) {
-	c, mc, screenSrc := CreateTestContainerWithContent(as)
-	ps := CreatePreview(screenSrc, mc.ID, as)
+func CreateScreen(t *testing.T, db *gorm.DB, router *gin.Engine) (*models.Container, *models.Content, *models.Screen) {
+	c, mc, screenSrc := CreateTestContainerWithContent(t, db)
+	ps := CreatePreview(screenSrc, mc.ID, t, router)
 	return c, mc, &ps
 }
 
-func (as *ActionSuite) Test_ScreensResource_List() {
-	test_common.InitFakeApp(true)
-	CreateScreen(as)
-	CreateScreen(as)
-
-	res := as.JSON("/screens/").Get()
-	as.Equal(http.StatusOK, res.Code)
+func TestScreensResourceList(t *testing.T) {
+	_, db, router := InitFakeRouterApp(true)
+	CreateScreen(t, db, router)
+	CreateScreen(t, db, router)
 
 	validate := ScreensResponse{}
-	json.NewDecoder(res.Body).Decode(&validate)
-	as.Equal(len(validate.Results), 2, "There should be two preview screens")
+	code, err := GetJson("/api/screens", "", &validate, router)
+	assert.NoError(t, err, "It should be able to list screens")
+	assert.Equal(t, http.StatusOK, code)
+	assert.Equal(t, len(validate.Results), 2, "There should be two preview screens")
 }
 
+/*
 func (as *ActionSuite) Test_ScreensResource_ListMC() {
 	test_common.InitFakeApp(true)
 
