@@ -3,6 +3,7 @@ package actions
 // These tests are DB based tests, vs in memory manager test_common.InitFakeApp(true)
 
 import (
+	"contented/managers"
 	"contented/models"
 	"contented/test_common"
 	"contented/utils"
@@ -142,21 +143,19 @@ func TestContainersResourceDestroy(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, code, "It should not get a container back")
 }
 
-/*
-
-func Test_ContainerList(t *testing.T) {
-	test_common.InitFakeApp(true)
-	db := models.InitGorm(false)
+func TestContainerList(t *testing.T) {
+	router := setupRouter() // move this into Fake App?
+	_, db := test_common.InitFakeApp(true)
 
 	cnt1, _ := test_common.GetContentByDirName("dir1")
 	cnt2, _ := test_common.GetContentByDirName("dir2")
 	db.Create(cnt1)
 	db.Create(cnt2)
-	res := as.JSON("/containers").Get()
-	assert.Equal(t, http.StatusOK, res.Code)
 
-	containers := ContainersResponse{}
-	json.NewDecoder(res.Body).Decode(&containers)
+	containers := &ContainersResponse{}
+	code, err := GetJson("/api/containers", "", containers, router)
+	assert.NoError(t, err, "It should not error")
+	assert.Equal(t, http.StatusOK, code)
 
 	assert.Equal(t, 2, len(containers.Results), "It should have loaded two fixtures")
 	var found *models.Container
@@ -165,28 +164,32 @@ func Test_ContainerList(t *testing.T) {
 			found = &c
 		}
 	}
-	as.NotNil(found, "If it had the fixture loaded we should have this name")
+	assert.NotNil(t, found, "If it had the fixture loaded we should have this name")
 	url := fmt.Sprintf("/api/containers/%d/contents", found.ID)
-	contentRes := as.JSON(url).Get()
-	assert.Equal(t, http.StatusOK, contentRes.Code)
+	contents := &ContentsResponse{}
+	contentsCode, contentsErr := GetJson(url, "", contents, router)
+	assert.NoError(t, contentsErr, "It should have no content but should work")
+	assert.Equal(t, http.StatusOK, contentsCode)
+	assert.Equal(t, int64(0), contents.Total, "There should not be content")
 }
 
-func Test_Memory_ReadOnlyDenyEdit(t *testing.T) {
-	cfg := test_common.InitFakeApp(false)
+func TestMemoryReadOnlyDenyEdit(t *testing.T) {
+	router := setupRouter() // move this into Fake App?
+	cfg, _ := test_common.InitFakeApp(false)
 	cfg.ReadOnly = true
 	ctx := test_common.GetContext()
 	man := managers.GetManager(ctx)
 
 	containers, count, err := man.ListContainersContext()
 	assert.NoError(t, err, "It should list containers")
-	assert.Greater(t, count, 0, "The count should be positive")
+	assert.Greater(t, count, int64(0), "The count should be positive")
 	assert.Greater(t, len(*containers), 0, "There should be containers")
 
 	for _, c := range *containers {
 		c.Name = "Update Should fail"
 		url := fmt.Sprintf("/api/containers/%d", c.ID)
-		res := as.JSON(url).Put(&c)
-		assert.Equal(t, http.StatusNotImplemented, res.Code)
+		code, err := PutJson(url, c, &models.Container{}, router)
+		assert.Equal(t, http.StatusNotImplemented, code)
+		assert.Error(t, err, "It should not work")
 	}
 }
-*/
