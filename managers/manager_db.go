@@ -138,12 +138,14 @@ func (cm ContentManagerDB) UpdateContent(content *models.Content) error {
 		}
 	}
 
-	// Crap, this might be really broken depending on how we use it
+	tags := content.Tags
+	content.Tags = nil // We don't want to allow the save to create tags not in the system
 	if res := tx.Save(content); res.Error != nil {
 		return res.Error
 	}
 	// Just trust we will associate all valid tags to the content.
-	if content.Tags != nil {
+	if tags != nil {
+		content.Tags = tags
 		return cm.AssociateTag(nil, content)
 	}
 	return nil
@@ -451,6 +453,9 @@ func (cm ContentManagerDB) GetScreen(psID int64) (*models.Screen, error) {
 }
 
 func (cm ContentManagerDB) CreateScreen(screen *models.Screen) error {
+	if screen == nil || screen.ContentID == 0 {
+		return fmt.Errorf("invalid screenshot data %s", screen)
+	}
 	tx := cm.GetConnection().Create(screen)
 	return tx.Error
 }
@@ -461,7 +466,6 @@ func (cm ContentManagerDB) CreateContent(content *models.Content) error {
 	if content.Tags == nil {
 		content.Tags = models.Tags{}
 	}
-
 	validTags, t_err := cm.GetValidTags(&content.Tags)
 	if t_err != nil {
 		log.Printf("Could not determine valid tags %s", t_err)

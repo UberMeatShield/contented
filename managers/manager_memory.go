@@ -379,6 +379,13 @@ func (cm ContentManagerMemory) UpdateContent(content *models.Content) error {
 			return fmt.Errorf("invalid content src %s for container %s", content.Src, cnt.Name)
 		}
 	}
+
+	tags, tagErr := cm.GetValidTags(&content.Tags)
+	if tagErr != nil {
+		return tagErr
+	}
+
+	content.Tags = *tags
 	_, err := cm.GetStore().UpdateContent(content)
 	return err
 }
@@ -663,10 +670,13 @@ func (cm ContentManagerMemory) AssociateTagByID(tagId string, mcID int64) error 
 	return errors.New(msg)
 }
 
-// TODO: Fix this so that the screen must be under the
 func (cm ContentManagerMemory) CreateScreen(screen *models.Screen) error {
 	// Validate that the content exists for the screen?
 	if screen != nil {
+		content, notFound := cm.GetContent(screen.ContentID)
+		if content == nil || notFound != nil {
+			return fmt.Errorf("a screen must be linked to content and %d was not found", screen.ContentID)
+		}
 		_, err := cm.GetStore().CreateScreen(screen)
 		return err
 	}
@@ -676,10 +686,34 @@ func (cm ContentManagerMemory) CreateScreen(screen *models.Screen) error {
 // TODO: Requires security checks like the DB version.
 func (cm ContentManagerMemory) CreateContent(content *models.Content) error {
 	if content != nil {
+		if content.Tags == nil {
+			content.Tags = models.Tags{}
+		}
+		validTags, tErr := cm.GetValidTags(&content.Tags)
+		if tErr != nil {
+			log.Printf("Failed to find valid tags %s", tErr)
+		}
+		content.Tags = *validTags
 		_, err := cm.GetStore().CreateContent(content)
 		return err
 	}
 	return errors.New("ContentManagerMemory no Instance was passed in to CreateContent")
+}
+
+func (cm ContentManagerMemory) GetValidTags(tags *models.Tags) (*models.Tags, error) {
+
+	goodTags := models.Tags{}
+	if tags == nil {
+		return &goodTags, nil
+	}
+
+	validTags := cm.GetStore().ValidTags
+	for _, tag := range *tags {
+		if _, ok := validTags[tag.ID]; ok {
+			goodTags = append(goodTags, tag)
+		}
+	}
+	return &goodTags, nil
 }
 
 /**

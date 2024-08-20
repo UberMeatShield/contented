@@ -4,6 +4,7 @@ import (
 	"contented/managers"
 	"contented/models"
 	"contented/utils"
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -24,9 +25,19 @@ type SearchContentsResult struct {
 	Results *models.Contents `json:"results"`
 }
 
+func (t SearchContentsResult) String() string {
+	jt, _ := json.Marshal(t)
+	return string(jt)
+}
+
 type SearchContainersResult struct {
 	Total   int64              `json:"total"`
 	Results *models.Containers `json:"results"`
+}
+
+func (t SearchContainersResult) String() string {
+	jt, _ := json.Marshal(t)
+	return string(jt)
 }
 
 // Builds out information given the application and the content directory

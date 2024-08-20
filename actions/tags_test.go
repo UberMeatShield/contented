@@ -1,5 +1,26 @@
 package actions
 
+import (
+	"contented/models"
+	"fmt"
+	"net/http"
+	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+)
+
+func CreateTag(name string, t *testing.T, router *gin.Engine) models.Tag {
+	tag := &models.Tag{
+		ID: name,
+	}
+
+	resObj := models.Tag{}
+	code, err := PostJson("/api/tags", tag, &resObj, router)
+	assert.Equal(t, http.StatusCreated, code, fmt.Sprintf("Error creating %s", err))
+	return resObj
+}
+
 /*
 func (as *ActionSuite) Test_TagsResource_List_DB() {
 	test_common.ResetConfig()

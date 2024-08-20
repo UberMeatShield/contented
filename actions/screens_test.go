@@ -120,44 +120,60 @@ func TestScreensResourceShow(t *testing.T) {
 	assert.Equal(t, "image/jpeg", header.Get("Content-Type"))
 }
 
-/*
 // TODO: Create a screen that is actually on disk.
-func (as *ActionSuite) Test_ScreensResource_Create() {
-	InitFakeRouterApp(true)
-	_, mc, screenSrc := CreateTestContainerWithContent(as)
-	ps := CreatePreview(screenSrc, mc.ID, as)
+func TestScreensResourceCreate(t *testing.T) {
+	_, db, router := InitFakeRouterApp(true)
+	_, mc, screenSrc := CreateTestContainerWithContent(t, db)
+	ps := CreatePreview(screenSrc, mc.ID, t, router)
 	assert.Equal(t, ps.Src, screenSrc)
 
 	screens := models.Screens{}
-	as.DB.Where("content_id = ?", mc.ID).All(&screens)
+	db.Where("content_id = ?", mc.ID).Find(&screens)
 	assert.Equal(t, len(screens), 1, "There should be a screen in the DB")
 }
 
-func (as *ActionSuite) Test_ScreensResource_Update() {
-	InitFakeRouterApp(true)
-	_, mc, screenSrc := CreateTestContainerWithContent(as)
-	ps := CreatePreview(screenSrc, mc.ID, as)
+func TestScreensResourceUpdate(t *testing.T) {
+	_, db, router := InitFakeRouterApp(true)
+	_, mc, screenSrc := CreateTestContainerWithContent(t, db)
+	ps := CreatePreview(screenSrc, mc.ID, t, router)
 	ps.Src = "UP"
-	res := as.JSON(fmt.Sprintf("/screens/%s", ps.ID.String())).Put(ps)
-	assert.Equal(t, http.StatusOK, res.Code)
+
+	url := fmt.Sprintf("/api/screens/%d", ps.ID)
+	resObj := models.Screen{}
+	code, err := PutJson(url, ps, &resObj, router)
+	assert.NoError(t, err, "It should update")
+	assert.Equal(t, http.StatusOK, code)
+
+	assert.Equal(t, ps.Src, resObj.Src, "It should have updated")
 }
 
-func (as *ActionSuite) Test_ScreensResource_Destroy() {
-	InitFakeRouterApp(true)
-	_, mc, screenSrc := CreateTestContainerWithContent(as)
-	ps := CreatePreview(screenSrc, mc.ID, as)
+func TestScreensResourceDestroy(t *testing.T) {
+	_, db, router := InitFakeRouterApp(true)
+	_, mc, screenSrc := CreateTestContainerWithContent(t, db)
+	ps := CreatePreview(screenSrc, mc.ID, t, router)
+	assert.Greater(t, ps.ID, int64(0), "It should create an entry in the DB")
 
-	del_res := as.JSON(fmt.Sprintf("/screens/%s", ps.ID.String())).Delete()
-	assert.Equal(t, http.StatusOK, del_res.Code)
+	url := fmt.Sprintf("/api/screens/%d", ps.ID)
+	code, err := DeleteJson(url, router)
+	assert.Equal(t, http.StatusOK, code)
+	assert.NoError(t, err, "It should delete ok")
+
+	check := models.Screen{}
+	res := db.Find(&check, ps.ID)
+	assert.NoError(t, res.Error, "Ensure we did not have an error")
+	assert.Equal(t, check.ID, int64(0))
 }
 
-func (as *ActionSuite) Test_ScreensResource_CannotCreate() {
-	InitFakeRouterApp(false)
+func TestScreensResourceCannotCreate(t *testing.T) {
+	_, _, router := InitFakeRouterApp(false)
 	ps := &models.Screen{
-		Src: "Shouldn't Allow Create",
+		Src: "ThisShouldBail",
 		Idx: 1,
 	}
-	res := as.JSON("/screens/").Post(ps)
-	assert.Equal(t, http.StatusCreated, res.Code)
+
+	resObj := models.Screen{}
+	code, err := PostJson("/api/screens", ps, &resObj, router)
+	fmt.Printf("What the actual fuck %s", resObj)
+	assert.NotEqual(t, http.StatusCreated, code)
+	assert.Error(t, err, "It Should error on post")
 }
-*/
