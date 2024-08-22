@@ -116,7 +116,7 @@ func (ms MemoryStorage) UpdateScreen(s *models.Screen) (*models.Screen, error) {
 		memStorage.ValidScreens[s.ID] = *s
 		return s, nil
 	}
-	return nil, errors.New(fmt.Sprintf("Screen not found with %s", s))
+	return nil, fmt.Errorf("Screen not found with %s", s)
 }
 
 func (ms MemoryStorage) CreateContent(content *models.Content) (*models.Content, error) {
@@ -134,7 +134,7 @@ func (ms MemoryStorage) UpdateContent(content *models.Content) (*models.Content,
 		memStorage.ValidContent[content.ID] = *content
 		return content, nil
 	}
-	return nil, errors.New("Content was not found")
+	return nil, errors.New("content was not found")
 }
 
 func (ms MemoryStorage) CreateContainer(c *models.Container) (*models.Container, error) {
@@ -164,6 +164,9 @@ func (ms MemoryStorage) CreateTask(tr *models.TaskRequest) (*models.TaskRequest,
 }
 
 func (ms MemoryStorage) CreateTag(tag *models.Tag) (*models.Tag, error) {
+	if _, ok := memStorage.ValidTags[tag.ID]; ok {
+		return nil, fmt.Errorf("tag %s already exists", tag)
+	}
 	tag.UpdatedAt = time.Now()
 	memStorage.ValidTags[tag.ID] = *tag
 	return tag, nil

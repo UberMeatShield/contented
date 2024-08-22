@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
@@ -14,6 +15,11 @@ import (
 type ContentsResponse struct {
 	Total   int64           `json:"total"`
 	Results models.Contents `json:"results"`
+}
+
+func (t ContentsResponse) String() string {
+	jt, _ := json.Marshal(t)
+	return string(jt)
 }
 
 // List gets all Contents. This function is mapped to the path

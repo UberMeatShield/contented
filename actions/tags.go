@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"encoding/json"
 	"errors"
 
 	"contented/managers"
@@ -19,6 +20,11 @@ type TagsResource struct {
 type TagResponse struct {
 	Total   int64       `json:"total"`
 	Results models.Tags `json:"results"`
+}
+
+func (t TagResponse) String() string {
+	jt, _ := json.Marshal(t)
+	return string(jt)
 }
 
 // List gets all Tags. This function is mapped to the path
@@ -74,8 +80,7 @@ func TagsResourceCreate(c *gin.Context) {
 		return
 	}
 	man := managers.GetManager(c)
-	cErr := man.CreateTag(tag)
-	if cErr != nil {
+	if cErr := man.CreateTag(tag); cErr != nil {
 		c.AbortWithError(http.StatusUnprocessableEntity, cErr)
 		return
 	}
