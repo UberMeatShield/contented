@@ -222,7 +222,9 @@ func (cm ContentManagerDB) SearchContent(sr ContentQuery) (*models.Contents, int
 	if sr.ContainerID != "" {
 		q = q.Where(`container_id = ?`, sr.ContainerID)
 	}
-	if sr.IncludeHidden {
+
+	log.Printf("What the fuck %s", sr)
+	if !sr.IncludeHidden {
 		q = q.Where(`hidden = ?`, false)
 	}
 	q = q.Order(models.GetContentOrder(sr.Order, sr.Direction))
@@ -586,7 +588,6 @@ func (cm ContentManagerDB) GetTag(tagID string) (*models.Tag, error) {
 }
 
 func (cm ContentManagerDB) GetValidTags(tags *models.Tags) (*models.Tags, error) {
-
 	tx := cm.GetConnection()
 	validTags := models.Tags{}
 	ids := []string{}

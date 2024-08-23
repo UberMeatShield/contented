@@ -1,11 +1,14 @@
 package actions
 
 import (
+	"bytes"
 	"contented/models"
 	"contented/test_common"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"testing"
 
@@ -28,92 +31,91 @@ func CreateResource(src string, containerID *int64, t *testing.T, router *gin.En
 	return resObj
 }
 
-/*
-func (as *ActionSuite) Test_ContentSubQuery_DB() {
-	// Create 2 containers
-	InitFakeRouterApp(true)
-	c1 := &models.Container{
-		Total: 2,
-		Path:  "container/1/contents",
-		Name:  "Trash1",
+func ValidateContentPreview(contentID int64, router *gin.Engine) (int, *httptest.ResponseRecorder, error) {
+	url := fmt.Sprintf("/api/preview/%d", contentID)
+	w := httptest.NewRecorder()
+	userJson, _ := json.Marshal("")
+	req, _ := http.NewRequest("GET", url, bytes.NewReader(userJson))
+	router.ServeHTTP(w, req)
+
+	result := w.Result()
+	if !(result.StatusCode == 200 || result.StatusCode == 201) {
+		log.Printf("Likely error getting data back from the server %s", w.Body)
+		return result.StatusCode, w, fmt.Errorf("%s, %s", url, w.Body)
 	}
-	c2 := &models.Container{
-		Total: 2,
-		Path:  "container/2/contents",
-		Name:  "Trash2",
-	}
-	c3 := &models.Container{
-		Total:  1,
-		Path:   "/container/3/contents",
-		Name:   "Hidden",
-		Hidden: true,
-	}
-	as.DB.Create(c1)
-	as.DB.Create(c2)
-	as.DB.Create(c3)
-	as.NotZero(c1.ID)
-	as.NotZero(c2.ID)
-	as.NotZero(c3.ID)
+	defer req.Body.Close()
+	return result.StatusCode, w, nil
+}
 
-	CreateResource("a", nulls.NewUUID(c1.ID), as)
-	CreateResource("b", nulls.NewUUID(c1.ID), as)
-	CreateResource("c", nulls.NewUUID(c2.ID), as)
-	CreateResource("donut", nulls.NewUUID(c2.ID), as)
-	CreateResource("e", nulls.NewUUID(c2.ID), as)
+func TestContentSubQueryDB(t *testing.T) {
+	_, db, router := InitFakeRouterApp(true)
 
-	// Check that hidden resources stay hidden
-	up := CreateResource("donut_2_search_should_fail", nulls.NewUUID(c3.ID), as)
-	up.Hidden = true
-	upErr := as.DB.Update(&up)
-	assert.NoError(t, upErr, fmt.Sprintf("It should have updated %s", upErr))
+	c1 := CreateContainer("Trash1", t, router)
+	c2 := CreateContainer("Trash2", t, router)
+	c3 := CreateContainer("Trash3", t, router)
+	c3.Hidden = true
+	uCode, uErr := PutJson(fmt.Sprintf("/api/containers/%d", c3.ID), c3, &models.Container{}, router)
+	assert.Equal(t, http.StatusOK, uCode, fmt.Sprintf("Failed to update %s", uErr))
 
-	res1 := as.JSON("/containers/" + c1.ID.String() + "/contents").Get()
-	res2 := as.JSON("/containers/" + c2.ID.String() + "/contents").Get()
+	defer test_common.CleanupContainer(&c1)
+	defer test_common.CleanupContainer(&c2)
+	defer test_common.CleanupContainer(&c3)
 
-	assert.Equal(t, http.StatusOK, res1.Code)
-	assert.Equal(t, http.StatusOK, res2.Code)
-	// Add resources to both
-	// Filter based on container
+	CreateResource("a", &c1.ID, t, router)
+	CreateResource("b", &c1.ID, t, router)
+	CreateResource("c", &c2.ID, t, router)
+	CreateResource("donut", &c2.ID, t, router)
+	CreateResource("e", &c2.ID, t, router)
+
+	// TODO: Update this to work with the memory setup too (no good way to update the Hidden)
+	hiddenDonut := CreateResource("donut_2_search_should_fail", &c3.ID, t, router)
+	hiddenDonut.Hidden = true
+	upRes := db.Save(hiddenDonut)
+	assert.NoError(t, upRes.Error, "We should be able to update the hidden param")
+
 	validate1 := ContentsResponse{}
 	validate2 := ContentsResponse{}
-	json.NewDecoder(res1.Body).Decode(&validate1)
-	json.NewDecoder(res2.Body).Decode(&validate2)
+	code1, err1 := GetJson(fmt.Sprintf("/api/containers/%d/contents", c1.ID), "", &validate1, router)
+	code2, err2 := GetJson(fmt.Sprintf("/api/containers/%d/contents", c2.ID), "", &validate2, router)
+
+	assert.Equal(t, http.StatusOK, code1, fmt.Sprintf("Failed to load container %s", err1))
+	assert.Equal(t, http.StatusOK, code2, fmt.Sprintf("Failed to load container %s", err2))
 
 	assert.Equal(t, 2, len(validate1.Results), "There should be 2 content containers found")
 	assert.Equal(t, 3, len(validate2.Results), "There should be 3 in this one")
 
-	// Add in a test that uses the search interface via the actions via DB
+	// Test that search also respets hidden content
 	params := url.Values{}
 	params.Add("search", "donut")
-	res3 := as.JSON("/api/search/contents?%s", params.Encode()).Get()
-	assert.Equal(t, http.StatusOK, res3.Code)
+
+	searchUrl := fmt.Sprintf("/api/search/contents?%s", params.Encode())
+	fmt.Printf("What did we search %s", searchUrl)
 	validate3 := SearchContentsResult{}
-	json.NewDecoder(res3.Body).Decode(&validate3)
-	assert.Equal(t, 1, len(*validate3.Results), "We have one donut that is not hidden")
+	searchCode, searchErr := GetJson(searchUrl, "", &validate3, router)
+
+	assert.Equal(t, http.StatusOK, searchCode, fmt.Sprintf("Failed to search %s", searchErr))
+	assert.Equal(t, 1, len(*validate3.Results), fmt.Sprintf("We have one donut that is not hidden %s", validate3))
 }
 
-func (as *ActionSuite) Test_ManagerDB_Preview() {
-	models.DB.TruncateAll()
-	test_common.ResetConfig()
-	InitFakeRouterApp(true)
+func TestManagerPreviewDB(t *testing.T) {
+	_, _, router := InitFakeRouterApp(true)
 
-	cnt, content := test_common.GetContentByDirName("dir2")
+	container, contents := test_common.GetContentByDirName("dir2")
+	assert.Equal(t, "dir2", container.Name, "It should have loaded the right item")
+	assert.Equal(t, test_common.EXPECT_CNT_COUNT["dir2"], len(contents), fmt.Sprintf("Dir2 should have 3 items %s", contents))
 
-	assert.Equal(t, "dir2", cnt.Name, "It should have loaded the right item")
-	assert.Equal(t, test_common.EXPECT_CNT_COUNT["dir2"], len(content), fmt.Sprintf("Dir2 should have 3 items %s", content))
+	cnt := CreateContainer(container.Name, t, router)
+	assert.NotZero(t, cnt.ID, "We should have an ID now for the container")
 
-	as.DB.Create(cnt)
-	as.NotZero(cnt.ID, "We should have an ID now for the container")
-	for _, mc := range content {
-		mc.ContainerID = nulls.NewUUID(cnt.ID)
-		err := as.DB.Create(&mc)
-		assert.NoError(t, err, fmt.Sprintf("It should create item %s with err %s", mc.Src, err))
-		as.NotZero(mc.ID, "It should have a content container ID and id")
-		previewRes := as.JSON("/preview/%s", mc.ID).Get()
-		assert.Equal(t, http.StatusOK, previewRes.Code, fmt.Sprintf("Failed to find preview for %s preview (%s)", mc.Src, previewRes.Response.Body))
+	for _, mc := range contents {
+
+		content := CreateResource(mc.Src, &cnt.ID, t, router)
+		assert.NotZero(t, content.ID, fmt.Sprintf("Failed creating should create item %s", mc.Src))
+
+		pCode, _, pErr := ValidateContentPreview(content.ID, router)
+		assert.Equal(t, http.StatusOK, pCode, fmt.Sprintf("Failed to find preview for %s preview (%s)", content.Src, pErr))
 	}
 }
-*/
 
 // Would be better to have these call the same test code after an init to ensure they are the same
 func TestMemoryAPIBasics(t *testing.T) {
