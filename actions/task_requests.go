@@ -98,7 +98,7 @@ func TaskRequestsResourceUpdate(c *gin.Context) {
 
 	// Maybe this would be fine with a custom route an /ID/state on a put
 	taskUp := models.TaskRequest{}
-	if err := c.Bind(&taskUp); err != nil {
+	if err := c.BindJSON(&taskUp); err != nil {
 		msg := fmt.Sprintf("Bad TaskRequest passed %s", taskUp)
 		log.Print(msg)
 		c.AbortWithError(http.StatusBadRequest, errors.New(msg))
