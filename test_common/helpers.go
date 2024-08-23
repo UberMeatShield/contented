@@ -110,10 +110,12 @@ func InitFakeApp(use_db bool) (*utils.DirConfigEntry, *gorm.DB) {
 	cfg.UseDatabase = use_db // Set via .env or USE_DATABASE as an environment var
 	cfg.StaticResourcePath = "./public/build"
 	cfg.StartQueueWorkers = false
+	utils.SetCfg(*cfg)
 
 	// TODO: Assign the context into the manager (force it?)
 	if !cfg.UseDatabase {
 
+		log.Printf("MEMORY")
 		// TODO: This moves into managers.. is there a sane way of handling this?
 		memStorage := utils.InitializeMemory(dir)
 
