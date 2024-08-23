@@ -223,7 +223,6 @@ func (cm ContentManagerDB) SearchContent(sr ContentQuery) (*models.Contents, int
 		q = q.Where(`container_id = ?`, sr.ContainerID)
 	}
 
-	log.Printf("What the fuck %s", sr)
 	if !sr.IncludeHidden {
 		q = q.Where(`hidden = ?`, false)
 	}
