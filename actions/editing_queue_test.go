@@ -344,49 +344,46 @@ func ValidateDuplicateApiCalls(t *testing.T, router *gin.Engine, container *mode
 	assert.Equal(t, http.StatusCreated, checkCode, fmt.Sprintf("Failed to queue dupe content task %s", checkErr))
 }
 
-/*
-func (as *ActionSuite) Test_ContainerEncodingMemory() {
-	cfg := test_common.InitFakeApp(false)
-	utils.SetCfg(*cfg)
+func TestContainerEncodingMemory(t *testing.T) {
+	_, _, router := InitFakeRouterApp(false)
 
-	ctx := test_common.GetContext(as.App)
-	man := managers.GetManager(&ctx)
+	ctx := test_common.GetContext()
+	man := managers.GetManager(ctx)
 
-	ValidateContainerEncoding(as, man)
+	ValidateContainerEncoding(t, router, man)
 }
 
-func (as *ActionSuite) Test_ContainerEncodingDB() {
-	cfg := test_common.InitFakeApp(true)
-	utils.SetCfg(*cfg)
+func TestContainerEncodingDB(t *testing.T) {
+	_, _, router := InitFakeRouterApp(true)
 
-	ctx := test_common.GetContext(as.App)
-	man := managers.GetManager(&ctx)
+	ctx := test_common.GetContext()
+	man := managers.GetManager(ctx)
 
-	cnt, contents := CreateVideoContents(as, "test_encoding", "")
+	cnt, contents := CreateVideoContents("test_encoding", "", t, router)
 	assert.NotNil(t, cnt)
 	assert.NotNil(t, contents)
 
-	ValidateContainerEncoding(as, man)
+	ValidateContainerEncoding(t, router, man)
 }
 
-func ValidateContainerEncoding(as *ActionSuite, man managers.ContentManager) {
+func ValidateContainerEncoding(t *testing.T, router *gin.Engine, man managers.ContentManager) {
 	_, total, tErr := man.ListTasks(managers.TaskQuery{})
 	assert.NoError(t, tErr)
-	assert.Equal(t, 0, total, fmt.Sprintf("There should not be any tasks %d", total))
+	assert.Equal(t, int64(0), total, fmt.Sprintf("There should not be any tasks %d", total))
 
 	query := managers.ContainerQuery{Name: "test_encoding", PerPage: 1}
 	containers, total, err := man.SearchContainers(query)
 	assert.NoError(t, err)
-	assert.Equal(t, 1, total, "There should only be one container matching")
+	assert.Equal(t, int64(1), total, "There should only be one container matching")
 	assert.Equal(t, 1, len(*containers), "There should be one container")
 
 	// Create the directory with the duplicate test
 	cnt := (*containers)[0]
 
-	url := fmt.Sprintf("/editing_container_queue/%s/encoding", cnt.ID.String())
-	res := as.JSON(url).Post(cnt)
+	url := fmt.Sprintf("/api/editing_container_queue/%d/encoding", cnt.ID)
+	code, err := PostJson(url, cnt, &models.TaskRequest{}, router)
 
-	assert.Equal(t, http.StatusCreated, res.Code)
+	assert.Equal(t, http.StatusCreated, code, fmt.Sprintf("Failed to queue encoding %s", err))
 
 	// There are two video files so we want to try and test both
 	tasks, _, tErr := man.ListTasks(managers.TaskQuery{})
@@ -399,31 +396,29 @@ func ValidateContainerEncoding(as *ActionSuite, man managers.ContentManager) {
 	}
 }
 
-func (as *ActionSuite) Test_ContainerScreensMemory() {
-	cfg := test_common.InitFakeApp(false)
-	utils.SetCfg(*cfg)
+func TestContainerScreensMemory(t *testing.T) {
+	_, _, router := InitFakeRouterApp(true)
 
-	ctx := test_common.GetContext(as.App)
-	man := managers.GetManager(&ctx)
+	ctx := test_common.GetContext()
+	man := managers.GetManager(ctx)
 
-	ValidateContainerEncoding(as, man)
+	ValidateContainerEncoding(t, router, man)
 }
 
-func (as *ActionSuite) Test_ContainerScreensDB() {
-	cfg := test_common.InitFakeApp(true)
-	utils.SetCfg(*cfg)
+func TestContainerScreensDB(t *testing.T) {
+	_, _, router := InitFakeRouterApp(true)
 
-	ctx := test_common.GetContext(as.App)
-	man := managers.GetManager(&ctx)
+	ctx := test_common.GetContext()
+	man := managers.GetManager(ctx)
 
-	cnt, contents := CreateVideoContents(as, "test_encoding", "")
+	cnt, contents := CreateVideoContents("test_encoding", "", t, router)
 	assert.NotNil(t, cnt)
 	assert.NotNil(t, contents)
 
-	ValidateContainerEncoding(as, man)
+	ValidateContainerEncoding(t, router, man)
 }
 
-func ValidateContainerScreens(as *ActionSuite, man managers.ContentManager) {
+func ValidateContainerScreens(t *testing.T, router *gin.Engine, man managers.ContentManager) {
 	_, total, tErr := man.ListTasks(managers.TaskQuery{})
 	assert.NoError(t, tErr)
 	assert.Equal(t, 0, total, fmt.Sprintf("There should not be any tasks %d", total))
@@ -437,10 +432,10 @@ func ValidateContainerScreens(as *ActionSuite, man managers.ContentManager) {
 	// Create the directory with the duplicate test
 	cnt := (*containers)[0]
 
-	url := fmt.Sprintf("/editing_container_queue/%s/screens", cnt.ID.String())
-	res := as.JSON(url).Post(cnt)
+	url := fmt.Sprintf("/api/editing_container_queue/%d/screens", cnt.ID)
+	code, err := PostJson(url, cnt, &models.TaskRequest{}, router)
 
-	assert.Equal(t, http.StatusCreated, res.Code)
+	assert.Equal(t, http.StatusCreated, code, fmt.Sprintf("Failed to create task %s", err))
 
 	// There are two video files so we want to try and test both
 	tasks, _, tErr := man.ListTasks(managers.TaskQuery{})
@@ -451,5 +446,3 @@ func ValidateContainerScreens(as *ActionSuite, man managers.ContentManager) {
 		assert.Equal(t, task.Operation, models.TaskOperation.SCREENS)
 	}
 }
-
-*/
