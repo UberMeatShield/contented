@@ -39,6 +39,8 @@ func InitGorm(reset bool) *gorm.DB {
 		if db.Error == nil {
 			log.Printf("Conected to the db")
 			GormDB = db
+		} else {
+			log.Printf("Error in the DB Connection %s", db.Error)
 		}
 	}
 	return GormDB

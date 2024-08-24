@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func CreateContainer(name string, t *testing.T, router *gin.Engine) models.Container {
+func CreateNamedContainer(name string, t *testing.T, router *gin.Engine) models.Container {
 	cfg := utils.GetCfg()
 	c := &models.Container{
 		Total: 1,
@@ -32,17 +32,17 @@ func CreateContainer(name string, t *testing.T, router *gin.Engine) models.Conta
 		panic(err)
 	}
 
+	return CreateContainer(c, t, router)
+}
+
+func CreateContainer(c *models.Container, t *testing.T, router *gin.Engine) models.Container {
 	resObj := &models.Container{}
 	code, err := PostJson("/api/containers", c, &resObj, router)
 
 	assert.NoError(t, err, "The Post was not a success")
 	assert.Greater(t, resObj.ID, int64(0), "A container ID should exist")
-	assert.Equal(t, resObj.Name, name, fmt.Sprintf("Did we get a valid object back %s", resObj))
+	assert.Equal(t, resObj.Name, c.Name, fmt.Sprintf("Did we get a valid object back %s", resObj))
 	assert.Equal(t, http.StatusCreated, code, "The http post call was successful")
-
-	if resObj.Name != name {
-		t.Fatalf("The container did not get created correctly %s", resObj)
-	}
 	return *resObj
 }
 
@@ -64,7 +64,7 @@ func TestContainersResourceShow(t *testing.T) {
 	_, _, router := InitFakeRouterApp(false)
 	name := "ShowTest"
 
-	cnt := CreateContainer(name, t, router)
+	cnt := CreateNamedContainer(name, t, router)
 	defer test_common.CleanupContainer(&cnt)
 	assert.NotZero(t, cnt.ID)
 
@@ -105,7 +105,7 @@ func TestContainersResourceCreate(t *testing.T) {
 
 func TestContainersResourceUpdate(t *testing.T) {
 	_, _, router := InitFakeRouterApp(false)
-	cnt := CreateContainer("Initial", t, router)
+	cnt := CreateNamedContainer("Initial", t, router)
 	defer test_common.CleanupContainer(&cnt)
 	assert.NotZero(t, cnt.ID)
 	assert.Equal(t, cnt.Name, "Initial")
@@ -122,7 +122,7 @@ func TestContainersResourceUpdate(t *testing.T) {
 
 func TestContainersResourceDestroy(t *testing.T) {
 	_, _, router := InitFakeRouterApp(false)
-	cnt := CreateContainer("Nuke", t, router)
+	cnt := CreateNamedContainer("Nuke", t, router)
 	defer test_common.CleanupContainer(&cnt)
 	assert.Equal(t, cnt.Name, "Nuke")
 	assert.NotZero(t, cnt.ID)

@@ -16,13 +16,6 @@ import (
 	"github.com/gobuffalo/buffalo"
 )
 
-// Following naming logic is implemented in Buffalo:
-// Model: Singular (TaskRequest)
-// DB Table: Plural (task_request)
-// Resource: Plural (TaskRequest)
-// Path: Plural (/task_request)
-// View Template Folder: Plural (/templates/task_request/)
-
 // TaskRequestsResource is the resource for the TaskRequest model
 type TaskRequestsResource struct {
 	buffalo.Resource

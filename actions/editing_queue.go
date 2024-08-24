@@ -41,19 +41,9 @@ func HandleTask(args worker.Args, taskFunc HandleTaskTypeFunc) error {
 	// Note this is extra complicated by the fact it SHOULD be able to run with NO connections
 	// or DB sessions made.
 	if cfg.UseDatabase {
-
-		var conn *gorm.DB
 		getConnection = func() *gorm.DB {
-			if conn == nil {
-				conn = models.InitGorm(false)
-				if conn == nil || conn.Error == nil {
-					log.Fatalf("Failed to get a db connection %s", conn.Error)
-					return nil
-				}
-			}
-			return conn
+			return models.InitGorm(false)
 		}
-
 		man := managers.GetAppManager(getConnection)
 		return taskFunc(man, taskId)
 	}
@@ -333,10 +323,12 @@ func DupesHandler(c *gin.Context) {
 // Should deny quickly if the media content type is incorrect for the action
 func ContentTaskScreensHandler(c *gin.Context) {
 	contentID, bad_id := strconv.ParseInt(c.Param("content_id"), 10, 64)
-	if bad_id != nil {
+	if bad_id != nil || contentID <= 0 {
 		c.AbortWithError(400, bad_id)
 	}
-	startTimeSeconds, numberOfScreens, err := ValidateScreensParams(c.Request.URL.Query())
+
+	params := managers.GinParamsToUrlValues(c.Params, c.Request.URL.Query())
+	startTimeSeconds, numberOfScreens, err := ValidateScreensParams(*params)
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
@@ -381,7 +373,8 @@ func ContainerScreensHandler(c *gin.Context) {
 		return
 	}
 	cfg := utils.GetCfg()
-	startTimeSeconds, numberOfScreens, err := ValidateScreensParams(c.Request.URL.Query())
+	params := managers.GinParamsToUrlValues(c.Params, c.Request.URL.Query())
+	startTimeSeconds, numberOfScreens, err := ValidateScreensParams(*params)
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return

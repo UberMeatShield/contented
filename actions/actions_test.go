@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -194,22 +195,18 @@ func TestContentDirDownload(t *testing.T) {
 	expectContent := "application/json; charset=utf-8"
 	assert.Equal(t, expectContent, w.Header().Get("Content-Type"), fmt.Sprintf("This should be json %s", w.Body))
 
-	log.Printf("What the shit %s", w.Body)
-
 	checkNoFile := models.Content{}
 	json.NewDecoder(w.Body).Decode(&checkNoFile)
 	assert.Equal(t, content.Description, checkNoFile.Description)
 }
 
-/*
 // Test if we can get the actual file using just a file ID
-func (as *ActionSuite) Test_FindAndLoadFile() {
-	cfg := test_common.InitFakeApp(false)
-
+func TestFindAndLoadFile(t *testing.T) {
+	cfg, _, _ := InitFakeRouterApp(false)
 	assert.Equal(t, true, cfg.Initialized)
 
-	ctx := test_common.GetContext(as.App)
-	man := managers.GetManager(&ctx)
+	ctx := test_common.GetContext()
+	man := managers.GetManager(ctx)
 	mcs, _, err := man.ListContent(managers.ContentQuery{})
 	assert.NoError(t, err)
 
@@ -229,63 +226,36 @@ func (as *ActionSuite) Test_FindAndLoadFile() {
 }
 
 // This checks that a preview loads when defined and otherwise falls back to the MC itself
-func (as *ActionSuite) Test_PreviewFile() {
-	test_common.InitFakeApp(false)
-	ctx := test_common.GetContext(as.App)
-	man := managers.GetManager(&ctx)
+func TestPreviewFileMemory(t *testing.T) {
+	_, _, router := InitFakeRouterApp(false)
+	ctx := test_common.GetContext()
+	man := managers.GetManager(ctx)
 	mcs, _, err := man.ListContent(managers.ContentQuery{})
 	assert.NoError(t, err)
 
 	for _, mc := range *mcs {
-		res := as.HTML("/preview/" + mc.ID.String()).Get()
-		assert.Equal(t, http.StatusOK, res.Code)
+		url := fmt.Sprintf("/api/preview/%d", +mc.ID)
+		code, w, err := MakeHttpRequest(url, router, "GET")
+		assert.Equal(t, http.StatusOK, code, fmt.Sprintf("Failed to preview %s", err))
 
-		header := res.Header()
+		header := w.Header()
 		assert.NoError(t, test_common.IsValidContentType(header.Get("Content-Type")))
 	}
 }
 
-func (as *ActionSuite) Test_FullFile() {
-	test_common.InitFakeApp(false)
-	ctx := test_common.GetContext(as.App)
-	man := managers.GetManager(&ctx)
-	mcs, _, err := man.ListContent(managers.ContentQuery{})
-	assert.NoError(t, err)
-
-	for _, mc := range *mcs {
-		if mc.Hidden == false {
-			res := as.HTML("/view/" + mc.ID.String()).Get()
-			assert.Equal(t, http.StatusOK, res.Code)
-
-			header := res.Header()
-			assert.NoError(t, test_common.IsValidContentType(header.Get("Content-Type")))
-		}
-	}
-}
-
 // This checks if previews are actually used if defined
-func (as *ActionSuite) Test_PreviewWorking() {
-	test_common.InitFakeApp(false)
-	ctx := test_common.GetContext(as.App)
-	man := managers.GetManager(&ctx)
+func TestPreviewApiLoadsNormalContent(t *testing.T) {
+	_, _, router := InitFakeRouterApp(false)
+	ctx := test_common.GetContext()
+	man := managers.GetManager(ctx)
 	mcs, _, err := man.ListContent(managers.ContentQuery{})
 	assert.NoError(t, err)
 
 	for _, mc := range *mcs {
 		if mc.Preview != "" {
-			res := as.HTML("/preview/" + mc.ID.String()).Get()
-			assert.Equal(t, http.StatusOK, res.Code)
-			fmt.Println("Not modified")
+			url := fmt.Sprintf("/api/preview/%d", mc.ID)
+			code, _, err := MakeHttpRequest(url, router, "GET")
+			assert.Equal(t, http.StatusOK, code, fmt.Sprintf("Failed preview %s", err))
 		}
 	}
 }
-
-func Test_ManagerSuite(t *testing.T) {
-	action := suite.NewAction(App(true))
-	as := &ActionSuite{
-		Action: action,
-	}
-	suite.Run(t, as)
-}
-
-*/
