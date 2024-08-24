@@ -4,6 +4,8 @@ import (
 	"contented/managers"
 	"contented/models"
 	"contented/test_common"
+	"contented/utils"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -171,76 +173,73 @@ func ValidateVideoEncodingQueue(t *testing.T, router *gin.Engine) {
 	}
 }
 
-/*
-func (as *ActionSuite) Test_DBWebpHandler() {
-	models.DB.TruncateAll()
-	cfg := test_common.InitFakeApp(true)    // Probably should do the truncate in the InitFakeApp?
+func TestWebpHandlerDB(t *testing.T) {
+	cfg, _, router := InitFakeRouterApp(true)
 	test_common.Get_VideoAndSetupPaths(cfg) // Resets the screens
+
 	cfg.ScreensOverSize = 1
 	cfg.PreviewVideoType = "screens"
 	utils.SetCfg(*cfg)
-	_, content := CreateVideoContainer(as)
-	ValidateWebpCode(as, content)
+	_, content := CreateVideoContainer(t, router)
+	ValidateWebpCode(t, router, content)
 	// Create some screens and then encode it?
 }
 
-func (as *ActionSuite) Test_MemoryWebpHandler() {
-	cfg := test_common.InitFakeApp(false)
+func TestWebpHandlerMemory(t *testing.T) {
+	cfg, _, router := InitFakeRouterApp(false)
 	test_common.Get_VideoAndSetupPaths(cfg) // Resets the screens
 
 	cfg.ScreensOverSize = 1
 	cfg.PreviewVideoType = "screens"
 	utils.SetCfg(*cfg)
-	_, content := CreateVideoContainer(as)
-	ValidateWebpCode(as, content)
+	_, content := CreateVideoContainer(t, router)
+	ValidateWebpCode(t, router, content)
 }
 
-func ValidateWebpCode(as *ActionSuite, content *models.Content) {
+func ValidateWebpCode(t *testing.T, router *gin.Engine, content *models.Content) {
 	assert.Equal(t, content.Preview, "", "It should not have a preview already")
-	ctx := test_common.GetContext(as.App)
-	man := managers.GetManager(&ctx)
+	ctx := test_common.GetContext()
+	man := managers.GetManager(ctx)
 	_, screenErr, _ := managers.CreateScreensForContent(man, content.ID, 10, 1)
 	assert.NoError(t, screenErr)
 
-	url := fmt.Sprintf("/editing_queue/%s/webp", content.ID.String())
-	res := as.JSON(url).Post(&content)
-	assert.Equal(t, http.StatusCreated, res.Code, fmt.Sprintf("Failed to queue encoding task %s", res.Body.String()))
-
+	url := fmt.Sprintf("/api/editing_queue/%d/webp", content.ID)
 	tr := models.TaskRequest{}
-	json.NewDecoder(res.Body).Decode(&tr)
-	assert.NotZero(t, tr.ID, fmt.Sprintf("WebP did not create a Task %s", res.Body.String()))
+	code, err := PostJson(url, content, &tr, router)
+	assert.Equal(t, http.StatusCreated, code, fmt.Sprintf("Failed to queue encoding task %s", err))
+
+	assert.NotZero(t, tr.ID, fmt.Sprintf("WebP did not create a Task %s", tr))
 	assert.Equal(t, models.TaskStatus.NEW, tr.Status, fmt.Sprintf("Task invalid %s", tr))
 	assert.Equal(t, tr.Operation, models.TaskOperation.WEBP)
 
-	args := worker.Args{"id": tr.ID.String()}
-	err := WebpFromScreensWrapper(args)
-	assert.NoError(t, err, fmt.Sprintf("Failed to create webp for task %s", err))
+	args := worker.Args{"id": strconv.FormatInt(tr.ID, 10)}
+	wErr := WebpFromScreensWrapper(args)
+	assert.NoError(t, wErr, fmt.Sprintf("Failed to create webp for task %s", wErr))
 
-	check := as.JSON(fmt.Sprintf("/contents/%s", content.ID.String())).Get()
-	assert.Equal(t, http.StatusOK, check.Code, fmt.Sprintf("Error loading %s", check.Body.String()))
-	// Get the content, check for a preview
 	checkContent := models.Content{}
-	json.NewDecoder(check.Body).Decode(&checkContent)
+	cCode, cErr := GetJson(fmt.Sprintf("/api/contents/%d", content.ID), "", &checkContent, router)
+	assert.Equal(t, http.StatusOK, cCode, fmt.Sprintf("Error loading %s", cErr))
+	// Get the content, check for a preview
 	assert.Equal(t, "/container_previews/donut_[special( gunk.mp4.webp", checkContent.Preview)
 }
 
-func (as *ActionSuite) Test_DBTagHandler() {
-	cfg := test_common.InitFakeApp(true)
+func TestTagHandlerDB(t *testing.T) {
+	cfg, _, router := InitFakeRouterApp(true)
 	utils.SetCfg(*cfg)
-	_, content := CreateVideoContainer(as)
-	ValidateTaggingCode(as, content)
+	_, content := CreateVideoContainer(t, router)
+	ValidateTaggingCode(t, router, content)
 }
 
-func (as *ActionSuite) Test_MemoryTagHandler() {
-	cfg := test_common.InitFakeApp(false)
+func TestTagHandlerMemory(t *testing.T) {
+	cfg, _, router := InitFakeRouterApp(false)
 	utils.SetCfg(*cfg)
-	_, content := CreateVideoContainer(as)
-	ValidateTaggingCode(as, content)
+	_, content := CreateVideoContainer(t, router)
+	ValidateTaggingCode(t, router, content)
 }
 
-func ValidateTaggingCode(as *ActionSuite, content *models.Content) {
-	ctx := test_common.GetContext(as.App)
-	man := managers.GetManager(&ctx)
+func ValidateTaggingCode(t *testing.T, router *gin.Engine, content *models.Content) {
+	ctx := test_common.GetContext()
+	man := managers.GetManager(ctx)
 
 	tag1 := models.Tag{ID: "donut"}
 	tag2 := models.Tag{ID: "mp4"}
@@ -249,7 +248,7 @@ func ValidateTaggingCode(as *ActionSuite, content *models.Content) {
 	man.CreateTag(&tag2)
 	man.CreateTag(&badTag)
 
-	tr := models.TaskRequest{Operation: models.TaskOperation.TAGGING, ContentID: nulls.NewUUID(content.ID)}
+	tr := models.TaskRequest{Operation: models.TaskOperation.TAGGING, ContentID: &content.ID}
 	task, err := man.CreateTask(&tr)
 	assert.NoError(t, err, "Failed to create Task to do tagging")
 	assert.NotZero(t, task.ID)
@@ -266,49 +265,49 @@ func ValidateTaggingCode(as *ActionSuite, content *models.Content) {
 	assert.NoError(t, taskErr, "We should still have a task")
 	assert.Equal(t, models.TaskStatus.DONE, taskCheck.Status)
 
-	url := fmt.Sprintf("/editing_queue/%s/tagging", content.ID.String())
-	res := as.JSON(url).Post(&content)
-	assert.Equal(t, http.StatusCreated, res.Code, fmt.Sprintf("Failed to queue tagging task %s", res.Body.String()))
+	url := fmt.Sprintf("/api/editing_queue/%d/tagging", content.ID)
+	checkTask := models.TaskRequest{}
+	checkCode, checkErr := PostJson(url, &content, &checkTask, router)
+	assert.Equal(t, http.StatusCreated, checkCode, fmt.Sprintf("Failed to queue tagging task %s", checkErr))
+
 }
 
-func (as *ActionSuite) Test_DuplicateHandlerDB() {
-	cfg := test_common.InitFakeApp(true)
-	utils.SetCfg(*cfg)
+func TestDuplicateHandlerDB(t *testing.T) {
+	_, _, router := InitFakeRouterApp(true)
 
 	// Create the directory with the duplicate test
-	cnt, contents := CreateVideoContents(as, "test_encoding", "")
+	cnt, contents := CreateVideoContents("test_encoding", "", t, router)
 	assert.NotNil(t, cnt)
 	assert.NotNil(t, contents)
 
-	ValidateDuplicatesTask(as, cnt)
-	ValidateDuplicateApiCalls(as, cnt)
+	ValidateDuplicatesTask(t, router, cnt)
+	ValidateDuplicateApiCalls(t, router, cnt)
 }
 
-func (as *ActionSuite) Test_DuplicateHandlerMemory() {
-	cfg := test_common.InitFakeApp(false)
-	utils.SetCfg(*cfg)
+func TestDuplicateHandlerMemory(t *testing.T) {
+	_, _, router := InitFakeRouterApp(false)
 
-	ctx := test_common.GetContext(as.App)
-	man := managers.GetManager(&ctx)
+	ctx := test_common.GetContext()
+	man := managers.GetManager(ctx)
 
 	query := managers.ContainerQuery{Name: "test_encoding", PerPage: 1}
 	containers, total, err := man.SearchContainers(query)
 	assert.NoError(t, err)
-	assert.Equal(t, 1, total, "There should only be one container matching")
+	assert.Equal(t, int64(1), total, "There should only be one container matching")
 	assert.Equal(t, 1, len(*containers), "There should be one container")
 
 	// Create the directory with the duplicate test
 	cnt := (*containers)[0]
 	assert.NotNil(t, cnt)
-	ValidateDuplicatesTask(as, &cnt)
-	ValidateDuplicateApiCalls(as, &cnt)
+	ValidateDuplicatesTask(t, router, &cnt)
+	ValidateDuplicateApiCalls(t, router, &cnt)
 }
 
-func ValidateDuplicatesTask(as *ActionSuite, container *models.Container) {
-	ctx := test_common.GetContext(as.App)
-	man := managers.GetManager(&ctx)
+func ValidateDuplicatesTask(t *testing.T, router *gin.Engine, container *models.Container) {
+	ctx := test_common.GetContext()
+	man := managers.GetManager(ctx)
 
-	tr := models.TaskRequest{Operation: models.TaskOperation.DUPES, ContainerID: nulls.NewUUID(container.ID)}
+	tr := models.TaskRequest{Operation: models.TaskOperation.DUPES, ContainerID: &container.ID}
 	task, err := man.CreateTask(&tr)
 	assert.NoError(t, err, "It should be able to create the duplicates task")
 
@@ -318,7 +317,7 @@ func ValidateDuplicatesTask(as *ActionSuite, container *models.Container) {
 	taskCheck, errCheck := man.GetTask(task.ID)
 	assert.NoError(t, errCheck)
 	assert.Equal(t, taskCheck.Status, models.TaskStatus.DONE)
-	as.NotEqual(taskCheck.Message, "")
+	assert.NotEqual(t, taskCheck.Message, "")
 
 	dupes := managers.DuplicateContents{}
 	json.Unmarshal([]byte(taskCheck.Message), &dupes)
@@ -326,25 +325,26 @@ func ValidateDuplicatesTask(as *ActionSuite, container *models.Container) {
 	assert.Equal(t, dupes[0].DuplicateSrc, "SampleVideo_1280x720_1mb.mp4")
 }
 
-func ValidateDuplicateApiCalls(as *ActionSuite, container *models.Container) {
-	ctx := test_common.GetContext(as.App)
-	man := managers.GetManager(&ctx)
+func ValidateDuplicateApiCalls(t *testing.T, router *gin.Engine, container *models.Container) {
+	ctx := test_common.GetContext()
+	man := managers.GetManager(ctx)
 
-	url := fmt.Sprintf("/editing_container_queue/%s/duplicates", container.ID.String())
-	res := as.JSON(url).Post(container)
-	assert.Equal(t, http.StatusCreated, res.Code, fmt.Sprintf("Failed to queue dupe container task %s", res.Body.String()))
+	url := fmt.Sprintf("/api/editing_container_queue/%d/duplicates", container.ID)
+	code, err := PostJson(url, container, "", router)
+	assert.Equal(t, http.StatusCreated, code, fmt.Sprintf("Failed to queue dupe container task %s", err))
 
-	cq := managers.ContentQuery{Text: "SampleVideo_1280x720_1mb_h265.mp4"}
+	cq := managers.ContentQuery{Search: "SampleVideo_1280x720_1mb_h265.mp4"}
 	contents, total, contentErr := man.SearchContent(cq)
-	assert.Equal(t, total, 1, "It should have found the content")
+	assert.Equal(t, int64(1), total, fmt.Sprintf("It should have found the content %s", contents))
 	assert.NoError(t, contentErr)
 
 	mc := (*contents)[0]
-	urlContent := fmt.Sprintf("/editing_queue/%s/duplicates", mc.ID.String())
-	resContent := as.JSON(urlContent).Post(mc)
-	assert.Equal(t, http.StatusCreated, resContent.Code, fmt.Sprintf("Failed to queue dupe content task %s", resContent.Body.String()))
+	urlContent := fmt.Sprintf("/api/editing_queue/%d/duplicates", mc.ID)
+	checkCode, checkErr := PostJson(urlContent, mc, models.TaskRequest{}, router)
+	assert.Equal(t, http.StatusCreated, checkCode, fmt.Sprintf("Failed to queue dupe content task %s", checkErr))
 }
 
+/*
 func (as *ActionSuite) Test_ContainerEncodingMemory() {
 	cfg := test_common.InitFakeApp(false)
 	utils.SetCfg(*cfg)

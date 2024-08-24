@@ -262,7 +262,7 @@ func DupesHandler(c *gin.Context) {
 	// Get content search from params
 	man := managers.GetManager(c)
 
-	params := c.Request.URL.Query()
+	params := managers.GinParamsToUrlValues(c.Params, c.Request.URL.Query())
 	cId := managers.StringDefault(params.Get("container_id"), "")
 	id := managers.StringDefault(params.Get("content_id"), "")
 
