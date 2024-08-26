@@ -494,25 +494,23 @@ func (cm ContentManagerDB) DestroyContent(id int64) (*models.Content, error) {
 	return content, nil
 }
 
-func (cm ContentManagerDB) DestroyContainer(id string) (*models.Container, error) {
+func (cm ContentManagerDB) DestroyContainer(id int64) (*models.Container, error) {
 	tx := cm.GetConnection()
 	cnt := &models.Container{}
-	log.Printf("What the fuck Lookup %s", id)
 	if res := tx.Find(cnt, id); res.Error != nil {
-		return nil, fmt.Errorf("could not find container with id %s", id)
+		return nil, fmt.Errorf("could not find container with id %d", id)
 	}
 	if res := tx.Delete(cnt); res.Error != nil {
 		return cnt, res.Error
 	}
-	log.Printf("What the fuck %s", cnt)
 	return cnt, nil
 }
 
-func (cm ContentManagerDB) DestroyScreen(id string) (*models.Screen, error) {
+func (cm ContentManagerDB) DestroyScreen(id int64) (*models.Screen, error) {
 	tx := cm.GetConnection()
 	screen := &models.Screen{}
 	if res := tx.Find(screen, id); res.Error != nil {
-		return nil, fmt.Errorf("could not find screen with id %s", id)
+		return nil, fmt.Errorf("could not find screen with id %d", id)
 	}
 	if res := tx.Delete(screen); res.Error != nil {
 		return screen, res.Error

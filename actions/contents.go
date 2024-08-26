@@ -145,11 +145,10 @@ func ContentsResourceDestroy(c *gin.Context) {
 	}
 	// TODO: Manager should ABSOLUTELY be the thing doing updates etc.
 	// Allocate an empty Content
-	contentContainer := &models.Content{}
-
 	id, argErr := strconv.ParseInt(c.Param("content_id"), 10, 64)
 	if argErr != nil {
 		c.AbortWithError(http.StatusBadRequest, argErr)
+		return
 	}
 	content, err := man.DestroyContent(id)
 	if err != nil {
@@ -161,5 +160,5 @@ func ContentsResourceDestroy(c *gin.Context) {
 			return
 		}
 	}
-	c.JSON(http.StatusOK, contentContainer)
+	c.JSON(http.StatusOK, content)
 }

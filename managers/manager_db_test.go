@@ -13,7 +13,7 @@ import (
 )
 
 func Test_ReadOnly_Mode(t *testing.T) {
-	cfg := test_common.InitFakeApp(true)
+	cfg, _ := test_common.InitFakeApp(true)
 	man := GetManagerTestSuite(cfg)
 	assert.Equal(t, man.CanEdit(), true, "It should be able to edit")
 
@@ -25,7 +25,7 @@ func Test_ReadOnly_Mode(t *testing.T) {
 // A basic DB search (ilike matching)
 func TestDbManagerSearch(t *testing.T) {
 	models.ResetDB(models.InitGorm(false))
-	cfg := test_common.InitFakeApp(true)
+	cfg, _ := test_common.InitFakeApp(true)
 	man := GetManagerTestSuite(cfg)
 	assert.Equal(t, man.CanEdit(), true, "It should be a DB manager")
 
@@ -81,8 +81,7 @@ func TestDbManagerSearch(t *testing.T) {
 func TestDbManagerMultiSearch(t *testing.T) {
 	// Test that a search restricting containerID works
 	// Test that search restricting container and text works
-	models.ResetDB(models.InitGorm(false))
-	cfg := test_common.InitFakeApp(true)
+	cfg, _ := test_common.InitFakeApp(true)
 
 	man := GetManagerTestSuite(cfg)
 	assert.Equal(t, man.CanEdit(), true)
@@ -113,8 +112,7 @@ func TestDbManagerMultiSearch(t *testing.T) {
 }
 
 func TestManagerDBBasics(t *testing.T) {
-	db := models.ResetDB(models.InitGorm(false))
-	cfg := test_common.InitFakeApp(true)
+	cfg, db := test_common.InitFakeApp(true)
 
 	cnt, content := test_common.GetContentByDirName("dir1")
 	assert.Equal(t, "dir1", cnt.Name, "It should be the right dir")
@@ -141,8 +139,7 @@ func TestManagerDBBasics(t *testing.T) {
 }
 
 func TestManagerDBTags(t *testing.T) {
-	models.ResetDB(models.InitGorm(false))
-	cfg := test_common.InitFakeApp(true)
+	cfg, _ := test_common.InitFakeApp(true)
 	man := GetManagerTestSuite(cfg)
 
 	assert.NoError(t, man.CreateTag(&models.Tag{ID: "A"}), "couldn't create tag A")
@@ -154,8 +151,7 @@ func TestManagerDBTags(t *testing.T) {
 }
 
 func TestManagerDBTagsAssignment(t *testing.T) {
-	db := models.ResetDB(models.InitGorm(false))
-	cfg := test_common.InitFakeApp(true)
+	cfg, db := test_common.InitFakeApp(true)
 	man := GetManagerTestSuite(cfg)
 
 	// TODO: Break up between DB and memory (check that it can ignore tags maybe)
@@ -187,8 +183,7 @@ func TestManagerDBTagsAssignment(t *testing.T) {
 }
 
 func TestManagerTagsDBCRUD(t *testing.T) {
-	models.ResetDB(models.InitGorm(false))
-	cfg := test_common.InitFakeApp(true)
+	cfg, _ := test_common.InitFakeApp(true)
 	man := GetManagerTestSuite(cfg)
 	tag := models.Tag{ID: "A"}
 	assert.NoError(t, man.CreateTag(&tag), "couldn't create tag A")
@@ -208,8 +203,7 @@ func TestManagerTagsDBCRUD(t *testing.T) {
 }
 
 func TestDbManagerAssociateTags(t *testing.T) {
-	models.ResetDB(models.InitGorm(false))
-	cfg := test_common.InitFakeApp(true)
+	cfg, _ := test_common.InitFakeApp(true)
 	man := GetManagerTestSuite(cfg)
 
 	// The Eager code just doesn't work in Buffalo?
@@ -255,15 +249,14 @@ func TestDbManagerAssociateTags(t *testing.T) {
 // TODO: Remove copy pasta and make it almost identical.
 func TestDbManagerTagSearch(t *testing.T) {
 	models.ResetDB(models.InitGorm(false))
-	cfg := test_common.InitFakeApp(true)
+	cfg, _ := test_common.InitFakeApp(true)
 
 	man := GetManagerTestSuite(cfg)
 	ManagersTagSearchValidation(t, man)
 }
 
 func TestManagerDBPreviews(t *testing.T) {
-	models.ResetDB(models.InitGorm(false))
-	cfg := test_common.InitFakeApp(true)
+	cfg, _ := test_common.InitFakeApp(true)
 	man := GetManagerTestSuite(cfg)
 
 	mc1 := models.Content{Src: "A", Preview: "p", ContentType: "video"}
@@ -302,8 +295,7 @@ func TestManagerDBPreviews(t *testing.T) {
 }
 
 func TestManagerDBSearchScreens(t *testing.T) {
-	db := models.ResetDB(models.InitGorm(false))
-	cfg := test_common.InitFakeApp(true)
+	cfg, db := test_common.InitFakeApp(true)
 
 	man := ContentManagerDB{cfg: cfg}
 	man.GetConnection = func() *gorm.DB {

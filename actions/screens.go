@@ -138,6 +138,10 @@ func ScreensResourceUpdate(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, err)
 		return
 	}
+	if upErr := man.UpdateScreen(screen); upErr != nil {
+		c.JSON(http.StatusInternalServerError, upErr)
+		return
+	}
 	checkScreen, _ := man.GetScreen(id)
 	c.JSON(http.StatusOK, checkScreen)
 }
@@ -149,10 +153,17 @@ func ScreensResourceDestroy(c *gin.Context) {
 	_, _, err := managers.ManagerCanCUD(c)
 	if err != nil {
 		c.AbortWithError(http.StatusForbidden, err)
+		return
+	}
+
+	screenId, sErr := strconv.ParseInt(c.Param("screen_id"), 10, 64)
+	if sErr != nil {
+		c.AbortWithError(http.StatusBadRequest, sErr)
+		return
 	}
 
 	man := managers.GetManager(c)
-	screen, dErr := man.DestroyScreen(c.Param("screen_id"))
+	screen, dErr := man.DestroyScreen(screenId)
 	if dErr != nil {
 		c.JSON(http.StatusBadRequest, dErr)
 		return

@@ -397,7 +397,7 @@ func ValidateContainerEncoding(t *testing.T, router *gin.Engine, man managers.Co
 }
 
 func TestContainerScreensMemory(t *testing.T) {
-	_, _, router := InitFakeRouterApp(true)
+	_, _, router := InitFakeRouterApp(false)
 
 	ctx := test_common.GetContext()
 	man := managers.GetManager(ctx)

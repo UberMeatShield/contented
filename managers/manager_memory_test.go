@@ -72,7 +72,7 @@ func TestMemoryManagerAssignManager(t *testing.T) {
 }
 
 func TestMemoryManagerPaginate(t *testing.T) {
-	cfg := test_common.InitFakeApp(false)
+	cfg, _ := test_common.InitFakeApp(false)
 	cfg.UseDatabase = false
 	cfg.ReadOnly = true
 
@@ -171,7 +171,7 @@ func TestMemoryManagerSearch(t *testing.T) {
 func TestMemoryManagerSearchMulti(t *testing.T) {
 	// Test that a search restricting containerID works
 	// Test that search restricting container and text works
-	cfg := test_common.InitFakeApp(false)
+	cfg, _ := test_common.InitFakeApp(false)
 	cfg.ReadOnly = false
 	ctx := test_common.GetContext()
 	man := GetManager(ctx)
@@ -296,7 +296,7 @@ func TestMemoryManagerTagSearch(t *testing.T) {
 }
 
 func TestMemoryMangerTagsMemoryCRUD(t *testing.T) {
-	cfg := test_common.InitFakeApp(false)
+	cfg, _ := test_common.InitFakeApp(false)
 	man := GetManagerTestSuite(cfg)
 
 	tag := models.Tag{ID: "A"}
@@ -315,7 +315,7 @@ func TestMemoryMangerTagsMemoryCRUD(t *testing.T) {
 }
 
 func TestManagerMemoryScreens(t *testing.T) {
-	cfg := test_common.InitFakeApp(false)
+	cfg, _ := test_common.InitFakeApp(false)
 
 	man := GetManagerTestSuite(cfg)
 	content, count, err := man.ListContent(ContentQuery{PerPage: 100})
@@ -357,7 +357,7 @@ func TestManagerMemoryScreens(t *testing.T) {
 }
 
 func TestManagerMemoryCRU(t *testing.T) {
-	cfg := test_common.InitFakeApp(false)
+	cfg, _ := test_common.InitFakeApp(false)
 	ctx := test_common.GetContext()
 	man := GetManager(ctx)
 
@@ -375,26 +375,27 @@ func TestManagerMemoryCRU(t *testing.T) {
 	assert.NoError(t, c_err, "We should be able to get back the container")
 	assert.Equal(t, c_check.Path, c.Path, "Ensure we are not stomping unset ID data")
 
-	mc := models.Content{Src: "content", ContainerID: &c.ID, NoFile: true}
-	assert.NoError(t, man.CreateContent(&mc), "Did not create content correctly")
-	mcUp := models.Content{Src: "updated", ID: mc.ID, ContainerID: &c.ID, NoFile: true}
+	content1 := models.Content{Src: "content1", ContainerID: &c.ID, NoFile: true}
+	content2 := models.Content{Src: "content2", ContainerID: &c.ID, NoFile: true}
+	assert.NoError(t, man.CreateContent(&content1), "Did not create content correctly")
+	assert.NoError(t, man.CreateContent(&content2), "Did not create content correctly")
+	mcUp := models.Content{Src: "updated", ID: content1.ID, ContainerID: &c.ID, NoFile: true}
 	man.UpdateContent(&mcUp)
-	mc_check, m_err := man.GetContent(mc.ID)
+	mc_check, m_err := man.GetContent(content1.ID)
 	assert.NoError(t, m_err, "It should find this content")
 	assert.Equal(t, mc_check.Src, "updated")
 
-	id := utils.AssignNumerical(0, "contents")
-	s1 := models.Screen{Path: "A", Src: "a.txt", ContentID: mc.ID}
-	s2 := models.Screen{Path: "B", Src: "b.txt", ContentID: id}
+	s1 := models.Screen{Path: "A", Src: "a.txt", ContentID: content1.ID}
+	s2 := models.Screen{Path: "B", Src: "b.txt", ContentID: content2.ID}
 	assert.NoError(t, man.CreateScreen(&s1), "Did not associate screen correctly")
-	assert.NoError(t, man.CreateScreen(&s2), "Did not associate screen correctly")
+	assert.NoError(t, man.CreateScreen(&s2), "It should not allow a screen that does not have")
 
-	sCheck, count, sErr := man.ListScreens(ScreensQuery{ContentID: strconv.FormatInt(mc.ID, 10)})
+	sCheck, count, sErr := man.ListScreens(ScreensQuery{ContentID: strconv.FormatInt(content1.ID, 10)})
 	assert.NoError(t, sErr, "Failed to list screens")
 	assert.Equal(t, len(*sCheck), 1, "It should properly filter screens.")
 	assert.Equal(t, int64(1), count, "Count should be correct")
 
-	s1Update := models.Screen{ID: s1.ID, Path: "C", ContentID: mc.ID}
+	s1Update := models.Screen{ID: s1.ID, Path: "C", ContentID: content1.ID}
 	assert.NoError(t, man.UpdateScreen(&s1Update))
 	s1Check, scErr := man.GetScreen(s1.ID)
 	assert.NoError(t, scErr, "Failed to get the screen back")

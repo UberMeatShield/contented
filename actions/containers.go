@@ -147,7 +147,11 @@ func ContainersResourceDestroy(c *gin.Context) {
 		c.AbortWithError(http.StatusForbidden, err)
 		return
 	}
-	id := c.Param("container_id")
+	id, idErr := strconv.ParseInt(c.Param("container_id"), 10, 64)
+	if idErr != nil {
+		c.AbortWithError(http.StatusBadRequest, idErr)
+		return
+	}
 	cnt, dErr := man.DestroyContainer(id)
 	if dErr != nil {
 		if cnt == nil {

@@ -138,12 +138,11 @@ func TestScreensResourceUpdate(t *testing.T) {
 	ps := CreatePreview(screenSrc, mc.ID, t, router)
 	ps.Src = "UP"
 
-	url := fmt.Sprintf("/api/screens/%d", ps.ID)
 	resObj := models.Screen{}
+	url := fmt.Sprintf("/api/screens/%d", ps.ID)
 	code, err := PutJson(url, ps, &resObj, router)
 	assert.NoError(t, err, "It should update")
-	assert.Equal(t, http.StatusOK, code)
-
+	assert.Equal(t, http.StatusOK, code, fmt.Sprintf("It should update %s", err))
 	assert.Equal(t, ps.Src, resObj.Src, "It should have updated")
 }
 

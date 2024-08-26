@@ -81,7 +81,7 @@ func TestContainersResourceShow(t *testing.T) {
 }
 
 func TestContainersResourceCreate(t *testing.T) {
-	cfg, db, router := InitFakeRouterApp(false)
+	cfg, db, router := InitFakeRouterApp(true)
 
 	cnt := &models.Container{
 		Total: 1,
@@ -139,7 +139,7 @@ func TestContainersResourceDestroy(t *testing.T) {
 }
 
 func TestContainerList(t *testing.T) {
-	_, db, router := InitFakeRouterApp(false)
+	_, db, router := InitFakeRouterApp(true)
 
 	cnt1, _ := test_common.GetContentByDirName("dir1")
 	cnt2, _ := test_common.GetContentByDirName("dir2")

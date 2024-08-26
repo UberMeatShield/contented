@@ -717,18 +717,33 @@ func (cm ContentManagerMemory) GetValidTags(tags *models.Tags) (*models.Tags, er
 }
 
 /**
-* Not a thing in the memory manager
+* Note that these methods are mostly for consistent API but do NOT cleanup references.
  */
 func (cm ContentManagerMemory) DestroyContent(id int64) (*models.Content, error) {
-	return nil, errors.New("not implemented")
+	contentMap := cm.GetStore().ValidContent
+	if content, ok := contentMap[id]; ok {
+		delete(contentMap, id)
+		return &content, nil
+	}
+	return nil, fmt.Errorf("Content not found %d", id)
 }
 
-func (cm ContentManagerMemory) DestroyContainer(id string) (*models.Container, error) {
-	return nil, errors.New("not implemented")
+func (cm ContentManagerMemory) DestroyContainer(id int64) (*models.Container, error) {
+	containerMap := cm.GetStore().ValidContainers
+	if container, ok := containerMap[id]; ok {
+		delete(containerMap, id)
+		return &container, nil
+	}
+	return nil, fmt.Errorf("Container not found %d", id)
 }
 
-func (cm ContentManagerMemory) DestroyScreen(id string) (*models.Screen, error) {
-	return nil, errors.New("not implemented")
+func (cm ContentManagerMemory) DestroyScreen(id int64) (*models.Screen, error) {
+	screensMap := cm.GetStore().ValidScreens
+	if screen, ok := screensMap[id]; ok {
+		delete(screensMap, id)
+		return &screen, nil
+	}
+	return nil, fmt.Errorf("Screen not found %d", id)
 }
 
 // Note that we need to lock this down so that it cannot just access arbitrary files

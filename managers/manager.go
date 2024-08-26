@@ -127,7 +127,7 @@ type ContentManager interface {
 	ListContainersContext() (*models.Containers, int64, error)
 	UpdateContainer(c *models.Container) (*models.Container, error)
 	CreateContainer(c *models.Container) error
-	DestroyContainer(id string) (*models.Container, error)
+	DestroyContainer(id int64) (*models.Container, error)
 
 	// Content listing (why did I name it Content vs Media?)
 	GetContent(content_id int64) (*models.Content, error)
@@ -152,7 +152,7 @@ type ContentManager interface {
 	GetScreen(psID int64) (*models.Screen, error)
 	CreateScreen(s *models.Screen) error
 	UpdateScreen(s *models.Screen) error
-	DestroyScreen(id string) (*models.Screen, error)
+	DestroyScreen(id int64) (*models.Screen, error)
 
 	// Tags listing (oy do I need to deal with this?)
 	GetTag(id string) (*models.Tag, error)
