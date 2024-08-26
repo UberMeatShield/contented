@@ -28,6 +28,7 @@ func init() {
  */
 var GormDB *gorm.DB = nil
 
+// Need to get the envy version of this working properly
 func InitGorm(reset bool) *gorm.DB {
 	if GormDB == nil || reset {
 		dsn := "host=localhost user=postgres dbname=content_test port=5432 sslmode=disable"

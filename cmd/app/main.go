@@ -8,12 +8,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// main is the starting point for your Buffalo application.
-// You can feel free and add to this `main` method, change
-// what it does, etc...
-// All we ask is that, at some point64, you make sure to
-// call `app.Serve()`, unless you don't want to start your
-// application that is. :)
+/**
+ * Initialize the Gin Application.
+ */
 func main() {
 	cfg := utils.GetCfg()
 	utils.InitConfigEnvy(cfg)
@@ -27,17 +24,6 @@ func main() {
 	if err := r.Run(); err != nil {
 		log.Fatalf("Crashed out %s", err)
 	}
-
-	/*
-		utils.InitConfigEnvy(cfg)
-		app := actions.App(cfg.UseDatabase)
-
-		// TODO: Update or delete this method as it is not really doing anything
-		// Potentially just do the static hosting in the actions.App bit.
-		if err := app.Serve(); err != nil {
-			log.Fatal(err)
-		}
-	*/
 }
 
 /*
@@ -48,12 +34,4 @@ func main() {
 We recommend placing your application behind a proxy, such as
 Apache or Nginx and letting them do the SSL heavy lifting
 for you. https://gobuffalo.io/en/docs/proxy
-
-## Buffalo Build
-
-When `buffalo build` is run to compile your binary, this `main`
-function will be at the heart of that binary. It is expected
-that your `main` function will start your application using
-the `app.Serve()` method.
-
 */

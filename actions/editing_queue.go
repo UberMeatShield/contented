@@ -14,7 +14,6 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/buffalo/worker"
@@ -33,8 +32,7 @@ func HandleTask(args worker.Args, taskFunc HandleTaskTypeFunc) error {
 	getConnection := func() *gorm.DB {
 		return nil
 	}
-	App(cfg.UseDatabase)
-	taskId, err := GetTaskId(args)
+	taskId, err := GetTaskId(args) // Determines if it is a valid id (bad request)
 	if err != nil {
 		return err
 	}
@@ -494,7 +492,6 @@ func AddTaskRequest(man managers.ContentManager, tr *models.TaskRequest) (*model
 	}
 	// This needs to delay a little before it starts
 	// It should probably not kick off the job task inside the manager
-	cfg := man.GetCfg()
 	job := worker.Job{
 		Queue:   "default",
 		Handler: tr.Operation.String(),
@@ -504,11 +501,18 @@ func AddTaskRequest(man managers.ContentManager, tr *models.TaskRequest) (*model
 	}
 
 	// This would be a good place to add in support for other task queues
-	err := App(cfg.UseDatabase).Worker.PerformIn(job, 2*time.Second)
-	if err != nil {
-		msg := fmt.Sprintf("Failed to enqueue task in the work queue %s", err)
-		log.Print(msg)
-		return nil, err
+	//cfg := man.GetCfg()
+	if job.Queue == "default" {
+		// TODO: Choose a new job processing system and integrate it.  SQS etc.
+		log.Printf("THIS SYSTEM IS NOT PROCESSING AS BUFFALO IS DEAD")
 	}
+	/*
+		err := App(cfg.UseDatabase).Worker.PerformIn(job, 2*time.Second)
+		if err != nil {
+			msg := fmt.Sprintf("Failed to enqueue task in the work queue %s", err)
+			log.Print(msg)
+			return nil, err
+		}
+	*/
 	return createdTask, nil
 }

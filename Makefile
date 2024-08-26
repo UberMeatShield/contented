@@ -34,7 +34,7 @@ build:
 
 .PHONY: dev
 dev:
-	export DIR=$(DIR) TAG_FILE=$(TAG_FILE) && buffalo dev
+	export DIR=$(DIR) TAG_FILE=$(TAG_FILE) && go run cmd/app/main.go
 
 # I would rather use gotestsum, but buffalo does a bunch of DB setup that doesn't play
 # nice with go test or gotestsum. Or potentially my tests need some saner / better init
@@ -42,17 +42,10 @@ dev:
 # damn slow ffmpeg seek screen tests are on MacOSX.
 .PHONY: test
 test:
-	export DIR=$(DIR) && buffalo test ./models ./utils ./managers ./actions
-
-# This works with gotestsum, something about a DB reset is missing or magical Buffalo code.
-# The Database side of things doesn't get created with gotestsum yet
-# To run one test with gotestsum you can steal this line and pass --run <TestName>
-.PHONY: gotestsum
-gtest:
-	export DIR=$(DIR) && gotestsum --format testname ./models
-	export DIR=$(DIR) && gotestsum --format testname ./utils
-	export DIR=$(DIR) && buffalo test ./managers
-	export DIR=$(DIR) && buffalo test ./actions
+	export DIR=$(DIR) && go run gotest.tools/gotestsum@latest --format testname ./models
+	export DIR=$(DIR) && go run gotest.tools/gotestsum@latest --format testname ./managers
+	export DIR=$(DIR) && go run gotest.tools/gotestsum@latest --format testname ./actions
+	export DIR=$(DIR) && go run gotest.tools/gotestsum@latest --format testname ./utils
 
 .PHONY: ngdev
 ngdev:
@@ -76,6 +69,7 @@ typescript:
 db-create:
 	buffalo db create
 
+# The DB side of things could use some love
 .PHONY: reset-db
 db-reset:
 	buffalo db migrate
@@ -96,7 +90,6 @@ encode:
 .PHONY: find-dupes
 find-dupes:
 	export DIR=$(DIR) && export DUPE_FILE=$(shell pwd)/duplicates.txt && buffalo task db:removeDuplicates
-
 
 # Read from a tag file and import the tags to the DB
 .PHONY: tags
