@@ -42,10 +42,10 @@ dev:
 # damn slow ffmpeg seek screen tests are on MacOSX.
 .PHONY: test
 test:
-	export DIR=$(DIR) && go run gotest.tools/gotestsum@latest --format testname ./models
-	export DIR=$(DIR) && go run gotest.tools/gotestsum@latest --format testname ./managers
-	export DIR=$(DIR) && go run gotest.tools/gotestsum@latest --format testname ./actions
-	export DIR=$(DIR) && go run gotest.tools/gotestsum@latest --format testname ./utils
+	export GO_ENV=test && export DIR=$(DIR) && go run gotest.tools/gotestsum@latest --format testname ./models
+	export GO_ENV=test && export DIR=$(DIR) && go run gotest.tools/gotestsum@latest --format testname ./managers
+	export GO_ENV=test && export DIR=$(DIR) && go run gotest.tools/gotestsum@latest --format testname ./actions
+	export GO_ENV=test && export DIR=$(DIR) && go run gotest.tools/gotestsum@latest --format testname ./utils
 
 .PHONY: ngdev
 ngdev:
