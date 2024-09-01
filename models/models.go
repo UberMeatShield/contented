@@ -28,13 +28,10 @@ var GormDB *gorm.DB = nil
 // Need to get the envy version of this working properly
 func InitGorm(reset bool) *gorm.DB {
 	if GormDB == nil || reset {
-		env := GetEnvString("GO_ENV", "development")
-		host := GetEnvString("DB_HOST", "localhost")
-		user := GetEnvString("DB_USER", "postgres")
-		dbName := GetEnvString("DB_NAME", fmt.Sprintf("content_%s", env))
-		password := GetEnvString("DB_PASSWORD", "")
 
-		dsn := fmt.Sprintf("host=%s user=%s dbname=%s password=%s port=5432 sslmode=disable", host, user, dbName, password)
+		env := GetEnvString("GO_ENV", "development")
+		host, user, dbName, password, port := GetDbConfig(env)
+		dsn := fmt.Sprintf("host=%s user=%s dbname=%s password=%s port=%s sslmode=disable", host, user, dbName, password, port)
 		db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 		if err != nil {
@@ -48,6 +45,45 @@ func InitGorm(reset bool) *gorm.DB {
 		}
 	}
 	return GormDB
+}
+
+func connectToDatabase(environment string) (*gorm.DB, string) {
+	host, user, dbName, password, port := GetDbConfig(environment)
+
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s sslmode=disable", host, port, user, password)
+	DB, _ := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	return DB, dbName
+}
+func createDatabase(db *gorm.DB, dbName string) error {
+	return db.Exec(fmt.Sprintf("CREATE DATABASE %s", dbName)).Error
+}
+
+func databaseExists(db *gorm.DB, dbName string) (bool, error) {
+
+	//query := fmt.Sprintf("SELECT COUNT(datname) FROM pg_catalog.pg_database WHERE lower(datname) = lower('?')", dbName)
+	query := "SELECT COUNT(datname) FROM pg_catalog.pg_database WHERE lower(datname) = lower(?)"
+	var count int64
+	if tx := db.Raw(query, dbName).Scan(&count); tx.Error != nil {
+		log.Fatalf("failed to even determine the database exists %s", tx.Error)
+	}
+	if count > 0 {
+		return true, nil
+	}
+	return false, nil
+}
+
+func dropDatabase(db *gorm.DB, dbName string) error {
+	return db.Exec(fmt.Sprintf("DROP DATABASE %s", dbName)).Error
+}
+
+func GetDbConfig(environmentDefault string) (string, string, string, string, string) {
+	dbName := GetEnvString("DB_NAME", fmt.Sprintf("content_%s", environmentDefault))
+	host := GetEnvString("DB_HOST", "localhost")
+	user := GetEnvString("DB_USER", "postgres")
+	password := GetEnvString("DB_PASSWORD", "")
+	port := GetEnvString("DB_PORT", "5432")
+
+	return host, user, dbName, password, port
 }
 
 // Not sure if I can use this in a saner way wrapped by Gorm
@@ -73,13 +109,35 @@ func MigrateDb(db *gorm.DB) *gorm.DB {
 	return db
 }
 
+// Use for a clean reset
+func RebuildDatabase(env string) {
+	db, dbName := connectToDatabase(env)
+	if db.Error != nil {
+		log.Fatalf("Database connection failed, probably fatal. %s", db.Error)
+	}
+	exists, _ := databaseExists(db, dbName) // Currently fatal if
+	if exists {
+		if errDrop := dropDatabase(db, dbName); errDrop != nil {
+			log.Printf("Did not drop database %s", errDrop)
+		}
+	}
+	if errCreate := createDatabase(db, dbName); errCreate != nil {
+		log.Fatalf("Could not create the DB %s", errCreate)
+	}
+
+	tx := InitGorm(true)
+	if migrateTx := MigrateDb(tx); migrateTx.Error != nil {
+		log.Fatalf("Could not init and migrate the db %s", migrateTx.Error)
+	}
+}
+
 func ResetDB(db *gorm.DB) *gorm.DB {
-	db.Exec("DELETE FROM contents_tags")
-	db.Exec("DELETE FROM tags")
-	db.Exec("DELETE FROM screens")
-	db.Exec("DELETE FROM task_requests")
-	db.Exec("DELETE FROM contents")
-	db.Exec("DELETE FROM containers")
+	CheckReset(db.Exec("DELETE FROM contents_tags"))
+	CheckReset(db.Exec("DELETE FROM tags"))
+	CheckReset(db.Exec("DELETE FROM screens"))
+	CheckReset(db.Exec("DELETE FROM task_requests"))
+	CheckReset(db.Exec("DELETE FROM contents"))
+	CheckReset(db.Exec("DELETE FROM containers"))
 	return db
 }
 

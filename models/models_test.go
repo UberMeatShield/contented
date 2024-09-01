@@ -1,7 +1,6 @@
 package models
 
 import (
-	"log"
 	"os"
 	"testing"
 
@@ -24,13 +23,7 @@ func SetupTests(db *gorm.DB, t *testing.T) {
 }
 
 func TestMain(m *testing.M) {
-	setup()
+	RebuildDatabase("test")
 	code := m.Run()
 	os.Exit(code)
-}
-
-func setup() {
-	if db := MigrateDb(InitGorm(true)); db.Error != nil {
-		log.Fatalf("Could not init and migrate the db %s", db.Error)
-	}
 }
