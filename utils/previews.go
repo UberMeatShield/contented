@@ -618,7 +618,6 @@ func CreateContentPreview(c *models.Container, mc *models.Content) (string, erro
 	cntPath := filepath.Join(c.Path, c.Name)
 	dstPath := GetContainerPreviewDst(c)
 
-	log.Printf("What the fuck is going on %d", cfg.PreviewOverSize)
 	dstFqPath, err := GetImagePreview(cntPath, mc.Src, dstPath, cfg.PreviewOverSize)
 	if err != nil {
 		log.Printf("Failed to create a preview in %s for content %d err: %s", dstPath, mc.ID, err)

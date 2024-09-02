@@ -77,7 +77,7 @@ func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
 // For now this is fine but this could probably be better as something that
 // just takes an array of strings and creates the tags that way in the manager.
 func CreateTagsFromFile(cm ContentManager) (*models.Tags, error) {
-	cfg := utils.GetCfg()
+	cfg := cm.GetCfg()
 	tagFile := cfg.TagFile
 	if tagFile == "" {
 		log.Printf("No tag file so nothing to create")
