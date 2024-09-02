@@ -3,5 +3,5 @@
 package internals
 
 import (
-	_ "gotest.tools/gotestsum@latest"
+	_ "gotest.tools/gotestsum"
 )
