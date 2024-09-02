@@ -108,7 +108,22 @@ func MigrateDb(db *gorm.DB) *gorm.DB {
 	return db
 }
 
-// Use for a clean reset
+func InitializeAppDatabase(env string) {
+	db, dbName := connectToDatabase(env)
+	exists, _ := databaseExists(db, dbName)
+
+	if !exists {
+		if errCreate := createDatabase(db, dbName); errCreate != nil {
+			log.Fatalf("Could not create the DB %s", errCreate)
+		}
+	}
+	tx := InitGorm(true)
+	if migrateTx := MigrateDb(tx); migrateTx.Error != nil {
+		log.Fatalf("Could not init and migrate the db %s", migrateTx.Error)
+	}
+}
+
+// Use for a clean reset but this is mostly for tests.
 func RebuildDatabase(env string) {
 	db, dbName := connectToDatabase(env)
 	if db.Error != nil {

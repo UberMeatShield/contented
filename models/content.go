@@ -9,8 +9,6 @@ import (
 
 	//"contented/actions"
 
-	"github.com/gobuffalo/pop/v6"
-	"github.com/gobuffalo/validate/v3"
 	"gorm.io/gorm"
 )
 
@@ -19,7 +17,7 @@ type Content struct {
 	ID        int64          `json:"id" gorm:"primaryKey"`
 	CreatedAt time.Time      `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time      `json:"updated" db:"updated_at"`
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+	DeletedAt gorm.DeletedAt `gorm:"index" db:"deleted_at"`
 
 	Src         string `json:"src" db:"src"`
 	ContentType string `json:"content_type" db:"content_type"`
@@ -155,24 +153,6 @@ func (m ContentMap) String() string {
 // String is not required by pop and may be deleted
 func (content Content) IsVideo() bool {
 	return strings.Contains(content.ContentType, "video")
-}
-
-// Validate gets run every time you call a "pop.Validate*" (pop.ValidateAndSave, pop.ValidateAndCreate, pop.ValidateAndUpdate) method.
-// This method is not required and may be deleted.
-func (m *Content) Validate(tx *pop.Connection) (*validate.Errors, error) {
-	return validate.NewErrors(), nil
-}
-
-// ValidateCreate gets run every time you call "pop.ValidateAndCreate" method.
-// This method is not required and may be deleted.
-func (m *Content) ValidateCreate(tx *pop.Connection) (*validate.Errors, error) {
-	return validate.NewErrors(), nil
-}
-
-// ValidateUpdate gets run every time you call "pop.ValidateAndUpdate" method.
-// This method is not required and may be deleted.
-func (m *Content) ValidateUpdate(tx *pop.Connection) (*validate.Errors, error) {
-	return validate.NewErrors(), nil
 }
 
 // This is a little risky as the tags might not be loaded on the object and there isn't
