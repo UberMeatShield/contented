@@ -19,6 +19,12 @@ import (
 	"gorm.io/gorm"
 )
 
+func TestMain(m *testing.M) {
+	models.RebuildDatabase("test")
+	code := m.Run()
+	os.Exit(code)
+}
+
 func setupRouter() *gin.Engine {
 	r := gin.Default()
 	SetupRoutes(r)

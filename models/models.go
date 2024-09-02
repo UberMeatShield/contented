@@ -55,25 +55,24 @@ func connectToDatabase(environment string) (*gorm.DB, string) {
 	return DB, dbName
 }
 func createDatabase(db *gorm.DB, dbName string) error {
+	// For some reason it doesn't like a bind in a create
 	return db.Exec(fmt.Sprintf("CREATE DATABASE %s", dbName)).Error
 }
 
-func databaseExists(db *gorm.DB, dbName string) (bool, error) {
+func dropDatabase(db *gorm.DB, dbName string) error {
+	return db.Exec(fmt.Sprintf("DROP DATABASE %s", dbName)).Error
+}
 
-	//query := fmt.Sprintf("SELECT COUNT(datname) FROM pg_catalog.pg_database WHERE lower(datname) = lower('?')", dbName)
+func databaseExists(db *gorm.DB, dbName string) (bool, error) {
 	query := "SELECT COUNT(datname) FROM pg_catalog.pg_database WHERE lower(datname) = lower(?)"
 	var count int64
 	if tx := db.Raw(query, dbName).Scan(&count); tx.Error != nil {
-		log.Fatalf("failed to even determine the database exists %s", tx.Error)
+		log.Fatalf("failed to even determine the database exists eventually this should not be fatal %s", tx.Error)
 	}
 	if count > 0 {
 		return true, nil
 	}
 	return false, nil
-}
-
-func dropDatabase(db *gorm.DB, dbName string) error {
-	return db.Exec(fmt.Sprintf("DROP DATABASE %s", dbName)).Error
 }
 
 func GetDbConfig(environmentDefault string) (string, string, string, string, string) {

@@ -630,7 +630,7 @@ func (cm ContentManagerDB) AssociateTag(t *models.Tag, mc *models.Content) error
 
 	// I really don't love this but Buffalo many_to_many associations do NOT handle updates.  In addition an integer
 	// as the join table ID also doesn't seem to do the link even on a create.
-	sql_str := "insert into contents_tags (tag_id, content_id, created_at, updated_at) values (?, ?, current_timestamp, current_timestamp)"
+	sql_str := "insert into contents_tags (tag_id, content_id) values (?, ?)"
 	for _, t := range tags {
 		res := tx.Exec(sql_str, t.ID, mc.ID)
 

@@ -5,16 +5,20 @@ import (
 	"contented/models"
 	"contented/test_common"
 	"contented/utils"
-	"log"
 	"net/url"
 	"os"
 	"testing"
 
-	"github.com/gobuffalo/envy"
 	"github.com/gobuffalo/suite/v4"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
+
+func TestMain(m *testing.M) {
+	models.RebuildDatabase("test")
+	code := m.Run()
+	os.Exit(code)
+}
 
 func GetManagerTestSuite(cfg *utils.DirConfigEntry) ContentManager {
 	ctx := test_common.GetContext()
@@ -28,16 +32,6 @@ func GetManagerTestSuite(cfg *utils.DirConfigEntry) ContentManager {
 		return models.InitGorm(false)
 	}
 	return CreateManager(cfg, get_conn, get_params)
-}
-
-func TestMain(m *testing.M) {
-	_, err := envy.MustGet("DIR")
-	if err != nil {
-		log.Println("DIR ENV REQUIRED ie: $export=DIR=`pwd`/mocks/content/ && buffalo test")
-		panic(err)
-	}
-	code := m.Run()
-	os.Exit(code)
 }
 
 func Test_ManagerSuite(t *testing.T) {
