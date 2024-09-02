@@ -70,14 +70,13 @@ db-create:
 	buffalo db create
 
 # The DB side of things could use some love
-.PHONY: reset-db
+.PHONY: db-reset
 db-reset:
-	buffalo db migrate
-	buffalo db reset
+	go run ./cmd/scripts/cmdline.go --action "rebuild"
 
 .PHONY: db-populate
 db-populate:
-	export DIR=$(DIR) && buffalo task db:seed
+	export DIR=$(DIR) && export USE_DATABASE=true && go run ./cmd/scripts/cmdline.go --action "populate"
 
 .PHONY: preview
 preview:

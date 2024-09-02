@@ -14,6 +14,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Should this be a set of scripts or should it be something else?
 var _ = grift.Namespace("db", func() {
 	grift.Desc("seed", "Populate the DB with a set of directory content.")
 	grift.Add("seed", func(c *grift.Context) error {

@@ -3,5 +3,5 @@
 package internals
 
 import (
-	_ "github.com/gobuffalo/pop/v6/soda/cmd/generate"
+	_ "gotest.tools/gotestsum@latest"
 )

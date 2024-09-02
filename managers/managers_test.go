@@ -1,7 +1,6 @@
 package managers
 
 import (
-	"contented/internals"
 	"contented/models"
 	"contented/test_common"
 	"contented/utils"
@@ -9,7 +8,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/gobuffalo/suite/v4"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
@@ -32,15 +30,6 @@ func GetManagerTestSuite(cfg *utils.DirConfigEntry) ContentManager {
 		return models.InitGorm(false)
 	}
 	return CreateManager(cfg, get_conn, get_params)
-}
-
-func Test_ManagerSuite(t *testing.T) {
-	app := internals.CreateBuffaloApp(true, "test")
-	action := suite.NewAction(app)
-	as := &ActionSuite{
-		Action: action,
-	}
-	suite.Run(t, as)
 }
 
 // Called by the various manager tests

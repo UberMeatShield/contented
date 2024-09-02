@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/gobuffalo/envy"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -240,7 +239,7 @@ func TestMemoryPreviewInitialization(t *testing.T) {
 	utils.SetCfg(*cfg)
 
 	// Create a fake file that would sub in by name for a preview
-	var testDir, _ = envy.MustGet("DIR")
+	testDir := models.GetEnvString("DIR", "")
 	srcDir := filepath.Join(testDir, "dir2")
 	dstDir := utils.GetPreviewDst(srcDir)
 	testFile := test_common.VIDEO_FILENAME
