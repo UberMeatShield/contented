@@ -10,21 +10,17 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strconv"
 	"strings"
 
-	"github.com/gobuffalo/buffalo"
-	"github.com/gobuffalo/pop/v6"
-	"github.com/gofrs/uuid"
 	"github.com/lib/pq"
 )
 
 // DB version of content management
 type ContentManagerDB struct {
 	cfg *utils.DirConfigEntry
-	c   *buffalo.Context
 
 	/* Is this even useful ? */
-	conn   *pop.Connection
 	params *url.Values
 
 	GetConnection GetConnType   // Returns .conn or context.Value(tx)
@@ -48,47 +44,59 @@ func (cm ContentManagerDB) CanEdit() bool {
 	return !cfg.ReadOnly
 }
 
-func (cm ContentManagerDB) ListContentContext() (*models.Contents, int, error) {
+func (cm ContentManagerDB) ListContentContext() (*models.Contents, int64, error) {
 	// Could add the context here correctly
 	params := cm.Params()
-	_, limit, page := GetPagination(params, cm.cfg.Limit)
+	offset, limit, page := GetPagination(params, cm.cfg.Limit)
 	cs := ContentQuery{
 		ContainerID: StringDefault(params.Get("container_id"), ""),
 		Page:        page,
+		Offset:      offset,
 		PerPage:     limit,
 	}
 	return cm.ListContent(cs)
 }
 
 // Awkard GoLang interface support is awkward
-func (cm ContentManagerDB) ListContent(cs ContentQuery) (*models.Contents, int, error) {
+func (cm ContentManagerDB) ListContent(cs ContentQuery) (*models.Contents, int64, error) {
 	log.Printf("Get a list of content from DB, we should have some %s", cs.ContainerID)
 	tx := cm.GetConnection()
-	contentContainers := &models.Contents{}
+	contents := &models.Contents{}
 
 	// Paginate results. Params "page" and "per_page" control pagination.
-	q := tx.Paginate(cs.Page, cs.PerPage)
+	q := tx.Model(&models.Contents{})
 	if cs.ContainerID != "" {
 		q = q.Where("container_id = ?", cs.ContainerID)
 	}
 	q = q.Order(models.GetContentOrder(cs.Order, cs.Direction))
 
-	count, _ := q.Count(&models.Contents{})
+	// Oy, have to count
+	var count int64
+	countRes := q.Count(&count)
+	if countRes.Error != nil {
+		return nil, count, countRes.Error
+	}
+
+	// Throw error if the offset is too large?
+	q = q.Offset(cs.Offset).Limit(GetPerPage(cs.PerPage))
 	if count > 0 {
-		if q_err := q.All(contentContainers); q_err != nil {
-			return nil, -1, q_err
+		if res := q.Find(contents); res.Error != nil {
+			return nil, -1, res.Error
 		}
 	}
-	return contentContainers, count, nil
+	return contents, count, nil
 }
 
 // Note this DOES allow for loading hidden content
-func (cm ContentManagerDB) GetContent(mcID uuid.UUID) (*models.Content, error) {
-	log.Printf("Get a single content object %s", mcID)
+func (cm ContentManagerDB) GetContent(mcID int64) (*models.Content, error) {
+	log.Printf("get a single content object %d", mcID)
 	tx := cm.GetConnection()
 	mc := &models.Content{}
-	if err := tx.Eager().Find(mc, mcID); err != nil {
-		return nil, err
+	if res := tx.Preload("Screens").Preload("Tags").Find(mc, mcID); res.Error != nil {
+		return nil, res.Error
+	}
+	if mc.ID == 0 {
+		return nil, fmt.Errorf("content not found %d", mcID)
 	}
 	return mc, nil
 }
@@ -106,9 +114,8 @@ func (cm ContentManagerDB) UpdateContainer(cnt *models.Container) (*models.Conta
 		return nil, errors.New(msg)
 	}
 	tx := cm.GetConnection()
-	err := tx.Update(cnt)
-	if err != nil {
-		return cnt, err
+	if res := tx.Save(cnt); res.Error != nil {
+		return cnt, res.Error
 	}
 	return cm.GetContainer(cnt.ID)
 }
@@ -117,23 +124,28 @@ func (cm ContentManagerDB) UpdateContent(content *models.Content) error {
 	// Check if file exists or allow content to be 'empty'?
 	tx := cm.GetConnection()
 	if !content.NoFile {
-		cnt, cErr := cm.GetContainer(content.ContainerID.UUID)
-		if cErr != nil {
-			return fmt.Errorf("parent container %s not found", content.ContainerID.UUID.String())
-		}
+		if content.ContainerID != nil {
+			cnt, cErr := cm.GetContainer(*content.ContainerID)
+			if cErr != nil {
+				return fmt.Errorf("parent container %d not found", content.ContainerID)
+			}
 
-		exists, pErr := utils.HasContent(content.Src, cnt.GetFqPath())
-		if !exists || pErr != nil {
-			log.Printf("Content not in container %s", pErr)
-			return fmt.Errorf("invalid content src %s for container %s", content.Src, cnt.Name)
+			exists, pErr := utils.HasContent(content.Src, cnt.GetFqPath())
+			if !exists || pErr != nil {
+				log.Printf("Content not in container %s", pErr)
+				return fmt.Errorf("invalid content src %s for container %s", content.Src, cnt.Name)
+			}
 		}
 	}
-	err := tx.Eager().Update(content)
-	if err != nil {
-		return err
+
+	tags := content.Tags
+	content.Tags = nil // We don't want to allow the save to create tags not in the system
+	if res := tx.Save(content); res.Error != nil {
+		return res.Error
 	}
 	// Just trust we will associate all valid tags to the content.
-	if content.Tags != nil {
+	if tags != nil {
+		content.Tags = tags
 		return cm.AssociateTag(nil, content)
 	}
 	return nil
@@ -157,39 +169,40 @@ func (cm ContentManagerDB) UpdateContents(contents models.Contents) error {
 
 func (cm ContentManagerDB) UpdateScreen(s *models.Screen) error {
 	tx := cm.GetConnection()
-	return tx.Update(s)
+	res := tx.Save(s)
+	return res.Error
 }
 
-func (cm ContentManagerDB) ListAllContent(page int, per_page int) (*models.Contents, error) {
+func (cm ContentManagerDB) ListAllContent(page int64, perPage int) (*models.Contents, error) {
 	log.Printf("List all content DB manager")
 	tx := cm.GetConnection()
-	q := tx.Paginate(page, per_page)
+
+	q := tx.Offset(int(page) - 1).Limit(perPage)
 	contentContainers := &models.Contents{}
-	if err := q.All(contentContainers); err != nil {
-		return nil, err
+	if res := q.Find(contentContainers); res.Error != nil {
+		return nil, res.Error
 	}
 	return contentContainers, nil
 }
 
 // It should probably be able to search the container too?
-func (cm ContentManagerDB) SearchContentContext() (*models.Contents, int, error) {
+func (cm ContentManagerDB) SearchContentContext() (*models.Contents, int64, error) {
 	sr := ContextToContentQuery(cm.Params(), cm.GetCfg())
 	return cm.SearchContent(sr)
 }
 
 // It should probably be able to search the container too?
-func (cm ContentManagerDB) SearchContainersContext() (*models.Containers, int, error) {
+func (cm ContentManagerDB) SearchContainersContext() (*models.Containers, int64, error) {
 	cq := ContextToContainerQuery(cm.Params(), cm.GetCfg())
 	return cm.SearchContainers(cq)
 }
 
-func (cm ContentManagerDB) SearchContent(sr ContentQuery) (*models.Contents, int, error) {
-	contentContainers := &models.Contents{}
-	tx := cm.GetConnection()
-	q := tx.Paginate(sr.Page, sr.PerPage)
-
+func (cm ContentManagerDB) SearchContent(sr ContentQuery) (*models.Contents, int64, error) {
+	contents := &models.Contents{}
+	q := cm.GetConnection().Model(&contents)
 	if len(sr.Tags) > 0 {
-		q = q.Join("contents_tags as ct", "ct.content_id = contents.id").Where("ct.tag_id IN (?)", sr.Tags)
+		// TODO: This is almost certainly the problem
+		q = q.Joins("JOIN contents_tags as ct ON ct.content_id = contents.id").Where("ct.tag_id IN (?)", sr.Tags)
 	}
 	// TODO: Could also search description (expand this)
 	if sr.Search != "*" && sr.Search != "" {
@@ -209,23 +222,29 @@ func (cm ContentManagerDB) SearchContent(sr ContentQuery) (*models.Contents, int
 	if sr.ContainerID != "" {
 		q = q.Where(`container_id = ?`, sr.ContainerID)
 	}
-	if sr.IncludeHidden == false {
+
+	if !sr.IncludeHidden {
 		q = q.Where(`hidden = ?`, false)
 	}
 	q = q.Order(models.GetContentOrder(sr.Order, sr.Direction))
 
-	count, _ := q.Count(&models.Contents{})
-	log.Printf("Total count of search content %d using search (%s) and contentType (%s)", count, sr.Text, sr.ContentType)
+	var count int64
+	if res := q.Model(models.Contents{}).Count(&count); res.Error != nil {
+		return nil, count, res.Error
+	}
 
+	q = q.Offset(sr.Offset).Limit(GetPerPage(sr.PerPage))
+	log.Printf("Total count of search content %d using search (%s) and contentType (%s)", count, sr.Text, sr.ContentType)
 	if count > 0 {
-		if q_err := q.All(contentContainers); q_err != nil {
-			return contentContainers, -1, q_err
+		if cRes := q.Find(contents); cRes.Error != nil {
+			return contents, -1, cRes.Error
 		}
+
 		// Now need to get any screens and associate them in a lookup
-		screenMap, s_err := cm.LoadRelatedScreens(contentContainers)
+		screenMap, s_err := cm.LoadRelatedScreens(contents)
 		contentWithScreens := models.Contents{}
 		if s_err == nil {
-			for _, mcPt := range *contentContainers {
+			for _, mcPt := range *contents {
 				mc := mcPt // GoLang... sometimes this just makes me sad.
 				if _, ok := screenMap[mc.ID]; ok {
 					mc.Screens = screenMap[mc.ID]
@@ -235,25 +254,30 @@ func (cm ContentManagerDB) SearchContent(sr ContentQuery) (*models.Contents, int
 		}
 		return &contentWithScreens, count, nil
 	}
-	return contentContainers, count, nil
+	return contents, count, nil
 }
 
-func (cm ContentManagerDB) SearchContainers(cs ContainerQuery) (*models.Containers, int, error) {
+func (cm ContentManagerDB) SearchContainers(cs ContainerQuery) (*models.Containers, int64, error) {
 	if cs.Search == "" || cs.Search == "*" {
 		return cm.ListContainers(cs)
 	}
 	containers := &models.Containers{}
-	tx := cm.GetConnection()
-	q := tx.Paginate(cs.Page, cs.PerPage)
-	q = q.Where("name ilike ?", cs.Search)
-	if cs.IncludeHidden == false {
+	q := cm.GetConnection().Where("name ilike ?", cs.Search)
+	if !cs.IncludeHidden {
 		q = q.Where(`hidden = ?`, false)
 	}
 	q = q.Order(models.GetContainerOrder(cs.Order, cs.Direction))
-	count, _ := q.Count(&models.Containers{})
+
+	var count int64
+	res := q.Model(&models.Containers{}).Count(&count)
+	if res.Error != nil {
+		return nil, count, res.Error
+	}
+
+	q = q.Offset(cs.Offset).Limit(GetPerPage(cs.PerPage))
 	if count > 0 {
-		if q_err := q.All(containers); q_err != nil {
-			return containers, -1, q_err
+		if res := q.Find(containers); res.Error != nil {
+			return containers, -1, res.Error
 		}
 	}
 	return containers, count, nil
@@ -266,26 +290,28 @@ func (cm ContentManagerDB) LoadRelatedScreens(content *models.Contents) (models.
 	videoIds := []string{}
 	for _, mc := range *content {
 		if strings.Contains(mc.ContentType, "video") {
-			videoIds = append(videoIds, mc.ID.String())
+			videoIds = append(videoIds, strconv.FormatInt(mc.ID, 10))
 		}
 	}
 	if len(videoIds) == 0 {
 		log.Printf("None of these content were a video, skipping")
 		return nil, nil
 	}
-	q := cm.GetConnection().Q().Where(`content_id = any($1)`, pq.Array(videoIds))
+	tx := cm.GetConnection()
+
 	screens := &models.Screens{}
-	if q_err := q.All(screens); q_err != nil {
-		log.Printf("Error loading video screens %s", q_err)
-		return nil, q_err
+	q := tx.Where(`content_id = any($1)`, pq.Array(videoIds)).Find(screens)
+	if q.Error != nil {
+		log.Printf("Error loading video screens %s", q.Error)
+		return nil, q.Error
 	}
 
 	screenMap := models.ScreenCollection{}
 	for _, screen := range *screens {
-		log.Printf("Found screen for %s", screen.ContentID.String())
+		log.Printf("found screen for %d", screen.ContentID)
 		if _, ok := screenMap[screen.ContentID]; ok {
 			screenMap[screen.ContentID] = append(screenMap[screen.ContentID], screen)
-			log.Printf("Screen count %s %s", screen.ContentID, screenMap[screen.ContentID])
+			log.Printf("screen count %d %s", screen.ContentID, screenMap[screen.ContentID])
 		} else {
 			screenMap[screen.ContentID] = models.Screens{screen}
 		}
@@ -294,50 +320,58 @@ func (cm ContentManagerDB) LoadRelatedScreens(content *models.Contents) (models.
 }
 
 // The default list using the current manager configuration
-func (cm ContentManagerDB) ListContainersContext() (*models.Containers, int, error) {
+func (cm ContentManagerDB) ListContainersContext() (*models.Containers, int64, error) {
 	params := cm.Params()
-	_, limit, page := GetPagination(params, cm.cfg.Limit)
+	offset, limit, page := GetPagination(params, GetPerPage(cm.cfg.Limit))
 	cs := ContainerQuery{
 		Name:    StringDefault(params.Get("name"), ""),
 		Page:    page,
+		Offset:  offset,
 		PerPage: limit,
 	}
 	return cm.ListContainers(cs)
 }
 
-func (cm ContentManagerDB) ListContainers(cs ContainerQuery) (*models.Containers, int, error) {
+func (cm ContentManagerDB) ListContainers(cs ContainerQuery) (*models.Containers, int64, error) {
 	return cm.ListContainersFiltered(cs)
 }
 
 // TODO: Add in support for actually doing the query using the current buffalo.Context
-func (cm ContentManagerDB) ListContainersFiltered(cs ContainerQuery) (*models.Containers, int, error) {
+func (cm ContentManagerDB) ListContainersFiltered(cs ContainerQuery) (*models.Containers, int64, error) {
 	tx := cm.GetConnection()
-	q := tx.Paginate(cs.Page, cs.PerPage)
-	if cs.IncludeHidden == false {
+	q := tx.Offset(cs.Offset).Limit(GetPerPage(cs.PerPage))
+	if !cs.IncludeHidden {
 		q = q.Where("hidden = ?", false)
 	}
 	q.Order(models.GetContainerOrder(cs.Order, cs.Direction))
 
 	// Retrieve all Containers from the DB (if there are any)
-	count, _ := q.Count(&models.Containers{})
+	var count int64
+	cRes := q.Model(&models.Containers{}).Count(&count)
+	if cRes.Error != nil {
+		return nil, count, cRes.Error
+	}
 	containers := &models.Containers{}
 	if count > 0 {
-		if err := q.All(containers); err != nil {
-			return nil, count, err
+		if res := q.Find(containers); res.Error != nil {
+			return nil, count, res.Error
 		}
 	}
 	return containers, count, nil
 }
 
 // TODO: Need a preview test using the database where we do NOT have a preview created
-func (cm ContentManagerDB) GetContainer(cID uuid.UUID) (*models.Container, error) {
-	log.Printf("Get a single container %s", cID)
+func (cm ContentManagerDB) GetContainer(cID int64) (*models.Container, error) {
+	log.Printf("get a single container %d", cID)
 	tx := cm.GetConnection()
 
 	// Allocate an empty Container p := cm.Params()
 	container := &models.Container{}
-	if err := tx.Find(container, cID); err != nil {
-		return nil, err
+	if res := tx.Find(container, cID); res.Error != nil {
+		return nil, res.Error
+	}
+	if container.ID == 0 {
+		return nil, fmt.Errorf("container not found %d", cID)
 	}
 	return container, nil
 }
@@ -348,7 +382,7 @@ func (cm *ContentManagerDB) Initialize() {
 }
 
 func (cm ContentManagerDB) GetPreviewForMC(mc *models.Content) (string, error) {
-	cnt, err := cm.GetContainer(mc.ContainerID.UUID)
+	cnt, err := cm.GetContainer(*mc.ContainerID)
 	if err != nil {
 		return "DB Manager Preview no Parent Found", err
 	}
@@ -356,25 +390,26 @@ func (cm ContentManagerDB) GetPreviewForMC(mc *models.Content) (string, error) {
 	if mc.Preview != "" {
 		src = mc.Preview
 	}
-	log.Printf("DB Manager loading %s preview %s\n", mc.ID.String(), src)
+	log.Printf("DB Manager loading %d preview %s\n", mc.ID, src)
 	return utils.GetFilePathInContainer(src, cnt.GetFqPath())
 }
 
 func (cm ContentManagerDB) FindActualFile(mc *models.Content) (string, error) {
-	cnt, err := cm.GetContainer(mc.ContainerID.UUID)
+	cnt, err := cm.GetContainer(*mc.ContainerID)
 	if err != nil {
 		return "DB Manager View no Parent Found", err
 	}
-	log.Printf("DB Manager View %s loading up %s\n", mc.ID.String(), mc.Src)
+	log.Printf("DB Manager View %d loading up %s\n", mc.ID, mc.Src)
 	return utils.GetFilePathInContainer(mc.Src, cnt.GetFqPath())
 }
 
-func (cm ContentManagerDB) ListScreensContext() (*models.Screens, int, error) {
+func (cm ContentManagerDB) ListScreensContext() (*models.Screens, int64, error) {
 	// Could add the context here correctly
 	params := cm.Params()
-	_, limit, page := GetPagination(params, cm.cfg.Limit)
+	offset, limit, page := GetPagination(params, cm.cfg.Limit)
 	sr := ScreensQuery{
 		Page:      page,
+		Offset:    offset,
 		PerPage:   limit,
 		ContentID: params.Get("content_id"),
 	}
@@ -382,42 +417,56 @@ func (cm ContentManagerDB) ListScreensContext() (*models.Screens, int, error) {
 }
 
 // TODO: Re-Assign the preview based on screen information
-func (cm ContentManagerDB) ListScreens(sr ScreensQuery) (*models.Screens, int, error) {
+func (cm ContentManagerDB) ListScreens(sr ScreensQuery) (*models.Screens, int64, error) {
 	tx := cm.GetConnection()
 	previews := &models.Screens{}
-	q := tx.Paginate(sr.Page, sr.PerPage)
+
+	q := tx.Model(previews)
 	if sr.ContentID != "" {
 		q = q.Where("content_id = ?", sr.ContentID)
 	}
-	count, _ := q.Count(&models.Screens{})
-	if count > 0 {
-		if q_err := q.All(previews); q_err != nil {
-			return nil, -1, q_err
+	var count int64
+	if cRes := q.Count(&count); cRes.Error != nil {
+		return nil, count, cRes.Error
+	}
+	if count > int64(0) {
+		q = q.Offset(sr.Offset).Limit(GetPerPage(sr.PerPage))
+		if res := q.Find(previews); res.Error != nil {
+			return nil, -1, res.Error
 		}
 	}
 	return previews, count, nil
 }
 
 // Need to make it use the manager and just show the file itself
-func (cm ContentManagerDB) GetScreen(psID uuid.UUID) (*models.Screen, error) {
+func (cm ContentManagerDB) GetScreen(psID int64) (*models.Screen, error) {
 	previewScreen := &models.Screen{}
 	tx := cm.GetConnection()
-	err := tx.Find(previewScreen, psID)
-	if err != nil {
-		return nil, err
+	res := tx.Find(previewScreen, psID)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	if previewScreen.ID == 0 {
+		return nil, fmt.Errorf("screen not found %d", psID)
 	}
 	return previewScreen, nil
 
 }
 
 func (cm ContentManagerDB) CreateScreen(screen *models.Screen) error {
-	tx := cm.GetConnection()
-	return tx.Create(screen)
+	if screen == nil || screen.ContentID == 0 {
+		return fmt.Errorf("invalid screenshot data %s", screen)
+	}
+	tx := cm.GetConnection().Create(screen)
+	return tx.Error
 }
 
 func (cm ContentManagerDB) CreateContent(content *models.Content) error {
 	tx := cm.GetConnection()
 
+	if content.Tags == nil {
+		content.Tags = models.Tags{}
+	}
 	validTags, t_err := cm.GetValidTags(&content.Tags)
 	if t_err != nil {
 		log.Printf("Could not determine valid tags %s", t_err)
@@ -425,85 +474,92 @@ func (cm ContentManagerDB) CreateContent(content *models.Content) error {
 	}
 	content.Tags = *validTags
 
-	_, err := tx.Eager().ValidateAndCreate(content)
-	if err != nil {
-		return err
+	if res := tx.Save(content); res.Error != nil {
+		return res.Error
 	}
-	return err
+	return nil
 }
 
 // Note we very intentionally are NOT destroying items on disk.
-func (cm ContentManagerDB) DestroyContent(id string) (*models.Content, error) {
+func (cm ContentManagerDB) DestroyContent(id int64) (*models.Content, error) {
 	tx := cm.GetConnection()
 	content := &models.Content{}
-	if err := tx.Find(content, id); err != nil {
-		return nil, errors.New(fmt.Sprintf("Could not find content with id %s", id))
+	if res := tx.Find(content, id); res.Error != nil {
+		return nil, fmt.Errorf("could not find content with id %d", id)
 	}
-	if err := tx.Destroy(content); err != nil {
-		return content, err
+
+	if res := tx.Delete(content); res.Error != nil {
+		return content, res.Error
 	}
 	return content, nil
 }
 
-func (cm ContentManagerDB) DestroyContainer(id string) (*models.Container, error) {
+func (cm ContentManagerDB) DestroyContainer(id int64) (*models.Container, error) {
 	tx := cm.GetConnection()
 	cnt := &models.Container{}
-	if err := tx.Find(cnt, id); err != nil {
-		return nil, errors.New(fmt.Sprintf("Could not find container with id %s", id))
+	if res := tx.Find(cnt, id); res.Error != nil {
+		return nil, fmt.Errorf("could not find container with id %d", id)
 	}
-	if err := tx.Destroy(cnt); err != nil {
-		return cnt, err
+	if res := tx.Delete(cnt); res.Error != nil {
+		return cnt, res.Error
 	}
 	return cnt, nil
 }
 
-func (cm ContentManagerDB) DestroyScreen(id string) (*models.Screen, error) {
+func (cm ContentManagerDB) DestroyScreen(id int64) (*models.Screen, error) {
 	tx := cm.GetConnection()
 	screen := &models.Screen{}
-	if err := tx.Find(screen, id); err != nil {
-		return nil, errors.New(fmt.Sprintf("Could not find screen with id %s", id))
+	if res := tx.Find(screen, id); res.Error != nil {
+		return nil, fmt.Errorf("could not find screen with id %d", id)
 	}
-	if err := tx.Destroy(screen); err != nil {
-		return screen, err
+	if res := tx.Delete(screen); res.Error != nil {
+		return screen, res.Error
 	}
 	return screen, nil
 }
 
-func (cm ContentManagerDB) ListAllTags(tq TagQuery) (*models.Tags, int, error) {
-	tx := cm.GetConnection()
-	q := tx.Paginate(tq.Page, tq.PerPage)
+func (cm ContentManagerDB) ListAllTags(tq TagQuery) (*models.Tags, int64, error) {
+	q := cm.GetConnection()
 	if tq.TagType != "" {
 		q = q.Where("tag_type = ?", tq.TagType)
 	}
-	total, _ := q.Count(&models.Tags{})
+
+	var total int64
+	cRes := q.Model(&models.Tags{}).Count(&total)
+	if cRes.Error != nil {
+		return nil, total, cRes.Error
+	}
+
+	q = q.Offset(tq.Offset).Limit(GetPerPage(tq.PerPage))
 	tags := &models.Tags{}
-	if total > 0 {
-		if q_err := q.All(tags); q_err != nil {
-			return nil, total, q_err
+	if total > int64(0) {
+		if res := q.Find(tags); res.Error != nil {
+			return nil, total, res.Error
 		}
 	}
 	return tags, total, nil
 }
 
-func (cm ContentManagerDB) ListAllTagsContext() (*models.Tags, int, error) {
+func (cm ContentManagerDB) ListAllTagsContext() (*models.Tags, int64, error) {
 	params := cm.Params()
-	_, limit, page := GetPagination(params, cm.cfg.Limit)
+	offset, limit, page := GetPagination(params, cm.cfg.Limit)
 	tq := TagQuery{
 		Page:    page,
 		PerPage: limit,
 		TagType: StringDefault(params.Get("tag_type"), ""),
+		Offset:  offset,
 	}
 	return cm.ListAllTags(tq)
 }
 
 func (cm ContentManagerDB) CreateTag(tag *models.Tag) error {
-	tx := cm.GetConnection()
-	return tx.Create(tag)
+	res := cm.GetConnection().Create(tag)
+	return res.Error
 }
 
 func (cm ContentManagerDB) UpdateTag(tag *models.Tag) error {
-	tx := cm.GetConnection()
-	return tx.Update(tag)
+	tx := cm.GetConnection().Save(tag)
+	return tx.Error
 }
 
 func (cm ContentManagerDB) DestroyTag(id string) (*models.Tag, error) {
@@ -512,15 +568,18 @@ func (cm ContentManagerDB) DestroyTag(id string) (*models.Tag, error) {
 		return nil, err
 	}
 	tx := cm.GetConnection()
-	return tag, tx.Destroy(tag)
+	return tag, tx.Delete(tag).Error
 }
 
 func (cm ContentManagerDB) GetTag(tagID string) (*models.Tag, error) {
 	// log.Printf("DB Get a tag %s", tagID)
 	tx := cm.GetConnection()
 	t := &models.Tag{}
-	if err := tx.Find(t, tagID); err != nil {
-		return nil, err
+	if res := tx.First(t, "id = ?", tagID); res.Error != nil {
+		return nil, res.Error
+	}
+	if t.ID == "" {
+		return nil, fmt.Errorf("no tag found with %s", tagID)
 	}
 	return t, nil
 }
@@ -536,11 +595,10 @@ func (cm ContentManagerDB) GetValidTags(tags *models.Tags) (*models.Tags, error)
 		return &validTags, nil
 	}
 
-	q := tx.Q().Where("id in (?)", ids)
-	q_err := q.All(&validTags)
-	if q_err != nil {
-		log.Printf("Error validating tags %s", q_err)
-		return nil, q_err
+	q := tx.Where("id in (?)", ids).Find(&validTags)
+	if q.Error != nil {
+		log.Printf("Error validating tags %s", q.Error)
+		return nil, q.Error
 	}
 	return &validTags, nil
 }
@@ -564,27 +622,27 @@ func (cm ContentManagerDB) AssociateTag(t *models.Tag, mc *models.Content) error
 	}
 	tags = *validTags
 
-	err := tx.RawQuery("delete from contents_tags where content_id = ?", mc.ID).Exec()
-	if err != nil {
-		log.Printf("Could not associate tag %s", err)
-		return err
+	res := tx.Exec("delete from contents_tags where content_id = ?", mc.ID)
+	if res.Error != nil {
+		log.Printf("Could not associate tag %s", res.Error)
+		return res.Error
 	}
 
 	// I really don't love this but Buffalo many_to_many associations do NOT handle updates.  In addition an integer
 	// as the join table ID also doesn't seem to do the link even on a create.
-	sql_str := "insert into contents_tags (id, tag_id, content_id, created_at, updated_at) values (?, ?, ?, current_timestamp, current_timestamp)"
+	sql_str := "insert into contents_tags (tag_id, content_id) values (?, ?)"
 	for _, t := range tags {
-		linkID, _ := uuid.NewV4()
-		link_err := tx.RawQuery(sql_str, linkID, t.ID, mc.ID).Exec()
-		if link_err != nil {
-			log.Printf("Failed to re-link %s", link_err)
-			return link_err
+		res := tx.Exec(sql_str, t.ID, mc.ID)
+
+		if res.Error != nil {
+			log.Printf("Failed to re-link %s", res.Error)
+			return res.Error
 		}
 	}
 	return nil
 }
 
-func (cm ContentManagerDB) AssociateTagByID(tagId string, mcID uuid.UUID) error {
+func (cm ContentManagerDB) AssociateTagByID(tagId string, mcID int64) error {
 	mc, m_err := cm.GetContent(mcID)
 	t, t_err := cm.GetTag(tagId)
 	if m_err != nil || t_err != nil {
@@ -605,31 +663,30 @@ func (cm ContentManagerDB) CreateContainer(c *models.Container) error {
 		log.Printf("Path does not exist on disk under the config directory err %s", err)
 		return err
 	}
-	tx := cm.GetConnection()
-	if ok == true {
-		return tx.Create(c)
+	if ok {
+		tx := cm.GetConnection()
+		return tx.Create(c).Error
 	}
-	msg := fmt.Sprintf("The directory was not under the config path %s", c.Name)
-	return errors.New(msg)
+	return fmt.Errorf("the directory was not under the config path %s", c.Name)
 
 }
 
 func (cm ContentManagerDB) CreateTask(t *models.TaskRequest) (*models.TaskRequest, error) {
 	if t == nil {
-		return nil, errors.New("Requires a valid task")
+		return nil, errors.New("cannot create without a valid task")
 	}
 	tx := cm.GetConnection()
 	t.Status = models.TaskStatus.NEW // The defaults do not seem to work right...
-	err := tx.Create(t)
-	if err != nil {
-		return nil, err
+	res := tx.Create(t)
+	if res.Error != nil {
+		return nil, res.Error
 	}
-	return t, err
+	return t, nil
 }
 
 func (cm ContentManagerDB) UpdateTask(t *models.TaskRequest, currentState models.TaskStatusType) (*models.TaskRequest, error) {
 	if t == nil {
-		return t, errors.New("No task to update")
+		return t, errors.New("no task to update")
 	}
 	checkStatus, cErr := cm.GetTask(t.ID)
 	if cErr != nil {
@@ -639,47 +696,50 @@ func (cm ContentManagerDB) UpdateTask(t *models.TaskRequest, currentState models
 	// update (there isn't a conditional add into the sql for some reason)
 	if checkStatus.Status == currentState {
 		tx := cm.GetConnection()
-		upErr := tx.Update(t)
-		if upErr != nil {
-			return nil, upErr
+		res := tx.Save(t)
+		if res.Error != nil {
+			return nil, res.Error
 		}
 	} else {
 		msg := fmt.Sprintf("The current DB status %s != exec status %s", checkStatus.Status, currentState)
-		log.Printf(msg)
+		log.Print(msg)
 		return nil, errors.New(msg)
 	}
 	return cm.GetTask(t.ID)
 }
 
-func (cm ContentManagerDB) GetTask(id uuid.UUID) (*models.TaskRequest, error) {
+func (cm ContentManagerDB) GetTask(id int64) (*models.TaskRequest, error) {
 	task := models.TaskRequest{}
 	tx := cm.GetConnection()
-	err := tx.Find(&task, id)
-	return &task, err
+	res := tx.Find(&task, id)
+	if task.ID == 0 {
+		return nil, fmt.Errorf("no task found %d", id)
+	}
+	return &task, res.Error
 }
 
 // Get the next task for processing (not super thread safe but enough for mem manager)
 func (cm ContentManagerDB) NextTask() (*models.TaskRequest, error) {
 	tasks := models.TaskRequests{}
 	tx := cm.GetConnection()
-	q := tx.Paginate(1, 1)
-	err := q.Where("status = ?", models.TaskStatus.NEW).All(&tasks)
-	if err != nil {
-		return nil, err
+	res := tx.Limit(1).Where("status = ?", models.TaskStatus.NEW).Find(&tasks)
+	if res.Error != nil {
+		return nil, res.Error
 	}
 	if len(tasks) == 1 {
 		task := tasks[0]
 		task.Status = models.TaskStatus.PENDING
 		return cm.UpdateTask(&task, models.TaskStatus.NEW)
 	}
-	return nil, errors.New("No Tasks to pull off the queue")
+	return nil, errors.New("no tasks to pull off the queue")
 }
 
-func (cm ContentManagerDB) ListTasksContext() (*models.TaskRequests, int, error) {
+func (cm ContentManagerDB) ListTasksContext() (*models.TaskRequests, int64, error) {
 	params := cm.Params()
-	_, limit, page := GetPagination(params, cm.GetCfg().Limit)
+	offset, limit, page := GetPagination(params, cm.GetCfg().Limit)
 	query := TaskQuery{
 		Page:        page,
+		Offset:      offset,
 		PerPage:     limit,
 		ContentID:   StringDefault(params.Get("content_id"), ""),
 		ContainerID: StringDefault(params.Get("container_id"), ""),
@@ -689,10 +749,10 @@ func (cm ContentManagerDB) ListTasksContext() (*models.TaskRequests, int, error)
 	return cm.ListTasks(query)
 }
 
-func (cm ContentManagerDB) ListTasks(query TaskQuery) (*models.TaskRequests, int, error) {
+func (cm ContentManagerDB) ListTasks(query TaskQuery) (*models.TaskRequests, int64, error) {
 	tasks := models.TaskRequests{}
 	tx := cm.GetConnection()
-	q := tx.Paginate(query.Page, query.PerPage)
+	q := tx.Offset(query.Offset).Limit(GetPerPage(query.PerPage))
 	if query.Status != "" {
 		q = q.Where("status = ?", query.Status)
 	}
@@ -707,11 +767,15 @@ func (cm ContentManagerDB) ListTasks(query TaskQuery) (*models.TaskRequests, int
 		search := ("%" + query.Search + "%")
 		q = q.Where("message ilike ?", search)
 	}
-	total, _ := q.Count(&models.TaskRequests{})
+
+	var total int64
+	cRes := q.Model(&models.TaskRequests{}).Count(&total)
+	if cRes.Error != nil {
+		return nil, total, cRes.Error
+	}
 	if total > 0 {
-		err := q.All(&tasks)
-		if err != nil {
-			return nil, total, err
+		if res := q.Find(&tasks); res.Error != nil {
+			return nil, total, res.Error
 		}
 	}
 	return &tasks, total, nil

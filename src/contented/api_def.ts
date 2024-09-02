@@ -1,4 +1,4 @@
-let base = window.location.origin + '/';
+let base = window.location.origin + '/api/';
 
 // Pagination is per_page and page to work with the standard Soda and Resource interfaces.
 export let ApiDef = {
@@ -10,30 +10,30 @@ export let ApiDef = {
     preview: base + 'preview/',
     containers: base + 'containers/',
     containerContent: base + 'containers/{cId}/contents',
-    content: '/contents/{id}/',
+    content: '/api/contents/{id}/',
     contentScreens: base + 'contents/{mcID}/screens',
     screens: base + 'screens/',
     contentAll: base + 'content/',
-    searchContents: base + 'api/search/contents',
-    searchContainers: base + 'api/search/containers',
+    searchContents: '/api/search/contents',
+    searchContainers:'/api/search/containers',
     tags: base + 'tags/',
 
     // Task Related APIs
-    requestScreens: '/editing_queue/{id}/screens/{count}/{startTimeSeconds}',
-    encodeVideoContent: '/editing_queue/{id}/encoding',
-    createPreviewFromScreens: '/editing_queue/{id}/webp',
-    createTagContentTask: '/editing_queue/{id}/tagging',
-    contentDuplicatesTask: '/editing_queue/{contentId}/duplicates',
+    requestScreens: '/api/editing_queue/{id}/screens/{count}/{startTimeSeconds}',
+    encodeVideoContent: '/api/editing_queue/{id}/encoding',
+    createPreviewFromScreens: '/api/editing_queue/{id}/webp',
+    createTagContentTask: '/api/editing_queue/{id}/tagging',
+    contentDuplicatesTask: '/api/editing_queue/{contentId}/duplicates',
 
     // These will attempt to queue up tasks for ALL content in the container (but not in sub-containers)
-    containerVideoEncodingTask: '/editing_container_queue/{containerId}/encoding',
-    containerDuplicatesTask: '/editing_container_queue/{containerId}/duplicates',
-    containerTaggingTask: '/editing_container_queue/{containerId}/tagging',
-    containerPreviewsTask: '/editing_container_queue/{containerId}/screens/{count}/{startTimeSeconds}',
+    containerVideoEncodingTask: '/api/editing_container_queue/{containerId}/encoding',
+    containerDuplicatesTask: '/api/editing_container_queue/{containerId}/duplicates',
+    containerTaggingTask: '/api/editing_container_queue/{containerId}/tagging',
+    containerPreviewsTask: '/api/editing_container_queue/{containerId}/screens/{count}/{startTimeSeconds}',
   },
   tasks: {
-    get: '/task_requests/{id}',
-    update: '/task_requests/{id}',
-    list: '/task_requests/',
+    get:  base + 'task_requests/{id}',
+    list: base + 'task_requests/',
+    update: '/api/task_requests/{id}',
   },
 };

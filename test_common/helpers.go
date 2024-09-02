@@ -7,18 +7,18 @@ package test_common
 import (
 	"contented/models"
 	"contented/utils"
-	"context"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"testing"
 
-	"github.com/gobuffalo/buffalo"
+	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/envy"
-	"github.com/gobuffalo/nulls"
-	"github.com/gofrs/uuid"
+	"gorm.io/gorm"
 )
 
 const TOTAL_CONTAINERS = 9
@@ -55,23 +55,19 @@ func Get_VideoAndSetupPaths(cfg *utils.DirConfigEntry) (string, string, string) 
 	return srcDir, dstDir, testFile
 }
 
-func GetContext(app *buffalo.App) buffalo.Context {
-	return GetContextParams(app, "/containers", "1", "10")
+func GetContext() *gin.Context {
+	return GetContextParams("/containers", "1", "10")
 }
 
-func GetContextParams(app *buffalo.App, url string, page string, per_page string) buffalo.Context {
-	req, _ := http.NewRequest("GET", url, nil)
-
-	// Setting a value here like this doesn't seem to work correctly.  The context will NOT
-	// Actually keep the param.  GoLang made this a huge pain to test vs a nice simple SetParam
-	ctx := req.Context()
-	ctx = context.WithValue(ctx, "page", page)
-	ctx = context.WithValue(ctx, "per_page", per_page)
-	ctx = context.WithValue(ctx, "tx", models.DB)
-
-	return &buffalo.DefaultContext{
-		Context: ctx,
+func GetContextParams(url string, page string, per_page string) *gin.Context {
+	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	c.Params = []gin.Param{
+		{Key: "page", Value: page},
+		{Key: "per_page", Value: per_page},
 	}
+	req, _ := http.NewRequest(http.MethodGet, url, nil)
+	c.Request = req
+	return c
 }
 
 // TODO validate octet/stream
@@ -106,7 +102,7 @@ func ResetConfig() *utils.DirConfigEntry {
 // This function is now how the init method should function till caching is implemented
 // As the internals / guts are functional using the new models the creation of models
 // can be removed.
-func InitFakeApp(use_db bool) *utils.DirConfigEntry {
+func InitFakeApp(use_db bool) (*utils.DirConfigEntry, *gorm.DB) {
 	dir, _ := envy.MustGet("DIR")
 	fmt.Printf("Using directory %s\n", dir)
 
@@ -114,10 +110,12 @@ func InitFakeApp(use_db bool) *utils.DirConfigEntry {
 	cfg.UseDatabase = use_db // Set via .env or USE_DATABASE as an environment var
 	cfg.StaticResourcePath = "./public/build"
 	cfg.StartQueueWorkers = false
+	utils.SetCfg(*cfg)
 
 	// TODO: Assign the context into the manager (force it?)
 	if !cfg.UseDatabase {
 
+		log.Printf("MEMORY")
 		// TODO: This moves into managers.. is there a sane way of handling this?
 		memStorage := utils.InitializeMemory(dir)
 
@@ -131,26 +129,37 @@ func InitFakeApp(use_db bool) *utils.DirConfigEntry {
 		}
 
 		// Fake somehidden content (put int on disk maybe?)
-		cID, _ := uuid.NewV4()
 		hiddenContainer := models.Container{
-			ID:     cID,
+			ID:     utils.AssignNumerical(0, "containers"),
 			Name:   "hide",
 			Hidden: true,
 		}
 
-		mcID, _ := uuid.NewV4()
 		hiddenContent := models.Content{
-			ID:          mcID,
-			ContainerID: nulls.NewUUID(hiddenContainer.ID),
+			ID:          utils.AssignNumerical(0, "contents"),
+			ContainerID: &hiddenContainer.ID,
 			Hidden:      true,
 			Src:         "hidden.txt",
 		}
 		memStorage.ValidContainers[hiddenContainer.ID] = hiddenContainer
 		memStorage.ValidContent[hiddenContent.ID] = hiddenContent
 	} else {
-		models.DB.TruncateAll()
+		db := models.ResetDB(models.InitGorm(false))
+		return cfg, db
 	}
-	return cfg
+	return cfg, nil
+}
+
+func NilError(err error, msg string, t *testing.T) {
+	if err != nil {
+		t.Errorf("%s error: %s", msg, err)
+	}
+}
+
+func NoError(tx *gorm.DB, msg string, t *testing.T) {
+	if tx.Error != nil {
+		t.Errorf("%s error: %s", msg, tx.Error)
+	}
 }
 
 // For loading up the memory app but not searching directories checking content etc.
@@ -168,15 +177,17 @@ func InitMemoryFakeAppEmpty() *utils.DirConfigEntry {
 func CreateContentByDirName(test_dir_name string) (*models.Container, models.Contents, error) {
 	cnt, content := GetContentByDirName(test_dir_name)
 
-	c_err := models.DB.Create(cnt)
-	if c_err != nil {
-		return nil, nil, c_err
+	db := models.InitGorm(false)
+	res := db.Create(cnt)
+	if res.Error != nil {
+		return nil, nil, res.Error
 	}
+
 	for _, mc := range content {
-		mc.ContainerID = nulls.NewUUID(cnt.ID)
-		m_err := models.DB.Create(&mc)
-		if m_err != nil {
-			return nil, nil, m_err
+		mc.ContainerID = &cnt.ID
+		mRes := db.Create(&mc)
+		if mRes.Error != nil {
+			return nil, nil, mRes.Error
 		}
 	}
 	return cnt, content, nil
@@ -210,7 +221,7 @@ func CleanupContainer(c *models.Container) error {
 	fqPath := filepath.Join(cfg.Dir, c.Name)
 	fmt.Printf("CleanupContent() Test trying to cleanup %s", fqPath)
 	if f, err := os.Stat(fqPath); !os.IsNotExist(err) {
-		if f.IsDir() == true {
+		if f.IsDir() {
 			err := os.Remove(fqPath)
 			if err != nil {
 				fmt.Printf("CleanupContent() Failed to cleanup test %s", err)
@@ -231,7 +242,7 @@ func CreateContainerPath(c *models.Container) (string, error) {
 		fqPath = c.GetFqPath() // Currently just ignore any path specified in the Container
 		// fmt.Printf("It should be trying to create %s\n", fqPath)
 		if _, err := os.Stat(fqPath); os.IsNotExist(err) {
-			return fqPath, os.Mkdir(fqPath, 0644)
+			return fqPath, os.Mkdir(fqPath, 0655)
 		}
 	}
 	return fqPath, nil

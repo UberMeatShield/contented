@@ -1,14 +1,20 @@
 package models
 
 import (
-	"fmt"
+	"testing"
 )
 
-func (ms *ModelSuite) Test_Content() {
-	count, err := ms.DB.Count("contents")
-	ms.NoError(err)
+func TestContent(t *testing.T) {
+	db := InitGorm(false)
+	SetupTests(db, t)
+
+	var count int64
+	tx := db.Model(&Content{}).Count(&count)
+	if tx.Error != nil {
+		t.Errorf("Failed to count %s", tx.Error)
+	}
 	if count > 0 {
-		ms.Fail("The DB was not reset")
+		t.Errorf("Test_Content There are still contents in the DB %d", count)
 	}
 
 	tags := Tags{
@@ -22,42 +28,29 @@ func (ms *ModelSuite) Test_Content() {
 		Tags:        tags,
 	}
 	// Tags MUST be created or the association will not be made
-	for _, t := range tags {
-		t_err := ms.DB.Create(&t)
-		if t_err != nil {
-			ms.Fail(fmt.Sprintf("Not creating tag %s\n", t_err))
+	for _, tag := range tags {
+		tagTx := db.Create(&tag)
+		if tagTx.Error != nil {
+			t.Errorf("Not creating tag %s\n", tagTx.Error)
 		}
 	}
+	mc.Tags = tags
 
-	verr, err := ms.DB.Eager().ValidateAndSave(&mc)
-	if err != nil {
-		ms.Fail(fmt.Sprintf("Error Creating Content %s\n", err))
+	mcTx := db.Save(&mc)
+	if mcTx.Error != nil {
+		t.Errorf("Failed to save content %s", mcTx.Error)
 	}
-	if verr == nil {
-		ms.Fail(fmt.Sprintf("Error Validating %s\n", verr))
+	if mc.ID <= 0 {
+		t.Errorf("Did not actually save content")
 	}
-	ms.NotZero(mc.ID)
 
 	// TODO: At least query the join table and see what comes back
 	check := Content{}
-	q_err := ms.DB.Eager("Tags").Find(&check, mc.ID)
-
-	//cols := []string{"*", "Content.Tags"}
-	//popModel := &pop.Model{Value: Content{}}
-	//sql, _ := ms.DB.Q().Eager("Tags").ToSQL(popModel, cols...)
-	//fmt.Printf("SQL %s\n", sql)
-
-	tags_check := Tags{}
-	t_err := ms.DB.All(&tags_check)
-	if t_err != nil {
-		ms.Fail(fmt.Sprintf("Could not find any tags %s", t_err))
+	checkRes := db.Preload("Tags").Find(&check, mc.ID)
+	if checkRes.Error != nil {
+		t.Errorf("Error loading the content %s", checkRes.Error)
 	}
-	fmt.Printf("Loaded tags %s \n", tags_check)
-
-	if q_err != nil {
-		ms.Fail("Could not query for this id" + mc.ID.String())
-	}
-	if len(check.Tags) == 0 {
-		ms.Fail("None of the tags have been loaded")
+	if len(check.Tags) != 2 {
+		t.Errorf("Failed to get the correct tags back %d", len(check.Tags))
 	}
 }

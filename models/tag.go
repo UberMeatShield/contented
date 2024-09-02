@@ -4,18 +4,19 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/gobuffalo/pop/v6"
-	"github.com/gobuffalo/validate/v3"
+	"gorm.io/gorm"
 )
 
 // Tag is used by pop to map your taggings database table to your go code.
 type Tag struct {
-	ID          string    `json:"id" db:"id"`
-	Description string    `json:"description" db:"description"`
-	TagType     string    `json:"tag_type" db:"tag_type" default:"keyword"`
-	CreatedAt   time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
-	Contents    Contents  `json:"contents,omitempty" many_to_many:"contents_tags"`
+	ID        string         `json:"id" db:"id" gorm:"primaryKey"`
+	CreatedAt time.Time      `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at" db:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" db:"deleted_at"`
+
+	Description string   `json:"description" db:"description" default:""`
+	TagType     string   `json:"tag_type" db:"tag_type" default:"keyword"`
+	Contents    Contents `json:"contents,omitempty" gorm:"many2many:contents_tags;"`
 }
 
 // String is not required by pop and may be deleted
@@ -72,22 +73,4 @@ type TagsCollection map[string]Tags
 func (t Tags) String() string {
 	jt, _ := json.Marshal(t)
 	return string(jt)
-}
-
-// Validate gets run every time you call a "pop.Validate*" (pop.ValidateAndSave, pop.ValidateAndCreate, pop.ValidateAndUpdate) method.
-// This method is not required and may be deleted.
-func (t *Tag) Validate(tx *pop.Connection) (*validate.Errors, error) {
-	return validate.NewErrors(), nil
-}
-
-// ValidateCreate gets run every time you call "pop.ValidateAndCreate" method.
-// This method is not required and may be deleted.
-func (t *Tag) ValidateCreate(tx *pop.Connection) (*validate.Errors, error) {
-	return validate.NewErrors(), nil
-}
-
-// ValidateUpdate gets run every time you call "pop.ValidateAndUpdate" method.
-// This method is not required and may be deleted.
-func (t *Tag) ValidateUpdate(tx *pop.Connection) (*validate.Errors, error) {
-	return validate.NewErrors(), nil
 }

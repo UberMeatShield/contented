@@ -8,42 +8,44 @@ import (
 	"time"
 
 	//"contented/actions"
-	"github.com/gobuffalo/nulls"
-	"github.com/gobuffalo/pop/v6"
-	"github.com/gobuffalo/validate/v3"
-	"github.com/gofrs/uuid"
+
+	"gorm.io/gorm"
 )
 
 // Content is used by pop to map your contents database table to your go code.
 type Content struct {
-	ID          uuid.UUID  `json:"id" db:"id"`
-	CreatedAt   time.Time  `json:"created" db:"created_at"`
-	UpdatedAt   time.Time  `json:"updated" db:"updated_at"`
-	Src         string     `json:"src" db:"src"`
-	ContentType string     `json:"content_type" db:"content_type"`
-	Preview     string     `json:"preview" db:"preview"`
-	ContainerID nulls.UUID `json:"container_id" db:"container_id" default:"nil"`
-	Idx         int        `json:"idx" db:"idx" default:"0"`
-	Active      bool       `json:"active" db:"active" default:"true"`
-	Corrupt     bool       `json:"corrupt" db:"corrupt" default:"false"`
-	SizeBytes   int64      `json:"size" db:"size_bytes" default:"0"`
-	Description string     `json:"description" db:"description" default:""`
-	NoFile      bool       `json:"no_file" db:"no_file" default:"false"` // Actual file or just description etc
-	Hidden      bool       `json:"-" db:"hidden" default:"false"`        // Should it be visible in basic list queries
+	ID        int64          `json:"id" gorm:"primaryKey"`
+	CreatedAt time.Time      `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time      `json:"updated" db:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" db:"deleted_at"`
+
+	Src         string `json:"src" db:"src"`
+	ContentType string `json:"content_type" db:"content_type"`
+	Preview     string `json:"preview" db:"preview"`
+	Idx         int    `json:"idx" db:"idx" default:"0"`
+	Active      bool   `json:"active" db:"active" default:"true"`
+	Corrupt     bool   `json:"corrupt" db:"corrupt" default:"false"`
+	SizeBytes   int64  `json:"size" db:"size_bytes" default:"0"`
+	Description string `json:"description" db:"description" default:""`
+	NoFile      bool   `json:"no_file" db:"no_file" default:"false"` // Actual file or just description etc
+	Hidden      bool   `json:"-" db:"hidden" default:"false"`        // Should it be visible in basic list queries
 
 	// This is for information about the file content (video / image mostly stats, rez etc)
 	Meta string `json:"meta" db:"meta" default:""`
 
 	// Joins (Eager loading is not working?)
-	Screens Screens `json:"screens" has_many:"preview_screens"`
-	Tags    Tags    `json:"tags" many_to_many:"contents_tags"`
+
+	Screens     Screens `json:"screens" has_many:"preview_screens"`
+	ContainerID *int64  `json:"container_id" db:"container_id" gorm:"default:null"`
+
+	Tags Tags `json:"tags,omitempty" gorm:"many2many:contents_tags;"`
 
 	// TODO: Maybe, MAYBE drop this?  None of the code currently really looks at the encoding
 	// till actually creating a preview.
 	Encoding string `json:"encoding" db:"encoding"`
 
 	// Useful for when we built out media in a container and want to associate it.
-	FqPath string `json:"-" db:"-" default:""` // NOT SET BY DEFAULT
+	FqPath string `json:"-" db:"-" default:"" gorm:"-"` // NOT SET BY DEFAULT
 }
 
 // It seems odd there is no arbitrary json field => proper sort on the struct but then many of
@@ -59,6 +61,11 @@ var VALID_CONTENT_ORDERS = []string{
 	"size",
 	"description",
 }
+
+// Contents is not required by pop and may be deleted
+type Contents []Content
+type ContentMap map[int64]Content
+type ContentMapBySrc map[string]Content
 
 func GetContentSort(arr Contents, jsonFieldName string) ContentJsonSort {
 	var theSort ContentJsonSort
@@ -77,7 +84,7 @@ func GetContentSort(arr Contents, jsonFieldName string) ContentJsonSort {
 		}
 	case "container_id":
 		theSort = func(i, j int) bool {
-			return arr[i].ContainerID.UUID.String() < arr[j].ContainerID.UUID.String()
+			return *arr[i].ContainerID < *arr[j].ContainerID
 		}
 	case "size":
 		theSort = func(i, j int) bool {
@@ -125,11 +132,6 @@ func (m Content) String() string {
 	return string(jm)
 }
 
-// Contents is not required by pop and may be deleted
-type Contents []Content
-type ContentMap map[uuid.UUID]Content
-type ContentMapBySrc map[string]Content
-
 func (arr Contents) Reverse() Contents {
 	for i, j := 0, len(arr)-1; i < j; i, j = i+1, j-1 {
 		arr[i], arr[j] = arr[j], arr[i]
@@ -143,34 +145,21 @@ func (m Contents) String() string {
 	return string(jm)
 }
 
+func (m ContentMap) String() string {
+	jm, _ := json.Marshal(m)
+	return string(jm)
+}
+
 // String is not required by pop and may be deleted
 func (content Content) IsVideo() bool {
 	return strings.Contains(content.ContentType, "video")
-}
-
-// Validate gets run every time you call a "pop.Validate*" (pop.ValidateAndSave, pop.ValidateAndCreate, pop.ValidateAndUpdate) method.
-// This method is not required and may be deleted.
-func (m *Content) Validate(tx *pop.Connection) (*validate.Errors, error) {
-	return validate.NewErrors(), nil
-}
-
-// ValidateCreate gets run every time you call "pop.ValidateAndCreate" method.
-// This method is not required and may be deleted.
-func (m *Content) ValidateCreate(tx *pop.Connection) (*validate.Errors, error) {
-	return validate.NewErrors(), nil
-}
-
-// ValidateUpdate gets run every time you call "pop.ValidateAndUpdate" method.
-// This method is not required and may be deleted.
-func (m *Content) ValidateUpdate(tx *pop.Connection) (*validate.Errors, error) {
-	return validate.NewErrors(), nil
 }
 
 // This is a little risky as the tags might not be loaded on the object and there isn't
 // a great way to tell 'loaded' vs just doesn't have tags
 func (m *Content) HasTag(tag string) bool {
 	tags := m.Tags
-	if tags == nil || len(tags) == 0 {
+	if len(tags) == 0 {
 		return false
 	}
 	for _, t := range tags {

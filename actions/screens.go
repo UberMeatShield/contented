@@ -3,18 +3,14 @@ package actions
 import (
 	"log"
 	"os"
+	"strconv"
 
-	//"fmt"
-	"net/http"
-	// "errors"
 	"contented/managers"
 	"contented/models"
+	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/buffalo"
-
-	//"github.com/gobuffalo/pop/v5"
-
-	"github.com/gofrs/uuid"
 )
 
 // Following naming logic is implemented in Buffalo:
@@ -24,7 +20,7 @@ import (
 // Path: Plural (/screens)
 // View Template Folder: Plural (/templates/screens/)
 type ScreensResponse struct {
-	Total   int            `json:"total" default:"0"`
+	Total   int64          `json:"total" default:"0"`
 	Results models.Screens `json:"results" default:"[]"`
 }
 
@@ -35,21 +31,23 @@ type ScreensResource struct {
 
 // List gets all Screens. This function is mapped to the path
 // GET /screens
-func (v ScreensResource) List(c buffalo.Context) error {
+func ScreensResourceList(c *gin.Context) {
 	// Get the DB connection from the context
 	mcStrID := managers.StringDefault(c.Param("content_id"), "")
 	log.Printf("Content ID specified %s", mcStrID)
 	if mcStrID != "" {
-		_, err := uuid.FromString(mcStrID)
+		_, err := strconv.ParseInt(mcStrID, 10, 64)
 		if err != nil {
-			return c.Error(http.StatusBadRequest, err)
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
 		}
 	}
 	// TODO: Screens Response (total count provided)
-	man := managers.GetManager(&c)
+	man := managers.GetManager(c)
 	screens, total, err := man.ListScreensContext()
 	if err != nil {
-		return c.Error(http.StatusBadRequest, err)
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
 	}
 	if screens == nil {
 		screens = &models.Screens{}
@@ -58,22 +56,24 @@ func (v ScreensResource) List(c buffalo.Context) error {
 		Total:   total,
 		Results: *screens,
 	}
-	return c.Render(200, r.JSON(res))
+	c.JSON(200, res)
 }
 
 // Show gets the data for one Screen. This function is mapped to
 // the path GET /screens/{screen_id}
-func (v ScreensResource) Show(c buffalo.Context) error {
+func ScreensResourceShow(c *gin.Context) {
 	psStrID := c.Param("screen_id")
-	psID, badUUID := uuid.FromString(psStrID)
+	psID, badUUID := strconv.ParseInt(psStrID, 10, 64)
 	if badUUID != nil {
-		return c.Error(400, badUUID)
+		c.AbortWithError(400, badUUID)
+		return
 	}
 
-	man := managers.GetManager(&c)
+	man := managers.GetManager(c)
 	screen, err := man.GetScreen(psID)
 	if err != nil {
-		return c.Error(404, err)
+		c.AbortWithError(404, err)
+		return
 	}
 
 	// Check it exists
@@ -81,71 +81,92 @@ func (v ScreensResource) Show(c buffalo.Context) error {
 	_, fErr := os.Stat(fqPath)
 	if fErr != nil {
 		log.Printf("Cannot download file not on disk %s with err %s", fqPath, fErr)
-		return c.Error(404, err)
+		c.AbortWithError(404, err)
+		return
 	}
+
+	// TODO: Figure out the headers better
 	log.Printf("Preview Screen ID specified %s path %s", psStrID, fqPath)
-	http.ServeFile(c.Response(), c.Request(), fqPath)
-	return nil
+	c.File(fqPath)
 }
 
 // Create adds a Screen to the DB. This function is mapped to the
 // path POST /screens
-func (v ScreensResource) Create(c buffalo.Context) error {
-	_, _, err := managers.ManagerCanCUD(&c)
+func ScreensResourceCreate(c *gin.Context) {
+	_, _, err := managers.ManagerCanCUD(c)
 	if err != nil {
-		return err
+		c.AbortWithError(http.StatusForbidden, err)
+		return
 	}
 	// Bind previewScreen to the html form/JSON elements
 	screen := &models.Screen{}
-	if err := c.Bind(screen); err != nil {
-		return err
+	if err := c.BindJSON(screen); err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
 	}
-	man := managers.GetManager(&c)
+	man := managers.GetManager(c)
 	cErr := man.CreateScreen(screen)
 	if cErr != nil {
-		return c.Render(http.StatusUnprocessableEntity, r.JSON(cErr))
+		c.AbortWithError(http.StatusUnprocessableEntity, cErr)
+		return
 	}
-	return c.Render(http.StatusCreated, r.JSON(screen))
+	c.JSON(http.StatusCreated, screen)
 }
 
 // Update changes a Screen in the DB. This function is mapped to
 // the path PUT /screens/{screen_id}
-func (v ScreensResource) Update(c buffalo.Context) error {
+func ScreensResourceUpdate(c *gin.Context) {
 	// Get the DB connection from the context
-	_, _, err := managers.ManagerCanCUD(&c)
+	_, _, err := managers.ManagerCanCUD(c)
 	if err != nil {
-		return err
+		c.AbortWithError(http.StatusForbidden, err)
+		return
 	}
 
-	man := managers.GetManager(&c)
-	id, idErr := uuid.FromString(c.Param("screen_id"))
+	man := managers.GetManager(c)
+	id, idErr := strconv.ParseInt(c.Param("screen_id"), 10, 64)
 	if idErr != nil {
-		return c.Error(http.StatusBadRequest, idErr)
+		c.AbortWithError(http.StatusBadRequest, idErr)
+		return
 	}
 	screen, notFoundErr := man.GetScreen(id)
 	if notFoundErr != nil {
-		return c.Error(http.StatusNotFound, err)
+		c.AbortWithError(http.StatusNotFound, err)
+		return
 	}
-	if err := c.Bind(screen); err != nil {
-		return c.Render(http.StatusUnprocessableEntity, r.JSON(err))
+	if err := c.BindJSON(screen); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, err)
+		return
+	}
+	if upErr := man.UpdateScreen(screen); upErr != nil {
+		c.JSON(http.StatusInternalServerError, upErr)
+		return
 	}
 	checkScreen, _ := man.GetScreen(id)
-	return c.Render(http.StatusOK, r.JSON(checkScreen))
+	c.JSON(http.StatusOK, checkScreen)
 }
 
 // Destroy deletes a Screen from the DB. This function is mapped
 // to the path DELETE /screens/{screen_id}
-func (v ScreensResource) Destroy(c buffalo.Context) error {
+func ScreensResourceDestroy(c *gin.Context) {
 	// Get the DB connection from the context
-	_, _, err := managers.ManagerCanCUD(&c)
+	_, _, err := managers.ManagerCanCUD(c)
 	if err != nil {
-		return err
+		c.AbortWithError(http.StatusForbidden, err)
+		return
 	}
 
-	man := managers.GetManager(&c)
-	screen, dErr := man.DestroyScreen(c.Param("screen_id"))
-	if dErr != nil {
-		return c.Render(http.StatusBadRequest, r.JSON(dErr))
+	screenId, sErr := strconv.ParseInt(c.Param("screen_id"), 10, 64)
+	if sErr != nil {
+		c.AbortWithError(http.StatusBadRequest, sErr)
+		return
 	}
-	return c.Render(http.StatusOK, r.JSON(screen))
+
+	man := managers.GetManager(c)
+	screen, dErr := man.DestroyScreen(screenId)
+	if dErr != nil {
+		c.JSON(http.StatusBadRequest, dErr)
+		return
+	}
+	c.JSON(http.StatusOK, screen)
 }

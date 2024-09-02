@@ -5,24 +5,24 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/gobuffalo/pop/v6"
-	"github.com/gobuffalo/validate/v3"
-	"github.com/gofrs/uuid"
+	"gorm.io/gorm"
 )
 
 // Container is used by pop to map your containers database table to your go code.
 type Container struct {
-	ID          uuid.UUID `json:"id" db:"id"`
-	Total       int       `json:"total" db:"total" default:"0"`
-	Path        string    `json:"-" db:"path"`
-	Name        string    `json:"name" db:"name"`
-	Description string    `json:"description" db:"description" default:""`
-	CreatedAt   time.Time `json:"created" db:"created_at"`
-	UpdatedAt   time.Time `json:"updated" db:"updated_at"`
-	Active      bool      `json:"active" db:"active" default:"true"`
-	Idx         int       `json:"idx" db:"idx" default:"0"`
-	Contents    Contents  `json:"contents" has_many:"contents" db:"-"`
-	Hidden      bool      `json:"-" db:"hidden" default:"false"`
+	ID        int64          `json:"id" gorm:"primaryKey" db:"id"`
+	CreatedAt time.Time      `json:"created" db:"created_at"`
+	UpdatedAt time.Time      `json:"updated" db:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" db:"deleted_at"`
+
+	Total       int      `json:"total" db:"total" default:"0"`
+	Path        string   `json:"-" db:"path"`
+	Name        string   `json:"name" db:"name"`
+	Description string   `json:"description" db:"description" default:""`
+	Active      bool     `json:"active" db:"active" default:"true"`
+	Idx         int      `json:"idx" db:"idx" default:"0"`
+	Contents    Contents `json:"contents" db:"-"`
+	Hidden      bool     `json:"-" db:"hidden" default:"false"`
 
 	// This is expected to be a URL where often a configured /preview/{mcID} is going
 	// to be assigned by default.  However you should be able to use any link but it is
@@ -86,7 +86,7 @@ func (c Container) String() string {
 
 // Containers is not required by pop and may be deleted
 type Containers []Container
-type ContainerMap map[uuid.UUID]Container
+type ContainerMap map[int64]Container
 
 func (arr Containers) Reverse() Containers {
 	for i, j := 0, len(arr)-1; i < j; i, j = i+1, j-1 {
@@ -104,22 +104,4 @@ func (c Containers) String() string {
 // Hmmmm (Unit tests were creating bad files in the mock dir)
 func (c Container) GetFqPath() string {
 	return filepath.Join(c.Path, c.Name)
-}
-
-// Validate gets run every time you call a "pop.Validate*" (pop.ValidateAndSave, pop.ValidateAndCreate, pop.ValidateAndUpdate) method.
-// This method is not required and may be deleted.
-func (c *Container) Validate(tx *pop.Connection) (*validate.Errors, error) {
-	return validate.NewErrors(), nil
-}
-
-// ValidateCreate gets run every time you call "pop.ValidateAndCreate" method.
-// This method is not required and may be deleted.
-func (c *Container) ValidateCreate(tx *pop.Connection) (*validate.Errors, error) {
-	return validate.NewErrors(), nil
-}
-
-// ValidateUpdate gets run every time you call "pop.ValidateAndUpdate" method.
-// This method is not required and may be deleted.
-func (c *Container) ValidateUpdate(tx *pop.Connection) (*validate.Errors, error) {
-	return validate.NewErrors(), nil
 }

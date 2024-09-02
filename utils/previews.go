@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	"github.com/disintegration/imaging"
-	"github.com/gofrs/uuid"
 	"github.com/nfnt/resize"
 	"github.com/tidwall/gjson"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
@@ -31,8 +30,8 @@ const PREVIEW_DIRECTORY = "container_previews"
 
 // Used in the case of async processing when creating Preview results
 type PreviewResult struct {
-	C_ID    uuid.UUID
-	MC_ID   uuid.UUID
+	C_ID    int64
+	MC_ID   int64
 	Preview string
 	Err     error
 }
@@ -135,10 +134,13 @@ func CreateImagePreview(srcImg *os.File, dstFile string, contentType string) (st
 		img, dErr = png.Decode(srcImg)
 	} else if contentType == "image/jpeg" {
 		img, dErr = jpeg.Decode(srcImg)
+	} else if contentType == "image/webp" || contentType == "image/gif" {
+		log.Printf("No provided method for this file type %s", contentType)
+		return "", nil
 	} else {
 		log.Printf("No provided method for this file type %s", contentType)
 		fname, _ := srcImg.Stat()
-		return "", errors.New("Cannot handle type for file: " + fname.Name())
+		return "", fmt.Errorf("cannot handle preview for file: %s contentType %s", fname.Name(), contentType)
 	}
 	if dErr != nil {
 		log.Printf("Failed to determine image type %s for %s", dstFile, dErr)
@@ -618,7 +620,7 @@ func CreateContentPreview(c *models.Container, mc *models.Content) (string, erro
 
 	dstFqPath, err := GetImagePreview(cntPath, mc.Src, dstPath, cfg.PreviewOverSize)
 	if err != nil {
-		log.Printf("Failed to create a preview in %s for mc %s err: %s", dstPath, mc.ID.String(), err)
+		log.Printf("Failed to create a preview in %s for content %d err: %s", dstPath, mc.ID, err)
 		if cfg.PreviewCreateFailIsFatal {
 			log.Fatal(err)
 		}
@@ -646,7 +648,7 @@ func AssignScreensFromSet(c *models.Container, mc *models.Content, maybeScreens 
 		name := fRef.Name()
 		if screenRe.MatchString(name) {
 			// log.Printf("Matched file %s idx %d", name, idx)
-			id, _ := uuid.NewV4()
+			id := AssignNumerical(0, "screens")
 			ps := models.Screen{
 				ID:        id,
 				Path:      previewPath,

@@ -14,13 +14,10 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"time"
 
-	"github.com/gobuffalo/buffalo"
+	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/buffalo/worker"
-	"github.com/gobuffalo/nulls"
-	"github.com/gobuffalo/pop/v6"
-	"github.com/gofrs/uuid"
+	"gorm.io/gorm"
 )
 
 type TasksQueuedResponse struct {
@@ -28,35 +25,42 @@ type TasksQueuedResponse struct {
 	Results models.TaskRequests `json:"results" default:"[]"`
 }
 
-/**
- * Execute the task within the transaction middleware scope.
- * TODO: Can this work in a full unit test?
- */
-func VideoEncodingWrapper(args worker.Args) error {
-	log.Printf("VideoEncodingWrapper () Starting Task args %s", args)
+type HandleTaskTypeFunc func(managers.ContentManager, int64) error
+
+func HandleTask(args worker.Args, taskFunc HandleTaskTypeFunc) error {
 	cfg := utils.GetCfg()
-	getConnection := func() *pop.Connection {
+	getConnection := func() *gorm.DB {
 		return nil
 	}
-	app := App(cfg.UseDatabase)
-	taskId, err := GetTaskId(args)
+	taskId, err := GetTaskId(args) // Determines if it is a valid id (bad request)
 	if err != nil {
 		return err
 	}
 	// Note this is extra complicated by the fact it SHOULD be able to run with NO connections
 	// or DB sessions made.
 	if cfg.UseDatabase {
-		return models.DB.Transaction(func(tx *pop.Connection) error {
-			getConnection = func() *pop.Connection {
-				return tx
-			}
-			man := managers.GetAppManager(app, getConnection)
-			return managers.EncodingVideoTask(man, taskId)
-		})
+		getConnection = func() *gorm.DB {
+			return models.InitGorm(false)
+		}
+		man := managers.GetAppManager(getConnection)
+		return taskFunc(man, taskId)
 	}
 	// Memory manager version
-	man := managers.GetAppManager(app, getConnection)
-	return managers.EncodingVideoTask(man, taskId)
+	man := managers.GetAppManager(getConnection)
+	return taskFunc(man, taskId)
+}
+
+/**
+ *
+ */
+
+/**
+ * Execute the task within the transaction middleware scope.
+ * TODO: Can this work in a full unit test?
+ */
+func VideoEncodingWrapper(args worker.Args) error {
+	log.Printf("VideoEncodingWrapper () Starting Task args %s", args)
+	return HandleTask(args, managers.EncodingVideoTask)
 }
 
 /*
@@ -65,59 +69,12 @@ func VideoEncodingWrapper(args worker.Args) error {
  */
 func ScreenCaptureWrapper(args worker.Args) error {
 	log.Printf("ScreenCaptureWrapper() Starting Task args %s", args)
-	cfg := utils.GetCfg()
-	getConnection := func() *pop.Connection {
-		return nil
-	}
-	app := App(cfg.UseDatabase)
-	taskId, err := GetTaskId(args)
-	if err != nil {
-		return err
-	}
-
-	// Note this is extra complicated by the fact it SHOULD be able to run with NO connections
-	// or DB sessions made.
-	if cfg.UseDatabase {
-		// There has to be a good way to have all transaction middleware commit and work
-		// without exploding and being fully wrapping the scope.
-		return models.DB.Transaction(func(tx *pop.Connection) error {
-			getConnection = func() *pop.Connection {
-				return tx
-			}
-			man := managers.GetAppManager(app, getConnection)
-			return managers.ScreenCaptureTask(man, taskId)
-		})
-	}
-	// Memory manager version
-	man := managers.GetAppManager(app, getConnection)
-	return managers.ScreenCaptureTask(man, taskId)
+	return HandleTask(args, managers.ScreenCaptureTask)
 }
 
 func WebpFromScreensWrapper(args worker.Args) error {
 	log.Printf("Web From Screens () Starting Task args %s", args)
-	cfg := utils.GetCfg()
-	getConnection := func() *pop.Connection {
-		return nil
-	}
-	app := App(cfg.UseDatabase)
-	taskId, err := GetTaskId(args)
-	if err != nil {
-		return err
-	}
-	// Note this is extra complicated by the fact it SHOULD be able to run with NO connections
-	// or DB sessions made.
-	if cfg.UseDatabase {
-		return models.DB.Transaction(func(tx *pop.Connection) error {
-			getConnection = func() *pop.Connection {
-				return tx
-			}
-			man := managers.GetAppManager(app, getConnection)
-			return managers.WebpFromScreensTask(man, taskId)
-		})
-	}
-	// Memory manager version
-	man := managers.GetAppManager(app, getConnection)
-	return managers.WebpFromScreensTask(man, taskId)
+	return HandleTask(args, managers.WebpFromScreensTask)
 }
 
 /*
@@ -125,134 +82,98 @@ func WebpFromScreensWrapper(args worker.Args) error {
  */
 func TaggingContentWrapper(args worker.Args) error {
 	log.Printf("Tagging content element () Starting Task args %s", args)
-	cfg := utils.GetCfg()
-	getConnection := func() *pop.Connection {
-		return nil
-	}
-	app := App(cfg.UseDatabase)
-	taskId, err := GetTaskId(args)
-	if err != nil {
-		return err
-	}
-	// Note this is extra complicated by the fact it SHOULD be able to run with NO connections
-	// or DB sessions made.
-	if cfg.UseDatabase {
-		return models.DB.Transaction(func(tx *pop.Connection) error {
-			getConnection = func() *pop.Connection {
-				return tx
-			}
-			man := managers.GetAppManager(app, getConnection)
-			return managers.TaggingContentTask(man, taskId)
-		})
-	}
-	// Memory manager version
-	man := managers.GetAppManager(app, getConnection)
-	return managers.TaggingContentTask(man, taskId)
+	return HandleTask(args, managers.TaggingContentTask)
 }
 
 func DuplicatesWrapper(args worker.Args) error {
 	log.Printf("Finding Duplicates %s", args)
-	cfg := utils.GetCfg()
-	getConnection := func() *pop.Connection {
-		return nil
-	}
-	app := App(cfg.UseDatabase)
-	taskId, err := GetTaskId(args)
-	if err != nil {
-		return err
-	}
-	// Note this is extra complicated by the fact it SHOULD be able to run with NO connections
-	// or DB sessions made.
-	if cfg.UseDatabase {
-		return models.DB.Transaction(func(tx *pop.Connection) error {
-			getConnection = func() *pop.Connection {
-				return tx
-			}
-			man := managers.GetAppManager(app, getConnection)
-			return managers.DetectDuplicatesTask(man, taskId)
-		})
-	}
-	// Memory manager version
-	man := managers.GetAppManager(app, getConnection)
-	return managers.DetectDuplicatesTask(man, taskId)
+	return HandleTask(args, managers.DetectDuplicatesTask)
 }
 
-func GetTaskId(args worker.Args) (uuid.UUID, error) {
+func GetTaskId(args worker.Args) (int64, error) {
 	taskId := ""
 	for k, v := range args {
 		if k == "id" {
 			taskId = v.(string)
 		}
 	}
-	id, err := uuid.FromString(taskId)
+	id, err := strconv.ParseInt(taskId, 10, 64)
 	if err != nil {
 		log.Printf("Failed to load task bad id %s", err)
-		bad, _ := uuid.NewV4()
-		return bad, err
+		return 0, err
 	}
 	return id, err
 }
 
-func WebpFromScreensHandler(c buffalo.Context) error {
-	contentID, bad_uuid := uuid.FromString(c.Param("contentID"))
-	if bad_uuid != nil {
-		return c.Error(http.StatusBadRequest, bad_uuid)
+func WebpFromScreensHandler(c *gin.Context) {
+	contentID, bad_id := strconv.ParseInt(c.Param("content_id"), 10, 64)
+	if bad_id != nil {
+		c.AbortWithError(http.StatusBadRequest, bad_id)
+		return
 	}
-	man := managers.GetManager(&c)
+	man := managers.GetManager(c)
 	content, err := man.GetContent(contentID)
 	if err != nil {
-		return nil
+		c.AbortWithError(http.StatusNotFound, err)
+		return
 	}
 	tr, tErr := CreateWebpTask(content)
 	if tErr != nil {
-		c.Error(http.StatusBadRequest, tErr)
+		c.AbortWithError(http.StatusBadRequest, tErr)
+		return
 	}
-	return QueueTaskRequest(c, man, tr)
+	QueueTaskRequest(c, man, tr)
 }
 
 // Should deny quickly if the media content type is incorrect for the action
-func VideoEncodingHandler(c buffalo.Context) error {
-	contentID, bad_uuid := uuid.FromString(c.Param("contentID"))
-	if bad_uuid != nil {
-		return c.Error(http.StatusBadRequest, bad_uuid)
+func VideoEncodingHandler(c *gin.Context) {
+	contentID, bad_id := strconv.ParseInt(c.Param("content_id"), 10, 64)
+	if bad_id != nil {
+		c.AbortWithError(http.StatusBadRequest, bad_id)
+		return
 	}
-	man := managers.GetManager(&c)
+	man := managers.GetManager(c)
 	content, err := man.GetContent(contentID)
 	if err != nil {
-		return c.Error(http.StatusNotFound, err)
+		c.AbortWithError(http.StatusNotFound, err)
+		return
 	}
 
 	task, badTask := CreateVideoEncodingTask(content, c.Param("codec"))
 	if badTask != nil {
-		return c.Error(http.StatusBadRequest, badTask)
+		c.AbortWithError(http.StatusBadRequest, badTask)
+		return
 	}
-	return QueueTaskRequest(c, man, task)
+	QueueTaskRequest(c, man, task)
 }
 
-func ContainerVideoEncodingHandler(c buffalo.Context) error {
-	containerID, bad_uuid := uuid.FromString(c.Param("containerID"))
-	if bad_uuid != nil {
-		return c.Error(http.StatusBadRequest, bad_uuid)
+func ContainerVideoEncodingHandler(c *gin.Context) {
+	containerID, bad_id := strconv.ParseInt(c.Param("container_id"), 10, 32)
+	if bad_id != nil {
+		c.AbortWithError(http.StatusBadRequest, bad_id)
+		return
 	}
 
 	// A lot of these will follow a pretty simple pattern of load all the container content
 	// and then attempt to act on them.  Unify it?
-	man := managers.GetManager(&c)
+	man := managers.GetManager(c)
 	contentQuery := managers.ContentQuery{
-		ContainerID: containerID.String(),
+		ContainerID: strconv.FormatInt(containerID, 10),
 		ContentType: "video",
 		PerPage:     man.GetCfg().Limit,
 	}
 	contents, total, err := man.ListContent(contentQuery)
 	if err != nil {
-		return c.Error(http.StatusInternalServerError, err)
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
 	}
 	if total == 0 {
 		queueResponse := TasksQueuedResponse{
 			Message: "No video content found to re-encode",
-			Results: models.TaskRequests{}, // hate
+			Results: models.TaskRequests{},
 		}
-		return c.Render(http.StatusOK, r.JSON(queueResponse))
+		c.JSON(http.StatusOK, queueResponse)
+		return
 	}
 
 	// TODO: Need to make it so that we get all the tasks created.
@@ -260,81 +181,88 @@ func ContainerVideoEncodingHandler(c buffalo.Context) error {
 	for _, content := range *contents {
 		task, taskErr := CreateVideoEncodingTask(&content, c.Param("codec"))
 		if taskErr != nil {
-			return taskErr
+			c.AbortWithError(http.StatusInternalServerError, taskErr)
+			return
 		}
 		tasks = append(tasks, *task)
 	}
-	return QueueTaskRequests(c, man, tasks)
+	QueueTaskRequests(c, man, tasks)
 }
 
 // Should deny quickly if the media content type is incorrect for the action
-func TaggingHandler(c buffalo.Context) error {
-	contentID, bad_uuid := uuid.FromString(c.Param("contentID"))
-	if bad_uuid != nil {
-		return c.Error(http.StatusBadRequest, bad_uuid)
+func TaggingHandler(c *gin.Context) {
+	contentID, bad_id := strconv.ParseInt(c.Param("content_id"), 10, 64)
+	if bad_id != nil {
+		c.AbortWithError(http.StatusBadRequest, bad_id)
+		return
 	}
-	man := managers.GetManager(&c)
+	man := managers.GetManager(c)
 	content, err := man.GetContent(contentID)
 	if err != nil {
-		return c.Error(http.StatusNotFound, err)
+		c.AbortWithError(http.StatusNotFound, err)
+		return
 	}
 	tr := models.TaskRequest{
-		ContentID: nulls.NewUUID(content.ID),
+		ContentID: &content.ID,
 		Operation: models.TaskOperation.TAGGING,
 	}
-	return QueueTaskRequest(c, man, &tr)
+	QueueTaskRequest(c, man, &tr)
 }
 
 // Container tagging would probably be better as another single task or the managers just need to cache the tasks in redis.
-func ContainerTaggingHandler(c buffalo.Context) error {
-	containerID, bad_uuid := uuid.FromString(c.Param("containerID"))
-	if bad_uuid != nil {
-		return c.Error(http.StatusBadRequest, bad_uuid)
+func ContainerTaggingHandler(c *gin.Context) {
+	containerID, badId := strconv.ParseInt(c.Param("container_id"), 10, 32)
+	if badId != nil {
+		c.AbortWithError(http.StatusBadRequest, badId)
+		return
 	}
 
 	// A lot of these will follow a pretty simple pattern of load all the container content
 	// and then attempt to act on them.  Unify it?
-	man := managers.GetManager(&c)
+	man := managers.GetManager(c)
 	contentQuery := managers.ContentQuery{
-		ContainerID: containerID.String(),
+		ContainerID: strconv.FormatInt(containerID, 10),
 		PerPage:     man.GetCfg().Limit,
 	}
 	_, total, tagErr := man.ListAllTags(managers.TagQuery{PerPage: 1})
 	if total == 0 || tagErr != nil {
-		return c.Error(http.StatusBadRequest, fmt.Errorf("no tags currently found in the system"))
+		c.AbortWithError(http.StatusBadRequest, fmt.Errorf("no tags currently found in the system"))
+		return
 	}
 	contents, total, err := man.ListContent(contentQuery)
 	if err != nil {
-		return c.Error(http.StatusInternalServerError, err)
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
 	}
 	if total == 0 {
 		queueResponse := TasksQueuedResponse{
 			Message: "No content found to tag",
 			Results: models.TaskRequests{},
 		}
-		return c.Render(http.StatusOK, r.JSON(queueResponse))
+		c.JSON(http.StatusOK, queueResponse)
+		return
 	}
 
 	// TODO: Need to make it so that we get all the tasks created.
 	tasks := models.TaskRequests{}
 	for _, content := range *contents {
 		task := models.TaskRequest{
-			ContentID: nulls.NewUUID(content.ID),
+			ContentID: &content.ID,
 			Operation: models.TaskOperation.TAGGING,
 		}
 		tasks = append(tasks, task)
 	}
-	return QueueTaskRequests(c, man, tasks)
+	QueueTaskRequests(c, man, tasks)
 }
 
 // Should deny quickly if the media content type is incorrect for the action
-func DupesHandler(c buffalo.Context) error {
+func DupesHandler(c *gin.Context) {
 	// Get content search from params
-	man := managers.GetManager(&c)
+	man := managers.GetManager(c)
 
-	params := c.Params()
-	cId := managers.StringDefault(params.Get("containerID"), "")
-	id := managers.StringDefault(params.Get("contentID"), "")
+	params := managers.GinParamsToUrlValues(c.Params, c.Request.URL.Query())
+	cId := managers.StringDefault(params.Get("container_id"), "")
+	id := managers.StringDefault(params.Get("content_id"), "")
 
 	// It could just take 'nothing' and run against ALL video I guess.
 	tr := models.TaskRequest{
@@ -347,27 +275,31 @@ func DupesHandler(c buffalo.Context) error {
 
 	// This is kinda ugly, might want to make it just two handlers
 	if cId != "" {
-		if containerID, err := uuid.FromString(cId); err == nil {
-			tr.ContainerID = nulls.NewUUID(containerID)
+		if containerID, err := strconv.ParseInt(cId, 10, 64); err == nil {
+			tr.ContainerID = &containerID
 			query.ContainerID = cId
 		} else {
-			return c.Error(http.StatusBadRequest, fmt.Errorf("invalid containerID %s", cId))
+			c.AbortWithError(http.StatusBadRequest, fmt.Errorf("invalid containerID %s", cId))
+			return
 		}
 	} else if id != "" {
-		if contentID, err := uuid.FromString(id); err == nil {
-			tr.ContentID = nulls.NewUUID(contentID)
+		if contentID, err := strconv.ParseInt(id, 10, 64); err == nil {
+			tr.ContentID = &contentID
 			query.ContentID = id
 		} else {
-			return c.Error(http.StatusBadRequest, fmt.Errorf("invalid containerID %s", cId))
+			c.AbortWithError(http.StatusBadRequest, fmt.Errorf("invalid containerID %s", cId))
+			return
 		}
 	} else {
-		return c.Error(http.StatusBadRequest, errors.New("containerID or contentID are required"))
+		c.AbortWithError(http.StatusBadRequest, errors.New("containerID or contentID are required"))
+		return
 	}
 
 	_, total, err := man.SearchContent(query)
 	if err != nil {
 		log.Printf("Cannot queue dupe task %s err: %s", query, err)
-		return c.Error(http.StatusInternalServerError, err)
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
 	}
 	// TODO: Always return this format from the task kick off (kind of a pain for tests but 'eh')
 	if total == 0 {
@@ -375,37 +307,44 @@ func DupesHandler(c buffalo.Context) error {
 			Message: "No duplicate videos found in this contianer",
 			Results: models.TaskRequests{},
 		}
-		return c.Render(http.StatusOK, r.JSON(res))
+		c.JSON(http.StatusOK, res)
+		return
 	}
 	if total < 1 {
-		return c.Error(http.StatusBadRequest, fmt.Errorf("could not find content to check %s", query))
+		c.AbortWithError(http.StatusBadRequest, fmt.Errorf("could not find content to check %s", query))
+		return
 	}
 	log.Printf("Attempting to queue task %s", tr)
-	return QueueTaskRequest(c, man, &tr)
+	QueueTaskRequest(c, man, &tr)
 }
 
 // Should deny quickly if the media content type is incorrect for the action
-func ContentTaskScreensHandler(c buffalo.Context) error {
-	contentID, bad_uuid := uuid.FromString(c.Param("contentID"))
-	if bad_uuid != nil {
-		return c.Error(400, bad_uuid)
-	}
-	startTimeSeconds, numberOfScreens, err := ValidateScreensParams(c.Params().(url.Values))
-	if err != nil {
-		return c.Error(http.StatusBadRequest, err)
+func ContentTaskScreensHandler(c *gin.Context) {
+	contentID, bad_id := strconv.ParseInt(c.Param("content_id"), 10, 64)
+	if bad_id != nil || contentID <= 0 {
+		c.AbortWithError(400, bad_id)
 	}
 
-	man := managers.GetManager(&c)
-	content, err := man.GetContent(contentID)
+	params := managers.GinParamsToUrlValues(c.Params, c.Request.URL.Query())
+	startTimeSeconds, numberOfScreens, err := ValidateScreensParams(*params)
 	if err != nil {
-		return c.Error(http.StatusNotFound, err)
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
 	}
-	tr, tErr := CreateScreensTask(content, numberOfScreens, startTimeSeconds)
+
+	man := managers.GetManager(c)
+	content, cErr := man.GetContent(contentID)
+	if cErr != nil {
+		c.AbortWithError(http.StatusNotFound, cErr)
+		return
+	}
+	tr, tErr := CreateScreensTask(content, int(numberOfScreens), int(startTimeSeconds))
 	if tErr != nil {
-		return c.Error(http.StatusBadRequest, tErr)
+		c.AbortWithError(http.StatusBadRequest, tErr)
+		return
 	}
 	log.Printf("Requesting screens be built out %s start %d count %d", content.Src, startTimeSeconds, numberOfScreens)
-	return QueueTaskRequest(c, man, tr)
+	QueueTaskRequest(c, man, tr)
 }
 
 func ValidateScreensParams(params url.Values) (int, int, error) {
@@ -425,44 +364,50 @@ func ValidateScreensParams(params url.Values) (int, int, error) {
 	return startTimeSeconds, numberOfScreens, nil
 }
 
-func ContainerScreensHandler(c buffalo.Context) error {
-	cID, badUuid := uuid.FromString(c.Param("containerID"))
-	if badUuid != nil {
-		return c.Error(http.StatusBadRequest, badUuid)
+func ContainerScreensHandler(c *gin.Context) {
+	cID, badId := strconv.ParseInt(c.Param("container_id"), 10, 64)
+	if badId != nil {
+		c.AbortWithError(http.StatusBadRequest, badId)
+		return
 	}
 	cfg := utils.GetCfg()
-	startTimeSeconds, numberOfScreens, err := ValidateScreensParams(c.Params().(url.Values))
+	params := managers.GinParamsToUrlValues(c.Params, c.Request.URL.Query())
+	startTimeSeconds, numberOfScreens, err := ValidateScreensParams(*params)
 	if err != nil {
-		return c.Error(http.StatusBadRequest, err)
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
 	}
 
 	cQ := managers.ContentQuery{
-		ContainerID: cID.String(),
+		ContainerID: strconv.FormatInt(cID, 10),
 		ContentType: "video",
 		PerPage:     cfg.Limit,
 	}
-	man := managers.GetManager(&c)
+	man := managers.GetManager(c)
 	contents, total, err := man.SearchContent(cQ)
 	if err != nil {
-		return c.Error(http.StatusInternalServerError, err)
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
 	}
 	if total == 0 {
 		res := TasksQueuedResponse{
 			Message: "No videos found to create screens for",
 			Results: models.TaskRequests{},
 		}
-		return c.Render(http.StatusOK, r.JSON(res))
+		c.JSON(http.StatusOK, res)
+		return
 	}
 
 	tasks := models.TaskRequests{}
 	for _, content := range *contents {
 		task, taskErr := CreateScreensTask(&content, numberOfScreens, startTimeSeconds)
 		if taskErr != nil {
-			return taskErr
+			c.AbortWithError(http.StatusInternalServerError, taskErr)
+			return
 		}
 		tasks = append(tasks, *task)
 	}
-	return QueueTaskRequests(c, man, tasks)
+	QueueTaskRequests(c, man, tasks)
 }
 
 func CreateScreensTask(content *models.Content, numberOfScreens int, startTimeSeconds int) (*models.TaskRequest, error) {
@@ -470,7 +415,7 @@ func CreateScreensTask(content *models.Content, numberOfScreens int, startTimeSe
 		return nil, fmt.Errorf("content was not a video %s", content.ContentType)
 	}
 	tr := models.TaskRequest{
-		ContentID:        nulls.NewUUID(content.ID),
+		ContentID:        &content.ID,
 		Operation:        models.TaskOperation.SCREENS,
 		NumberOfScreens:  numberOfScreens,
 		StartTimeSeconds: startTimeSeconds,
@@ -487,9 +432,9 @@ func CreateVideoEncodingTask(content *models.Content, codecChoice string) (*mode
 	codec := managers.StringDefault(codecChoice, cfg.CodecForConversion)
 
 	// Check codec seems valid?
-	log.Printf("Requesting a re-encode %s with codec %s for contentID %s", content.Src, codec, content.ID.String())
+	log.Printf("Requesting a re-encode %s with codec %s for contentID %d", content.Src, codec, content.ID)
 	tr := models.TaskRequest{
-		ContentID:        nulls.NewUUID(content.ID),
+		ContentID:        &content.ID,
 		Operation:        models.TaskOperation.ENCODING,
 		NumberOfScreens:  0,
 		StartTimeSeconds: 0,
@@ -506,27 +451,29 @@ func CreateWebpTask(content *models.Content) (*models.TaskRequest, error) {
 
 	// TODO: The actual task processing should check if the entry has actual screens
 	tr := models.TaskRequest{
-		ContentID: nulls.NewUUID(content.ID),
+		ContentID: &content.ID,
 		Operation: models.TaskOperation.WEBP,
 	}
 	return &tr, nil
 }
 
-func QueueTaskRequest(c buffalo.Context, man managers.ContentManager, tr *models.TaskRequest) error {
+func QueueTaskRequest(c *gin.Context, man managers.ContentManager, tr *models.TaskRequest) {
 	taskCreated, queueErr := AddTaskRequest(man, tr)
 	if queueErr != nil {
-		return c.Error(http.StatusInternalServerError, queueErr)
+		c.AbortWithError(http.StatusInternalServerError, queueErr)
+		return
 	}
-	return c.Render(http.StatusCreated, r.JSON(taskCreated))
+	c.JSON(http.StatusCreated, taskCreated)
 }
 
 // Hande a partial failure
-func QueueTaskRequests(c buffalo.Context, man managers.ContentManager, tasks models.TaskRequests) error {
+func QueueTaskRequests(c *gin.Context, man managers.ContentManager, tasks models.TaskRequests) {
 	tasksOk := models.TaskRequests{}
 	for _, task := range tasks {
 		taskCreated, queueErr := AddTaskRequest(man, &task)
 		if queueErr != nil {
-			return c.Error(http.StatusInternalServerError, queueErr)
+			c.AbortWithError(http.StatusInternalServerError, queueErr)
+			return
 		}
 		tasksOk = append(tasksOk, *taskCreated)
 	}
@@ -535,7 +482,7 @@ func QueueTaskRequests(c buffalo.Context, man managers.ContentManager, tasks mod
 		Message: fmt.Sprintf("Queued %d tasks for", len(tasksOk)),
 		Results: tasksOk,
 	}
-	return c.Render(http.StatusCreated, r.JSON(queueResponse))
+	c.JSON(http.StatusCreated, queueResponse)
 }
 
 func AddTaskRequest(man managers.ContentManager, tr *models.TaskRequest) (*models.TaskRequest, error) {
@@ -545,21 +492,27 @@ func AddTaskRequest(man managers.ContentManager, tr *models.TaskRequest) (*model
 	}
 	// This needs to delay a little before it starts
 	// It should probably not kick off the job task inside the manager
-	cfg := man.GetCfg()
 	job := worker.Job{
 		Queue:   "default",
 		Handler: tr.Operation.String(),
 		Args: worker.Args{
-			"id": tr.ID.String(),
+			"id": tr.ID,
 		},
 	}
 
 	// This would be a good place to add in support for other task queues
-	err := App(cfg.UseDatabase).Worker.PerformIn(job, 2*time.Second)
-	if err != nil {
-		msg := fmt.Sprintf("Failed to enqueue task in the work queue %s", err)
-		log.Print(msg)
-		return nil, err
+	//cfg := man.GetCfg()
+	if job.Queue == "default" {
+		// TODO: Choose a new job processing system and integrate it.  SQS etc.
+		log.Printf("THIS SYSTEM IS NOT PROCESSING AS BUFFALO IS DEAD")
 	}
+	/*
+		err := App(cfg.UseDatabase).Worker.PerformIn(job, 2*time.Second)
+		if err != nil {
+			msg := fmt.Sprintf("Failed to enqueue task in the work queue %s", err)
+			log.Print(msg)
+			return nil, err
+		}
+	*/
 	return createdTask, nil
 }

@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/gobuffalo/envy"
-	"github.com/gofrs/uuid"
 	"github.com/tidwall/gjson"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
@@ -24,7 +23,7 @@ func Test_VideoMeta(t *testing.T) {
 	srcDir, _, testFile := Get_VideoAndSetupPaths()
 	srcFile := filepath.Join(srcDir, testFile)
 
-	id, _ := uuid.NewV4()
+	id := int64(666)
 	finfo, err := os.Stat(srcFile)
 	if err != nil {
 		t.Errorf("Failed to stat %s err: %s", srcFile, err)

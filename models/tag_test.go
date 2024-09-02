@@ -1,18 +1,23 @@
 package models
 
 import (
-	"fmt"
+	"testing"
 )
 
-func (ms *ModelSuite) Test_Tag() {
-	t := Tag{
+func TestTag(t *testing.T) {
+	db := InitGorm(false)
+	NoError(db, "Could not connect to the db", t)
+
+	SetupTests(db, t)
+	tag := Tag{
 		ID: "Test",
 	}
-	ms.DB.Create(&t)
+	res := db.Create(&tag)
+	NoError(res, "Failed to create tag", t)
 
-	t_check := Tag{}
-	q_err := ms.DB.Find(&t_check, "Test")
-	if q_err != nil {
-		ms.Fail(fmt.Sprintf("Failed to load tag %s", q_err))
+	tCheck := Tag{}
+	db.First(&tCheck, "id = ?", tag.ID)
+	if tCheck.ID == "" {
+		t.Errorf("Failed to load tag %s", tCheck)
 	}
 }

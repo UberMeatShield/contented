@@ -4,10 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/gobuffalo/nulls"
-	"github.com/gobuffalo/pop/v6"
-	"github.com/gobuffalo/validate/v3"
-	"github.com/gofrs/uuid"
+	"gorm.io/gorm"
 )
 
 // This might move into a model
@@ -110,23 +107,25 @@ func (to TaskOperationType) String() string {
 
 // TaskRequest is used by pop to map your task_requests database table to your go code.
 type TaskRequest struct {
-	ID          uuid.UUID  `json:"id" db:"id"`
-	ContentID   nulls.UUID `json:"content_id" db:"content_id" default:"nil"`
-	ContainerID nulls.UUID `json:"container_id" db:"container_id" default:"nil"`
+	ID        int64          `json:"id" gorm:"primaryKey"`
+	CreatedAt time.Time      `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time      `json:"updated" db:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" db:"deleted_at"`
+
+	// Need to get these all properly fk constrained
+	ContentID   *int64 `json:"content_id" db:"content_id" gorm:"default:null"`
+	ContainerID *int64 `json:"container_id" db:"container_id" gorm:"default:null"`
+	CreatedID   *int64 `json:"created_id" db:"created_id" gorm:"default:null"`
 
 	// TODO: Make it optional on ContentId so things cna work on a container?
-	// ContainerID nulls.UUID `json:"container_id" db:"container_id" default:"nil"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 	StartedAt time.Time `json:"started_at" db:"started_at"`
 
 	Status    TaskStatusType    `json:"status" db:"status" default:"new" `
 	Operation TaskOperationType `json:"operation" db:"operation"`
-	CreatedID nulls.UUID        `json:"created_id" db:"created_id"`
 
 	// Initial default time would be nice
 	Message string `json:"message" default:"" db:"message"`
-	ErrMsg  string `json:"err_msg" default:"" db:"err_message"`
+	ErrMsg  string `json:"err_msg" default:"" db:"err_msg"`
 
 	// Is it worth having two different queues for this?  Probably not, both use ffmpeg resource
 	// Add once I have the basic processor in place
@@ -145,30 +144,10 @@ func (t TaskRequest) String() string {
 
 // TaskRequests is not required by pop and may be deleted
 type TaskRequests []TaskRequest
-type TaskRequestMap map[uuid.UUID]TaskRequest
+type TaskRequestMap map[int]TaskRequest
 
 // String is not required by pop and may be deleted
 func (t TaskRequests) String() string {
 	jt, _ := json.Marshal(t)
 	return string(jt)
 }
-
-// Validate gets run every time you call a "pop.Validate*" (pop.ValidateAndSave, pop.ValidateAndCreate, pop.ValidateAndUpdate) method.
-// This method is not required and may be deleted.
-func (t *TaskRequest) Validate(tx *pop.Connection) (*validate.Errors, error) {
-	return validate.NewErrors(), nil
-}
-
-// ValidateCreate gets run every time you call "pop.ValidateAndCreate" method.
-// This method is not required and may be deleted.
-func (t *TaskRequest) ValidateCreate(tx *pop.Connection) (*validate.Errors, error) {
-	return validate.NewErrors(), nil
-}
-
-// ValidateUpdate gets run every time you call "pop.ValidateAndUpdate" method.
-// This method is not required and may be deleted.
-func (t *TaskRequest) ValidateUpdate(tx *pop.Connection) (*validate.Errors, error) {
-	return validate.NewErrors(), nil
-}
-
-// TODO: Potentially need to add in Retry helper logic.

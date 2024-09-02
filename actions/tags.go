@@ -1,24 +1,16 @@
 package actions
 
 import (
+	"encoding/json"
 	"errors"
 
-	//"fmt"
-	"net/http"
-	// "errors"
 	"contented/managers"
 	"contented/models"
+	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/buffalo"
-	//"github.com/gobuffalo/pop/v5"
 )
-
-// Following naming logic is implemented in Buffalo:
-// Model: Singular (Tag)
-// DB Table: Plural (tags)
-// Resource: Plural (Tags)
-// Path: Plural (/tags)
-// View Template Folder: Plural (/templates/tags/)
 
 // TagsResource is the resource for the Tag model
 type TagsResource struct {
@@ -26,102 +18,117 @@ type TagsResource struct {
 }
 
 type TagResponse struct {
-	Total   int         `json:"total"`
+	Total   int64       `json:"total"`
 	Results models.Tags `json:"results"`
+}
+
+func (t TagResponse) String() string {
+	jt, _ := json.Marshal(t)
+	return string(jt)
 }
 
 // List gets all Tags. This function is mapped to the path
 // GET /tags
-func (v TagsResource) List(c buffalo.Context) error {
+func TagsResourceList(c *gin.Context) {
 	// Get the DB connection from the context
-	man := managers.GetManager(&c)
+	man := managers.GetManager(c)
+
 	previewTags, total, err := man.ListAllTagsContext()
 	if err != nil {
-		return c.Error(http.StatusBadRequest, err)
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+	if previewTags == nil {
+		previewTags = &models.Tags{}
 	}
 	tr := TagResponse{
 		Total:   total,
 		Results: *previewTags,
 	}
-	return c.Render(200, r.JSON(tr))
+	c.JSON(200, tr)
 }
 
 // Show gets the data for one Tag. This function is mapped to
 // the path GET /tags/{tag_id}
-func (v TagsResource) Show(c buffalo.Context) error {
-
+func TagsResourceShow(c *gin.Context) {
 	tagID := c.Param("tag_id")
 	if tagID == "" {
-		return c.Error(400, errors.New("Requires ID"))
+		c.AbortWithError(http.StatusBadRequest, errors.New("requires ID"))
+		return
 	}
-	man := managers.GetManager(&c)
+	man := managers.GetManager(c)
 	tag, err := man.GetTag(tagID)
 	if err != nil {
-		return c.Error(404, err)
+		c.AbortWithError(http.StatusNotFound, err)
+		return
 	}
-	return c.Render(200, r.JSON(tag))
+	c.JSON(200, tag)
 }
 
 // Create adds a Tag to the DB. This function is mapped to the
 // path POST /tags
-func (v TagsResource) Create(c buffalo.Context) error {
-	_, _, err := managers.ManagerCanCUD(&c)
+func TagsResourceCreate(c *gin.Context) {
+	_, _, err := managers.ManagerCanCUD(c)
 	if err != nil {
-		return err
+		c.AbortWithError(http.StatusForbidden, err)
+		return
 	}
 	// Bind previewTag to the html form/JSON elements
 	tag := &models.Tag{}
-	if err := c.Bind(tag); err != nil {
-		return err
+	if err := c.BindJSON(tag); err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
 	}
-	man := managers.GetManager(&c)
-	cErr := man.CreateTag(tag)
-	if cErr != nil {
-		return c.Render(http.StatusUnprocessableEntity, r.JSON(cErr))
+	man := managers.GetManager(c)
+	if cErr := man.CreateTag(tag); cErr != nil {
+		c.AbortWithError(http.StatusUnprocessableEntity, cErr)
+		return
 	}
-	return c.Render(http.StatusCreated, r.JSON(tag))
+	c.JSON(http.StatusCreated, tag)
 }
 
 // Update changes a Tag in the DB. This function is mapped to
 // the path PUT /tags/{tag_id}
-func (v TagsResource) Update(c buffalo.Context) error {
+func TagsResourceUpdate(c *gin.Context) {
 	// Get the DB connection from the context
-	_, _, err := managers.ManagerCanCUD(&c)
+	man, _, err := managers.ManagerCanCUD(c)
 	if err != nil {
-		return err
+		c.AbortWithError(http.StatusForbidden, err)
+		return
 	}
 
-	man := managers.GetManager(&c)
 	id := c.Param("tag_id")
 	tag, notFoundErr := man.GetTag(id)
 	if notFoundErr != nil {
-		return c.Error(http.StatusNotFound, err)
+		c.AbortWithError(http.StatusNotFound, err)
+		return
 	}
-	if err := c.Bind(tag); err != nil {
-		return c.Render(http.StatusUnprocessableEntity, r.JSON(err))
+	if err := c.BindJSON(tag); err != nil {
+		c.AbortWithError(http.StatusUnprocessableEntity, err)
+		return
 	}
 	upErr := man.UpdateTag(tag)
 	if upErr != nil {
-		return c.Render(http.StatusUnprocessableEntity, r.JSON(upErr))
+		c.AbortWithError(http.StatusUnprocessableEntity, upErr)
+		return
 	}
 	checkTag, _ := man.GetTag(id)
-	return c.Render(http.StatusOK, r.JSON(checkTag))
+	c.JSON(http.StatusOK, checkTag)
 }
 
 // Destroy deletes a Tag from the DB. This function is mapped
 // to the path DELETE /tags/{tag_id}
-func (v TagsResource) Destroy(c buffalo.Context) error {
+func TagsResourceDestroy(c *gin.Context) {
 	// Get the DB connection from the context
-	_, _, err := managers.ManagerCanCUD(&c)
+	man, _, err := managers.ManagerCanCUD(c)
 	if err != nil {
-		return err
+		c.AbortWithError(http.StatusForbidden, err)
+		return
 	}
-
-	// TODO: Implement
-	man := managers.GetManager(&c)
 	tag, dErr := man.DestroyTag(c.Param("tag_id"))
 	if dErr != nil {
-		return c.Render(http.StatusBadRequest, r.JSON(dErr))
+		c.AbortWithError(http.StatusBadRequest, dErr)
+		return
 	}
-	return c.Render(http.StatusOK, r.JSON(tag))
+	c.JSON(http.StatusOK, tag)
 }

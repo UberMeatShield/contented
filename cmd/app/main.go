@@ -2,43 +2,27 @@ package main
 
 import (
 	"contented/actions"
+	"contented/models"
 	"contented/utils"
 	"log"
+
+	"github.com/gin-gonic/gin"
 )
 
-// main is the starting point for your Buffalo application.
-// You can feel free and add to this `main` method, change
-// what it does, etc...
-// All we ask is that, at some point, you make sure to
-// call `app.Serve()`, unless you don't want to start your
-// application that is. :)
+/**
+ * Initialize the Gin Application.
+ */
 func main() {
-	appCfg := utils.GetCfg()
-	utils.InitConfigEnvy(appCfg)
-	app := actions.App(appCfg.UseDatabase)
+	cfg := utils.GetCfg()
+	utils.InitConfigEnvy(cfg)
+	models.InitializeAppDatabase(utils.GetEnvString("GO_ENV", "development"))
 
-	// TODO: Update or delete this method as it is not really doing anything
-	// Potentially just do the static hosting in the actions.App bit.
-	actions.SetupContented(app, "", 0, 0)
-	if err := app.Serve(); err != nil {
-		log.Fatal(err)
+	// Set them up side by side?
+	r := gin.Default()
+	actions.GinApp(r)
+
+	actions.SetupContented(r, "", 0, 0)
+	if err := r.Run(); err != nil {
+		log.Fatalf("Crashed out %s", err)
 	}
 }
-
-/*
-# Notes about `main.go`
-
-## SSL Support
-
-We recommend placing your application behind a proxy, such as
-Apache or Nginx and letting them do the SSL heavy lifting
-for you. https://gobuffalo.io/en/docs/proxy
-
-## Buffalo Build
-
-When `buffalo build` is run to compile your binary, this `main`
-function will be at the heart of that binary. It is expected
-that your `main` function will start your application using
-the `app.Serve()` method.
-
-*/

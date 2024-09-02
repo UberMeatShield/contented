@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 
 	//"fmt"
 	"net/http"
@@ -11,106 +12,114 @@ import (
 	"contented/managers"
 	"contented/models"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/buffalo"
-	"github.com/gofrs/uuid"
 )
 
-// Following naming logic is implemented in Buffalo:
-// Model: Singular (TaskRequest)
-// DB Table: Plural (task_request)
-// Resource: Plural (TaskRequest)
-// Path: Plural (/task_request)
-// View Template Folder: Plural (/templates/task_request/)
-
-// TaskRequestResource is the resource for the TaskRequest model
-type TaskRequestResource struct {
+// TaskRequestsResource is the resource for the TaskRequest model
+type TaskRequestsResource struct {
 	buffalo.Resource
 }
 
 type TaskRequestResponse struct {
-	Total   int                 `json:"total"`
+	Total   int64               `json:"total"`
 	Results models.TaskRequests `json:"results"`
 }
 
 // List gets all TaskRequest. This function is mapped to the path
 // GET /task_request
-func (v TaskRequestResource) List(c buffalo.Context) error {
+func TaskRequestsResourceList(c *gin.Context) {
 	// Get the DB connection from the context
-	man := managers.GetManager(&c)
+	man := managers.GetManager(c)
 	tasks, total, err := man.ListTasksContext()
 	if err != nil {
-		return c.Error(http.StatusBadRequest, err)
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+	if tasks == nil {
+		tasks = &models.TaskRequests{}
 	}
 	tres := TaskRequestResponse{
 		Total:   total,
 		Results: *tasks,
 	}
-	return c.Render(200, r.JSON(tres))
+	c.JSON(200, tres)
 }
 
 // Show gets the data for one TaskRequest. This function is mapped to
 // the path GET /task_request/{task_request_id} ?
-func (v TaskRequestResource) Show(c buffalo.Context) error {
-	// TODO: Test this (not sure what the ID comes in as)
+func TaskRequestsResourceShow(c *gin.Context) {
 	tStrID := c.Param("task_request_id")
-	tID, badUUID := uuid.FromString(tStrID)
-	if badUUID != nil {
-		return c.Error(400, badUUID)
+	tID, badId := strconv.ParseInt(tStrID, 10, 64)
+	if badId != nil {
+		c.AbortWithError(400, badId)
+		return
 	}
-	man := managers.GetManager(&c)
+	man := managers.GetManager(c)
 	task, err := man.GetTask(tID)
 	if err != nil {
-		return c.Error(404, err)
+		c.AbortWithError(404, err)
+		return
 	}
-	return c.Render(http.StatusOK, r.JSON(task))
+	c.JSON(http.StatusOK, task)
 }
 
 // Currently this is a private setup not accessible from the UI
-func (v TaskRequestResource) Create(c buffalo.Context) error {
-	return c.Error(http.StatusNotImplemented, errors.New("Not implemented"))
+func TaskRequestsResourceCreate(c *gin.Context) {
+	c.AbortWithError(http.StatusNotImplemented, errors.New("restricted to editing queue requests"))
 }
 
 // Another private method, might be opened to just canceling a task (if possible)
-func (v TaskRequestResource) Update(c buffalo.Context) error {
-	_, _, err := managers.ManagerCanCUD(&c)
+func TaskRequestsResourceUpdate(c *gin.Context) {
+	_, _, err := managers.ManagerCanCUD(c)
 	if err != nil {
-		return err
+		c.AbortWithError(http.StatusForbidden, err)
+		return
 	}
 
-	man := managers.GetManager(&c)
-	id, _ := uuid.FromString(c.Param("task_request_id"))
+	man := managers.GetManager(c)
+	id, badId := strconv.ParseInt(c.Param("task_request_id"), 10, 64)
+	if badId != nil {
+		c.AbortWithError(http.StatusBadRequest, badId)
+	}
+
 	exists, err := man.GetTask(id)
 	if err != nil || exists == nil {
-		return c.Error(http.StatusNotFound, err)
+		c.AbortWithError(http.StatusNotFound, err)
+		return
 	}
 
 	// Maybe this would be fine with a custom route an /ID/state on a put
 	taskUp := models.TaskRequest{}
-	if err := c.Bind(&taskUp); err != nil {
+	if err := c.BindJSON(&taskUp); err != nil {
 		msg := fmt.Sprintf("Bad TaskRequest passed %s", taskUp)
-		log.Printf(msg)
-		return c.Error(http.StatusBadRequest, errors.New(msg))
+		log.Print(msg)
+		c.AbortWithError(http.StatusBadRequest, errors.New(msg))
+		return
 	}
 
 	state := taskUp.Status
 	if state == models.TaskStatus.INVALID {
 		msg := fmt.Sprintf("Invalid state passed %s to task update", state)
-		log.Printf(msg)
-		return c.Error(http.StatusBadRequest, errors.New(msg))
+		log.Print(msg)
+		c.AbortWithError(http.StatusBadRequest, errors.New(msg))
+		return
 	}
 
 	if state != models.TaskStatus.CANCELED {
 		msg := fmt.Sprintf("Currently only supports canceled. %s", state)
-		log.Printf(msg)
-		return c.Error(http.StatusBadRequest, errors.New(msg))
+		log.Print(msg)
+		c.AbortWithError(http.StatusBadRequest, errors.New(msg))
+		return
 	}
 
 	// Awkward states to handle, but the basic one is just going to be can we cancel
 	task := *exists
 	if !(task.Status == models.TaskStatus.NEW || task.Status == models.TaskStatus.PENDING) {
 		msg := fmt.Sprintf("Cannot change state from current (%s) to %s", task.Status, state)
-		log.Printf(msg)
-		return c.Error(http.StatusBadRequest, errors.New(msg))
+		log.Print(msg)
+		c.AbortWithError(http.StatusBadRequest, errors.New(msg))
+		return
 	}
 
 	currentState := task.Status
@@ -118,12 +127,13 @@ func (v TaskRequestResource) Update(c buffalo.Context) error {
 	taskUpdated, upErr := man.UpdateTask(&task, currentState)
 	if upErr != nil || taskUpdated == nil {
 		log.Printf("Failed to update resource %s", upErr)
-		return upErr
+		c.AbortWithError(http.StatusInternalServerError, upErr)
+		return
 	}
-	return c.Render(http.StatusOK, r.JSON(taskUpdated))
+	c.JSON(http.StatusOK, taskUpdated)
 }
 
 // Also a private setup, it is saner to not have somebody messing with the task queue.
-func (v TaskRequestResource) Destroy(c buffalo.Context) error {
-	return c.Error(http.StatusNotImplemented, errors.New("Not implemented"))
+func TaskRequestsResourceDestroy(c *gin.Context) {
+	c.AbortWithError(http.StatusNotImplemented, errors.New("not available"))
 }

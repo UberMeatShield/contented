@@ -1,38 +1,36 @@
 package actions
 
 import (
-	"fmt"
-	"net/http"
-	"os"
-
-	//    "net/url"
 	"contented/models"
 	"contented/test_common"
 	"contented/utils"
-	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"path/filepath"
+	"testing"
 
-	"github.com/gobuffalo/nulls"
-	"github.com/gofrs/uuid"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
 
-func CreatePreview(src string, contentID uuid.UUID, as *ActionSuite) models.Screen {
-	mc := &models.Screen{
+func CreatePreview(src string, contentID int64, t *testing.T, router *gin.Engine) models.Screen {
+	screen := &models.Screen{
 		Src:       src,
 		ContentID: contentID,
 		Idx:       1,
 	}
-	res := as.JSON("/screens").Post(mc)
-	as.Equal(http.StatusCreated, res.Code)
-
-	resObj := models.Screen{}
-	json.NewDecoder(res.Body).Decode(&resObj)
-	return resObj
-
+	resObj := &models.Screen{}
+	code, err := PostJson("/api/screens", screen, resObj, router)
+	assert.NoError(t, err, "It should create a screen")
+	assert.Equal(t, http.StatusCreated, code)
+	return *resObj
 }
 
 // Kind of a pain in the ass to create all the way down to a valid preview screen
-func CreateTestContainerWithContent(as *ActionSuite) (*models.Container, *models.Content, string) {
+func CreateTestContainerWithContent(t *testing.T, db *gorm.DB) (*models.Container, *models.Content, string) {
 	cfg := utils.GetCfg()
 	srcDir, dstDir, testFile := test_common.Get_VideoAndSetupPaths(cfg)
 	c := &models.Container{
@@ -40,7 +38,7 @@ func CreateTestContainerWithContent(as *ActionSuite) (*models.Container, *models
 		Path:  filepath.Dir(srcDir),
 		Name:  filepath.Base(srcDir),
 	}
-	as.DB.Create(c)
+	assert.NoError(t, db.Create(c).Error, "Failed to create container")
 
 	// TODO: Ensure that this path is actually correct, should actually make a REAL jpeg copy
 	screenSrc := filepath.Join(dstDir, fmt.Sprintf("%s.screen.001.jpg", testFile))
@@ -48,113 +46,133 @@ func CreateTestContainerWithContent(as *ActionSuite) (*models.Container, *models
 		Src:         testFile,
 		ContentType: "video/mp4",
 		Preview:     screenSrc,
-		ContainerID: nulls.NewUUID(c.ID),
+		ContainerID: &c.ID,
 	}
-	as.DB.Create(mc)
+	assert.NoError(t, db.Create(mc).Error, "Failed to create content")
 
 	fmt.Printf("Screen src %s", screenSrc)
 	f, err := os.Create(screenSrc)
-	if err != nil {
-		as.T().Errorf("Couldn't write to %s", screenSrc)
-	}
+	assert.NoError(t, err, fmt.Sprintf("It could not create the screen on disk %s", screenSrc))
+
 	_, wErr := f.WriteString("Totally a screen")
-	if wErr != nil {
-		as.T().Errorf("Create a fake screen file on disk %s", screenSrc)
-	}
+	assert.NoError(t, wErr, fmt.Sprintf("And be able to write to it %s", screenSrc))
 	f.Sync()
 	f.Close()
 	return c, mc, screenSrc
 }
 
-func CreateScreen(as *ActionSuite) (*models.Container, *models.Content, *models.Screen) {
-	c, mc, screenSrc := CreateTestContainerWithContent(as)
-	ps := CreatePreview(screenSrc, mc.ID, as)
+func CreateScreen(t *testing.T, db *gorm.DB, router *gin.Engine) (*models.Container, *models.Content, *models.Screen) {
+	c, mc, screenSrc := CreateTestContainerWithContent(t, db)
+	ps := CreatePreview(screenSrc, mc.ID, t, router)
 	return c, mc, &ps
 }
 
-func (as *ActionSuite) Test_ScreensResource_List() {
-	test_common.InitFakeApp(true)
-	CreateScreen(as)
-	CreateScreen(as)
-
-	res := as.JSON("/screens/").Get()
-	as.Equal(http.StatusOK, res.Code)
+func TestScreensResourceList(t *testing.T) {
+	_, db, router := InitFakeRouterApp(true)
+	CreateScreen(t, db, router)
+	CreateScreen(t, db, router)
 
 	validate := ScreensResponse{}
-	json.NewDecoder(res.Body).Decode(&validate)
-	as.Equal(len(validate.Results), 2, "There should be two preview screens")
+	code, err := GetJson("/api/screens", "", &validate, router)
+	assert.NoError(t, err, "It should be able to list screens")
+	assert.Equal(t, http.StatusOK, code)
+	assert.Equal(t, len(validate.Results), 2, "There should be two preview screens")
 }
 
-func (as *ActionSuite) Test_ScreensResource_ListMC() {
-	test_common.InitFakeApp(true)
+func TestScreensResourceListMedia(t *testing.T) {
+	_, db, router := InitFakeRouterApp(true)
 
 	// This creates a preview screen making the total 3 in the DB
 	// Note it also resets the container_preview dir right now
-	CreateScreen(as)
+	CreateScreen(t, db, router)
+	_, mc1, _ := CreateScreen(t, db, router)
 
-	_, mc1, _ := CreateScreen(as)
-	CreatePreview("A", mc1.ID, as)
-	res := as.JSON(fmt.Sprintf("/contents/%s/screens", mc1.ID.String())).Get()
-	as.Equal(http.StatusOK, res.Code)
+	CreatePreview("A", mc1.ID, t, router)
 
+	url := fmt.Sprintf("/api/contents/%d/screens", mc1.ID)
 	validate := ScreensResponse{}
-	json.NewDecoder(res.Body).Decode(&validate)
-	as.Equal(len(validate.Results), 2, "Note we should have only two screens")
-	as.Equal(validate.Total, 2, "Count should be correct")
+	code, err := GetJson(url, "", &validate, router)
+	assert.NoError(t, err, "It should load up screens")
+	assert.Equal(t, http.StatusOK, code, "It should get screens back")
+
+	assert.Equal(t, 2, len(validate.Results), 2, "Note we should have only two screens")
+	assert.Equal(t, int64(2), validate.Total, "Count should be correct")
+
 	for _, ps := range validate.Results {
-		as.Equal(ps.ContentID, mc1.ID)
-		as.Equal(ps.Path, "") // Path should not be visible in the API
+		assert.Equal(t, ps.ContentID, mc1.ID, fmt.Sprintf("Failed %s", ps))
+		assert.Equal(t, ps.Path, "", fmt.Sprintf("Path visible %s", ps)) // Path should not be visible in the API
 	}
 }
 
-func (as *ActionSuite) Test_ScreensResource_Show() {
-	test_common.InitFakeApp(true)
-	_, _, ps := CreateScreen(as)
+func TestScreensResourceShow(t *testing.T) {
+	_, db, router := InitFakeRouterApp(true)
+	_, _, ps := CreateScreen(t, db, router)
 
-	res := as.JSON(fmt.Sprintf("/screens/%s", ps.ID.String())).Get()
-	as.Equal(http.StatusOK, res.Code)
+	url := fmt.Sprintf("/api/screens/%d", ps.ID)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", url, nil)
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
 
 	// Need to make it host the file.
-	header := res.Header()
-	as.Equal("image/jpeg", header.Get("Content-Type"))
+	header := w.Header()
+	assert.Equal(t, "image/jpeg", header.Get("Content-Type"))
 }
 
 // TODO: Create a screen that is actually on disk.
-func (as *ActionSuite) Test_ScreensResource_Create() {
-	test_common.InitFakeApp(true)
-	_, mc, screenSrc := CreateTestContainerWithContent(as)
-	ps := CreatePreview(screenSrc, mc.ID, as)
-	as.Equal(ps.Src, screenSrc)
+func TestScreensResourceCreate(t *testing.T) {
+	_, db, router := InitFakeRouterApp(true)
+	_, mc, screenSrc := CreateTestContainerWithContent(t, db)
+	ps := CreatePreview(screenSrc, mc.ID, t, router)
+	assert.Equal(t, ps.Src, screenSrc)
 
 	screens := models.Screens{}
-	as.DB.Where("content_id = ?", mc.ID).All(&screens)
-	as.Equal(len(screens), 1, "There should be a screen in the DB")
+	db.Where("content_id = ?", mc.ID).Find(&screens)
+	assert.Equal(t, len(screens), 1, "There should be a screen in the DB")
 }
 
-func (as *ActionSuite) Test_ScreensResource_Update() {
-	test_common.InitFakeApp(true)
-	_, mc, screenSrc := CreateTestContainerWithContent(as)
-	ps := CreatePreview(screenSrc, mc.ID, as)
+func TestScreensResourceUpdate(t *testing.T) {
+	_, db, router := InitFakeRouterApp(true)
+	_, mc, screenSrc := CreateTestContainerWithContent(t, db)
+	ps := CreatePreview(screenSrc, mc.ID, t, router)
 	ps.Src = "UP"
-	res := as.JSON(fmt.Sprintf("/screens/%s", ps.ID.String())).Put(ps)
-	as.Equal(http.StatusOK, res.Code)
+
+	resObj := models.Screen{}
+	url := fmt.Sprintf("/api/screens/%d", ps.ID)
+	code, err := PutJson(url, ps, &resObj, router)
+	assert.NoError(t, err, "It should update")
+	assert.Equal(t, http.StatusOK, code, fmt.Sprintf("It should update %s", err))
+	assert.Equal(t, ps.Src, resObj.Src, "It should have updated")
 }
 
-func (as *ActionSuite) Test_ScreensResource_Destroy() {
-	test_common.InitFakeApp(true)
-	_, mc, screenSrc := CreateTestContainerWithContent(as)
-	ps := CreatePreview(screenSrc, mc.ID, as)
+func TestScreensResourceDestroy(t *testing.T) {
+	_, db, router := InitFakeRouterApp(true)
+	_, mc, screenSrc := CreateTestContainerWithContent(t, db)
+	ps := CreatePreview(screenSrc, mc.ID, t, router)
+	assert.Greater(t, ps.ID, int64(0), "It should create an entry in the DB")
 
-	del_res := as.JSON(fmt.Sprintf("/screens/%s", ps.ID.String())).Delete()
-	as.Equal(http.StatusOK, del_res.Code)
+	url := fmt.Sprintf("/api/screens/%d", ps.ID)
+	code, err := DeleteJson(url, router)
+	assert.Equal(t, http.StatusOK, code)
+	assert.NoError(t, err, "It should delete ok")
+
+	check := models.Screen{}
+	res := db.Find(&check, ps.ID)
+	assert.NoError(t, res.Error, "Ensure we did not have an error")
+	assert.Equal(t, check.ID, int64(0))
 }
 
-func (as *ActionSuite) Test_ScreensResource_CannotCreate() {
-	test_common.InitFakeApp(false)
+func TestScreensResourceCannotCreate(t *testing.T) {
+	_, _, router := InitFakeRouterApp(false)
 	ps := &models.Screen{
-		Src: "Shouldn't Allow Create",
+		Src: "ThisShouldBail",
 		Idx: 1,
 	}
-	res := as.JSON("/screens/").Post(ps)
-	as.Equal(http.StatusCreated, res.Code)
+
+	resObj := models.Screen{}
+	code, err := PostJson("/api/screens", ps, &resObj, router)
+	fmt.Printf("What the actual fuck %s", resObj)
+	assert.NotEqual(t, http.StatusCreated, code)
+	assert.Error(t, err, "It Should error on post")
 }

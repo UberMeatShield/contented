@@ -2,13 +2,19 @@ package models
 
 import (
 	"path/filepath"
+	"testing"
 )
 
-func (ms *ModelSuite) Test_ContentScreens() {
-	count, err := ms.DB.Count("contents")
-	ms.NoError(err)
+func TestScreensContent(t *testing.T) {
+	db := InitGorm(false)
+	SetupTests(db, t)
+
+	var count int64
+	tx := db.Model(&Screen{}).Count(&count)
+	NoError(tx, "Failed to count screens", t)
+
 	if count > 0 {
-		ms.Fail("The DB was not reset")
+		t.Errorf("There are still screens in the DB %d", count)
 	}
 
 	mc := Content{
@@ -16,8 +22,11 @@ func (ms *ModelSuite) Test_ContentScreens() {
 		Preview:     "preview_location",
 		ContentType: "image/png",
 	}
-	ms.DB.Create(&mc)
-	ms.NotZero(mc.ID)
+	mcTx := db.Create(&mc)
+	NoError(mcTx, "Could not create content in screens test", t)
+	if mc.ID == 0 {
+		t.Errorf("Failed to save %d", mc.ID)
+	}
 
 	p1 := Screen{
 		Src:       "fake1",
@@ -33,26 +42,21 @@ func (ms *ModelSuite) Test_ContentScreens() {
 
 	p2Loc := p2.GetFqPath()
 	if p2Loc != filepath.Join(p2.Path, p2.Src) {
-		ms.Fail("Didn't create the right fq path")
-	}
-	perr1 := ms.DB.Create(&p1)
-	if perr1 != nil {
-		ms.Fail("Couldn't create preview screen 1 %s", perr1)
-	}
-	perr2 := ms.DB.Create(&p2)
-	if perr2 != nil {
-		ms.Fail("Couldn't create preview screen 2 %s", perr2)
+		t.Errorf("Didn't create the right fq path %s", p2Loc)
 	}
 
+	s1Tx := db.Create(&p1)
+	s2Tx := db.Create(&p2)
+	NoError(s1Tx, "Couldn't create preview screen 1", t)
+	NoError(s2Tx, "Couldn't create preview screen 2", t)
+
 	check := Content{}
-	q_err := ms.DB.Eager().Find(&check, mc.ID)
-	if q_err != nil {
-		ms.Fail("Could not query for this id %s"+mc.ID.String(), q_err)
-	}
+	checkTx := db.Preload("Screens").Find(&check, mc.ID)
+	NoError(checkTx, "Could not load back content", t)
 	if check.Screens == nil {
-		ms.Fail("Failed to load screens" + mc.ID.String())
+		t.Errorf("Failed to load screens %d", mc.ID)
 	}
 	if len(check.Screens) != 2 {
-		ms.Fail("The screens did not load back: " + mc.ID.String())
+		t.Errorf("The screens did not load back: %d", mc.ID)
 	}
 }

@@ -2,93 +2,134 @@ package actions
 
 import (
 	"contented/models"
-	"contented/test_common"
-	"encoding/json"
 	"fmt"
 	"net/http"
+	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
-func (as *ActionSuite) Test_TagsResource_List_DB() {
-	test_common.ResetConfig()
-	test_common.InitFakeApp(true)
+func CreateTag(name string, t *testing.T, router *gin.Engine) models.Tag {
+	tag := &models.Tag{
+		ID: name,
+	}
+	resObj := models.Tag{}
+	code, err := PostJson("/api/tags", tag, &resObj, router)
+	assert.Equal(t, http.StatusCreated, code, fmt.Sprintf("Error creating %s", err))
+	assert.NoError(t, err, "It should not throw an error")
+	return resObj
+}
 
-	a := models.Tag{ID: "A", Description: "Create a tag, show it"}
-	b := models.Tag{ID: "B", Description: "Create a tag, show it"}
-	as.DB.Create(&a)
-	as.DB.Create(&b)
+func TestTagsResourceListDB(t *testing.T) {
+	_, _, router := InitFakeRouterApp(true)
+	ValidateTagList(t, router)
+}
 
-	res := as.JSON("/tags/").Get()
-	as.Equal(http.StatusOK, res.Code, fmt.Sprintf("Failed to load tags %s", res.Body.String()))
+func TestTagsResourceListMemory(t *testing.T) {
+	_, _, router := InitFakeRouterApp(true)
+	ValidateTagList(t, router)
+}
+
+func ValidateTagList(t *testing.T, router *gin.Engine) {
+	CreateTag("A", t, router)
+	CreateTag("B", t, router)
 
 	tags := TagResponse{}
-	json.NewDecoder(res.Body).Decode(&tags)
-	as.Equal(len(tags.Results), 2, fmt.Sprintf("There should be two tags %s", tags.Results))
+	code, err := GetJson("/api/tags", "", &tags, router)
+	assert.Equal(t, http.StatusOK, code, fmt.Sprintf("Failed to load tags %s", err))
+	assert.Equal(t, len(tags.Results), 2, fmt.Sprintf("There should be two tags %s", tags.Results))
 }
 
-func (as *ActionSuite) Test_TagsResource_Show_DB() {
-	test_common.ResetConfig()
-	test_common.InitFakeApp(true)
-	t := models.Tag{ID: "A", Description: "Create a tag, show it"}
-	err := as.DB.Create(&t)
-	as.NoError(err)
+func TestTagsResourceShowDB(t *testing.T) {
+	_, _, router := InitFakeRouterApp(true)
+	ValidateTagShow(t, router)
+}
 
-	res := as.JSON(fmt.Sprintf("/tags/%s/", t.ID)).Get()
-	as.Equal(http.StatusOK, res.Code, fmt.Sprintf("It should find the tag %s", res.Body.String()))
+func TestTagsResourceShowMemory(t *testing.T) {
+	_, _, router := InitFakeRouterApp(false)
+	ValidateTagShow(t, router)
+}
 
+func ValidateTagShow(t *testing.T, router *gin.Engine) {
+	tag := CreateTag("A", t, router)
+	url := fmt.Sprintf("/api/tags/%s", tag.ID)
 	check := models.Tag{}
-	cErr := as.DB.Find(&check, t.ID)
-	as.NoError(cErr)
-	as.Equal(check.Description, t.Description)
+	code, err := GetJson(url, "", &check, router)
+	assert.Equal(t, http.StatusOK, code, fmt.Sprintf("It should find the tag %s", err))
+	assert.NoError(t, err)
 }
 
-func (as *ActionSuite) Test_TagsResource_Create_DB() {
-	test_common.ResetConfig()
-	test_common.InitFakeApp(true)
-	t := models.Tag{ID: "Monkey", Description: "What?"}
-	res := as.JSON("/tags/").Post(t)
-	as.Equal(http.StatusCreated, res.Code, fmt.Sprintf("Error %s", res.Body.String()))
+func TestTagsResourceCreateDB(t *testing.T) {
+	_, _, router := InitFakeRouterApp(true)
+	ValidateTagCreate(t, router)
+}
 
-	check := as.JSON("/tags").Get()
-	as.Equal(http.StatusOK, check.Code, fmt.Sprintf("It should find the tag %s", res.Body.String()))
+func TestTagsResourceCreateMemory(t *testing.T) {
+	_, _, router := InitFakeRouterApp(false)
+	ValidateTagCreate(t, router)
+}
+
+func ValidateTagCreate(t *testing.T, router *gin.Engine) {
+	CreateTag("Monkey", t, router)
+	CreateTag("Dupe", t, router)
+	tag := &models.Tag{
+		ID: "Dupe",
+	}
+	resObj := models.Tag{}
+	codeDupe, errDupe := PostJson("/api/tags", tag, &resObj, router)
+	assert.Equal(t, http.StatusUnprocessableEntity, codeDupe, fmt.Sprintf("Error creating %s", errDupe))
 
 	checkTags := TagResponse{}
-	json.NewDecoder(check.Body).Decode(&checkTags)
-	as.Equal(1, len(checkTags.Results), fmt.Sprintf("We should have a tag %s", check.Body.String()))
+	code, err := GetJson("/api/tags", "", &checkTags, router)
+	assert.Equal(t, http.StatusOK, code, fmt.Sprintf("It should find the tag %s", err))
+	assert.Equal(t, 2, len(checkTags.Results), fmt.Sprintf("We should have a tag %s", checkTags))
 }
 
-func (as *ActionSuite) Test_TagsResource_Update_DB() {
-	test_common.ResetConfig()
-	test_common.InitFakeApp(true)
-	t := models.Tag{ID: "Tag", Description: "Original"}
-	as.DB.Create(&t)
-	t.Description = "Updated"
-	res := as.JSON(fmt.Sprintf("/tags/%s", t.ID)).Put(t)
-	as.Equal(http.StatusOK, res.Code, fmt.Sprintf("It should update %s", res.Body.String()))
+func TestTagsResourceUpdateDB(t *testing.T) {
+	_, _, router := InitFakeRouterApp(true)
+	ValidateTagsUpdate(t, router)
+}
+
+func TestTagsResourceUpdateMemory(t *testing.T) {
+	_, _, router := InitFakeRouterApp(false)
+	ValidateTagsUpdate(t, router)
+}
+
+func ValidateTagsUpdate(t *testing.T, router *gin.Engine) {
+	tag := CreateTag("Tag", t, router)
+	tag.Description = "Updated"
+	url := fmt.Sprintf("/api/tags/%s", tag.ID)
 
 	check := models.Tag{}
-	err := as.DB.Find(&check, t.ID)
-	as.NoError(err)
-	as.Equal("Updated", check.Description)
+	code, err := PutJson(url, tag, &check, router)
+	assert.Equal(t, http.StatusOK, code, fmt.Sprintf("It should update %s", err))
+
+	assert.NoError(t, err)
+	assert.Equal(t, "Updated", check.Description)
 }
 
-func (as *ActionSuite) Test_TagsResource_Destroy_DB() {
-	test_common.ResetConfig()
-	test_common.InitFakeApp(true)
+func TestTagsResourceDestroyDB(t *testing.T) {
+	_, _, router := InitFakeRouterApp(true)
+	ValidateTagsDelete(t, router)
+}
 
-	t := models.Tag{ID: "A"}
-	err := as.DB.Create(&t)
-	as.NoError(err)
+func TestTagsResourceDestroyMemory(t *testing.T) {
+	_, _, router := InitFakeRouterApp(false)
+	ValidateTagsDelete(t, router)
+}
 
-	tags := models.Tags{}
-	tErr := as.DB.All(&tags)
-	as.NoError(tErr)
-	as.Equal(len(tags), 1, "There should be a tag")
+func ValidateTagsDelete(t *testing.T, router *gin.Engine) {
+	tag := CreateTag("A", t, router)
 
-	res := as.JSON(fmt.Sprintf("/tags/%s", t.ID)).Delete()
-	as.Equal(http.StatusOK, res.Code)
+	url := fmt.Sprintf("/api/tags/%s", tag.ID)
+	code, err := DeleteJson(url, router)
+	assert.Equal(t, http.StatusOK, code, fmt.Sprintf("Failed to delete %s", err))
 
-	checkTags := models.Tags{}
-	cErr := as.DB.All(&checkTags)
-	as.NoError(cErr)
-	as.Equal(len(checkTags), 0, "It should be deleted")
+	tagCheck := TagResponse{}
+	codeCheck, cErr := GetJson("/api/tags", "", &tagCheck, router)
+	assert.Equal(t, http.StatusOK, codeCheck, fmt.Sprintf("It should get tags fine %s", cErr))
+
+	assert.NoError(t, cErr, "Getting tags should be fine")
+	assert.Equal(t, len(tagCheck.Results), 0, "It should be deleted")
 }

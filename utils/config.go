@@ -6,14 +6,14 @@ package utils
 * in environment variables when running the full instance vs unit tests.
  */
 import (
-	"errors"
 	"log"
 	"os"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
-	"github.com/gobuffalo/envy"
+	"github.com/joho/godotenv"
 )
 
 // TODO: hard code vs Envy vs test stuff.  A pain in the butt
@@ -22,7 +22,7 @@ const DefaultLimit int = 10000 // The max limit set by environment variable
 const DefaultPreviewCount int = 8
 const DefaultUseDatabase bool = false
 const DefaultMaxSearchDepth int = 1
-const DefaultMaxContentPerContainer int = 90001
+const DefaultMaxContentPerContainer = int64(90001)
 const DefaultExcludeEmptyContainers bool = true
 const DefeaultTotalScreens = 12
 const DefaultPreviewFirstScreenOffset = 5
@@ -32,6 +32,8 @@ const DefaultCodecForConversionName = "hevc" // The name of the encoding (someti
 const DefaultEncodingDestination = ""
 const DefaultCodecForConversion = "libx265"
 const DefaultEncodingFilenameModifier = "_h265" // This is used when encoding a new video file name <name>_h265.mp4
+
+var ValidPreviewTypes = []string{"png", "gif", "screens"}
 
 // Matchers that determine if you want to include specific filenames/content types
 type ContentMatcher func(string, string) bool
@@ -124,9 +126,9 @@ type DirConfigEntry struct {
 	IncContainer ContainerMatcher
 	ExcContainer ContainerMatcher
 
-	MaxSearchDepth         int  // When we search for data how far down the filesystem to search
-	MaxContentPerContainer int  // When we search for data how far down the filesystem to search
-	ExcludeEmptyContainers bool // If there is no content, should we list the container default true
+	MaxSearchDepth         int   // When we search for data how far down the filesystem to search
+	MaxContentPerContainer int64 // When we search for data how far down the filesystem to search
+	ExcludeEmptyContainers bool  // If there is no content, should we list the container default true
 
 	// Splash Endpoint configuration for the 'home' page
 	SplashContainerName string // A Container you would like to load and send back
@@ -212,133 +214,134 @@ func InitConfig(dir_root string, cfg *DirConfigEntry) *DirConfigEntry {
 	return cfg
 }
 
+// These need to be valid or we will bail the app
+func GetEnvString(key string, defaultVal string) string {
+	valStr := os.Getenv(key)
+	if valStr != "" {
+		return valStr
+	}
+	return defaultVal
+}
+
+func GetEnvBool(key string, defaultBool bool) bool {
+	valStr := os.Getenv(key)
+	if valStr != "" {
+		val, err := strconv.ParseBool(valStr)
+		if err != nil {
+			log.Fatalf("Failed to parse boolean key(%s) val (%s) err %s", key, valStr, err)
+		}
+		return val
+	}
+	return defaultBool
+}
+
+func GetEnvInt64(key string, defaultInt int64) int64 {
+	valStr := os.Getenv(key)
+	if valStr != "" {
+		val, err := strconv.ParseInt(valStr, 10, 64)
+		if err != nil {
+			log.Fatalf("Failed to parse Int64 key(%s) val (%s) err %s", key, valStr, err)
+		}
+		return val
+	}
+	return defaultInt
+}
+
+func GetEnvInt(key string, defaultInt int) int {
+	valStr := os.Getenv(key)
+	if valStr != "" {
+		val, err := strconv.Atoi(valStr)
+		if err != nil {
+			log.Fatalf("Failed to parse Int key(%s) val (%s) err %s", key, valStr, err)
+		}
+		return val
+	}
+	return defaultInt
+}
+
 // Should I move this into the config itself?
 func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
-	var err error
-	dir := envy.Get("DIR", "")
+	envErr := godotenv.Load()
+	if envErr != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	dir := GetEnvString("DIR", "")
 	if dir == "" {
-		dir, err = envy.MustGet("CONTENT_DIR") // From the .env file
+		dir = GetEnvString("CONTENT_DIR", "") // From the .env file
+		if dir == "" {
+			log.Fatalf("No DIR environment variable or CONTENT_DIR in the .env found")
+		}
 	}
 	if !strings.HasSuffix(dir, "/") {
 		dir = dir + "/"
 	}
-	staticDir := envy.Get("STATIC_RESOURCE_PATH", "./public/build")
-	libraryDir := envy.Get("STATIC_LIBRARY_PATH", "./public/static")
 
-	log.Printf("Setting up the content directory with %s Static: %s Library %s", dir, staticDir, libraryDir)
-	limitCount, limErr := strconv.Atoi(envy.Get("LIMIT", strconv.Itoa(DefaultLimit)))
-	previewCount, previewErr := strconv.Atoi(envy.Get("PREVIEW", strconv.Itoa(DefaultPreviewCount)))
-	useDatabase, connErr := strconv.ParseBool(envy.Get("USE_DATABASE", strconv.FormatBool(DefaultUseDatabase)))
-	coreCount, coreErr := strconv.Atoi(envy.Get("CORE_COUNT", "4"))
-	startQueueWorkers, qErr := strconv.ParseBool(envy.Get("START_QUEUE_WORKERS", "true"))
-
-	// There must be a cleaner way to do some of this default loading...
-	excludeEmpty, emptyErr := strconv.ParseBool(envy.Get("EXCLUDE_EMPTY_CONTAINER", strconv.FormatBool(DefaultExcludeEmptyContainers)))
-	maxSearchDepth, depthErr := strconv.Atoi(envy.Get("MAX_SEARCH_DEPTH", strconv.Itoa(DefaultMaxSearchDepth)))
-	maxContentPerContainer, medErr := strconv.Atoi(envy.Get("MAX_MEDIA_PER_CONTAINER", strconv.Itoa(DefaultMaxContentPerContainer)))
-
-	psize, perr := strconv.ParseInt(envy.Get("CREATE_PREVIEW_SIZE", "1024000"), 10, 64)
-	useSeekScreenSize, seekErr := strconv.ParseInt(envy.Get("SEEK_SCREEN_OVER_SIZE", "7168000"), 10, 64)
-
-	previewType := envy.Get("PREVIEW_VIDEO_TYPE", "png")
-	previewFailIsFatal, prevErr := strconv.ParseBool(envy.Get("PREVIEW_CREATE_FAIL_IS_FATAL", "false"))
-
-	previewNumberOfScreens, totalScreenErr := strconv.Atoi(envy.Get("TOTAL_SCREENS", strconv.Itoa(DefeaultTotalScreens)))
-	previewFirstScreenOffset, offsetErr := strconv.Atoi(envy.Get("FIRST_SCREEN_OFFSET", strconv.Itoa(DefaultPreviewFirstScreenOffset)))
-	readOnly, rOnlyErr := strconv.ParseBool(envy.Get("READ_ONLY", "false"))
-	tagFile := envy.Get("TAG_FILE", "")
-
-	if err != nil {
-		panic(err)
-	} else if limErr != nil {
-		panic(limErr)
-	} else if previewErr != nil {
-		panic(previewErr)
-	} else if prevErr != nil {
-		panic(prevErr)
-	} else if _, noDirErr := os.Stat(dir); os.IsNotExist(noDirErr) {
-		panic(noDirErr)
-	} else if connErr != nil {
-		panic(connErr)
-	} else if coreErr != nil {
-		panic(coreErr)
-	} else if qErr != nil {
-		panic(qErr)
-	} else if perr != nil {
-		panic(perr)
-	} else if seekErr != nil {
-		panic(seekErr)
-	} else if medErr != nil {
-		panic(medErr)
-	} else if depthErr != nil {
-		panic(depthErr)
-	} else if emptyErr != nil {
-		panic(emptyErr)
-	} else if (totalScreenErr) != nil {
-		panic(totalScreenErr)
-	} else if (offsetErr) != nil {
-		panic(offsetErr)
-	} else if (rOnlyErr) != nil {
-		panic(rOnlyErr)
-	}
-
-	if !(previewType == "png" || previewType == "gif" || previewType == "screens") {
-		panic(errors.New("The video preview type is not png or gif"))
+	if _, noDirErr := os.Stat(dir); os.IsNotExist(noDirErr) {
+		log.Fatalf("Failed to find directory %s error %s", dir, noDirErr)
 	}
 
 	cfg.Dir = dir
-	cfg.UseDatabase = useDatabase
-	cfg.StaticResourcePath = staticDir
-	cfg.StaticLibraryPath = libraryDir
-	cfg.TagFile = tagFile
-	cfg.Limit = limitCount
-	cfg.CoreCount = coreCount
-	cfg.StartQueueWorkers = startQueueWorkers
-	cfg.PreviewCount = previewCount
-	cfg.PreviewVideoType = previewType
-	cfg.PreviewOverSize = psize
-	cfg.ScreensOverSize = useSeekScreenSize
-	cfg.PreviewCreateFailIsFatal = previewFailIsFatal
-	cfg.PreviewNumberOfScreens = previewNumberOfScreens
-	cfg.PreviewFirstScreenOffset = previewFirstScreenOffset
+	cfg.UseDatabase = GetEnvBool("USE_DATABASE", DefaultUseDatabase)
+	cfg.StaticResourcePath = GetEnvString("STATIC_RESOURCE_PATH", "./public/build")
+	cfg.StaticLibraryPath = GetEnvString("STATIC_LIBRARY_PATH", "./public/static")
+	cfg.TagFile = GetEnvString("TAG_FILE", "")
 
-	cfg.ReadOnly = readOnly
-	cfg.IncludeOperator = envy.Get("INCLUDE_OPERATOR", "AND")
-	cfg.ExcludeOperator = envy.Get("EXCLUDE_OPERATOR", "AND")
+	cfg.Limit = GetEnvInt("LIMIT", DefaultLimit)
+	cfg.CoreCount = GetEnvInt("CORE_COUNT", 4)
+	cfg.StartQueueWorkers = GetEnvBool("START_QUEUE_WORKERS", true)
+	cfg.PreviewCount = GetEnvInt("PREVIEW", DefaultPreviewCount)
+
+	// Could make this an enum?
+	cfg.PreviewVideoType = GetEnvString("PREVIEW_VIDEO_TYPE", "png")
+	if !(slices.Contains(ValidPreviewTypes, cfg.PreviewVideoType)) {
+		log.Fatalf("the video preview type is not png or gif %s", cfg.PreviewVideoType)
+	}
+
+	cfg.PreviewOverSize = GetEnvInt64("CREATE_PREVIEW_SIZE", int64(1024000))
+	cfg.ScreensOverSize = GetEnvInt64("SEEK_SCREEN_OVER_SIZE", int64(7168000))
+	cfg.PreviewCreateFailIsFatal = GetEnvBool("PREVIEW_CREATE_FAIL_IS_FATAL", false)
+	cfg.PreviewNumberOfScreens = GetEnvInt("TOTAL_SCREENS", DefeaultTotalScreens)
+	cfg.PreviewFirstScreenOffset = GetEnvInt("FIRST_SCREEN_OFFSET", DefaultPreviewFirstScreenOffset)
+
+	cfg.ReadOnly = GetEnvBool("READ_ONLY", false)
+	cfg.IncludeOperator = GetEnvString("INCLUDE_OPERATOR", "AND")
+	cfg.ExcludeOperator = GetEnvString("EXCLUDE_OPERATOR", "AND")
 
 	// For video conversion options (eventually)
-	cfg.CodecsToConvert = envy.Get("CODECS_TO_CONVERT", DefaultCodecsToConvert)
-	cfg.CodecsToIgnore = envy.Get("CODECS_TO_IGNORE", DefaultCodecsToIgnore)
-	cfg.CodecForConversion = envy.Get("CODEC_FOR_CONVERSION", DefaultCodecForConversion)
-	cfg.CodecForConversionName = envy.Get("CODEC_FOR_CONVERSION_NAME", DefaultCodecForConversionName)
-	cfg.EncodingDestination = envy.Get("ENCODING_DESTINATION", DefaultEncodingDestination)
+	cfg.CodecsToConvert = GetEnvString("CODECS_TO_CONVERT", DefaultCodecsToConvert)
+	cfg.CodecsToIgnore = GetEnvString("CODECS_TO_IGNORE", DefaultCodecsToIgnore)
+	cfg.CodecForConversion = GetEnvString("CODEC_FOR_CONVERSION", DefaultCodecForConversion)
+	cfg.CodecForConversionName = GetEnvString("CODEC_FOR_CONVERSION_NAME", DefaultCodecForConversionName)
+	cfg.EncodingDestination = GetEnvString("ENCODING_DESTINATION", DefaultEncodingDestination)
 
 	// TODO: Make this a little saner on the name side
-	removeDuplicates, _ := strconv.ParseBool(envy.Get("REMOVE_DUPLICATE_FILES", "false"))
-	cfg.EncodingFilenameModifier = envy.Get("ENCODING_FILENAME_MODIFIER", DefaultEncodingFilenameModifier)
-	cfg.RemoveDuplicateFiles = removeDuplicates
+	cfg.EncodingFilenameModifier = GetEnvString("ENCODING_FILENAME_MODIFIER", DefaultEncodingFilenameModifier)
+	cfg.RemoveDuplicateFiles = GetEnvBool("REMOVE_DUPLICATE_FILES", false)
 
-	cfg.ExcludeEmptyContainers = excludeEmpty
-	cfg.MaxSearchDepth = maxSearchDepth
-	cfg.MaxContentPerContainer = maxContentPerContainer
+	// There must be a cleaner way to do some of this default loading...
 
-	cfg.SplashContainerName = envy.Get("SPLASH_CONTAINER_NAME", "")
-	cfg.SplashContentID = envy.Get("SPLASH_CONTENT_ID", "")
-	cfg.SplashRendererType = envy.Get("SPLASH_RENDERER_TYPE", "")
-	cfg.SplashHtmlFile = envy.Get("SPLASH_HTML_FILE", "")
-	cfg.SplashTitle = envy.Get("SPLASH_TITLE", "")
+	cfg.ExcludeEmptyContainers = GetEnvBool("EXCLUDE_EMPTY_CONTAINER", DefaultExcludeEmptyContainers)
+	cfg.MaxSearchDepth = GetEnvInt("MAX_SEARCH_DEPTH", DefaultMaxSearchDepth)
+	cfg.MaxContentPerContainer = GetEnvInt64("MAX_MEDIA_PER_CONTAINER", DefaultMaxContentPerContainer)
+
+	cfg.SplashContainerName = GetEnvString("SPLASH_CONTAINER_NAME", "")
+	cfg.SplashContentID = GetEnvString("SPLASH_CONTENT_ID", "")
+	cfg.SplashRendererType = GetEnvString("SPLASH_RENDERER_TYPE", "")
+	cfg.SplashHtmlFile = GetEnvString("SPLASH_HTML_FILE", "")
+	cfg.SplashTitle = GetEnvString("SPLASH_TITLE", "")
 
 	SetupContentMatchers(
 		cfg,
-		envy.Get("INCLUDE_MEDIA_MATCH", ""),
-		envy.Get("INCLUDE_TYPES_MATCH", ""),
-		envy.Get("EXCLUDE_MEDIA_MATCH", ""),
-		envy.Get("EXCLUDE_TYPES_MATCH", ""),
+		GetEnvString("INCLUDE_MEDIA_MATCH", ""),
+		GetEnvString("INCLUDE_TYPES_MATCH", ""),
+		GetEnvString("EXCLUDE_MEDIA_MATCH", ""),
+		GetEnvString("EXCLUDE_TYPES_MATCH", ""),
 	)
 	SetupContainerMatchers(
 		cfg,
-		envy.Get("INCLUDE_CONTAINER_MATCH", ""),
-		envy.Get("EXCLUDE_CONTAINER_MATCH", ""),
+		GetEnvString("INCLUDE_CONTAINER_MATCH", ""),
+		GetEnvString("EXCLUDE_CONTAINER_MATCH", ""),
 	)
 	cfg.Initialized = true
 	return cfg

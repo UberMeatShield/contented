@@ -19,14 +19,14 @@ func TestFindContainers(t *testing.T) {
 	if len(containers) != len(dirs) {
 		t.Fatalf("There should be %d containers in the mock found %d", len(dirs), len(containers))
 	}
-	var known_dirs = map[string]bool{}
+	var knownDirs = map[string]bool{}
 	for _, dir := range dirs {
-		known_dirs[dir] = true
+		knownDirs[dir] = true
 	}
 
 	count := 0
 	for _, c := range containers {
-		if _, ok := known_dirs[c.Name]; ok {
+		if _, ok := knownDirs[c.Name]; ok {
 			count++
 		} else {
 			t.Errorf("Failed to get a lookup for this dir %s", c.Name)
@@ -37,7 +37,7 @@ func TestFindContainers(t *testing.T) {
 	}
 }
 
-func Test_FindContent(t *testing.T) {
+func TestFindContent(t *testing.T) {
 	var testDir, _ = envy.MustGet("DIR")
 	cfg := GetCfg()
 	cfg.Dir = testDir
@@ -185,18 +185,22 @@ func TestEmptyInitial(t *testing.T) {
 	tree, err := CreateStructure(testDir, cfg, &cTree, 0)
 	if err != nil {
 		t.Errorf("Could not create a proper tree %s", err)
+		return
 	}
 	if tree == nil {
 		t.Errorf("Container tree was set to nil")
+		return
 	}
 	lenTree := len(*tree)
 	if lenTree != 3 {
 		t.Errorf("The tree should match only an initial empty container")
+		return
 	}
 
 	memStorage := InitializeMemory(testDir)
 	if len(memStorage.ValidContent) != 1 {
-		t.Errorf("Did not initialize with an empty chain of directories %s", memStorage.ValidContent)
+
+		t.Errorf("did not initialize with an empty chain of directories %s", memStorage.ValidContent)
 	}
 }
 
@@ -263,7 +267,7 @@ func Test_CreateContentMatcher(t *testing.T) {
 	}
 }
 
-func example(sleep int, msg string, reply chan string) {
+func example(sleep int64, msg string, reply chan string) {
 	sleepTime := time.Duration(sleep) * time.Millisecond
 	time.Sleep(sleepTime)
 	// fmt.Printf("Done sleeping %d with msg %s \n", sleep, msg)

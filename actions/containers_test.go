@@ -9,15 +9,16 @@ import (
 	"contented/utils"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
-func (as *ActionSuite) Test_ContainersResource_List() {
-	res := as.JSON("/containers").Get()
-	as.Equal(http.StatusOK, res.Code)
-}
-
-func CreateContainer(name string, as *ActionSuite) models.Container {
+func CreateNamedContainer(name string, t *testing.T, router *gin.Engine) models.Container {
 	cfg := utils.GetCfg()
 	c := &models.Container{
 		Total: 1,
@@ -25,125 +26,163 @@ func CreateContainer(name string, as *ActionSuite) models.Container {
 		Path:  cfg.Dir,
 	}
 	fqPath, err := test_common.CreateContainerPath(c)
+	log.Printf("What is the fqContainer path %s", fqPath)
 	if err != nil {
 		fmt.Printf("Failed to create path %s with err %s", fqPath, err)
 		panic(err)
 	}
-	res := as.JSON("/containers").Post(c)
-	resObj := models.Container{}
-	json.NewDecoder(res.Body).Decode(&resObj)
-	return resObj
+
+	return CreateContainer(c, t, router)
 }
 
-func (as *ActionSuite) Test_ContainersResource_Show() {
-	test_common.InitFakeApp(true)
+func CreateContainer(c *models.Container, t *testing.T, router *gin.Engine) models.Container {
+	resObj := &models.Container{}
+	code, err := PostJson("/api/containers", c, &resObj, router)
+
+	assert.NoError(t, err, "The Post was not a success")
+	assert.Greater(t, resObj.ID, int64(0), "A container ID should exist")
+	assert.Equal(t, resObj.Name, c.Name, fmt.Sprintf("Did we get a valid object back %s", resObj))
+	assert.Equal(t, http.StatusCreated, code, "The http post call was successful")
+	return *resObj
+}
+
+func TestContainersResourceList(t *testing.T) {
+	_, _, router := InitFakeRouterApp(false)
+
+	url := "/api/containers"
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", url, nil)
+	router.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code, fmt.Sprintf("Failed to call %s", url))
+
+	containers := ContainersResponse{}
+	json.NewDecoder(w.Body).Decode(&containers)
+	assert.NotEmpty(t, containers.Results, "No containers returned from the call")
+}
+
+func TestContainersResourceShow(t *testing.T) {
+	_, _, router := InitFakeRouterApp(false)
 	name := "ShowTest"
-	cnt := CreateContainer(name, as)
-	defer test_common.CleanupContainer(&cnt)
-	as.NotZero(cnt.ID)
 
-	validate := as.JSON("/containers/" + cnt.ID.String()).Get()
-	as.Equal(http.StatusOK, validate.Code)
+	cnt := CreateNamedContainer(name, t, router)
+	defer test_common.CleanupContainer(&cnt)
+	assert.NotZero(t, cnt.ID)
+
+	url := fmt.Sprintf("/api/containers/%d", cnt.ID)
+	req, _ := http.NewRequest("GET", url, nil)
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
 
 	resObj := models.Container{}
-	json.NewDecoder(validate.Body).Decode(&resObj)
-	as.Equal(resObj.Name, name)
+	json.NewDecoder(w.Body).Decode(&resObj)
+	assert.Equal(t, resObj.Name, name)
 }
 
-func (as *ActionSuite) Test_ContainersResource_Create() {
-	cfg := test_common.InitFakeApp(true)
+func TestContainersResourceCreate(t *testing.T) {
+	cfg, db, router := InitFakeRouterApp(true)
+
 	cnt := &models.Container{
 		Total: 1,
 		Name:  "dir3",
 		Path:  "ShouldGetReset",
 	}
-	res := as.JSON("/containers").Post(cnt)
-	as.Equal(http.StatusCreated, res.Code, "It should be able to create")
+	resObj := &models.Container{}
+	code, err := PostJson("/api/containers", cnt, resObj, router)
+	assert.NoError(t, err, "Failure in creating the container")
+	assert.Equal(t, http.StatusCreated, code, "It should be able to create")
 	defer test_common.CleanupContainer(cnt)
 
-	resObj := models.Container{}
-	json.NewDecoder(res.Body).Decode(&resObj)
-	as.Equal(resObj.Name, cnt.Name)
-	as.NotZero(resObj.ID)
-	as.Equal(http.StatusCreated, res.Code)
+	assert.Equal(t, resObj.Name, cnt.Name)
+	assert.NotZero(t, resObj.ID)
 
 	// Path does not come back from the API (hidden), check it updated.
 	check := models.Container{}
-	as.NoError(as.DB.Find(&check, resObj.ID))
-	as.Equal(check.Path, cfg.Dir, "It should reset our path")
+	assert.NoError(t, db.Find(&check, resObj.ID).Error, "Could not pull back a container from the DB")
+	assert.Equal(t, check.Path, cfg.Dir, "It should reset our path")
 }
 
-func (as *ActionSuite) Test_ContainersResource_Update() {
-	test_common.InitFakeApp(true)
-	cnt := CreateContainer("Initial", as)
-	test_common.CleanupContainer(&cnt)
-	as.NotZero(cnt.ID)
-
-	name := "UpdateTest"
-	cnt.Name = name
-	test_common.CreateContainerPath(&cnt)
-
-	res := as.JSON("/containers/" + cnt.ID.String()).Put(cnt)
+func TestContainersResourceUpdate(t *testing.T) {
+	_, _, router := InitFakeRouterApp(false)
+	cnt := CreateNamedContainer("Initial", t, router)
 	defer test_common.CleanupContainer(&cnt)
-	as.Equal(http.StatusOK, res.Code, fmt.Sprintf("Error %s", res.Body.String()))
+	assert.NotZero(t, cnt.ID)
+	assert.Equal(t, cnt.Name, "Initial")
 
-	check := models.Container{}
-	json.NewDecoder(res.Body).Decode(&check)
-	as.Equal(check.Name, name, "It should update the name")
+	description := "UpdateTest"
+	cnt.Description = description
+
+	url := fmt.Sprintf("/api/containers/%d", cnt.ID)
+	check := &models.Container{}
+	code, err := PutJson(url, cnt, check, router)
+	assert.Equal(t, http.StatusOK, code, fmt.Sprintf("Error %s", err))
+	assert.Equal(t, description, check.Description, "It should update the description")
 }
 
-func (as *ActionSuite) Test_ContainersResource_Destroy() {
-	test_common.InitFakeApp(true)
-	cnt := CreateContainer("Nuke", as)
+func TestContainersResourceDestroy(t *testing.T) {
+	_, _, router := InitFakeRouterApp(false)
+	cnt := CreateNamedContainer("Nuke", t, router)
 	defer test_common.CleanupContainer(&cnt)
-	as.NotZero(cnt.ID)
+	assert.Equal(t, cnt.Name, "Nuke")
+	assert.NotZero(t, cnt.ID)
 
-	res := as.JSON("/containers/" + cnt.ID.String()).Delete()
-	as.Equal(http.StatusOK, res.Code)
+	url := fmt.Sprintf("/api/containers/%d", cnt.ID)
+	deleteCode, err := DeleteJson(url, router)
+	assert.NoError(t, err, "It should delete")
+	assert.Equal(t, http.StatusOK, deleteCode, "The delete operation failed")
 
-	notFoundRes := as.JSON("/containers/" + cnt.ID.String()).Get()
-	as.Equal(http.StatusNotFound, notFoundRes.Code)
+	check := &models.Container{}
+	code, err := GetJson(url, cnt, check, router)
+	assert.Error(t, err, "It should be in an error state")
+	assert.Equal(t, http.StatusNotFound, code, "It should not get a container back")
 }
 
-func (as *ActionSuite) Test_ContainerList() {
-	test_common.InitFakeApp(true)
+func TestContainerList(t *testing.T) {
+	_, db, router := InitFakeRouterApp(true)
 
 	cnt1, _ := test_common.GetContentByDirName("dir1")
 	cnt2, _ := test_common.GetContentByDirName("dir2")
-	models.DB.Create(cnt1)
-	models.DB.Create(cnt2)
-	res := as.JSON("/containers").Get()
-	as.Equal(http.StatusOK, res.Code)
+	db.Create(cnt1)
+	db.Create(cnt2)
 
-	containers := ContainersResponse{}
-	json.NewDecoder(res.Body).Decode(&containers)
+	containers := &ContainersResponse{}
+	code, err := GetJson("/api/containers", "", containers, router)
+	assert.NoError(t, err, "It should not error")
+	assert.Equal(t, http.StatusOK, code)
 
-	as.Equal(2, len(containers.Results), "It should have loaded two fixtures")
+	assert.Equal(t, 2, len(containers.Results), "It should have loaded two fixtures")
 	var found *models.Container
 	for _, c := range containers.Results {
 		if c.Name == "dir2" {
 			found = &c
 		}
 	}
-	as.NotNil(found, "If it had the fixture loaded we should have this name")
-	contentRes := as.JSON("/containers/" + found.ID.String() + "/contents").Get()
-	as.Equal(http.StatusOK, contentRes.Code)
+	assert.NotNil(t, found, "If it had the fixture loaded we should have this name")
+	url := fmt.Sprintf("/api/containers/%d/contents", found.ID)
+	contents := &ContentsResponse{}
+	contentsCode, contentsErr := GetJson(url, "", contents, router)
+	assert.NoError(t, contentsErr, "It should have no content but should work")
+	assert.Equal(t, http.StatusOK, contentsCode)
+	assert.Equal(t, int64(0), contents.Total, "There should not be content")
 }
 
-func (as *ActionSuite) Test_Memory_ReadOnlyDenyEdit() {
-	cfg := test_common.InitFakeApp(false)
+func TestMemoryReadOnlyDenyEdit(t *testing.T) {
+	cfg, _, router := InitFakeRouterApp(false)
 	cfg.ReadOnly = true
-	ctx := test_common.GetContext(as.App)
-	man := managers.GetManager(&ctx)
+	ctx := test_common.GetContext()
+	man := managers.GetManager(ctx)
 
 	containers, count, err := man.ListContainersContext()
-	as.NoError(err, "It should list containers")
-	as.Greater(count, 0, "The count should be positive")
-	as.Greater(len(*containers), 0, "There should be containers")
+	assert.NoError(t, err, "It should list containers")
+	assert.Greater(t, count, int64(0), "The count should be positive")
+	assert.Greater(t, len(*containers), 0, "There should be containers")
 
 	for _, c := range *containers {
 		c.Name = "Update Should fail"
-		res := as.JSON("/containers/" + c.ID.String()).Put(&c)
-		as.Equal(http.StatusNotImplemented, res.Code)
+		url := fmt.Sprintf("/api/containers/%d", c.ID)
+		code, err := PutJson(url, c, &models.Container{}, router)
+		assert.Equal(t, http.StatusNotImplemented, code)
+		assert.Error(t, err, "It should not work")
 	}
 }

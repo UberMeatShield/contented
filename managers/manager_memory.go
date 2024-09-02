@@ -14,9 +14,8 @@ import (
 	"net/url"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
-
-	"github.com/gofrs/uuid"
 )
 
 // Provides the support for looking up content by ID while only using memory
@@ -32,9 +31,7 @@ type ContentManagerMemory struct {
 		ValidTasks      models.TaskRequests
 	*/
 	validate string
-
-	params *url.Values
-	Params GetParamsType
+	Params   GetParamsType
 }
 
 // We do not allow editing in a memory manager
@@ -77,14 +74,15 @@ func (cm ContentManagerMemory) GetParams() *url.Values {
 	return cm.Params()
 }
 
-func (cm ContentManagerMemory) ListContentContext() (*models.Contents, int, error) {
+func (cm ContentManagerMemory) ListContentContext() (*models.Contents, int64, error) {
 	params := cm.Params()
 	_, limit, page := GetPagination(params, cm.cfg.Limit)
 
+	cID := StringDefault(params.Get("container_id"), "")
 	// Note text is an exact match, search is a regex or partial
 	cs := ContentQuery{
 		Text:        StringDefault(params.Get("text"), ""),
-		ContainerID: StringDefault(params.Get("container_id"), ""),
+		ContainerID: cID,
 		Page:        page,
 		PerPage:     limit,
 		Order:       StringDefault(params.Get("order"), ""),
@@ -93,13 +91,13 @@ func (cm ContentManagerMemory) ListContentContext() (*models.Contents, int, erro
 }
 
 // It should probably be able to search the container too?
-func (cm ContentManagerMemory) SearchContentContext() (*models.Contents, int, error) {
+func (cm ContentManagerMemory) SearchContentContext() (*models.Contents, int64, error) {
 	sr := ContextToContentQuery(cm.Params(), cm.GetCfg())
 	return cm.SearchContent(sr)
 }
 
 // Memory version is going to be extra annoying to tag search more than one tag on an or, or AND...
-func (cm ContentManagerMemory) SearchContent(sr ContentQuery) (*models.Contents, int, error) {
+func (cm ContentManagerMemory) SearchContent(sr ContentQuery) (*models.Contents, int64, error) {
 	filteredContent, cErr := cm.getContentFiltered(sr)
 	if cErr != nil {
 		return nil, 0, cErr
@@ -125,9 +123,9 @@ func (cm ContentManagerMemory) SearchContent(sr ContentQuery) (*models.Contents,
 	}
 	if end > 0 { // If it is empty a slice ending in 0 = boom
 		mc_arr = mc_arr[offset:end]
-		return &mc_arr, count, nil
+		return &mc_arr, int64(count), nil
 	}
-	return &mc_arr, count, nil
+	return &mc_arr, int64(count), nil
 }
 
 // This is not great but there isn't a lookup of tag => contents
@@ -160,10 +158,10 @@ func (cm ContentManagerMemory) getContentFiltered(cs ContentQuery) (*models.Cont
 
 	// Most common initial filtering call
 	if cs.ContainerID != "" {
-		cID, cErr := uuid.FromString(cs.ContainerID)
+		cID, cErr := strconv.ParseInt(cs.ContainerID, 10, 64)
 		if cErr == nil {
 			for _, mc := range mem.ValidContent {
-				if mc.ContainerID.Valid && mc.ContainerID.UUID == cID {
+				if mc.ContainerID != nil && *mc.ContainerID == cID {
 					cidArr = append(cidArr, mc)
 				}
 			}
@@ -189,7 +187,7 @@ func (cm ContentManagerMemory) getContentFiltered(cs ContentQuery) (*models.Cont
 		mcArr = visibleArr
 	}
 
-	if id, err := uuid.FromString(cs.ContentID); err == nil {
+	if id, err := strconv.ParseInt(cs.ContentID, 10, 32); err == nil {
 		idArr := models.Contents{}
 		for _, mc := range mcArr {
 			if mc.ID == id {
@@ -236,13 +234,13 @@ func (cm ContentManagerMemory) getContentFiltered(cs ContentQuery) (*models.Cont
 }
 
 // It should probably be able to search the container too?
-func (cm ContentManagerMemory) SearchContainersContext() (*models.Containers, int, error) {
+func (cm ContentManagerMemory) SearchContainersContext() (*models.Containers, int64, error) {
 	cq := ContextToContainerQuery(cm.Params(), cm.GetCfg())
 	return cm.SearchContainers(cq)
 }
 
 // TODO: Make it page but right now this will only be used in splash (regex it?)
-func (cm ContentManagerMemory) SearchContainers(cs ContainerQuery) (*models.Containers, int, error) {
+func (cm ContentManagerMemory) SearchContainers(cs ContainerQuery) (*models.Containers, int64, error) {
 	limit := cs.PerPage
 	cs.PerPage = 90000 // Search everything in the filtered section
 	cnts, _, cErr := cm.ListContainersFiltered(cs)
@@ -265,7 +263,7 @@ func (cm ContentManagerMemory) SearchContainers(cs ContainerQuery) (*models.Cont
 	if cs.Direction == "desc" {
 		cArr = cArr.Reverse()
 	}
-	count := len(cArr)
+	count := int64(len(cArr))
 	if end > 0 { // If it is empty a slice ending in 0 = boom
 		cArr = cArr[offset:end]
 		return &cArr, count, nil
@@ -274,20 +272,21 @@ func (cm ContentManagerMemory) SearchContainers(cs ContainerQuery) (*models.Cont
 }
 
 // Awkard GoLang interface support is awkward
-func (cm ContentManagerMemory) ListContent(cs ContentQuery) (*models.Contents, int, error) {
+func (cm ContentManagerMemory) ListContent(cs ContentQuery) (*models.Contents, int64, error) {
 	cs.IncludeHidden = false
 	return cm.ListContentFiltered(cs)
 }
 
-func (cm ContentManagerMemory) ListContentFiltered(cs ContentQuery) (*models.Contents, int, error) {
+func (cm ContentManagerMemory) ListContentFiltered(cs ContentQuery) (*models.Contents, int64, error) {
 	m_arr := models.Contents{}
 	mem := cm.GetStore()
 
+	log.Printf("What the shit %s", cs.ContainerID)
 	// Need to test invalid / empty ""
-	containerID, invalid := uuid.FromString(cs.ContainerID)
+	containerID, invalid := strconv.ParseInt(cs.ContainerID, 10, 64)
 	if invalid == nil {
 		for _, content := range mem.ValidContent {
-			if content.ContainerID.Valid && content.ContainerID.UUID == containerID {
+			if content.ContainerID != nil && *content.ContainerID == containerID {
 				m_arr = append(m_arr, content)
 			}
 		}
@@ -297,7 +296,7 @@ func (cm ContentManagerMemory) ListContentFiltered(cs ContentQuery) (*models.Con
 		}
 	}
 
-	if contentID, badIdErr := uuid.FromString(cs.ContentID); badIdErr == nil {
+	if contentID, badIdErr := strconv.ParseInt(cs.ContentID, 10, 64); badIdErr == nil {
 		for _, content := range m_arr {
 			if content.ID == contentID {
 				m_arr = models.Contents{content}
@@ -333,15 +332,15 @@ func (cm ContentManagerMemory) ListContentFiltered(cs ContentQuery) (*models.Con
 	offset, end := GetOffsetEnd(cs.Page, cs.PerPage, len(m_arr))
 	if end > 0 { // If it is empty a slice ending in 0 = boom
 		m_arr = m_arr[offset:end]
-		return &m_arr, count, nil
+		return &m_arr, int64(count), nil
 	}
 	// log.Printf("Get a list of content offset(%d), end(%d) we should have some %d", offset, end, len(m_arr))
-	return &m_arr, count, nil
+	return &m_arr, int64(count), nil
 
 }
 
 // Get a content element by the ID
-func (cm ContentManagerMemory) GetContent(mcID uuid.UUID) (*models.Content, error) {
+func (cm ContentManagerMemory) GetContent(mcID int64) (*models.Content, error) {
 	// log.Printf("Memory Get a single content %s", mcID)
 	mem := cm.GetStore()
 	if mc, ok := mem.ValidContent[mcID]; ok {
@@ -367,9 +366,9 @@ func (cm ContentManagerMemory) UpdateContainer(cnt *models.Container) (*models.C
 func (cm ContentManagerMemory) UpdateContent(content *models.Content) error {
 	// TODO: Should I be able to ignore being in a container if there is no file?
 	if !content.NoFile {
-		cnt, cErr := cm.GetContainer(content.ContainerID.UUID)
+		cnt, cErr := cm.GetContainer(*content.ContainerID)
 		if cErr != nil {
-			msg := fmt.Sprintf("parent container %s not found", content.ContainerID.UUID.String())
+			msg := fmt.Sprintf("parent container %d not found", content.ContainerID)
 			log.Print(msg)
 			return errors.New(msg)
 		}
@@ -380,6 +379,13 @@ func (cm ContentManagerMemory) UpdateContent(content *models.Content) error {
 			return fmt.Errorf("invalid content src %s for container %s", content.Src, cnt.Name)
 		}
 	}
+
+	tags, tagErr := cm.GetValidTags(&content.Tags)
+	if tagErr != nil {
+		return tagErr
+	}
+
+	content.Tags = *tags
 	_, err := cm.GetStore().UpdateContent(content)
 	return err
 }
@@ -404,7 +410,10 @@ func (cm ContentManagerMemory) UpdateScreen(s *models.Screen) error {
 }
 
 // Given the current parameters in the buffalo context return a list of matching containers.
-func (cm ContentManagerMemory) ListContainersContext() (*models.Containers, int, error) {
+// TODO: Probably port all Context interfaces to pass in a url.Values element.
+// TODO: On the actions layer make a gin.Context to the Gin params
+// TODO: Remove all Gin or buffalo from the manager layer, it is just not good
+func (cm ContentManagerMemory) ListContainersContext() (*models.Containers, int64, error) {
 	params := cm.Params()
 	_, limit, page := GetPagination(params, cm.cfg.Limit)
 	cs := ContainerQuery{
@@ -417,11 +426,11 @@ func (cm ContentManagerMemory) ListContainersContext() (*models.Containers, int,
 }
 
 // Actually list containers using a page and per_page which is consistent with buffalo standard pagination
-func (cm ContentManagerMemory) ListContainers(cs ContainerQuery) (*models.Containers, int, error) {
+func (cm ContentManagerMemory) ListContainers(cs ContainerQuery) (*models.Containers, int64, error) {
 	return cm.ListContainersFiltered(cs)
 }
 
-func (cm ContentManagerMemory) ListContainersFiltered(cs ContainerQuery) (*models.Containers, int, error) {
+func (cm ContentManagerMemory) ListContainersFiltered(cs ContainerQuery) (*models.Containers, int64, error) {
 	c_arr := models.Containers{}
 	mem := cm.GetStore()
 	for _, c := range mem.ValidContainers {
@@ -440,23 +449,23 @@ func (cm ContentManagerMemory) ListContainersFiltered(cs ContainerQuery) (*model
 		return c_arr[i].Idx < c_arr[j].Idx
 	})
 	count := len(c_arr)
-	offset, end := GetOffsetEnd(cs.Page, cs.PerPage, len(c_arr))
+	offset, end := GetOffsetEnd(cs.Page, cs.PerPage, count)
 	c_arr = c_arr[offset:end]
-	return &c_arr, count, nil
+	return &c_arr, int64(count), nil
 }
 
 // Get a single container given the primary key
-func (cm ContentManagerMemory) GetContainer(cID uuid.UUID) (*models.Container, error) {
+func (cm ContentManagerMemory) GetContainer(cID int64) (*models.Container, error) {
 	// log.Printf("Get a single container %s", cID)
 	mem := cm.GetStore()
 	if c, ok := mem.ValidContainers[cID]; ok {
 		return &c, nil
 	}
-	return nil, errors.New("Memory manager did not find this container id: " + cID.String())
+	return nil, fmt.Errorf("ContentMemoryManager did not find this container id: %d", cID)
 }
 
 func (cm ContentManagerMemory) GetPreviewForMC(mc *models.Content) (string, error) {
-	cnt, err := cm.GetContainer(mc.ContainerID.UUID)
+	cnt, err := cm.GetContainer(*mc.ContainerID)
 	if err != nil {
 		return "Memory Manager Preview no Parent Found", err
 	}
@@ -464,23 +473,23 @@ func (cm ContentManagerMemory) GetPreviewForMC(mc *models.Content) (string, erro
 	if mc.Preview != "" {
 		src = mc.Preview
 	}
-	log.Printf("Memory Manager loading %s preview %s\n", mc.ID.String(), src)
+	log.Printf("ContentMemoryManager loading %d preview %s\n", mc.ID, src)
 	return utils.GetFilePathInContainer(src, cnt.GetFqPath())
 }
 
 func (cm ContentManagerMemory) FindActualFile(mc *models.Content) (string, error) {
-	cnt, err := cm.GetContainer(mc.ContainerID.UUID)
+	cnt, err := cm.GetContainer(*mc.ContainerID)
 	if err != nil {
 		return "Memory Manager View no Parent Found", err
 	}
-	log.Printf("Memory Manager View %s loading up %s\n", mc.ID.String(), mc.Src)
+	log.Printf("Memory Manager View %d loading up %s\n", mc.ID, mc.Src)
 	return utils.GetFilePathInContainer(mc.Src, cnt.GetFqPath())
 }
 
 // If you want to do in memory testing and already manually created previews this will
 // then try and use the previews for the in memory manager.
 func (cm ContentManagerMemory) SetPreviewIfExists(mc *models.Content) (string, error) {
-	c, err := cm.GetContainer(mc.ContainerID.UUID)
+	c, err := cm.GetContainer(*mc.ContainerID)
 	if err != nil {
 		log.Fatal(err)
 		return "", err
@@ -489,7 +498,7 @@ func (cm ContentManagerMemory) SetPreviewIfExists(mc *models.Content) (string, e
 	return pFile, nil
 }
 
-func (cm ContentManagerMemory) ListScreensContext() (*models.Screens, int, error) {
+func (cm ContentManagerMemory) ListScreensContext() (*models.Screens, int64, error) {
 	// Could add the context here correctly
 	params := cm.Params()
 	_, limit, page := GetPagination(params, cm.cfg.Limit)
@@ -504,13 +513,13 @@ func (cm ContentManagerMemory) ListScreensContext() (*models.Screens, int, error
 
 // TODO: Get a pattern for each MC, look at a preview Destination, then match against the pattern
 // And build out a set of screens.
-func (cm ContentManagerMemory) ListScreens(sq ScreensQuery) (*models.Screens, int, error) {
+func (cm ContentManagerMemory) ListScreens(sq ScreensQuery) (*models.Screens, int64, error) {
 
 	// Did I create this just to sort by Idx across all content?  Kinda strange
 	mem := cm.GetStore()
 	s_arr := models.Screens{}
 	if sq.ContentID != "" {
-		contentID, idErr := uuid.FromString(sq.ContentID)
+		contentID, idErr := strconv.ParseInt(sq.ContentID, 10, 32)
 		if idErr != nil {
 			return nil, -1, idErr
 		}
@@ -530,15 +539,15 @@ func (cm ContentManagerMemory) ListScreens(sq ScreensQuery) (*models.Screens, in
 		s_arr = s_arr.Reverse()
 	}
 	count := len(s_arr)
-	offset, end := GetOffsetEnd(sq.Page, sq.PerPage, len(s_arr))
+	offset, end := GetOffsetEnd(sq.Page, sq.PerPage, count)
 	if end > 0 { // If it is empty a slice ending in 0 = boom
 		s_arr = s_arr[offset:end]
-		return &s_arr, count, nil
+		return &s_arr, int64(count), nil
 	}
-	return &s_arr, count, nil
+	return &s_arr, int64(count), nil
 }
 
-func (cm ContentManagerMemory) GetScreen(psID uuid.UUID) (*models.Screen, error) {
+func (cm ContentManagerMemory) GetScreen(psID int64) (*models.Screen, error) {
 	// Need to build out a memory setup and look the damn thing up :(
 	mem := cm.GetStore()
 	if screen, ok := mem.ValidScreens[psID]; ok {
@@ -548,7 +557,7 @@ func (cm ContentManagerMemory) GetScreen(psID uuid.UUID) (*models.Screen, error)
 }
 
 // It really seems like it would be nicer to have a base class do this...
-func (cm ContentManagerMemory) ListAllTags(tq TagQuery) (*models.Tags, int, error) {
+func (cm ContentManagerMemory) ListAllTags(tq TagQuery) (*models.Tags, int64, error) {
 	log.Printf("Using memory manager for tag page %d perPage %d \n", tq.Page, tq.PerPage)
 	t_arr := models.Tags{}
 	mem := cm.GetStore()
@@ -564,14 +573,14 @@ func (cm ContentManagerMemory) ListAllTags(tq TagQuery) (*models.Tags, int, erro
 	sort.SliceStable(t_arr, func(i, j int) bool {
 		return t_arr[i].ID < t_arr[j].ID
 	})
-	offset, end := GetOffsetEnd(tq.Page, tq.PerPage, len(t_arr))
 	total := len(t_arr)
+	offset, end := GetOffsetEnd(tq.Page, tq.PerPage, total)
 
 	if end > 0 { // If it is empty a slice ending in 0 = boom
 		t_arr = t_arr[offset:end]
-		return &t_arr, total, nil
+		return &t_arr, int64(total), nil
 	}
-	return &t_arr, total, errors.New("Not implemented")
+	return &t_arr, int64(total), fmt.Errorf("invalid page end %d per page %d", tq.Page, tq.PerPage)
 }
 
 func (cm ContentManagerMemory) GetTag(id string) (*models.Tag, error) {
@@ -579,10 +588,10 @@ func (cm ContentManagerMemory) GetTag(id string) (*models.Tag, error) {
 	if tag, ok := mem.ValidTags[id]; ok {
 		return &tag, nil
 	}
-	return nil, errors.New(fmt.Sprintf("Tag not found %s", id))
+	return nil, fmt.Errorf("tag not found %s", id)
 }
 
-func (cm ContentManagerMemory) ListAllTagsContext() (*models.Tags, int, error) {
+func (cm ContentManagerMemory) ListAllTagsContext() (*models.Tags, int64, error) {
 	params := cm.Params()
 	_, limit, page := GetPagination(params, cm.cfg.Limit)
 	tq := TagQuery{
@@ -598,7 +607,7 @@ func (cm ContentManagerMemory) CreateTag(tag *models.Tag) error {
 		_, err := cm.GetStore().CreateTag(tag)
 		return err
 	}
-	return errors.New("ContentManagerMemory no tag provided.")
+	return errors.New("ContentManagerMemory no tag provided")
 }
 
 // If you already updated the container in memory you are done
@@ -617,12 +626,12 @@ func (cm ContentManagerMemory) DestroyTag(id string) (*models.Tag, error) {
 		delete(mem.ValidTags, t.ID)
 		return &t, nil
 	}
-	return nil, errors.New("ContentManagerMemory Destroy failed, no tag found.")
+	return nil, errors.New("ContentManagerMemory destroy failed, no tag found")
 }
 
 func (cm ContentManagerMemory) AssociateTag(t *models.Tag, mc *models.Content) error {
 	if t == nil || mc == nil {
-		return errors.New(fmt.Sprintf("Cannot associate missing tag %s or content %s", t, mc))
+		return fmt.Errorf("cannot associate missing tag %s or content %s", t, mc)
 	}
 	tag, err := cm.GetTag(t.ID)
 	content, cErr := cm.GetContent(mc.ID)
@@ -638,42 +647,36 @@ func (cm ContentManagerMemory) AssociateTag(t *models.Tag, mc *models.Content) e
 				found = true
 			}
 		}
-		if found == false {
+		if !found {
 			tags = append(tags, *tag)
 		}
 		content.Tags = tags
 		return cm.UpdateContent(content)
 	}
-	return errors.New(fmt.Sprintf("Tag %s not in the list of valid tags", t))
+	return fmt.Errorf("tag %s not in the list of valid tags", t)
 }
 
-func (cm ContentManagerMemory) AssociateTagByID(tagId string, mcID uuid.UUID) error {
+func (cm ContentManagerMemory) AssociateTagByID(tagId string, mcID int64) error {
 	t, err := cm.GetTag(tagId)
 	if err == nil && t != nil {
 		content, cErr := cm.GetContent(mcID)
 		if cErr == nil {
 			return cm.AssociateTag(t, content)
 		}
-		return errors.New(fmt.Sprintf("Did not find content %s or err %s", content, cErr))
+		return fmt.Errorf("did not find content %s or err %s", content, cErr)
 	}
 	msg := fmt.Sprintf("Failed to find either the tag %s or error %s", t, err)
-	log.Printf(msg)
+	log.Print(msg)
 	return errors.New(msg)
 }
 
-func AssignID(id uuid.UUID) uuid.UUID {
-	emptyID, _ := uuid.FromString("00000000-0000-0000-0000-000000000000")
-	if id == emptyID {
-		newID, _ := uuid.NewV4()
-		return newID
-	}
-	return id
-}
-
-// TODO: Fix this so that the screen must be under the
 func (cm ContentManagerMemory) CreateScreen(screen *models.Screen) error {
 	// Validate that the content exists for the screen?
 	if screen != nil {
+		content, notFound := cm.GetContent(screen.ContentID)
+		if content == nil || notFound != nil {
+			return fmt.Errorf("a screen must be linked to content and %d was not found", screen.ContentID)
+		}
 		_, err := cm.GetStore().CreateScreen(screen)
 		return err
 	}
@@ -683,25 +686,64 @@ func (cm ContentManagerMemory) CreateScreen(screen *models.Screen) error {
 // TODO: Requires security checks like the DB version.
 func (cm ContentManagerMemory) CreateContent(content *models.Content) error {
 	if content != nil {
+		if content.Tags == nil {
+			content.Tags = models.Tags{}
+		}
+		validTags, tErr := cm.GetValidTags(&content.Tags)
+		if tErr != nil {
+			log.Printf("Failed to find valid tags %s", tErr)
+		}
+		content.Tags = *validTags
 		_, err := cm.GetStore().CreateContent(content)
 		return err
 	}
 	return errors.New("ContentManagerMemory no Instance was passed in to CreateContent")
 }
 
+func (cm ContentManagerMemory) GetValidTags(tags *models.Tags) (*models.Tags, error) {
+
+	goodTags := models.Tags{}
+	if tags == nil {
+		return &goodTags, nil
+	}
+
+	validTags := cm.GetStore().ValidTags
+	for _, tag := range *tags {
+		if _, ok := validTags[tag.ID]; ok {
+			goodTags = append(goodTags, tag)
+		}
+	}
+	return &goodTags, nil
+}
+
 /**
-* Not a thing in the memory manager
+* Note that these methods are mostly for consistent API but do NOT cleanup references.
  */
-func (cm ContentManagerMemory) DestroyContent(id string) (*models.Content, error) {
-	return nil, errors.New("Not Implemented")
+func (cm ContentManagerMemory) DestroyContent(id int64) (*models.Content, error) {
+	contentMap := cm.GetStore().ValidContent
+	if content, ok := contentMap[id]; ok {
+		delete(contentMap, id)
+		return &content, nil
+	}
+	return nil, fmt.Errorf("Content not found %d", id)
 }
 
-func (cm ContentManagerMemory) DestroyContainer(id string) (*models.Container, error) {
-	return nil, errors.New("Not Implemented")
+func (cm ContentManagerMemory) DestroyContainer(id int64) (*models.Container, error) {
+	containerMap := cm.GetStore().ValidContainers
+	if container, ok := containerMap[id]; ok {
+		delete(containerMap, id)
+		return &container, nil
+	}
+	return nil, fmt.Errorf("Container not found %d", id)
 }
 
-func (cm ContentManagerMemory) DestroyScreen(id string) (*models.Screen, error) {
-	return nil, errors.New("Not Implemented")
+func (cm ContentManagerMemory) DestroyScreen(id int64) (*models.Screen, error) {
+	screensMap := cm.GetStore().ValidScreens
+	if screen, ok := screensMap[id]; ok {
+		delete(screensMap, id)
+		return &screen, nil
+	}
+	return nil, fmt.Errorf("Screen not found %d", id)
 }
 
 // Note that we need to lock this down so that it cannot just access arbitrary files
@@ -715,7 +757,7 @@ func (cm ContentManagerMemory) CreateContainer(c *models.Container) error {
 		log.Printf("Path does not exist on disk under the config directory err %s", err)
 		return err
 	}
-	if ok == true {
+	if ok {
 		_, err := cm.GetStore().CreateContainer(c)
 		return err
 	}
@@ -725,7 +767,7 @@ func (cm ContentManagerMemory) CreateContainer(c *models.Container) error {
 
 func (cm ContentManagerMemory) CreateTask(t *models.TaskRequest) (*models.TaskRequest, error) {
 	if t == nil {
-		return nil, errors.New("Requires a valid task")
+		return nil, errors.New("requires a valid task")
 	}
 	mem := cm.GetStore()
 	task, err := mem.CreateTask(t)
@@ -747,14 +789,14 @@ func (cm ContentManagerMemory) UpdateTask(t *models.TaskRequest, currentState mo
 	return cm.GetTask(t.ID)
 }
 
-func (cm ContentManagerMemory) GetTask(id uuid.UUID) (*models.TaskRequest, error) {
+func (cm ContentManagerMemory) GetTask(id int64) (*models.TaskRequest, error) {
 	mem := cm.GetStore()
 	for idx, task := range mem.ValidTasks {
 		if task.ID == id {
 			return &mem.ValidTasks[idx], nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("Task not found %s", id))
+	return nil, fmt.Errorf("task not found %d", id)
 }
 
 // Get the next task for processing (not super thread safe but enough for mem manager)
@@ -777,7 +819,7 @@ func (cm ContentManagerMemory) NextTask() (*models.TaskRequest, error) {
 /*
 *
  */
-func (cm ContentManagerMemory) ListTasksContext() (*models.TaskRequests, int, error) {
+func (cm ContentManagerMemory) ListTasksContext() (*models.TaskRequests, int64, error) {
 	params := cm.Params()
 	_, limit, page := GetPagination(params, cm.GetCfg().Limit)
 	query := TaskQuery{
@@ -789,17 +831,17 @@ func (cm ContentManagerMemory) ListTasksContext() (*models.TaskRequests, int, er
 	return cm.ListTasks(query)
 }
 
-func (cm ContentManagerMemory) ListTasks(query TaskQuery) (*models.TaskRequests, int, error) {
+func (cm ContentManagerMemory) ListTasks(query TaskQuery) (*models.TaskRequests, int64, error) {
 	mem := cm.GetStore()
 	task_arr := mem.ValidTasks
 	if query.ContentID != "" {
-		contentID, err := uuid.FromString(query.ContentID)
+		contentID, err := strconv.ParseInt(query.ContentID, 10, 64)
 		filtered_tasks := models.TaskRequests{}
 		if err != nil {
 			return nil, 0, err
 		}
 		for _, task := range task_arr {
-			if task.ContentID.UUID == contentID {
+			if task.ContentID != nil && *task.ContentID == contentID {
 				filtered_tasks = append(filtered_tasks, task)
 			}
 		}
@@ -818,7 +860,7 @@ func (cm ContentManagerMemory) ListTasks(query TaskQuery) (*models.TaskRequests,
 	offset, end := GetOffsetEnd(query.Page, query.PerPage, total)
 	if end > 0 { // If it is empty a slice ending in 0 = boom
 		task_arr = task_arr[offset:end]
-		return &task_arr, total, nil
+		return &task_arr, int64(total), nil
 	}
-	return &task_arr, total, nil
+	return &task_arr, int64(total), nil
 }

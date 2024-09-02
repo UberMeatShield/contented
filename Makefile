@@ -1,40 +1,32 @@
 .DEFAULT_GOAL := build
-
-# TODO: Flesh out more of the makefile 
-# DB reset and create
-# Make previews
-# ENV variable for the directory to use
 DIR ?= $(shell echo `pwd`/mocks/content/)
 TAG_FILE ?= $(shell echo `pwd`/mocks/content/dir2/tags.txt)
+GO_ENV ?= development
 
-# You are going to need to have buffalo installed https://gobuffalo.io/documentation/getting_started/installation/
+# Golang and yarn need to be on the system. They will do the rest
 .PHONY: install
 install:
 	go get contented
-	buffalo plugins install
 	yarn install
 
-# Typically you will want to have created the db and ensured it is configured (make db-create)
-# And have the docker or postgres instance configured.  This take will reset the DB, import
-# your tags and then populate the db, finally it creates previews.  Doing this in order
-# will get the actual DB done.  When not in the DB just running make preview is typically enough.
-# Finally it starts the dev server so you can view content at http://localhost:3000
+# This should be the most common development experience (but a little awkward based on docker)
 .PHONY: setup
 setup:
 	make db-reset
 	make tags
 	make db-seed
 	make preview
+	make typescript
 	make dev
 
-# Need to fix the docker build, it is pretty old.
+# TODO: This is busted, GoBuffalo is deprecated and the docer image must be redone.
 .PHONY: build
 build:
 	docker build .
 
 .PHONY: dev
 dev:
-	export DIR=$(DIR) TAG_FILE=$(TAG_FILE) && buffalo dev
+	export DIR=$(DIR) TAG_FILE=$(TAG_FILE) && go run cmd/app/main.go
 
 # I would rather use gotestsum, but buffalo does a bunch of DB setup that doesn't play
 # nice with go test or gotestsum. Or potentially my tests need some saner / better init
@@ -42,17 +34,10 @@ dev:
 # damn slow ffmpeg seek screen tests are on MacOSX.
 .PHONY: test
 test:
-	export DIR=$(DIR) && buffalo test ./models ./utils ./managers ./actions
-
-# This works with gotestsum, something about a DB reset is missing or magical Buffalo code.
-# The Database side of things doesn't get created with gotestsum yet
-# To run one test with gotestsum you can steal this line and pass --run <TestName>
-.PHONY: gotestsum
-gtest:
-	export DIR=$(DIR) && gotestsum --format testname ./models
-	export DIR=$(DIR) && gotestsum --format testname ./utils
-	export DIR=$(DIR) && buffalo test ./managers
-	export DIR=$(DIR) && buffalo test ./actions
+	export GO_ENV=test && export DIR=$(DIR) && go run gotest.tools/gotestsum@latest --format testname ./models
+	export GO_ENV=test && export DIR=$(DIR) && go run gotest.tools/gotestsum@latest --format testname ./managers
+	export GO_ENV=test && export DIR=$(DIR) && go run gotest.tools/gotestsum@latest --format testname ./actions
+	export GO_ENV=test && export DIR=$(DIR) && go run gotest.tools/gotestsum@latest --format testname ./utils
 
 .PHONY: ngdev
 ngdev:
@@ -72,35 +57,27 @@ lint:
 typescript:
 	yarn run ng build contented --configuration=production --watch=false --base-href /public/build/
 
-.PHONY: db-create
-db-create:
-	buffalo db create
-
-.PHONY: reset-db
+.PHONY: db-reset
 db-reset:
-	buffalo db migrate
-	buffalo db reset
+	export GO_ENV=$(GO_ENV) && go run ./cmd/scripts/cmdline.go --action reset
 
 .PHONY: db-populate
 db-populate:
-	export DIR=$(DIR) && buffalo task db:seed
+	export GO_ENV=$(GO_ENV) && export DIR=$(DIR) && go run ./cmd/scripts/cmdline.go --action populate
 
 .PHONY: preview
 preview:
-	export DIR=$(DIR) && buffalo task db:preview
+	export GO_ENV=$(GO_ENV) && export DIR=$(DIR) && go run ./cmd/scripts/cmdline.go --action preview
 
 .PHONY: encode
 encode:
-	export DIR=$(DIR) && buffalo task db:encode
+	export GO_ENV=$(GO_ENV) && export DIR=$(DIR) && go run ./cmd/scripts/cmdline.go --action encode
 
 .PHONY: find-dupes
 find-dupes:
-	export DIR=$(DIR) && export DUPE_FILE=$(shell pwd)/duplicates.txt && buffalo task db:removeDuplicates
-
+	export GO_ENV=$(GO_ENV) && export DIR=$(DIR) && go run ./cmd/scripts/cmdline.go --action duplicates
 
 # Read from a tag file and import the tags to the DB
 .PHONY: tags
 tags:
-	echo "Looking for tagfile a" $TAG_FILE
-	export TAG_FILE=$(TAG_FILE) && buffalo task db:tags
-
+	export GO_ENV=$(GO_ENV) && export DIR=$(DIR) && export TAG_FILE=$(TAG_FILE) && go run ./cmd/scripts/cmdline.go --action tags
