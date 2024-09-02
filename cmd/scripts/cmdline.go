@@ -77,7 +77,7 @@ func preview(man managers.ContentManager) error {
 func encode(man managers.ContentManager) error {
 	cfg := man.GetCfg()
 	fmt.Printf("Encoding task started %s", cfg.Dir)
-	return managers.CreateAllPreviews(man)
+	return managers.EncodeVideos(man)
 }
 
 func tags(man managers.ContentManager) error {
