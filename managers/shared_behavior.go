@@ -281,30 +281,38 @@ func CreateContainerPreviews(c *models.Container, cm ContentManager) error {
 		cm.UpdateContainer(c)
 	}
 
-	update_list, err := CreateContentPreviews(c, *content)
+	updateList, err := CreateContentPreviews(c, *content)
 	if err != nil {
 		log.Printf("Summary of Errors while creating content previews %s", err)
 	}
-	log.Printf("Finished creating previews, now updating the database count(%d)", len(update_list))
+	log.Printf("Finished creating previews, now updating the database count(%d)", len(updateList))
 	maybeScreens, _ := utils.GetPotentialScreens(c)
-	for _, mc := range update_list {
-		if mc.Preview != "" {
-			log.Printf("Created a preview %s for mc %d", mc.Preview, mc.ID)
-			screens := utils.AssignScreensFromSet(c, &mc, maybeScreens)
+	for _, content := range updateList {
+
+		// Why does it check the mc preview here (maybe a webp?)
+		if content.Preview != "" {
+			log.Printf("Created a preview %s for mc %d", content.Preview, content.ID)
+			screens := utils.AssignScreensFromSet(c, &content, maybeScreens)
 			if screens != nil {
 				log.Printf("Found new screens we should create %d", len(*screens))
+
+				cm.ClearScreens(&content)
+
+				// This can definitely take a delete operation where the mc is defined.
 				for _, s := range *screens {
-					cm.CreateScreen(&s)
+					screen := s
+					log.Printf("What is the screen %s", screen)
+					cm.CreateScreen(&screen)
 				}
 			}
 
 			// Note that UpdateContent and create screen don't really work for in memory
 			// Though it actually wouldn't be that bad to update the MemStorage...
-			cm.UpdateContent(&mc)
+			cm.UpdateContent(&content)
 
 			// TODO: Add in a search for getting screens based on the container and content
-		} else if mc.Corrupt {
-			cm.UpdateContent(&mc)
+		} else if content.Corrupt {
+			cm.UpdateContent(&content)
 		}
 	}
 	return err

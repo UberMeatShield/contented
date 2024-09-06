@@ -547,6 +547,27 @@ func (cm ContentManagerMemory) ListScreens(sq ScreensQuery) (*models.Screens, in
 	return &s_arr, int64(count), nil
 }
 
+func (cm ContentManagerMemory) ClearScreens(content *models.Content) error {
+	if content == nil || content.ID == 0 {
+		return fmt.Errorf("cannot clear screens without content or a valid id")
+	}
+	// Update the screens reference
+	content.Screens = models.Screens{}
+
+	screenMap := cm.GetStore().ValidScreens
+	screens := []int64{}
+	for _, screen := range screenMap {
+		if screen.ContentID == content.ID {
+			screens = append(screens, screen.ID)
+		}
+	}
+	// Remove the in memory screens
+	for _, screenID := range screens {
+		delete(screenMap, screenID)
+	}
+	return nil
+}
+
 func (cm ContentManagerMemory) GetScreen(psID int64) (*models.Screen, error) {
 	// Need to build out a memory setup and look the damn thing up :(
 	mem := cm.GetStore()

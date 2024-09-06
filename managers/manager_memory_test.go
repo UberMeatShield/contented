@@ -153,7 +153,7 @@ func TestMemoryManagerSearch(t *testing.T) {
 	sr := ContentQuery{Search: "Donut", PerPage: 20}
 	mcs, total, err := man.SearchContent(sr)
 	assert.NoError(t, err, "Can we search in the memory manager")
-	assert.Equal(t, len(*mcs), 1, "One donut should be found")
+	assert.Equal(t, 1, len(*mcs), "One donut should be found")
 	assert.Equal(t, total, int64(len(*mcs)), "It should get the total right")
 
 	sr = ContentQuery{Search: "Large", PerPage: 6}

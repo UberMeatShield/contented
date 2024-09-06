@@ -644,13 +644,11 @@ func AssignScreensFromSet(c *models.Container, mc *models.Content, maybeScreens 
 	// ie: 1000 episodes of One Piece * (15 screens  + 1 webp) in a loop running
 	// the regex against them all over and over...
 	previewScreens := models.Screens{}
+
 	for idx, fRef := range *maybeScreens {
 		name := fRef.Name()
 		if screenRe.MatchString(name) {
-			// log.Printf("Matched file %s idx %d", name, idx)
-			id := AssignNumerical(0, "screens")
 			ps := models.Screen{
-				ID:        id,
 				Path:      previewPath,
 				Src:       name,
 				ContentID: mc.ID,

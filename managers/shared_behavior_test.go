@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 
 	"github.com/gobuffalo/envy"
@@ -359,4 +360,45 @@ func TestSharedFindDuplicateVideos(t *testing.T) {
 	assert.NoError(t, dupeErr, "Duplicate errors found")
 	assert.NotNil(t, dupeContent)
 	assert.Equal(t, 1, len(dupeContent), fmt.Sprintf("It should find %s", dupeSample))
+}
+
+func TestClearScreensMemory(t *testing.T) {
+	cfg, _ := test_common.InitFakeApp(false)
+	man := GetManagerTestSuite(cfg)
+	ValidateClearScreens(t, man)
+}
+func TestClearScreensDatabase(t *testing.T) {
+	cfg, _ := test_common.InitFakeApp(true)
+	man := GetManagerTestSuite(cfg)
+	ValidateClearScreens(t, man)
+}
+
+func ValidateClearScreens(t *testing.T, man ContentManager) {
+	content := models.Content{
+		Src:    "ScreenContent",
+		NoFile: true,
+	}
+	assert.NoError(t, man.CreateContent(&content), "Failed to create the content")
+	assert.Greater(t, content.ID, int64(0), "It should create a valid content")
+
+	contentID := content.ID
+	screen1 := models.Screen{ContentID: contentID, Src: "https://some.url.com"}
+	screen2 := models.Screen{ContentID: contentID, Src: "https://other.url.com"}
+
+	assert.NoError(t, man.CreateScreen(&screen1), "Failed to create screen1")
+	assert.NoError(t, man.CreateScreen(&screen2), "Failed to create screen2")
+
+	sq := ScreensQuery{
+		ContentID: strconv.FormatInt(contentID, 10),
+	}
+	screens, total, err := man.ListScreens(sq)
+	assert.NoError(t, err, "Failed to list screens")
+	assert.Equal(t, int64(2), total, "We should have our screens")
+	assert.NotNil(t, screens)
+
+	assert.NoError(t, man.ClearScreens(&content), "It should clear the screens")
+
+	_, totalAfter, errAfter := man.ListScreens(sq)
+	assert.Equal(t, int64(0), totalAfter, "Now it should be clear")
+	assert.NoError(t, errAfter, "It should not fail the list")
 }
