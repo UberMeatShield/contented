@@ -148,6 +148,7 @@ type ContentManager interface {
 	// Functions that help with viewing movie screens if found.
 	ListScreensContext() (*models.Screens, int64, error)
 	ListScreens(sr ScreensQuery) (*models.Screens, int64, error)
+	ClearScreens(content *models.Content) error
 
 	GetScreen(psID int64) (*models.Screen, error)
 	CreateScreen(s *models.Screen) error

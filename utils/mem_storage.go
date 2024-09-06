@@ -233,12 +233,18 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.ContentMap
 			for _, mc := range ct.Content {
 				// Assign anything required to the content before we put it in the lookup hash
 				AssignPreviewIfExists(&c, &mc)
+				content := mc
 				if screenErr == nil {
-					screens := AssignScreensFromSet(&c, &mc, maybeScreens)
+
+					// Awkward assignment of screen ID and re-assignment to the content element
+					screens := AssignScreensFromSet(&c, &content, maybeScreens)
 					if screens != nil {
 						for _, screen := range *screens {
-							screensMap[screen.ID] = screen
+							s := screen
+							s.ID = AssignNumerical(screen.ID, "screens")
+							screensMap[s.ID] = s
 						}
+						content.Screens = *screens
 					}
 				} else {
 					log.Printf("No potential screens present in container %s", c.Path)

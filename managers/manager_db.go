@@ -438,6 +438,15 @@ func (cm ContentManagerDB) ListScreens(sr ScreensQuery) (*models.Screens, int64,
 	return previews, count, nil
 }
 
+func (cm ContentManagerDB) ClearScreens(content *models.Content) error {
+	if content == nil || content.ID == 0 {
+		return fmt.Errorf("cannot clear screens without content or a valid id")
+	}
+	tx := cm.GetConnection()
+	removed := tx.Exec("DELETE FROM screens WHERE content_id = ?", content.ID)
+	return removed.Error
+}
+
 // Need to make it use the manager and just show the file itself
 func (cm ContentManagerDB) GetScreen(psID int64) (*models.Screen, error) {
 	previewScreen := &models.Screen{}
