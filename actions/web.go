@@ -4,6 +4,7 @@ import (
 	"contented/managers"
 	"contented/models"
 	"contented/utils"
+	"contented/worker"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -12,7 +13,6 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gobuffalo/buffalo"
 )
 
 type HttpError struct {
@@ -63,17 +63,28 @@ func SetupMemory(dir string) {
 	}
 }
 
+var TASK_QUEUE *worker.TaskQueue
+var ENCODING_QUEUE *worker.TaskQueue
+
 // TODO: Determine if these should be registered by config (don't use normal workers basically)
-func SetupWorkers(app *buffalo.App) {
+func SetupWorkers() {
 	cfg := utils.GetCfg()
 
+	// Note this only works locally in memory and this should be extended to a set of tasks that
+	// can read from redis OR a local queue.
+	ENCODING_QUEUE = worker.NewTaskQueue(100, 1)
+	ENCODING_QUEUE.RegisterTaskHandler(models.TaskOperation.ENCODING.String(), VideoEncodingWrapper)
+
+	TASK_QUEUE = worker.NewTaskQueue(100, 10)
+	TASK_QUEUE.RegisterTaskHandler(models.TaskOperation.SCREENS.String(), ScreenCaptureWrapper)
+	TASK_QUEUE.RegisterTaskHandler(models.TaskOperation.WEBP.String(), WebpFromScreensWrapper)
+	TASK_QUEUE.RegisterTaskHandler(models.TaskOperation.TAGGING.String(), TaggingContentWrapper)
+	TASK_QUEUE.RegisterTaskHandler(models.TaskOperation.DUPES.String(), DuplicatesWrapper)
+
 	if cfg.StartQueueWorkers {
-		w := app.Worker
-		w.Register(models.TaskOperation.SCREENS.String(), ScreenCaptureWrapper)
-		w.Register(models.TaskOperation.ENCODING.String(), VideoEncodingWrapper)
-		w.Register(models.TaskOperation.WEBP.String(), WebpFromScreensWrapper)
-		w.Register(models.TaskOperation.TAGGING.String(), TaggingContentWrapper)
-		w.Register(models.TaskOperation.DUPES.String(), DuplicatesWrapper)
+		log.Printf("Starting Queue workers locally")
+		TASK_QUEUE.Start()
+		ENCODING_QUEUE.Start()
 	}
 }
 

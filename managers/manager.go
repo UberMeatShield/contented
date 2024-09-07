@@ -184,10 +184,28 @@ func GetManager(c *gin.Context) ContentManager {
 	// TODO: This will need to be nuked and cleaned up to use GORM
 	// The get connection might need an async channel or it potentially locks
 	// the dev server :(.   Need to only do this if use database is setup and connects
-	var get_connection GetConnType
+	getConnection := GetConnection(cfg)
+	// Annoying differences between url values and the param option.  Another GoLang bit where it isn't
+	// handling ?id=1&id=2 and instead just allows for a single param (ie: The tags hack is still required in Gin)
+	getParams := func() *url.Values {
+		return GinParamsToUrlValues(c.Params, c.Request.URL.Query()) //c.Request.URL.Query())
+	}
+	return CreateManager(cfg, getConnection, getParams)
+}
+
+func GetManagerNoContext() ContentManager {
+	cfg := utils.GetCfg()
+	get_params := func() *url.Values {
+		return &url.Values{}
+	}
+	getConnection := GetConnection(cfg)
+	return CreateManager(cfg, getConnection, get_params)
+}
+
+func GetConnection(cfg *utils.DirConfigEntry) GetConnType {
 	if cfg.UseDatabase {
 		var conn *gorm.DB
-		get_connection = func() *gorm.DB {
+		return func() *gorm.DB {
 			if conn == nil {
 				conn = models.InitGorm(false)
 				if conn == nil || conn.Error != nil {
@@ -197,20 +215,11 @@ func GetManager(c *gin.Context) ContentManager {
 			}
 			return conn
 		}
-	} else {
-		// Just required for the memory version create statement
-		get_connection = func() *gorm.DB {
-			return nil
-		}
 	}
-
-	// Annoying differences between url values and the param option.  Another GoLang bit where it isn't
-	// handling ?id=1&id=2 and instead just allows for a single param (ie: The tags hack is still required in Gin)
-	get_params := func() *url.Values {
-		//log.Printf("HMMM %s with HMMMM %s", c.Params, c.Request.URL.Query())
-		return GinParamsToUrlValues(c.Params, c.Request.URL.Query()) //c.Request.URL.Query())
+	// Just required for the memory version create statement
+	return func() *gorm.DB {
+		return nil
 	}
-	return CreateManager(cfg, get_connection, get_params)
 }
 
 func GinParamsToUrlValues(params gin.Params, queryValues url.Values) *url.Values {
@@ -407,12 +416,12 @@ func GetContentAndContainer(cm ContentManager, contentID int64) (*models.Content
 	return content, cnt, nil
 }
 
-func CreateScreensForContent(cm ContentManager, contentID int64, count int, offset int) ([]string, error, string) {
+func CreateScreensForContent(cm ContentManager, contentID int64, count int, offset int) ([]string, string, error) {
 	// It would be good to have the screens element take a few more params and have a wrapper on the
 	// Content manager level.
 	content, cnt, err := GetContentAndContainer(cm, contentID)
 	if err != nil {
-		return nil, err, ""
+		return nil, "", err
 	}
 	path := cnt.GetFqPath()
 	srcFile := filepath.Join(path, content.Src)
@@ -421,7 +430,7 @@ func CreateScreensForContent(cm ContentManager, contentID int64, count int, offs
 
 	log.Printf("Src file %s and Destination %s", srcFile, dstFile)
 	utils.MakePreviewPath(dstPath)
-	screens, err, ptrn := utils.CreateSeekScreens(srcFile, dstFile, count, offset)
+	screens, ptrn, err := utils.CreateSeekScreens(srcFile, dstFile, count, offset)
 
 	for idx, sFile := range screens {
 		src := strings.ReplaceAll(sFile, dstPath, "")
@@ -439,7 +448,7 @@ func CreateScreensForContent(cm ContentManager, contentID int64, count int, offs
 			log.Printf("Screen not actually in the DB? %s", s)
 		}
 	}
-	return screens, err, ptrn
+	return screens, ptrn, err
 }
 
 // Should get a bunch of crap here (TODO: Error should always come last)

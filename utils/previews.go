@@ -310,7 +310,7 @@ func CreateScreensFromVideoSized(srcFile string, dstFile string, previewScreensO
 		cfg := GetCfg()
 		totalScreens := cfg.PreviewNumberOfScreens
 		frameOffset := cfg.PreviewFirstScreenOffset
-		_, err, screenFmt := CreateSeekScreens(srcFile, dstFile, totalScreens, frameOffset)
+		_, screenFmt, err := CreateSeekScreens(srcFile, dstFile, totalScreens, frameOffset)
 		return screenFmt, err
 	} else {
 		log.Printf("File size is small %s using SELECT filter", srcFile)
@@ -336,7 +336,7 @@ func CreateSelectFilterScreens(srcFile string, dstFile string) (string, error) {
 		log.Printf("Error creating screens for %s err: %s", srcFile, err)
 	}
 	msg := fmt.Sprintf("%s Total time was %f with %d as the fps", srcFile, totalTime, fps)
-	log.Printf(msg)
+	log.Print(msg)
 	if int(fps) == 0 || int(totalTime) == 0 {
 		return "", errors.New(msg + " Invalid duration or fps")
 	}
@@ -356,15 +356,15 @@ func CreateSelectFilterScreens(srcFile string, dstFile string) (string, error) {
 
 // Need to do timing test with this then a timing test with a much bigger file.
 // IMPORTANT if this is > 4 it will break ffmpeg finding the screens.
-func CreateSeekScreens(srcFile string, dstFile string, totalScreens int, frameOffset int) ([]string, error, string) {
+func CreateSeekScreens(srcFile string, dstFile string, totalScreens int, frameOffset int) ([]string, string, error) {
 	totalTime, fps, err := GetTotalVideoLength(srcFile)
 	if err != nil {
 		log.Printf("Error creating screens for %s err: %s", srcFile, err)
 	}
 	msg := fmt.Sprintf("%s Total time was %f with %d as the fps", srcFile, totalTime, fps)
-	log.Printf(msg)
+	log.Print(msg)
 	if int(totalTime) == 0 {
-		return []string{}, errors.New(msg + " Invalid duration or fps"), ""
+		return []string{}, "", errors.New(msg + " Invalid duration or fps")
 	}
 
 	// This is ugly enough that maybe it should be a method small files cause
@@ -397,7 +397,7 @@ func CreateSeekScreens(srcFile string, dstFile string, totalScreens int, frameOf
 			screenFiles = append(screenFiles, screenFile)
 		}
 	}
-	return screenFiles, err, screenFmt
+	return screenFiles, screenFmt, err
 }
 
 // This can be much faster to do multiple seek screens vs a filter over about a 50mb

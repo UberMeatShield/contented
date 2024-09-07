@@ -28,13 +28,13 @@ func TestMain(m *testing.M) {
 func setupRouter() *gin.Engine {
 	r := gin.Default()
 	SetupRoutes(r)
+	SetupWorkers()
 	return r
 }
 
 func setupStatic() *gin.Engine {
-	r := gin.Default()
+	r := setupRouter()
 	SetupStatic(r)
-	SetupRoutes(r)
 	return r
 }
 

@@ -165,7 +165,7 @@ func ScreenCaptureTask(man ContentManager, id int64) error {
 	if err != nil {
 		return err
 	}
-	screens, sErr, pattern := CreateScreensForContent(man, *task.ContentID, task.NumberOfScreens, task.StartTimeSeconds)
+	screens, pattern, sErr := CreateScreensForContent(man, *task.ContentID, task.NumberOfScreens, task.StartTimeSeconds)
 	if sErr != nil {
 		failMsg := fmt.Sprintf("Failing to create screen %s", sErr)
 		FailTask(man, task, failMsg)
