@@ -34,6 +34,7 @@ dev:
 # damn slow ffmpeg seek screen tests are on MacOSX.
 .PHONY: test
 test:
+	export GO_ENV=test && export DIR=$(DIR) && go run gotest.tools/gotestsum@latest --format testname ./worker
 	export GO_ENV=test && export DIR=$(DIR) && go run gotest.tools/gotestsum@latest --format testname ./models
 	export GO_ENV=test && export DIR=$(DIR) && go run gotest.tools/gotestsum@latest --format testname ./managers
 	export GO_ENV=test && export DIR=$(DIR) && go run gotest.tools/gotestsum@latest --format testname ./actions
