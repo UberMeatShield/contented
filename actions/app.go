@@ -16,6 +16,7 @@ var ENV = utils.GetEnvString("GO_ENV", "development")
 func GinApp(r *gin.Engine) {
 	SetupRoutes(r)
 	SetupStatic(r)
+	SetupWorkers()
 }
 
 func SetupStatic(r *gin.Engine) {

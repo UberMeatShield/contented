@@ -8,6 +8,7 @@ import (
 	"contented/managers"
 	"contented/models"
 	"contented/utils"
+	"contented/worker"
 	"errors"
 	"fmt"
 	"log"
@@ -16,8 +17,6 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gobuffalo/buffalo/worker"
-	"gorm.io/gorm"
 )
 
 type TasksQueuedResponse struct {
@@ -27,26 +26,12 @@ type TasksQueuedResponse struct {
 
 type HandleTaskTypeFunc func(managers.ContentManager, int64) error
 
-func HandleTask(args worker.Args, taskFunc HandleTaskTypeFunc) error {
-	cfg := utils.GetCfg()
-	getConnection := func() *gorm.DB {
-		return nil
-	}
+func HandleTask(args worker.Task, taskFunc HandleTaskTypeFunc) error {
 	taskId, err := GetTaskId(args) // Determines if it is a valid id (bad request)
 	if err != nil {
 		return err
 	}
-	// Note this is extra complicated by the fact it SHOULD be able to run with NO connections
-	// or DB sessions made.
-	if cfg.UseDatabase {
-		getConnection = func() *gorm.DB {
-			return models.InitGorm(false)
-		}
-		man := managers.GetAppManager(getConnection)
-		return taskFunc(man, taskId)
-	}
-	// Memory manager version
-	man := managers.GetAppManager(getConnection)
+	man := managers.GetManagerNoContext()
 	return taskFunc(man, taskId)
 }
 
@@ -58,7 +43,7 @@ func HandleTask(args worker.Args, taskFunc HandleTaskTypeFunc) error {
  * Execute the task within the transaction middleware scope.
  * TODO: Can this work in a full unit test?
  */
-func VideoEncodingWrapper(args worker.Args) error {
+func VideoEncodingWrapper(args worker.Task) error {
 	log.Printf("VideoEncodingWrapper () Starting Task args %s", args)
 	return HandleTask(args, managers.EncodingVideoTask)
 }
@@ -67,12 +52,12 @@ func VideoEncodingWrapper(args worker.Args) error {
  * For all the transaction middleware to play nice you have to ensure that everything
  * is wrapped by a transaction
  */
-func ScreenCaptureWrapper(args worker.Args) error {
+func ScreenCaptureWrapper(args worker.Task) error {
 	log.Printf("ScreenCaptureWrapper() Starting Task args %s", args)
 	return HandleTask(args, managers.ScreenCaptureTask)
 }
 
-func WebpFromScreensWrapper(args worker.Args) error {
+func WebpFromScreensWrapper(args worker.Task) error {
 	log.Printf("Web From Screens () Starting Task args %s", args)
 	return HandleTask(args, managers.WebpFromScreensTask)
 }
@@ -80,29 +65,23 @@ func WebpFromScreensWrapper(args worker.Args) error {
 /*
  * Attempt to tag a piece of content (tempting to just make this a switch)
  */
-func TaggingContentWrapper(args worker.Args) error {
+func TaggingContentWrapper(args worker.Task) error {
 	log.Printf("Tagging content element () Starting Task args %s", args)
 	return HandleTask(args, managers.TaggingContentTask)
 }
 
-func DuplicatesWrapper(args worker.Args) error {
+func DuplicatesWrapper(args worker.Task) error {
 	log.Printf("Finding Duplicates %s", args)
 	return HandleTask(args, managers.DetectDuplicatesTask)
 }
 
-func GetTaskId(args worker.Args) (int64, error) {
-	taskId := ""
-	for k, v := range args {
-		if k == "id" {
-			taskId = v.(string)
-		}
-	}
-	id, err := strconv.ParseInt(taskId, 10, 64)
-	if err != nil {
-		log.Printf("Failed to load task bad id %s", err)
+func GetTaskId(args worker.Task) (int64, error) {
+	taskId := args.ID
+	if taskId <= 0 {
+		err := fmt.Errorf("failed to load task bad id %s", args)
 		return 0, err
 	}
-	return id, err
+	return taskId, nil
 }
 
 func WebpFromScreensHandler(c *gin.Context) {
@@ -334,6 +313,8 @@ func ContentTaskScreensHandler(c *gin.Context) {
 
 	man := managers.GetManager(c)
 	content, cErr := man.GetContent(contentID)
+	log.Printf("Requesting screens be built out %s start %d count %d", content.Src, startTimeSeconds, numberOfScreens)
+
 	if cErr != nil {
 		c.AbortWithError(http.StatusNotFound, cErr)
 		return
@@ -490,29 +471,21 @@ func AddTaskRequest(man managers.ContentManager, tr *models.TaskRequest) (*model
 	if tErr != nil {
 		return nil, tErr
 	}
+
 	// This needs to delay a little before it starts
 	// It should probably not kick off the job task inside the manager
-	job := worker.Job{
-		Queue:   "default",
-		Handler: tr.Operation.String(),
-		Args: worker.Args{
-			"id": tr.ID,
-		},
+	task := worker.Task{
+		ID:        tr.ID,
+		Operation: tr.Operation,
 	}
+	log.Printf("Created task %s", task)
 
-	// This would be a good place to add in support for other task queues
-	//cfg := man.GetCfg()
-	if job.Queue == "default" {
-		// TODO: Choose a new job processing system and integrate it.  SQS etc.
-		log.Printf("THIS SYSTEM IS NOT PROCESSING AS BUFFALO IS DEAD")
+	if tr.Operation == models.TaskOperation.ENCODING {
+		log.Printf("Queuing encoding task for %d", tr.ID)
+		ENCODING_QUEUE.EnqueueTask(task)
+	} else {
+		log.Printf("Queuing task for %d operation %s", tr.ID, tr.Operation)
+		TASK_QUEUE.EnqueueTask(task)
 	}
-	/*
-		err := App(cfg.UseDatabase).Worker.PerformIn(job, 2*time.Second)
-		if err != nil {
-			msg := fmt.Sprintf("Failed to enqueue task in the work queue %s", err)
-			log.Print(msg)
-			return nil, err
-		}
-	*/
 	return createdTask, nil
 }
