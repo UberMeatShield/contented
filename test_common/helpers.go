@@ -17,7 +17,6 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gobuffalo/envy"
 	"gorm.io/gorm"
 )
 
@@ -45,8 +44,8 @@ func Get_VideoAndSetupPaths(cfg *utils.DirConfigEntry) (string, string, string) 
 	cfg.PreviewNumberOfScreens = 4
 	utils.SetCfg(*cfg)
 
-	var testDir, _ = envy.MustGet("DIR")
-	srcDir := filepath.Join(testDir, "dir2")
+	dir := utils.MustGetEnvString("DIR")
+	srcDir := filepath.Join(dir, "dir2")
 	dstDir := utils.GetPreviewDst(srcDir)
 	testFile := "donut_[special( gunk.mp4"
 
@@ -89,7 +88,7 @@ func IsValidContentType(content_type string) error {
 
 func ResetConfig() *utils.DirConfigEntry {
 	cfg := utils.GetCfgDefaults()
-	dir, _ := envy.MustGet("DIR")
+	dir := utils.MustGetEnvString("DIR")
 	cfg.Dir = dir
 	cfg.MaxSearchDepth = 3
 	utils.InitConfig(dir, &cfg)
@@ -103,7 +102,7 @@ func ResetConfig() *utils.DirConfigEntry {
 // As the internals / guts are functional using the new models the creation of models
 // can be removed.
 func InitFakeApp(use_db bool) (*utils.DirConfigEntry, *gorm.DB) {
-	dir, _ := envy.MustGet("DIR")
+	dir := utils.MustGetEnvString("DIR")
 	fmt.Printf("Using directory %s\n", dir)
 
 	cfg := ResetConfig()
@@ -164,7 +163,7 @@ func NoError(tx *gorm.DB, msg string, t *testing.T) {
 
 // For loading up the memory app but not searching directories checking content etc.
 func InitMemoryFakeAppEmpty() *utils.DirConfigEntry {
-	dir, _ := envy.MustGet("DIR")
+	dir := utils.MustGetEnvString("DIR")
 	fmt.Printf("Using directory %s\n", dir)
 	cfg := ResetConfig()
 	cfg.UseDatabase = false
@@ -194,7 +193,7 @@ func CreateContentByDirName(test_dir_name string) (*models.Container, models.Con
 }
 
 func GetContentByDirName(test_dir_name string) (*models.Container, models.Contents) {
-	dir, _ := envy.MustGet("DIR")
+	dir := utils.MustGetEnvString("DIR")
 	cfg := utils.GetCfg()
 	cfg.Dir = dir
 	cnts := utils.FindContainers(cfg.Dir)

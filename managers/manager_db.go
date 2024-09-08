@@ -336,7 +336,6 @@ func (cm ContentManagerDB) ListContainers(cs ContainerQuery) (*models.Containers
 	return cm.ListContainersFiltered(cs)
 }
 
-// TODO: Add in support for actually doing the query using the current buffalo.Context
 func (cm ContentManagerDB) ListContainersFiltered(cs ContainerQuery) (*models.Containers, int64, error) {
 	tx := cm.GetConnection()
 	q := tx.Offset(cs.Offset).Limit(GetPerPage(cs.PerPage))
@@ -637,8 +636,7 @@ func (cm ContentManagerDB) AssociateTag(t *models.Tag, mc *models.Content) error
 		return res.Error
 	}
 
-	// I really don't love this but Buffalo many_to_many associations do NOT handle updates.  In addition an integer
-	// as the join table ID also doesn't seem to do the link even on a create.
+	// Clean insert a new set of tags given a content element
 	sql_str := "insert into contents_tags (tag_id, content_id) values (?, ?)"
 	for _, t := range tags {
 		res := tx.Exec(sql_str, t.ID, mc.ID)

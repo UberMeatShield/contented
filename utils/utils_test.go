@@ -2,18 +2,22 @@ package utils
 
 import (
 	"contented/models"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
-
-	"github.com/gobuffalo/envy"
 )
 
 // Test common has these but we cannot circle import
 var dirs = []string{"dir1", "dir2", "dir3", "screens", "test_encoding", "empty"}
 
+func TestMain(m *testing.M) {
+	code := m.Run()
+	os.Exit(code)
+}
+
 func TestFindContainers(t *testing.T) {
-	var testDir, _ = envy.MustGet("DIR")
+	testDir := MustGetEnvString("DIR")
 
 	containers := FindContainers(testDir)
 	if len(containers) != len(dirs) {
@@ -38,7 +42,7 @@ func TestFindContainers(t *testing.T) {
 }
 
 func TestFindContent(t *testing.T) {
-	var testDir, _ = envy.MustGet("DIR")
+	testDir := MustGetEnvString("DIR")
 	cfg := GetCfg()
 	cfg.Dir = testDir
 	containers := FindContainers(testDir)
@@ -51,7 +55,7 @@ func TestFindContent(t *testing.T) {
 }
 
 func Test_SetupContainerMatchers(t *testing.T) {
-	var testDir, _ = envy.MustGet("DIR")
+	testDir := MustGetEnvString("DIR")
 	cfg := DirConfigEntry{}
 	cfg.Dir = testDir
 	SetupContainerMatchers(&cfg, "dir1|screens", "DS_Store")
@@ -72,7 +76,7 @@ func Test_SetupContainerMatchers(t *testing.T) {
 
 // Exclude the movie by name
 func Test_SetupContentMatchers(t *testing.T) {
-	var testDir, _ = envy.MustGet("DIR")
+	testDir := MustGetEnvString("DIR")
 	cfg := DirConfigEntry{}
 	cfg.Dir = testDir
 	SetupContentMatchers(&cfg, "", "", "donut|.DS_Store", "")
@@ -94,7 +98,7 @@ func Test_SetupContentMatchers(t *testing.T) {
 }
 
 func Test_ContentMatcher(t *testing.T) {
-	var testDir, _ = envy.MustGet("DIR")
+	testDir := MustGetEnvString("DIR")
 	containers := FindContainers(testDir)
 
 	FailAll := func(filename string, content_type string) bool {
@@ -116,7 +120,7 @@ func Test_ContentMatcher(t *testing.T) {
 }
 
 func Test_ContentType(t *testing.T) {
-	var testDir, _ = envy.MustGet("DIR")
+	testDir := MustGetEnvString("DIR")
 	imgName := "this_is_jp_eg"
 	dirPath := filepath.Join(testDir, "dir1")
 
@@ -141,7 +145,7 @@ func Test_ContentType(t *testing.T) {
 }
 
 func TestCreateStructure(t *testing.T) {
-	var testDir, _ = envy.MustGet("DIR")
+	testDir := MustGetEnvString("DIR")
 	cfg := GetCfg()
 	cfg.MaxSearchDepth = 3
 	cfg.Dir = testDir
@@ -175,7 +179,7 @@ func TestCreateStructure(t *testing.T) {
 }
 
 func TestEmptyInitial(t *testing.T) {
-	var testDir, _ = envy.MustGet("DIR")
+	testDir := MustGetEnvString("DIR")
 	cfg := GetCfg()
 	cfg.Dir = testDir
 	cfg.MaxSearchDepth = 3
@@ -213,7 +217,7 @@ func Test_DirId(t *testing.T) {
 }
 
 func Test_FindContentOffset(t *testing.T) {
-	var testDir, _ = envy.MustGet("DIR")
+	testDir := MustGetEnvString("DIR")
 	containers := FindContainers(testDir)
 
 	expect_dir := false
@@ -290,7 +294,7 @@ func Test_Channels(t *testing.T) {
 }
 
 func Test_TagFileRead(t *testing.T) {
-	var testDir, _ = envy.MustGet("DIR")
+	testDir := MustGetEnvString("DIR")
 	tagFile := filepath.Join(testDir, "dir2", "tags.txt")
 
 	tags, err := ReadTagsFromFile(tagFile)
@@ -331,7 +335,7 @@ func Test_TagFileRead(t *testing.T) {
 }
 
 func Test_AssignTagContent(t *testing.T) {
-	var testDir, _ = envy.MustGet("DIR")
+	testDir := MustGetEnvString("DIR")
 
 	cfg := GetCfg()
 	cfg.Dir = testDir

@@ -1,7 +1,7 @@
 package actions
 
 /***
- * Wrapper functions are used by the buffalo queuing system to actually execute the various tasks.
+ * Wrappers around the task execution. This is now a custom simple queue worker setup for now.
  * The handler functions are used to actually add something in the API and validate the inputs.
  */
 import (

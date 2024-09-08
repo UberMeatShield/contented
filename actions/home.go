@@ -4,12 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	//"github.com/gobuffalo/buffalo"
-	//"github.com/gobuffalo/buffalo/render"
 )
 
-// HomeHandler is a default handler to serve up
-// a home page.
+// HomeHandler is a default handler to serve up a home page.
 func StatusHandler(c *gin.Context) {
 	obj := gin.H{"message": "Contented Is Up"}
 	c.JSON(http.StatusOK, obj)

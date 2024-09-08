@@ -9,13 +9,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gobuffalo/buffalo"
 )
-
-// TagsResource is the resource for the Tag model
-type TagsResource struct {
-	buffalo.Resource
-}
 
 type TagResponse struct {
 	Total   int64       `json:"total"`
