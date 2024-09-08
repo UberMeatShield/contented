@@ -6,20 +6,12 @@ import (
 	"log"
 	"strconv"
 
-	//"fmt"
-	"net/http"
-	// "errors"
 	"contented/managers"
 	"contented/models"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gobuffalo/buffalo"
 )
-
-// TaskRequestsResource is the resource for the TaskRequest model
-type TaskRequestsResource struct {
-	buffalo.Resource
-}
 
 type TaskRequestResponse struct {
 	Total   int64               `json:"total"`

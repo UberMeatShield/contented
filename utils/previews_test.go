@@ -11,8 +11,6 @@ import (
 	"contented/models"
 	"path/filepath"
 	"testing"
-
-	"github.com/gobuffalo/envy"
 )
 
 // Helper for a common block of video test code (duplicated in internals)
@@ -24,7 +22,7 @@ func Get_VideoAndSetupPaths() (string, string, string) {
 	cfg.PreviewNumberOfScreens = 4
 	SetCfg(cfg)
 
-	var testDir, _ = envy.MustGet("DIR")
+	testDir := MustGetEnvString("DIR")
 	srcDir := filepath.Join(testDir, "dir2")
 	dstDir := GetPreviewDst(srcDir)
 	testFile := "donut_[special( gunk.mp4"
@@ -50,7 +48,7 @@ func WriteScreenFile(dstPath string, fileName string, count int) (string, error)
 }
 
 func Test_ImageMetaLookup(t *testing.T) {
-	var testDir, _ = envy.MustGet("DIR")
+	testDir := MustGetEnvString("DIR")
 	srcDir := filepath.Join(testDir, "dir2")
 	testFile := "typescript_nginx_ci_dir2.png"
 
@@ -67,7 +65,7 @@ func Test_ImageMetaLookup(t *testing.T) {
 
 // Check that handling bad inputs behaves in an expected fashion
 func Test_BrokenImagePreview(t *testing.T) {
-	var testDir, _ = envy.MustGet("DIR")
+	testDir := MustGetEnvString("DIR")
 	srcDir := filepath.Join(testDir, "dir3")
 	dstDir := GetPreviewDst(srcDir)
 	testFile := "nature-corrupted-free-use.jpg"
@@ -91,7 +89,7 @@ func Test_BrokenImagePreview(t *testing.T) {
 
 // Should it Create a preview based on size of the file
 func Test_ShouldCreate(t *testing.T) {
-	var testDir, _ = envy.MustGet("DIR")
+	testDir := MustGetEnvString("DIR")
 	srcDir := filepath.Join(testDir, "dir1")
 	testFile := "this_is_p_ng"
 
@@ -113,7 +111,7 @@ func Test_ShouldCreate(t *testing.T) {
 }
 
 func Test_FileExistsError(t *testing.T) {
-	var testDir, _ = envy.MustGet("DIR")
+	testDir := MustGetEnvString("DIR")
 	srcDir := filepath.Join(testDir, "dir1")
 	dstDir := GetPreviewDst(srcDir)
 	knownFile := "0_LargeScreen.png"
@@ -142,7 +140,7 @@ func Test_FileExistsError(t *testing.T) {
 
 // Possibly make this some sort of global test helper function (harder to do in GoLang?)
 func Test_JpegPreview(t *testing.T) {
-	var testDir, _ = envy.MustGet("DIR")
+	testDir := MustGetEnvString("DIR")
 	srcDir := filepath.Join(testDir, "dir1")
 	dstDir := GetPreviewDst(srcDir)
 	testFile := "this_is_jp_eg"
@@ -177,7 +175,7 @@ func Test_JpegPreview(t *testing.T) {
 
 // Does it work when there is a png
 func Test_PngPreview(t *testing.T) {
-	var testDir, _ = envy.MustGet("DIR")
+	testDir := MustGetEnvString("DIR")
 	srcDir := filepath.Join(testDir, "dir1")
 	dstDir := GetPreviewDst(srcDir)
 	testFile := "this_is_p_ng"

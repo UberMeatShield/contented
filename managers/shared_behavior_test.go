@@ -12,16 +12,10 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/gobuffalo/envy"
-	"github.com/gobuffalo/suite/v4"
 	"github.com/stretchr/testify/assert"
 )
 
 var TOTAL_IN_SCREENS = 4
-
-type ActionSuite struct {
-	*suite.Action
-}
 
 // TODO: This naming is now bad with preview screens
 func GetScreens() (*models.Container, models.Contents) {
@@ -50,7 +44,7 @@ func TestSharedInitialCreation(t *testing.T) {
 	cfg := test_common.ResetConfig()
 	db := models.ResetDB(models.InitGorm(false))
 
-	dir, _ := envy.MustGet("DIR")
+	dir := utils.MustGetEnvString("DIR")
 	assert.NotEmpty(t, dir, "The test must specify a directory to run on")
 
 	assert.True(t, cfg.ExcContent(".DS_Store", "application/octet-stream"), "This should not be allowed")
@@ -74,7 +68,7 @@ func TestSharedCfgIncExcContent(t *testing.T) {
 	db := models.ResetDB(models.InitGorm(false))
 
 	// Exclude all images
-	dir, _ := envy.MustGet("DIR")
+	dir := utils.MustGetEnvString("DIR")
 	cfg.Dir = dir
 	nope := utils.CreateContentMatcher("DS_Store", "image|text", "OR")
 
@@ -104,7 +98,7 @@ func TestSharedCfgIncExcContent(t *testing.T) {
 
 func TestSharedImgShouldCreatePreview(t *testing.T) {
 	cfg := test_common.ResetConfig()
-	dir, _ := envy.MustGet("DIR")
+	dir := utils.MustGetEnvString("DIR")
 
 	cfg.Dir = dir
 
@@ -258,7 +252,7 @@ func TestSharedPreviewAllData(t *testing.T) {
 	db := models.ResetDB(models.InitGorm(false))
 	assert.NoError(t, db.Error, "Couldn't clean the DB")
 
-	dir, _ := envy.MustGet("DIR")
+	dir := utils.MustGetEnvString("DIR")
 	assert.NotEmpty(t, dir, "The test must specify a directory to run on")
 
 	cfg.UseDatabase = true
@@ -291,7 +285,7 @@ func TestSharedPreviewsWithCorrupted(t *testing.T) {
 	db := models.ResetDB(models.InitGorm(false))
 	assert.NoError(t, db.Error, "Couldn't clean the DB")
 
-	dir, _ := envy.MustGet("DIR")
+	dir := utils.MustGetEnvString("DIR")
 	assert.NotEmpty(t, dir, "The test must specify a directory to run on")
 
 	// Note for this test we DO allow corrupted files
@@ -337,7 +331,7 @@ func TestSharedFindDuplicateVideos(t *testing.T) {
 	db := models.ResetDB(models.InitGorm(false))
 	assert.NoError(t, db.Error, "Couldn't clean the DB")
 
-	dir, _ := envy.MustGet("DIR")
+	dir := utils.MustGetEnvString("DIR")
 	assert.NotEmpty(t, dir, "The test must specify a directory to run on")
 
 	cfg.UseDatabase = false

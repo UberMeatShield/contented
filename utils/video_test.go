@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gobuffalo/envy"
 	"github.com/tidwall/gjson"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
@@ -117,8 +116,8 @@ func Test_VideoEncodingNotMatching(t *testing.T) {
 }
 
 func Test_VideoImageDiff(t *testing.T) {
-	testDir, _ := envy.MustGet("DIR")
-	srcDir := filepath.Join(testDir, "test_encoding")
+	dir := MustGetEnvString("DIR")
+	srcDir := filepath.Join(dir, "test_encoding")
 
 	encodedFile := filepath.Join(srcDir, "SampleVideo_1280x720_1mb_h265.mp4")
 	duplicateFile := filepath.Join(srcDir, "SampleVideo_1280x720_1mb.mp4")
@@ -140,8 +139,8 @@ func Test_VideoImageDiff(t *testing.T) {
 }
 
 func Test_VideosAreDifferent(t *testing.T) {
-	testDir, _ := envy.MustGet("DIR")
-	srcDir := filepath.Join(testDir, "test_encoding")
+	dir := MustGetEnvString("DIR")
+	srcDir := filepath.Join(dir, "test_encoding")
 
 	encodedFile := filepath.Join(srcDir, "SampleVideo_1280x720_1mb_h265.mp4")
 

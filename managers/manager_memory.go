@@ -409,10 +409,7 @@ func (cm ContentManagerMemory) UpdateScreen(s *models.Screen) error {
 	return err
 }
 
-// Given the current parameters in the buffalo context return a list of matching containers.
-// TODO: Probably port all Context interfaces to pass in a url.Values element.
-// TODO: On the actions layer make a gin.Context to the Gin params
-// TODO: Remove all Gin or buffalo from the manager layer, it is just not good
+// Given the current parameters in the gin context return a list of matching containers.
 func (cm ContentManagerMemory) ListContainersContext() (*models.Containers, int64, error) {
 	params := cm.Params()
 	_, limit, page := GetPagination(params, cm.cfg.Limit)
@@ -425,7 +422,7 @@ func (cm ContentManagerMemory) ListContainersContext() (*models.Containers, int6
 	return cm.ListContainers(cs)
 }
 
-// Actually list containers using a page and per_page which is consistent with buffalo standard pagination
+// Actually list containers using a page and per_page consistent with pagination.
 func (cm ContentManagerMemory) ListContainers(cs ContainerQuery) (*models.Containers, int64, error) {
 	return cm.ListContainersFiltered(cs)
 }

@@ -10,7 +10,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gobuffalo/buffalo"
 )
 
 // Following naming logic is implemented in Buffalo:
@@ -22,11 +21,6 @@ import (
 type ScreensResponse struct {
 	Total   int64          `json:"total" default:"0"`
 	Results models.Screens `json:"results" default:"[]"`
-}
-
-// ScreensResource is the resource for the Screen model
-type ScreensResource struct {
-	buffalo.Resource
 }
 
 // List gets all Screens. This function is mapped to the path

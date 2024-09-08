@@ -24,15 +24,12 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gobuffalo/buffalo/worker"
-	"github.com/gobuffalo/pop/v6"
 	"golang.org/x/exp/maps"
 	"gorm.io/gorm"
 )
 
 type GetConnType func() *gorm.DB
 type GetParamsType func() *url.Values
-type GetAppWorker func() worker.Worker
 
 type TaskQuery struct {
 	Page        int    `json:"page" default:"1"`
@@ -111,7 +108,7 @@ func (t TagQuery) String() string {
 	return string(jt)
 }
 
-// This is the primary interface used by the Buffalo actions.
+// This is the primary interface used to interact with the Content and related models.
 type ContentManager interface {
 	GetCfg() *utils.DirConfigEntry
 	CanEdit() bool // Do we support CRUD or just R
@@ -176,14 +173,11 @@ type ContentManager interface {
 	GetTask(id int64) (*models.TaskRequest, error)
 }
 
-// Dealing with buffalo.Context vs grift.Context is kinda annoying, this handles the
-// buffalo context which handles tests or runtime but doesn't work in grifts.
+// Grab a manager based on the gin context. This should probably be mo
 func GetManager(c *gin.Context) ContentManager {
 	cfg := utils.GetCfg()
 
-	// TODO: This will need to be nuked and cleaned up to use GORM
-	// The get connection might need an async channel or it potentially locks
-	// the dev server :(.   Need to only do this if use database is setup and connects
+	// The connection should probably using both pooling and actual transactions when this is allo cleaned up.
 	getConnection := GetConnection(cfg)
 	// Annoying differences between url values and the param option.  Another GoLang bit where it isn't
 	// handling ?id=1&id=2 and instead just allows for a single param (ie: The tags hack is still required in Gin)
@@ -264,8 +258,7 @@ func ManagerCanCUD(c *gin.Context) (ContentManager, *gorm.DB, error) {
 	return man, nil, nil
 }
 
-// Provides the ability to pass a connection function and get params function to the manager so we can handle
-// a request.  We set this up so that the interface can still use the buffalo connection and param management.
+// Create a manager based on the config, connection and params.
 func CreateManager(cfg *utils.DirConfigEntry, get_conn GetConnType, get_params GetParamsType) ContentManager {
 	if cfg.UseDatabase {
 		// Not really important for a DB manager, just need to look at it
@@ -322,7 +315,7 @@ func GetOffsetEnd(page int, per_page int, max int) (int, int) {
 }
 
 // Returns the offest, limit, page from pagination params (page indexing starts at 1)
-func GetPagination(params pop.PaginationParams, DefaultLimit int) (int, int, int) {
+func GetPagination(params *url.Values, DefaultLimit int) (int, int, int) {
 	p := StringDefault(params.Get("page"), "1")
 	page, err := strconv.Atoi(p)
 	if err != nil || page < 1 {
@@ -347,7 +340,7 @@ func GetPerPage(perPage int) int {
 }
 
 // TODO: Fill in tags if they are provided.
-func ContextToContentQuery(params pop.PaginationParams, cfg *utils.DirConfigEntry) ContentQuery {
+func ContextToContentQuery(params *url.Values, cfg *utils.DirConfigEntry) ContentQuery {
 	offset, per_page, page := GetPagination(params, cfg.Limit)
 	sReq := ContentQuery{
 		Text:          StringDefault(params.Get("text"), ""),
@@ -371,7 +364,7 @@ func ContextToContentQuery(params pop.PaginationParams, cfg *utils.DirConfigEntr
 }
 
 // TODO: Fill in tags if they are provided.
-func ContextToContainerQuery(params pop.PaginationParams, cfg *utils.DirConfigEntry) ContainerQuery {
+func ContextToContainerQuery(params *url.Values, cfg *utils.DirConfigEntry) ContainerQuery {
 	offset, per_page, page := GetPagination(params, cfg.Limit)
 	sReq := ContainerQuery{
 		Name:          StringDefault(params.Get("name"), ""),
@@ -382,15 +375,6 @@ func ContextToContainerQuery(params pop.PaginationParams, cfg *utils.DirConfigEn
 		IncludeHidden: false,
 		Order:         StringDefault(params.Get("order"), ""),
 	}
-	/*
-		tags, err := GetTagsFromParam(params.Get("tags"))
-		if err == nil {
-			// BAIL / reject
-			sReq.Tags = tags
-		} else {
-			log.Printf("Failed to parse query tags, ignoring %s", err)
-		}
-	*/
 	return sReq
 }
 

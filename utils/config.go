@@ -214,6 +214,14 @@ func InitConfig(dir_root string, cfg *DirConfigEntry) *DirConfigEntry {
 	return cfg
 }
 
+func MustGetEnvString(key string) string {
+	val := GetEnvString(key, "")
+	if val == "" {
+		log.Fatalf("failed to find key %s", key)
+	}
+	return val
+}
+
 // These need to be valid or we will bail the app
 func GetEnvString(key string, defaultVal string) string {
 	valStr := os.Getenv(key)
