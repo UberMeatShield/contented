@@ -6,7 +6,6 @@ import (
 	"contented/utils"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -34,7 +33,7 @@ func SetupScreensPreview(t *testing.T) (*models.Container, models.Contents) {
 	dir_err := utils.MakePreviewPath(dstPath)
 	assert.NoError(t, dir_err, "Did we create preview path", t)
 
-	empty, read_err := ioutil.ReadDir(dstPath)
+	empty, read_err := os.ReadDir(dstPath)
 	assert.Empty(t, empty, fmt.Sprintf("It has an empty directory %s", dstPath))
 	assert.NoError(t, read_err, "It should be able to read the dst directory")
 	return c_pt, content
@@ -143,7 +142,7 @@ func TestSharedCreatePreview(t *testing.T) {
 		assert.NoError(t, err, "It should be ble to create previews")
 		assert.NotEqual(t, preview_path, "", "The path should be defined")
 	}
-	previews, read_err := ioutil.ReadDir(dstPath)
+	previews, read_err := os.ReadDir(dstPath)
 	assert.Equal(t, TOTAL_IN_SCREENS, len(previews), "It should create 4 previews")
 	assert.NoError(t, read_err, "It should be able to read the directory")
 }
@@ -216,7 +215,7 @@ func TestSharedCreateContainerPreviews(t *testing.T) {
 
 	assert.NoError(t, p_err, "An error happened creating the previews")
 	dstPath := utils.GetContainerPreviewDst(c_pt)
-	previews, read_err := ioutil.ReadDir(dstPath)
+	previews, read_err := os.ReadDir(dstPath)
 	assert.Equal(t, TOTAL_IN_SCREENS, len(previews), fmt.Sprintf("It should create 6 previews %s", dstPath))
 	assert.NoError(t, read_err, "It should be able to read the directory")
 
