@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -298,7 +297,7 @@ func Test_AssignScreensWithEscapeChars(t *testing.T) {
 func Test_VideoSelectScreens(t *testing.T) {
 	srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
 
-	empty_check, _ := ioutil.ReadDir(dstDir)
+	empty_check, _ := os.ReadDir(dstDir)
 	if len(empty_check) > 0 {
 		t.Errorf("The destination directory was not empty %s", empty_check)
 	}
@@ -312,7 +311,7 @@ func Test_VideoSelectScreens(t *testing.T) {
 	if screensSrc == "" {
 		t.Errorf("Did not get a valid destination file.")
 	}
-	screens_check, _ := ioutil.ReadDir(dstDir)
+	screens_check, _ := os.ReadDir(dstDir)
 	expected := 10
 	if len(screens_check) != expected {
 		t.Errorf("Not enough screens created %d vs expected %d", len(screens_check), expected)
