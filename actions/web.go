@@ -46,7 +46,7 @@ func SetupContented(r *gin.Engine, contentDir string, numToPreview int64, limit 
 
 	// Initialize workers that will listen for encoding tasks (GoBuffalo has some Gin does not)
 	log.Printf("TODO: The job processors are busted without GoBuffalo")
-	// TODO: SetupWorkers(app)
+	SetupWorkers()
 
 	// If we are not using databases load up the memory view
 	if !cfg.UseDatabase {

@@ -19,10 +19,10 @@ setup:
 	make typescript
 	make dev
 
-# TODO: This is busted, GoBuffalo is deprecated and the docer image must be redone.
+# TODO: GoBuffalo is deprecated and the docker image must be redone.
 .PHONY: build
 build:
-	docker build .
+	docker build -f Dockerfile -t contented:latest .
 
 .PHONY: dev
 dev:
