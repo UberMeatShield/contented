@@ -51,6 +51,7 @@ jobs:
       with:
         go-version: '1.23'
 
+    # TODO: Either ffmpeg needs to be installed or we need to skip the encode tests
     - name: Install dependencies
       run: go mod download
 
