@@ -57,6 +57,9 @@ jobs:
 
     - name: Install ffmpeg
       run: sudo apt-get install ffmpeg
+    
+    - name: Fake a typescript build of the index.html
+      run: mkdir -p public/build && echo "Loading Up Contented" > public/build/index.html
 
     - name: Run Go tests
       run: make test
