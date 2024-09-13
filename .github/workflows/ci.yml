@@ -55,6 +55,9 @@ jobs:
     - name: Install dependencies
       run: go mod download
 
+    - name: Install ffmpeg
+      run: sudo apt-get install ffmpeg
+
     - name: Run Go tests
       run: make test
       env:
