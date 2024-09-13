@@ -15,7 +15,7 @@ export let ApiDef = {
     screens: base + 'screens/',
     contentAll: base + 'content/',
     searchContents: '/api/search/contents',
-    searchContainers:'/api/search/containers',
+    searchContainers: '/api/search/containers',
     tags: base + 'tags/',
 
     // Task Related APIs
@@ -32,7 +32,7 @@ export let ApiDef = {
     containerPreviewsTask: '/api/editing_container_queue/{containerId}/screens/{count}/{startTimeSeconds}',
   },
   tasks: {
-    get:  base + 'task_requests/{id}',
+    get: base + 'task_requests/{id}',
     list: base + 'task_requests/',
     update: '/api/task_requests/{id}',
   },

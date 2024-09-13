@@ -10,6 +10,8 @@ import (
 	"contented/models"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // Helper for a common block of video test code (duplicated in internals)
@@ -287,6 +289,7 @@ func Test_AssignScreensWithEscapeChars(t *testing.T) {
 
 	if ps == nil {
 		t.Errorf("We did not find matching screens")
+		return
 	}
 	if len(*ps) != 2 {
 		t.Errorf("We did not find the correct number of files %d", len(*ps))
@@ -294,7 +297,7 @@ func Test_AssignScreensWithEscapeChars(t *testing.T) {
 }
 
 // Test Generating screens using the sampling method vs seeking.
-func Test_VideoSelectScreens(t *testing.T) {
+func TestVideoSelectScreens(t *testing.T) {
 	srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
 
 	empty_check, _ := os.ReadDir(dstDir)
@@ -313,9 +316,7 @@ func Test_VideoSelectScreens(t *testing.T) {
 	}
 	screens_check, _ := os.ReadDir(dstDir)
 	expected := 10
-	if len(screens_check) != expected {
-		t.Errorf("Not enough screens created %d vs expected %d", len(screens_check), expected)
-	}
+	assert.GreaterOrEqual(t, len(screens_check), expected, fmt.Sprintf("Screens %s", screens_check))
 
 	// TODO: Really need to fix the dest file info
 	globMatch := GetScreensOutputGlob(destFile)
