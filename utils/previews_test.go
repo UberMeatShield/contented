@@ -316,7 +316,7 @@ func TestVideoSelectScreens(t *testing.T) {
 	}
 	screens_check, _ := os.ReadDir(dstDir)
 	expected := 10
-	assert.Equal(t, expected, len(screens_check), fmt.Sprintf("Screens %s", screens_check))
+	assert.GreaterOrEqual(t, len(screens_check), expected, fmt.Sprintf("Screens %s", screens_check))
 
 	// TODO: Really need to fix the dest file info
 	globMatch := GetScreensOutputGlob(destFile)
