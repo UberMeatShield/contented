@@ -13,7 +13,7 @@ import (
 
 func TestHomeHandler(t *testing.T) {
 	cfg, _ := test_common.InitFakeApp(false)
-	cfg.StaticResourcePath = fmt.Sprintf("../%s", cfg.StaticResourcePath)
+	cfg.StaticResourcePath = fmt.Sprintf("../../%s", cfg.StaticResourcePath)
 	utils.SetCfg(*cfg)
 
 	r := setupStatic()

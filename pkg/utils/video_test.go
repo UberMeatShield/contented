@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/gjson"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
@@ -61,6 +62,7 @@ func Test_VideoEncoding(t *testing.T) {
 
 	cfg := GetCfg()
 	vidInfo, err := ffmpeg.Probe(dstFile)
+	assert.NoError(t, err, fmt.Sprintf("Failed to probe dstFile %s", dstFile))
 
 	totalTimeSrc, _, _ := GetTotalVideoLength(srcFile)
 	totalTimeDst, _, _ := GetTotalVideoLength(dstFile)
