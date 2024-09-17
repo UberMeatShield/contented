@@ -1,9 +1,9 @@
 package main
 
 import (
-	"contented/actions"
-	"contented/models"
-	"contented/utils"
+	"contented/pkg/actions"
+	"contented/pkg/models"
+	"contented/pkg/utils"
 	"log"
 
 	"github.com/gin-gonic/gin"
