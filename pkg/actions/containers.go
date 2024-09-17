@@ -1,8 +1,8 @@
 package actions
 
 import (
-	"contented/managers"
-	"contented/models"
+	"contented/pkg/managers"
+	"contented/pkg/models"
 	"log"
 	"strconv"
 

@@ -6,7 +6,7 @@ package utils
  */
 import (
 	"bytes"
-	"contented/models"
+	"contented/pkg/models"
 	"errors"
 	"fmt"
 	"image"

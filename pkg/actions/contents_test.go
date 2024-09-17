@@ -2,8 +2,8 @@ package actions
 
 import (
 	"bytes"
-	"contented/models"
-	"contented/test_common"
+	"contented/pkg/models"
+	"contented/pkg/test_common"
 	"encoding/json"
 	"fmt"
 	"log"

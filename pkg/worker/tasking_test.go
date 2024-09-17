@@ -1,7 +1,7 @@
 package worker
 
 import (
-	"contented/models"
+	"contented/pkg/models"
 	"testing"
 )
 

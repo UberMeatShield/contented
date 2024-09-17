@@ -1,10 +1,10 @@
 package actions
 
 import (
-	"contented/managers"
-	"contented/models"
-	"contented/utils"
-	"contented/worker"
+	"contented/pkg/managers"
+	"contented/pkg/models"
+	"contented/pkg/utils"
+	"contented/pkg/worker"
 	"encoding/json"
 	"log"
 	"net/http"

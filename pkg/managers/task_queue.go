@@ -4,7 +4,7 @@
 package managers
 
 import (
-	"contented/models"
+	"contented/pkg/models"
 	"encoding/json"
 	"fmt"
 	"log"

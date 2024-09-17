@@ -1,7 +1,7 @@
 package actions
 
 import (
-	"contented/models"
+	"contented/pkg/models"
 	"fmt"
 	"net/http"
 	"testing"

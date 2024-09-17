@@ -7,7 +7,7 @@ import (
 	"time"
 
 	//    "errors"
-	"contented/models"
+	"contented/pkg/models"
 	"path/filepath"
 	"testing"
 

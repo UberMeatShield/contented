@@ -1,11 +1,11 @@
 package actions
 
 import (
-	"contented/managers"
-	"contented/models"
-	"contented/test_common"
-	"contented/utils"
-	"contented/worker"
+	"contented/pkg/managers"
+	"contented/pkg/models"
+	"contented/pkg/test_common"
+	"contented/pkg/utils"
+	"contented/pkg/worker"
 	"encoding/json"
 	"fmt"
 	"log"

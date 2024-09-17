@@ -1,9 +1,9 @@
 package actions
 
 import (
-	"contented/managers"
-	"contented/models"
-	"contented/test_common"
+	"contented/pkg/managers"
+	"contented/pkg/models"
+	"contented/pkg/test_common"
 	"fmt"
 	"net/http"
 	"testing"

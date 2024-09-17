@@ -15,7 +15,7 @@ import (
 
 	//"errors"
 	"bufio"
-	"contented/models"
+	"contented/pkg/models"
 	"crypto/sha256"
 	"encoding/hex"
 	"log"

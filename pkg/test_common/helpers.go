@@ -5,8 +5,8 @@ package test_common
  * mock data counts and information.
  */
 import (
-	"contented/models"
-	"contented/utils"
+	"contented/pkg/models"
+	"contented/pkg/utils"
 	"errors"
 	"fmt"
 	"log"

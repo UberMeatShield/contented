@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"contented/models"
+	"contented/pkg/models"
 	"os"
 	"path/filepath"
 	"testing"

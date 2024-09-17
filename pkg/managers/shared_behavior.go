@@ -9,8 +9,8 @@ package managers
  */
 
 import (
-	"contented/models"
-	"contented/utils"
+	"contented/pkg/models"
+	"contented/pkg/utils"
 	"fmt"
 	"log"
 	"path/filepath"

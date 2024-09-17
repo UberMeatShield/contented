@@ -1,8 +1,8 @@
 package actions
 
 import (
-	"contented/test_common"
-	"contented/utils"
+	"contented/pkg/test_common"
+	"contented/pkg/utils"
 	"fmt"
 	"net/http"
 	"net/http/httptest"

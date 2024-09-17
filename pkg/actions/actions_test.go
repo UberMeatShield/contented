@@ -2,10 +2,10 @@ package actions
 
 import (
 	"bytes"
-	"contented/managers"
-	"contented/models"
-	"contented/test_common"
-	"contented/utils"
+	"contented/pkg/managers"
+	"contented/pkg/models"
+	"contented/pkg/test_common"
+	"contented/pkg/utils"
 	"encoding/json"
 	"fmt"
 	"log"

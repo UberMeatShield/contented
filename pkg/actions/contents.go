@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"contented/managers"
-	"contented/models"
+	"contented/pkg/managers"
+	"contented/pkg/models"
 
 	"github.com/gin-gonic/gin"
 )

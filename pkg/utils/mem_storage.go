@@ -6,7 +6,7 @@ package utils
 * containers and content and is then used by the MemoryManager.
  */
 import (
-	"contented/models"
+	"contented/pkg/models"
 	"errors"
 	"fmt"
 	"log"

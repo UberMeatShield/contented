@@ -1,9 +1,9 @@
 package managers
 
 import (
-	"contented/models"
-	"contented/test_common"
-	"contented/utils"
+	"contented/pkg/models"
+	"contented/pkg/test_common"
+	"contented/pkg/utils"
 	"net/url"
 	"os"
 	"testing"

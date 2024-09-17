@@ -4,7 +4,7 @@ package worker
  * Initial framework was built out using Cursor (color me impressed)
  */
 import (
-	"contented/models"
+	"contented/pkg/models"
 	"fmt"
 	"log"
 )

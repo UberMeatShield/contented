@@ -4,7 +4,7 @@ package utils
  * These functions deal with using ffmpeg to encode video to new formats (h265)
  */
 import (
-	"contented/models"
+	"contented/pkg/models"
 	"errors"
 	"fmt"
 	"log"

@@ -5,10 +5,10 @@ package actions
  * The handler functions are used to actually add something in the API and validate the inputs.
  */
 import (
-	"contented/managers"
-	"contented/models"
-	"contented/utils"
-	"contented/worker"
+	"contented/pkg/managers"
+	"contented/pkg/models"
+	"contented/pkg/utils"
+	"contented/pkg/worker"
 	"errors"
 	"fmt"
 	"log"

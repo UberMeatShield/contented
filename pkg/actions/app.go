@@ -1,7 +1,7 @@
 package actions
 
 import (
-	"contented/utils"
+	"contented/pkg/utils"
 	"fmt"
 	"net/http"
 
