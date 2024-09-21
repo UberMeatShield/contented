@@ -1,9 +1,9 @@
 package main
 
 import (
-	"contented/managers"
-	"contented/models"
-	"contented/utils"
+	"contented/pkg/managers"
+	"contented/pkg/models"
+	"contented/pkg/utils"
 	"flag"
 	"fmt"
 	"net/url"

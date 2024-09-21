@@ -24,6 +24,7 @@ setup:
 build:
 	docker build -f Dockerfile -t contented:latest .
 
+# Start up the contented server (todo: Missing javascript should be a warning not a failure?)
 .PHONY: dev
 dev:
 	export DIR=$(DIR) TAG_FILE=$(TAG_FILE) && go run cmd/app/main.go
@@ -56,7 +57,7 @@ lint:
 # Typically you want a different window doing your jsbuilds nd golang stuff for sanity
 .PHONY: typescript
 typescript:
-	rsync -urv node_modules/monaco-editor build/static/monaco
+	make monaco-copy
 	yarn run ng build contented --configuration=production --watch=false --base-href /public/build/
 
 .PHONY: db-reset
@@ -84,10 +85,31 @@ find-dupes:
 tags:
 	export GO_ENV=$(GO_ENV) && export DIR=$(DIR) && export TAG_FILE=$(TAG_FILE) && go run ./cmd/scripts/cmdline.go --action tags
 
+.PHONY: clean
+clean:
+	rm -rf ./public/*
+	rm -rf ./build/*
+
+.PHONY: monaco-copy
+monaco-copy:
+	mkdir -p ./public/static/monaco/min/vs/base/common/worker
+	mkdir -p ./public/static/monaco/min/vs/base/worker
+	mkdir -p ./public/static/monaco/min/vs/editor
+	rsync -uv ./node_modules/monaco-editor/min/vs/loader.js ./public/static/monaco/min/vs/
+	rsync -uv ./node_modules/monaco-editor/min/vs/editor/editor.main.js ./public/static/monaco/min/vs/editor/
+	rsync -uv ./node_modules/monaco-editor/min/vs/editor/editor.main.css ./public/static/monaco/min/vs/editor/
+	rsync -uv ./node_modules/monaco-editor/min/vs/editor/editor.main.nls.js public/static/monaco/min/vs/editor
+	rsync -uv ./node_modules/monaco-editor/min/vs/base/worker/workerMain.js ./public/static/monaco/min/vs/base/worker/
+	rsync -uv ./node_modules/monaco-editor/min/vs/base/common/worker/simpleWorker.nls.js ./public/static/monaco/min/vs/base/common/worker/
+
 
 .PHONY: bundle
 bundle:
-	mkdir -p build/bundle
-	go build -o /build/bundle/contented cmd/app/main.go
-	go build -o /build/bundle/contented-tools cmd/scripts/main.go
+	make clean
+	mkdir -p ./build/bundle
+	go build -o ./build/bundle/contented cmd/app/main.go
+	go build -o ./build/bundle/contented-tools cmd/scripts/main.go
 	make typescript
+	rsync -urv ./public build/bundle/public
+	tar -cvzf contented.build.tar.gz build/*
+	mv contented.build.tar.gz build/
