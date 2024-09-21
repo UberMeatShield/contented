@@ -53,9 +53,10 @@ ngtest:
 lint:
 	yarn run lint
 
-# Typically you want a different window doing your jsbuilds and golang stuff for sanity
+# Typically you want a different window doing your jsbuilds nd golang stuff for sanity
 .PHONY: typescript
 typescript:
+	rsync -urv node_modules/monaco-editor build/static/monaco
 	yarn run ng build contented --configuration=production --watch=false --base-href /public/build/
 
 .PHONY: db-reset
@@ -82,3 +83,11 @@ find-dupes:
 .PHONY: tags
 tags:
 	export GO_ENV=$(GO_ENV) && export DIR=$(DIR) && export TAG_FILE=$(TAG_FILE) && go run ./cmd/scripts/cmdline.go --action tags
+
+
+.PHONY: bundle
+bundle:
+	mkdir -p build/bundle
+	go build -o /build/bundle/contented cmd/app/main.go
+	go build -o /build/bundle/contented-tools cmd/scripts/main.go
+	make typescript
