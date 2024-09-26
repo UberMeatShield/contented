@@ -21,6 +21,9 @@ jobs:
     - name: Install dependencies
       run: yarn install
 
+    - name: Copy in the Monaco Editor
+      run: make monaco-copy
+
     - name: Run Angular tests
       run: yarn run ng test --watch=false --browsers=ChromeHeadless
 

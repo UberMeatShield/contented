@@ -47,6 +47,7 @@ ngdev:
 
 .PHONY: ngtest
 ngtest:
+	make monaco-copy
 	yarn run ng test
 
 # Often a run with eslint --fix will actually handle just about everything
@@ -95,12 +96,12 @@ monaco-copy:
 	mkdir -p ./public/static/monaco/min/vs/base/common/worker
 	mkdir -p ./public/static/monaco/min/vs/base/worker
 	mkdir -p ./public/static/monaco/min/vs/editor
-	rsync -uv ./node_modules/monaco-editor/min/vs/loader.js ./public/static/monaco/min/vs/
-	rsync -uv ./node_modules/monaco-editor/min/vs/editor/editor.main.js ./public/static/monaco/min/vs/editor/
-	rsync -uv ./node_modules/monaco-editor/min/vs/editor/editor.main.css ./public/static/monaco/min/vs/editor/
-	rsync -uv ./node_modules/monaco-editor/min/vs/editor/editor.main.nls.js public/static/monaco/min/vs/editor
-	rsync -uv ./node_modules/monaco-editor/min/vs/base/worker/workerMain.js ./public/static/monaco/min/vs/base/worker/
-	rsync -uv ./node_modules/monaco-editor/min/vs/base/common/worker/simpleWorker.nls.js ./public/static/monaco/min/vs/base/common/worker/
+	rsync -u ./node_modules/monaco-editor/min/vs/loader.js ./public/static/monaco/min/vs/
+	rsync -u ./node_modules/monaco-editor/min/vs/editor/editor.main.js ./public/static/monaco/min/vs/editor/
+	rsync -u ./node_modules/monaco-editor/min/vs/editor/editor.main.css ./public/static/monaco/min/vs/editor/
+	rsync -u ./node_modules/monaco-editor/min/vs/editor/editor.main.nls.js public/static/monaco/min/vs/editor
+	rsync -u ./node_modules/monaco-editor/min/vs/base/worker/workerMain.js ./public/static/monaco/min/vs/base/worker/
+	rsync -u ./node_modules/monaco-editor/min/vs/base/common/worker/simpleWorker.nls.js ./public/static/monaco/min/vs/base/common/worker/
 
 
 .PHONY: bundle
