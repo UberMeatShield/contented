@@ -63,34 +63,35 @@ typescript:
 
 .PHONY: db-reset
 db-reset:
-	export GO_ENV=$(GO_ENV) && go run ./cmd/scripts/cmdline.go --action reset
+	export GO_ENV=$(GO_ENV) && go run ./cmd/scripts/main.go --action reset
 
 .PHONY: db-populate
 db-populate:
-	export GO_ENV=$(GO_ENV) && export DIR=$(DIR) && go run ./cmd/scripts/cmdline.go --action populate
+	export GO_ENV=$(GO_ENV) && export DIR=$(DIR) && go run ./cmd/scripts/main.go --action populate
 
 .PHONY: preview
 preview:
-	export GO_ENV=$(GO_ENV) && export DIR=$(DIR) && go run ./cmd/scripts/cmdline.go --action preview
+	export GO_ENV=$(GO_ENV) && export DIR=$(DIR) && go run ./cmd/scripts/main.go --action preview
 
 .PHONY: encode
 encode:
-	export GO_ENV=$(GO_ENV) && export DIR=$(DIR) && go run ./cmd/scripts/cmdline.go --action encode
+	export GO_ENV=$(GO_ENV) && export DIR=$(DIR) && go run ./cmd/scripts/main.go --action encode
 
 .PHONY: find-dupes
 find-dupes:
-	export GO_ENV=$(GO_ENV) && export DIR=$(DIR) && go run ./cmd/scripts/cmdline.go --action duplicates
+	export GO_ENV=$(GO_ENV) && export DIR=$(DIR) && go run ./cmd/scripts/main.go --action duplicates
 
 # Read from a tag file and import the tags to the DB
 .PHONY: tags
 tags:
-	export GO_ENV=$(GO_ENV) && export DIR=$(DIR) && export TAG_FILE=$(TAG_FILE) && go run ./cmd/scripts/cmdline.go --action tags
+	export GO_ENV=$(GO_ENV) && export DIR=$(DIR) && export TAG_FILE=$(TAG_FILE) && go run ./cmd/scripts/main.go --action tags
 
 .PHONY: clean
 clean:
 	rm -rf ./public/*
 	rm -rf ./build/*
 
+# We do not need the full Monaco editor in the deployment or container but these files are required.
 .PHONY: monaco-copy
 monaco-copy:
 	mkdir -p ./public/static/monaco/min/vs/base/common/worker
@@ -103,7 +104,7 @@ monaco-copy:
 	rsync -u ./node_modules/monaco-editor/min/vs/base/worker/workerMain.js ./public/static/monaco/min/vs/base/worker/
 	rsync -u ./node_modules/monaco-editor/min/vs/base/common/worker/simpleWorker.nls.js ./public/static/monaco/min/vs/base/common/worker/
 
-
+# Get a single bundle file built out that could be uploaded to S3 and used to run the app
 .PHONY: bundle
 bundle:
 	make clean
