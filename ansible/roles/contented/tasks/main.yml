@@ -6,6 +6,7 @@
     - curl
     - vim
     - wget
+    - ffmpeg
 
 - import_tasks: permissions.yml
 
@@ -31,7 +32,7 @@
   become: true
   when: ansible_service_mgr == 'systemd'
 
-- name: Create contented init.d script (for non-systemd systems)
+- name: Create contented init.d script (for non-systemd systems) This does not work (yet)
   template:
     src: contented.init.j2
     dest: /etc/init.d/contented
