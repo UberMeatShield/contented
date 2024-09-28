@@ -10,15 +10,39 @@
 - import_tasks: permissions.yml
 
 - import_tasks: go.yml
+- name: Copy contented binary to /usr/local/bin
+  copy:
+    src: "{{ src_dir }}/contented"
+    dest: "/usr/local/bin/contented"
+    mode: '0755'
+  become: true
 
-# Create a task for getting the angular build fully working (much fun...)
-- name: Install depenedent go packages
-  command: dep ensure
-  args: 
-    chdir: /home/vagrant/go/src/contented/
-    creates: /home/vagrant/go/src/contented/vendor/github.com
+- name: Create contented systemd service file
+  template:
+    src: contented.service.j2
+    dest: /etc/systemd/system/contented.service
+  become: true
 
-- name: Actually build the http binary
-  shell: /usr/local/go/bin/go build
-  args:
-    chdir: /home/vagrant/go/src/contented/
+- name: Ensure contented service is enabled and started
+  systemd:
+    name: contented
+    enabled: yes
+    state: started
+  become: true
+  when: ansible_service_mgr == 'systemd'
+
+- name: Create contented init.d script (for non-systemd systems)
+  template:
+    src: contented.init.j2
+    dest: /etc/init.d/contented
+    mode: '0755'
+  become: true
+  when: ansible_service_mgr != 'systemd'
+
+- name: Ensure contented service is enabled and started (for non-systemd systems)
+  service:
+    name: contented
+    enabled: yes
+    state: started
+  become: true
+  when: ansible_service_mgr != 'systemd'
