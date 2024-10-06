@@ -15,7 +15,9 @@ import (
 func main() {
 	cfg := utils.GetCfg()
 	utils.InitConfigEnvy(cfg)
-	models.InitializeAppDatabase(utils.GetEnvString("GO_ENV", "development"))
+	if cfg.UseDatabase {
+		models.InitializeAppDatabase(utils.GetEnvString("GO_ENV", "development"))
+	}
 
 	// Set them up side by side?
 	r := gin.Default()
