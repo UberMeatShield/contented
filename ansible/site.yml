@@ -1,7 +1,10 @@
 ---
 - name: Setup a golang server
   hosts: all
-  remote_user: ubuntu
+  remote_user: "{{ run_user | default('contented_user') }}"
+
+  vars:
+    run_user: contented_user
 
   roles:
     - contented

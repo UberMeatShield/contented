@@ -1,15 +1,41 @@
+- name: Create run user for the golang service
+  become: true
+  user:
+    name: "{{ run_user | default('contented_user') }}"
+    comment: User for running the golang service
+    shell: /bin/bash
+
+- name: Set the mounted directory to run user ownership
+  become: true
+  file:
+    path: "/home/{{ run_user | default('contented_user') }}/go"
+    owner: "{{ run_user | default('contented_user') }}"
+    group: "{{ run_user | default('contented_user') }}"
+    state: directory
+
+- name: Create the static content location
+  become: true
+  file:
+    path: "/usr/local/gohttp/static"
+    state: directory
+    owner: "{{ run_user | default('contented_user') }}"
+    group: "{{ run_user | default('contented_user') }}"
+    mode: '0775'
+    recurse: yes
+
+- name: Create a place to dump logs
+  become: true
+  file:
+    path: "/usr/local/gohttp/logs"
+    state: directory
+    owner: "{{ run_user | default('contented_user') }}"
+    group: "{{ run_user | default('contented_user') }}"
+    mode: '0775'
+    recurse: yes
+
 - name: Set the mounted directory to vagrant ownership (not root) so we can build and install into pkg
   become: true
   file:
     path: /home/vagrant/go
     owner: vagrant
     group: vagrant
-
-- name: Create the static content location (sym links?)
-  file: path="/usr/local/gohttp/static" state=directory owner={{remote_user}} group={{remote_user}} mode=0775 recurse=yes
-  become: true
-
-- name: Create a place to dump logs (make logging exist)
-  file: path="/usr/local/gohttp/logs" state=directory owner={{remote_user}} group={{remote_user}} mode=0775 recurse=yes
-  become: true
-

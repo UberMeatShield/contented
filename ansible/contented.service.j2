@@ -3,10 +3,10 @@
 Description=Contented service as a resume host
 
 [Service]
-WorkingDirectory=/home/user/contented
+User={{ run_user | default('contented_user') }}
+Group={{ run_user | default('contented_user') }}
+WorkingDirectory=/home/{{ run_user | default('contented_user') }}/contented
 ExecStart=/usr/local/bin/contented
-User=ec2-user
-Group=ec2-user
 UMask=007
 
 [Install]

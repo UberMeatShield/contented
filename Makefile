@@ -19,7 +19,7 @@ setup:
 	make typescript
 	make dev
 
-# TODO: GoBuffalo is deprecated and the docker image must be redone.
+# Build the container that can run the application using Gorm, Gin and defaulting to memory DB 
 .PHONY: build
 build:
 	docker build -f Dockerfile -t contented:latest .
@@ -58,7 +58,6 @@ lint:
 # Typically you want a different window doing your jsbuilds nd golang stuff for sanity
 .PHONY: typescript
 typescript:
-	make monaco-copy
 	yarn run ng build contented --configuration=production --watch=false --base-href /public/build/
 
 .PHONY: db-reset
@@ -108,9 +107,11 @@ monaco-copy:
 .PHONY: bundle
 bundle:
 	make clean
+	make install
 	mkdir -p ./build/bundle
 	go build -o ./build/bundle/contented cmd/app/main.go
 	go build -o ./build/bundle/contented-tools cmd/scripts/main.go
+	make monaco-copy
 	make typescript
 	rsync -urv ./public build/bundle/public
 	tar -cvzf contented.build.tar.gz build/*

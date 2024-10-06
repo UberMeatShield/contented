@@ -1,58 +1,47 @@
-- name: Download the Go tarball
+- name: Add the Go official repository
+  apt_repository:
+    repo: ppa:longsleep/golang-backports
+    state: present
   become: true
-  get_url:
-    url: "{{ go_download_location }}"
-    dest: /usr/local/src/{{ go_tarball }}
-    checksum: "{{ go_tarball_checksum }}"
+  when: ansible_distribution == 'Ubuntu'
 
-- name: Register the current Go version (if any)
+- name: Update apt cache
+  apt:
+    update_cache: yes
   become: true
-  command: /usr/local/go/bin/go version
-  ignore_errors: yes
-  register: go_version
-  changed_when: false
+  when: ansible_distribution == 'Ubuntu'
 
-- name: Remove old installation of Go
+- name: Install Go on Ubuntu
+  apt:
+    name: golang-go
+    state: present
   become: true
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install Go on Amazon Linux
+  yum:
+    name: golang
+    state: present
+  become: true
+  when: ansible_distribution == 'Amazon'
+
+- name: Set GOPATH in .bashrc
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: "export GOPATH=$HOME/go"
+    state: present
+
+- name: Add GOPATH/bin to PATH in .bashrc
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: "export PATH=$PATH:$GOPATH/bin"
+    state: present
+
+- name: Create GOPATH directory
   file:
-    path: /usr/local/go
-    state: absent
-  when: go_version|failed or go_version.stdout != go_version_target
+    path: "/home/{{ ansible_user }}/go"
+    state: directory
+    mode: '0755'
 
-- name: Extract the Go tarball if Go is not yet installed or not the desired version
-  become: true
-  unarchive:
-    src: "/usr/local/src/{{ go_tarball }}"
-    dest: /usr/local
-    copy: no
-  when: go_version|failed or go_version.stdout != go_version_target
-
-
-- name: Add the Go bin directory to the PATH environment variable for all users
-  become: true
-  copy:
-    src: go-bin.sh
-    dest: /etc/profile.d
-
-- name: Set GOPATH for all users
-  become: true
-  copy:
-    src: go-path.sh
-    dest: /etc/profile.d
-  when: set_go_path
-
-- name: Install DEP
-  become: true
-  get_url: 
-    url: https://github.com/golang/dep/releases/download/v0.3.2/dep-linux-amd64
-    checksum: "sha256:322152b8b50b26e5e3a7f6ebaeb75d9c11a747e64bbfd0d8bb1f4d89a031c2b5"
-    dest: /usr/local/bin/dep
-
-- name: Make DEP into a valid executable
-  become: true
-  file:
-    path: /usr/local/bin/dep
-    mode: 755
-
-  
-  
+- name: Reload .bashrc
+  shell: source "/home/{{ ansible_user }}/.bashrc"
