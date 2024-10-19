@@ -37,12 +37,32 @@
     mode: '0755'
   become: true
 
+- name: Create contented directory under run_user's home
+  file:
+    path: "/home/{{ run_user | default('contented_user') }}/contented"
+    state: directory
+    owner: "{{ run_user | default('contented_user') }}"
+    group: "{{ run_user | default('contented_user') }}"
+    mode: '0755'
+  become: true
+
+- name: Copy public directory from build/bundle to contented directory
+  copy:
+    src: "/home/{{ run_user | default('contented_user') }}/build/bundle/public"
+    dest: "/home/{{ run_user | default('contented_user') }}/contented/"
+    remote_src: yes
+    owner: "{{ run_user | default('contented_user') }}"
+    group: "{{ run_user | default('contented_user') }}"
+    mode: '0755'
+  become: true
+
 
 - name: Download FFmpeg for Amazon Linux
   get_url:
     url: https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-lgpl.tar.xz
     dest: /tmp/ffmpeg-master-latest-linuxm64-xgpl.tar.xz
-  when: ansible_distribution == 'Amazon'
+  become: true
+
 
 - name: Create directory for FFmpeg
   file:
@@ -95,6 +115,26 @@
     src: contented.service.j2
     dest: /etc/systemd/system/contented.service
   become: true
+
+- name: Ensure contented.service.d directory exists
+  file:
+    path: /etc/systemd/system/contented.service.d
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: Copy override.conf to contented.service.d
+  template:
+    src: override.conf
+    dest: /etc/systemd/system/contented.service.d/override.conf
+    mode: '0644'
+  become: true
+
+- name: Reload systemd to apply changes
+  systemd:
+    daemon_reload: yes
+  become: true
+
 
 - name: Ensure contented service is enabled and started
   systemd:
