@@ -9,6 +9,8 @@
   become: true
   when:  ansible_distribution == 'Amazon'
 
+# Install nginx before we copy the tar file so we can get the certificate in place
+- import_tasks: nginx.yml
 
 - name: Copy contented tar file from build directory under {{ playbook_dir }}
   copy:
