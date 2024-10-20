@@ -9,63 +9,19 @@
   become: true
   when:  ansible_distribution == 'Amazon'
 
-# Install nginx before we copy the tar file so we can get the certificate in place
-- import_tasks: nginx.yml
 
-- name: Copy contented tar file from build directory under {{ playbook_dir }}
-  copy:
-    src: "{{ playbook_dir }}/../build/contented.build.tar.gz"
-    dest: "/home/{{ run_user | default('contented_user') }}/contented.build.tar.gz"
-    owner: "{{ run_user | default('contented_user') }}"
-    group: "{{ run_user | default('contented_user') }}"
-    mode: '0644'
+- name: Install ubuntu pacakges
+  package:
+    name:
+      - ffmpeg
+      - python3
+      - vim
+      - curl
   become: true
-
-
-- name: Extract contented tar file
-  unarchive:
-    src: "/home/{{ run_user | default('contented_user') }}/contented.build.tar.gz"
-    dest: "/home/{{ run_user | default('contented_user') }}/"
-    remote_src: yes
-    owner: "{{ run_user | default('contented_user') }}"
-    group: "{{ run_user | default('contented_user') }}"
-  become: true
-
-- name: Copy contented binary to /usr/local/bin
-  copy:
-    src: "/home/{{ run_user | default('contented_user') }}/build/bundle/contented"
-    dest: "/usr/local/bin/contented"
-    remote_src: yes
-    mode: '0755'
-  become: true
-
-- name: Create contented directory under run_user's home
-  file:
-    path: "/home/{{ run_user | default('contented_user') }}/contented"
-    state: directory
-    owner: "{{ run_user | default('contented_user') }}"
-    group: "{{ run_user | default('contented_user') }}"
-    mode: '0755'
-  become: true
-
-- name: Copy public directory from build/bundle to contented directory
-  copy:
-    src: "/home/{{ run_user | default('contented_user') }}/build/bundle/public"
-    dest: "/home/{{ run_user | default('contented_user') }}/contented/"
-    remote_src: yes
-    owner: "{{ run_user | default('contented_user') }}"
-    group: "{{ run_user | default('contented_user') }}"
-    mode: '0755'
-  become: true
-
-- name: Create media directory under run_user's home
-  file:
-    path: "/home/{{ run_user | default('contented_user') }}/media"
-    state: directory
-    owner: "{{ run_user | default('contented_user') }}"
-    group: "{{ run_user | default('contented_user') }}"
-    mode: '0755'
-  become: true
+  when: ansible_distribution == 'Ubuntu'
+  tags:
+    - packages
+    - ubuntu
 
 - name: Download FFmpeg for Amazon Linux
   get_url:
@@ -102,18 +58,8 @@
     executable: /bin/bash
   become: true
 
-- name: Install ubuntu pacakges
-  package:
-    name:
-      - ffmpeg
-      - python3
-      - vim
-      - curl
-  become: true
-  when: ansible_distribution == 'Ubuntu'
-  tags:
-    - packages
-    - ubuntu
+# Install nginx before we copy the tar file so we can get the certificate in place
+- import_tasks: nginx.yml
   
 - import_tasks: permissions.yml
 
