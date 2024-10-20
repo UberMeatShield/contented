@@ -126,6 +126,6 @@ bundle:
 	go build -o ./build/bundle/contented-tools cmd/scripts/main.go
 	make monaco-copy
 	make typescript
-	rsync -urv ./public build/bundle/public
+	rsync -urv ./public build/bundle
 	tar -cvzf contented.build.tar.gz build/*
 	mv contented.build.tar.gz build/

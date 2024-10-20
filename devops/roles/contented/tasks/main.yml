@@ -56,6 +56,14 @@
     mode: '0755'
   become: true
 
+- name: Create media directory under run_user's home
+  file:
+    path: "/home/{{ run_user | default('contented_user') }}/media"
+    state: directory
+    owner: "{{ run_user | default('contented_user') }}"
+    group: "{{ run_user | default('contented_user') }}"
+    mode: '0755'
+  become: true
 
 - name: Download FFmpeg for Amazon Linux
   get_url:
