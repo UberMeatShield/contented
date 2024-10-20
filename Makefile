@@ -3,6 +3,9 @@ DIR ?= $(shell echo `pwd`/mocks/content/)
 TAG_FILE ?= $(shell echo `pwd`/mocks/content/dir2/tags.txt)
 GO_ENV ?= development
 
+GOOS ?= darwin 
+GOARCH ?= arm64
+
 # Golang and yarn need to be on the system. They will do the rest
 .PHONY: install
 install:
@@ -103,6 +106,16 @@ monaco-copy:
 	rsync -u ./node_modules/monaco-editor/min/vs/base/worker/workerMain.js ./public/static/monaco/min/vs/base/worker/
 	rsync -u ./node_modules/monaco-editor/min/vs/base/common/worker/simpleWorker.nls.js ./public/static/monaco/min/vs/base/common/worker/
 
+
+
+.PHONY: build-linux
+build-linux:
+	GOOS=linux GOARCH=amd64 make bundle
+
+.PHONY: build-mac
+build-mac:
+	GOOS=darwin GOARCH=arm64 make bundle
+
 # Get a single bundle file built out that could be uploaded to S3 and used to run the app
 .PHONY: bundle
 bundle:
@@ -113,6 +126,6 @@ bundle:
 	go build -o ./build/bundle/contented-tools cmd/scripts/main.go
 	make monaco-copy
 	make typescript
-	rsync -urv ./public build/bundle/public
+	rsync -urv ./public build/bundle
 	tar -cvzf contented.build.tar.gz build/*
 	mv contented.build.tar.gz build/

@@ -1,0 +1,11 @@
+---
+remote_user: "ec2-user"
+project: "contented"
+revision: "0.2"
+ansible_python_interpreter: /usr/bin/python
+
+go_version: "1.21.0"
+go_tarball: "go1.21.0.linux-amd64.tar.gz"
+go_version_target: "go version go1.21.0 linux/amd64"
+set_go_path: true
+

@@ -269,9 +269,10 @@ func GetEnvInt(key string, defaultInt int) int {
 
 // Should I move this into the config itself?
 func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
+
 	envErr := godotenv.Load()
 	if envErr != nil {
-		log.Fatal("Error loading .env file")
+		log.Printf("No .env file found if this is not running a service this is probably fatal")
 	}
 
 	dir := GetEnvString("DIR", "")

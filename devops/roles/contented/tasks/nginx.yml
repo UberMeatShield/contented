@@ -1,0 +1,70 @@
+- name: Ensure /etc/pki/nginx directory exists
+  become: true
+  file:
+    path: /etc/pki/nginx
+    state: directory
+    mode: '0755'
+
+- name: Generate RSA private key
+  become: true
+  openssl_privatekey:
+    path: /etc/pki/nginx/server.key
+    size: 2048
+
+- name: Generate Certificate Signing Request (CSR)
+  become: true
+  openssl_csr:
+    path: /etc/pki/nginx/server.csr
+    privatekey_path: /etc/pki/nginx/server.key
+    common_name: "{{ ansible_fqdn }}"
+
+- name: Generate self-signed certificate
+  become: true
+  openssl_certificate:
+    path: /etc/pki/nginx/server.crt
+    privatekey_path: /etc/pki/nginx/server.key
+    csr_path: /etc/pki/nginx/server.csr
+    provider: selfsigned
+
+- name: Set proper permissions for the certificate and key
+  become: true
+  file:
+    path: "{{ item }}"
+    owner: root
+    group: root
+    mode: '0600'
+  loop:
+    - /etc/pki/nginx/server.key
+    - /etc/pki/nginx/server.crt
+
+
+- name: Install nginx
+  become: true
+  package:
+    name: nginx
+    state: present
+
+- name: Copy nginx configuration file
+  become: true
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Ensure nginx is started and enabled
+  become: true
+  systemd:
+    name: nginx
+    state: restarted
+    enabled: yes
+
+- name: Create nginx log directory
+  become: true
+  file:
+    path: /var/log/nginx
+    state: directory
+    owner: nginx
+    group: nginx
+    mode: '0755'

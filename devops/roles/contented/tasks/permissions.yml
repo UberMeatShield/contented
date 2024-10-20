@@ -39,3 +39,4 @@
     path: /home/vagrant/go
     owner: vagrant
     group: vagrant
+  when: ansible_distribution != 'Amazon'

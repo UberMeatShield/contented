@@ -1,5 +1,8 @@
-.angular/cache
+.angular/cache/*
+.angular/*
 node_modules/*
+node_modules
+venv/*
 bin/*
 locales/*
 migrations/schema.sql

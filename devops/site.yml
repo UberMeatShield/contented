@@ -1,5 +1,5 @@
 ---
-- name: Setup a golang server
+- name: Setup contented to run as a service on a linux machine (make build-linux first)
   hosts: all
   remote_user: "{{ run_user | default('contented_user') }}"
 
