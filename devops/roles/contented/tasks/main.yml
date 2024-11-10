@@ -1,0 +1,120 @@
+---
+- import_tasks: permissions.yml
+
+- import_tasks: application.yml
+
+
+- name: Install required packages
+  package:
+    name:
+      - python3
+      - vim
+    state: present
+  become: true
+  when:  ansible_distribution == 'Amazon'
+
+
+- name: Install ubuntu pacakges
+  package:
+    name:
+      - ffmpeg
+      - python3
+      - vim
+      - curl
+  become: true
+  when: ansible_distribution == 'Ubuntu'
+  tags:
+    - packages
+    - ubuntu
+
+- name: Download FFmpeg for Amazon Linux
+  get_url:
+    url: https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-lgpl.tar.xz
+    dest: /tmp/ffmpeg-master-latest-linux64-lgpl.tar.xz
+  become: true
+
+
+- name: Create directory for FFmpeg
+  file:
+    path: /usr/local/ffmpeg
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: Extract FFmpeg
+  unarchive:
+    src: /tmp/ffmpeg-master-latest-linux64-lgpl.tar.xz
+    dest: /usr/local/ffmpeg
+    remote_src: yes
+    extra_opts: [--strip-components=1]
+  become: true
+
+- name: Add FFmpeg to PATH
+  lineinfile:
+    path: /etc/environment
+    line: 'PATH=$PATH:/usr/local/ffmpeg/bin:/usr/local/bin:/usr/bin'
+    state: present
+  become: true
+
+- name: Reload environment variables
+  shell: source /etc/environment
+  args:
+    executable: /bin/bash
+  become: true
+
+# Install nginx before we copy the tar file so we can get the certificate in place
+- import_tasks: nginx.yml
+  
+
+# - import_tasks: go.yml
+
+
+- name: Create contented systemd service file
+  template:
+    src: contented.service.j2
+    dest: /etc/systemd/system/contented.service
+  become: true
+
+- name: Ensure contented.service.d directory exists
+  file:
+    path: /etc/systemd/system/contented.service.d
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: Copy override.conf to contented.service.d
+  template:
+    src: override.conf
+    dest: /etc/systemd/system/contented.service.d/override.conf
+    mode: '0644'
+  become: true
+
+- name: Reload systemd to apply changes
+  systemd:
+    daemon_reload: yes
+  become: true
+
+
+- name: Ensure contented service is enabled and started
+  systemd:
+    name: contented
+    enabled: yes
+    state: started
+  become: true
+  when: ansible_service_mgr == 'systemd'
+
+#- name: Create contented init.d script (for non-systemd systems) This does not work (yet)
+#  template:
+#    src: contented.init.j2
+#    dest: /etc/init.d/contented
+#    mode: '0755'
+#  become: true
+#  when: ansible_service_mgr != 'systemd'
+
+#- name: Ensure contented service is enabled and started (for non-systemd systems)
+#  service:
+#    name: contented
+#    enabled: yes
+#    state: started
+#  become: true
+#  when: ansible_service_mgr != 'systemd'

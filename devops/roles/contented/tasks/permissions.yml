@@ -8,10 +8,27 @@
 - name: Set the mounted directory to run user ownership
   become: true
   file:
-    path: "/home/{{ run_user | default('contented_user') }}/go"
+    path: "/home/{{ run_user | default('contented_user') }}/contented"
     owner: "{{ run_user | default('contented_user') }}"
     group: "{{ run_user | default('contented_user') }}"
     state: directory
+
+- name: Create a default location for media uploads
+  become: true
+  file:
+    path: "/home/{{ run_user | default('contented_user') }}/media/splash"
+    owner: "{{ run_user | default('contented_user') }}"
+    group: "{{ run_user | default('contented_user') }}"
+    state: directory
+
+- name: Create hello.txt file with content to prove the directory is writable
+  become: true
+  copy:
+    dest: "/home/{{ run_user | default('contented_user') }}/media/splash/hello.txt"
+    content: "Hello World"
+    owner: "{{ run_user | default('contented_user') }}"
+    group: "{{ run_user | default('contented_user') }}"
+    mode: '0644'
 
 - name: Create the static content location
   become: true
@@ -39,3 +56,4 @@
     path: /home/vagrant/go
     owner: vagrant
     group: vagrant
+  when: ansible_distribution != 'Amazon'
