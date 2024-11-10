@@ -1,4 +1,8 @@
 ---
+- import_tasks: permissions.yml
+
+- import_tasks: application.yml
+
 
 - name: Install required packages
   package:
@@ -26,7 +30,7 @@
 - name: Download FFmpeg for Amazon Linux
   get_url:
     url: https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-lgpl.tar.xz
-    dest: /tmp/ffmpeg-master-latest-linuxm64-xgpl.tar.xz
+    dest: /tmp/ffmpeg-master-latest-linux64-lgpl.tar.xz
   become: true
 
 
@@ -39,7 +43,7 @@
 
 - name: Extract FFmpeg
   unarchive:
-    src: /tmp/ffmpeg-master-latest-linuxarm64-gpl.tar.xz
+    src: /tmp/ffmpeg-master-latest-linux64-lgpl.tar.xz
     dest: /usr/local/ffmpeg
     remote_src: yes
     extra_opts: [--strip-components=1]
@@ -61,9 +65,8 @@
 # Install nginx before we copy the tar file so we can get the certificate in place
 - import_tasks: nginx.yml
   
-- import_tasks: permissions.yml
 
-- import_tasks: go.yml
+# - import_tasks: go.yml
 
 
 - name: Create contented systemd service file

@@ -1,0 +1,45 @@
+- name: Remove existing contents in contented directory so it is a clean install
+  become: true
+  shell: rm -rf /home/{{ run_user }}/contented/*
+
+- name: Copy contented.build.tar.gz to remote server
+  copy:
+    src: ../build/contented.build.tar.gz
+    dest: /home/{{ run_user }}/contented.build.tar.gz
+
+- name: Extract contented.build.tar.gz
+  unarchive:
+    src: /home/{{ run_user }}/contented.build.tar.gz
+    dest: /home/{{ run_user }}/contented
+    owner: "{{ run_user }}"
+    group: "{{ run_user }}"
+    remote_src: yes
+
+- name: Create contented directory
+  file:
+    path: /home/{{ run_user }}/contented
+    state: directory
+    mode: '0755'
+    owner: "{{ run_user }}"
+    group: "{{ run_user }}"
+
+- name: Move bundle contents up to contented directory
+  shell: mv /home/{{ run_user }}/contented/build/bundle/* /home/{{ run_user }}/contented/
+
+- name: Move contented binary to contented directory
+  command: rsync -urv /home/{{ run_user }}/contented/contented /usr/local/bin/
+  become: true
+
+- name: Move contented-tools binary to /usr/local/bin
+  command: rsync -urv /home/{{ run_user }}/contented/contented-tools /usr/local/bin/
+  become: true
+
+- name: Set proper permissions on contented-tools
+  file:
+    path: /usr/local/bin/contented-tools
+    mode: '0755'
+    owner: root
+    group: root
+  become: true
+
+

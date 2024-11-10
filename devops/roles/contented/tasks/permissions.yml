@@ -8,7 +8,15 @@
 - name: Set the mounted directory to run user ownership
   become: true
   file:
-    path: "/home/{{ run_user | default('contented_user') }}/go"
+    path: "/home/{{ run_user | default('contented_user') }}/contented"
+    owner: "{{ run_user | default('contented_user') }}"
+    group: "{{ run_user | default('contented_user') }}"
+    state: directory
+
+- name: Create a default location for media uploads
+  become: true
+  file:
+    path: "/home/{{ run_user | default('contented_user') }}/media"
     owner: "{{ run_user | default('contented_user') }}"
     group: "{{ run_user | default('contented_user') }}"
     state: directory
