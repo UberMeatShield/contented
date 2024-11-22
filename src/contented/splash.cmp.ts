@@ -68,20 +68,22 @@ export class SplashCmp implements OnInit {
   loadSplash() {
     //this.loading = true;
     console.log('Load splash media content');
-    this._service.splash().subscribe(res => {
-      this.c = res.container;
-      this.mc = res.content;
-      this.splashTitle = res.splashTitle || '';
-      this.splashContent = res.splashContent || '';
-      this.rendererType = res.rendererType;
-    }, console.error);
+    this._service.splash().pipe(
+      finalize(() => this.loading = false)
+    ).subscribe({
+      next: (res) => {
+        this.c = res.container;
+        this.mc = res.content;
+        this.splashTitle = res.splashTitle || '';
+        this.splashContent = res.splashContent || '';
+        this.rendererType = res.rendererType;
+      },
+      error: (error) => console.error(error)
+    });
   }
 
   getVideos() {
-    if (!this.c) {
-      return [];
-    }
-    return _.filter(this.c.contents, mc => {
+    return _.filter(this.c?.contents || [], mc => {
       return mc.content_type.includes('video');
     });
   }
