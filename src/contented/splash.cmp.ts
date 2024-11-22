@@ -66,20 +66,21 @@ export class SplashCmp implements OnInit {
 
   // Load the splash page instead of a particular content id
   loadSplash() {
-    //this.loading = true;
     console.log('Load splash media content');
-    this._service.splash().pipe(
-      finalize(() => this.loading = false)
-    ).subscribe({
-      next: (res) => {
-        this.c = res.container;
-        this.mc = res.content;
-        this.splashTitle = res.splashTitle || '';
-        this.splashContent = res.splashContent || '';
-        this.rendererType = res.rendererType;
-      },
-      error: (error) => console.error(error)
-    });
+    this.loading = true;
+    this._service
+      .splash()
+      .pipe(finalize(() => (this.loading = false)))
+      .subscribe({
+        next: res => {
+          this.c = res.container;
+          this.mc = res.content;
+          this.splashTitle = res.splashTitle || '';
+          this.splashContent = res.splashContent || '';
+          this.rendererType = res.rendererType;
+        },
+        error: error => console.error(error),
+      });
   }
 
   getVideos() {
