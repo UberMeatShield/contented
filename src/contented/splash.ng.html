@@ -32,7 +32,7 @@
     </mat-card>
   </div>
 
-  <div *ngIf="rendererType === 'video'">
+  <div *ngIf="rendererType === 'video' && c">
     <div *ngFor="let content of c.contents">
       <video-preview-cmp [maxVisible]="4" [content]="content" *ngIf="content.isVideo()" [inlineView]="true">
       </video-preview-cmp>
