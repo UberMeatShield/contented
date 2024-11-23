@@ -111,6 +111,10 @@ body {
       // flex-shrink: 0;
       margin: 5px;
     }
+    .search-result {
+       margin-top: 1rem;
+       border: 1px solid $color-pri;
+    }
 }
 
 .search-field {
