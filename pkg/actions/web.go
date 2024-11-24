@@ -165,7 +165,7 @@ func SplashHandler(c *gin.Context) {
 				refs := *cnts // Ok, seriously why is the de-ref so annoying
 				cnt := refs[0]
 
-				log.Printf("What did we search for %s and results %s", cs, cnt)
+				log.Printf("Splash container search for %s and results %s", cs, cnt)
 				// Limit the amount loaded for splash, could make it search based on render
 				// type but that is pretty over optimized.
 

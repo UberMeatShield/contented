@@ -1,6 +1,23 @@
 <contented-nav [loading]="loading" ></contented-nav>
 <div class="editor-content-cmp">
   <div *ngIf="content">
+    <mat-card class="primary-card">
+      <mat-card-header>
+        <mat-card-title>
+          Editing {{content?.src}}
+        </mat-card-title>
+        <mat-card-subtitle>
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="content-type">
+        {{content.content_type}}
+        </div>
+        <div class="content-type">
+        {{content.size | byteFormatter: 0}}
+        </div>
+      </mat-card-content>
+    </mat-card>
 
     <contented-view
       [forceHeight]="600"
