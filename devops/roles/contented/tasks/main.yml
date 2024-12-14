@@ -51,8 +51,8 @@
 
 - name: Add FFmpeg to PATH
   lineinfile:
-    path: /etc/environment
-    line: 'PATH=$PATH:/usr/local/ffmpeg/bin:/usr/local/bin:/usr/bin'
+    path: "/home/{{ run_user }}/.bashrc"
+    line: 'export PATH=$PATH:/usr/local/ffmpeg/bin:/usr/local/bin:/usr/bin'
     state: present
   become: true
 
