@@ -13,29 +13,55 @@
       </div>
 
       <div class="container-bar-info">
-          <div class="container-bar-controls" *ngIf="!!navForm">
-            <button type="button" mat-icon-button (click)="prevContainer()" class="nav-cnt-previous" title="Next Container">
-              <mat-icon>skip_previous</mat-icon>
+        <div class="container-bar-controls" *ngIf="!!navForm">
+          <button type="button" mat-icon-button (click)="prevContainer()" class="nav-cnt-previous" title="Next Container">
+            <mat-icon>skip_previous</mat-icon>
+          </button>
+          <button type="button" mat-icon-button (click)="prev()" class="nav-content-previous" title="Previous Content">
+            <mat-icon>navigate_before</mat-icon>
+          </button>
+          <form #navFormIndexing [formGroup]="navForm">
+            <mat-form-field floatLabel="true">
+              <input class="cnt-row-idx" matInput [formControl]="idxControl" name="rowIdx" type="number" min="0" max="{{cnt.total}}">
+            </mat-form-field>
+          </form>
+          <button type="button" mat-icon-button (click)="next()" class="nav-content-next" title="Next Content">
+            <mat-icon>navigate_next</mat-icon>
+          </button>
+          <button type="button" mat-icon-button (click)="nextContainer()" class="nav-cnt-next" title="Next Container">
+            <mat-icon>skip_next</mat-icon>
+          </button>
+        </div>
+
+        <span class="bar-spacer">
+          Selected: 
+          <a target="window" class="cnt-name"
+            href="/api/containers/{{cnt?.id}}"
+          >{{cnt?.name}}</a>
+          
+          <span *ngIf="currentContent">
+            /
+            <a target="window" class="current-item" href="{{currentContent.fullUrl}}"> {{currentContent?.src}}</a>
+            <span class="content-size-info"> {{currentContent.size | byteFormatter: 0}}</span>
+            <span class="content-content-type"> {{currentContent?.content_type}}</span>
+          </span>
+        </span>
+
+        <!-- Event emit for the rowIdx for this component -->
+        <form class="container-meta-text bar-spacer">
+          Loaded: <span class="cnt-max-count">{{cnt?.contents?.length}}</span>/<span class="cnt-total">{{cnt?.total}}</span>
+          <span *ngIf="cnt?.contents?.length < cnt.total">
+            press (F) or: 
+            <button class="btn-full-load-ctn" (click)="fullLoadContainer(cnt)">
+              Load ({{ cnt.total - cnt.count }}) Items
             </button>
-            <button type="button" mat-icon-button (click)="prev()" class="nav-content-previous" title="Previous Content">
-              <mat-icon>navigate_before</mat-icon>
-            </button>
-            <form #navFormIndexing [formGroup]="navForm">
-              <mat-form-field floatLabel="true">
-                <input class="cnt-row-idx" matInput [formControl]="idxControl" name="rowIdx" type="number" min="0" max="{{cnt.total}}">
-              </mat-form-field>
-            </form>
-            <button type="button" mat-icon-button (click)="next()" class="nav-content-next" title="Next Content">
-              <mat-icon>navigate_next</mat-icon>
-            </button>
-            <button type="button" mat-icon-button (click)="nextContainer()" class="nav-cnt-next" title="Next Container">
-              <mat-icon>skip_next</mat-icon>
-            </button>
-          </div>
+          </span>
+        </form>
 
         <span class="bar-spacer">
           {{idx + 1}} of {{totalContainers}} Containers.
         </span>
+      </div>
 
         <div class="bar-spacer">
           <mat-progress-spinner
@@ -45,32 +71,6 @@
           </mat-progress-spinner>
         </div>
 
-        <!-- Event emit for the rowIdx for this component -->
-        <form class="container-meta-text bar-spacer">
-          Loaded: <span class="cnt-max-count"> {{cnt?.contents?.length}}</span>
-          of <span class="cnt-total">{{cnt?.total}}</span> content
-          <span *ngIf="cnt?.contents?.length < cnt.total">
-            press (F) or: 
-            <button class="btn-full-load-ctn" (click)="fullLoadContainer(cnt)">
-              Load ({{ cnt.total - cnt.count }}) Items
-            </button>
-          </span>
-        </form>
-
-          <span class="bar-spacer">
-            Selected: 
-          <a target="window" class="cnt-name"
-            href="/api/containers/{{cnt?.id}}"
-          >{{cnt?.name}}</a>
-          <span *ngIf="currentContent">
-              /
-              <a target="window" class="current-item" href="{{currentContent.fullUrl}}"> {{currentContent?.src}}</a>
-              <span class="content-size-info"> {{currentContent.size | byteFormatter: 0}}</span>
-              <span class="content-content-type"> {{currentContent?.content_type}}</span>
-          </span>
-          </span>
-
-        </div>
-      </div> <!-- End Container bar info -->
+    </div> <!-- End Container bar info -->
   </div> <!-- End cnt -->
 </div> <!-- End Component -->
