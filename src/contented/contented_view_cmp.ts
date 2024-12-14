@@ -57,6 +57,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
             }
             break;
           case NavTypes.HIDE_FULLSCREEN:
+            console.log('Hide fullscreen', this.content);
             if (this.visible && this.content) {
               GlobalNavEvents.scrollContentView(this.content);
             }
@@ -129,13 +130,13 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
 
   public scrollContent(content: Content) {
     _.delay(() => {
-      let id = `MEDIA_VIEW`;
+      let id = `MEDIA_VIEW_${this.restrictContentId}`;
       let el = document.getElementById(id);
       if (el) {
         el.scrollIntoView(true);
         window.scrollBy(0, -30);
       }
-    }, 10);
+    }, 50);
   }
 
   public clickedScreen(evt) {

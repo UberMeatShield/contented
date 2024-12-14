@@ -62,14 +62,16 @@ export class VideoPreviewCmp implements OnInit {
 
   // A little awkward and needs to be fixed (attempt to do a lookup)
   public fullView(mc: Content) {
+    // This needs to be fixed to not scroll up
     GlobalNavEvents.selectContent(mc, null);
 
     // Just makes sure the selection event doesn't race condition the scroll
     // into view event.  So the click triggers, scrolls and then we scroll to
     // the fullscreen element.
+
     _.delay(() => {
       GlobalNavEvents.viewFullScreen(mc);
-    }, 100);
+    }, 50);
   }
 
   // Rather than window I should probably make it the containing dom element?
