@@ -127,11 +127,13 @@ body {
     .search-tags {
         width: 55%;
     }
-    .search-paginator {
-        width: 35%;
-    }
     .search-type-selector {
+        width: 10%;
+        margin-top: 0.45rem;
         margin-left: 1rem;
+    }
+    .search-paginator {
+        width: 30%;
     }
 }
 
@@ -229,6 +231,8 @@ body {
                                          
 .bar-spacer {                            
   margin-left: 1.5rem;                   
+  margin-top: 0.45rem;
+  display: flex;
 }                                        
                                          
 .search-dialog {                        
