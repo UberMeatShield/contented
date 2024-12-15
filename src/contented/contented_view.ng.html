@@ -1,10 +1,14 @@
 <div class="contented-view-cmp">
   <div *ngIf="visible" class="contented-view" id="MEDIA_VIEW_{{restrictContentId}}">
     <!-- swap the terms here and make content into 'content' -->
+    <div class="close-icon-container">
+      <mat-icon class="close-icon" *ngIf="content?.isVideo()" (click)="visible = false">visibility_off</mat-icon>
+    </div>
     <div *ngIf="content"
       class="content-full-view" 
       style="width: {{maxWidth}}px; height: {{maxHeight}}px;"
     >
+
         <img class="content-img" *ngIf="content?.isImage()" 
           class="full-view-img content-img" 
           [src]="content.fullUrl"
