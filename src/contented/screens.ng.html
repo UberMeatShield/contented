@@ -4,10 +4,13 @@
     <div class="screen"
       style="width:{{previewWidth}}px; height: {{previewHeight}}px;"
       *ngFor="let s of screens"
-      (click)="clickContent(s)"
       >
       <!-- Assume that every preview is actually going to be an image -->
-      <img class="screen-img" [src]="s?.url">
+      <img class="screen-img" [src]="s?.url" title="Click to view in fullscreen" 
+      (click)="clickContent(s)">
+      <a class="screen-time" title="Click to jump to the time of the screen"
+        (click)="clickTime(s, $event)"
+      >{{s?.timeSeconds}}Time</a>
     </div>
   </div>
   <div class="loading" *ngIf="loading">loading...</div>
