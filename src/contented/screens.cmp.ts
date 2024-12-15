@@ -68,9 +68,22 @@ export class ScreensCmp implements OnInit {
     }
   }
 
+
   public clickContent(screen: Screen) {
+
+    console.log("What information exists on the screen?", screen);
     // Just here in case we want to override what happens on a click
-    this.clickedItem.emit({ screen: screen, screens: this.screens });
+    this.clickedItem.emit({ 
+      screen: screen, 
+      screens: this.screens,
+      action: 'view',
+    });
+  }
+
+  public clickTime(screen: Screen, evt: Event) {
+    evt.preventDefault();
+    evt.stopPropagation();
+    console.log("Screen time Click information exists on the screen?", screen);
   }
 
   // Should grab the content dimensions

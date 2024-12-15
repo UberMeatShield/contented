@@ -10,6 +10,7 @@ export class Screen {
   public size_bytes: number;
   public content_container_id: string;
   public url: string;
+  public timeSeconds: number;
 
   constructor(obj: any = {}) {
     this.fromJson(obj);
@@ -18,6 +19,7 @@ export class Screen {
   public fromJson(raw: any) {
     if (raw) {
       Object.assign(this, raw);
+      this.timeSeconds = this.parseSecondsFromScreen();
       this.links();
     }
   }
