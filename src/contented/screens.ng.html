@@ -8,6 +8,7 @@
       <!-- Assume that every preview is actually going to be an image -->
       <img class="screen-img" [src]="s?.url" title="Click to view in fullscreen" 
       (click)="clickContent(s)">
+
       <a class="screen-time" title="Click to jump to the time of the screen"
         (click)="clickTime(s, $event)"
       >{{s?.toHHMMSS()}}</a>

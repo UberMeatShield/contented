@@ -68,7 +68,10 @@ export class ScreensCmp implements OnInit {
     }
   }
 
+
   public clickContent(screen: Screen) {
+
+    console.log("What information exists on the screen?", screen);
     // Just here in case we want to override what happens on a click
     this.screenClick.emit({
       screen: screen,
