@@ -57,9 +57,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
               this.handleTextContent(this.content);
 
               if (evt.screen) {
-                _.delay(() => {
-                  this.clickedScreen({screen: evt.screen, action: ScreenAction.PLAY_SCREEN});
-                }, 100);
+                this.clickedScreen({ screen: evt.screen, action: ScreenAction.PLAY_SCREEN });
               }
             }
             break;
@@ -147,17 +145,18 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
   }
 
   public clickedScreen(evt: ScreenClickEvent, count: number = 0) {
-      const findVideo = (attempt = 0) => {
-        const videoEl = <HTMLVideoElement>document.getElementById(`VIDEO_${this.content.id}`);
-        if (videoEl) {
-          videoEl.currentTime = evt.screen?.parseSecondsFromScreen() || 0;
-          videoEl.play();
-          return;
-        }
-        
-        if (attempt < 50) { // 50 attempts * 100ms = 5 seconds
-          setTimeout(() => findVideo(attempt + 1), 100);
-        }
+    const findVideo = (attempt = 0) => {
+      const videoEl = <HTMLVideoElement>document.getElementById(`VIDEO_${this.content.id}`);
+      if (videoEl) {
+        videoEl.currentTime = evt.screen?.parseSecondsFromScreen() || 0;
+        videoEl.play();
+        return;
+      }
+
+      if (attempt < 50) {
+        // 50 attempts * 100ms = 5 seconds
+        setTimeout(() => findVideo(attempt + 1), 100);
+      }
     };
     findVideo();
   }

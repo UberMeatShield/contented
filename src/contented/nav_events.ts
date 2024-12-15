@@ -3,7 +3,6 @@ import { Content } from './content';
 import { Container } from './container';
 import { Screen } from './screen';
 
-
 export enum NavTypes {
   NEXT_CONTAINER,
   PREV_CONTAINER,

@@ -10,7 +10,7 @@
       (click)="clickContent(s)">
       <a class="screen-time" title="Click to jump to the time of the screen"
         (click)="clickTime(s, $event)"
-      >{{s?.timeSeconds}}Time</a>
+      >{{s?.toHHMMSS()}}</a>
     </div>
   </div>
   <div class="loading" *ngIf="loading">loading...</div>
