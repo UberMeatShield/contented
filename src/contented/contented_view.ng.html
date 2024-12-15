@@ -37,16 +37,6 @@
         <mat-icon>tab</mat-icon> 
       </button>
 
-      <!--
-      <button *ngIf="content" type="button" class="editor-link" 
-        title="Edit information / descriptions about the content."
-        mat-icon-button 
-        [routerLinkActive]="['hidden']"
-        [routerLink]="['/ui/editor_content/', content.id]">
-        <mat-icon>edit</mat-icon> 
-      </button>
-      -->
-
       <button *ngIf="content?.isVideo()" type="button" class="screencap hidden" 
         title="Take a screen at the current video time"
         [disabled]="taskLoading"
