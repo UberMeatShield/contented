@@ -54,12 +54,12 @@ jobs:
       with:
         go-version: '1.23'
 
-    # TODO: Either ffmpeg needs to be installed or we need to skip the encode tests
     - name: Install dependencies
       run: go mod download
 
+    # TODO: Potentially need to install ffmpeg in the CI from the prebuilt binary vs the ubuntu package (slow)
     - name: Install ffmpeg
-      run: sudo apt-get install ffmpeg
+      run: sudo apt-get update && sudo apt-get install ffmpeg
     
     - name: Fake a typescript build of the index.html
       run: mkdir -p public/build && echo "Loading Up Contented" > public/build/index.html

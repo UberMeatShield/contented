@@ -107,7 +107,6 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
             break;
           case NavTypes.HIDE_FULLSCREEN:
             // Scroll back into view
-            console.log('selectedContent', this.selectedContent, evt);
             this.selectContent(this.selectedContent, this.selectedContainer);
             break;
           case NavTypes.LOAD_MORE:
@@ -167,20 +166,17 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
 
   public selectContent(content: Content, container: Container) {
     this.selectedContent = content;
-    console.log('Select content is executing.');
-    _.delay(() => {
-      if (!content) {
-        return;
-      }
-      let id = `view_content_${content?.id}`;
-      let el = document.getElementById(id);
+    if (!content) {
+      return;
+    }
+    let id = `view_content_${content?.id}`;
+    let el = document.getElementById(id);
 
-      // Might want to debounce this as well
-      if (el) {
-        el.scrollIntoView(true);
-        window.scrollBy(0, -60);
-      }
-    }, 50);
+    // Might want to debounce this as well
+    if (el) {
+      el.scrollIntoView(true);
+      window.scrollBy(0, -60);
+    }
   }
 
   public resetForm(setupFilterEvents: boolean = false) {
