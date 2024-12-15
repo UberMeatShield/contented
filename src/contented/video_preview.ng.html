@@ -40,7 +40,7 @@
               [screens]="content.screens"
               [containerWidth]="screenWidth - previewWidth"
               [containerHeight]="2 * previewHeight"
-              (clickedItem)="screenEvt($event)"
+              (screenClick)="screenEvt($event)"
               (screensLoaded)="screensLoaded($event)"
             ></screens-cmp>
           </div>

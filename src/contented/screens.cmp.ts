@@ -3,7 +3,7 @@ import { OnInit, Component, EventEmitter, Input, Output, HostListener } from '@a
 import { ContentedService } from './contented_service';
 import { finalize } from 'rxjs/operators';
 
-import { Screen } from './screen';
+import { Screen, ScreenAction, ScreenClickEvent } from './screen';
 import { GlobalBroadcast } from './global_message';
 import * as _ from 'lodash';
 
@@ -29,7 +29,7 @@ export class ScreensCmp implements OnInit {
     @Input() maxPrevItems: number = 2; // When scrolling through a cnt, how many previous items should be visible
     */
 
-  @Output() clickedItem: EventEmitter<any> = new EventEmitter<any>();
+  @Output() screenClick: EventEmitter<ScreenClickEvent> = new EventEmitter<ScreenClickEvent>();
   public loading: boolean = false;
 
   // @Output clickEvt: EventEmitter<any>;
@@ -68,22 +68,25 @@ export class ScreensCmp implements OnInit {
     }
   }
 
-
   public clickContent(screen: Screen) {
-
-    console.log("What information exists on the screen?", screen);
     // Just here in case we want to override what happens on a click
-    this.clickedItem.emit({ 
-      screen: screen, 
+    this.screenClick.emit({
+      screen: screen,
       screens: this.screens,
-      action: 'view',
+      action: ScreenAction.VIEW,
     });
   }
 
   public clickTime(screen: Screen, evt: Event) {
     evt.preventDefault();
     evt.stopPropagation();
-    console.log("Screen time Click information exists on the screen?", screen);
+
+    this.screenClick.emit({
+      screen: screen,
+      screens: this.screens,
+      action: ScreenAction.PLAY_SCREEN,
+    });
+    console.log('Screen time Click information exists on the screen?', screen);
   }
 
   // Should grab the content dimensions

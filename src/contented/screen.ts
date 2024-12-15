@@ -1,6 +1,18 @@
 import * as _ from 'lodash';
 import { ApiDef } from './api_def';
 
+
+export enum ScreenAction {
+  VIEW = 'view',
+  PLAY_SCREEN = 'play-screen',
+}
+
+export interface ScreenClickEvent {
+  screen: Screen;
+  action: ScreenAction;
+  screens?: Screen[];
+}
+
 export class Screen {
   public id: string;
   public src: string;

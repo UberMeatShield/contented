@@ -14,7 +14,7 @@ import {
 import { ContentedService } from './contented_service';
 import { Content } from './content';
 import { Container } from './container';
-import { Screen } from './screen';
+import { Screen, ScreenAction } from './screen';
 import { GlobalNavEvents, NavTypes } from './nav_events';
 import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 import { FormBuilder, NgForm, FormControl, FormGroup } from '@angular/forms';
@@ -61,7 +61,7 @@ export class VideoPreviewCmp implements OnInit {
   }
 
   // A little awkward and needs to be fixed (attempt to do a lookup)
-  public fullView(mc: Content) {
+  public fullView(mc: Content, screen?: Screen) {
     // This needs to be fixed to not scroll up
     GlobalNavEvents.selectContent(mc, null);
 
@@ -70,7 +70,7 @@ export class VideoPreviewCmp implements OnInit {
     // the fullscreen element.
 
     _.delay(() => {
-      GlobalNavEvents.viewFullScreen(mc);
+      GlobalNavEvents.viewFullScreen(mc, screen);
     }, 50);
   }
 
@@ -89,18 +89,24 @@ export class VideoPreviewCmp implements OnInit {
 
   public screenEvt(evt) {
     console.log('Screen Evt', evt);
-    const dialogRef = this.dialog.open(ScreenDialog, {
-      data: { screen: evt.screen, screens: evt.screens },
-      width: '90%',
-      height: '100%',
-      maxWidth: '100vw',
-      maxHeight: '100vh',
-    });
-    dialogRef.afterClosed().subscribe({
+    if (evt.action === ScreenAction.PLAY_SCREEN) {
+      return this.fullView(this.content, evt.screen);
+    }
+
+    if (evt.action === ScreenAction.VIEW) {
+      const dialogRef = this.dialog.open(ScreenDialog, {
+        data: { screen: evt.screen, screens: evt.screens },
+        width: '90%',
+        height: '100%',
+        maxWidth: '100vw',
+        maxHeight: '100vh',
+      });
+      dialogRef.afterClosed().subscribe({
       next: result => {
-        console.log('Closing the Dialog on VideoPreview', result);
-      },
-    });
+          console.log('Closing the Dialog on VideoPreview', result);
+        },
+      });
+    }
   }
 
   imgClicked(mc: Content) {
