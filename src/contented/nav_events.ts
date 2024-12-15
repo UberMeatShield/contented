@@ -1,6 +1,7 @@
 import { EventEmitter } from '@angular/core';
 import { Content } from './content';
 import { Container } from './container';
+import { Screen } from './screen';
 
 export enum NavTypes {
   NEXT_CONTAINER,
@@ -20,6 +21,7 @@ export interface NavEventMessage {
   action: NavTypes;
   content: Content | undefined;
   cnt: Container | undefined;
+  screen?: Screen | undefined;
 }
 
 export class NavEvents {
@@ -79,11 +81,12 @@ export class NavEvents {
     });
   }
 
-  viewFullScreen(content: Content = null) {
+  viewFullScreen(content: Content = null, screen?: Screen, container?: Container) {
     this.navEvts.emit({
       action: NavTypes.VIEW_FULLSCREEN,
       content: content,
-      cnt: undefined,
+      cnt: container,
+      screen: screen,
     });
   }
 

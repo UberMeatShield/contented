@@ -7,6 +7,7 @@ import { ContentedService } from './contented_service';
 import { GlobalBroadcast } from './global_message';
 import { TaskRequest } from './task_request';
 import * as _ from 'lodash';
+import { ScreenAction, ScreenClickEvent } from './screen';
 
 @Component({
   selector: 'contented-view',
@@ -54,6 +55,10 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
             if (this.content) {
               this.scrollContent(this.content);
               this.handleTextContent(this.content);
+
+              if (evt.screen) {
+                this.clickedScreen({ screen: evt.screen, action: ScreenAction.PLAY_SCREEN });
+              }
             }
             break;
           case NavTypes.HIDE_FULLSCREEN:
@@ -139,16 +144,26 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
     }, 50);
   }
 
-  public clickedScreen(evt) {
-    let seconds = evt.screen.parseSecondsFromScreen();
-    let videoEl = <HTMLVideoElement>document.getElementById(`VIDEO_${this.content.id}`);
-    videoEl.currentTime = seconds;
+  public clickedScreen(evt: ScreenClickEvent, count: number = 0) {
+    const findVideo = (attempt = 0) => {
+      const videoEl = <HTMLVideoElement>document.getElementById(`VIDEO_${this.content.id}`);
+      if (videoEl) {
+        videoEl.currentTime = evt.screen?.parseSecondsFromScreen() || 0;
+        videoEl.play();
+        return;
+      }
+
+      if (attempt < 50) {
+        // 50 attempts * 100ms = 5 seconds
+        setTimeout(() => findVideo(attempt + 1), 100);
+      }
+    };
+    findVideo();
   }
 
   // Kinda just need the ability to get the task info from the server
   screenshot(content: Content) {
     // Determine how to get the current video index, if not defined then just use the default
-
     console.log(this.video.nativeElement.currentTime);
     let ss = this.video.nativeElement.currentTime;
     this.taskLoading = true;
