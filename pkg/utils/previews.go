@@ -303,18 +303,20 @@ func CreateScreensFromVideo(srcFile string, dstFile string) (string, error) {
 }
 
 func CreateScreensFromVideoSized(srcFile string, dstFile string, previewScreensOverSize int64) (string, error) {
+
+	cfg := GetCfg()
+	frameOffsetSeconds := cfg.PreviewFirstScreenOffset
+	totalScreens := cfg.PreviewNumberOfScreens
+
 	if FileOverSize(srcFile, previewScreensOverSize) {
 		log.Printf("File size is large for %s using SEEK screen", srcFile)
 
 		// Currently I get a list of screens but don't do anything with it.
-		cfg := GetCfg()
-		totalScreens := cfg.PreviewNumberOfScreens
-		frameOffset := cfg.PreviewFirstScreenOffset
-		_, screenFmt, err := CreateSeekScreens(srcFile, dstFile, totalScreens, frameOffset)
+		_, screenFmt, err := CreateSeekScreens(srcFile, dstFile, totalScreens, frameOffsetSeconds)
 		return screenFmt, err
 	} else {
 		log.Printf("File size is small %s using SELECT filter", srcFile)
-		return CreateSelectFilterScreens(srcFile, dstFile)
+		return CreateSelectFilterScreens(srcFile, dstFile, totalScreens, frameOffsetSeconds)
 	}
 }
 
@@ -330,18 +332,20 @@ func CreateWebpFromVideo(srcFile string, dstFile string) (string, error) {
 	return CreateWebpFromScreens(globMatch, dstFile)
 }
 
-func CreateSelectFilterScreens(srcFile string, dstFile string) (string, error) {
+func CreateSelectFilterScreens(srcFile string, dstFile string, maxScreens int, frameOffsetSeconds int) (string, error) {
 	totalTime, fps, err := GetTotalVideoLength(srcFile)
 	if err != nil {
 		log.Printf("Error creating screens for %s err: %s", srcFile, err)
 	}
-	msg := fmt.Sprintf("%s Total time was %f with %d as the fps", srcFile, totalTime, fps)
+	msg := fmt.Sprintf("%s Total time was %f with %d as the fps max screens %d frame offset %d", srcFile, totalTime, fps, maxScreens, frameOffsetSeconds)
 	log.Print(msg)
 	if int(fps) == 0 || int(totalTime) == 0 {
 		return "", errors.New(msg + " Invalid duration or fps")
 	}
 
-	frameNum := (int(totalTime) * fps) / 10
+	totalScreenTime, totalScreens, _ := GetScreenNumber(totalTime, maxScreens, frameOffsetSeconds)
+	frameNum := (totalScreenTime * fps) / totalScreens
+
 	screensDst := GetScreensOutputPattern(dstFile)
 	filter := fmt.Sprintf("select='not(mod(n,%d))',setpts='N/(30*TB)'", frameNum)
 	screenErr := ffmpeg.Input(srcFile, ffmpeg.KwArgs{}).
@@ -354,9 +358,17 @@ func CreateSelectFilterScreens(srcFile string, dstFile string) (string, error) {
 	return screensDst, err
 }
 
+func GetScreenNumber(totalTime float64, maxScreens int, frameOffsetSeconds int) (int, int, int) {
+	totalScreenTime := int(totalTime) - frameOffsetSeconds
+	if totalScreenTime <= maxScreens {
+		return int(totalTime), int(totalTime), 0
+	}
+	return totalScreenTime, maxScreens, frameOffsetSeconds
+}
+
 // Need to do timing test with this then a timing test with a much bigger file.
 // IMPORTANT if this is > 4 it will break ffmpeg finding the screens.
-func CreateSeekScreens(srcFile string, dstFile string, totalScreens int, frameOffset int) ([]string, string, error) {
+func CreateSeekScreens(srcFile string, dstFile string, maxScreens int, frameOffsetSeconds int) ([]string, string, error) {
 	totalTime, fps, err := GetTotalVideoLength(srcFile)
 	if err != nil {
 		log.Printf("Error creating screens for %s err: %s", srcFile, err)
@@ -371,12 +383,7 @@ func CreateSeekScreens(srcFile string, dstFile string, totalScreens int, frameOf
 	// surprising numbers of problems.
 	// For a very short video (testing we don't want to skip or take a lot of screens)
 	// or even do a frame skip, so reassign to something more sensible.
-	totalScreenTime := int(totalTime) - frameOffset
-	if totalScreenTime <= totalScreens {
-		totalScreens = int(totalTime) / 2
-		totalScreenTime = int(totalTime)
-		frameOffset = 0
-	}
+	totalScreenTime, totalScreens, frameOffsetSeconds := GetScreenNumber(totalTime, maxScreens, frameOffsetSeconds)
 	timeSkip := int(totalScreenTime) / totalScreens
 	log.Printf("Setting up screens (%d) with timeSkip (%d) dstFile (%s)", totalScreens, timeSkip, dstFile)
 
@@ -385,7 +392,7 @@ func CreateSeekScreens(srcFile string, dstFile string, totalScreens int, frameOf
 
 	// Screen file can be modified to take a second format which is the time skip
 	for idx := 0; idx < totalScreens; idx++ {
-		ss := (idx * timeSkip) + frameOffset
+		ss := (idx * timeSkip) + frameOffsetSeconds
 		// screenFile := fmt.Sprintf(screenFmt, ss)
 		screenFile := fmt.Sprintf(screenFmt, idx+1, ss)
 		// screenFile := fmt.Sprintf(screenFmt, idx)

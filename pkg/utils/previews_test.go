@@ -305,6 +305,9 @@ func TestVideoSelectScreens(t *testing.T) {
 		t.Errorf("The destination directory was not empty %s", empty_check)
 	}
 
+	cfg := GetCfg()
+	cfg.PreviewNumberOfScreens = 10
+
 	destFile := filepath.Join(dstDir, "donut.mp4.webp")
 	srcFile := filepath.Join(srcDir, testFile)
 	screensSrc, err := CreateScreensFromVideoSized(srcFile, destFile, 1024*300000)
@@ -315,6 +318,7 @@ func TestVideoSelectScreens(t *testing.T) {
 		t.Errorf("Did not get a valid destination file.")
 	}
 	screens_check, _ := os.ReadDir(dstDir)
+
 	expected := 10
 	assert.GreaterOrEqual(t, len(screens_check), expected, fmt.Sprintf("Screens %s", screens_check))
 
@@ -330,6 +334,35 @@ func TestVideoSelectScreens(t *testing.T) {
 	}
 	if webpStat.Size() > (700 * 1024) {
 		t.Errorf("Webp has too much chonk %d", webpStat.Size())
+	}
+}
+
+func Test_ScreenNumber(t *testing.T) {
+	totalTime := 10.08
+	maxScreens := 11
+	frameOffset := 2
+	totalScreenTime, totalScreens, frameOffset := GetScreenNumber(totalTime, maxScreens, frameOffset)
+	if totalScreenTime != 10 {
+		t.Errorf("Total screen time was not 10 %d", totalScreenTime)
+	}
+	if totalScreens != 10 {
+		t.Errorf("Total screens was not 10 %d", totalScreens)
+	}
+	if frameOffset != 0 {
+		t.Errorf("Frame offset was not 0 %d", frameOffset)
+	}
+
+	shortTime := 5.6
+	frameOffset = 1
+	totalScreenTime, totalScreens, frameOffset = GetScreenNumber(shortTime, maxScreens, frameOffset)
+	if totalScreenTime != 5 {
+		t.Errorf("Total screen time was not 5 %d", totalScreenTime)
+	}
+	if totalScreens != 5 {
+		t.Errorf("Total screens was not 5 %d", totalScreens)
+	}
+	if frameOffset != 0 {
+		t.Errorf("Frame offset was not 0 %d", frameOffset)
 	}
 }
 

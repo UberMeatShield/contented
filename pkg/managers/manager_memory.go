@@ -281,7 +281,6 @@ func (cm ContentManagerMemory) ListContentFiltered(cs ContentQuery) (*models.Con
 	m_arr := models.Contents{}
 	mem := cm.GetStore()
 
-	log.Printf("What the shit %s", cs.ContainerID)
 	// Need to test invalid / empty ""
 	containerID, invalid := strconv.ParseInt(cs.ContainerID, 10, 64)
 	if invalid == nil {
