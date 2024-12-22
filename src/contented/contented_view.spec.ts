@@ -93,7 +93,7 @@ describe('TestingContentedViewCmp', () => {
   });
 
   // Test that we listen to nav events correctly
-  it('Should register nav events', () => {
+  it('Should register nav events', fakeAsync(() => {
     fixture.detectChanges();
     expect($('.content-full-view').length).toBe(0, 'Nothing in the view');
 
@@ -105,18 +105,19 @@ describe('TestingContentedViewCmp', () => {
     let content = MockData.getImg();
     expect(content.content_type).toEqual('image/png');
     GlobalNavEvents.viewFullScreen(content);
+    tick(1000);
     fixture.detectChanges();
     expect($('.content-full-view').length).toBe(1, 'It should now be visible');
 
     expect(comp.content).toEqual(content);
     expect(comp.visible).toBeTrue();
-    expect($('.full-view-img').length).toBe(1, 'And it is an image');
+    expect($('.full-view-img').length).withContext("It should be an image").toEqual(1);
     expect(comp.content).toEqual(content, 'A view event with a content item should change it');
 
     GlobalNavEvents.hideFullScreen();
     fixture.detectChanges();
     expect(comp.visible).toBe(false, 'It should not be visible now');
-  });
+  }));
 
   it('Should have a video in the case of a video, image for image', () => {
     let video = new Content({ content_type: 'video/mp4', fullUrl: 'cthulhu' });
