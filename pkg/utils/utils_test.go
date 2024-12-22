@@ -232,7 +232,7 @@ func Test_FindContentOffset(t *testing.T) {
 			allm := FindContent(c, 42, 0)
 			total := len(allm)
 			if total != expect_total {
-				t.Errorf("There should be exactly n(%d) found but returned %d", expect_total, total)
+				t.Errorf("There should be exactly n(%d) found but returned %d %s", expect_total, total, allm)
 			}
 
 			offset := FindContent(c, 6, 4)
