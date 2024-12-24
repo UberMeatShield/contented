@@ -111,7 +111,7 @@ describe('TestingContentedViewCmp', () => {
 
     expect(comp.content).toEqual(content);
     expect(comp.visible).toBeTrue();
-    expect($('.full-view-img').length).withContext("It should be an image").toEqual(1);
+    expect($('.full-view-img').length).withContext('It should be an image').toEqual(1);
     expect(comp.content).toEqual(content, 'A view event with a content item should change it');
 
     GlobalNavEvents.hideFullScreen();

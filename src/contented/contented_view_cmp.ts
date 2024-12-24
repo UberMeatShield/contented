@@ -58,7 +58,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
                 this.selectFullScreenContent(content, evt.screen);
               }, 50);
             } else {
-                this.selectFullScreenContent(content, evt.screen);
+              this.selectFullScreenContent(content, evt.screen);
             }
 
             break;
@@ -93,7 +93,6 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
   }
 
   selectFullScreenContent(content: Content, screen?: Screen) {
-
     this.content = content;
     this.visible = true;
 
@@ -102,7 +101,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
       this.handleTextContent(this.content);
 
       if (screen) {
-        this.clickedScreen({screen, action: ScreenAction.PLAY_SCREEN });
+        this.clickedScreen({ screen, action: ScreenAction.PLAY_SCREEN });
       }
     }
   }
@@ -162,7 +161,6 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
   }
 
   public clickedScreen(evt: ScreenClickEvent, count: number = 0) {
-
     // These screens are associated with the currently selected content
     const findVideo = (attempt = 0) => {
       const videoEl = <HTMLVideoElement>document.getElementById(`VIDEO_${this.content.id}`);

@@ -68,7 +68,6 @@ export class ScreensCmp implements OnInit {
   }
 
   public clickContent(screen: Screen) {
-
     // Potentially this should just submit the global nav event
     this.screenClick.emit({
       screen: screen,
