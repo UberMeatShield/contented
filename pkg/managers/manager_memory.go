@@ -742,7 +742,7 @@ func (cm ContentManagerMemory) DestroyContent(id int64) (*models.Content, error)
 		delete(contentMap, id)
 		return &content, nil
 	}
-	return nil, fmt.Errorf("Content not found %d", id)
+	return nil, fmt.Errorf("content not found to delete %d", id)
 }
 
 func (cm ContentManagerMemory) DestroyContainer(id int64) (*models.Container, error) {
@@ -751,7 +751,7 @@ func (cm ContentManagerMemory) DestroyContainer(id int64) (*models.Container, er
 		delete(containerMap, id)
 		return &container, nil
 	}
-	return nil, fmt.Errorf("Container not found %d", id)
+	return nil, fmt.Errorf("container not found to delete %d", id)
 }
 
 func (cm ContentManagerMemory) DestroyScreen(id int64) (*models.Screen, error) {
@@ -760,7 +760,7 @@ func (cm ContentManagerMemory) DestroyScreen(id int64) (*models.Screen, error) {
 		delete(screensMap, id)
 		return &screen, nil
 	}
-	return nil, fmt.Errorf("Screen not found %d", id)
+	return nil, fmt.Errorf("screen not found to delete %d", id)
 }
 
 // Note that we need to lock this down so that it cannot just access arbitrary files

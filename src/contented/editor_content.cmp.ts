@@ -10,9 +10,9 @@ import { finalize } from 'rxjs/operators';
 import { ContentedService } from './contented_service';
 import { Tag, Content, VideoCodecInfo } from './content';
 import { VSCodeEditorCmp } from './vscode_editor.cmp';
-import { TaskRequest } from './task_request';
+import { TaskOperation, TaskRequest } from './task_request';
 import { GlobalBroadcast } from './global_message';
-
+import { Screen } from './screen';
 import * as _ from 'lodash-es';
 
 @Component({
@@ -201,6 +201,32 @@ export class EditorContentCmp implements OnInit {
         },
       });
   }
+
+  taskUpdated(task: TaskRequest) {
+    console.log('Task updated', task);
+    if ([TaskOperation.SCREENS, TaskOperation.WEBP].includes(task.operation)) {
+      const contentId = this.content?.id;
+      if (contentId) {
+        this.content.screens = null;
+
+        // Probably need to debounce this
+        this.loadContent(contentId);
+      }
+    }
+  }
+
+  loadScreens(contentId: string) {
+    this._service.getScreens(this.content.id).subscribe({
+      next: (screens: { total: number; results: Array<Screen> }) => {
+        this.content.screens = screens.results;
+      },
+      error: err => {
+        GlobalBroadcast.error('Failed to load screens', err);
+      },
+    });
+  }
+
+
 
   canCreatePreview(content: Content) {
     if (!this.taskLoading && content && content.screens && content.screens.length > 0) {

@@ -96,4 +96,24 @@ describe('EditorContentCmp', () => {
     httpMock.expectOne(r => r.url.includes(ApiDef.contented.tags)).flush(MockData.tags());
     tick(15000);
   }));
+
+  it('Should be able to screen new screens', fakeAsync(() => {
+    let content = new Content(MockData.videoContent());
+    cmp.content = content;
+    cmp.checkStates = false;
+    fixture.detectChanges();
+
+    let url = ApiDef.contented.contentScreens.replace('{mcID}', cmp.content.id);
+    httpMock.expectOne(url).flush(MockData.getScreens());
+    fixture.detectChanges();
+    tick(10000);
+
+    let taskUrl = `${ApiDef.tasks.list}?page=1&per_page=100&content_id=${content.id}`;
+    httpMock.expectOne(taskUrl).flush(MockData.taskRequests());
+    httpMock.expectOne(r => r.url.includes(ApiDef.contented.tags)).flush(MockData.tags());
+    tick(15000);
+
+  }));
+
+
 });

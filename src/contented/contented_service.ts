@@ -8,7 +8,7 @@ import { ApiDef } from './api_def';
 import { TAGS_RESPONSE } from './tagging_syntax';
 
 // The manner in which RxJS does this is really stupid, saving 50K for hours of dev time is fail
-import { forkJoin, from as observableFrom } from 'rxjs';
+import { forkJoin, Observable, from as observableFrom } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { GlobalBroadcast } from './global_message';
 
@@ -95,7 +95,7 @@ export class ContentedService {
     );
   }
 
-  public getScreens(contentID: string) {
+  public getScreens(contentID: string): Observable<{ total: number; results: Array<Screen> }> {
     let url = ApiDef.contented.contentScreens.replace('{mcID}', contentID);
     return this.http.get(url, this.options).pipe(
       map((res: any) => {

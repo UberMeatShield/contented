@@ -54,7 +54,6 @@ export class TaskRequestCmp implements OnInit {
   }
 
   ngOnInit() {
-    this.loadTasks(this.contentID);
 
     if (this.reloadEvt) {
       this.reloadEvt.subscribe({
@@ -83,12 +82,16 @@ export class TaskRequestCmp implements OnInit {
           console.error('Failed to search Tasks error', error);
         },
       });
+
+    // Interesting
     if (this.checkStates) {
       this.pollStart();
+    } else {
+      this.loadTasks(this.contentID);
     }
   }
 
-  loadTasks(contentID: string, watching: Array<TaskRequest> = [], status: TaskStatus = '', search = '') {
+  loadTasks(contentID: string, notComplete: Array<TaskRequest> = [], status: TaskStatus = '', search = '') {
     this.loading = true;
 
     const query: TaskSearch = {
@@ -98,16 +101,23 @@ export class TaskRequestCmp implements OnInit {
       offset: 0,
       limit: this.pageSize,
     };
+
     return this._service
       .getTasks(query)
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: taskResponse => {
+
+          // On an initial load we need to get the not complete tasks and don't want events
+          // for tasks completed long ago.
+          if (!this.tasks && _.isEmpty(notComplete))  {
+            notComplete = _.filter(this.tasks, task => !task.isComplete()) || [];
+          }
           this.tasks = taskResponse.results;
           this.total = taskResponse.total;
           this.dataSource = new MatTableDataSource<TaskRequest>(this.tasks || []);
 
-          this.checkComplete(this.tasks, watching);
+          this.checkComplete(this.tasks, notComplete);
         },
         error: err => {
           GlobalBroadcast.error('Failed to load tasks', err);
@@ -129,8 +139,12 @@ export class TaskRequestCmp implements OnInit {
       });
   }
 
+
+
   checkComplete(tasks: Array<TaskRequest>, watching: Array<TaskRequest> = []) {
     let check = _.keyBy(watching, 'id');
+
+    console.log("What in the actual shit?", tasks, watching, Object.keys(check));
     (tasks || []).forEach(task => {
       if (check[task.id] && task.isComplete()) {
         this.taskUpdated.emit(task);
@@ -149,12 +163,9 @@ export class TaskRequestCmp implements OnInit {
     if (this.loading) {
       return;
     }
-    let notComplete: Array<TaskRequest> =
-      _.filter(this.tasks, task => {
-        return task.isComplete();
-      }) || [];
+    let watching: Array<TaskRequest> = _.filter(this.tasks, task => !task.isComplete()) || [];
     let vals = this.searchForm.value;
-    this.loadTasks(this.contentID, notComplete, vals.status, vals.search);
+    this.loadTasks(this.contentID, watching, vals.status, vals.search);
   }
 
   pageEvt(evt: any) {

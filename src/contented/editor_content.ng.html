@@ -141,6 +141,7 @@
         [contentID]="content.id"
         [reloadEvt]="taskCreated"
         [checkStates]="checkStates"
+        (taskUpdated)="taskUpdated($event)"
       ></task-request-cmp>
     </mat-card-content>
   </mat-card>
