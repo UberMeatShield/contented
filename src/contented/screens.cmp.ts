@@ -22,14 +22,13 @@ export class ScreensCmp implements OnInit {
   @Input() containerHeight: number = null;
 
   @Output() screensLoaded: EventEmitter<Array<Screen>> = new EventEmitter<Array<Screen>>();
+  @Output() screenClick: EventEmitter<ScreenClickEvent> = new EventEmitter<ScreenClickEvent>();
 
   // TODO: These are not used
   /*
     @Input() maxRendered: number = 8; // Default setting for how many should be visible at any given time
     @Input() maxPrevItems: number = 2; // When scrolling through a cnt, how many previous items should be visible
     */
-
-  @Output() screenClick: EventEmitter<ScreenClickEvent> = new EventEmitter<ScreenClickEvent>();
   public loading: boolean = false;
 
   // @Output clickEvt: EventEmitter<any>;
@@ -69,6 +68,7 @@ export class ScreensCmp implements OnInit {
   }
 
   public clickContent(screen: Screen) {
+    // Potentially this should just submit the global nav event
     this.screenClick.emit({
       screen: screen,
       screens: this.screens,
@@ -79,13 +79,13 @@ export class ScreensCmp implements OnInit {
   public clickTime(screen: Screen, evt: Event) {
     evt.preventDefault();
     evt.stopPropagation();
+    console.log('Screen time Click information exists on the screen?', screen);
 
     this.screenClick.emit({
       screen: screen,
       screens: this.screens,
       action: ScreenAction.PLAY_SCREEN,
     });
-    console.log('Screen time Click information exists on the screen?', screen);
   }
 
   // Should grab the content dimensions

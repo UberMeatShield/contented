@@ -68,7 +68,6 @@ export class VideoPreviewCmp implements OnInit {
     // Just makes sure the selection event doesn't race condition the scroll
     // into view event.  So the click triggers, scrolls and then we scroll to
     // the fullscreen element.
-
     _.delay(() => {
       GlobalNavEvents.viewFullScreen(mc, screen);
     }, 50);
@@ -88,7 +87,6 @@ export class VideoPreviewCmp implements OnInit {
   }
 
   public screenEvt(evt) {
-    console.log('Screen Evt', evt);
     if (evt.action === ScreenAction.PLAY_SCREEN) {
       return this.fullView(this.content, evt.screen);
     }
@@ -137,7 +135,6 @@ export class ScreenDialog implements AfterViewInit {
   }
 
   ngAfterViewInit() {
-    console.log('Search content is:', this.screenContent);
     setTimeout(() => {
       let el = this.screenContent.nativeElement;
       if (el) {

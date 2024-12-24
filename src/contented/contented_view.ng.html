@@ -60,7 +60,7 @@
 
   <div *ngIf="showScreens && content && content.isVideo()" class="content-video-screens">
     <screens-cmp
-      (clickedItem)="clickedScreen($event)"
+      (screenClick)="clickedScreen($event)"
       [contentId]="content.id"
     ></screens-cmp>
   </div>

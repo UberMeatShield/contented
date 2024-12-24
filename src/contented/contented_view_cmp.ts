@@ -7,7 +7,7 @@ import { ContentedService } from './contented_service';
 import { GlobalBroadcast } from './global_message';
 import { TaskRequest } from './task_request';
 import * as _ from 'lodash';
-import { ScreenAction, ScreenClickEvent } from './screen';
+import { ScreenAction, ScreenClickEvent, Screen } from './screen';
 
 @Component({
   selector: 'contented-view',
@@ -44,23 +44,25 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
     this.sub = GlobalNavEvents.navEvts.subscribe({
       next: (evt: NavEventMessage) => {
         // Restrict content ID might need to be a bit smarter
+
         let content = this.shouldIgnoreEvt(evt.content);
         if (!content) {
           return;
         }
         switch (evt.action) {
           case NavTypes.VIEW_FULLSCREEN:
-            this.content = content;
-            this.visible = true;
             if (this.content) {
-              this.scrollContent(this.content);
-              this.handleTextContent(this.content);
-
-              if (evt.screen) {
-                this.clickedScreen({ screen: evt.screen, action: ScreenAction.PLAY_SCREEN });
-              }
+              // Akward but without a digest it will NOT change the video if it is already playing
+              this.content = null;
+              setTimeout(() => {
+                this.selectFullScreenContent(content, evt.screen);
+              }, 50);
+            } else {
+              this.selectFullScreenContent(content, evt.screen);
             }
+
             break;
+
           case NavTypes.HIDE_FULLSCREEN:
             console.log('Hide fullscreen', this.content);
             if (this.visible && this.content) {
@@ -87,6 +89,20 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
           GlobalBroadcast.error('Failed to get description', err);
         },
       });
+    }
+  }
+
+  selectFullScreenContent(content: Content, screen?: Screen) {
+    this.content = content;
+    this.visible = true;
+
+    if (this.content) {
+      this.scrollContent(this.content);
+      this.handleTextContent(this.content);
+
+      if (screen) {
+        this.clickedScreen({ screen, action: ScreenAction.PLAY_SCREEN });
+      }
     }
   }
 
@@ -145,6 +161,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
   }
 
   public clickedScreen(evt: ScreenClickEvent, count: number = 0) {
+    // These screens are associated with the currently selected content
     const findVideo = (attempt = 0) => {
       const videoEl = <HTMLVideoElement>document.getElementById(`VIDEO_${this.content.id}`);
       if (videoEl) {

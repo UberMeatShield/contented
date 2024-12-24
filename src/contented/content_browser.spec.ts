@@ -127,7 +127,6 @@ describe('TestingContentBrowserCmp', () => {
     fixture.detectChanges();
 
     let cnt = comp.getCurrentContainer();
-    console.log('What is the current container?', cnt.id);
     expect(cnt).withContext('There should be a current container').toBeDefined();
     cnt.addContents(MockData.getContentArr(cnt.id, 4));
     let cl = cnt.getContentList();
@@ -140,6 +139,7 @@ describe('TestingContentBrowserCmp', () => {
     expect($('.content-full-view').length).withContext('It should not have a view').toBe(0);
 
     let toClick = $(imgs[3]).trigger('click');
+    tick(100);
     fixture.detectChanges();
 
     let currLoc = $('img', $('.current-content'));
