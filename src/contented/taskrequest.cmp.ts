@@ -54,7 +54,6 @@ export class TaskRequestCmp implements OnInit {
   }
 
   ngOnInit() {
-
     if (this.reloadEvt) {
       this.reloadEvt.subscribe({
         next: () => {
@@ -107,10 +106,9 @@ export class TaskRequestCmp implements OnInit {
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: taskResponse => {
-
           // On an initial load we need to get the not complete tasks and don't want events
           // for tasks completed long ago.
-          if (!this.tasks && _.isEmpty(notComplete))  {
+          if (!this.tasks && _.isEmpty(notComplete)) {
             notComplete = _.filter(this.tasks, task => !task.isComplete()) || [];
           }
           this.tasks = taskResponse.results;
@@ -139,12 +137,10 @@ export class TaskRequestCmp implements OnInit {
       });
   }
 
-
-
   checkComplete(tasks: Array<TaskRequest>, watching: Array<TaskRequest> = []) {
     let check = _.keyBy(watching, 'id');
 
-    console.log("What in the actual shit?", tasks, watching, Object.keys(check));
+    console.log('What in the actual shit?', tasks, watching, Object.keys(check));
     (tasks || []).forEach(task => {
       if (check[task.id] && task.isComplete()) {
         this.taskUpdated.emit(task);

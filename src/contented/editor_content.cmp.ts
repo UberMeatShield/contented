@@ -226,8 +226,6 @@ export class EditorContentCmp implements OnInit {
     });
   }
 
-
-
   canCreatePreview(content: Content) {
     if (!this.taskLoading && content && content.screens && content.screens.length > 0) {
       return true;

@@ -112,8 +112,5 @@ describe('EditorContentCmp', () => {
     httpMock.expectOne(taskUrl).flush(MockData.taskRequests());
     httpMock.expectOne(r => r.url.includes(ApiDef.contented.tags)).flush(MockData.tags());
     tick(15000);
-
   }));
-
-
 });

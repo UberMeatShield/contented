@@ -13,11 +13,11 @@ export const TASK_STATES = {
 };
 
 export enum TaskOperation {
-  ENCODING = "video_encoding",
-	SCREENS =  "screen_capture",
-	WEBP =     "webp_from_screens",
-	TAGGING =  "tag_content",
-	DUPES =    "detect_duplicates",
+  ENCODING = 'video_encoding',
+  SCREENS = 'screen_capture',
+  WEBP = 'webp_from_screens',
+  TAGGING = 'tag_content',
+  DUPES = 'detect_duplicates',
 }
 
 export const COMPLETE_TASKS = [TASK_STATES.CANCELED, TASK_STATES.ERROR, TASK_STATES.DONE];
