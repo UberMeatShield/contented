@@ -56,10 +56,17 @@ export class TaskRequestCmp implements OnInit {
   ngOnInit() {
     if (this.reloadEvt) {
       this.reloadEvt.subscribe({
-        next: () => {
+        next: (tr: TaskRequest) => {
+          console.log('Reloading tasks', tr);
           _.delay(() => {
-            this.loadTasks(this.contentID);
-          }, 2000);
+            try {
+              const watched = [tr].concat(_.filter(this.tasks, task => !task.isComplete()));
+              this.tasks = [];
+              this.loadTasks(this.contentID, watched);
+            } catch (err) {
+              console.error('Failed to reload the tasks', err);
+            }
+          }, 1000);
         },
         error: err => {
           GlobalBroadcast.error('Failed to reload the tasks', err);
@@ -82,7 +89,7 @@ export class TaskRequestCmp implements OnInit {
         },
       });
 
-    // Interesting
+    // If it should be checking for completed tasks, start polling, vs just load it up once for a state check
     if (this.checkStates) {
       this.pollStart();
     } else {
@@ -101,6 +108,7 @@ export class TaskRequestCmp implements OnInit {
       limit: this.pageSize,
     };
 
+    console.log('Loading tasks', query, notComplete);
     return this._service
       .getTasks(query)
       .pipe(finalize(() => (this.loading = false)))
@@ -108,9 +116,6 @@ export class TaskRequestCmp implements OnInit {
         next: taskResponse => {
           // On an initial load we need to get the not complete tasks and don't want events
           // for tasks completed long ago.
-          if (!this.tasks && _.isEmpty(notComplete)) {
-            notComplete = _.filter(this.tasks, task => !task.isComplete()) || [];
-          }
           this.tasks = taskResponse.results;
           this.total = taskResponse.total;
           this.dataSource = new MatTableDataSource<TaskRequest>(this.tasks || []);
@@ -139,8 +144,6 @@ export class TaskRequestCmp implements OnInit {
 
   checkComplete(tasks: Array<TaskRequest>, watching: Array<TaskRequest> = []) {
     let check = _.keyBy(watching, 'id');
-
-    console.log('What in the actual shit?', tasks, watching, Object.keys(check));
     (tasks || []).forEach(task => {
       if (check[task.id] && task.isComplete()) {
         this.taskUpdated.emit(task);
