@@ -302,11 +302,12 @@ func HasContent(src string, path string) (bool, error) {
 	return true, nil
 }
 
+/*
+ * Check if the path is under a valid directory and doesn't try and escape up
+ */
 func PathIsOk(path string, name string, ensureUnder string) (bool, error) {
-	up := ".." + string(os.PathSeparator)
 	dest := filepath.Join(path, name)
-
-	if strings.Contains(dest, up) || strings.Contains(dest, "~") {
+	if HasUpwardTraversal(dest) {
 		return false, errors.New("path includes possible up directory access, denied")
 	}
 
@@ -326,6 +327,97 @@ func PathIsOk(path string, name string, ensureUnder string) (bool, error) {
 		return true, nil
 	}
 	return false, fmt.Errorf("%s is not a directory under the path", name)
+}
+
+/*
+ * Remove a file from the disk if it exists and is under a safe directory.
+ */
+func RemoveFileIsOk(path string, name string, underDirectory string) (bool, error) {
+
+	// NOTE if you join these paths using filepath.Join it will remove the traversal attempts
+	// for you already... which is not great when trying to prevent that kind of access.
+	if HasUpwardTraversal(name) {
+		return false, fmt.Errorf("filename includes possible up directory access, denied")
+	}
+	if HasUpwardTraversal(path) {
+		return false, fmt.Errorf("path includes possible up directory access, denied")
+	}
+
+	if ok, err := PathIsOk(path, "", underDirectory); err != nil {
+		return false, err
+	} else if !ok {
+		return false, fmt.Errorf("path is not under root %s", path)
+	}
+
+	fqPath := filepath.Join(path, name)
+
+	// Check if file exists
+	fileInfo, err := os.Stat(fqPath)
+	if errors.Is(err, os.ErrNotExist) {
+		return true, err
+	}
+	if err != nil {
+		return false, err
+	}
+	// Verify it's not a directory
+	if fileInfo.IsDir() {
+		return false, fmt.Errorf("this points to a directory: %s", fqPath)
+	}
+	return true, nil
+}
+
+func RemoveFile(path string, name string, underDirectory string) (bool, error) {
+	ok, err := RemoveFileIsOk(path, name, underDirectory)
+
+	// It is ok if the file was already removed by another process or call
+	if errors.Is(err, os.ErrNotExist) {
+		log.Printf("File already removed %s", err)
+		return true, err
+	}
+	// Otherwise all errors will be considered fatal
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, fmt.Errorf("path is not ok %s", path)
+	}
+
+	// Remove the file
+	fqPath := filepath.Join(path, name)
+	if err := os.Remove(fqPath); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+/*
+ * Detects if a filename is attempting to traverse up directories (Cursor wrote it impressive)
+ * Returns true if the filename contains directory traversal attempts
+ */
+func HasUpwardTraversal(filename string) bool {
+	// Check for ../ or ..\ patterns
+	up := ".." + string(os.PathSeparator)
+	if strings.Contains(filename, up) {
+		return true
+	}
+
+	// Check for encoded variants
+	encodedUp := "%2e%2e%2f"    // ../
+	encodedUpAlt := "%2e%2e%5c" // ..\
+	if strings.Contains(strings.ToLower(filename), encodedUp) ||
+		strings.Contains(strings.ToLower(filename), encodedUpAlt) {
+		return true
+	}
+
+	// Check for double-encoded variants
+	doubleEncodedUp := "%252e%252e%252f"    // ../
+	doubleEncodedUpAlt := "%252e%252e%255c" // ..\
+	if strings.Contains(strings.ToLower(filename), doubleEncodedUp) ||
+		strings.Contains(strings.ToLower(filename), doubleEncodedUpAlt) {
+		return true
+	}
+
+	return false
 }
 
 func ReadTagsFromFile(tagFile string) (*models.Tags, error) {
