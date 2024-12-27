@@ -108,6 +108,16 @@ export class ContentedService {
     );
   }
 
+  public clearScreens(contentID: string): Observable<Content> {
+    let url = ApiDef.contented.contentScreens.replace('{mcID}', contentID);
+    return this.http.delete(url, this.options).pipe(
+      map((res: any) => {
+        return new Content(res);
+      }),
+      catchError(err => this.handleError(err))
+    );
+  }
+
   public getContent(contentID: string) {
     let url = ApiDef.contented.content.replace('{id}', contentID);
     return this.http.get(url, this.options).pipe(

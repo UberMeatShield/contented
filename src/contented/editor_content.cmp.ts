@@ -110,8 +110,19 @@ export class EditorContentCmp implements OnInit {
       });
   }
 
+  clearScreens(content: Content) {
+    this._service.clearScreens(this.content.id).subscribe({
+      next: (content: Content) => {
+        this.content = content;
+      },
+      error: err => {
+        GlobalBroadcast.error('Could not clear screens', err);
+      },
+    });
+  }
+
   // Generate incremental screens and then check the request
-  incrementalScreens(content) {
+  incrementalScreens(content: Content) {
     let req = this.screensForm.value;
     this.taskLoading = true;
     this._service

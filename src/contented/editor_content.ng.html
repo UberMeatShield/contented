@@ -54,6 +54,12 @@
             <mat-icon>screenshot_keyboard</mat-icon>
             Take Incremental Screens
           </button>
+          <button type="button" mat-raised-button 
+            (click)="clearScreens(content)" 
+            [disabled]="taskLoading">
+            <mat-icon>delete</mat-icon>
+            Clear Screens
+          </button>
         </form>
       </mat-card-content>
     </mat-card>
