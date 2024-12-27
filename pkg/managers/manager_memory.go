@@ -690,6 +690,9 @@ func (cm ContentManagerMemory) AssociateTagByID(tagId string, mcID int64) error 
 func (cm ContentManagerMemory) CreateScreen(screen *models.Screen) error {
 	// Validate that the content exists for the screen?
 	if screen != nil {
+		if utils.HasUpwardTraversal(screen.Src) {
+			return fmt.Errorf("screen src cannot contain upward traversal")
+		}
 		content, notFound := cm.GetContent(screen.ContentID)
 		if content == nil || notFound != nil {
 			return fmt.Errorf("a screen must be linked to content and %d was not found", screen.ContentID)
@@ -703,6 +706,12 @@ func (cm ContentManagerMemory) CreateScreen(screen *models.Screen) error {
 // TODO: Requires security checks like the DB version.
 func (cm ContentManagerMemory) CreateContent(content *models.Content) error {
 	if content != nil {
+		if utils.HasUpwardTraversal(content.Src) {
+			return fmt.Errorf("content src cannot contain upward traversal")
+		}
+		if utils.HasUpwardTraversal(content.FqPath) {
+			return fmt.Errorf("content path cannot contain upward traversal")
+		}
 		if content.Tags == nil {
 			content.Tags = models.Tags{}
 		}
@@ -742,7 +751,7 @@ func (cm ContentManagerMemory) DestroyContent(id int64) (*models.Content, error)
 		delete(contentMap, id)
 		return &content, nil
 	}
-	return nil, fmt.Errorf("Content not found %d", id)
+	return nil, fmt.Errorf("content not found to delete %d", id)
 }
 
 func (cm ContentManagerMemory) DestroyContainer(id int64) (*models.Container, error) {
@@ -751,7 +760,7 @@ func (cm ContentManagerMemory) DestroyContainer(id int64) (*models.Container, er
 		delete(containerMap, id)
 		return &container, nil
 	}
-	return nil, fmt.Errorf("Container not found %d", id)
+	return nil, fmt.Errorf("container not found to delete %d", id)
 }
 
 func (cm ContentManagerMemory) DestroyScreen(id int64) (*models.Screen, error) {
@@ -760,13 +769,19 @@ func (cm ContentManagerMemory) DestroyScreen(id int64) (*models.Screen, error) {
 		delete(screensMap, id)
 		return &screen, nil
 	}
-	return nil, fmt.Errorf("Screen not found %d", id)
+	return nil, fmt.Errorf("screen not found to delete %d", id)
 }
 
 // Note that we need to lock this down so that it cannot just access arbitrary files
 func (cm ContentManagerMemory) CreateContainer(c *models.Container) error {
 	if c == nil {
 		return errors.New("ContentManagerMemory no container was passed in to CreateContainer")
+	}
+	if utils.HasUpwardTraversal(c.Path) {
+		return fmt.Errorf("container path cannot contain upward traversal")
+	}
+	if utils.HasUpwardTraversal(c.Name) {
+		return fmt.Errorf("container name cannot contain upward traversal")
 	}
 	cfg := cm.GetCfg()
 	ok, err := utils.PathIsOk(c.Path, c.Name, cfg.Dir)

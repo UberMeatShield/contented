@@ -81,8 +81,8 @@ func ContainersResourceCreate(c *gin.Context) {
 		return
 	}
 
-	cfg := man.GetCfg()
 	// IS-327 Reset the path for now
+	cfg := man.GetCfg()
 	container.Path = cfg.Dir
 
 	c_err := man.CreateContainer(container)

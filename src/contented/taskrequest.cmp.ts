@@ -54,14 +54,19 @@ export class TaskRequestCmp implements OnInit {
   }
 
   ngOnInit() {
-    this.loadTasks(this.contentID);
-
     if (this.reloadEvt) {
       this.reloadEvt.subscribe({
-        next: () => {
+        next: (tr: TaskRequest) => {
+          console.log('Reloading tasks', tr);
           _.delay(() => {
-            this.loadTasks(this.contentID);
-          }, 2000);
+            try {
+              const watched = [tr].concat(_.filter(this.tasks, task => !task.isComplete()));
+              this.tasks = [];
+              this.loadTasks(this.contentID, watched);
+            } catch (err) {
+              console.error('Failed to reload the tasks', err);
+            }
+          }, 1000);
         },
         error: err => {
           GlobalBroadcast.error('Failed to reload the tasks', err);
@@ -83,12 +88,16 @@ export class TaskRequestCmp implements OnInit {
           console.error('Failed to search Tasks error', error);
         },
       });
+
+    // If it should be checking for completed tasks, start polling, vs just load it up once for a state check
     if (this.checkStates) {
       this.pollStart();
+    } else {
+      this.loadTasks(this.contentID);
     }
   }
 
-  loadTasks(contentID: string, watching: Array<TaskRequest> = [], status: TaskStatus = '', search = '') {
+  loadTasks(contentID: string, notComplete: Array<TaskRequest> = [], status: TaskStatus = '', search = '') {
     this.loading = true;
 
     const query: TaskSearch = {
@@ -98,16 +107,20 @@ export class TaskRequestCmp implements OnInit {
       offset: 0,
       limit: this.pageSize,
     };
+
+    console.log('Loading tasks', query, notComplete);
     return this._service
       .getTasks(query)
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: taskResponse => {
+          // On an initial load we need to get the not complete tasks and don't want events
+          // for tasks completed long ago.
           this.tasks = taskResponse.results;
           this.total = taskResponse.total;
           this.dataSource = new MatTableDataSource<TaskRequest>(this.tasks || []);
 
-          this.checkComplete(this.tasks, watching);
+          this.checkComplete(this.tasks, notComplete);
         },
         error: err => {
           GlobalBroadcast.error('Failed to load tasks', err);
@@ -149,12 +162,9 @@ export class TaskRequestCmp implements OnInit {
     if (this.loading) {
       return;
     }
-    let notComplete: Array<TaskRequest> =
-      _.filter(this.tasks, task => {
-        return task.isComplete();
-      }) || [];
+    let watching: Array<TaskRequest> = _.filter(this.tasks, task => !task.isComplete()) || [];
     let vals = this.searchForm.value;
-    this.loadTasks(this.contentID, notComplete, vals.status, vals.search);
+    this.loadTasks(this.contentID, watching, vals.status, vals.search);
   }
 
   pageEvt(evt: any) {

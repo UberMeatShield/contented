@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"time"
@@ -33,7 +34,7 @@ func Get_VideoAndSetupPaths() (string, string, string) {
 	return srcDir, dstDir, testFile
 }
 
-// Should probably toss this into internals
+// Should probably toss this into internals but cannot because it is all the way down in utils
 func WriteScreenFile(dstPath string, fileName string, count int) (string, error) {
 	screenName := fmt.Sprintf("%s.screens.00%d.jpg", fileName, count)
 	fqPath := filepath.Join(dstPath, screenName)
@@ -46,6 +47,75 @@ func WriteScreenFile(dstPath string, fileName string, count int) (string, error)
 		return "", wErr
 	}
 	return screenName, nil
+}
+
+func CreateTestPreviewsContainerDirectory(t *testing.T) (string, string) {
+	testDir := MustGetEnvString("DIR")
+	_, dstDir, _ := Get_VideoAndSetupPaths()
+
+	// Check we can write to the video destination directory (probably not needed)
+	ok, err := PathIsOk(dstDir, "", testDir)
+	if err != nil {
+		t.Errorf("Failed to check path %s", err)
+	}
+	if !ok {
+		t.Errorf("Path was not ok %s", dstDir)
+	}
+
+	containerPreviews := filepath.Join(dstDir, "container_previews")
+	if _, err := os.Stat(containerPreviews); os.IsNotExist(err) {
+		err := os.MkdirAll(containerPreviews, 0755)
+		if err != nil {
+			t.Fatalf("Failed to create container_previews directory: %v", err)
+		}
+	}
+	ok, err = PathIsOk(containerPreviews, "", testDir)
+	if err != nil {
+		t.Errorf("Failed to check container path %s", err)
+	}
+	if !ok {
+		t.Errorf("container Path was not ok %s", containerPreviews)
+	}
+	return containerPreviews, testDir
+}
+
+func Test_RemoveFile(t *testing.T) {
+	// Create a temp file to test removal
+	containerPreviews, testDir := CreateTestPreviewsContainerDirectory(t)
+	screenName, err := WriteScreenFile(containerPreviews, "ScreenTestRemove", 1)
+	assert.NoError(t, err, "Failed to write screen file: %v", err)
+
+	ok, noErr := RemoveFileIsOk(containerPreviews, screenName, testDir)
+	assert.NoError(t, noErr, "This file is ok to remove %s", err)
+	assert.True(t, ok, "This is a valid file  to remove %s", screenName)
+
+	bad, err := RemoveFileIsOk("~/.ssh", screenName, testDir)
+	assert.Error(t, err, "This file is not ok to remove %s", err)
+	assert.False(t, bad, "It was not a valid file %s", "~/.ssh")
+
+	bad, err = RemoveFileIsOk("../../etc/passwd", screenName, testDir)
+	assert.Error(t, err, "This file is not ok to remove %s", err)
+	assert.False(t, bad, "It was not a valid file %s", "../../etc/passwd")
+
+	bad, err = RemoveFileIsOk(containerPreviews, fmt.Sprintf("../../%s", screenName), testDir)
+	assert.Error(t, err, "This file is not ok to remove %s", err)
+	log.Printf("Bad %t", bad)
+	assert.False(t, bad, "File should not allow going up a directory %s", fmt.Sprintf("./../%s", screenName))
+
+	fqPath := filepath.Join(containerPreviews, screenName)
+	_, err = os.Stat(fqPath)
+	assert.NoError(t, err, "Failed to stat file %s", err)
+
+	removed, err := RemoveFile(containerPreviews, screenName, testDir)
+	assert.NoError(t, err, "Failed to remove file %s", err)
+	assert.True(t, removed, "File was removed %s", screenName)
+
+	_, goneErr := os.Stat(fqPath)
+	assert.Error(t, goneErr, "File should be deleted %s", goneErr)
+
+	stillSuccess, err := RemoveFileIsOk(containerPreviews, screenName, testDir)
+	assert.ErrorIs(t, err, os.ErrNotExist, "This file is should be removed %s", err)
+	assert.True(t, stillSuccess, "The file is removed so it is a success %s", fqPath)
 }
 
 func Test_ImageMetaLookup(t *testing.T) {

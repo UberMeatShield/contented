@@ -395,3 +395,70 @@ func ValidateClearScreens(t *testing.T, man ContentManager) {
 	assert.Equal(t, int64(0), totalAfter, "Now it should be clear")
 	assert.NoError(t, errAfter, "It should not fail the list")
 }
+
+func TestClearScreensDiskMemory(t *testing.T) {
+	cfg, _ := test_common.InitFakeApp(false)
+	man := GetManagerTestSuite(cfg)
+	ValidateClearScreensOnDisk(t, man)
+}
+func TestClearScreensDiskDatabase(t *testing.T) {
+	cfg, _ := test_common.InitFakeApp(true)
+	man := GetManagerTestSuite(cfg)
+	ValidateClearScreensOnDisk(t, man)
+}
+
+func ValidateClearScreensOnDisk(t *testing.T, man ContentManager) {
+	containerPreviews, testDir := test_common.CreateTestPreviewsContainerDirectory(t)
+	utils.ResetPreviewDir(containerPreviews)
+	container := models.Container{
+		Name: "dir2",
+		Path: testDir,
+	}
+	assert.NoError(t, man.CreateContainer(&container), "Failed to create the container %s", container.GetFqPath())
+
+	content := models.Content{
+		Src:         "donut_[special( gunk.mp4",
+		ContainerID: &container.ID,
+	}
+	assert.NoError(t, man.CreateContent(&content), "Failed to create the content")
+	assert.Greater(t, content.ID, int64(0), "It should create a valid content")
+
+	// Create some content on disk so we can validate disk removal of these elements
+	screenName1, err := test_common.WriteScreenFile(containerPreviews, "ScreenTestRemove", 1)
+	assert.NoError(t, err, "Failed to write screen file: %v", err)
+	screenName2, err := test_common.WriteScreenFile(containerPreviews, "ScreenTestRemove", 2)
+	assert.NoError(t, err, "Failed to write screen file: %v", err)
+
+	screen1 := models.Screen{ContentID: content.ID, Src: screenName1, Path: containerPreviews}
+	screen2 := models.Screen{ContentID: content.ID, Src: screenName2, Path: containerPreviews}
+	assert.NoError(t, man.CreateScreen(&screen1), "Failed to create screen1")
+	assert.NoError(t, man.CreateScreen(&screen2), "Failed to create screen2")
+
+	// Verify directory now has two files
+	files, err := os.ReadDir(containerPreviews)
+	assert.NoError(t, err, "Should be able to read directory")
+	assert.NotEmpty(t, files, "Directory should be empty before test")
+	assert.Equal(t, 2, len(files), fmt.Sprintf("Directory should have two files %s", containerPreviews))
+
+	// Verify the screens exist in the managers
+	sq := ScreensQuery{
+		ContentID: strconv.FormatInt(content.ID, 10),
+	}
+	screens, total, err := man.ListScreens(sq)
+	assert.NoError(t, err, "Failed to list screens")
+	assert.Equal(t, int64(2), total, "We should have our screens")
+	assert.NotNil(t, screens)
+
+	err = RemoveScreensForContent(man, content.ID)
+	assert.NoError(t, err, "Could not remove screens for content")
+
+	// Check that the screens are gone
+	_, totalAfter, errAfter := man.ListScreens(sq)
+	assert.Equal(t, int64(0), totalAfter, "Now it should be clear")
+	assert.NoError(t, errAfter, "It should not fail the list")
+
+	// Check that the files are gone
+	files, err = os.ReadDir(containerPreviews)
+	assert.NoError(t, err, "Should be able to read directory")
+	assert.Empty(t, files, "No files should be left on disk")
+}

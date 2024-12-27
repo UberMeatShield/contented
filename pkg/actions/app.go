@@ -74,6 +74,7 @@ func SetupRoutes(r *gin.Engine) {
 	r.POST("/api/contents", ContentsResourceCreate)
 	r.PUT("/api/contents/:content_id", ContentsResourceUpdate)
 	r.DELETE("/api/contents/:content_id", ContentsResourceDestroy)
+	r.DELETE("/api/contents/:content_id/screens", ContentScreensDestroy)
 
 	// Screens
 	r.GET("/api/screens", ScreensResourceList)

@@ -10,9 +10,9 @@ import { finalize } from 'rxjs/operators';
 import { ContentedService } from './contented_service';
 import { Tag, Content, VideoCodecInfo } from './content';
 import { VSCodeEditorCmp } from './vscode_editor.cmp';
-import { TaskRequest } from './task_request';
+import { TaskOperation, TaskRequest } from './task_request';
 import { GlobalBroadcast } from './global_message';
-
+import { Screen } from './screen';
 import * as _ from 'lodash-es';
 
 @Component({
@@ -110,8 +110,19 @@ export class EditorContentCmp implements OnInit {
       });
   }
 
+  clearScreens(content: Content) {
+    this._service.clearScreens(this.content.id).subscribe({
+      next: (content: Content) => {
+        this.content = content;
+      },
+      error: err => {
+        GlobalBroadcast.error('Could not clear screens', err);
+      },
+    });
+  }
+
   // Generate incremental screens and then check the request
-  incrementalScreens(content) {
+  incrementalScreens(content: Content) {
     let req = this.screensForm.value;
     this.taskLoading = true;
     this._service
@@ -200,6 +211,30 @@ export class EditorContentCmp implements OnInit {
           GlobalBroadcast.error('Failed to kick off dupe task', err);
         },
       });
+  }
+
+  taskUpdated(task: TaskRequest) {
+    console.log('Task updated', task, task.operation);
+    if ([TaskOperation.SCREENS, TaskOperation.WEBP].includes(task.operation)) {
+      const contentId = this.content?.id;
+      if (contentId) {
+        this.content.screens = null;
+
+        // Probably need to debounce this
+        this.loadScreens(contentId);
+      }
+    }
+  }
+
+  loadScreens(contentId: string) {
+    this._service.getScreens(this.content.id).subscribe({
+      next: (screens: { total: number; results: Array<Screen> }) => {
+        this.content.screens = screens.results;
+      },
+      error: err => {
+        GlobalBroadcast.error('Failed to load screens', err);
+      },
+    });
   }
 
   canCreatePreview(content: Content) {

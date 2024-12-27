@@ -11,6 +11,15 @@ export const TASK_STATES = {
   ERROR: 'error',
   DONE: 'done',
 };
+
+export enum TaskOperation {
+  ENCODING = 'video_encoding',
+  SCREENS = 'screen_capture',
+  WEBP = 'webp_from_screens',
+  TAGGING = 'tag_content',
+  DUPES = 'detect_duplicates',
+}
+
 export const COMPLETE_TASKS = [TASK_STATES.CANCELED, TASK_STATES.ERROR, TASK_STATES.DONE];
 
 export class TaskRequest {
@@ -20,7 +29,7 @@ export class TaskRequest {
   updated_at: Date | undefined;
   started_at: Date | undefined;
   status: string;
-  operation: string;
+  operation: TaskOperation;
   number_of_screens: number;
   start_time_seconds: number;
 
@@ -47,7 +56,7 @@ export class TaskRequest {
       this.updated_at = obj.created_at ? new Date(obj.updated_at) : undefined;
       this.started_at = obj.created_at ? new Date(obj.started_at) : undefined;
 
-      if (obj.operation === 'detect_duplicates' && obj.message) {
+      if (obj.operation === TaskOperation.DUPES && obj.message) {
         this.complexMessage = JSON.parse(obj.message);
       }
     }

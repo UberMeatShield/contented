@@ -588,3 +588,47 @@ func CreateContentAfterEncoding(man ContentManager, originalContent *models.Cont
 	}
 	return nil, fmt.Errorf("%s file did not exist", newFile)
 }
+
+/**
+ * Remove the screens for a content element and also remove the files from disk.
+ * Should this be "best effort" and still at least try and remove the screens even if the disk removes fail?
+ */
+func RemoveScreensForContent(man ContentManager, contentID int64) error {
+	sr := ScreensQuery{ContentID: strconv.FormatInt(contentID, 10)}
+	screens, _, err := man.ListScreens(sr)
+	if err != nil {
+		return err
+	}
+	if screens == nil || len(*screens) == 0 {
+		return nil
+	}
+
+	// Might need to get the container in these cases... ugly issue
+	content, err := man.GetContent(contentID)
+	if err != nil {
+		return err
+	}
+	cnt, err := man.GetContainer(*content.ContainerID)
+	if err != nil {
+		return err
+	}
+	dstPath := cnt.GetFqPath()
+	dstPath = filepath.Join(dstPath, utils.PREVIEW_DIRECTORY)
+
+	/*
+	 * DB it is more efficient to use the ClearScreens method but then we wouldn't have the actual
+	 * disk removal...
+	 */
+	for _, screen := range *screens {
+		_, err := man.DestroyScreen(screen.ID)
+		if err != nil {
+			return err
+		}
+		// It can be removed from disk already and we already check for IsNotExist
+		removed, err := utils.RemoveFile(screen.Path, screen.Src, man.GetCfg().Dir)
+		if !removed {
+			log.Printf("Failed to remove file on disk for screen %d %s %s error %s", screen.ID, screen.Path, screen.Src, err)
+		}
+	}
+	return nil
+}

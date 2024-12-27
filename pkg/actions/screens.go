@@ -1,12 +1,15 @@
 package actions
 
 import (
+	"errors"
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	"contented/pkg/managers"
 	"contented/pkg/models"
+	"contented/pkg/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -74,7 +77,7 @@ func ScreensResourceShow(c *gin.Context) {
 	fqPath := screen.GetFqPath()
 	_, fErr := os.Stat(fqPath)
 	if fErr != nil {
-		log.Printf("Cannot download file not on disk %s with err %s", fqPath, fErr)
+		log.Printf("Cannot download Screen file not on disk %s with err %s", fqPath, fErr)
 		c.AbortWithError(404, err)
 		return
 	}
@@ -87,7 +90,7 @@ func ScreensResourceShow(c *gin.Context) {
 // Create adds a Screen to the DB. This function is mapped to the
 // path POST /screens
 func ScreensResourceCreate(c *gin.Context) {
-	_, _, err := managers.ManagerCanCUD(c)
+	man, _, err := managers.ManagerCanCUD(c)
 	if err != nil {
 		c.AbortWithError(http.StatusForbidden, err)
 		return
@@ -98,7 +101,30 @@ func ScreensResourceCreate(c *gin.Context) {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	man := managers.GetManager(c)
+
+	// We don't allow a src to provide a path
+	src := filepath.Base(screen.Src)
+	if utils.HasUpwardTraversal(src) {
+		c.AbortWithError(http.StatusBadRequest, errors.New("src cannot contain upward traversal"))
+	}
+	screen.Src = src
+
+	// Ensure that the content exists and is under a container so we can find where the preview should exist
+	content, err := man.GetContent(screen.ContentID)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+	cnt, err := man.GetContainer(*content.ContainerID)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	// TODO: make the preview directory name configurable or something that can be passed via the API
+	dstPath := cnt.GetFqPath()
+	screen.Path = filepath.Join(dstPath, utils.PREVIEW_DIRECTORY)
+
 	cErr := man.CreateScreen(screen)
 	if cErr != nil {
 		c.AbortWithError(http.StatusUnprocessableEntity, cErr)

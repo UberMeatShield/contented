@@ -54,6 +54,51 @@ func Get_VideoAndSetupPaths(cfg *utils.DirConfigEntry) (string, string, string) 
 	return srcDir, dstDir, testFile
 }
 
+func CreateTestPreviewsContainerDirectory(t *testing.T) (string, string) {
+	cfg := utils.GetCfg()
+	testDir := cfg.Dir
+	_, containerPreviews, _ := Get_VideoAndSetupPaths(cfg)
+
+	// Check we can write to the video destination directory (probably not needed)
+	ok, err := utils.PathIsOk(containerPreviews, "", testDir)
+	if err != nil {
+		t.Errorf("Failed to check path %s", err)
+	}
+	if !ok {
+		t.Errorf("Path was not ok %s", containerPreviews)
+	}
+
+	if _, err := os.Stat(containerPreviews); os.IsNotExist(err) {
+		err := os.MkdirAll(containerPreviews, 0755)
+		if err != nil {
+			t.Fatalf("Failed to create container_previews directory: %v", err)
+		}
+	}
+	ok, err = utils.PathIsOk(containerPreviews, "", testDir)
+	if err != nil {
+		t.Errorf("Failed to check container path %s", err)
+	}
+	if !ok {
+		t.Errorf("container Path was not ok %s", containerPreviews)
+	}
+	return containerPreviews, testDir
+}
+
+// duplicated in utils/previews_test.go
+func WriteScreenFile(dstPath string, fileName string, count int) (string, error) {
+	screenName := fmt.Sprintf("%s.screens.00%d.jpg", fileName, count)
+	fqPath := filepath.Join(dstPath, screenName)
+	f, err := os.Create(fqPath)
+	if err != nil {
+		return "", err
+	}
+	_, wErr := f.WriteString("Now something exists in the file")
+	if wErr != nil {
+		return "", wErr
+	}
+	return screenName, nil
+}
+
 func GetContext() *gin.Context {
 	return GetContextParams("/containers", "1", "10")
 }
