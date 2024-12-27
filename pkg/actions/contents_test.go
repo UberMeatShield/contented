@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"contented/pkg/models"
 	"contented/pkg/test_common"
+	"contented/pkg/utils"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -283,4 +285,84 @@ func ActionsTagSearchValidation(t *testing.T, router *gin.Engine) {
 	vCode, vErr := GetJson(url, "", &validate, router)
 	assert.Equal(t, http.StatusOK, vCode, fmt.Sprintf("Search failed %s", vErr))
 	assert.Equal(t, 1, len(*validate.Results), "Searching tags return content")
+}
+
+func TestActionsMemoryScreensDestroy(t *testing.T) {
+	cfg := test_common.InitMemoryFakeAppEmpty()
+	router := setupRouter()
+	assert.Equal(t, cfg.ReadOnly, false)
+	ValidateContentScreensDestroy(t, router)
+}
+
+func TestActionsDbContentScreensDestroy(t *testing.T) {
+	cfg, _, router := InitFakeRouterApp(true)
+	assert.Equal(t, cfg.ReadOnly, false)
+	ValidateContentScreensDestroy(t, router)
+}
+
+func ValidateContentScreensDestroy(t *testing.T, router *gin.Engine) {
+	containerPreviews, testDir := test_common.CreateTestPreviewsContainerDirectory(t)
+	utils.ResetPreviewDir(containerPreviews)
+	print("WHAT IS THE PREVIEW DIRECTORY %s", containerPreviews)
+
+	container := models.Container{
+		Name: "dir2",
+		Path: testDir,
+	}
+	cnt := models.Container{}
+	code, cErr := PostJson("/api/containers", container, &cnt, router)
+	assert.NoError(t, cErr, "Failed to create the container %s", container.GetFqPath())
+	assert.Equal(t, http.StatusCreated, code, "It should create the container %d", code)
+
+	content := models.Content{
+		Src:         "donut_[special( gunk.mp4",
+		ContainerID: &cnt.ID,
+	}
+	contentCheck := models.Content{}
+	code, cErr = PostJson("/api/contents", content, &contentCheck, router)
+	assert.NoError(t, cErr, "It should create content %d", code)
+	assert.Greater(t, contentCheck.ID, int64(0), "It should create a valid content")
+	assert.Equal(t, http.StatusCreated, code, "It should create the content %d", code)
+
+	// Create some content on disk so we can validate disk removal of these elements
+	screenName1, err := test_common.WriteScreenFile(containerPreviews, "ScreenTestRemove", 1)
+	assert.NoError(t, err, "Failed to write screen file: %v", err)
+	screenName2, err := test_common.WriteScreenFile(containerPreviews, "ScreenTestRemove", 2)
+	assert.NoError(t, err, "Failed to write screen file: %v", err)
+
+	screen1 := models.Screen{ContentID: contentCheck.ID, Src: screenName1, Path: containerPreviews}
+	screen1Check := models.Screen{}
+	screen2 := models.Screen{ContentID: contentCheck.ID, Src: screenName2, Path: containerPreviews}
+	screen2Check := models.Screen{}
+
+	s1Code, s1Err := PostJson("/api/screens", screen1, &screen1Check, router)
+	assert.NoError(t, s1Err, "It should create the screen %d", code)
+	assert.Equal(t, http.StatusCreated, s1Code, "Screen create status code was unexpected %d", code)
+	assert.Equal(t, screen1Check.ContentID, contentCheck.ID, "It should have the same ID")
+	s2Code, s2Err := PostJson("/api/screens", screen2, &screen2Check, router)
+	assert.NoError(t, s2Err, "It should create the second screen %d", code)
+	assert.Equal(t, http.StatusCreated, s2Code, "Bad status code back from screen creation %d", code)
+	assert.Equal(t, screen2Check.ContentID, contentCheck.ID, "It should have the same ID")
+
+	// Verify directory now has two files
+	files, err := os.ReadDir(containerPreviews)
+	assert.NoError(t, err, "Should be able to read directory")
+	assert.NotEmpty(t, files, "Directory should be empty before test")
+	assert.Equal(t, 2, len(files), "Directory should have two files")
+
+	screenCheck := ScreensResponse{}
+	code, err = GetJson(fmt.Sprintf("/api/contents/%d/screens", contentCheck.ID), "", &screenCheck, router)
+	assert.NoError(t, err, "It should get the screens")
+	assert.Equal(t, http.StatusOK, code, "It should get the screens")
+	assert.Equal(t, 2, len(screenCheck.Results), "It should have two screens")
+
+	// Now delete the screens
+	code, err = DeleteJson(fmt.Sprintf("/api/contents/%d/screens", contentCheck.ID), router)
+	assert.NoError(t, err, "It should delete the screens")
+	assert.Equal(t, http.StatusOK, code, "It should delete the screens")
+
+	// Verify directory now has no files remaining
+	files, err = os.ReadDir(containerPreviews)
+	assert.NoError(t, err, "Should be able to read directory")
+	assert.Equal(t, 0, len(files), "Directory should have two files %s", containerPreviews)
 }

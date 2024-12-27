@@ -603,6 +603,18 @@ func RemoveScreensForContent(man ContentManager, contentID int64) error {
 		return nil
 	}
 
+	// Might need to get the container in these cases... ugly issue
+	content, err := man.GetContent(contentID)
+	if err != nil {
+		return err
+	}
+	cnt, err := man.GetContainer(*content.ContainerID)
+	if err != nil {
+		return err
+	}
+	dstPath := cnt.GetFqPath()
+	dstPath = filepath.Join(dstPath, utils.PREVIEW_DIRECTORY)
+
 	/*
 	 * DB it is more efficient to use the ClearScreens method but then we wouldn't have the actual
 	 * disk removal...
@@ -615,7 +627,7 @@ func RemoveScreensForContent(man ContentManager, contentID int64) error {
 		// It can be removed from disk already and we already check for IsNotExist
 		removed, err := utils.RemoveFile(screen.Path, screen.Src, man.GetCfg().Dir)
 		if !removed {
-			log.Printf("Failed to remove file on disk for screen %d %s", contentID, err)
+			log.Printf("Failed to remove file on disk for screen %d %s %s error %s", screen.ID, screen.Path, screen.Src, err)
 		}
 	}
 	return nil

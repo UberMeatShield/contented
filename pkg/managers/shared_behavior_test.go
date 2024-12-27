@@ -423,17 +423,14 @@ func ValidateClearScreensOnDisk(t *testing.T, man ContentManager) {
 	assert.NoError(t, man.CreateContent(&content), "Failed to create the content")
 	assert.Greater(t, content.ID, int64(0), "It should create a valid content")
 
-	contentID := content.ID
-
 	// Create some content on disk so we can validate disk removal of these elements
-
 	screenName1, err := test_common.WriteScreenFile(containerPreviews, "ScreenTestRemove", 1)
 	assert.NoError(t, err, "Failed to write screen file: %v", err)
 	screenName2, err := test_common.WriteScreenFile(containerPreviews, "ScreenTestRemove", 2)
 	assert.NoError(t, err, "Failed to write screen file: %v", err)
 
-	screen1 := models.Screen{ContentID: contentID, Src: screenName1, Path: containerPreviews}
-	screen2 := models.Screen{ContentID: contentID, Src: screenName2, Path: containerPreviews}
+	screen1 := models.Screen{ContentID: content.ID, Src: screenName1, Path: containerPreviews}
+	screen2 := models.Screen{ContentID: content.ID, Src: screenName2, Path: containerPreviews}
 	assert.NoError(t, man.CreateScreen(&screen1), "Failed to create screen1")
 	assert.NoError(t, man.CreateScreen(&screen2), "Failed to create screen2")
 
@@ -441,18 +438,18 @@ func ValidateClearScreensOnDisk(t *testing.T, man ContentManager) {
 	files, err := os.ReadDir(containerPreviews)
 	assert.NoError(t, err, "Should be able to read directory")
 	assert.NotEmpty(t, files, "Directory should be empty before test")
-	assert.Equal(t, 2, len(files), "Directory should have two files")
+	assert.Equal(t, 2, len(files), fmt.Sprintf("Directory should have two files %s", containerPreviews))
 
 	// Verify the screens exist in the managers
 	sq := ScreensQuery{
-		ContentID: strconv.FormatInt(contentID, 10),
+		ContentID: strconv.FormatInt(content.ID, 10),
 	}
 	screens, total, err := man.ListScreens(sq)
 	assert.NoError(t, err, "Failed to list screens")
 	assert.Equal(t, int64(2), total, "We should have our screens")
 	assert.NotNil(t, screens)
 
-	err = RemoveScreensForContent(man, contentID)
+	err = RemoveScreensForContent(man, content.ID)
 	assert.NoError(t, err, "Could not remove screens for content")
 
 	// Check that the screens are gone

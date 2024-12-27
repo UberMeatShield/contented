@@ -162,3 +162,43 @@ func ContentsResourceDestroy(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, content)
 }
+
+// Destroy deletes a Content from the DB. This function is mapped
+// to the path DELETE /contents/{content_id}
+func ContentScreensDestroy(c *gin.Context) {
+	man, _, err := managers.ManagerCanCUD(c)
+	if err != nil {
+		c.AbortWithError(http.StatusForbidden, err)
+		return
+	}
+
+	// TODO: Manager should ABSOLUTELY be the thing doing updates etc.
+	id, argErr := strconv.ParseInt(c.Param("content_id"), 10, 64)
+	if argErr != nil {
+		c.AbortWithError(http.StatusBadRequest, argErr)
+		return
+	}
+
+	content, err := man.GetContent(id)
+	if err != nil {
+		if content == nil {
+			c.AbortWithError(http.StatusNotFound, err)
+			return
+		} else {
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+	}
+
+	if content == nil {
+		c.AbortWithError(http.StatusNotFound, err)
+		return
+	}
+	err = managers.RemoveScreensForContent(man, content.ID)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+	content.Screens = models.Screens{}
+	c.JSON(http.StatusOK, content)
+}

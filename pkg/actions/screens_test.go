@@ -17,6 +17,7 @@ import (
 )
 
 func CreatePreview(src string, contentID int64, t *testing.T, router *gin.Engine) models.Screen {
+
 	screen := &models.Screen{
 		Src:       src,
 		ContentID: contentID,
@@ -41,7 +42,8 @@ func CreateTestContainerWithContent(t *testing.T, db *gorm.DB) (*models.Containe
 	assert.NoError(t, db.Create(c).Error, "Failed to create container")
 
 	// TODO: Ensure that this path is actually correct, should actually make a REAL jpeg copy
-	screenSrc := filepath.Join(dstDir, fmt.Sprintf("%s.screen.001.jpg", testFile))
+	screenName := fmt.Sprintf("%s.screen.001.jpg", testFile)
+	screenSrc := filepath.Join(dstDir, fmt.Sprintf("%s.screen.001.jpg", screenName))
 	mc := &models.Content{
 		Src:         testFile,
 		ContentType: "video/mp4",
@@ -125,7 +127,7 @@ func TestScreensResourceCreate(t *testing.T) {
 	_, db, router := InitFakeRouterApp(true)
 	_, mc, screenSrc := CreateTestContainerWithContent(t, db)
 	ps := CreatePreview(screenSrc, mc.ID, t, router)
-	assert.Equal(t, ps.Src, screenSrc)
+	assert.Equal(t, ps.Src, filepath.Base(screenSrc))
 
 	screens := models.Screens{}
 	db.Where("content_id = ?", mc.ID).Find(&screens)

@@ -57,18 +57,17 @@ func Get_VideoAndSetupPaths(cfg *utils.DirConfigEntry) (string, string, string) 
 func CreateTestPreviewsContainerDirectory(t *testing.T) (string, string) {
 	cfg := utils.GetCfg()
 	testDir := cfg.Dir
-	_, dstDir, _ := Get_VideoAndSetupPaths(cfg)
+	_, containerPreviews, _ := Get_VideoAndSetupPaths(cfg)
 
 	// Check we can write to the video destination directory (probably not needed)
-	ok, err := utils.PathIsOk(dstDir, "", testDir)
+	ok, err := utils.PathIsOk(containerPreviews, "", testDir)
 	if err != nil {
 		t.Errorf("Failed to check path %s", err)
 	}
 	if !ok {
-		t.Errorf("Path was not ok %s", dstDir)
+		t.Errorf("Path was not ok %s", containerPreviews)
 	}
 
-	containerPreviews := filepath.Join(dstDir, "container_previews")
 	if _, err := os.Stat(containerPreviews); os.IsNotExist(err) {
 		err := os.MkdirAll(containerPreviews, 0755)
 		if err != nil {

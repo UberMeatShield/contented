@@ -690,6 +690,9 @@ func (cm ContentManagerMemory) AssociateTagByID(tagId string, mcID int64) error 
 func (cm ContentManagerMemory) CreateScreen(screen *models.Screen) error {
 	// Validate that the content exists for the screen?
 	if screen != nil {
+		if utils.HasUpwardTraversal(screen.Src) {
+			return fmt.Errorf("screen src cannot contain upward traversal")
+		}
 		content, notFound := cm.GetContent(screen.ContentID)
 		if content == nil || notFound != nil {
 			return fmt.Errorf("a screen must be linked to content and %d was not found", screen.ContentID)
@@ -703,6 +706,12 @@ func (cm ContentManagerMemory) CreateScreen(screen *models.Screen) error {
 // TODO: Requires security checks like the DB version.
 func (cm ContentManagerMemory) CreateContent(content *models.Content) error {
 	if content != nil {
+		if utils.HasUpwardTraversal(content.Src) {
+			return fmt.Errorf("content src cannot contain upward traversal")
+		}
+		if utils.HasUpwardTraversal(content.FqPath) {
+			return fmt.Errorf("content path cannot contain upward traversal")
+		}
 		if content.Tags == nil {
 			content.Tags = models.Tags{}
 		}
@@ -767,6 +776,12 @@ func (cm ContentManagerMemory) DestroyScreen(id int64) (*models.Screen, error) {
 func (cm ContentManagerMemory) CreateContainer(c *models.Container) error {
 	if c == nil {
 		return errors.New("ContentManagerMemory no container was passed in to CreateContainer")
+	}
+	if utils.HasUpwardTraversal(c.Path) {
+		return fmt.Errorf("container path cannot contain upward traversal")
+	}
+	if utils.HasUpwardTraversal(c.Name) {
+		return fmt.Errorf("container name cannot contain upward traversal")
 	}
 	cfg := cm.GetCfg()
 	ok, err := utils.PathIsOk(c.Path, c.Name, cfg.Dir)
