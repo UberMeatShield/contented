@@ -1,8 +1,8 @@
 package actions
 
 import (
+	"contented/pkg/config"
 	"contented/pkg/test_common"
-	"contented/pkg/utils"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -14,7 +14,7 @@ import (
 func TestHomeHandler(t *testing.T) {
 	cfg, _ := test_common.InitFakeApp(false)
 	cfg.StaticResourcePath = fmt.Sprintf("../../%s", cfg.StaticResourcePath)
-	utils.SetCfg(*cfg)
+	config.SetCfg(*cfg)
 
 	r := setupStatic()
 	url := "/"

@@ -15,6 +15,7 @@ import (
 
 	//"errors"
 	"bufio"
+	"contented/pkg/config"
 	"contented/pkg/models"
 	"crypto/sha256"
 	"encoding/hex"
@@ -38,10 +39,10 @@ type ContentTree []ContentInformation
  * Grab a small preview list of all items in the directory.
  */
 func FindContainers(dir_root string) models.Containers {
-	return FindContainersMatcher(dir_root, IncludeAllContainers, ExcludeContainerDefault)
+	return FindContainersMatcher(dir_root, config.IncludeAllContainers, config.ExcludeContainerDefault)
 }
 
-func FindContainersMatcher(dir_root string, incCnt ContainerMatcher, excCnt ContainerMatcher) models.Containers {
+func FindContainersMatcher(dir_root string, incCnt config.ContainerMatcher, excCnt config.ContainerMatcher) models.Containers {
 	//log.Printf("FindContainers Reading from: %s", dir_root)
 	var listings = models.Containers{}
 	files, err := os.ReadDir(dir_root)
@@ -74,12 +75,12 @@ func FindContainersMatcher(dir_root string, incCnt ContainerMatcher, excCnt Cont
  *  Get all the content in a particular directory (would be good to filter down to certain file types?)
  */
 func FindContent(cnt models.Container, limit int64, start_offset int) models.Contents {
-	return FindContentMatcher(cnt, limit, start_offset, IncludeAllFiles, ExcludeNoFiles)
+	return FindContentMatcher(cnt, limit, start_offset, config.IncludeAllFiles, config.ExcludeNoFiles)
 }
 
 // func yup(string, string) bool is a required positive check on the filename and content type (default .*)
 // func nope(string, string) bool is a negative check (ie no zip files) default (everything is fine)
-func FindContentMatcher(cnt models.Container, limit int64, start_offset int, yup ContentMatcher, nope ContentMatcher) models.Contents {
+func FindContentMatcher(cnt models.Container, limit int64, start_offset int, yup config.ContentMatcher, nope config.ContentMatcher) models.Contents {
 	var arr = models.Contents{}
 
 	fqDirPath := filepath.Join(cnt.Path, cnt.Name)
@@ -161,7 +162,8 @@ func GetMimeType(path string, filename string) (string, error) {
 }
 
 func SniffFileType(content *os.File) (string, error) {
-	var buf [sniffLen]byte
+
+	var buf [config.SniffLen]byte
 	n, _ := io.ReadFull(content, buf[:])
 	ctype := http.DetectContentType(buf[:n])
 	_, err := content.Seek(0, io.SeekStart) // rewind to output whole file
@@ -244,7 +246,7 @@ func GetImageMeta(srcFile string) (string, bool) {
 }
 
 // Write a recurse method for getting all the data up to depth N
-func CreateStructure(dir string, cfg *DirConfigEntry, results *ContentTree, depth int) (*ContentTree, error) {
+func CreateStructure(dir string, cfg *config.DirConfigEntry, results *ContentTree, depth int) (*ContentTree, error) {
 	// log.Printf("Looking in directory %s set have results %d depth %d", dir, len(*results), depth)
 	if depth > cfg.MaxSearchDepth {
 		return results, nil

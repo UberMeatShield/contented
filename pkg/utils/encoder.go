@@ -4,6 +4,7 @@ package utils
  * These functions deal with using ffmpeg to encode video to new formats (h265)
  */
 import (
+	"contented/pkg/config"
 	"contented/pkg/models"
 	"errors"
 	"fmt"
@@ -95,7 +96,7 @@ func ShouldEncodeVideo(srcFile string, dstFile string) (string, error, bool) {
 	}
 
 	// Check that the converted file doesn't exist
-	cfg := GetCfg()
+	cfg := config.GetCfg()
 	log.Printf("The current src codec %s checking if we should convert to %s", codecName, cfg.CodecForConversion)
 
 	// The CodecForConversion is NOT the name of the thing you convert to...
@@ -155,7 +156,7 @@ func GetVideoConversionName(srcFile string) string {
 	filename := filepath.Base(srcFile)
 	ext := filepath.Ext(filename)
 
-	cfg := GetCfg()
+	cfg := config.GetCfg()
 	if cfg.EncodingDestination != "" {
 		path = cfg.EncodingDestination
 	}
@@ -178,7 +179,7 @@ func ConvertVideoToH265(srcFile string, dstFile string) (string, error, bool) {
 	}
 
 	// If codec in list of conversion codecs, then do it
-	cfg := GetCfg()
+	cfg := config.GetCfg()
 	log.Printf("About to convert %s to codec %s", reason, cfg.CodecForConversion)
 	encode_err := ffmpeg.Input(srcFile).
 		Output(dstFile, ffmpeg.KwArgs{"c:v": cfg.CodecForConversion, "tag:v": "hvc1"}).
@@ -205,7 +206,7 @@ func IsDuplicateVideo(encodedFile string, dupeFile string) (bool, error) {
 	encodedDuration := gjson.Get(encodedMeta, "format.duration").Float()
 	log.Printf("Src %s had codec %s, size %d and runtime %f", encodedFile, encodedCodec, encodedSize, encodedDuration)
 
-	cfg := GetCfg()
+	cfg := config.GetCfg()
 	if encodedCodec != cfg.CodecForConversionName {
 		msg := fmt.Sprintf("Encoded File %s was not what we want %s", encodedFile, encodedCodec)
 		return false, errors.New(msg)

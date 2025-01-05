@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"contented/pkg/config"
 	"contented/pkg/managers"
 	"contented/pkg/models"
 	"contented/pkg/utils"
@@ -42,7 +43,7 @@ func (t SearchContainersResult) String() string {
 
 // Builds out information given the application and the content directory
 func SetupContented(r *gin.Engine, contentDir string, numToPreview int64, limit int) {
-	cfg := utils.GetCfg()
+	cfg := config.GetCfg()
 
 	// Initialize workers that will listen for encoding tasks (GoBuffalo has some Gin does not)
 	log.Printf("TODO: The job processors are busted without GoBuffalo")
@@ -68,7 +69,7 @@ var ENCODING_QUEUE *worker.TaskQueue
 
 // TODO: Determine if these should be registered by config (don't use normal workers basically)
 func SetupWorkers() {
-	cfg := utils.GetCfg()
+	cfg := config.GetCfg()
 
 	// Note this only works locally in memory and this should be extended to a set of tasks that
 	// can read from redis OR a local queue.
@@ -153,7 +154,7 @@ type SplashResponse struct {
 }
 
 func SplashHandler(c *gin.Context) {
-	cfg := utils.GetCfg()
+	cfg := config.GetCfg()
 	man := managers.GetManager(c)
 
 	sr := SplashResponse{}

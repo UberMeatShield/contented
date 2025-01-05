@@ -1,6 +1,7 @@
 package managers
 
 import (
+	"contented/pkg/config"
 	"contented/pkg/models"
 	"contented/pkg/test_common"
 	"contented/pkg/utils"
@@ -43,7 +44,7 @@ func TestSharedInitialCreation(t *testing.T) {
 	cfg := test_common.ResetConfig()
 	db := models.ResetDB(models.InitGorm(false))
 
-	dir := utils.MustGetEnvString("DIR")
+	dir := config.MustGetEnvString("DIR")
 	assert.NotEmpty(t, dir, "The test must specify a directory to run on")
 
 	assert.True(t, cfg.ExcContent(".DS_Store", "application/octet-stream"), "This should not be allowed")
@@ -67,13 +68,13 @@ func TestSharedCfgIncExcContent(t *testing.T) {
 	db := models.ResetDB(models.InitGorm(false))
 
 	// Exclude all images
-	dir := utils.MustGetEnvString("DIR")
+	dir := config.MustGetEnvString("DIR")
 	cfg.Dir = dir
-	nope := utils.CreateContentMatcher("DS_Store", "image|text", "OR")
+	nope := config.CreateContentMatcher("DS_Store", "image|text", "OR")
 
 	assert.True(t, nope(".DS_Store", "image/png"))
 	cfg.ExcContent = nope
-	utils.SetCfg(*cfg)
+	config.SetCfg(*cfg)
 	err := CreateInitialStructure(cfg)
 	assert.NoError(t, err)
 
@@ -84,8 +85,8 @@ func TestSharedCfgIncExcContent(t *testing.T) {
 	assert.Equal(t, content[0].ContentType, "video/mp4", "It should be the video")
 
 	models.ResetDB(models.InitGorm(false))
-	cfg.ExcContent = utils.ExcludeNoFiles
-	cfg.IncContent = utils.CreateContentMatcher("", "jpeg", "AND")
+	cfg.ExcContent = config.ExcludeNoFiles
+	cfg.IncContent = config.CreateContentMatcher("", "jpeg", "AND")
 
 	err_png := CreateInitialStructure(cfg)
 	assert.NoError(t, err_png)
@@ -97,7 +98,7 @@ func TestSharedCfgIncExcContent(t *testing.T) {
 
 func TestSharedImgShouldCreatePreview(t *testing.T) {
 	cfg := test_common.ResetConfig()
-	dir := utils.MustGetEnvString("DIR")
+	dir := config.MustGetEnvString("DIR")
 
 	cfg.Dir = dir
 
@@ -152,7 +153,7 @@ func TestSharedCreateBaseTags(t *testing.T) {
 	cfg := test_common.ResetConfig()
 	cfg.UseDatabase = true
 	cfg.TagFile = filepath.Join(cfg.Dir, "/dir2/tags.txt")
-	utils.SetCfg(*cfg)
+	config.SetCfg(*cfg)
 
 	// TODO: Fix / nuke this
 	man := GetManagerTestSuite(cfg)
@@ -183,10 +184,10 @@ func TestSharedCreateContainerPreviews(t *testing.T) {
 
 	// Now add the data into the database
 	c_pt, content := SetupScreensPreview(t)
-	cfg := utils.GetCfg()
+	cfg := config.GetCfg()
 	cfg.UseDatabase = true
 	cfg.PreviewOverSize = int64(1)
-	utils.SetCfg(*cfg) // Note the SetupScrensPreview resets the config
+	config.SetCfg(*cfg) // Note the SetupScrensPreview resets the config
 
 	cRes := db.Create(c_pt)
 	test_common.NoError(cRes, "Failed to create content", t)
@@ -251,12 +252,12 @@ func TestSharedPreviewAllData(t *testing.T) {
 	db := models.ResetDB(models.InitGorm(false))
 	assert.NoError(t, db.Error, "Couldn't clean the DB")
 
-	dir := utils.MustGetEnvString("DIR")
+	dir := config.MustGetEnvString("DIR")
 	assert.NotEmpty(t, dir, "The test must specify a directory to run on")
 
 	cfg.UseDatabase = true
 	cfg.Dir = dir
-	cfg.ExcContent = utils.CreateContentMatcher("corrupted", "", cfg.ExcludeOperator)
+	cfg.ExcContent = config.CreateContentMatcher("corrupted", "", cfg.ExcludeOperator)
 
 	cErr := CreateInitialStructure(cfg)
 	assert.NoError(t, cErr, "No errors should occur during data creation")
@@ -284,7 +285,7 @@ func TestSharedPreviewsWithCorrupted(t *testing.T) {
 	db := models.ResetDB(models.InitGorm(false))
 	assert.NoError(t, db.Error, "Couldn't clean the DB")
 
-	dir := utils.MustGetEnvString("DIR")
+	dir := config.MustGetEnvString("DIR")
 	assert.NotEmpty(t, dir, "The test must specify a directory to run on")
 
 	// Note for this test we DO allow corrupted files
@@ -292,8 +293,8 @@ func TestSharedPreviewsWithCorrupted(t *testing.T) {
 	cfg.Dir = dir
 
 	// Match only our corrupted files
-	cfg.IncContent = utils.CreateContentMatcher(".*corrupted.*", "", cfg.IncludeOperator)
-	cfg.ExcContent = utils.ExcludeNoFiles
+	cfg.IncContent = config.CreateContentMatcher(".*corrupted.*", "", cfg.IncludeOperator)
+	cfg.ExcContent = config.ExcludeNoFiles
 
 	c_err := CreateInitialStructure(cfg)
 	man := GetManagerTestSuite(cfg)
@@ -330,7 +331,7 @@ func TestSharedFindDuplicateVideos(t *testing.T) {
 	db := models.ResetDB(models.InitGorm(false))
 	assert.NoError(t, db.Error, "Couldn't clean the DB")
 
-	dir := utils.MustGetEnvString("DIR")
+	dir := config.MustGetEnvString("DIR")
 	assert.NotEmpty(t, dir, "The test must specify a directory to run on")
 
 	cfg.UseDatabase = false

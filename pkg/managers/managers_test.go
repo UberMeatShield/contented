@@ -1,9 +1,9 @@
 package managers
 
 import (
+	"contented/pkg/config"
 	"contented/pkg/models"
 	"contented/pkg/test_common"
-	"contented/pkg/utils"
 	"net/url"
 	"os"
 	"testing"
@@ -18,7 +18,7 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func GetManagerTestSuite(cfg *utils.DirConfigEntry) ContentManager {
+func GetManagerTestSuite(cfg *config.DirConfigEntry) ContentManager {
 	ctx := test_common.GetContext()
 	get_params := func() *url.Values {
 		return GinParamsToUrlValues(ctx.Params, url.Values{})

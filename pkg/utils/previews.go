@@ -6,6 +6,7 @@ package utils
  */
 import (
 	"bytes"
+	"contented/pkg/config"
 	"contented/pkg/models"
 	"errors"
 	"fmt"
@@ -113,7 +114,7 @@ func GetPreviewPathDestination(filename string, dstPath string, contentType stri
 	dstFilename := filename
 	if strings.Contains(contentType, "video") {
 		// The image library for video previews sets the output by ext (not a video)
-		previewType := GetCfg().PreviewVideoType
+		previewType := config.GetCfg().PreviewVideoType
 		if previewType == "screens" {
 			dstFilename += ".webp"
 		} else {
@@ -193,7 +194,7 @@ func CleanPaletteFile(paletteFile string) error {
 func GetScreensOutputPattern(dstFile string) string {
 	stripExtension := regexp.MustCompile(".png$|.gif$|.webp$")
 	dstFile = stripExtension.ReplaceAllString(dstFile, "")
-	cfg := GetCfg()
+	cfg := config.GetCfg()
 	if cfg.PreviewVideoType == "screens" {
 		return fmt.Sprintf("%s%s", dstFile, ".screens.%03dss%05d.jpg")
 	} else {
@@ -221,7 +222,7 @@ func GetScreensMatcherRE(dstFile string) (*regexp.Regexp, error) {
 	dstFile = regexp.QuoteMeta(dstFile)
 
 	// Check if there is a screens option and modify the screen time
-	cfg := GetCfg()
+	cfg := config.GetCfg()
 
 	// This can be changed to use ffmpeg -pattern_type glob -i 'name.ss*.jpg' which is BETTER on linux
 	// but seemingly would never work on windows which is annoying.
@@ -279,7 +280,7 @@ func GetImagePreview(path string, filename string, dstPath string, pIfSize int64
 func CreateVideoPreview(srcFile string, dstFile string, contentType string) (string, error) {
 	// Split based on the environment variable () - Need to set the location
 	// And probably the name of the thing better based on the type.
-	cfg := GetCfg()
+	cfg := config.GetCfg()
 
 	if cfg.PreviewVideoType == "gif" {
 		return CreateGifFromVideo(srcFile, dstFile)
@@ -298,13 +299,13 @@ func CreateVideoPreview(srcFile string, dstFile string, contentType string) (str
 * Creates a set of preview files in the preview directory from the source image.
  */
 func CreateScreensFromVideo(srcFile string, dstFile string) (string, error) {
-	cfg := GetCfg()
+	cfg := config.GetCfg()
 	return CreateScreensFromVideoSized(srcFile, dstFile, cfg.ScreensOverSize)
 }
 
 func CreateScreensFromVideoSized(srcFile string, dstFile string, previewScreensOverSize int64) (string, error) {
 
-	cfg := GetCfg()
+	cfg := config.GetCfg()
 	frameOffsetSeconds := cfg.PreviewFirstScreenOffset
 	totalScreens := cfg.PreviewNumberOfScreens
 
@@ -579,7 +580,7 @@ func CreateGifFromVideo(srcFile string, dstFile string) (string, error) {
 		return "", err
 	}
 
-	cfg := GetCfg()
+	cfg := config.GetCfg()
 	framerate := "0.5"
 	vframes := cfg.PreviewNumberOfScreens
 	filter_v := "setpts=PTS/2"
@@ -621,7 +622,7 @@ func CreateGifFromVideo(srcFile string, dstFile string) (string, error) {
 // This might not need to be a fatal on an error, but is nice for debugging now
 // Unit test is in helper_test...
 func CreateContentPreview(c *models.Container, mc *models.Content) (string, error) {
-	cfg := GetCfg()
+	cfg := config.GetCfg()
 	cntPath := filepath.Join(c.Path, c.Name)
 	dstPath := GetContainerPreviewDst(c)
 

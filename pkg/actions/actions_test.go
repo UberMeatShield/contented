@@ -2,10 +2,10 @@ package actions
 
 import (
 	"bytes"
+	"contented/pkg/config"
 	"contented/pkg/managers"
 	"contented/pkg/models"
 	"contented/pkg/test_common"
-	"contented/pkg/utils"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -38,7 +38,7 @@ func setupStatic() *gin.Engine {
 	return r
 }
 
-func InitFakeRouterApp(useDb bool) (*utils.DirConfigEntry, *gorm.DB, *gin.Engine) {
+func InitFakeRouterApp(useDb bool) (*config.DirConfigEntry, *gorm.DB, *gin.Engine) {
 	cfg, db := test_common.InitFakeApp(useDb)
 	return cfg, db, setupRouter()
 }

@@ -6,6 +6,7 @@ package managers
  */
 
 import (
+	"contented/pkg/config"
 	"contented/pkg/models"
 	"contented/pkg/utils"
 	"fmt"
@@ -109,7 +110,7 @@ func EncodeContainer(c *models.Container, cm ContentManager) (*utils.EncodingRes
 func EncodeContainerContent(toEncode *utils.EncodingRequests, cm ContentManager) (*utils.EncodingResults, error) {
 	expected := len(*toEncode)
 	log.Printf("Attempting to encode N(%d) video files", expected)
-	cfg := utils.GetCfg()
+	cfg := config.GetCfg()
 	processors := cfg.CoreCount / 2 // TODO: Another config... SO MANY
 	if processors <= 0 {
 		processors = 1 // Without at least one processor this will hang forever

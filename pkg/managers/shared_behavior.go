@@ -9,6 +9,7 @@ package managers
  */
 
 import (
+	"contented/pkg/config"
 	"contented/pkg/models"
 	"contented/pkg/utils"
 	"fmt"
@@ -22,7 +23,7 @@ import (
 
 // Process all the directories and get a valid setup into the DB
 // Probably should return a count of everything
-func CreateInitialStructure(cfg *utils.DirConfigEntry) error {
+func CreateInitialStructure(cfg *config.DirConfigEntry) error {
 
 	contentTree, err := utils.CreateStructure(cfg.Dir, cfg, &utils.ContentTree{}, 0)
 	if err != nil {
@@ -143,7 +144,7 @@ func CreateAllPreviews(cm ContentManager) error {
 // source video was not removed.
 func FindDuplicateVideos(cm ContentManager) (DuplicateContents, error) {
 	log.Printf("Attempting to remove Duplicate videos")
-	cfg := utils.GetCfg()
+	cfg := config.GetCfg()
 	if cfg.EncodingFilenameModifier == "" {
 		log.Fatalf("The encoding filename modifier is used to look for a dupe and it is not set.")
 	}
@@ -189,7 +190,7 @@ func FindContainerDuplicates(cm ContentManager, cnt *models.Container, contentTy
 }
 
 func FindDuplicateContents(cm ContentManager, cnt *models.Container, cs ContentQuery) (DuplicateContents, []string) {
-	cfg := utils.GetCfg()
+	cfg := config.GetCfg()
 	contents, total, err := cm.ListContent(cs)
 	errors := []string{}
 	if total == 0 || err != nil {
@@ -324,7 +325,7 @@ func CreateContentPreviews(c *models.Container, content models.Contents) (models
 	if len(content) == 0 {
 		return models.Contents{}, nil
 	}
-	cfg := utils.GetCfg()
+	cfg := config.GetCfg()
 	processors := cfg.CoreCount
 	if processors <= 0 {
 		processors = 1 // Without at least one processor this will hang forever

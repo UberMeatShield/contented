@@ -6,6 +6,7 @@ package utils
 * containers and content and is then used by the MemoryManager.
  */
 import (
+	"contented/pkg/config"
 	"contented/pkg/models"
 	"errors"
 	"fmt"
@@ -209,7 +210,7 @@ func PopulateMemoryView(dir_root string) (models.ContainerMap, models.ContentMap
 	files := models.ContentMap{}
 	screensMap := models.ScreenMap{}
 
-	cfg := GetCfg()
+	cfg := config.GetCfg()
 
 	log.Printf("PopulateMemoryView searching in %s with depth %d", dir_root, cfg.MaxSearchDepth)
 	contentTree, err := CreateStructure(cfg.Dir, cfg, &ContentTree{}, 0)

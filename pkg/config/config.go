@@ -1,4 +1,4 @@
-package utils
+package config
 
 /**
 * These are utilities for handling configuration settings for the app overall.  It sets up
@@ -17,7 +17,7 @@ import (
 )
 
 // TODO: hard code vs Envy vs test stuff.  A pain in the butt
-const sniffLen = 512           // How many bytes to read in a file when trying to determine mime type
+const SniffLen = 512           // How many bytes to read in a file when trying to determine mime type
 const DefaultLimit int = 10000 // The max limit set by environment variable
 const DefaultPreviewCount int = 8
 const DefaultUseDatabase bool = false

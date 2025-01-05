@@ -3,10 +3,10 @@ package actions
 // These tests are DB based tests, vs in memory manager test_common.InitFakeApp(true)
 
 import (
+	"contented/pkg/config"
 	"contented/pkg/managers"
 	"contented/pkg/models"
 	"contented/pkg/test_common"
-	"contented/pkg/utils"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -19,7 +19,7 @@ import (
 )
 
 func CreateNamedContainer(name string, t *testing.T, router *gin.Engine) models.Container {
-	cfg := utils.GetCfg()
+	cfg := config.GetCfg()
 	c := &models.Container{
 		Total: 1,
 		Name:  name,

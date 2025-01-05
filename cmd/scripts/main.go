@@ -1,9 +1,9 @@
 package main
 
 import (
+	"contented/pkg/config"
 	"contented/pkg/managers"
 	"contented/pkg/models"
-	"contented/pkg/utils"
 	"flag"
 	"fmt"
 	"net/url"
@@ -43,9 +43,9 @@ func main() {
 }
 
 func CreateScriptManager() managers.ContentManager {
-	cfg := utils.GetCfgDefaults()
-	utils.InitConfigEnvy(&cfg)
-	utils.SetCfg(cfg)
+	cfg := config.GetCfgDefaults()
+	config.InitConfigEnvy(&cfg)
+	config.SetCfg(cfg)
 
 	//TODO: Override with various flags and arguments
 	get_params := func() *url.Values {

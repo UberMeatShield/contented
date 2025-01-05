@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"contented/pkg/config"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -60,7 +61,7 @@ func Test_VideoEncoding(t *testing.T) {
 		t.Errorf("It should have encoded but something went wrong: %s, err: %s", msg, err)
 	}
 
-	cfg := GetCfg()
+	cfg := config.GetCfg()
 	vidInfo, err := ffmpeg.Probe(dstFile)
 	assert.NoError(t, err, fmt.Sprintf("Failed to probe dstFile %s", dstFile))
 
@@ -101,9 +102,9 @@ func Test_VideoEncodingNotMatching(t *testing.T) {
 	dstFile := fmt.Sprintf("%s.%s", srcFile, "[h265].mp4")
 
 	nukeFile(dstFile) // Ensure a previous test fail doesn't leave files
-	cfg := GetCfg()
+	cfg := config.GetCfg()
 	cfg.CodecsToConvert = "windows_trash|quicktime" // Shouldn't match
-	SetCfg(*cfg)
+	config.SetCfg(*cfg)
 
 	checkMsg, checkErr, encoded := ConvertVideoToH265(srcFile, dstFile)
 	if _, err := os.Stat(dstFile); !os.IsNotExist(err) {
@@ -118,7 +119,7 @@ func Test_VideoEncodingNotMatching(t *testing.T) {
 }
 
 func Test_VideoImageDiff(t *testing.T) {
-	dir := MustGetEnvString("DIR")
+	dir := config.MustGetEnvString("DIR")
 	srcDir := filepath.Join(dir, "test_encoding")
 
 	encodedFile := filepath.Join(srcDir, "SampleVideo_1280x720_1mb_h265.mp4")
@@ -141,7 +142,7 @@ func Test_VideoImageDiff(t *testing.T) {
 }
 
 func Test_VideosAreDifferent(t *testing.T) {
-	dir := MustGetEnvString("DIR")
+	dir := config.MustGetEnvString("DIR")
 	srcDir := filepath.Join(dir, "test_encoding")
 
 	encodedFile := filepath.Join(srcDir, "SampleVideo_1280x720_1mb_h265.mp4")

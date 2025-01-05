@@ -1,6 +1,7 @@
 package managers
 
 import (
+	"contented/pkg/config"
 	"contented/pkg/models"
 	"contented/pkg/test_common"
 	"contented/pkg/utils"
@@ -50,7 +51,7 @@ func TestMemoryManagerContent(t *testing.T) {
 func TestMemoryManagerAssignManager(t *testing.T) {
 	cfg := test_common.ResetConfig()
 	cfg.UseDatabase = false
-	utils.InitConfig(cfg.Dir, cfg)
+	config.InitConfig(cfg.Dir, cfg)
 
 	mem := ContentManagerMemory{}
 	mem.validate = "Memory"
@@ -235,8 +236,8 @@ func TestMemoryManagerSearchMulti(t *testing.T) {
 
 func TestMemoryPreviewInitialization(t *testing.T) {
 	cfg := test_common.ResetConfig()
-	utils.SetupContentMatchers(cfg, "", "video", "DS_Store", "")
-	utils.SetCfg(*cfg)
+	config.SetupContentMatchers(cfg, "", "video", "DS_Store", "")
+	config.SetCfg(*cfg)
 
 	// Create a fake file that would sub in by name for a preview
 	testDir := models.GetEnvString("DIR", "")
