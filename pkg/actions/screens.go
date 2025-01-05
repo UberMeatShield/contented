@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"contented/pkg/config"
 	"contented/pkg/managers"
 	"contented/pkg/models"
 	"contented/pkg/utils"
@@ -123,7 +124,7 @@ func ScreensResourceCreate(c *gin.Context) {
 
 	// TODO: make the preview directory name configurable or something that can be passed via the API
 	dstPath := cnt.GetFqPath()
-	screen.Path = filepath.Join(dstPath, utils.PREVIEW_DIRECTORY)
+	screen.Path = filepath.Join(dstPath, config.PREVIEW_DIRECTORY)
 
 	cErr := man.CreateScreen(screen)
 	if cErr != nil {

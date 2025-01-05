@@ -609,12 +609,10 @@ func RemoveScreensForContent(man ContentManager, contentID int64) error {
 	if err != nil {
 		return err
 	}
-	cnt, err := man.GetContainer(*content.ContainerID)
+	_, err = man.GetContainer(*content.ContainerID)
 	if err != nil {
 		return err
 	}
-	dstPath := cnt.GetFqPath()
-	dstPath = filepath.Join(dstPath, utils.PREVIEW_DIRECTORY)
 
 	/*
 	 * DB it is more efficient to use the ClearScreens method but then we wouldn't have the actual
