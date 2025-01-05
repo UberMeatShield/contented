@@ -2,8 +2,8 @@ package main
 
 import (
 	"contented/pkg/actions"
+	"contented/pkg/config"
 	"contented/pkg/models"
-	"contented/pkg/utils"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -13,10 +13,10 @@ import (
  * Initialize the Gin Application.
  */
 func main() {
-	cfg := utils.GetCfg()
-	utils.InitConfigEnvy(cfg)
+	cfg := config.GetCfg()
+	config.InitConfigEnvy(cfg)
 	if cfg.UseDatabase {
-		models.InitializeAppDatabase(utils.GetEnvString("GO_ENV", "development"))
+		models.InitializeAppDatabase(config.GetEnvString("GO_ENV", "development"))
 	}
 
 	// Set them up side by side?

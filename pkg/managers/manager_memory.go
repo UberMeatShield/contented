@@ -6,6 +6,7 @@
 package managers
 
 import (
+	"contented/pkg/config"
 	"contented/pkg/models"
 	"contented/pkg/utils"
 	"errors"
@@ -20,7 +21,7 @@ import (
 
 // Provides the support for looking up content by ID while only using memory
 type ContentManagerMemory struct {
-	cfg *utils.DirConfigEntry
+	cfg *config.DirConfigEntry
 
 	// Hmmm, this should use the memory manager probably
 	/*
@@ -40,13 +41,13 @@ func (cm ContentManagerMemory) CanEdit() bool {
 }
 
 // Provide the ability to set the configuration for a memory manager.
-func (cm *ContentManagerMemory) SetCfg(cfg *utils.DirConfigEntry) {
+func (cm *ContentManagerMemory) SetCfg(cfg *config.DirConfigEntry) {
 	cm.cfg = cfg
 	log.Printf("Memory Manager SetCfg() validate: %s\n", cm.validate)
 }
 
 // Get the currently configuration for this manager.
-func (cm ContentManagerMemory) GetCfg() *utils.DirConfigEntry {
+func (cm ContentManagerMemory) GetCfg() *config.DirConfigEntry {
 	// log.Printf("Memory Config is using path %s", cm.cfg.Dir)
 	return cm.cfg
 }

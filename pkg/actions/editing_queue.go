@@ -5,9 +5,9 @@ package actions
  * The handler functions are used to actually add something in the API and validate the inputs.
  */
 import (
+	"contented/pkg/config"
 	"contented/pkg/managers"
 	"contented/pkg/models"
-	"contented/pkg/utils"
 	"contented/pkg/worker"
 	"errors"
 	"fmt"
@@ -329,7 +329,7 @@ func ContentTaskScreensHandler(c *gin.Context) {
 }
 
 func ValidateScreensParams(params url.Values) (int, int, error) {
-	cfg := utils.GetCfg()
+	cfg := config.GetCfg()
 
 	startTimeSeconds, startErr := strconv.Atoi(params.Get("startTimeSeconds"))
 	if startErr != nil || startTimeSeconds < 0 {
@@ -351,7 +351,7 @@ func ContainerScreensHandler(c *gin.Context) {
 		c.AbortWithError(http.StatusBadRequest, badId)
 		return
 	}
-	cfg := utils.GetCfg()
+	cfg := config.GetCfg()
 	params := managers.GinParamsToUrlValues(c.Params, c.Request.URL.Query())
 	startTimeSeconds, numberOfScreens, err := ValidateScreensParams(*params)
 	if err != nil {
@@ -409,7 +409,7 @@ func CreateVideoEncodingTask(content *models.Content, codecChoice string) (*mode
 	if !content.IsVideo() {
 		return nil, fmt.Errorf("content %s was not a video %s", content.Src, content.ContentType)
 	}
-	cfg := utils.GetCfg()
+	cfg := config.GetCfg()
 	codec := managers.StringDefault(codecChoice, cfg.CodecForConversion)
 
 	// Check codec seems valid?

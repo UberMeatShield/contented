@@ -10,6 +10,7 @@
 package managers
 
 import (
+	"contented/pkg/config"
 	"contented/pkg/models"
 	"contented/pkg/utils"
 	"encoding/json"
@@ -110,7 +111,7 @@ func (t TagQuery) String() string {
 
 // This is the primary interface used to interact with the Content and related models.
 type ContentManager interface {
-	GetCfg() *utils.DirConfigEntry
+	GetCfg() *config.DirConfigEntry
 	CanEdit() bool // Do we support CRUD or just R
 
 	// Utility
@@ -175,7 +176,7 @@ type ContentManager interface {
 
 // Grab a manager based on the gin context. This should probably be mo
 func GetManager(c *gin.Context) ContentManager {
-	cfg := utils.GetCfg()
+	cfg := config.GetCfg()
 
 	// The connection should probably using both pooling and actual transactions when this is allo cleaned up.
 	getConnection := GetConnection(cfg)
@@ -188,7 +189,7 @@ func GetManager(c *gin.Context) ContentManager {
 }
 
 func GetManagerNoContext() ContentManager {
-	cfg := utils.GetCfg()
+	cfg := config.GetCfg()
 	get_params := func() *url.Values {
 		return &url.Values{}
 	}
@@ -196,7 +197,7 @@ func GetManagerNoContext() ContentManager {
 	return CreateManager(cfg, getConnection, get_params)
 }
 
-func GetConnection(cfg *utils.DirConfigEntry) GetConnType {
+func GetConnection(cfg *config.DirConfigEntry) GetConnType {
 	if cfg.UseDatabase {
 		var conn *gorm.DB
 		return func() *gorm.DB {
@@ -231,7 +232,7 @@ func GinParamsToUrlValues(params gin.Params, queryValues url.Values) *url.Values
 
 // this is sketchy because of the connection scope closing on us
 func GetAppManager(getConnection GetConnType) ContentManager {
-	cfg := utils.GetCfg()
+	cfg := config.GetCfg()
 	getParams := func() *url.Values {
 
 		// Need to fix this up as well or change the worker model.
@@ -259,7 +260,7 @@ func ManagerCanCUD(c *gin.Context) (ContentManager, *gorm.DB, error) {
 }
 
 // Create a manager based on the config, connection and params.
-func CreateManager(cfg *utils.DirConfigEntry, get_conn GetConnType, get_params GetParamsType) ContentManager {
+func CreateManager(cfg *config.DirConfigEntry, get_conn GetConnType, get_params GetParamsType) ContentManager {
 	if cfg.UseDatabase {
 		// Not really important for a DB manager, just need to look at it
 		log.Printf("Setting up the DB Manager")
@@ -292,7 +293,7 @@ func GetOffsetEnd(page int, per_page int, max int) (int, int) {
 	}
 
 	if per_page <= 0 {
-		per_page = utils.DefaultLimit
+		per_page = config.DefaultLimit
 	}
 	if page <= 0 {
 		page = 1
@@ -332,7 +333,7 @@ func GetPagination(params *url.Values, DefaultLimit int) (int, int, int) {
 }
 
 func GetPerPage(perPage int) int {
-	cfg := utils.GetCfg()
+	cfg := config.GetCfg()
 	if perPage > cfg.Limit || perPage <= 0 {
 		return cfg.Limit
 	}
@@ -340,7 +341,7 @@ func GetPerPage(perPage int) int {
 }
 
 // TODO: Fill in tags if they are provided.
-func ContextToContentQuery(params *url.Values, cfg *utils.DirConfigEntry) ContentQuery {
+func ContextToContentQuery(params *url.Values, cfg *config.DirConfigEntry) ContentQuery {
 	offset, per_page, page := GetPagination(params, cfg.Limit)
 	sReq := ContentQuery{
 		Text:          StringDefault(params.Get("text"), ""),
@@ -364,7 +365,7 @@ func ContextToContentQuery(params *url.Values, cfg *utils.DirConfigEntry) Conten
 }
 
 // TODO: Fill in tags if they are provided.
-func ContextToContainerQuery(params *url.Values, cfg *utils.DirConfigEntry) ContainerQuery {
+func ContextToContainerQuery(params *url.Values, cfg *config.DirConfigEntry) ContainerQuery {
 	offset, per_page, page := GetPagination(params, cfg.Limit)
 	sReq := ContainerQuery{
 		Name:          StringDefault(params.Get("name"), ""),

@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"contented/pkg/config"
 	"contented/pkg/models"
 	"os"
 	"path/filepath"
@@ -17,7 +18,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestFindContainers(t *testing.T) {
-	testDir := MustGetEnvString("DIR")
+	testDir := config.MustGetEnvString("DIR")
 
 	containers := FindContainers(testDir)
 	if len(containers) != len(dirs) {
@@ -42,8 +43,8 @@ func TestFindContainers(t *testing.T) {
 }
 
 func TestFindContent(t *testing.T) {
-	testDir := MustGetEnvString("DIR")
-	cfg := GetCfg()
+	testDir := config.MustGetEnvString("DIR")
+	cfg := config.GetCfg()
 	cfg.Dir = testDir
 	containers := FindContainers(testDir)
 	for _, c := range containers {
@@ -55,20 +56,20 @@ func TestFindContent(t *testing.T) {
 }
 
 func Test_SetupContainerMatchers(t *testing.T) {
-	testDir := MustGetEnvString("DIR")
-	cfg := DirConfigEntry{}
+	testDir := config.MustGetEnvString("DIR")
+	cfg := config.DirConfigEntry{}
 	cfg.Dir = testDir
-	SetupContainerMatchers(&cfg, "dir1|screens", "DS_Store")
+	config.SetupContainerMatchers(&cfg, "dir1|screens", "DS_Store")
 
 	containers := FindContainersMatcher(testDir, cfg.IncContainer, cfg.ExcContainer)
 	if len(containers) != 2 {
 		t.Errorf("We should only have matched two directories")
 	}
-	all_containers := FindContainersMatcher(testDir, IncludeAllContainers, cfg.ExcContainer)
+	all_containers := FindContainersMatcher(testDir, config.IncludeAllContainers, cfg.ExcContainer)
 	if len(all_containers) != len(dirs) {
 		t.Errorf("We should have excluded the .DS_Store")
 	}
-	exclude_none := FindContainersMatcher(testDir, IncludeAllContainers, ExcludeNoContainers)
+	exclude_none := FindContainersMatcher(testDir, config.IncludeAllContainers, config.ExcludeNoContainers)
 	if len(exclude_none) != len(dirs)+1 { // Prove we excluded some containers
 		t.Errorf("The DS_Store exists, if nothing is excluded then it should count")
 	}
@@ -76,10 +77,10 @@ func Test_SetupContainerMatchers(t *testing.T) {
 
 // Exclude the movie by name
 func Test_SetupContentMatchers(t *testing.T) {
-	testDir := MustGetEnvString("DIR")
-	cfg := DirConfigEntry{}
+	testDir := config.MustGetEnvString("DIR")
+	cfg := config.DirConfigEntry{}
 	cfg.Dir = testDir
-	SetupContentMatchers(&cfg, "", "", "donut|.DS_Store", "")
+	config.SetupContentMatchers(&cfg, "", "", "donut|.DS_Store", "")
 
 	containers := FindContainers(testDir)
 	found := false
@@ -98,7 +99,7 @@ func Test_SetupContentMatchers(t *testing.T) {
 }
 
 func Test_ContentMatcher(t *testing.T) {
-	testDir := MustGetEnvString("DIR")
+	testDir := config.MustGetEnvString("DIR")
 	containers := FindContainers(testDir)
 
 	FailAll := func(filename string, content_type string) bool {
@@ -107,11 +108,11 @@ func Test_ContentMatcher(t *testing.T) {
 
 	// The positive include all cases handled by using FindContent tests (default include all matches)
 	for _, cnt := range containers {
-		content := FindContentMatcher(cnt, 0, 20, IncludeAllFiles, FailAll)
+		content := FindContentMatcher(cnt, 0, 20, config.IncludeAllFiles, FailAll)
 		if len(content) != 0 {
 			t.Errorf("All Files should be excluded")
 		}
-		inc_test := FindContentMatcher(cnt, 0, 20, FailAll, ExcludeNoFiles)
+		inc_test := FindContentMatcher(cnt, 0, 20, FailAll, config.ExcludeNoFiles)
 		if len(inc_test) != 0 {
 			t.Errorf("None of these should be included")
 		}
@@ -120,7 +121,7 @@ func Test_ContentMatcher(t *testing.T) {
 }
 
 func Test_ContentType(t *testing.T) {
-	testDir := MustGetEnvString("DIR")
+	testDir := config.MustGetEnvString("DIR")
 	imgName := "this_is_jp_eg"
 	dirPath := filepath.Join(testDir, "dir1")
 
@@ -145,11 +146,11 @@ func Test_ContentType(t *testing.T) {
 }
 
 func TestCreateStructure(t *testing.T) {
-	testDir := MustGetEnvString("DIR")
-	cfg := GetCfg()
+	testDir := config.MustGetEnvString("DIR")
+	cfg := config.GetCfg()
 	cfg.MaxSearchDepth = 3
 	cfg.Dir = testDir
-	SetupContentMatchers(cfg, "", "", "DS_Store", "")
+	config.SetupContentMatchers(cfg, "", "", "DS_Store", "")
 
 	cTree := ContentTree{}
 	tree, err := CreateStructure(testDir, cfg, &cTree, 0)
@@ -179,11 +180,11 @@ func TestCreateStructure(t *testing.T) {
 }
 
 func TestEmptyInitial(t *testing.T) {
-	testDir := MustGetEnvString("DIR")
-	cfg := GetCfg()
+	testDir := config.MustGetEnvString("DIR")
+	cfg := config.GetCfg()
 	cfg.Dir = testDir
 	cfg.MaxSearchDepth = 3
-	SetupContainerMatchers(cfg, "empty", "")
+	config.SetupContainerMatchers(cfg, "empty", "")
 
 	cTree := ContentTree{}
 	tree, err := CreateStructure(testDir, cfg, &cTree, 0)
@@ -217,7 +218,7 @@ func Test_DirId(t *testing.T) {
 }
 
 func Test_FindContentOffset(t *testing.T) {
-	testDir := MustGetEnvString("DIR")
+	testDir := config.MustGetEnvString("DIR")
 	containers := FindContainers(testDir)
 
 	expect_dir := false
@@ -248,7 +249,7 @@ func Test_FindContentOffset(t *testing.T) {
 }
 
 func Test_CreateContentMatcher(t *testing.T) {
-	matcher := CreateContentMatcher(".jpg|.png|.gif", "image", "AND")
+	matcher := config.CreateContentMatcher(".jpg|.png|.gif", "image", "AND")
 
 	valid_fn := "derp.jpg"
 	valid_mime := "image/jpeg"
@@ -263,7 +264,7 @@ func Test_CreateContentMatcher(t *testing.T) {
 		t.Errorf("Does not match fn %s and mime %s", invalid_fn, valid_mime)
 	}
 
-	wild_matcher := CreateContentMatcher("", ".*", "AND")
+	wild_matcher := config.CreateContentMatcher("", ".*", "AND")
 	// empty_or_wild := matcher(empty_fn, wild_mime)
 	empty_or_wild := wild_matcher(invalid_fn, "application/x-bzip")
 	if !empty_or_wild {
@@ -294,7 +295,7 @@ func Test_Channels(t *testing.T) {
 }
 
 func Test_TagFileRead(t *testing.T) {
-	testDir := MustGetEnvString("DIR")
+	testDir := config.MustGetEnvString("DIR")
 	tagFile := filepath.Join(testDir, "dir2", "tags.txt")
 
 	tags, err := ReadTagsFromFile(tagFile)
@@ -335,14 +336,14 @@ func Test_TagFileRead(t *testing.T) {
 }
 
 func Test_AssignTagContent(t *testing.T) {
-	testDir := MustGetEnvString("DIR")
+	testDir := config.MustGetEnvString("DIR")
 
-	cfg := GetCfg()
+	cfg := config.GetCfg()
 	cfg.Dir = testDir
 	cfg.MaxSearchDepth = 1
 	cfg.Dir = testDir
-	SetupContainerMatchers(cfg, "dir2", "DS_Store")
-	SetupContentMatchers(cfg, "", "", "DS_Store", "")
+	config.SetupContainerMatchers(cfg, "dir2", "DS_Store")
+	config.SetupContentMatchers(cfg, "", "", "DS_Store", "")
 
 	tagFile := filepath.Join(testDir, "dir2", "tags.txt")
 	tags, err := ReadTagsFromFile(tagFile)

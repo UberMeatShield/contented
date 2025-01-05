@@ -1,9 +1,9 @@
 package actions
 
 import (
+	"contented/pkg/config"
 	"contented/pkg/models"
 	"contented/pkg/test_common"
-	"contented/pkg/utils"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -32,7 +32,7 @@ func CreatePreview(src string, contentID int64, t *testing.T, router *gin.Engine
 
 // Kind of a pain in the ass to create all the way down to a valid preview screen
 func CreateTestContainerWithContent(t *testing.T, db *gorm.DB) (*models.Container, *models.Content, string) {
-	cfg := utils.GetCfg()
+	cfg := config.GetCfg()
 	srcDir, dstDir, testFile := test_common.Get_VideoAndSetupPaths(cfg)
 	c := &models.Container{
 		Total: 4,

@@ -4,6 +4,7 @@
 package managers
 
 import (
+	"contented/pkg/config"
 	"contented/pkg/models"
 	"contented/pkg/utils"
 	"errors"
@@ -18,7 +19,7 @@ import (
 
 // DB version of content management
 type ContentManagerDB struct {
-	cfg *utils.DirConfigEntry
+	cfg *config.DirConfigEntry
 
 	/* Is this even useful ? */
 	params *url.Values
@@ -28,10 +29,10 @@ type ContentManagerDB struct {
 }
 
 // This is a little sketchy that the two are not directly linked
-func (cm *ContentManagerDB) SetCfg(cfg *utils.DirConfigEntry) {
+func (cm *ContentManagerDB) SetCfg(cfg *config.DirConfigEntry) {
 	cm.cfg = cfg
 }
-func (cm ContentManagerDB) GetCfg() *utils.DirConfigEntry {
+func (cm ContentManagerDB) GetCfg() *config.DirConfigEntry {
 	return cm.cfg
 }
 
@@ -40,7 +41,7 @@ func (cm ContentManagerDB) GetParams() *url.Values {
 }
 
 func (cm ContentManagerDB) CanEdit() bool {
-	cfg := utils.GetCfg()
+	cfg := config.GetCfg()
 	return !cfg.ReadOnly
 }
 

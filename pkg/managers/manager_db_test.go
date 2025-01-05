@@ -1,9 +1,9 @@
 package managers
 
 import (
+	"contented/pkg/config"
 	"contented/pkg/models"
 	"contented/pkg/test_common"
-	"contented/pkg/utils"
 	"fmt"
 	"strconv"
 	"testing"
@@ -18,7 +18,7 @@ func Test_ReadOnly_Mode(t *testing.T) {
 	assert.Equal(t, man.CanEdit(), true, "It should be able to edit")
 
 	cfg.ReadOnly = true
-	utils.SetCfg(*cfg)
+	config.SetCfg(*cfg)
 	assert.Equal(t, man.CanEdit(), false, "We should not be able to edit now")
 }
 

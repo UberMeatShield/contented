@@ -1,10 +1,10 @@
 package actions
 
 import (
+	"contented/pkg/config"
 	"contented/pkg/managers"
 	"contented/pkg/models"
 	"contented/pkg/test_common"
-	"contented/pkg/utils"
 	"contented/pkg/worker"
 	"encoding/json"
 	"fmt"
@@ -180,7 +180,7 @@ func TestWebpHandlerDB(t *testing.T) {
 
 	cfg.ScreensOverSize = 1
 	cfg.PreviewVideoType = "screens"
-	utils.SetCfg(*cfg)
+	config.SetCfg(*cfg)
 	_, content := CreateVideoContainer(t, router)
 	ValidateWebpCode(t, router, content)
 	// Create some screens and then encode it?
@@ -192,7 +192,7 @@ func TestWebpHandlerMemory(t *testing.T) {
 
 	cfg.ScreensOverSize = 1
 	cfg.PreviewVideoType = "screens"
-	utils.SetCfg(*cfg)
+	config.SetCfg(*cfg)
 	_, content := CreateVideoContainer(t, router)
 	ValidateWebpCode(t, router, content)
 }
@@ -226,14 +226,14 @@ func ValidateWebpCode(t *testing.T, router *gin.Engine, content *models.Content)
 
 func TestTagHandlerDB(t *testing.T) {
 	cfg, _, router := InitFakeRouterApp(true)
-	utils.SetCfg(*cfg)
+	config.SetCfg(*cfg)
 	_, content := CreateVideoContainer(t, router)
 	ValidateTaggingCode(t, router, content)
 }
 
 func TestTagHandlerMemory(t *testing.T) {
 	cfg, _, router := InitFakeRouterApp(false)
-	utils.SetCfg(*cfg)
+	config.SetCfg(*cfg)
 	_, content := CreateVideoContainer(t, router)
 	ValidateTaggingCode(t, router, content)
 }

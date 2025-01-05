@@ -8,6 +8,7 @@ import (
 	"time"
 
 	//    "errors"
+	"contented/pkg/config"
 	"contented/pkg/models"
 	"path/filepath"
 	"testing"
@@ -17,14 +18,14 @@ import (
 
 // Helper for a common block of video test code (duplicated in internals)
 func Get_VideoAndSetupPaths() (string, string, string) {
-	cfg := GetCfgDefaults()
+	cfg := config.GetCfgDefaults()
 
 	// The video we use is only 10.08 seconds long.
 	cfg.PreviewFirstScreenOffset = 2
 	cfg.PreviewNumberOfScreens = 4
-	SetCfg(cfg)
+	config.SetCfg(cfg)
 
-	testDir := MustGetEnvString("DIR")
+	testDir := config.MustGetEnvString("DIR")
 	srcDir := filepath.Join(testDir, "dir2")
 	dstDir := GetPreviewDst(srcDir)
 	testFile := "donut_[special( gunk.mp4"
@@ -50,7 +51,7 @@ func WriteScreenFile(dstPath string, fileName string, count int) (string, error)
 }
 
 func CreateTestPreviewsContainerDirectory(t *testing.T) (string, string) {
-	testDir := MustGetEnvString("DIR")
+	testDir := config.MustGetEnvString("DIR")
 	_, dstDir, _ := Get_VideoAndSetupPaths()
 
 	// Check we can write to the video destination directory (probably not needed)
@@ -119,7 +120,7 @@ func Test_RemoveFile(t *testing.T) {
 }
 
 func Test_ImageMetaLookup(t *testing.T) {
-	testDir := MustGetEnvString("DIR")
+	testDir := config.MustGetEnvString("DIR")
 	srcDir := filepath.Join(testDir, "dir2")
 	testFile := "typescript_nginx_ci_dir2.png"
 
@@ -136,7 +137,7 @@ func Test_ImageMetaLookup(t *testing.T) {
 
 // Check that handling bad inputs behaves in an expected fashion
 func Test_BrokenImagePreview(t *testing.T) {
-	testDir := MustGetEnvString("DIR")
+	testDir := config.MustGetEnvString("DIR")
 	srcDir := filepath.Join(testDir, "dir3")
 	dstDir := GetPreviewDst(srcDir)
 	testFile := "nature-corrupted-free-use.jpg"
@@ -160,7 +161,7 @@ func Test_BrokenImagePreview(t *testing.T) {
 
 // Should it Create a preview based on size of the file
 func Test_ShouldCreate(t *testing.T) {
-	testDir := MustGetEnvString("DIR")
+	testDir := config.MustGetEnvString("DIR")
 	srcDir := filepath.Join(testDir, "dir1")
 	testFile := "this_is_p_ng"
 
@@ -182,7 +183,7 @@ func Test_ShouldCreate(t *testing.T) {
 }
 
 func Test_FileExistsError(t *testing.T) {
-	testDir := MustGetEnvString("DIR")
+	testDir := config.MustGetEnvString("DIR")
 	srcDir := filepath.Join(testDir, "dir1")
 	dstDir := GetPreviewDst(srcDir)
 	knownFile := "0_LargeScreen.png"
@@ -211,7 +212,7 @@ func Test_FileExistsError(t *testing.T) {
 
 // Possibly make this some sort of global test helper function (harder to do in GoLang?)
 func Test_JpegPreview(t *testing.T) {
-	testDir := MustGetEnvString("DIR")
+	testDir := config.MustGetEnvString("DIR")
 	srcDir := filepath.Join(testDir, "dir1")
 	dstDir := GetPreviewDst(srcDir)
 	testFile := "this_is_jp_eg"
@@ -246,7 +247,7 @@ func Test_JpegPreview(t *testing.T) {
 
 // Does it work when there is a png
 func Test_PngPreview(t *testing.T) {
-	testDir := MustGetEnvString("DIR")
+	testDir := config.MustGetEnvString("DIR")
 	srcDir := filepath.Join(testDir, "dir1")
 	dstDir := GetPreviewDst(srcDir)
 	testFile := "this_is_p_ng"
@@ -282,10 +283,10 @@ func Test_VideoLength(t *testing.T) {
 
 func Test_WebpFromVideo(t *testing.T) {
 	srcDir, dstDir, testFile := Get_VideoAndSetupPaths()
-	cfg := GetCfg()
+	cfg := config.GetCfgDefaults()
 	cfg.ScreensOverSize = 1024
 	cfg.PreviewVideoType = "screens"
-	SetCfg(*cfg)
+	config.SetCfg(cfg)
 
 	// It will tack on .webp
 	dstFile := GetPreviewPathDestination(testFile, dstDir, "video")
@@ -297,12 +298,8 @@ func Test_WebpFromVideo(t *testing.T) {
 		t.Errorf("Couldn't create preview from %s err: %s", srcFile, err)
 	}
 	webpStat, noWebp := os.Stat(previewFile)
-	if noWebp != nil {
-		t.Errorf("Did not create a preview from screens %s", previewFile)
-	}
-	if webpStat.Size() > (700 * 1024) {
-		t.Errorf("Webp has too much chonk %d", webpStat.Size())
-	}
+	assert.Nil(t, noWebp, "Did not create a preview from screens %s", previewFile)
+	assert.LessOrEqual(t, webpStat.Size(), int64(700*1024), "Webp has too much chonk %d", webpStat.Size())
 
 	// Check that if we use a screens version it will work as a preview
 	// using memory storage
@@ -315,17 +312,11 @@ func Test_WebpFromVideo(t *testing.T) {
 		Src:         testFile,
 	}
 	screens := AssignScreensIfExists(c, mc)
-	if len(*screens) != cfg.PreviewNumberOfScreens {
-		msg := `Failed to actually find the screens %s expected %d found %d`
-		t.Errorf(msg, *screens, cfg.PreviewNumberOfScreens, len(*screens))
-	}
+	assert.Equal(t, 10, len(*screens), "Screens should be the same")
+
 	checkFile := AssignPreviewIfExists(c, mc)
-	if previewFile != checkFile {
-		t.Errorf("Check not set to Expected\n check(%s) \n previewFile(%s)", checkFile, previewFile)
-	}
-	if !strings.Contains(checkFile, mc.Preview) {
-		t.Errorf("mc.Preview (%s) not contained in check(%s)", mc.Preview, checkFile)
-	}
+	assert.Equal(t, previewFile, checkFile, "Check not set to Expected\n check(%s) \n previewFile(%s)", checkFile, previewFile)
+	assert.Contains(t, checkFile, mc.Preview, "mc.Preview (%s) not contained in check(%s)", mc.Preview, checkFile)
 }
 
 func Test_AssignScreensWithEscapeChars(t *testing.T) {
@@ -375,8 +366,9 @@ func TestVideoSelectScreens(t *testing.T) {
 		t.Errorf("The destination directory was not empty %s", empty_check)
 	}
 
-	cfg := GetCfg()
+	cfg := config.GetCfgDefaults()
 	cfg.PreviewNumberOfScreens = 10
+	config.SetCfg(cfg)
 
 	destFile := filepath.Join(dstDir, "donut.mp4.webp")
 	srcFile := filepath.Join(srcDir, testFile)
@@ -442,9 +434,10 @@ func Test_VideoCreateSeekScreens(t *testing.T) {
 	// With bigger files ~ 100mb it is much faster to do 10 seek time screens
 	// instead of using a single operation.  The small donut file is faster with
 	// a single operation with a frame selection.
-	cfg := GetCfg()
+	cfg := config.GetCfgDefaults()
 	cfg.ScreensOverSize = 1024
 	cfg.PreviewVideoType = "screens"
+	config.SetCfg(cfg)
 
 	previewName := filepath.Join(dstDir, testFile+".webp")
 	srcFile := filepath.Join(srcDir, testFile)
@@ -462,12 +455,8 @@ func Test_VideoCreateSeekScreens(t *testing.T) {
 		t.Errorf("Failed creating multiple screens %s", multiErr)
 	}
 	fmt.Printf("Screen Multi timing %s\n", time.Since(startMulti))
-	if len(screens) != cfg.PreviewNumberOfScreens {
-		t.Errorf("Didn't find enough screens %d", len(screens))
-	}
-	if strings.Contains("screens", screenPtrn) {
-		t.Errorf("We should have a pattern to match against %s", screenPtrn)
-	}
+	assert.Equal(t, 10, len(screens), "Didn't find enough screens %d", len(screens))
+	assert.Contains(t, screenPtrn, "screens", "We should have a pattern to match against %s", screenPtrn)
 
 	// Check to ensure you can create a gif from the seek screens
 	globMatch := GetScreensOutputGlob(previewName)
@@ -487,9 +476,7 @@ func Test_VideoCreateSeekScreens(t *testing.T) {
 	// TODO: Check file size and determine the faster way to create a gif
 	singleScreen := time.Now()
 	_, screenErr := CreateScreensFromVideo(srcFile, previewName)
-	if screenErr != nil {
-		t.Errorf("Couldn't create screens all at once %s", screenErr)
-	}
+	assert.Nil(t, screenErr, "Couldn't create screens all at once %s", screenErr)
 	fmt.Printf("Screen single execution %s\n", time.Since(singleScreen))
 }
 
