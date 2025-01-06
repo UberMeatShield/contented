@@ -27,8 +27,6 @@ import (
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
-const PREVIEW_DIRECTORY = "container_previews"
-
 // Used in the case of async processing when creating Preview results
 type PreviewResult struct {
 	C_ID    int64
@@ -57,7 +55,7 @@ func MakePreviewPath(dstPath string) error {
 }
 
 func ResetPreviewDir(dstDir string) error {
-	if strings.Contains(dstDir, PREVIEW_DIRECTORY) {
+	if strings.Contains(dstDir, config.PREVIEW_DIRECTORY) {
 		dstDir = filepath.Join(dstDir, "/")
 		os.RemoveAll(dstDir)
 	}
@@ -90,7 +88,7 @@ func FileOverSize(srcFile string, fsize int64) bool {
 // TODO: make the preview directory name configurable
 // Make it use the container Path instead of the name?
 func GetPreviewDst(fqDir string) string {
-	return filepath.Join(fqDir, PREVIEW_DIRECTORY)
+	return filepath.Join(fqDir, config.PREVIEW_DIRECTORY)
 }
 
 // Get the relative path for a preview
@@ -180,7 +178,7 @@ func CleanPaletteFile(paletteFile string) error {
 		return nil
 	}
 	// Not perfect but "good enough"
-	if strings.Contains(paletteFile, "palette") && strings.Contains(paletteFile, PREVIEW_DIRECTORY) {
+	if strings.Contains(paletteFile, "palette") && strings.Contains(paletteFile, config.PREVIEW_DIRECTORY) {
 		os.Remove(paletteFile)
 	} else {
 		return errors.New("Unwilling to remove non-paletteFile: " + paletteFile)
