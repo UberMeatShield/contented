@@ -109,7 +109,7 @@ func (to TaskOperationType) String() string {
 type TaskRequest struct {
 	ID        int64          `json:"id" gorm:"primaryKey"`
 	CreatedAt time.Time      `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time      `json:"updated" db:"updated_at"`
+	UpdatedAt time.Time      `json:"updated_at" db:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" db:"deleted_at"`
 
 	// Need to get these all properly fk constrained

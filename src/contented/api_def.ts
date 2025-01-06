@@ -10,7 +10,7 @@ export let ApiDef = {
     preview: base + 'preview/',
     containers: base + 'containers/',
     containerContent: base + 'containers/{cId}/contents',
-    content: '/api/contents/{id}/',
+    content: '/api/contents/{id}',
     contentScreens: base + 'contents/{mcID}/screens',
     screens: base + 'screens/',
     contentAll: base + 'content/',
@@ -33,7 +33,7 @@ export let ApiDef = {
   },
   tasks: {
     get: base + 'task_requests/{id}',
-    list: base + 'task_requests/',
+    list: base + 'task_requests',
     update: '/api/task_requests/{id}',
   },
 };
