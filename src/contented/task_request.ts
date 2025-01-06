@@ -53,8 +53,8 @@ export class TaskRequest {
     if (obj) {
       Object.assign(this, obj);
       this.created_at = obj.created_at ? new Date(obj.created_at) : undefined;
-      this.updated_at = obj.created_at ? new Date(obj.updated_at) : undefined;
-      this.started_at = obj.created_at ? new Date(obj.started_at) : undefined;
+      this.updated_at = obj.updated_at ? new Date(obj.updated_at) : undefined;
+      this.started_at = obj.started_at ? new Date(obj.started_at) : undefined;
 
       if (obj.operation === TaskOperation.DUPES && obj.message) {
         this.complexMessage = JSON.parse(obj.message);

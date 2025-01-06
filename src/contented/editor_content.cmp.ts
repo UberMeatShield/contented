@@ -215,14 +215,16 @@ export class EditorContentCmp implements OnInit {
 
   taskUpdated(task: TaskRequest) {
     console.log('Task updated', task, task.operation);
-    if ([TaskOperation.SCREENS, TaskOperation.WEBP].includes(task.operation)) {
-      const contentId = this.content?.id;
-      if (contentId) {
-        this.content.screens = null;
 
-        // Probably need to debounce this
-        this.loadScreens(contentId);
-      }
+    const contentId = this.content?.id;
+    if (task.operation === TaskOperation.SCREENS) {
+      this.content.screens = null;
+      this.loadScreens(contentId);
+    }
+
+    if (task.operation === TaskOperation.WEBP) {
+      this.content = null;
+      this.loadContent(contentId);
     }
   }
 
