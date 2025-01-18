@@ -34,7 +34,6 @@ func ContentsResourceList(c *gin.Context) {
 			return
 		}
 	}
-	log.Printf("What is cID %s", cIDStr)
 
 	// The managers are going to be rough
 	man := managers.GetManager(c)
@@ -68,6 +67,7 @@ func ContentsResourceShow(c *gin.Context) {
 		c.AbortWithError(http.StatusNotFound, missing_err)
 		return
 	}
+	c.Header("Last-Modified", contentContainer.UpdatedAt.UTC().Format(http.TimeFormat))
 	c.JSON(http.StatusOK, *contentContainer)
 }
 
