@@ -3,11 +3,11 @@
     <mat-card id="view_content_{{content.id}}" class="video-view-card primary-card">
       <mat-card-header>
         <mat-card-title class="video-details">
-          <a mat-raised-button href="/view/{{content.id}}" title="View fullscreen in a new tab" target="window">
+          <a mat-raised-button href="/api/view/{{content.id}}" title="View fullscreen in a new tab" target="window">
             <mat-icon>tab</mat-icon>
             New Tab
           </a>
-          <a mat-raised-button href="/download/{{content.id}}" title="Download">
+          <a mat-raised-button href="/api/download/{{content.id}}" title="Download">
             {{content.size | byteFormatter: 0}}
             <mat-icon>download</mat-icon>
           </a>
