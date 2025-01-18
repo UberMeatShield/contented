@@ -117,7 +117,7 @@ func (ms MemoryStorage) UpdateScreen(s *models.Screen) (*models.Screen, error) {
 		memStorage.ValidScreens[s.ID] = *s
 		return s, nil
 	}
-	return nil, fmt.Errorf("Screen not found with %s", s)
+	return nil, fmt.Errorf("screen not found with %s", s)
 }
 
 func (ms MemoryStorage) CreateContent(content *models.Content) (*models.Content, error) {
@@ -189,7 +189,7 @@ func (ms MemoryStorage) UpdateTask(t *models.TaskRequest, currentState models.Ta
 		// prevent MOST update errors in the memory view.
 		log.Printf("Looking at %s trying to find id(%d) in state %s", task, t.ID, currentState)
 		if task.ID == t.ID && (currentState == task.Status || task.Status == t.Status) {
-			t.UpdatedAt = time.Now()
+			t.UpdatedAt = time.Now() // TODO: This is not thread safe
 			memStorage.ValidTasks[idx] = *t
 			updated = true
 			break

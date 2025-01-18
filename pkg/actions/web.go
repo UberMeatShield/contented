@@ -108,6 +108,7 @@ func FullHandler(c *gin.Context) {
 		return
 	}
 	log.Printf("Full preview: %s for %d", fq_path, mc.ID)
+	c.Header("Last-Modified", mc.UpdatedAt.UTC().Format(http.TimeFormat))
 	c.File(fq_path)
 }
 
@@ -225,6 +226,7 @@ func PreviewHandler(c *gin.Context) {
 		return
 	}
 	log.Printf("Found this preview filename to view: %s for %d", fq_path, mc.ID)
+	c.Header("Last-Modified", mc.UpdatedAt.UTC().Format(http.TimeFormat))
 	c.File(fq_path)
 }
 
@@ -253,6 +255,7 @@ func DownloadHandler(c *gin.Context) {
 		return
 	}
 	finfo, _ := os.Stat(fq_path)
+	c.Header("Last-Modified", mc.UpdatedAt.UTC().Format(http.TimeFormat))
 	c.FileAttachment(fq_path, finfo.Name())
 }
 
