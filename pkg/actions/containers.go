@@ -61,6 +61,7 @@ func ContainersResourceShow(c *gin.Context) {
 		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
+	c.Header("Last-Modified", container.UpdatedAt.UTC().Format(http.TimeFormat))
 	c.JSON(200, container)
 }
 
