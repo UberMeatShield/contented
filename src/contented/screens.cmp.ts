@@ -37,12 +37,11 @@ export class ScreensCmp implements OnInit {
   constructor(public _contentedService: ContentedService) {}
 
   public ngOnInit() {
-    if (!_.isEmpty(this.screens)) {
+      this.calculateDimensions();
+
       _.delay(() => {
         this.calculateDimensions();
-      }, 10);
-      return;
-    }
+      }, 50);
 
     if (this.contentId) {
       this.loading = true;
@@ -92,7 +91,11 @@ export class ScreensCmp implements OnInit {
   @HostListener('window:resize', ['$event'])
   public calculateDimensions() {
     // TODO: Should this base the screen sizing on dom container vs the overall window?
-    let perRow = this.screens ? this.screens.length / 2 : 6;
+    if (!this.screens) {
+      return;
+    }
+
+    let perRow = Math.ceil((this.screens?.length || 0) / 2);
     let width = !window['jasmine'] ? window.innerWidth : 800;
     if (this.containerWidth) {
       width = this.containerWidth;
@@ -102,8 +105,10 @@ export class ScreensCmp implements OnInit {
       height = this.containerHeight;
     }
 
+    console.log("Per Row", perRow);
+
     // This should be based on the total number of screens?
-    this.previewWidth = (width - 41) / perRow;
-    this.previewHeight = (height / 2 - 41) / 2;
+    this.previewWidth = Math.ceil(width / perRow);
+    this.previewHeight = Math.floor(height / 4); // We want 2 rows
   }
 }
