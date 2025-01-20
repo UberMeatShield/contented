@@ -46,7 +46,7 @@ export class Content {
 
   // Only defined currently on video
   public encoding: string | undefined;
-
+  public duration: string | undefined;
   public previewUrl: string;
   public fullUrl: string;
   public screens: Array<Screen>;
@@ -71,6 +71,10 @@ export class Content {
 
       this.created_at = new Date(this.created_at);
       this.updated_at = new Date(this.updated_at);
+
+      if (this.isVideo()) {
+        this.getVideoInfo();
+      }
     }
   }
 
@@ -89,8 +93,12 @@ export class Content {
   getVideoInfo() {
     if (!this.videoInfo) {
       if (this.isVideo() && this.meta) {
-        let ffmpegProbe = JSON.parse(this.meta);
-        this.videoInfo = new VideoCodecInfo(ffmpegProbe);
+        try {
+          let ffmpegProbe = JSON.parse(this.meta);
+          this.videoInfo = new VideoCodecInfo(ffmpegProbe);
+        } catch (e) {
+          console.error('Failed to parse video meta for ', this.id, e);
+        }
       }
     }
     return this.videoInfo;
@@ -132,6 +140,10 @@ class VideoFormat {
 
   constructor(obj: any) {
     Object.assign(this, obj); // Lazy start...
+
+    if (!isNaN(this.duration)) {
+      this.duration = Math.floor(this.duration);
+    }
   }
 }
 
@@ -148,6 +160,7 @@ class VideoStream {
   codec_type: string;
   coded_height: number;
   coded_width: number;
+  duration: number;
 
   constructor(obj: any) {
     Object.assign(this, obj); // lazy
@@ -164,7 +177,6 @@ export class VideoCodecInfo {
   constructor(obj: any) {
     this.format = new VideoFormat(_.get(obj, 'format'));
     this.streams = _.map(_.get(obj, 'streams'), s => new VideoStream(s));
-
     this.CanEncode = this.getVideoCodecName() !== 'hevc';
   }
 
