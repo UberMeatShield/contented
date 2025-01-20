@@ -53,10 +53,12 @@ export class VideoPreviewCmp implements OnInit {
           this.content.screens.push(screen);
         }
       });
+      this.calculateDimensions();
     }
   }
 
   public ngOnInit() {
+    // Might need to delay till page load is done...
     this.calculateDimensions();
   }
 
@@ -83,7 +85,7 @@ export class VideoPreviewCmp implements OnInit {
     this.previewHeight = height / this.maxVisible - 41;
 
     // screenHeight is just calculated on the component previewHeight * 2
-    this.screenWidth = width - this.previewWidth - 200; // Fudge factor
+    this.screenWidth = width - this.previewWidth - 41; // Fudge factor
   }
 
   public screenEvt(evt) {
