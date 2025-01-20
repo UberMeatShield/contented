@@ -4,62 +4,73 @@ import { Content } from './../../contented/content';
 import { ApiDef } from './../../contented/api_def';
 import * as _ from 'lodash';
 
+import screensResult from './screens.json';
+import splashResult from './splash.json';
+import tagsResult from './tags.json';
+import videoContentResult from './video_content.json';
+import fullResult from './full.json';
+import taskRequestsResult from './task_requests.json';
+import contentResult from './content.json';
+import containersResult from './containers.json';
+import searchResult from './search.json';
+import videoViewResult from './video_view.json';
+
 declare var require: any;
 class MockLoader {
   public timeoutSpan = 100;
   public constructor() {}
 
   public getPreview() {
-    return _.clone(require('./containers.json'));
+    return _.clone(containersResult);
   }
 
   public getSearch() {
-    return _.clone(require('./search.json'));
+    return _.clone(searchResult);
   }
 
   public getVideos() {
-    return _.cloneDeep(require('./video_view.json'));
+    return _.clone(videoViewResult);
   }
 
   // TODO: Get some generated data (for pagination tests)
   public getContainers(total: number = 10) {
     console.log('TODO: Make the containers paginate');
-    return _.cloneDeep(require('./containers.json'));
+    return _.clone(containersResult);
   }
 
   public getScreens() {
-    return _.clone(require('./screens.json'));
+    return _.clone(screensResult);
   }
 
   public splash() {
-    return _.clone(require('./splash.json'));
+    return _.clone(splashResult);
   }
 
   public tags() {
-    return _.clone(require('./tags.json'));
+    return _.clone(tagsResult);
   }
 
   public videoContent() {
-    return _.clone(require('./video_content.json'));
+    return _.clone(videoContentResult);
   }
 
   public getFullContainer() {
-    return _.clone(require('./full.json'));
+    return _.clone(fullResult);
   }
 
   public taskRequest(taskId: string) {
-    let tasks = _.clone(require('./task_requests.json'));
+    let tasks = _.clone(taskRequestsResult);
     let task = tasks[0];
     task.id = taskId;
     return task;
   }
 
   public taskRequests() {
-    return _.clone(require('./task_requests.json'));
+    return _.clone(taskRequestsResult);
   }
 
   public getContent(container_id = null, total = null) {
-    let res = _.clone(require('./content.json'));
+    let res = _.clone(contentResult);
     if (container_id) {
       _.each(res.results, content => {
         content.id = content.id + container_id;

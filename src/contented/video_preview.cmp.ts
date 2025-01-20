@@ -53,8 +53,6 @@ export class VideoPreviewCmp implements OnInit {
           this.content.screens.push(screen);
         }
       });
-
-      console.log('VIDEO', this.content);
       this.calculateDimensions();
     }
   }
