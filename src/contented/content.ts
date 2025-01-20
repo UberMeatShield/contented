@@ -46,7 +46,6 @@ export class Content {
 
   // Only defined currently on video
   public encoding: string | undefined;
-  public duration: string | undefined;
   public previewUrl: string;
   public fullUrl: string;
   public screens: Array<Screen>;
