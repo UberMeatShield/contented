@@ -45,7 +45,7 @@ import { ErrorHandlerCmp, ErrorDialogCmp } from './error_handler.cmp';
 import { Container } from './container';
 import { Content } from './content';
 import { Screen } from './screen';
-import { ByteFormatterPipe } from './filters';
+import { ByteFormatterPipe, DurationFormatPipe } from './filters';
 import { SafePipe } from './safe.pipe';
 
 import { MonacoEditorModule, NgxMonacoEditorConfig } from 'ngx-monaco-editor-v2';
@@ -149,6 +149,7 @@ const monacoConfig: NgxMonacoEditorConfig = {
     ScreensCmp,
     SplashCmp,
     ByteFormatterPipe,
+    DurationFormatPipe,
     SafePipe,
     EditorContentCmp,
     TagsCmp,

@@ -24,3 +24,18 @@ export class ByteFormatterPipe implements PipeTransform {
     return (Number(bytes) / Math.pow(1024, Math.floor(actualValue))).toFixed(precision) + ' ' + units[actualValue];
   }
 }
+
+// From Brave AI results
+@Pipe({ name: 'durationFormat' })
+export class DurationFormatPipe implements PipeTransform {
+  transform(value: number, inputType: 'ms' | 's', format: 'hhmmss' | 'ddhhmmss' | 'ddhhmmssLong' = 'hhmmss'): string {
+    if (inputType === 'ms') {
+      value = value / 1000;
+    }
+    const hours = Math.floor(value / 3600);
+    const minutes = Math.floor((value % 3600) / 60);
+    const seconds = value % 60;
+
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  }
+}
