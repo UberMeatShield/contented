@@ -37,11 +37,7 @@ export class ScreensCmp implements OnInit {
   constructor(public _contentedService: ContentedService) {}
 
   public ngOnInit() {
-      this.calculateDimensions();
-
-      _.delay(() => {
-        this.calculateDimensions();
-      }, 50);
+    this.calculateDimensions();
 
     if (this.contentId) {
       this.loading = true;
@@ -104,8 +100,6 @@ export class ScreensCmp implements OnInit {
     if (this.containerHeight) {
       height = this.containerHeight;
     }
-
-    console.log("Per Row", perRow);
 
     // This should be based on the total number of screens?
     this.previewWidth = Math.ceil(width / perRow);

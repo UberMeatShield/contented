@@ -53,16 +53,13 @@ export class VideoPreviewCmp implements OnInit {
           this.content.screens.push(screen);
         }
       });
+      this.calculateDimensions();
     }
   }
 
   public ngOnInit() {
-
     // Might need to delay till page load is done...
     this.calculateDimensions();
-    _.delay(() => {
-      this.calculateDimensions();
-    }, 20);
   }
 
   // A little awkward and needs to be fixed (attempt to do a lookup)

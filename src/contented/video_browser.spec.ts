@@ -94,14 +94,24 @@ describe('TestingVideoBrowserCmp', () => {
 
     MockData.handleContainerLoad(httpMock);
     let req = httpMock.expectOne(req => req.url === ApiDef.contented.searchContents, 'Failed to find search');
-    let sr = MockData.getVideos();
+    let searchResults = MockData.getVideos();
 
-    expect(sr.results.length).withContext('We need some search results.').toBeGreaterThan(0);
-    req.flush(sr);
+    expect(searchResults.results.length).withContext('We need some search results.').toBeGreaterThan(0);
+    req.flush(searchResults);
     fixture.detectChanges();
-    expect($('.video-view-card').length).toEqual(sr.results.length);
+    expect($('.video-view-card').length).toEqual(searchResults.results.length);
     tick(1000);
     tick(1000);
+
+    for (const content of searchResults.results) {
+      let screenUrl = ApiDef.contented.contentScreens.replace('{mcID}', content.id);
+      let screenReq = httpMock.expectOne(req => req.url.includes(screenUrl));
+      screenReq.flush(MockData.getScreens());
+    }
+
+    fixture.detectChanges();
+    tick(1000);
+    tick(10000);
   }));
 
   it('Will load up screens if they are not provided', fakeAsync(() => {
