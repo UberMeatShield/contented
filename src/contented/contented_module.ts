@@ -49,7 +49,7 @@ import { MonacoEditorModule, NgxMonacoEditorConfig } from 'ngx-monaco-editor-v2'
 import { TagLang } from './tagging_syntax';
 
 import { FavoritesCmp } from './favorites.cmp';
-import { PreviewContentCmp } from './PreviewContent.cmp';
+import { PreviewContentCmp } from './preview_content.cmp';
 
 let MONACO_LOADED = false;
 let GIVE_UP = 0;
