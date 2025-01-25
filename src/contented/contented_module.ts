@@ -42,16 +42,14 @@ import { VSCodeEditorCmp } from './vscode_editor.cmp';
 import { TaskRequestCmp } from './taskrequest.cmp';
 import { TasksCmp } from './tasks.cmp';
 import { ErrorHandlerCmp, ErrorDialogCmp } from './error_handler.cmp';
-import { Container } from './container';
-import { Content } from './content';
-import { Screen } from './screen';
 import { ByteFormatterPipe, DurationFormatPipe } from './filters';
 import { SafePipe } from './safe.pipe';
 
 import { MonacoEditorModule, NgxMonacoEditorConfig } from 'ngx-monaco-editor-v2';
 import { TagLang } from './tagging_syntax';
 
-import * as $ from 'jquery';
+import { FavoritesCmp } from './favorites.cmp';
+import { PreviewContentCmp } from './PreviewContent.cmp';
 
 let MONACO_LOADED = false;
 let GIVE_UP = 0;
@@ -148,10 +146,12 @@ const monacoConfig: NgxMonacoEditorConfig = {
     SearchDialog,
     ScreensCmp,
     SplashCmp,
+    FavoritesCmp,
     ByteFormatterPipe,
     DurationFormatPipe,
     SafePipe,
     EditorContentCmp,
+    PreviewContentCmp,
     TagsCmp,
     TaskRequestCmp,
     TasksCmp,

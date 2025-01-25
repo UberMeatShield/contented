@@ -1,29 +1,12 @@
 <div class="container-cmp">
   <div *ngIf="container" class="cnt-contents" style="min-height: {{(previewHeight + 20) * 2}}px;">
-    
-    <div class="preview-content preview-is{{content.shouldUseTypedPreview()}}"
-      [class.video-overlay]="content?.content_type?.match('video')"
-      style="width:{{previewWidth}}px; height: {{previewHeight}}px;"
-      [class.current-content]="active && (content === container.getCurrentContent())"
-      *ngFor="let content of getVisibleSet()"
+    <preview-content-cmp *ngFor="let content of getVisibleSet()"
+      [content]="content"
+      [previewWidth]="previewWidth"
+      [previewHeight]="previewHeight"
+      [active]="active && (content === container.getCurrentContent())"
       (click)="clickContent(content)"
-      title="{{content.description || content.src}}"
-      >
-      <!-- Assume that every preview is actually going to be an image -->
-      <img class="preview-img"
-        [id]="'preview_' + content.id"
-        [src]="content?.previewUrl" 
-        (load)="imgLoaded($event)"
-        *ngIf="!content.shouldUseTypedPreview()"
-      > 
-
-      <!-- Probably an HTML pipe or component would make the most sense to keep it DRY. -->
-      <span class="preview-type" *ngIf="content.shouldUseTypedPreview()">
-        <mat-icon>{{content.shouldUseTypedPreview()}}</mat-icon>
-        {{content.src}}
-      </span>
-    </div>
-
+    ></preview-content-cmp>
   </div>
   <div class="cnt-empty" *ngIf="!container || !container.contents">
     Empty Directory

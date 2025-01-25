@@ -251,7 +251,7 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
 
     // 120 is right if the top nav is hidden, could calculate that it is out of view for the height of things
     // when doing navigation.
-    this.previewWidth = width / 4 - 12;
+    this.previewWidth = (width / 4) - 12;
     this.previewHeight = (height - 160) / this.maxVisible;
   }
 

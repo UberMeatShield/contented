@@ -32,11 +32,6 @@ export class ContainerCmp implements OnInit, OnDestroy {
   public ngOnInit() {
     this.sub = GlobalNavEvents.navEvts.subscribe({
       next: (evt: NavEventMessage) => {
-        // This container is not active but it should be monitoring favorites
-        if (this.monitorFavorites && evt.action === NavTypes.FAVORITE_MEDIA) {
-          this.handleFavorite(evt.content);
-        }
-
         if (this.active) {
           // console.log("Container Event found", this.container.name, evt);
           switch (evt.action) {
@@ -76,19 +71,6 @@ export class ContainerCmp implements OnInit, OnDestroy {
         window.scrollBy(0, -30);
       }
     }, 20);
-  }
-
-  /**
-   * This might be worth a full component with different behaviors
-   * @param content
-   */
-  public handleFavorite(content: Content) {
-    let idx = _.findIndex(this.container.contents, { id: content.id });
-    if (idx >= 0) {
-      _.remove(this.container.contents, { id: content.id });
-    } else {
-      this.container.addContents([content]);
-    }
   }
 
   /**

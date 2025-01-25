@@ -1,0 +1,20 @@
+<div class="preview-content preview-content-cmp preview-is{{content.shouldUseTypedPreview()}}"
+  [class.video-overlay]="content?.content_type?.match('video')"
+  style="width:{{previewWidth}}px; height: {{previewHeight}}px;"
+  [class.current-content]="active"
+  (click)="clickContent(content)"
+  title="{{content.description || content.src}}"
+  >
+  <!-- Assume that every preview is actually going to be an image -->
+  <img class="preview-img"
+    [id]="'preview_' + content.id"
+    [src]="content?.previewUrl" 
+    *ngIf="!content.shouldUseTypedPreview()"
+  > 
+
+  <!-- Probably an HTML pipe or component would make the most sense to keep it DRY. -->
+  <span class="preview-type" *ngIf="content.shouldUseTypedPreview()">
+    <mat-icon>{{content.shouldUseTypedPreview()}}</mat-icon>
+    {{content.src}}
+  </span>
+</div>
