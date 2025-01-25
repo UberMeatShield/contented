@@ -30,12 +30,15 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
   public containers: Array<Container>; // Current set of visible containers
   public allCnts: Array<Container>; // All the containers we have loaded
   public sub: Subscription;
+  public favoritesContainer: Container;
 
   constructor(
     public _contentedService: ContentedService,
     public route: ActivatedRoute,
     public router: Router
-  ) {}
+  ) {
+    this.favoritesContainer = this.getFavoritesContainer();
+  }
 
   public ngOnInit() {
     // Need to load content if the idx is greater than content loaded (n times potentially)
@@ -98,6 +101,21 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
   public setPosition(idx: number, rowIdx: number) {
     this.idx = idx;
     this.rowIdx = rowIdx;
+  }
+
+  public getFavoritesContainer() {
+    if (!this.favoritesContainer) {
+      this.favoritesContainer = new Container({
+        id: 'favorites',
+        name: 'Favorites',
+        previewUrl: 'https://placehold.co/200x200',
+        contents: [],
+        total: 0,
+        count: 0,
+        rowIdx: 0,
+      });
+    }
+    return this.favoritesContainer;
   }
 
   public loadContainers() {

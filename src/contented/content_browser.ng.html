@@ -7,6 +7,19 @@
     {{emptyMessage}}
   </div>
 
+  <div class="contented-cnt" [class.hidden]="favoritesContainer?.contents?.length === 0">
+    <div class="contented-cnt-header" *ngIf="favoritesContainer">
+      <container-cmp 
+        [container]="favoritesContainer"
+        [previewWidth]="previewWidth / 4" 
+        [previewHeight]="previewHeight / 4"
+        [maxRendered]="32"
+        [maxPrevItems]="32"
+        [monitorFavorites]="true"
+        ></container-cmp>
+    </div>
+  </div>
+
   <div>
     <contented-view></contented-view>
   </div>

@@ -19,6 +19,7 @@ export class ContainerCmp implements OnInit, OnDestroy {
 
   @Input() maxRendered: number = 8; // Default setting for how many should be visible at any given time
   @Input() maxPrevItems: number = 2; // When scrolling through a cnt, how many previous items should be visible
+  @Input() monitorFavorites: boolean = false;
 
   @Output() clickedItem: EventEmitter<any> = new EventEmitter<any>();
 
@@ -31,6 +32,11 @@ export class ContainerCmp implements OnInit, OnDestroy {
   public ngOnInit() {
     this.sub = GlobalNavEvents.navEvts.subscribe({
       next: (evt: NavEventMessage) => {
+        // This container is not active but it should be monitoring favorites
+        if (this.monitorFavorites && evt.action === NavTypes.FAVORITE_MEDIA) {
+          this.handleFavorite(evt.content);
+        }
+
         if (this.active) {
           // console.log("Container Event found", this.container.name, evt);
           switch (evt.action) {
@@ -45,6 +51,9 @@ export class ContainerCmp implements OnInit, OnDestroy {
             case NavTypes.SAVE_MEDIA:
               console.log('Save the currently selected content');
               this.saveContent();
+              break;
+            case NavTypes.TOGGLE_FAVORITE:
+              this.toggleFavorite();
               break;
             case NavTypes.SCROLL_MEDIA_INTO_VIEW:
               this.scrollContent(evt.content);
@@ -67,6 +76,29 @@ export class ContainerCmp implements OnInit, OnDestroy {
         window.scrollBy(0, -30);
       }
     }, 20);
+  }
+
+  /**
+   * This might be worth a full component with different behaviors
+   * @param content
+   */
+  public handleFavorite(content: Content) {
+    let idx = _.findIndex(this.container.contents, { id: content.id });
+    if (idx >= 0) {
+      _.remove(this.container.contents, { id: content.id });
+    } else {
+      this.container.addContents([content]);
+    }
+  }
+
+  /**
+   * (keypress 't') If there is a current media element selected then we should toggle it.
+   */
+  public toggleFavorite() {
+    if (this.container.rowIdx >= 0 && this.container.rowIdx < this.container?.contents?.length) {
+      const content = this.container.contents[this.container.rowIdx];
+      GlobalNavEvents.favoriteContent(content);
+    }
   }
 
   public ngOnDestroy() {

@@ -14,6 +14,8 @@ export enum NavTypes {
   HIDE_FULLSCREEN,
   LOAD_MORE,
   SAVE_MEDIA,
+  TOGGLE_FAVORITE, // A Keypress event that can be listened to to generate a favorite media event
+  FAVORITE_MEDIA, // Add this media for a favorite
   SCROLL_MEDIA_INTO_VIEW,
 }
 
@@ -112,6 +114,24 @@ export class NavEvents {
     this.navEvts.emit({
       action: NavTypes.SAVE_MEDIA,
       content: content,
+      cnt: undefined,
+    });
+  }
+
+  // Determine if this should require a content element
+  favoriteContent(content: Content = null) {
+    this.navEvts.emit({
+      action: NavTypes.FAVORITE_MEDIA,
+      content: content,
+      cnt: undefined,
+    });
+  }
+
+  toggleFavorite(content: Content = null) {
+    console.log('toggleFavorite keypress', content);
+    this.navEvts.emit({
+      action: NavTypes.TOGGLE_FAVORITE,
+      content: undefined,
       cnt: undefined,
     });
   }
