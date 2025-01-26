@@ -1,7 +1,6 @@
 import { OnInit, Component, Input, HostListener, OnDestroy, ViewChild } from '@angular/core';
 import { Content } from './content';
 import { ContentedService } from './contented_service';
-import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 
 import { MatMenuTrigger } from '@angular/material/menu';
 import { finalize } from 'rxjs/operators';
@@ -36,11 +35,7 @@ export class FavoritesCmp implements OnInit, OnDestroy {
 
   public contextMenuPosition = { x: '0px', y: '0px' };
 
-  constructor(
-    public _service: ContentedService,
-    public route: ActivatedRoute,
-    public router: Router
-  ) {}
+  constructor(public _service: ContentedService) {}
 
   onContextMenu(event: MouseEvent, content: Content) {
     event.preventDefault();

@@ -144,5 +144,9 @@ class MockLoader {
     let actualContent = res.results[0];
     return new Content(actualContent);
   }
+
+  public getVideo(): Content {
+    return new Content(_.clone(videoContentResult));
+  }
 }
 export let MockData = new MockLoader();
