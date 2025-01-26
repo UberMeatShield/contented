@@ -4,7 +4,6 @@ import { By } from '@angular/platform-browser';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { DebugElement } from '@angular/core';
 
-import { RouterTestingModule } from '@angular/router/testing';
 import { ContentedNavCmp } from '../contented/contented_nav.cmp';
 import { Container } from '../contented/container';
 
@@ -13,9 +12,11 @@ import { ContentedService } from '../contented/contented_service';
 import { ContentedModule } from '../contented/contented_module';
 import { GlobalNavEvents, NavTypes } from '../contented/nav_events';
 
-import * as _ from 'lodash';
-import * as $ from 'jquery';
+import _ from 'lodash';
+import $ from 'jquery';
 import { MockData } from '../test/mock/mock_data';
+import { provideRouter } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 
 describe('TestingContentedNavCmp', () => {
   let fixture: ComponentFixture<ContentedNavCmp>;
@@ -26,11 +27,14 @@ describe('TestingContentedNavCmp', () => {
   let httpMock: HttpTestingController;
   let sub: Subscription;
 
-  beforeEach(() => {
+  beforeEach(waitForAsync(async () => {
     TestBed.configureTestingModule({
-      imports: [RouterTestingModule, ContentedModule, HttpClientTestingModule],
-      providers: [ContentedService],
+      imports: [ContentedModule, HttpClientTestingModule],
+      providers: [provideRouter([{ path: '', component: ContentedNavCmp }]), ContentedService],
+      teardown: { destroyAfterEach: true },
     }).compileComponents();
+
+    await RouterTestingHarness.create();
 
     service = TestBed.inject(ContentedService);
     httpMock = TestBed.inject(HttpTestingController);
@@ -39,7 +43,7 @@ describe('TestingContentedNavCmp', () => {
 
     de = fixture.debugElement.query(By.css('.contented-nav-cmp'));
     el = de.nativeElement;
-  });
+  }));
 
   afterEach(() => {
     if (sub) {
@@ -56,6 +60,7 @@ describe('TestingContentedNavCmp', () => {
   it('Should be able to handle certain key events', () => {
     let counter = 0;
     sub = GlobalNavEvents.navEvts.subscribe(evt => {
+      console.log(evt);
       counter++;
     });
 
@@ -68,10 +73,11 @@ describe('TestingContentedNavCmp', () => {
     comp.handleKey('q');
     comp.handleKey('x');
     comp.handleKey('f');
+    comp.handleKey('t');
     fixture.detectChanges();
 
     fixture.whenStable().then(() => {
-      expect(counter).withContext('It should have handled these events').toEqual(8);
+      expect(counter).withContext('It should have handled these events').toEqual(9);
     });
   });
 

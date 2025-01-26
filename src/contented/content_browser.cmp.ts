@@ -9,7 +9,7 @@ import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 import { GlobalNavEvents, NavTypes, NavEventMessage } from './nav_events';
 
 import { GlobalBroadcast } from './global_message';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 @Component({
   selector: 'content-browser',
@@ -36,9 +36,7 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
     public _contentedService: ContentedService,
     public route: ActivatedRoute,
     public router: Router
-  ) {
-    this.favoritesContainer = this.getFavoritesContainer();
-  }
+  ) {}
 
   public ngOnInit() {
     // Need to load content if the idx is greater than content loaded (n times potentially)
@@ -54,6 +52,7 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
       },
     });
     this.setupEvtListener();
+
     this.calculateDimensions();
     if (_.isEmpty(this.allCnts)) {
       this.loadContainers(); // Do this after the param map load potentially
@@ -101,21 +100,6 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
   public setPosition(idx: number, rowIdx: number) {
     this.idx = idx;
     this.rowIdx = rowIdx;
-  }
-
-  public getFavoritesContainer() {
-    if (!this.favoritesContainer) {
-      this.favoritesContainer = new Container({
-        id: 'favorites',
-        name: 'Favorites',
-        previewUrl: 'https://placehold.co/200x200',
-        contents: [],
-        total: 0,
-        count: 0,
-        rowIdx: 0,
-      });
-    }
-    return this.favoritesContainer;
   }
 
   public loadContainers() {
@@ -251,7 +235,7 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
 
     // 120 is right if the top nav is hidden, could calculate that it is out of view for the height of things
     // when doing navigation.
-    this.previewWidth = (width / 4) - 12;
+    this.previewWidth = width / 4 - 12;
     this.previewHeight = (height - 160) / this.maxVisible;
   }
 

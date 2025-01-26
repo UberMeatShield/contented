@@ -242,6 +242,8 @@ export class TagLang {
   }
 
   loadLanguage(monaco: any, languageName: string) {
+    console.log('Loading language', ApiDef.contented.tags);
+
     $.ajax(ApiDef.contented.tags, {
       params: { per_page: 1000 },
       success: res => {
@@ -265,8 +267,12 @@ export class TagLang {
         TAGS_RESPONSE.initialized = true;
       },
       error: err => {
-        //this.setMonacoLanguage("tagging", [], []);
         console.error('loadLanguage failed to load tags', err);
+        this.setMonacoLanguage('tagging', [], [], []);
+
+        TAGS_RESPONSE.total = 0;
+        TAGS_RESPONSE.results = [];
+        TAGS_RESPONSE.initialized = true;
       },
     });
   }

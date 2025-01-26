@@ -3,7 +3,6 @@
  * to quickly manage tags.
  */
 import { Component, OnInit, Input, Output, EventEmitter, ViewChild, ElementRef } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { EditorComponent } from 'ngx-monaco-editor-v2';
@@ -56,12 +55,12 @@ export class VSCodeEditorCmp implements OnInit {
 
   constructor(
     public fb: FormBuilder,
-    public route: ActivatedRoute,
     public _service: ContentedService
   ) {}
 
   // Subscribe to options changes, if the definition changes make the call
   public ngOnInit() {
+    this.tags?.length > 0 ? this.assignTagLookup(this.tags) : this.loadTags();
     this.editorOptions.language = this.language || this.editorOptions.language;
 
     if (!this.editForm) {
@@ -74,7 +73,6 @@ export class VSCodeEditorCmp implements OnInit {
     this.descriptionControl = control as FormControl<string>; // Sketchy...
 
     this.monacoDigestHackery();
-    this.tags?.length > 0 ? this.assignTagLookup(this.tags) : this.loadTags();
   }
 
   loadTags() {
@@ -107,6 +105,21 @@ export class VSCodeEditorCmp implements OnInit {
         this.monacoDigestHackery(count + 1);
       }
     }, 500);
+  }
+
+  isInitialized() {
+    let self = this;
+    function monacoPoller(resolve, reject) {
+      if (self.initialized) {
+        resolve(self.initialized);
+      } else {
+        setTimeout(() => monacoPoller(resolve, reject), 500);
+      }
+    }
+
+    return new Promise((resolve, reject) => {
+      monacoPoller(resolve, reject);
+    });
   }
 
   setReadOnly(state: boolean) {

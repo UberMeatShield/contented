@@ -1,5 +1,5 @@
 <div class="favorites-cmp">
-  <div class="contented-cnt" [class.hidden]="container?.contents?.length === 0">
+  <div class="favorites-cnt" [class.hidden]="container?.contents?.length === 0">
     <div *ngIf="container" class="cnt-contents" style="min-height: {{previewHeight}}px;">
     
         <preview-content-cmp *ngFor="let content of container?.contents || []"

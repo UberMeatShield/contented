@@ -34,7 +34,6 @@ class MockLoader {
 
   // TODO: Get some generated data (for pagination tests)
   public getContainers(total: number = 10) {
-    console.log('TODO: Make the containers paginate');
     return _.clone(containersResult);
   }
 

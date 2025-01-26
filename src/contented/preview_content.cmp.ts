@@ -15,7 +15,7 @@ import _ from 'lodash';
   selector: 'preview-content-cmp',
   templateUrl: './preview_content.ng.html',
 })
-export class PreviewContentCmp implements OnInit {
+export class PreviewContentCmp {
   @Input() content: Content;
   @Input() previewWidth: number;
   @Input() previewHeight: number;
@@ -23,12 +23,7 @@ export class PreviewContentCmp implements OnInit {
 
   @Output() clickEvt: EventEmitter<Content> = new EventEmitter<Content>();
 
-  constructor() {
-  }
-
-  public ngOnInit() {
-
-  }
+  constructor() {}
 
   public clickContent(content: Content) {
     this.clickEvt.emit(content);

@@ -1,12 +1,11 @@
-import { TestBed, ComponentFixture, waitForAsync, fakeAsync, tick } from '@angular/core/testing';
+import { TestBed, ComponentFixture, waitForAsync, fakeAsync, tick, flush } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { RouterTestingModule } from '@angular/router/testing';
 import { DebugElement } from '@angular/core';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MockData } from '../test/mock/mock_data';
 import { MonacoLoaded, WaitForMonacoLoad, ContentedModule } from './contented_module';
-import { TagLang } from './tagging_syntax';
+import { TagLang, TAGS_RESPONSE } from './tagging_syntax';
 import { ApiDef } from './api_def';
 import { VSCodeEditorCmp } from './vscode_editor.cmp';
 
@@ -22,7 +21,7 @@ let editorValue = ` class Funky() {
 
    what the heck
 }`;
-import * as _ from 'lodash-es';
+import _ from 'lodash';
 
 describe('VSCodeEditorCmp', () => {
   let fixture: ComponentFixture<VSCodeEditorCmp>;
@@ -32,11 +31,12 @@ describe('VSCodeEditorCmp', () => {
   let httpMock: HttpTestingController;
   let tagLang: TagLang;
 
-  beforeEach(fakeAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [RouterTestingModule, HttpClientTestingModule, ContentedModule, NoopAnimationsModule],
+      imports: [HttpClientTestingModule, ContentedModule, NoopAnimationsModule],
       providers: [],
       declarations: [VSCodeEditorCmp],
+      teardown: { destroyAfterEach: true },
     }).compileComponents();
 
     fixture = TestBed.createComponent(VSCodeEditorCmp);
@@ -46,7 +46,7 @@ describe('VSCodeEditorCmp', () => {
     httpMock = TestBed.inject(HttpTestingController);
 
     tagLang = new TagLang();
-  }));
+  });
 
   afterEach(() => {
     httpMock.verify();
@@ -58,10 +58,9 @@ describe('VSCodeEditorCmp', () => {
   });
 
   // TODO: The ajax load of tags is still not working right.
-  it('Should be able to render the monaco editor and process tokens', fakeAsync(() => {
+  it('Should be able to render the monaco editor and process tokens', waitForAsync(async () => {
     cmp.language = 'test';
     cmp.editorValue = editorValue;
-    fixture.detectChanges();
 
     let keywords = [
       { id: 'constructor', tag_type: 'keywords' },
@@ -74,19 +73,24 @@ describe('VSCodeEditorCmp', () => {
       total: 4,
       results: keywords,
     };
-    WaitForMonacoLoad();
-    tick(1000);
+
+    TAGS_RESPONSE.initialized = false;
+
+    cmp.tags = [];
+    fixture.detectChanges();
+    await WaitForMonacoLoad();
+    await cmp.isInitialized();
+    await fixture.whenRenderingDone();
+    expect(cmp.initialized).toBe(true);
 
     httpMock.expectOne(r => r.url.includes(ApiDef.contented.tags)).flush(tags);
     expect(cmp.problemTags.length).withContext('We should consider Google Earth a problem').toBe(1);
     fixture.detectChanges();
-    tick(1000);
 
     expect((window as any).monaco?.languages).toBeDefined();
     let ids = _.map(keywords, 'id').slice(0, keywords.length - 2);
     let types = _.map(keywords, 'id').slice(keywords.length - 2, keywords.length);
     tagLang.setMonacoLanguage(cmp.language, ids, types);
-    tick(1000);
 
     expect(cmp.descriptionControl.value).toEqual(editorValue);
     let tokens = cmp.getTokens();
@@ -98,5 +102,6 @@ describe('VSCodeEditorCmp', () => {
     // Qoutes in the string can still be a problem
     let tokenTypes = cmp.getTokens('type');
     expect(tokenTypes.sort()).toEqual(types);
+    console.log('End test case');
   }));
 });

@@ -1,4 +1,4 @@
-import { OnInit, Component, Input, HostListener } from '@angular/core';
+import { OnInit, Component, Input, HostListener, OnDestroy } from '@angular/core';
 import { Content } from './content';
 import { ContentedService } from './contented_service';
 import { ActivatedRoute, Router, ParamMap } from '@angular/router';
@@ -15,7 +15,7 @@ import _ from 'lodash';
   selector: 'favorites-cmp',
   templateUrl: './favorites.ng.html',
 })
-export class FavoritesCmp implements OnInit {
+export class FavoritesCmp implements OnInit, OnDestroy {
   @Input() container: Container;
   @Input() previewWidth: number;
   @Input() previewHeight: number;
@@ -34,29 +34,30 @@ export class FavoritesCmp implements OnInit {
     public _service: ContentedService,
     public route: ActivatedRoute,
     public router: Router
-  ) {
-  }
+  ) {}
 
   public ngOnInit() {
-    this.container = this.container || new Container({
-      id: 'favorites',
-      name: 'Favorites',
-      previewUrl: 'https://placehold.co/200x200',
-      contents: [],
-      total: 0,
-      count: 0,
-      rowIdx: 0,
-    });
+    this.container =
+      this.container ||
+      new Container({
+        id: 'favorites',
+        name: 'Favorites',
+        previewUrl: 'https://placehold.co/200x200',
+        contents: [],
+        total: 0,
+        count: 0,
+        rowIdx: 0,
+      });
     this.calculateDimensions();
 
     this.sub = GlobalNavEvents.navEvts.subscribe({
-        next: (evt: NavEventMessage) => {
-          // This container is not active but it should be monitoring favorites
-          if (this.monitorFavorites && evt.action === NavTypes.FAVORITE_MEDIA) {
-            this.handleFavorite(evt.content);
-          }
-        },
-      });
+      next: (evt: NavEventMessage) => {
+        // This container is not active but it should be monitoring favorites
+        if (this.monitorFavorites && evt.action === NavTypes.FAVORITE_MEDIA) {
+          this.handleFavorite(evt.content);
+        }
+      },
+    });
   }
 
   public ngOnDestroy() {
@@ -85,7 +86,7 @@ export class FavoritesCmp implements OnInit {
   }
 
   public clickContent(content: Content) {
-    console.log("Clicked content", content);
+    console.log('Clicked content', content);
   }
 
   // TODO: Being called abusively in the constructor rather than on page resize events
@@ -96,8 +97,8 @@ export class FavoritesCmp implements OnInit {
     // so there is a load operation order issue to solve.  Maybe afterViewInit would work?
     let width = !window['jasmine'] ? window.innerWidth : 800;
     let height = !window['jasmine'] ? window.innerHeight : 800;
-  
+
     // 120 is right if the top nav is hidden, could calculate that it is out of view for the height of things
-    this.previewWidth = (width / this.maxVisible) - 12;
+    this.previewWidth = width / this.maxVisible - 12;
   }
 }

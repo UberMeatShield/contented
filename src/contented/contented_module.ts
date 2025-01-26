@@ -55,7 +55,6 @@ let MONACO_LOADED = false;
 let GIVE_UP = 0;
 function monacoPoller(resolve, reject) {
   if (MONACO_LOADED) {
-    console.log('Monaco loaded');
     return resolve((window as any).monaco);
   } else {
     if (GIVE_UP > 4) {
@@ -68,11 +67,12 @@ function monacoPoller(resolve, reject) {
   }
 }
 
-export let MonacoLoaded = new Promise((resolve, reject) => {
-  return monacoPoller(resolve, reject);
-});
+export let MonacoLoaded: Promise<any>;
 
 export async function WaitForMonacoLoad() {
+  MonacoLoaded = new Promise((resolve, reject) => {
+    return monacoPoller(resolve, reject);
+  });
   return await MonacoLoaded.then(() => {
     console.log('Monaco Resolved this is used in test Cases');
   });
@@ -98,6 +98,7 @@ const monacoConfig: NgxMonacoEditorConfig = {
     lang.register({id: "tagging"});
     lang.setMonarchTokensProvider("tagging", TAGGING_SYNTAX);
     */
+    console.log('onMonacoLoad has been called');
     MONACO_LOADED = true;
     let tl = new TagLang();
     tl.loadLanguage((<any>window).monaco, 'tagging');

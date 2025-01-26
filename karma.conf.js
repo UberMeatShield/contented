@@ -18,7 +18,7 @@ module.exports = function (config) {
     ],
     proxies: {
         '/public/static/monaco/': path.resolve("public/static/monaco/"),
-        '/tags/': tagPath,
+        '/api/tags/': tagPath,
     },
     plugins: [
       require('karma-jasmine'),
@@ -55,7 +55,7 @@ module.exports = function (config) {
     browserNoActivityTimeout: 4000000,
     colors: true,
     logLevel: config.LOG_DISABLE,
-    // logLevel: config.LOG_INFO,
+    //logLevel: config.LOG_INFO,
     autoWatch: true,
     browsers: ['ChromeHeadless'],
     singleRun: false
