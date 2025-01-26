@@ -1,6 +1,6 @@
 import { OnInit, Component, EventEmitter, Input, Output, HostListener, ViewChild } from '@angular/core';
 import { ContentedService } from './contented_service';
-import { Container } from './container';
+import { Container, getFavorites } from './container';
 import { Content } from './content';
 import { GlobalNavEvents } from './nav_events';
 import { MatRipple } from '@angular/material/core';
@@ -27,8 +27,11 @@ export class ContentedNavCmp implements OnInit {
 
   public containerFilter = new FormControl<string>('');
   public filteredContainers: Observable<Container[]>;
+  public favoriteContainer: Container;
 
-  constructor(public _contentedService: ContentedService) {}
+  constructor(public _contentedService: ContentedService) {
+    this.favoriteContainer = getFavorites();
+  }
 
   ngOnInit() {
     this.navEvts = this.navEvts || GlobalNavEvents.navEvts;
@@ -36,6 +39,10 @@ export class ContentedNavCmp implements OnInit {
       startWith(''),
       map(value => (value ? this.filter(value) : this.containers))
     );
+  }
+
+  public toggleFavorites() {
+    GlobalNavEvents.toggleFavoriteVisibility();
   }
 
   public filter(value: string) {

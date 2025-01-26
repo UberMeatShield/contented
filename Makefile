@@ -56,7 +56,7 @@ ngtest:
 # Often a run with eslint --fix will actually handle just about everything
 .PHONY: lint
 lint:
-	yarn run lint
+	yarn run lint --fix
 
 # Typically you want a different window doing your jsbuilds nd golang stuff for sanity
 .PHONY: typescript

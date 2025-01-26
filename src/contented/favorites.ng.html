@@ -1,12 +1,24 @@
 <div class="favorites-cmp">
-  <div class="favorites-cnt" [class.hidden]="container?.contents?.length === 0">
+  <div class="favorites-cnt" [class.hidden]="container?.contents?.length === 0 || !visible">
+
+    <div style="visibility: hidden; position: fixed"
+      [style.left]="contextMenuPosition.x"
+      [style.top]="contextMenuPosition.y"
+      [matMenuTriggerFor]="contextMenu">
+    </div>
+    <mat-menu #contextMenu="matMenu">
+    	<ng-template matMenuContent let-content="content">
+    		<button mat-menu-item (click)="removeFavorite(content)">Remove</button>
+    	</ng-template>
+    </mat-menu>
+
     <div *ngIf="container" class="cnt-contents" style="min-height: {{previewHeight}}px;">
-    
         <preview-content-cmp *ngFor="let content of container?.contents || []"
           [content]="content"
           [previewWidth]="previewWidth"
           [previewHeight]="previewHeight"
           (click)="clickContent(content)"
+          (contextmenu)="onContextMenu($event, content)"
         ></preview-content-cmp>
       </div>
       <div class="cnt-empty" *ngIf="!container || !container.contents">
