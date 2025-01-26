@@ -30,7 +30,7 @@
     [mode]="'indeterminate'">
   </mat-progress-spinner>
 
-  <div class="search-result" *ngIf="!!content">
+  <div class="search-results" *ngIf="!!content">
     <preview-content-cmp class="search-result" *ngFor="let content of getVisibleSet()"
       [content]="content"
       [previewWidth]="previewWidth"
