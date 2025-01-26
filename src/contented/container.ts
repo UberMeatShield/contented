@@ -27,6 +27,7 @@ export class Container {
 
   // Set on the initial content loads
   public loadState: LoadStates = LoadStates.NotLoaded;
+  public visible: boolean = false;
 
   // All potential items that can be rendered from the contents
   public renderable: Array<Content>;
@@ -123,4 +124,21 @@ export class Container {
     }
     return this.renderable || [];
   }
+}
+
+// No loading in the DB at this point so this will work for just the UI development
+let favoriteContainer: Container;
+export function getFavorites() {
+  if (!favoriteContainer) {
+    favoriteContainer = new Container({
+      id: 'favorites',
+      name: 'Favorites',
+      previewUrl: '', // Find a local one and use that
+      contents: [],
+      total: 0,
+      count: 0,
+      rowIdx: 0,
+    });
+  }
+  return favoriteContainer;
 }

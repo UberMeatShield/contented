@@ -8,7 +8,7 @@ import { finalize } from 'rxjs/operators';
 import { GlobalBroadcast } from './global_message';
 import { GlobalNavEvents, NavEventMessage, NavTypes } from './nav_events';
 import { Subscription } from 'rxjs';
-import { Container } from './container';
+import { Container, getFavorites } from './container';
 
 import _ from 'lodash';
 
@@ -52,24 +52,23 @@ export class FavoritesCmp implements OnInit, OnDestroy {
   }
 
   public ngOnInit() {
-    this.container =
-      this.container ||
-      new Container({
-        id: 'favorites',
-        name: 'Favorites',
-        previewUrl: 'https://placehold.co/200x200',
-        contents: [],
-        total: 0,
-        count: 0,
-        rowIdx: 0,
-      });
+    this.container = this.container || getFavorites();
     this.calculateDimensions();
 
     this.sub = GlobalNavEvents.navEvts.subscribe({
       next: (evt: NavEventMessage) => {
         // This container is not active but it should be monitoring favorites
-        if (this.monitorFavorites && evt.action === NavTypes.FAVORITE_MEDIA) {
-          this.handleFavorite(evt.content);
+        switch (evt.action) {
+          case NavTypes.FAVORITE_MEDIA:
+            this.handleFavorite(evt.content);
+            break;
+          case NavTypes.REMOVE_FAVORITE:
+            this.removeFavorite(evt.content);
+            break;
+          case NavTypes.TOGGLE_FAVORITE_VISIBILITY:
+            this.visible = !this.visible;
+            this.container.visible = this.visible;
+            break;
         }
       },
     });

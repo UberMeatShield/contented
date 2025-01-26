@@ -1,5 +1,5 @@
 <div class="favorites-cmp">
-  <div class="favorites-cnt" [class.hidden]="container?.contents?.length === 0">
+  <div class="favorites-cnt" [class.hidden]="container?.contents?.length === 0 || !visible">
 
     <div style="visibility: hidden; position: fixed"
       [style.left]="contextMenuPosition.x"

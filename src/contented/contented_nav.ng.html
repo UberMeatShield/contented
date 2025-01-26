@@ -145,6 +145,16 @@
     <!-- Could use this to scroll in or other evts, but mainly lets us manually trigger on keypress-->
   </div>
 
+  <!-- Could put a an active check on the container-->
+  <button class="nav-link" [color]="'secondary'"
+    mat-raised-button
+    [class.active]="favoriteContainer?.visible"
+    [disabled]="favoriteContainer?.contents?.length === 0"
+    (click)="toggleFavorites()"
+  >
+    <mat-icon>favorite</mat-icon><span>Favorites ({{favoriteContainer?.contents?.length}})</span>
+  </button>
+
   <!-- This pretty much just flickers, probably test it is working on larger content -->
   <div *ngIf="loading">
      <mat-progress-spinner
