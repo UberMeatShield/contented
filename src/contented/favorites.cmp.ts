@@ -1,8 +1,9 @@
-import { OnInit, Component, Input, HostListener, OnDestroy } from '@angular/core';
+import { OnInit, Component, Input, HostListener, OnDestroy, ViewChild } from '@angular/core';
 import { Content } from './content';
 import { ContentedService } from './contented_service';
 import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 
+import { MatMenuTrigger } from '@angular/material/menu';
 import { finalize } from 'rxjs/operators';
 import { GlobalBroadcast } from './global_message';
 import { GlobalNavEvents, NavEventMessage, NavTypes } from './nav_events';
@@ -23,6 +24,9 @@ export class FavoritesCmp implements OnInit, OnDestroy {
   @Input() visible: boolean = false;
   @Input() monitorFavorites: boolean = true;
 
+  @ViewChild(MatMenuTrigger)
+  contextMenu: MatMenuTrigger;
+
   public sub: Subscription;
   public maxWidth: number;
   public maxHeight: number;
@@ -30,11 +34,22 @@ export class FavoritesCmp implements OnInit, OnDestroy {
   public error = null;
   public active: boolean = false;
 
+  public contextMenuPosition = { x: '0px', y: '0px' };
+
   constructor(
     public _service: ContentedService,
     public route: ActivatedRoute,
     public router: Router
   ) {}
+
+  onContextMenu(event: MouseEvent, content: Content) {
+    event.preventDefault();
+    this.contextMenuPosition.x = event.clientX + 'px';
+    this.contextMenuPosition.y = event.clientY + 'px';
+    this.contextMenu.menuData = { content: content };
+    this.contextMenu.menu.focusFirstItem('mouse');
+    this.contextMenu.openMenu();
+  }
 
   public ngOnInit() {
     this.container =
@@ -86,7 +101,7 @@ export class FavoritesCmp implements OnInit, OnDestroy {
   }
 
   public clickContent(content: Content) {
-    console.log('Clicked content', content);
+    GlobalNavEvents.viewFullScreen(content);
   }
 
   // TODO: Being called abusively in the constructor rather than on page resize events
