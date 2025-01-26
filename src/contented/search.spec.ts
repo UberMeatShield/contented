@@ -1,15 +1,14 @@
-import { fakeAsync, getTestBed, tick, ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { fakeAsync, getTestBed, tick, ComponentFixture, TestBed, waitForAsync, flush } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { HttpParams } from '@angular/common/http';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { Location } from '@angular/common';
-import { DebugElement } from '@angular/core';
+import { DebugElement, NgZone } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-import { RouterTestingModule } from '@angular/router/testing';
-import { Router } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 
 import { SearchCmp } from '../contented/search.cmp';
 import { ContentedService } from '../contented/contented_service';
@@ -17,41 +16,34 @@ import { ContentedModule, WaitForMonacoLoad } from '../contented/contented_modul
 import { Container } from '../contented/container';
 import { ApiDef } from '../contented/api_def';
 
-import * as _ from 'lodash';
+import _ from 'lodash';
+import $ from 'jquery';
 import { MockData } from '../test/mock/mock_data';
+import { RouterTestingHarness } from '@angular/router/testing';
+import { Tag } from './content';
 
-declare var $;
 describe('TestingSearchCmp', () => {
   let fixture: ComponentFixture<SearchCmp>;
   let service: ContentedService;
   let comp: SearchCmp;
-  let el: HTMLElement;
-  let de: DebugElement;
   let router: Router;
 
   let httpMock: HttpTestingController;
   let loc: Location;
+  let harness: RouterTestingHarness;
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(waitForAsync(async () => {
     TestBed.configureTestingModule({
-      imports: [
-        RouterTestingModule.withRoutes([{ path: 'ui/search', component: SearchCmp }]),
-        FormsModule,
-        ContentedModule,
-        HttpClientTestingModule,
-        NoopAnimationsModule,
-      ],
-      providers: [ContentedService],
+      imports: [FormsModule, ContentedModule, HttpClientTestingModule, NoopAnimationsModule],
+      providers: [provideRouter([{ path: 'ui/search/', component: SearchCmp }]), ContentedService],
+      teardown: { destroyAfterEach: true },
     }).compileComponents();
 
+    harness = await RouterTestingHarness.create();
+
     service = TestBed.inject(ContentedService);
-    fixture = TestBed.createComponent(SearchCmp);
     httpMock = TestBed.inject(HttpTestingController);
     loc = TestBed.inject(Location);
-    comp = fixture.componentInstance;
-
-    de = fixture.debugElement.query(By.css('.search-cmp'));
-    el = de.nativeElement;
     router = TestBed.inject(Router);
     router.initialNavigation();
   }));
@@ -60,38 +52,30 @@ describe('TestingSearchCmp', () => {
     httpMock.verify();
   });
 
-  it('Should create a contented component', () => {
+  it('Should create a search component', waitForAsync(async () => {
+    comp = await harness.navigateByUrl('/ui/search/?searchText=Cthulhu', SearchCmp);
+    harness.detectChanges();
+    let de: DebugElement = harness.fixture.debugElement.query(By.css('.search-cmp'));
+    let el: HTMLElement = de.nativeElement;
+
     expect(comp).withContext('We should have the Contented comp').toBeDefined();
     expect(el).withContext('We should have a top level element').toBeDefined();
-  });
+  }));
 
-  it('It can setup all eventing without exploding', fakeAsync(() => {
-    comp.tags = [
-      {
-        id: 'a',
-        tag_type: '',
-        isProblem: function (): boolean {
-          return false;
-        },
-      },
-    ];
-    let st = 'Cthulhu';
-    router.navigate(['/ui/search/'], { queryParams: { searchText: st } });
-    tick(1000);
-    fixture.detectChanges();
-    tick(3000);
-    expect(comp.searchText).withContext('It should default via route params').toBe(st);
-    fixture.detectChanges();
+  it('It can setup all eventing without exploding', waitForAsync(async () => {
+    comp = await harness.navigateByUrl('/ui/search/?searchText=Cthulhu', SearchCmp);
+    harness.detectChanges();
+    expect(comp.searchText).withContext('It should default via route params').toBe('Cthulhu');
 
-    // TODO: Configure the language...
-    let req = httpMock.expectOne(req => req.url === ApiDef.contented.searchContents, 'Expect a search');
+    comp.search(comp.searchText, 0, 50, null);
     let sr = MockData.getSearch();
     expect(sr.results.length).withContext('We need some search results.').toBeGreaterThan(0);
-    req.flush(sr);
-    tick(1000);
-    fixture.detectChanges();
+    httpMock.match(req => req.url === ApiDef.contented.searchContents).forEach(req => req.flush(sr));
+    harness.detectChanges();
 
-    expect($('.search-result').length).withContext('It should render dom results').toEqual(sr.results.length);
-    tick(10000);
+    expect(comp.loading).toBeFalse();
+    harness.detectChanges();
+    expect(comp.content.length).withContext('It should have results').toEqual(sr.results.length);
+    expect(comp.loading).toBeFalse();
   }));
 });

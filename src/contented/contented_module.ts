@@ -42,22 +42,19 @@ import { VSCodeEditorCmp } from './vscode_editor.cmp';
 import { TaskRequestCmp } from './taskrequest.cmp';
 import { TasksCmp } from './tasks.cmp';
 import { ErrorHandlerCmp, ErrorDialogCmp } from './error_handler.cmp';
-import { Container } from './container';
-import { Content } from './content';
-import { Screen } from './screen';
 import { ByteFormatterPipe, DurationFormatPipe } from './filters';
 import { SafePipe } from './safe.pipe';
 
 import { MonacoEditorModule, NgxMonacoEditorConfig } from 'ngx-monaco-editor-v2';
 import { TagLang } from './tagging_syntax';
 
-import * as $ from 'jquery';
+import { FavoritesCmp } from './favorites.cmp';
+import { PreviewContentCmp } from './preview_content.cmp';
 
 let MONACO_LOADED = false;
 let GIVE_UP = 0;
 function monacoPoller(resolve, reject) {
   if (MONACO_LOADED) {
-    console.log('Monaco loaded');
     return resolve((window as any).monaco);
   } else {
     if (GIVE_UP > 4) {
@@ -70,11 +67,12 @@ function monacoPoller(resolve, reject) {
   }
 }
 
-export let MonacoLoaded = new Promise((resolve, reject) => {
-  return monacoPoller(resolve, reject);
-});
+export let MonacoLoaded: Promise<any>;
 
 export async function WaitForMonacoLoad() {
+  MonacoLoaded = new Promise((resolve, reject) => {
+    return monacoPoller(resolve, reject);
+  });
   return await MonacoLoaded.then(() => {
     console.log('Monaco Resolved this is used in test Cases');
   });
@@ -100,6 +98,7 @@ const monacoConfig: NgxMonacoEditorConfig = {
     lang.register({id: "tagging"});
     lang.setMonarchTokensProvider("tagging", TAGGING_SYNTAX);
     */
+    console.log('onMonacoLoad has been called');
     MONACO_LOADED = true;
     let tl = new TagLang();
     tl.loadLanguage((<any>window).monaco, 'tagging');
@@ -148,10 +147,12 @@ const monacoConfig: NgxMonacoEditorConfig = {
     SearchDialog,
     ScreensCmp,
     SplashCmp,
+    FavoritesCmp,
     ByteFormatterPipe,
     DurationFormatPipe,
     SafePipe,
     EditorContentCmp,
+    PreviewContentCmp,
     TagsCmp,
     TaskRequestCmp,
     TasksCmp,

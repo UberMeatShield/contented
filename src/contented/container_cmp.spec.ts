@@ -10,8 +10,8 @@ import { Container } from '../contented/container';
 import { ContentedService } from '../contented/contented_service';
 import { ContentedModule } from '../contented/contented_module';
 
-import * as _ from 'lodash';
-import * as $ from 'jquery';
+import _ from 'lodash';
+import $ from 'jquery';
 import { MockData } from '../test/mock/mock_data';
 
 describe('TestingContainerCmp', () => {
@@ -37,8 +37,8 @@ describe('TestingContainerCmp', () => {
   }));
 
   it('Should create a contented component', () => {
-    expect(comp).toBeDefined('We should have the Contented comp');
-    expect(el).toBeDefined('We should have a top level element');
+    expect(comp).withContext('We should have the Contented comp').toBeDefined();
+    expect(el).withContext('We should have a top level element').toBeDefined();
   });
 
   it('Should be able to load up the basic data and render an image for each', fakeAsync(() => {

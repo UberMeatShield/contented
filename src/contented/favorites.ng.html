@@ -1,0 +1,16 @@
+<div class="favorites-cmp">
+  <div class="favorites-cnt" [class.hidden]="container?.contents?.length === 0">
+    <div *ngIf="container" class="cnt-contents" style="min-height: {{previewHeight}}px;">
+    
+        <preview-content-cmp *ngFor="let content of container?.contents || []"
+          [content]="content"
+          [previewWidth]="previewWidth"
+          [previewHeight]="previewHeight"
+          (click)="clickContent(content)"
+        ></preview-content-cmp>
+      </div>
+      <div class="cnt-empty" *ngIf="!container || !container.contents">
+        No Favorites
+      </div>
+  </div>
+</div>

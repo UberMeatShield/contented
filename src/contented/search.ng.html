@@ -25,32 +25,17 @@
       </div>
   </form>
 
-
   <mat-progress-spinner *ngIf="loading"
     [diameter]="32"
     [mode]="'indeterminate'">
   </mat-progress-spinner>
 
   <div class="search-results" *ngIf="!!content">
-     <div class="preview-content search-result preview-is{{content.shouldUseTypedPreview()}}"
-       [class.video-overlay]="content?.content_type?.match('video')"
-       style="width: {{previewWidth}}px; height: {{previewHeight}}px;"
-       *ngFor="let content of getVisibleSet()"
-       (click)="contentClicked(content)"
-       >
-
-      <img class="preview-img"
-        [id]="'preview_' + content.id"
-        [src]="content?.previewUrl" 
-        (load)="imgLoaded($event)"
-        *ngIf="!content?.shouldUseTypedPreview()"
-      > 
-
-      <!-- Probably an HTML pipe or component would make the most sense to keep it DRY. -->
-      <span class="preview-type" *ngIf="content.shouldUseTypedPreview()">
-        <mat-icon>{{content.shouldUseTypedPreview()}}</mat-icon>
-        {{content.src}}
-      </span>
-    </div>
+    <preview-content-cmp class="search-result" *ngFor="let content of getVisibleSet()"
+      [content]="content"
+      [previewWidth]="previewWidth"
+      [previewHeight]="previewHeight"
+      (click)="contentClicked(content)"
+    ></preview-content-cmp>
   </div>
 </div>

@@ -9,7 +9,7 @@ import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 import { GlobalNavEvents, NavTypes, NavEventMessage } from './nav_events';
 
 import { GlobalBroadcast } from './global_message';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 @Component({
   selector: 'content-browser',
@@ -30,6 +30,7 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
   public containers: Array<Container>; // Current set of visible containers
   public allCnts: Array<Container>; // All the containers we have loaded
   public sub: Subscription;
+  public favoritesContainer: Container;
 
   constructor(
     public _contentedService: ContentedService,
@@ -51,6 +52,7 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
       },
     });
     this.setupEvtListener();
+
     this.calculateDimensions();
     if (_.isEmpty(this.allCnts)) {
       this.loadContainers(); // Do this after the param map load potentially

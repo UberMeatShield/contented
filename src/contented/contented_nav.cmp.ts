@@ -124,11 +124,14 @@ export class ContentedNavCmp implements OnInit {
       case 'e':
         GlobalNavEvents.viewFullScreen();
         break;
+      case 't':
+        GlobalNavEvents.toggleFavorite();
+        break;
       case 'q':
         GlobalNavEvents.hideFullScreen();
         break;
       case 'Escape':
-        // I think it should potentially have a different action
+        // I think it should potentially have a different action for escape vs q
         GlobalNavEvents.hideFullScreen();
         break;
       case 'f':

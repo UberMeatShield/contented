@@ -67,6 +67,7 @@ export class SearchCmp implements OnInit {
 
     this.route.queryParams.pipe().subscribe({
       next: (res: ParamMap) => {
+        console.log('Query Params set', res);
         // Note you do NOT want searchText to be updated by changes
         // in this component except possibly a 'clear'
         this.searchText = res['searchText'] || '';
@@ -147,7 +148,7 @@ export class SearchCmp implements OnInit {
   }
 
   public getVisibleSet() {
-    return this.content;
+    return this.content || [];
   }
 
   // TODO: Being called abusively in the content rather than on page resize events
