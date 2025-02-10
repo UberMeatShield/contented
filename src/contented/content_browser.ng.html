@@ -15,6 +15,7 @@
   </div>
 
   <!-- Fix this to be better about how to get the currDir -->
+  <input type="number" [(ngModel)]="perRow" />
   <div class="contented-cnt" name="contents" *ngFor="let cnt of getVisibleContainers()">
     <!-- Probably break this out into a container Info Component -->
     <div class="container-contents">
@@ -29,11 +30,12 @@
           ></container-nav>
         </mat-card-subtitle>
         <mat-card-content>
+
+          <!-- TODO: Make this a better calculation since the width depends on a calculation on per row. -->
           <container-cmp 
             [container]="cnt" 
             [active]="cnt === getCurrentContainer()"
-            [previewWidth]="previewWidth" 
-            [previewHeight]="previewHeight"
+            [maxRendered]="perRow * 2"
           ></container-cmp>
         </mat-card-content>
       </mat-card>
