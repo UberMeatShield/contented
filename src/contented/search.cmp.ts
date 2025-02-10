@@ -163,7 +163,7 @@ export class SearchCmp implements OnInit {
 
   /**
    * Don't really love the dialog, might want to swap this or need to cleanup the dialog
-   * @param mc 
+   * @param mc
    */
   public fullView(mc: Content) {
     const dialogRef = this.dialog.open(SearchDialog, {
