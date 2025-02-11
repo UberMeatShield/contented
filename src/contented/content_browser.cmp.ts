@@ -29,7 +29,6 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
   public containers: Array<Container>; // Current set of visible containers
   public allCnts: Array<Container>; // All the containers we have loaded
   public sub: Subscription;
-  public favoritesContainer: Container;
 
   constructor(
     public _contentedService: ContentedService,
