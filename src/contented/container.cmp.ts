@@ -1,5 +1,5 @@
 import { Subscription } from 'rxjs';
-import { OnInit, OnDestroy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener } from '@angular/core';
 import { ContentedService } from './contented_service';
 
 import { Container } from './container';
@@ -14,8 +14,11 @@ import * as _ from 'lodash';
 export class ContainerCmp implements OnInit, OnDestroy {
   @Input() container: Container;
   @Input() active: boolean = false;
-  @Input() previewWidth: number;
-  @Input() previewHeight: number;
+  @Input() maxWidth: number = 0;
+  @Input() maxHeight: number = 0;
+
+  public previewWidth: number = 0;
+  public previewHeight: number = 0;
 
   @Input() maxRendered: number = 8; // Default setting for how many should be visible at any given time
   @Input() maxPrevItems: number = 2; // When scrolling through a cnt, how many previous items should be visible
@@ -59,6 +62,8 @@ export class ContainerCmp implements OnInit, OnDestroy {
         }
       },
     });
+
+    this.calculateDimensions();
   }
 
   public scrollContent(content: Content) {
@@ -137,5 +142,22 @@ export class ContainerCmp implements OnInit, OnDestroy {
 
     // Just here in case we want to override what happens on a click
     this.clickedItem.emit({ cnt: this.container, content: content });
+  }
+
+  // TODO: Being called abusively in the constructor rather than on page resize events
+  @HostListener('window:resize', ['$event'])
+  public calculateDimensions() {
+    // This should be based on the container not the window
+    // but unfortunately we call it before it is in the dom and visible
+    // so there is a load operation order issue to solve.  Maybe afterViewInit would work?
+    let width = this.maxWidth || !window['jasmine'] ? window.innerWidth : 800;
+    let height = this.maxHeight || !window['jasmine'] ? window.innerHeight : 800;
+
+    // 120 is right if the top nav is hidden, could calculate that it is out of view for the height of things
+    // when doing navigation. Potentially the sizing could be done in the container and the max with provided
+    // to the container (maxWidth, maxHeight)
+    const halfVisible = Math.ceil(this.maxRendered / 2);
+    this.previewWidth = Math.ceil(width / halfVisible - 12);
+    this.previewHeight = Math.ceil((height - 160) / 2);
   }
 }

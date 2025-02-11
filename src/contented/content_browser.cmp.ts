@@ -17,13 +17,12 @@ import _ from 'lodash';
 })
 export class ContentBrowserCmp implements OnInit, OnDestroy {
   @Input() maxVisible: number = 2; // How many of the loaded containers should we be viewing
+  @Input() perRow: number = 6; // How many items per row should we be viewing
   @Input() rowIdx: number = 0; // Which row (content item) are we on
   @Input() idx: number = 0; // Which item within the container are we viewing
 
   public loading: boolean = false;
   public emptyMessage = null;
-  public previewWidth: number = 200; // Based on current client page sizes, scale the preview images natually
-  public previewHeight: number = 200; // height for the previews ^
 
   // TODO: Remove this listener
   public fullScreen: boolean = false; // Should we view fullscreen the current item
@@ -53,7 +52,6 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
     });
     this.setupEvtListener();
 
-    this.calculateDimensions();
     if (_.isEmpty(this.allCnts)) {
       this.loadContainers(); // Do this after the param map load potentially
     }
@@ -222,21 +220,6 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
       this.idx--;
       this.selectionEvt();
     }
-  }
-
-  // TODO: Being called abusively in the constructor rather than on page resize events
-  @HostListener('window:resize', ['$event'])
-  public calculateDimensions() {
-    // This should be based on the container not the window
-    // but unfortunately we call it before it is in the dom and visible
-    // so there is a load operation order issue to solve.  Maybe afterViewInit would work?
-    let width = !window['jasmine'] ? window.innerWidth : 800;
-    let height = !window['jasmine'] ? window.innerHeight : 800;
-
-    // 120 is right if the top nav is hidden, could calculate that it is out of view for the height of things
-    // when doing navigation.
-    this.previewWidth = width / 4 - 12;
-    this.previewHeight = (height - 160) / this.maxVisible;
   }
 
   public previewResults(containers: Array<Container>) {
