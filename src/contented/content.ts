@@ -179,13 +179,20 @@ export class VideoCodecInfo {
     this.CanEncode = this.getVideoCodecName() !== 'hevc';
   }
 
-  getVideoCodecName() {
-    let streams = this.streams || [];
-    for (let j = 0; j < streams.length; ++j) {
-      let stream = streams[j];
-      if (stream.codec_type == 'video') {
-        return stream.codec_name;
-      }
+  getVideoStream() {
+    return (this.streams || []).find(stream => stream.codec_type === "video");
+  }
+
+  getResolution() {
+    const stream = this.getVideoStream();
+    if (stream) {
+      return stream.coded_width + 'x' + stream.coded_height;
     }
+    return '';
+  }
+
+  getVideoCodecName() {
+    const stream = this.getVideoStream();
+    return stream?.codec_name || '';
   }
 }
