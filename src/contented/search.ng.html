@@ -1,6 +1,20 @@
 <div class="search-cmp">
   <contented-nav [loading]="loading"></contented-nav>
 
+  <favorites-cmp></favorites-cmp>
+  <div style="visibility: hidden; position: fixed"
+    [style.left]="contextMenuPosition.x"
+    [style.top]="contextMenuPosition.y"
+    [matMenuTriggerFor]="contextMenu">
+  </div>
+  <mat-menu #contextMenu="matMenu">
+    <ng-template matMenuContent let-content="content">
+      <button mat-menu-item (click)="addFavorite(content)">Toggle Favorite</button>
+    </ng-template>
+  </mat-menu>
+
+
+
   <form class="search-form" [formGroup]="options" *ngIf="options">
     <div class="search-tags">
       <tags-cmp
@@ -24,7 +38,6 @@
         ></mat-paginator>
       </div>
   </form>
-  <favorites-cmp></favorites-cmp>
 
   <mat-progress-spinner *ngIf="loading"
     [diameter]="32"
@@ -37,6 +50,7 @@
       [previewWidth]="previewWidth"
       [previewHeight]="previewHeight"
       (click)="contentClicked(content)"
+      (contextmenu)="onContextMenu($event, content)"
     ></preview-content-cmp>
   </div>
 </div>

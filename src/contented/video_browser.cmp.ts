@@ -12,6 +12,7 @@ import { GlobalBroadcast } from './global_message';
 
 import { PageEvent as PageEvent } from '@angular/material/paginator';
 import * as _ from 'lodash';
+import { MatMenuTrigger } from '@angular/material/menu';
 
 @Component({
   selector: 'video-browser-cmp',
@@ -22,6 +23,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
   // Take in the search text route param
   // Debounce the search
   @ViewChild('searchForm', { static: true }) searchControl;
+  @ViewChild(MatMenuTrigger) contextMenu: MatMenuTrigger;
   @Input() tags: Array<Tag>;
   throttleSearch: Subscription;
 
@@ -75,6 +77,20 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
         this.loadContainers();
       },
     });
+  }
+
+  public contextMenuPosition = { x: '0px', y: '0px' };
+  onContextMenu(event: MouseEvent, content: Content) {
+    event.preventDefault();
+    this.contextMenuPosition.x = event.clientX + 'px';
+    this.contextMenuPosition.y = event.clientY + 'px';
+    this.contextMenu.menuData = { content: content };
+    this.contextMenu.menu.focusFirstItem('mouse');
+    this.contextMenu.openMenu();
+  }
+
+  addFavorite(content: Content) {
+    GlobalNavEvents.favoriteContent(content);
   }
 
   ngOnDestroy() {

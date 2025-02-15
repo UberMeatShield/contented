@@ -2,6 +2,17 @@
   <!-- Add in the full list of containers and allow for selection events. -->
   <contented-nav [loading]="loading" [containers]="containers"></contented-nav>
 
+  <div style="visibility: hidden; position: fixed"
+    [style.left]="contextMenuPosition.x"
+    [style.top]="contextMenuPosition.y"
+    [matMenuTriggerFor]="contextMenu">
+  </div>
+  <mat-menu #contextMenu="matMenu">
+    <ng-template matMenuContent let-content="content">
+      <button mat-menu-item (click)="addFavorite(content)">Toggle Favorite</button>
+    </ng-template>
+  </mat-menu>
+
   <form #videoForm [formGroup]="options" (keypress)="$event.stopPropagation()">
     <div class="search-form">
         <div class="search-tags" *ngIf="this.options">
@@ -42,5 +53,6 @@
     [maxVisible]="3"
     [content]="content"
     *ngFor="let content of getVisibleSet()"
+    (contextmenu)="onContextMenu($event, content)"
   ></video-preview-cmp>
 </div>

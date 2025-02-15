@@ -23,17 +23,15 @@ export class FavoritesCmp implements OnInit, OnDestroy {
   @Input() visible: boolean = false;
   @Input() monitorFavorites: boolean = true;
 
-  @ViewChild(MatMenuTrigger)
-  contextMenu: MatMenuTrigger;
+  @ViewChild(MatMenuTrigger) contextMenu: MatMenuTrigger;
 
+  public contextMenuPosition = { x: '0px', y: '0px' };
   public sub: Subscription;
   public maxWidth: number;
   public maxHeight: number;
   public loading: boolean = false;
   public error = null;
   public active: boolean = false;
-
-  public contextMenuPosition = { x: '0px', y: '0px' };
 
   constructor(public _service: ContentedService) {}
 

@@ -11,6 +11,8 @@ import { PageEvent } from '@angular/material/paginator';
 import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { GlobalBroadcast } from './global_message';
 import * as _ from 'lodash';
+import { MatMenuTrigger } from '@angular/material/menu';
+import { GlobalNavEvents } from './nav_events';
 
 @Component({
   selector: 'search-cmp',
@@ -21,6 +23,7 @@ export class SearchCmp implements OnInit {
   // Take in the search text route param
   // Debounce the search
   @ViewChild('videoForm', { static: true }) searchControl;
+  @ViewChild(MatMenuTrigger) contextMenu: MatMenuTrigger;
   @Input() tags: Array<Tag>;
 
   throttleSearch: Subscription;
@@ -36,6 +39,7 @@ export class SearchCmp implements OnInit {
   public total = 0;
   public pageSize = 50;
   public loading: boolean = false;
+  public contextMenuPosition = { x: '0px', y: '0px' };
 
   public searchText: string; // Initial searchText value if passed in the url
   public searchType = new FormControl('text');
@@ -75,6 +79,19 @@ export class SearchCmp implements OnInit {
     });
     this.calculateDimensions();
     this.setupFilterEvts();
+  }
+
+  onContextMenu(event: MouseEvent, content: Content) {
+    event.preventDefault();
+    this.contextMenuPosition.x = event.clientX + 'px';
+    this.contextMenuPosition.y = event.clientY + 'px';
+    this.contextMenu.menuData = { content: content };
+    this.contextMenu.menu.focusFirstItem('mouse');
+    this.contextMenu.openMenu();
+  }
+
+  addFavorite(content: Content) {
+    GlobalNavEvents.favoriteContent(content);
   }
 
   /*

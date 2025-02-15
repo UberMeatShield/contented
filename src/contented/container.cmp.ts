@@ -1,5 +1,6 @@
 import { Subscription } from 'rxjs';
-import { OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener } from '@angular/core';
+import { OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener, ViewChild } from '@angular/core';
+import { MatMenuTrigger } from '@angular/material/menu';
 import { ContentedService } from './contented_service';
 
 import { Container } from './container';
@@ -16,9 +17,7 @@ export class ContainerCmp implements OnInit, OnDestroy {
   @Input() active: boolean = false;
   @Input() maxWidth: number = 0;
   @Input() maxHeight: number = 0;
-
-  public previewWidth: number = 0;
-  public previewHeight: number = 0;
+  @ViewChild(MatMenuTrigger) contextMenu: MatMenuTrigger;
 
   @Input() maxRendered: number = 8; // Default setting for how many should be visible at any given time
   @Input() maxPrevItems: number = 2; // When scrolling through a cnt, how many previous items should be visible
@@ -27,8 +26,11 @@ export class ContainerCmp implements OnInit, OnDestroy {
   @Output() clickedItem: EventEmitter<any> = new EventEmitter<any>();
 
   // @Output clickEvt: EventEmitter<any>;
+  public previewWidth: number = 0;
+  public previewHeight: number = 0;
   public visibleSet: Array<Content>; // The currently visible set of items from in the container
   public sub: Subscription;
+  public contextMenuPosition = { x: '0px', y: '0px' };
 
   constructor(public _contentedService: ContentedService) {}
 
@@ -66,6 +68,15 @@ export class ContainerCmp implements OnInit, OnDestroy {
     this.calculateDimensions();
   }
 
+  onContextMenu(event: MouseEvent, content: Content) {
+    event.preventDefault();
+    this.contextMenuPosition.x = event.clientX + 'px';
+    this.contextMenuPosition.y = event.clientY + 'px';
+    this.contextMenu.menuData = { content: content };
+    this.contextMenu.menu.focusFirstItem('mouse');
+    this.contextMenu.openMenu();
+  }
+
   public scrollContent(content: Content) {
     _.delay(() => {
       let id = `preview_${content.id}`;
@@ -76,6 +87,10 @@ export class ContainerCmp implements OnInit, OnDestroy {
         window.scrollBy(0, -30);
       }
     }, 20);
+  }
+
+  addFavorite(content: Content) {
+    GlobalNavEvents.favoriteContent(content);
   }
 
   /**
