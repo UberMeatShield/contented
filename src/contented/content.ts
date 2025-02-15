@@ -180,7 +180,7 @@ export class VideoCodecInfo {
   }
 
   getVideoStream() {
-    return (this.streams || []).find(stream => stream.codec_type === "video");
+    return (this.streams || []).find(stream => stream.codec_type === 'video');
   }
 
   getResolution() {
