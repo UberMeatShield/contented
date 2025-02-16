@@ -37,7 +37,9 @@ func Test_VideoMeta(t *testing.T) {
 	if codec != "h264" {
 		t.Errorf("Codec format incorrect %s wanted h264 found %s", c.Meta, codec)
 	}
-
+	if c.Duration == 0 {
+		t.Errorf("Duration is 0 for %s", c.Meta)
+	}
 }
 
 func Test_VideoEncoding(t *testing.T) {

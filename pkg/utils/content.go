@@ -188,6 +188,7 @@ func GetContent(id int64, fileInfo os.FileInfo, path string) models.Content {
 	meta := ""
 	encoding := ""
 	corrupt := false
+	duration := 0.0
 	srcFile := filepath.Join(path, fileInfo.Name())
 	if strings.Contains(contentType, "image") {
 		// TODO: Determine if we can use the image library to get some information about the file.
@@ -197,6 +198,7 @@ func GetContent(id int64, fileInfo os.FileInfo, path string) models.Content {
 		if probeErr == nil {
 			meta = vidInfo
 			encoding = gjson.Get(meta, "streams.0.codec_name").String() // hate
+			duration = gjson.Get(meta, "format.duration").Float()
 		} else {
 			meta = fmt.Sprintf("Failed to probe video %s", probeErr)
 			corrupt = true
@@ -210,6 +212,7 @@ func GetContent(id int64, fileInfo os.FileInfo, path string) models.Content {
 		SizeBytes:   int64(fileInfo.Size()),
 		ContentType: contentType,
 		Meta:        meta,
+		Duration:    duration,
 		Corrupt:     corrupt,
 		Encoding:    encoding,
 	}
