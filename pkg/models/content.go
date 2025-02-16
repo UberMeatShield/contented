@@ -31,7 +31,8 @@ type Content struct {
 	Hidden      bool   `json:"-" db:"hidden" default:"false"`        // Should it be visible in basic list queries
 
 	// This is for information about the file content (video / image mostly stats, rez etc)
-	Meta string `json:"meta" db:"meta" default:""`
+	Meta     string  `json:"meta" db:"meta" default:""`
+	Duration float64 `json:"duration" db:"duration" default:"0"`
 
 	// Joins (Eager loading is not working?)
 
@@ -93,6 +94,10 @@ func GetContentSort(arr Contents, jsonFieldName string) ContentJsonSort {
 	case "description":
 		theSort = func(i, j int) bool {
 			return arr[i].Description < arr[j].Description
+		}
+	case "duration":
+		theSort = func(i, j int) bool {
+			return arr[i].Duration < arr[j].Duration
 		}
 	case "created_at":
 		theSort = func(i, j int) bool {
