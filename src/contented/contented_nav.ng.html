@@ -147,6 +147,7 @@
 
   <!-- Could put a an active check on the container-->
   <button class="nav-link" [color]="'secondary'"
+    *ngIf="showFavorites"
     mat-raised-button
     [class.active]="favoriteContainer?.visible"
     [disabled]="favoriteContainer?.contents?.length === 0"

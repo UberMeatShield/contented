@@ -1,12 +1,11 @@
-import { OnInit, Component, EventEmitter, Input, Output, HostListener, ViewChild } from '@angular/core';
+import { OnInit, Component, Input, HostListener, ViewChild } from '@angular/core';
 import { ContentedService } from './contented_service';
 import { Container, getFavorites } from './container';
-import { Content } from './content';
 import { GlobalNavEvents } from './nav_events';
 import { MatRipple } from '@angular/material/core';
 import { MatAutocomplete } from '@angular/material/autocomplete';
 import { FormControl } from '@angular/forms';
-import { Observable } from 'rxjs';
+import type { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 
 import * as _ from 'lodash';
@@ -24,6 +23,7 @@ export class ContentedNavCmp implements OnInit {
   @Input() containers: Array<Container>;
   @Input() noKeyPress = false;
   @Input() title = '';
+  @Input() showFavorites = true;
 
   public containerFilter = new FormControl<string>('');
   public filteredContainers: Observable<Container[]>;
@@ -46,14 +46,14 @@ export class ContentedNavCmp implements OnInit {
   }
 
   public filter(value: string) {
-    let lcVal = value.toLowerCase();
+    const lcVal = value.toLowerCase();
     return _.filter(this.containers, c => {
       return c.name.toLowerCase().includes(lcVal);
     });
   }
 
   public displaySelection(id: string) {
-    let cnt = _.find(this.containers, { id: id });
+    const cnt = _.find(this.containers, { id: id });
     return cnt ? cnt.name : '';
   }
 
@@ -62,7 +62,7 @@ export class ContentedNavCmp implements OnInit {
 
     // If this is not in a delay it will race condition with the selection opening / closing.
     _.delay(() => {
-      let filterEl = $('#CONTENT_FILTER');
+      const filterEl = $('#CONTENT_FILTER');
       filterEl.blur();
 
       // We want to use the container value setValue to ensure the autocomplete doesn't

@@ -64,6 +64,7 @@ func SetupMemory(dir string) {
 	}
 }
 
+// TODO: Move the encoding queue initialization into managers?
 var TASK_QUEUE *worker.TaskQueue
 var ENCODING_QUEUE *worker.TaskQueue
 

@@ -174,6 +174,8 @@ func ScreenCaptureTask(man ContentManager, id int64) error {
 	// Should strip the path information out of the task state
 	ChangeTaskState(man, task, models.TaskStatus.DONE, fmt.Sprintf("Successfully created screens %s", pattern))
 	log.Printf("Screens %s and the pattern %s", screens, pattern)
+
+	// TODO: Come up with a way to submit a follow-up task to create a webp from the screens
 	return sErr
 }
 
