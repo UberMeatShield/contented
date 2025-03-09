@@ -93,6 +93,7 @@ type ContentQuery struct {
 	Order         string   `json:"order" default:"created_at"`
 	Tags          []string `json:"tags" default:"[]"`
 	Direction     string   `json:"direction" default:"desc"`
+	Duplicate     bool     `json:"duplicate" default:"false"`
 }
 
 type TagQuery struct {

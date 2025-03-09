@@ -38,8 +38,8 @@ func ManagersTagSearchValidation(t *testing.T, man ContentManager) {
 	assert.NoError(t, man.CreateTag(&models.Tag{ID: "B"}))
 	assert.NoError(t, man.CreateTag(&models.Tag{ID: "OR"}))
 
-	a := &models.Content{NoFile: true, Src: "AFile"}
-	b := &models.Content{NoFile: true, Src: "BFile"}
+	a := &models.Content{NoFile: true, Src: "AFile", Duplicate: true}
+	b := &models.Content{NoFile: true, Src: "BFile", Duplicate: false}
 	assert.NoError(t, man.CreateContent(a))
 	assert.NoError(t, man.CreateContent(b))
 
@@ -62,4 +62,8 @@ func ManagersTagSearchValidation(t *testing.T, man ContentManager) {
 	_, noCount, noErr := man.SearchContent(ContentQuery{Tags: []string{"A"}, Search: "YAAARG"})
 	assert.NoError(t, noErr, "It should not error")
 	assert.Equal(t, int64(0), noCount, "But it shouldn't match the text")
+
+	_, dupCount, dupErr := man.SearchContent(ContentQuery{Duplicate: true})
+	assert.NoError(t, dupErr, "It should not error")
+	assert.Equal(t, int64(1), dupCount, "And it should get the duplicate back")
 }

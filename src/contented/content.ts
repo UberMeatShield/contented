@@ -58,22 +58,28 @@ export class Content {
   public created_at: Date;
   public updated_at: Date;
 
+  public duplicate: boolean = false;
+
   constructor(obj: any = {}) {
     this.fromJson(obj);
   }
 
   public fromJson(raw: any) {
     if (raw) {
-      Object.assign(this, raw);
-      this.links();
-      this.screens = _.map(raw.screens, s => new Screen(s));
+      this.update(raw);
+    }
+  }
 
-      this.created_at = new Date(this.created_at);
-      this.updated_at = new Date(this.updated_at);
+  public update(raw: any) {
+    Object.assign(this, raw);
+    this.links();
+    this.screens = _.map(raw.screens, s => new Screen(s));
 
-      if (this.isVideo()) {
-        this.getVideoInfo();
-      }
+    this.created_at = new Date(this.created_at);
+    this.updated_at = new Date(this.updated_at);
+
+    if (this.isVideo()) {
+      this.getVideoInfo();
     }
   }
 

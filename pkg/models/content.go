@@ -47,6 +47,9 @@ type Content struct {
 
 	// Useful for when we built out media in a container and want to associate it.
 	FqPath string `json:"-" db:"-" default:"" gorm:"-"` // NOT SET BY DEFAULT
+
+	// Allow for marking something as a duplicate for ease of review
+	Duplicate bool `json:"duplicate" db:"duplicate" default:"false"`
 }
 
 // It seems odd there is no arbitrary json field => proper sort on the struct but then many of
@@ -61,6 +64,7 @@ var VALID_CONTENT_ORDERS = []string{
 	"idx",
 	"size",
 	"description",
+	"duplicate",
 }
 
 // Contents is not required by pop and may be deleted
@@ -106,6 +110,10 @@ func GetContentSort(arr Contents, jsonFieldName string) ContentJsonSort {
 	case "idx":
 		theSort = func(i, j int) bool {
 			return arr[i].Idx < arr[j].Idx
+		}
+	case "duplicate":
+		theSort = func(i, j int) bool {
+			return arr[i].Duplicate
 		}
 	default:
 		theSort = func(i, j int) bool {

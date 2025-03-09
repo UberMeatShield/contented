@@ -93,6 +93,10 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     GlobalNavEvents.favoriteContent(content);
   }
 
+  public toggleDuplicate(content: Content) {
+    GlobalNavEvents.toggleDuplicate(content);
+  }
+
   ngOnDestroy() {
     if (this.sub) {
       this.sub.unsubscribe();

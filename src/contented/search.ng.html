@@ -10,6 +10,7 @@
   <mat-menu #contextMenu="matMenu">
     <ng-template matMenuContent let-content="content">
       <button mat-menu-item (click)="addFavorite(content)">Toggle Favorite</button>
+      <button mat-menu-item (click)="toggleDuplicate(content)">Toggle Duplicate</button>
     </ng-template>
   </mat-menu>
 

@@ -58,6 +58,9 @@ export class FavoritesCmp implements OnInit, OnDestroy {
           case NavTypes.REMOVE_FAVORITE:
             this.removeFavorite(evt.content);
             break;
+          case NavTypes.TOGGLE_DUPLICATE:
+            this.handleToggleDuplicate(evt.content);
+            break;
           case NavTypes.TOGGLE_FAVORITE_VISIBILITY:
             this.visible = !this.visible;
             this.container.visible = this.visible;
@@ -92,6 +95,26 @@ export class FavoritesCmp implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   *
+   * @param content
+   */
+  public toggleDuplicate(content: Content) {
+    GlobalNavEvents.toggleDuplicate(content);
+  }
+
+  public handleToggleDuplicate(content: Content) {
+    content.duplicate = !content.duplicate;
+    this._service.saveContent(content).subscribe({
+      next: (updated: Content) => {
+        content.duplicate = updated.duplicate;
+      },
+      error: err => {
+        GlobalBroadcast.error(err);
+      },
+    });
+  }
+
   public clickContent(content: Content) {
     GlobalNavEvents.viewFullScreen(content);
   }
@@ -107,5 +130,6 @@ export class FavoritesCmp implements OnInit, OnDestroy {
 
     // 120 is right if the top nav is hidden, could calculate that it is out of view for the height of things
     this.previewWidth = width / this.maxVisible - 12;
+    this.previewHeight = height / 6;
   }
 }

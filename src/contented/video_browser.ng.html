@@ -1,6 +1,7 @@
 <div class="video-browser-cmp">
   <!-- Add in the full list of containers and allow for selection events. -->
   <contented-nav [loading]="loading" [containers]="containers"></contented-nav>
+  <favorites-cmp></favorites-cmp>
 
   <div style="visibility: hidden; position: fixed"
     [style.left]="contextMenuPosition.x"
@@ -10,6 +11,7 @@
   <mat-menu #contextMenu="matMenu">
     <ng-template matMenuContent let-content="content">
       <button mat-menu-item (click)="addFavorite(content)">Toggle Favorite</button>
+      <button mat-menu-item (click)="toggleDuplicate(content)">Toggle Duplicate</button>
     </ng-template>
   </mat-menu>
 
@@ -44,7 +46,6 @@
     </div>
   </form>
 
-  <favorites-cmp></favorites-cmp>
   <!-- Hidden unless the user expands it -->
   <contented-view></contented-view>
 

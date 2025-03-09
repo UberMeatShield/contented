@@ -178,6 +178,16 @@ func (cm ContentManagerMemory) getContentFiltered(cs ContentQuery) (*models.Cont
 		mcArr = cidArr
 	}
 
+	if cs.Duplicate {
+		duplicateArr := models.Contents{}
+		for _, mc := range mcArr {
+			if mc.Duplicate {
+				duplicateArr = append(duplicateArr, mc)
+			}
+		}
+		mcArr = duplicateArr
+	}
+
 	if !cs.IncludeHidden {
 		visibleArr := models.Contents{}
 		for _, mc := range mcArr {
