@@ -79,7 +79,7 @@ func ScreensResourceShow(c *gin.Context) {
 	_, fErr := os.Stat(fqPath)
 	if fErr != nil {
 		log.Printf("Cannot download Screen file not on disk %s with err %s", fqPath, fErr)
-		c.AbortWithError(404, err)
+		c.AbortWithError(404, fErr)
 		return
 	}
 
@@ -107,6 +107,7 @@ func ScreensResourceCreate(c *gin.Context) {
 	src := filepath.Base(screen.Src)
 	if utils.HasUpwardTraversal(src) {
 		c.AbortWithError(http.StatusBadRequest, errors.New("src cannot contain upward traversal"))
+		return
 	}
 	screen.Src = src
 

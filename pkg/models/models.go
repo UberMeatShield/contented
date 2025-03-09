@@ -25,7 +25,10 @@ func GetEnvString(key string, defaultVal string) string {
  */
 var GormDB *gorm.DB = nil
 
-// Need to get the envy version of this working properly
+/**
+ * Initialize the GormDB connection and setup some basic pool settings.  Getting the transactions setup
+ * is a little tricky compared to what GoBuffalo did.
+ */
 func InitGorm(reset bool) *gorm.DB {
 	if GormDB == nil || reset {
 
@@ -43,6 +46,14 @@ func InitGorm(reset bool) *gorm.DB {
 		} else {
 			log.Printf("Error in the DB Connection %s", db.Error)
 		}
+
+		sqlDB, err := GormDB.DB()
+		if err != nil {
+			log.Fatalf("could not connect to the DB %s", db.Error)
+		}
+		sqlDB.SetMaxIdleConns(10)           // Maximum number of idle connections
+		sqlDB.SetMaxOpenConns(100)          // Maximum number of open connections
+		sqlDB.SetConnMaxLifetime(time.Hour) // Maximum amount of time a connection can be reused
 	}
 	return GormDB
 }
