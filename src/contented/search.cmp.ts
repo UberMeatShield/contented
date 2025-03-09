@@ -25,6 +25,7 @@ export class SearchCmp implements OnInit {
   @ViewChild('videoForm', { static: true }) searchControl;
   @ViewChild(MatMenuTrigger) contextMenu: MatMenuTrigger;
   @Input() tags: Array<Tag>;
+  @Input() showToggleDuplicate: boolean = false;
 
   throttleSearch: Subscription;
   options: FormGroup;
@@ -43,6 +44,7 @@ export class SearchCmp implements OnInit {
 
   public searchText: string; // Initial searchText value if passed in the url
   public searchType = new FormControl('text');
+  public duplicateFilterState = new FormControl(false);
   public currentTextChange: VSCodeChange = { value: '', tags: [] };
   public changedSearch: (evt: VSCodeChange) => void;
 
@@ -56,6 +58,7 @@ export class SearchCmp implements OnInit {
     this.fb = fb;
     this.options = fb.group({
       searchType: this.searchType,
+      duplicateFilterState: this.duplicateFilterState,
     });
   }
 
@@ -63,6 +66,7 @@ export class SearchCmp implements OnInit {
     // We don't want to call search ever keypress and changeSearch is being called
     // by an event emitter with a different debounce & distinct timing.
     this.changedSearch = _.debounce((evt: VSCodeChange) => {
+      console.log('Changed search', evt);
       // Do not change this.searchText it will re-assign the VS-Code editor in a
       // bad way and muck with the cursor.
       this.search(evt.value, 0, 50, evt.tags);
@@ -150,7 +154,14 @@ export class SearchCmp implements OnInit {
       tags = [];
     }
     // TODO: Make the tags optional
-    const cs = ContentSearchSchema.parse({ text, offset, limit, tags });
+    const cs = ContentSearchSchema.parse({ 
+      text, 
+      offset, 
+      limit, 
+      tags, 
+      ...(this.duplicateFilterState.value ? {duplicate: true} : {})
+    });
+
     this._contentedService
       .searchContent(cs)
       .pipe(finalize(() => (this.loading = false)))

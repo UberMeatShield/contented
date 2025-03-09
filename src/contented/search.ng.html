@@ -11,6 +11,7 @@
     <ng-template matMenuContent let-content="content">
       <button mat-menu-item (click)="addFavorite(content)">Toggle Favorite</button>
       <button mat-menu-item (click)="toggleDuplicate(content)">Toggle Duplicate</button>
+      <button mat-menu-item *ngIf="showToggleDuplicate" (click)="contentClicked(content)">Remove Duplicate</button>
     </ng-template>
   </mat-menu>
 
@@ -30,7 +31,15 @@
         <mat-radio-button value="text">By Text</mat-radio-button>
         <mat-radio-button value="tags">By Tags</mat-radio-button>
       </mat-radio-group>
+
+      <div *ngIf="showToggleDuplicate">
+        <input id="duplicateFilterState" type="checkbox"  formControlName="duplicateFilterState"/>
+        <label  for="duplicateFilterState">
+          Show Duplicates{{duplicateFilterState.value ? ' (On)' : ' (Off)'}}
+        </label>
+      </div>
     </div>
+
     <div class="search-paginator">
       <mat-paginator
         [length]="total"
