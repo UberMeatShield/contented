@@ -227,6 +227,9 @@ func (cm ContentManagerDB) SearchContent(sr ContentQuery) (*models.Contents, int
 	if !sr.IncludeHidden {
 		q = q.Where(`hidden = ?`, false)
 	}
+	if sr.Duplicate {
+		q = q.Where("duplicate = ?", sr.Duplicate)
+	}
 	q = q.Order(models.GetContentOrder(sr.Order, sr.Direction))
 
 	var count int64

@@ -19,6 +19,7 @@ export enum NavTypes {
   TOGGLE_FAVORITE, // A Keypress event that can be listened to to generate a favorite media event
   FAVORITE_MEDIA, // Add this media for a favorite
   SCROLL_MEDIA_INTO_VIEW,
+  TOGGLE_DUPLICATE,
 }
 
 export interface NavEventMessage {
@@ -157,6 +158,14 @@ export class NavEvents {
   scrollContentView(content: Content = null) {
     this.navEvts.emit({
       action: NavTypes.SCROLL_MEDIA_INTO_VIEW,
+      content: content,
+      cnt: undefined,
+    });
+  }
+
+  toggleDuplicate(content: Content = null) {
+    this.navEvts.emit({
+      action: NavTypes.TOGGLE_DUPLICATE,
       content: content,
       cnt: undefined,
     });

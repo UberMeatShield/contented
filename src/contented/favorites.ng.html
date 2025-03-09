@@ -9,10 +9,11 @@
     <mat-menu #contextMenu="matMenu">
     	<ng-template matMenuContent let-content="content">
     		<button mat-menu-item (click)="removeFavorite(content)">Remove</button>
+    		<button mat-menu-item (click)="toggleDuplicate(content)">Toggle Duplicate</button>
     	</ng-template>
     </mat-menu>
 
-    <div *ngIf="container" class="cnt-contents" style="min-height: {{previewHeight}}px;">
+    <div *ngIf="container" class="cnt-contents" style="min-height: {{previewHeight}}px; min-width: {{previewWidth}}px;">
         <preview-content-cmp *ngFor="let content of container?.contents || []"
           [content]="content"
           [previewWidth]="previewWidth"

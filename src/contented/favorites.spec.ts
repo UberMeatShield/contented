@@ -11,6 +11,7 @@ import { MockData } from '../test/mock/mock_data';
 import $ from 'jquery';
 import { GlobalNavEvents } from './nav_events';
 import { getFavorites } from './container';
+import { ApiDef } from './api_def';
 
 describe('FavoritesCmp', () => {
   let comp: FavoritesCmp;
@@ -68,5 +69,23 @@ describe('FavoritesCmp', () => {
     tick(100);
     fixture.detectChanges();
     expect($('.preview-content-cmp').length).toBe(0);
+  }));
+
+  it('Should be able to toggle duplicate', fakeAsync(() => {
+    const content = MockData.getVideo();
+    getFavorites().addContents([content]);
+    comp.container = getFavorites();
+
+    fixture.detectChanges();
+
+    comp.toggleDuplicate(content);
+    httpMock.expectOne({
+      method: 'PUT',
+      url: ApiDef.contented.content.replace('{id}', content.id.toString()),
+    });
+
+    tick(100);
+    fixture.detectChanges();
+    expect(content.duplicate).toBe(true);
   }));
 });

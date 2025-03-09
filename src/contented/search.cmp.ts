@@ -94,6 +94,10 @@ export class SearchCmp implements OnInit {
     GlobalNavEvents.favoriteContent(content);
   }
 
+  toggleDuplicate(content: Content) {
+    GlobalNavEvents.toggleDuplicate(content);
+  }
+
   /*
    * Should reset the pagination utils?
    */
