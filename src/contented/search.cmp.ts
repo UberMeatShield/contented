@@ -154,12 +154,12 @@ export class SearchCmp implements OnInit {
       tags = [];
     }
     // TODO: Make the tags optional
-    const cs = ContentSearchSchema.parse({ 
-      text, 
-      offset, 
-      limit, 
-      tags, 
-      ...(this.duplicateFilterState.value ? {duplicate: true} : {})
+    const cs = ContentSearchSchema.parse({
+      text,
+      offset,
+      limit,
+      tags,
+      ...(this.duplicateFilterState.value ? { duplicate: true } : {}),
     });
 
     this._contentedService
