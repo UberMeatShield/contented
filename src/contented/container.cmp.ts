@@ -117,7 +117,6 @@ export class ContainerCmp implements OnInit, OnDestroy {
     this._contentedService.download(this.container, this.container.rowIdx);
   }
 
-
   public nextContent() {
     let contentList = this.container.getContentList() || [];
     if (this.container.rowIdx < contentList.length) {

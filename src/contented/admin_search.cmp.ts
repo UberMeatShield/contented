@@ -21,5 +21,4 @@ export class AdminSearchCmp extends SearchCmp {
     console.log('Remove duplicate', mc);
     GlobalNavEvents.removeDuplicate(mc);
   }
-
 }
