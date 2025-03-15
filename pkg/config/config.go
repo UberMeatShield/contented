@@ -115,6 +115,7 @@ type DirConfigEntry struct {
 	// TODO: Handle it being mp4?
 	EncodingFilenameModifier string // After re-encoding filename<EncodingFilenameModifier>.mp4
 	RemoveDuplicateFiles     bool   // Removing old video files after re-encoding
+	RemoveLocation           string // If defined and something we can write to delete of content will move the files here
 
 	StartQueueWorkers bool // Should we process requested tasks on this server
 
@@ -180,6 +181,7 @@ func GetCfgDefaults() DirConfigEntry {
 
 		EncodingFilenameModifier: DefaultEncodingFilenameModifier,
 		RemoveDuplicateFiles:     false,
+		RemoveLocation:           "",
 
 		// Should this server start up processing tasks for tasking screens, encoding etc.
 		StartQueueWorkers: true,
@@ -328,8 +330,7 @@ func InitConfigEnvy(cfg *DirConfigEntry) *DirConfigEntry {
 	// TODO: Make this a little saner on the name side
 	cfg.EncodingFilenameModifier = GetEnvString("ENCODING_FILENAME_MODIFIER", DefaultEncodingFilenameModifier)
 	cfg.RemoveDuplicateFiles = GetEnvBool("REMOVE_DUPLICATE_FILES", false)
-
-	// There must be a cleaner way to do some of this default loading...
+	cfg.RemoveLocation = GetEnvString("REMOVE_LOCATION", "")
 
 	cfg.ExcludeEmptyContainers = GetEnvBool("EXCLUDE_EMPTY_CONTAINER", DefaultExcludeEmptyContainers)
 	cfg.MaxSearchDepth = GetEnvInt("MAX_SEARCH_DEPTH", DefaultMaxSearchDepth)

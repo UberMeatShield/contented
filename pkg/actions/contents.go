@@ -144,7 +144,6 @@ func ContentsResourceDestroy(c *gin.Context) {
 		return
 	}
 	// TODO: Manager should ABSOLUTELY be the thing doing updates etc.
-	// Allocate an empty Content
 	id, argErr := strconv.ParseInt(c.Param("content_id"), 10, 64)
 	if argErr != nil {
 		c.AbortWithError(http.StatusBadRequest, argErr)
@@ -160,6 +159,9 @@ func ContentsResourceDestroy(c *gin.Context) {
 			return
 		}
 	}
+
+	// This will only remove content from the disk if the remove location is set in the environment
+	managers.RemoveContentFromDisk(man, content)
 	c.JSON(http.StatusOK, content)
 }
 

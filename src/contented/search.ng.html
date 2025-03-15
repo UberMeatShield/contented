@@ -11,7 +11,10 @@
     <ng-template matMenuContent let-content="content">
       <button mat-menu-item (click)="addFavorite(content)">Toggle Favorite</button>
       <button mat-menu-item (click)="toggleDuplicate(content)">Toggle Duplicate</button>
-      <button mat-menu-item *ngIf="showToggleDuplicate" (click)="removeDuplicate(content)">Remove Duplicate</button>
+      <button mat-menu-item 
+        *ngIf="showToggleDuplicate && content?.duplicate" 
+        (click)="removeDuplicate(content)"
+      >Remove Duplicate</button>
     </ng-template>
   </mat-menu>
 
