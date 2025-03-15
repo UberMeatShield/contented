@@ -20,6 +20,7 @@ export enum NavTypes {
   FAVORITE_MEDIA, // Add this media for a favorite
   SCROLL_MEDIA_INTO_VIEW,
   TOGGLE_DUPLICATE,
+  REMOVE_DUPLICATE,
 }
 
 export interface NavEventMessage {
@@ -166,6 +167,14 @@ export class NavEvents {
   toggleDuplicate(content: Content = null) {
     this.navEvts.emit({
       action: NavTypes.TOGGLE_DUPLICATE,
+      content: content,
+      cnt: undefined,
+    });
+  }
+
+  removeDuplicate(content: Content = null) {
+    this.navEvts.emit({
+      action: NavTypes.REMOVE_DUPLICATE,
       content: content,
       cnt: undefined,
     });

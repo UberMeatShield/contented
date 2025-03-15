@@ -93,6 +93,10 @@ export class ContainerCmp implements OnInit, OnDestroy {
     GlobalNavEvents.favoriteContent(content);
   }
 
+  public toggleDuplicate(content: Content) {
+    GlobalNavEvents.toggleDuplicate(content);
+  }
+
   /**
    * (keypress 't') If there is a current media element selected then we should toggle it.
    */
@@ -112,6 +116,7 @@ export class ContainerCmp implements OnInit, OnDestroy {
   public saveContent() {
     this._contentedService.download(this.container, this.container.rowIdx);
   }
+
 
   public nextContent() {
     let contentList = this.container.getContentList() || [];

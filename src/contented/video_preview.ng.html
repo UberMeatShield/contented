@@ -23,9 +23,10 @@
         <div class="video-view">
           <div class="preview-content video-result preview-is{{content.shouldUseTypedPreview()}}"
             [class.video-overlay]="content?.content_type?.match('video')"
+            [class.content-duplicate]="content.duplicate"
             style="width: {{previewWidth}}px; height: {{previewHeight}}px;"
             (click)="imgClicked(content)"
-            title="Click to play the video (ESC to hide)">
+            title="{{content.duplicate ? 'Marked as a duplicate.' : 'Click to play the video (ESC to hide)'}}">
             <!-- TODO: no preview video should use a differnt icon (content|video browser)-->
             <img class="preview-img" [src]="content.previewUrl" />
             <span class="preview-type" title="No preview">

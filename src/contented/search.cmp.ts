@@ -102,6 +102,11 @@ export class SearchCmp implements OnInit {
     GlobalNavEvents.toggleDuplicate(content);
   }
 
+  removeDuplicate(content: Content) {
+    // only on admin
+    console.log('Remove duplicate only works in admin', content);
+  }
+
   /*
    * Should reset the pagination utils?
    */
