@@ -75,7 +75,7 @@ export class FavoritesCmp implements OnInit, OnDestroy {
   }
 
   /**
-   * This might be worth a full component with different behaviors
+   * This might be worth a full component with different behaviors (needs a user model to properly handle favorites)
    * @param content
    */
   public handleFavorite(content: Content) {

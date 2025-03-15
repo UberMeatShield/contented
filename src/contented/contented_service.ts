@@ -29,6 +29,7 @@ export const ContentSearchSchema = SearchSchema.extend({
   cId: z.string().optional().nullable(), // Container Id
   contentType: z.string().optional(),
   text: z.string().optional(), // An exact search on file name
+  duplicate: z.boolean().optional(),
 });
 
 export const ContainerSearchSchema = SearchSchema.extend({
@@ -286,6 +287,9 @@ export class ContentedService {
     // params.get("tags[]") just returns the first entry if there are multiple
     if (cs.tags?.length > 0) {
       params = params.set('tags', JSON.stringify(cs.tags));
+    }
+    if (cs.duplicate) {
+      params = params.set('duplicate', 'true');
     }
     return this.http
       .get(ApiDef.contented.searchContents, {

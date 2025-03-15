@@ -294,8 +294,25 @@ body {
   }
 }
 
+.content-duplicate {
+    @extend .video-overlay;
+    background-color: darken($color-sec, 15%);
+
+    &:before {
+      content: "Duplicate";
+      color: darken($color-sec, 15%);
+    }
+    &:hover:before {
+      color: darken($color-sec, 25%);
+    }
+}
+
 .video-overlay:hover {
     background: lighten($color-pri, 20%);
+}
+
+.content-duplicate:hover {
+    background: darken($color-sec, 20%) !important;
 }
 
 .full-view-img {

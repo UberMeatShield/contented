@@ -6,7 +6,7 @@ venv/*
 bin/*
 locales/*
 migrations/schema.sql
-
+devops/inventory.ini
 tmp/*
 
 .grifter/

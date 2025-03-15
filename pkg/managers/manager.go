@@ -287,6 +287,13 @@ func StringDefault(s1 string, s2 string) string {
 	return s1
 }
 
+func BoolDefault(s1 string, s2 bool) bool {
+	if s1 == "true" {
+		return true
+	}
+	return s2
+}
+
 // Used when doing pagination on the arrays of memory manager
 func GetOffsetEnd(page int, per_page int, max int) (int, int) {
 	if max == 0 {
@@ -354,6 +361,7 @@ func ContextToContentQuery(params *url.Values, cfg *config.DirConfigEntry) Conte
 		IncludeHidden: false,
 		Order:         StringDefault(params.Get("order"), ""),
 		Offset:        offset,
+		Duplicate:     BoolDefault(params.Get("duplicate"), false),
 	}
 	tags, err := GetTagsFromParam(params.Get("tags"))
 	if err == nil {
