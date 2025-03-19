@@ -129,6 +129,11 @@ export class ContentedService {
     );
   }
 
+  public removeContent(contentID: string) {
+    let url = ApiDef.contented.content.replace('{id}', contentID);
+    return this.http.delete(url, this.options).pipe(catchError(err => this.handleError(err)));
+  }
+
   // Do a preview load (should it be API?)
 
   // TODO: Make all the test mock data new and or recent

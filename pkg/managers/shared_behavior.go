@@ -14,6 +14,7 @@ import (
 	"contented/pkg/utils"
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -108,6 +109,34 @@ func CreateTagsFromFile(cm ContentManager) (*models.Tags, error) {
 		}
 	}
 	return tags, nil
+}
+
+/**
+ * Remove a content from the disk and move it to a new location.
+ * This is a destructive operation and should be called only after the remove from the manager
+ * has been completed.
+ */
+func RemoveContentFromDisk(cm ContentManager, content *models.Content) (string, error) {
+	cfg := cm.GetCfg()
+	if cfg.RemoveLocation == "" {
+		log.Printf("No remove location set so nothing to do")
+		return "", nil
+	}
+
+	cnt, err := cm.GetContainer(*content.ContainerID)
+	if err != nil {
+		log.Printf("Failed to get container %s", err)
+		return "", err
+	}
+	src := filepath.Join(cnt.GetFqPath(), content.Src)
+	dst := filepath.Join(cfg.RemoveLocation, fmt.Sprintf("%s_%d_%s", cnt.Name, content.ID, filepath.Base(src)))
+
+	moveErr := os.Rename(src, dst)
+	if moveErr != nil {
+		log.Printf("Failed to move content %s to %s err %s", src, dst, moveErr)
+		return "", moveErr
+	}
+	return dst, nil
 }
 
 // Init a manager and pass it in or just do this via config value instead of a pass in

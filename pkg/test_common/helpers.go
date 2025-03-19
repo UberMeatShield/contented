@@ -85,6 +85,22 @@ func CreateTestPreviewsContainerDirectory(t *testing.T) (string, string) {
 	return containerPreviews, testDir
 }
 
+func CreateTestContentInContainer(cnt *models.Container, fileName string, writeString string) (*models.Content, error) {
+	testFile := "test.txt"
+	contentPath := filepath.Join(cnt.GetFqPath(), testFile)
+
+	err := os.WriteFile(contentPath, []byte(writeString), 0644)
+	if err != nil {
+		return nil, err
+	}
+	content := models.Content{
+		ID:          42,
+		ContainerID: &cnt.ID,
+		Src:         testFile,
+	}
+	return &content, nil
+}
+
 // duplicated in utils/previews_test.go
 func WriteScreenFile(dstPath string, fileName string, count int) (string, error) {
 	screenName := fmt.Sprintf("%s.screens.00%d.jpg", fileName, count)

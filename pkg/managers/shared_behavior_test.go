@@ -463,3 +463,64 @@ func ValidateClearScreensOnDisk(t *testing.T, man ContentManager) {
 	assert.NoError(t, err, "Should be able to read directory")
 	assert.Empty(t, files, "No files should be left on disk")
 }
+
+func Test_RemoveContentFromDiskDB(t *testing.T) {
+	cfg, _ := test_common.InitFakeApp(true)
+	test_common.CreateContentByDirName("dir3")
+
+	man := GetManagerTestSuite(cfg)
+	ValidateRemoveContentFromDisk(t, man)
+}
+
+func Test_RemoveContentFromDiskMemory(t *testing.T) {
+	cfg, _ := test_common.InitFakeApp(false)
+	man := GetManagerTestSuite(cfg)
+	ValidateRemoveContentFromDisk(t, man)
+}
+
+func ValidateRemoveContentFromDisk(t *testing.T, man ContentManager) {
+	// DB test only
+	cfg := man.GetCfg()
+	removeLocation := filepath.Join(cfg.Dir, "removed_content_test")
+	cfg.RemoveLocation = removeLocation
+	config.SetCfg(*cfg)
+
+	// Create a test directory for the removed content
+	mkErr := os.MkdirAll(removeLocation, 0755)
+	fmt.Printf("Remove location: %s\n", removeLocation)
+
+	assert.NoError(t, mkErr, fmt.Sprintf("Failed to create remove location %s", mkErr))
+
+	cs := ContainerQuery{
+		Name:    "dir3",
+		PerPage: 100,
+	}
+	cnts, _, err := man.SearchContainers(cs)
+	assert.NoError(t, err, fmt.Sprintf("Failed to search containers %s", err))
+	assert.NotNil(t, cnts)
+	assert.Equal(t, 1, len(*cnts), fmt.Sprintf("We should have 1 screens container %s", cnts))
+	cnt := (*cnts)[0]
+
+	content, err := test_common.CreateTestContentInContainer(&cnt, "test.txt", "test removal")
+	assert.NoError(t, err, "Failed to create test file")
+
+	_, verifyFileErr := os.Stat(filepath.Join(cnt.GetFqPath(), content.Src))
+	assert.NoError(t, verifyFileErr, "Content should exist on disk")
+
+	// Test removing content
+	dst, err := RemoveContentFromDisk(man, content)
+	assert.NoError(t, err, fmt.Sprintf("Failed to remove content from disk %s", err))
+	assert.NotEmpty(t, dst, fmt.Sprintf("Failed to remove content from disk no dst %s", dst))
+
+	// Verify original file is gone
+	_, err = os.Stat(filepath.Join(cnt.GetFqPath(), content.Src))
+	assert.True(t, os.IsNotExist(err), fmt.Sprintf("Original file should be removed %s content %s", err, content.Src))
+
+	// Verify file exists in new location
+	_, err = os.Stat(dst)
+	assert.NoError(t, err, fmt.Sprintf("File should exist in remove location %s", dst))
+
+	// Clean up
+	defer os.RemoveAll(removeLocation)
+
+}
