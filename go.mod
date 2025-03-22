@@ -1,8 +1,6 @@
 module contented
 
-go 1.23.0
-
-toolchain go1.24.1
+go 1.24.1
 
 require (
 	github.com/disintegration/imaging v1.6.2

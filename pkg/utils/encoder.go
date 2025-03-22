@@ -124,7 +124,7 @@ func ShouldEncodeVideo(srcFile string, dstFile string) (string, error, bool) {
 		if err != nil {
 			// This should fail a test (might need to dump junk in the file)
 			msg := fmt.Sprintf("File %s exists but cannot probe dst video info (likely corrupt so re-encode) err: %s", dstFile, err)
-			log.Printf(msg)
+			log.Print(msg)
 			return msg, nil, true
 		} else {
 			// Check the times (the name maybe the same but the content might differ if the time is off then re-encode)
@@ -137,11 +137,11 @@ func ShouldEncodeVideo(srcFile string, dstFile string) (string, error, bool) {
 			// TODO: could also check we are in the actually requested codec as well.
 			if int(srcDuration) == int(dstDuration) { // Within minimal amount length?
 				existsMsg = fmt.Sprintf("Done %s exists and has source duration %d", dstFile, int(srcDuration))
-				log.Printf(existsMsg)
+				log.Print(existsMsg)
 				return existsMsg, nil, false
 			} else {
 				msg := fmt.Sprintf("%s Existed but did NOT have the same duration src(%f) vs dst(%f)", dstFile, srcDuration, dstDuration)
-				log.Printf(msg)
+				log.Print(msg)
 				return msg, nil, true
 			}
 		}

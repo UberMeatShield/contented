@@ -76,17 +76,19 @@ func (ts TaskStatusType) Copy() TaskStatusType {
 type TaskOperationType string
 
 var TaskOperation = struct {
-	ENCODING TaskOperationType
-	SCREENS  TaskOperationType
-	WEBP     TaskOperationType
-	TAGGING  TaskOperationType
-	DUPES    TaskOperationType
+	ENCODING               TaskOperationType
+	SCREENS                TaskOperationType
+	WEBP                   TaskOperationType
+	TAGGING                TaskOperationType
+	DUPES                  TaskOperationType
+	REMOVE_DUPLICATE_FILES TaskOperationType
 }{
-	ENCODING: "video_encoding",
-	SCREENS:  "screen_capture",
-	WEBP:     "webp_from_screens",
-	TAGGING:  "tag_content",
-	DUPES:    "detect_duplicates",
+	ENCODING:               "video_encoding",
+	SCREENS:                "screen_capture",
+	WEBP:                   "webp_from_screens",
+	TAGGING:                "tag_content",
+	DUPES:                  "detect_duplicates",
+	REMOVE_DUPLICATE_FILES: "remove_duplicate_files",
 }
 
 func (to TaskOperationType) String() string {
@@ -101,6 +103,8 @@ func (to TaskOperationType) String() string {
 		return "tag_content"
 	case TaskOperation.DUPES:
 		return "detect_duplicates"
+	case TaskOperation.REMOVE_DUPLICATE_FILES:
+		return "remove_duplicate_files"
 	}
 	return "unknown"
 }

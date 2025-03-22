@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -34,9 +33,8 @@ func TestTaskRequestContent(t *testing.T) {
 		t.Errorf("Check had the wrong operation %s", check.Operation)
 	}
 	if check.ID == 0 {
-		t.Errorf("")
+		t.Errorf("Task request was not created")
 	}
-	fmt.Printf("Wha tthe fuck %d", check.ID)
 
 	check.ErrMsg = "Something wicked this way comes"
 	check.Status = TaskStatus.ERROR
