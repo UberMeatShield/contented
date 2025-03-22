@@ -28,6 +28,8 @@ const TOTAL_TAGS = 49
 const TOTAL_VIDEO = 3
 const VIDEO_FILENAME = "donut_[special( gunk.mp4"
 
+const TEST_REMOVAL_LOCATION = "test_removal_content"
+
 var EXPECT_CNT_COUNT = map[string]int{
 	"dir1":            12,
 	"dir2":            4,
@@ -99,6 +101,51 @@ func CreateTestContentInContainer(cnt *models.Container, fileName string, writeS
 		Src:         testFile,
 	}
 	return &content, nil
+}
+
+// Remember to cleanup after the test
+func SetupRemovalLocation(cfg *config.DirConfigEntry) (string, error) {
+	if cfg.Dir == "" {
+		cfg.Dir = config.MustGetEnvString("DIR")
+	}
+
+	removeLocation := filepath.Join(cfg.Dir, TEST_REMOVAL_LOCATION)
+	cfg.RemoveLocation = removeLocation
+	mkErr := os.MkdirAll(removeLocation, 0755)
+	fmt.Printf("Remove location: %s\n", removeLocation)
+	config.SetCfg(*cfg)
+	return removeLocation, mkErr
+}
+
+// Generates files on disk in a temporary directory and returns the container and contents
+func CreateTestRemovalContent(cfg *config.DirConfigEntry, amountToCreate int) (cnt *models.Container, contents models.Contents, err error) {
+	if cfg.Dir == "" {
+		cfg.Dir = config.MustGetEnvString("DIR")
+	}
+	locationPath := filepath.Join(cfg.Dir, TEST_REMOVAL_LOCATION)
+	log.Printf("Creating %d test removal %s content in %s", amountToCreate, cfg.Dir, locationPath)
+
+	mkErr := os.MkdirAll(locationPath, 0755)
+	if mkErr != nil {
+		return nil, nil, mkErr
+	}
+
+	for i := 0; i < amountToCreate; i++ {
+		fileName := fmt.Sprintf("test_%d.txt", i)
+		filePath := filepath.Join(locationPath, fileName)
+		err := os.WriteFile(filePath, []byte(fmt.Sprintf("test %d", i)), 0644)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+	return CreateContentByDirName(TEST_REMOVAL_LOCATION)
+}
+
+func RemoveTestContent() error {
+	cfg := config.GetCfg()
+	location := "test_removal_content"
+	locationPath := filepath.Join(cfg.Dir, location)
+	return os.RemoveAll(locationPath)
 }
 
 // duplicated in utils/previews_test.go
@@ -176,7 +223,7 @@ func InitFakeApp(use_db bool) (*config.DirConfigEntry, *gorm.DB) {
 	// TODO: Assign the context into the manager (force it?)
 	if !cfg.UseDatabase {
 
-		log.Printf("MEMORY")
+		log.Printf("Using memory storage for unit test")
 		// TODO: This moves into managers.. is there a sane way of handling this?
 		memStorage := utils.InitializeMemory(dir)
 

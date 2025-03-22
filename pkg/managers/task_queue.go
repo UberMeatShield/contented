@@ -202,6 +202,27 @@ func WebpFromScreensTask(man ContentManager, id int64) error {
 }
 
 /**
+ * Remove a duplicate content
+ */
+func RemoveDuplicateContentTask(man ContentManager, id int64) error {
+	log.Printf("Managers duplicate content taskID attempting to start %d", id)
+	task, cnt, _, err := TakeContainerTask(man, id, "RemoveDuplicateContentTask")
+	if err != nil {
+		return err
+	}
+	removed, err := RemoveDuplicateContents(man, cnt)
+	if err != nil {
+		failMsg := fmt.Sprintf("Failed to remove duplicate contents %s", err)
+		FailTask(man, task, failMsg)
+		return err
+	}
+	// Remove the content from the database
+	successMsg := fmt.Sprintf("Successfully removed %d duplicate contents from container %d", removed, cnt.ID)
+	ChangeTaskState(man, task, models.TaskStatus.DONE, successMsg)
+	return err
+}
+
+/**
  * Capture a set of screens given a task
  */
 func DetectDuplicatesTask(man ContentManager, id int64) error {

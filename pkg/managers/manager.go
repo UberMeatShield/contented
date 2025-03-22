@@ -640,3 +640,37 @@ func RemoveScreensForContent(man ContentManager, contentID int64) error {
 	}
 	return nil
 }
+
+// Load all the contents in the container that are duplicates and destroy them.
+func RemoveDuplicateContents(man ContentManager, cnt *models.Container) (int, error) {
+	cs := ContentQuery{
+		Duplicate:   true,
+		PerPage:     9001,
+		ContainerID: strconv.FormatInt(cnt.ID, 10),
+	}
+
+	// For now this is fine as paging doesn't use a cursor after each loop the search would no longer work, could just do a while
+	contents, _, cErr := man.SearchContent(cs)
+	if cErr != nil {
+		return 0, cErr
+	}
+	if contents == nil {
+		return 0, nil
+	}
+
+	// Destroy the content from the database or memory and remove it from the disk
+	for _, content := range *contents {
+
+		// The query SHOULD have filtered this but be paranoid in case search bugs out
+		if !content.Duplicate {
+			continue
+		}
+		_, dErr := man.DestroyContent(content.ID)
+		if dErr != nil {
+			return 0, fmt.Errorf("Failed to destroy content %s", dErr)
+		}
+		// Only move content IF the destroy worked and a removal location was configured
+		RemoveContentFromContainer(man, &content, cnt)
+	}
+	return len(*contents), nil
+}
