@@ -119,7 +119,7 @@ func CreateTagsFromFile(cm ContentManager) (*models.Tags, error) {
 func RemoveContentFromContainer(cm ContentManager, content *models.Content, parent *models.Container) (string, error) {
 	cfg := cm.GetCfg()
 	if cfg.RemoveLocation == "" {
-		log.Printf("No remove location set so nothing to do")
+		log.Printf("No remove location set so nothing just removing it from the db/memory model")
 		return "", nil
 	}
 

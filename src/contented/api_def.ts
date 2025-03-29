@@ -30,6 +30,7 @@ export let ApiDef = {
     containerDuplicatesTask: '/api/editing_container_queue/{containerId}/duplicates',
     containerTaggingTask: '/api/editing_container_queue/{containerId}/tagging',
     containerPreviewsTask: '/api/editing_container_queue/{containerId}/screens/{count}/{startTimeSeconds}',
+    containerRemoveDuplicatesTask: '/api/editing_container_queue/{containerId}/remove_duplicates',
   },
   tasks: {
     get: base + 'task_requests/{id}',

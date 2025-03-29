@@ -48,7 +48,10 @@
                   </button>
                   -->
                   <button mat-raised-button [disabled]="creatingTask" (click)="findDuplicates(container)">
-                      Duplicates
+                      Find Duplicates
+                  </button>
+                  <button mat-raised-button [disabled]="creatingTask" (click)="removeDuplicates(container)">
+                      Remove Duplicates
                   </button>
                   <button mat-raised-button [disabled]="creatingTask" (click)="createTags(container)">
                       Assign Tags
