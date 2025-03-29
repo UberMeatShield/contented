@@ -82,6 +82,7 @@ func SetupWorkers() {
 	TASK_QUEUE.RegisterTaskHandler(models.TaskOperation.WEBP.String(), WebpFromScreensWrapper)
 	TASK_QUEUE.RegisterTaskHandler(models.TaskOperation.TAGGING.String(), TaggingContentWrapper)
 	TASK_QUEUE.RegisterTaskHandler(models.TaskOperation.DUPES.String(), DuplicatesWrapper)
+	TASK_QUEUE.RegisterTaskHandler(models.TaskOperation.REMOVE_DUPLICATE_FILES.String(), RemoveDuplicatesWrapper)
 
 	if cfg.StartQueueWorkers {
 		log.Printf("Starting Queue workers locally")

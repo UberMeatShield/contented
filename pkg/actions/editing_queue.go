@@ -75,6 +75,11 @@ func DuplicatesWrapper(args worker.Task) error {
 	return HandleTask(args, managers.DetectDuplicatesTask)
 }
 
+func RemoveDuplicatesWrapper(args worker.Task) error {
+	log.Printf("Removing Duplicates %s", args)
+	return HandleTask(args, managers.RemoveDuplicateContentTask)
+}
+
 func GetTaskId(args worker.Task) (int64, error) {
 	taskId := args.ID
 	if taskId <= 0 {
@@ -294,6 +299,20 @@ func DupesHandler(c *gin.Context) {
 		return
 	}
 	log.Printf("Attempting to queue task %s", tr)
+	QueueTaskRequest(c, man, &tr)
+}
+
+func ContainerRemoveDuplicatesHandler(c *gin.Context) {
+	containerID, badId := strconv.ParseInt(c.Param("container_id"), 10, 64)
+	if badId != nil {
+		c.AbortWithError(http.StatusBadRequest, badId)
+		return
+	}
+	man := managers.GetManager(c)
+	tr := models.TaskRequest{
+		ContainerID: &containerID,
+		Operation:   models.TaskOperation.REMOVE_DUPLICATE_FILES,
+	}
 	QueueTaskRequest(c, man, &tr)
 }
 

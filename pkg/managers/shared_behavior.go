@@ -116,18 +116,23 @@ func CreateTagsFromFile(cm ContentManager) (*models.Tags, error) {
  * This is a destructive operation and should be called only after the remove from the manager
  * has been completed.
  */
-func RemoveContentFromDisk(cm ContentManager, content *models.Content) (string, error) {
+func RemoveContentFromContainer(cm ContentManager, content *models.Content, parent *models.Container) (string, error) {
 	cfg := cm.GetCfg()
 	if cfg.RemoveLocation == "" {
-		log.Printf("No remove location set so nothing to do")
+		log.Printf("No remove location set so nothing just removing it from the db/memory model")
 		return "", nil
 	}
 
-	cnt, err := cm.GetContainer(*content.ContainerID)
-	if err != nil {
-		log.Printf("Failed to get container %s", err)
-		return "", err
+	cnt := parent
+	if cnt == nil {
+		actualParent, err := cm.GetContainer(*content.ContainerID)
+		if err != nil {
+			log.Printf("Failed to get container %s", err)
+			return "", err
+		}
+		cnt = actualParent
 	}
+
 	src := filepath.Join(cnt.GetFqPath(), content.Src)
 	dst := filepath.Join(cfg.RemoveLocation, fmt.Sprintf("%s_%d_%s", cnt.Name, content.ID, filepath.Base(src)))
 
@@ -200,7 +205,7 @@ func FindDuplicateVideos(cm ContentManager) (DuplicateContents, error) {
 		}
 	}
 	if len(errors) > 0 {
-		return duplicates, fmt.Errorf(strings.Join(errors, "\n"))
+		return duplicates, fmt.Errorf("%s", strings.Join(errors, "\n"))
 	}
 	return duplicates, nil
 }

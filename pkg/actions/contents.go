@@ -161,7 +161,7 @@ func ContentsResourceDestroy(c *gin.Context) {
 	}
 
 	// This will only remove content from the disk if the remove location is set in the environment
-	managers.RemoveContentFromDisk(man, content)
+	managers.RemoveContentFromContainer(man, content, nil)
 	c.JSON(http.StatusOK, content)
 }
 

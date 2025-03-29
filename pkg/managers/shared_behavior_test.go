@@ -479,16 +479,8 @@ func Test_RemoveContentFromDiskMemory(t *testing.T) {
 }
 
 func ValidateRemoveContentFromDisk(t *testing.T, man ContentManager) {
-	// DB test only
 	cfg := man.GetCfg()
-	removeLocation := filepath.Join(cfg.Dir, "removed_content_test")
-	cfg.RemoveLocation = removeLocation
-	config.SetCfg(*cfg)
-
-	// Create a test directory for the removed content
-	mkErr := os.MkdirAll(removeLocation, 0755)
-	fmt.Printf("Remove location: %s\n", removeLocation)
-
+	removeLocation, mkErr := test_common.SetupRemovalLocation(cfg)
 	assert.NoError(t, mkErr, fmt.Sprintf("Failed to create remove location %s", mkErr))
 
 	cs := ContainerQuery{
@@ -508,7 +500,7 @@ func ValidateRemoveContentFromDisk(t *testing.T, man ContentManager) {
 	assert.NoError(t, verifyFileErr, "Content should exist on disk")
 
 	// Test removing content
-	dst, err := RemoveContentFromDisk(man, content)
+	dst, err := RemoveContentFromContainer(man, content, nil)
 	assert.NoError(t, err, fmt.Sprintf("Failed to remove content from disk %s", err))
 	assert.NotEmpty(t, dst, fmt.Sprintf("Failed to remove content from disk no dst %s", dst))
 
@@ -522,5 +514,60 @@ func ValidateRemoveContentFromDisk(t *testing.T, man ContentManager) {
 
 	// Clean up
 	defer os.RemoveAll(removeLocation)
+}
 
+func Test_ContainerDuplicateRemovalMemory(t *testing.T) {
+	cfg, _ := test_common.InitFakeApp(false)
+	man := GetManagerTestSuite(cfg)
+	ValidateContainerDuplicateRemoval(t, man)
+}
+
+func Test_ContainerDuplicateRemovalDB(t *testing.T) {
+	cfg, _ := test_common.InitFakeApp(true)
+	man := GetManagerTestSuite(cfg)
+	ValidateContainerDuplicateRemoval(t, man)
+}
+
+func ValidateContainerDuplicateRemoval(t *testing.T, man ContentManager) {
+	cfg := man.GetCfg()
+
+	removeLocation, mkErr := test_common.SetupRemovalLocation(cfg)
+	assert.NoError(t, mkErr, fmt.Sprintf("Failed to create remove location %s", mkErr))
+
+	total := 4
+	cnt, contents, err := test_common.CreateTestRemovalContent(cfg, total)
+	cnt.ID = 0
+	assert.NoError(t, err, "Failed to create test removal content")
+	assert.NotNil(t, cnt)
+	assert.NotNil(t, contents)
+	assert.Equal(t, total, len(contents))
+
+	cntErr := man.CreateContainer(cnt)
+	assert.NoError(t, cntErr, fmt.Sprintf("Failed to create container %s", cntErr))
+
+	// Set all the contents except the first one as duplicates for removal purposes
+	for idx, content := range contents {
+		content.ContainerID = &cnt.ID
+		if idx != 0 {
+			content.Duplicate = true
+		}
+		contentErr := man.CreateContent(&content)
+		assert.NoError(t, contentErr, fmt.Sprintf("Failed to create content %s", contentErr))
+	}
+
+	removed_count, err := RemoveDuplicateContents(man, cnt)
+	assert.NoError(t, err, fmt.Sprintf("Failed to remove duplicate contents %s", err))
+	assert.Equal(t, total-1, removed_count, "We should have removed 2 contents")
+
+	// Verify the contents are gone
+	for idx, content := range contents {
+		if idx == 0 {
+			continue
+		}
+		_, err = os.Stat(filepath.Join(cnt.GetFqPath(), content.Src))
+		assert.True(t, os.IsNotExist(err), fmt.Sprintf("Content should be removed %s", content.Src))
+	}
+
+	defer os.RemoveAll(removeLocation)
+	defer test_common.RemoveTestContent()
 }

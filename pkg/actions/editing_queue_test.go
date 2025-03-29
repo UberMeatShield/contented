@@ -447,3 +447,52 @@ func ValidateContainerScreens(t *testing.T, router *gin.Engine, man managers.Con
 		assert.Equal(t, task.Operation, models.TaskOperation.SCREENS)
 	}
 }
+
+func Test_ContainerDuplicateTaskMemory(t *testing.T) {
+	cfg := test_common.ResetConfig()
+	cnt, contents, err := test_common.CreateTestRemovalContent(cfg, 3)
+	assert.NoError(t, err)
+	assert.NotNil(t, cnt)
+	assert.NotNil(t, contents)
+	assert.Equal(t, 3, len(contents))
+
+	_, _, router := InitFakeRouterApp(false)
+
+	ctx := test_common.GetContext()
+	man := managers.GetManager(ctx)
+
+	ValidateContainerDuplicateRemovalTask(t, router, man)
+	defer test_common.RemoveTestContent()
+}
+
+func ValidateContainerDuplicateRemovalTask(t *testing.T, router *gin.Engine, man managers.ContentManager) {
+	_, total, tErr := man.ListTasks(managers.TaskQuery{})
+	assert.NoError(t, tErr)
+	assert.Equal(t, int64(0), total, fmt.Sprintf("There should not be any tasks %d", total))
+
+	query := managers.ContainerQuery{Name: test_common.TEST_REMOVAL_LOCATION, PerPage: 1}
+	containers, total, err := man.SearchContainers(query)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(1), total, "There should only be one container matching for removal tests")
+	assert.Equal(t, 1, len(*containers), "There should be one container")
+
+	// Create the directory with the duplicate test
+	cnt := (*containers)[0]
+
+	// Need to mark all the contents as duplicates in the removal container
+
+	// Need to implement
+	url := fmt.Sprintf("/api/editing_container_queue/%d/remove_duplicates", cnt.ID)
+	code, err := PostJson(url, cnt, &models.TaskRequest{}, router)
+
+	assert.Equal(t, http.StatusCreated, code, fmt.Sprintf("Failed to create task %s", err))
+
+	// There are two video files so we want to try and test both
+	tasks, _, tErr := man.ListTasks(managers.TaskQuery{})
+	assert.NoError(t, tErr, "Tasks should exist and not error")
+	assert.NotNil(t, tasks, "We should have a task result")
+	assert.Equal(t, 1, len(*tasks), "There should be some tasks now ")
+	for _, task := range *tasks {
+		assert.Equal(t, task.Operation, models.TaskOperation.REMOVE_DUPLICATE_FILES)
+	}
+}

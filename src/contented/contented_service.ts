@@ -421,6 +421,15 @@ export class ContentedService {
     );
   }
 
+  containerRemoveDuplicatesTask(cnt: Container) {
+    let url = ApiDef.contented.containerRemoveDuplicatesTask.replace('{containerId}', cnt.id);
+    return this.http.post(url, cnt).pipe(
+      map(res => {
+        return [new TaskRequest(res)];
+      })
+    );
+  }
+
   containerPreviewsTask(cnt: Container, count: number = 16, startTimeSeconds: number = -1) {
     let url = ApiDef.contented.containerPreviewsTask.replace('{containerId}', cnt.id);
     url = url.replace('{count}', `${count}`).replace('{startTimeSeconds}', `${startTimeSeconds}`);

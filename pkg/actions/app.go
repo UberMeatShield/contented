@@ -109,5 +109,6 @@ func SetupRoutes(r *gin.Engine) {
 	r.POST("/api/editing_container_queue/:container_id/encoding", ContainerVideoEncodingHandler)
 	r.POST("/api/editing_container_queue/:container_id/tagging", ContainerTaggingHandler)
 	r.POST("/api/editing_container_queue/:container_id/duplicates", DupesHandler)
+	r.POST("/api/editing_container_queue/:container_id/remove_duplicates", ContainerRemoveDuplicatesHandler)
 	//TODO: app.POST("/editing_container_queue/{containerID}/webp", ContainerWebpHandler)
 }
