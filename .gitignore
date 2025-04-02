@@ -12,6 +12,8 @@ tmp/*
 .yarn/
 .yarnrc.yml
 .DS_Store
+.vscode
+build
 /mocks/.DS_Store
 /mocks/content/*
 /mocks/content/*/container_previews/*
