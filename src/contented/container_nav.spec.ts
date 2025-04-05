@@ -1,6 +1,6 @@
 import { fakeAsync, getTestBed, tick, ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { DebugElement } from '@angular/core';
 import { BrowserAnimationsModule, NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Subscription } from 'rxjs';
@@ -18,6 +18,7 @@ import { GlobalNavEvents, NavTypes } from '../contented/nav_events';
 import * as _ from 'lodash';
 import * as $ from 'jquery';
 import { MockData } from '../test/mock/mock_data';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('TestingContainerNavCmp', () => {
   let fixture: ComponentFixture<ContainerNavCmp>;
@@ -31,10 +32,10 @@ describe('TestingContainerNavCmp', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [RouterTestingModule, ContentedModule, HttpClientTestingModule, NoopAnimationsModule],
-      providers: [ContentedService],
-      teardown: { destroyAfterEach: false },
-    }).compileComponents();
+    teardown: { destroyAfterEach: false },
+    imports: [RouterTestingModule, ContentedModule, NoopAnimationsModule],
+    providers: [ContentedService, provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+}).compileComponents();
 
     service = TestBed.inject(ContentedService);
     httpMock = TestBed.inject(HttpTestingController);

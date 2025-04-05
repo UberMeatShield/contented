@@ -1,7 +1,7 @@
 import { TestBed, ComponentFixture, waitForAsync, fakeAsync, tick, flush } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { DebugElement } from '@angular/core';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MockData } from '../test/mock/mock_data';
 import { MonacoLoaded, WaitForMonacoLoad, ContentedModule } from './contented_module';
@@ -22,6 +22,7 @@ let editorValue = ` class Funky() {
    what the heck
 }`;
 import _ from 'lodash';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('VSCodeEditorCmp', () => {
   let fixture: ComponentFixture<VSCodeEditorCmp>;
@@ -33,11 +34,11 @@ describe('VSCodeEditorCmp', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule, ContentedModule, NoopAnimationsModule],
-      providers: [],
-      declarations: [VSCodeEditorCmp],
-      teardown: { destroyAfterEach: true },
-    }).compileComponents();
+    declarations: [VSCodeEditorCmp],
+    teardown: { destroyAfterEach: true },
+    imports: [ContentedModule, NoopAnimationsModule],
+    providers: [provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+}).compileComponents();
 
     fixture = TestBed.createComponent(VSCodeEditorCmp);
     de = fixture.debugElement.query(By.css('.vscode-editor-cmp'));

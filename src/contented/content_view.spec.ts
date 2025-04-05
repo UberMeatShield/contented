@@ -1,7 +1,7 @@
 import { fakeAsync, getTestBed, tick, ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { HttpParams } from '@angular/common/http';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpParams, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { DebugElement } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
@@ -46,14 +46,11 @@ describe('TestingContentViewCmp', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [
-        RouterTestingModule.withRoutes([{ path: 'ui/view/:id', component: ContentViewCmp }]),
+    imports: [RouterTestingModule.withRoutes([{ path: 'ui/view/:id', component: ContentViewCmp }]),
         FormsModule,
-        ContentedModule,
-        HttpClientTestingModule,
-      ],
-      providers: [ContentedService],
-    }).compileComponents();
+        ContentedModule],
+    providers: [ContentedService, provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+}).compileComponents();
 
     service = TestBed.get(ContentedService);
     fixture = TestBed.createComponent(ContentViewCmp);

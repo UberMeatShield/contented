@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { By } from '@angular/platform-browser';
 import { DebugElement } from '@angular/core';
 
@@ -9,6 +9,7 @@ import { TaskRequestCmp } from './taskrequest.cmp';
 import { TaskRequest } from './task_request';
 import { MockData } from '../test/mock/mock_data';
 import { RouterTestingModule } from '@angular/router/testing';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 declare var $;
 
@@ -22,14 +23,12 @@ describe('TaskRequestCmp', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [
-        NoopAnimationsModule,
+    declarations: [TaskRequestCmp],
+    imports: [NoopAnimationsModule,
         ContentedModule,
-        HttpClientTestingModule,
-        RouterTestingModule.withRoutes([{ path: 'admin_ui/tasks', component: TaskRequestCmp }]),
-      ],
-      declarations: [TaskRequestCmp],
-    });
+        RouterTestingModule.withRoutes([{ path: 'admin_ui/tasks', component: TaskRequestCmp }])],
+    providers: [provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+});
     fixture = TestBed.createComponent(TaskRequestCmp);
     component = fixture.componentInstance;
 

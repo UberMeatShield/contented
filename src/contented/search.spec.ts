@@ -1,7 +1,7 @@
 import { fakeAsync, getTestBed, tick, ComponentFixture, TestBed, waitForAsync, flush } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { HttpParams } from '@angular/common/http';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpParams, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { Location } from '@angular/common';
@@ -34,10 +34,10 @@ describe('TestingSearchCmp', () => {
 
   beforeEach(waitForAsync(async () => {
     TestBed.configureTestingModule({
-      imports: [FormsModule, ContentedModule, HttpClientTestingModule, NoopAnimationsModule],
-      providers: [provideRouter([{ path: 'ui/search/', component: SearchCmp }]), ContentedService],
-      teardown: { destroyAfterEach: true },
-    }).compileComponents();
+    teardown: { destroyAfterEach: true },
+    imports: [FormsModule, ContentedModule, NoopAnimationsModule],
+    providers: [provideRouter([{ path: 'ui/search/', component: SearchCmp }]), ContentedService, provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+}).compileComponents();
 
     harness = await RouterTestingHarness.create();
 

@@ -1,7 +1,7 @@
 import { fakeAsync, getTestBed, tick, ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { HttpParams } from '@angular/common/http';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpParams, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { Location } from '@angular/common';
@@ -34,10 +34,10 @@ describe('TestingVideoBrowserCmp', () => {
 
   beforeEach(waitForAsync(async () => {
     TestBed.configureTestingModule({
-      imports: [FormsModule, ContentedModule, HttpClientTestingModule, NoopAnimationsModule],
-      providers: [ContentedService, provideRouter([{ path: 'ui/video/', component: VideoBrowserCmp }])],
-      teardown: { destroyAfterEach: true },
-    }).compileComponents();
+    teardown: { destroyAfterEach: true },
+    imports: [FormsModule, ContentedModule, NoopAnimationsModule],
+    providers: [ContentedService, provideRouter([{ path: 'ui/video/', component: VideoBrowserCmp }]), provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+}).compileComponents();
 
     harness = await RouterTestingHarness.create();
     service = TestBed.inject(ContentedService);

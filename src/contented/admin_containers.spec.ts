@@ -1,6 +1,6 @@
 import { fakeAsync, getTestBed, tick, ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { DebugElement } from '@angular/core';
 
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -15,6 +15,7 @@ import * as $ from 'jquery';
 import { MockData } from '../test/mock/mock_data';
 import { ApiDef } from './api_def';
 import { provideRouter, Router } from '@angular/router';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('TestingAdminContainersCmp', () => {
   let fixture: ComponentFixture<AdminContainersCmp>;
@@ -27,10 +28,10 @@ describe('TestingAdminContainersCmp', () => {
 
   beforeEach(waitForAsync(async () => {
     TestBed.configureTestingModule({
-      imports: [ContentedModule, HttpClientTestingModule],
-      providers: [ContentedService, provideRouter([{ path: 'ui/admin/containers', component: AdminContainersCmp }])],
-      teardown: { destroyAfterEach: false },
-    }).compileComponents();
+    teardown: { destroyAfterEach: false },
+    imports: [ContentedModule],
+    providers: [ContentedService, provideRouter([{ path: 'ui/admin/containers', component: AdminContainersCmp }]), provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+}).compileComponents();
 
     harness = await RouterTestingHarness.create();
 

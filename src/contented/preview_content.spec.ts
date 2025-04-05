@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { By } from '@angular/platform-browser';
 import { DebugElement } from '@angular/core';
 
@@ -9,6 +9,7 @@ import { PreviewContentCmp } from './preview_content.cmp';
 import { MockData } from '../test/mock/mock_data';
 
 import $ from 'jquery';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('PreviewContentCmp', () => {
   let comp: PreviewContentCmp;
@@ -20,9 +21,10 @@ describe('PreviewContentCmp', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [NoopAnimationsModule, ContentedModule, HttpClientTestingModule],
-      declarations: [PreviewContentCmp],
-    });
+    declarations: [PreviewContentCmp],
+    imports: [NoopAnimationsModule, ContentedModule],
+    providers: [provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+});
     fixture = TestBed.createComponent(PreviewContentCmp);
     comp = fixture.componentInstance;
 

@@ -1,6 +1,6 @@
 import { fakeAsync, tick, ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { DebugElement } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
@@ -15,6 +15,7 @@ import { ApiDef } from '../contented/api_def';
 import * as _ from 'lodash';
 import $ from 'jquery';
 import { MockData } from '../test/mock/mock_data';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('TestingSplashCmp', () => {
   let fixture: ComponentFixture<SplashCmp>;
@@ -28,14 +29,11 @@ describe('TestingSplashCmp', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [
-        RouterTestingModule.withRoutes([{ path: 'ui/view/:id', component: SplashCmp }]),
+    imports: [RouterTestingModule.withRoutes([{ path: 'ui/view/:id', component: SplashCmp }]),
         FormsModule,
-        ContentedModule,
-        HttpClientTestingModule,
-      ],
-      providers: [ContentedService],
-    }).compileComponents();
+        ContentedModule],
+    providers: [ContentedService, provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+}).compileComponents();
 
     service = TestBed.inject(ContentedService);
     fixture = TestBed.createComponent(SplashCmp);
