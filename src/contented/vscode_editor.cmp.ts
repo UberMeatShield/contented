@@ -8,7 +8,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { EditorComponent } from 'ngx-monaco-editor-v2';
 import { ContentedService } from './contented_service';
 import { GlobalBroadcast } from './global_message';
-import { PageResponse } from 'src/types/global';
+import { PageResponse } from './common';
 
 // Why is it importing api.d?  Because Monaco does a bunch of css importing in the
 // javascript which breaks the hell out of angular tooling, so just get the 'shapes'

@@ -1,7 +1,5 @@
-import { Directive, Input, ElementRef, QueryList, ViewChild, Injectable } from '@angular/core';
+import { Directive, Input, ViewChild, Injectable } from '@angular/core';
 import { MatMenuTrigger, MatMenu } from '@angular/material/menu';
-import { MatPaginator } from '@angular/material/paginator';
-import { MatTable } from '@angular/material/table';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Content } from '../content';
 

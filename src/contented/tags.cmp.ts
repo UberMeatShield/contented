@@ -1,4 +1,4 @@
-import { OnInit, Component, Input, Output, ViewChild, EventEmitter } from '@angular/core';
+import { OnInit, Component, Input, Output, ViewChild, EventEmitter, ElementRef } from '@angular/core';
 import { Tag, VSCodeChange } from './content';
 import { ContentedService } from './contented_service';
 
@@ -59,18 +59,18 @@ export class TagsCmp {
   // Route needs to exist
   // Take in the search text route param
   // Debounce the search
-  @ViewChild('searchForm', { static: true }) searchControl;
+  @ViewChild('searchForm', { static: true }) searchControl!: ElementRef;
 
   @Input() editorValue: string = '';
-  @Input() editorOptions;
+  @Input() editorOptions = editorOptions;
 
   @Output() tagsChanged = new EventEmitter<VSCodeChange>();
 
   // I don't think I need to load the tags, the monaco editor should get them.
-  @Input() tags: Array<Tag>;
-  @Input() TEST_MODE: boolean = window['jasmine'] ? true : false;
+  @Input() tags: Array<Tag> = [];
+  @Input() TEST_MODE: boolean = (window as any).jasmine ? true : false;
 
-  matchedTags: Array<Tag>;
+  matchedTags: Array<Tag> = [];
 
   public loading: boolean = false;
   public pageSize: number = 1000;

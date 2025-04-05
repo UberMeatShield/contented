@@ -18,9 +18,9 @@ interface CountMessages {
     standalone: false
 })
 export class ErrorHandlerCmp implements OnInit, OnDestroy {
-  @Input() broadcast: MessageBroadcast;
+  @Input() broadcast: MessageBroadcast = GlobalBroadcast;
   public events: { [id: string]: CountMessages } = {};
-  public sub: Subscription;
+  public sub: Subscription | undefined;
 
   constructor(
     private snack: MatSnackBar,
@@ -116,7 +116,7 @@ export class ErrorDialogCmp implements AfterViewInit {
 
   constructor(
     public dialogRef: MatDialogRef<ErrorDialogCmp>,
-    public data: { errors: Array<CountMessages> }
+    @Inject(MAT_DIALOG_DATA) public data: { errors: Array<CountMessages> }
   ) {
     this.errors = data.errors;
   }

@@ -1,7 +1,7 @@
 import { OnInit, Component, Input, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { ContentedService } from './contented_service';
 import { Container, getFavorites } from './container';
-import { GlobalNavEvents } from './nav_events';
+import { GlobalNavEvents, NavEventMessage, NavEvents } from './nav_events';
 import { MatRipple } from '@angular/material/core';
 import { MatAutocomplete } from '@angular/material/autocomplete';
 import { FormControl } from '@angular/forms';
@@ -15,13 +15,12 @@ import _ from 'lodash';
     templateUrl: 'contented_nav.ng.html',
     standalone: false
 })
-export class ContentedNavCmp implements OnInit {
-  @ViewChild(MatRipple) ripple: MatRipple;
-  @ViewChild(MatAutocomplete) matAutocomplete: MatAutocomplete;
-  @ViewChild("#CONTENT_FILTER") filterEl: ElementRef;
-  @Input() navEvts;
-  @Input() loading: boolean;
-  @Input() containers: Array<Container>;
+export class ContentedNavCmp {
+  @ViewChild(MatRipple) ripple!: MatRipple;
+  @ViewChild(MatAutocomplete) matAutocomplete!: MatAutocomplete;
+  @ViewChild("#CONTENT_FILTER") filterEl!: ElementRef;
+  @Input() loading: boolean = false;
+  @Input() containers: Array<Container> = [];
   @Input() noKeyPress = false;
   @Input() title = '';
   @Input() showFavorites = true;
@@ -32,10 +31,6 @@ export class ContentedNavCmp implements OnInit {
 
   constructor(public _contentedService: ContentedService) {
     this.favoriteContainer = getFavorites();
-  }
-
-  ngOnInit() {
-    this.navEvts = this.navEvts || GlobalNavEvents.navEvts;
     this.filteredContainers = this.containerFilter.valueChanges.pipe(
       startWith(''),
       map(value => (value ? this.filter(value) : this.containers))

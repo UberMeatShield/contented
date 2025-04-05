@@ -1,5 +1,6 @@
 <div class="preview-content-cmp">
-  <div class="preview-content preview-is{{content.shouldUseTypedPreview()}}"
+
+  <div *ngIf="content" class="preview-content preview-is{{content.shouldUseTypedPreview()}}"
     [class.video-overlay]="content?.content_type?.match('video')"
     [class.current-content]="active"
     [class.content-duplicate]="content.duplicate"
@@ -20,4 +21,5 @@
       {{content.src}}
     </span>
   </div>
+
 </div>

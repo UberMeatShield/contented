@@ -52,8 +52,8 @@ import * as monacoEditor from 'monaco-editor';
 
 import { FavoritesCmp } from './favorites.cmp';
 import { PreviewContentCmp } from './preview_content.cmp';
-import { SafeContextMenuDirective, NotificationService } from './directives/material-helpers.directive';
-import { HelpersModule } from './helpers.module';
+import { NotificationService, SafeContextMenuDirective } from './directives/material-helpers.directive';
+
 
 let MONACO_LOADED = false;
 let GIVE_UP = 0;
@@ -138,7 +138,6 @@ const monacoConfig: NgxMonacoEditorConfig = {
         VSCodeEditorCmp,
         ErrorHandlerCmp,
         ErrorDialogCmp,
-        SafeContextMenuDirective,
     ],
     exports: [
         ContentBrowserCmp,
@@ -179,5 +178,5 @@ const monacoConfig: NgxMonacoEditorConfig = {
         MatSnackBarModule,
         MatMenuModule,
         MatRadioModule,
-        HelpersModule], providers: [ContentedService, Title, NotificationService, provideHttpClient(withInterceptorsFromDi())] })
+        ], providers: [ContentedService, Title, NotificationService, provideHttpClient(withInterceptorsFromDi())] })
 export class ContentedModule {}

@@ -1,12 +1,12 @@
 import { Subscription } from 'rxjs';
 import { finalize, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
-import { OnInit, OnDestroy, Component, ViewChild, Input } from '@angular/core';
+import { OnInit, OnDestroy, Component, ViewChild, Input, ElementRef } from '@angular/core';
 import { ContentedService, ContentSearchSchema } from './contented_service';
 import { Content, Tag, VSCodeChange } from './content';
 import { Container } from './container';
 import { GlobalNavEvents, NavTypes, NavEventMessage } from './nav_events';
-import { ActivatedRoute, Router, ParamMap } from '@angular/router';
+import { ActivatedRoute, Router, ParamMap, Params } from '@angular/router';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { GlobalBroadcast } from './global_message';
 
@@ -23,23 +23,23 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
   // Route needs to exist
   // Take in the search text route param
   // Debounce the search
-  @ViewChild('searchForm', { static: true }) searchControl;
-  @ViewChild(MatMenuTrigger) contextMenu: MatMenuTrigger;
-  @Input() tags: Array<Tag>;
-  throttleSearch: Subscription;
+  @ViewChild('searchForm', { static: true }) searchControl!: ElementRef;
+  @ViewChild(MatMenuTrigger) contextMenu!: MatMenuTrigger;
+  @Input() tags: Array<Tag> = [];
+  throttleSearch!: Subscription;
 
-  searchText: string; // Initial value
+  searchText: string = ''; // Initial value
   searchType = new FormControl('text');
   currentTextChange: VSCodeChange = { value: '', tags: [] };
   changedSearch: (evt: VSCodeChange) => void;
 
-  options: FormGroup;
+  options: FormGroup = new FormGroup({});
   fb: FormBuilder;
 
-  public selectedContent: Content; // For keeping track of where we are in the page
-  public selectedContainer: Container; // For filtering
-  public content: Array<Content>;
-  public containers: Array<Container>;
+  public selectedContent: Content | undefined; // For keeping track of where we are in the page
+  public selectedContainer: Container | undefined; // For filtering
+  public content: Array<Content> = [];
+  public containers: Array<Container> = [];
 
   // TODO: Make this a saner calculation
   public maxVisible = 3; // How many results show vertically
@@ -47,7 +47,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
   public offset = 0; // Tracking where we are in the position
   public pageSize = 50;
   public loading: boolean = false;
-  public sub: Subscription; // Listening for GlobalNavEvents
+  public sub: Subscription | undefined; // Listening for GlobalNavEvents
 
   constructor(
     public _contentedService: ContentedService,
@@ -55,6 +55,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     public router: Router,
     fb: FormBuilder
   ) {
+    this.changedSearch = (evt: VSCodeChange) => {};
     this.fb = fb;
   }
 
@@ -70,8 +71,8 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     this.resetForm();
     this.setupEvtListener();
     this.route.queryParams.pipe().subscribe({
-      next: (res: ParamMap) => {
-        this.searchText = res['searchText'] || '';
+      next: (res: Params) => {
+        this.searchText = res.searchText || '';
 
         // Add in a param for container_id ?
         // this.search(this.searchText, this.offset, this.pageSize, this.getCntId());
@@ -81,13 +82,15 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
   }
 
   public contextMenuPosition = { x: '0px', y: '0px' };
-  onContextMenu(event: MouseEvent, content: Content) {
+  onContextMenu(event: MouseEvent, content: Content | undefined) {
     event.preventDefault();
-    this.contextMenuPosition.x = event.clientX + 'px';
-    this.contextMenuPosition.y = event.clientY + 'px';
-    this.contextMenu.menuData = { content: content };
-    this.contextMenu.menu.focusFirstItem('mouse');
-    this.contextMenu.openMenu();
+    if (this.contextMenu && content) {
+      this.contextMenuPosition.x = event.clientX + 'px';
+      this.contextMenuPosition.y = event.clientY + 'px';
+      this.contextMenu.menuData = { content: content };
+      this.contextMenu.menu?.focusFirstItem('mouse');
+      this.contextMenu.openMenu();
+    }
   }
 
   addFavorite(content: Content) {
@@ -147,7 +150,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     });
   }
 
-  public selectContainer(cnt: Container) {
+  public selectContainer(cnt: Container | undefined) {
     let offset = this.offset;
     if (_.get(cnt, 'id') != _.get(this.selectedContainer, 'id')) {
       this.offset = 0;
@@ -185,7 +188,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     }
   }
 
-  public selectContent(content: Content, container: Container) {
+  public selectContent(content: Content | undefined, container: Container | undefined) {
     this.selectedContent = content;
     if (!content) {
       return;
@@ -252,12 +255,12 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     text: string = '',
     offset: number = 0,
     limit: number = 50,
-    cntId: string = null,
+    cntId: string | null = null,
     tags: Array<string> = []
   ) {
     console.log('Get the information from the input and search on it', text, offset, limit, cntId);
 
-    this.selectedContent = null;
+    this.selectedContent = undefined;
     this.content = [];
     this.loading = true;
 

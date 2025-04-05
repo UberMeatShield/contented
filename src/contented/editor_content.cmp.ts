@@ -25,10 +25,10 @@ export class EditorContentCmp implements OnInit {
 
   @Input() content?: Content;
 
-  @Input() editForm?: FormGroup;
+  @Input() editForm: FormGroup;
   @Input() descriptionControl: FormControl = new FormControl('', Validators.required);
 
-  @Input() screensForm?: FormGroup;
+  @Input() screensForm: FormGroup;
   @Input() offsetControl: FormControl<number | null> = new FormControl(null, Validators.required);
   @Input() countControl: FormControl<number | null> = new FormControl(12, Validators.required);
   @Input() checkStates = true;

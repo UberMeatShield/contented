@@ -16,7 +16,7 @@ import { safeContent } from './utils';
     standalone: false
 })
 export class ContentedViewCmp implements OnInit, OnDestroy {
-  @Input() content!: Content;
+  @Input() content: Content | undefined;
   @Input() forceWidth: number = 0;
   @Input() forceHeight: number = 0;
   @Input() visible: boolean = false;
@@ -58,7 +58,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
           case NavTypes.VIEW_FULLSCREEN:
             if (this.content) {
               // Akward but without a digest it will NOT change the video if it is already playing
-              this.content = null;
+              this.content = undefined;
               setTimeout(() => {
                 this.selectFullScreenContent(content, evt.screen);
               }, 50);
@@ -88,7 +88,9 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
     if (this.content && this.content.isText() && this.visible) {
       this._service.getTextContent(this.content).subscribe({
         next: (text: string) => {
-          this.content.fullText = text;
+          if (this.content) {
+            this.content.fullText = text;
+          }
         },
         error: err => {
           GlobalBroadcast.error('Failed to get description', err);
@@ -121,7 +123,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
 
   public handleTextContent(content: Content) {
     // This would be better in a method but I would like another example type.
-    if (this.content.isText() && !this.content.fullText) {
+    if (this.content?.isText() && !this.content.fullText) {
       this._service.getTextContent(content).subscribe({
         next: (text: string) => {
           content.fullText = text;
@@ -168,7 +170,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
   public clickedScreen(evt: ScreenClickEvent, count: number = 0) {
     // These screens are associated with the currently selected content
     const findVideo = (attempt = 0) => {
-      const videoEl = <HTMLVideoElement>document.getElementById(`VIDEO_${this.content.id}`);
+      const videoEl = <HTMLVideoElement>document.getElementById(`VIDEO_${this.content?.id}`);
       if (videoEl) {
         videoEl.currentTime = evt.screen?.parseSecondsFromScreen() || 0;
         videoEl.play();
@@ -203,7 +205,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
   }
 
   handleNavEvt(evt: NavEventMessage) {
-    if (evt.action === NavTypes.CONTENT_SELECTED) {
+    if (evt.action === NavTypes.SELECT_MEDIA) {
       const content = this.shouldIgnoreEvt(evt.content);
       if (content) {
         this.content = content;

@@ -12,13 +12,13 @@ import { GlobalBroadcast } from './global_message';
     standalone: false
 })
 export class ContentViewCmp implements OnInit {
-  @Input() content: Content;
-  @Input() forceWidth: number;
-  @Input() forceHeight: number;
+  @Input() content: Content | undefined;
+  @Input() forceWidth: number | undefined;
+  @Input() forceHeight: number | undefined;
   @Input() visible: boolean = false;
 
-  public maxWidth: number;
-  public maxHeight: number;
+  public maxWidth: number | undefined;
+  public maxHeight: number | undefined;
   public loading: boolean = false;
   public error = null;
 

@@ -15,6 +15,7 @@ import { MatMenuTrigger } from '@angular/material/menu';
 import { GlobalNavEvents } from './nav_events';
 import { SearchDialog } from './search_dialog.cmp';
 import { initializeDefaults } from './utils';
+import { getWindowSize } from './common';
 
 @Component({
     selector: 'search-cmp',
@@ -25,9 +26,9 @@ export class SearchCmp implements OnInit {
   // Route needs to exist
   // Take in the search text route param
   // Debounce the search
-  @ViewChild('videoForm', { static: true }) searchControl: ElementRef;
+  @ViewChild('videoForm', { static: true }) searchControl!: ElementRef;
   @ViewChild(MatMenuTrigger) contextMenu!: MatMenuTrigger;
-  @Input() tags!: Array<Tag>;
+  @Input() tags: Array<Tag> = [];
   @Input() showToggleDuplicate: boolean = false;
 
   throttleSearch!: Subscription;
@@ -204,8 +205,7 @@ export class SearchCmp implements OnInit {
   // TODO: Being called abusively in the content rather than on page resize events
   @HostListener('window:resize', ['$event'])
   public calculateDimensions() {
-    let width = !window['jasmine'] ? window.innerWidth : 800;
-    let height = !window['jasmine'] ? window.innerHeight : 800;
+    const {width, height} = getWindowSize();
 
     this.previewWidth = width / 4 - 41;
     this.previewHeight = height / this.maxVisible - 41;

@@ -6,6 +6,7 @@ import { finalize } from 'rxjs/operators';
 import { Screen, ScreenAction, ScreenClickEvent } from './screen';
 import { GlobalBroadcast } from './global_message';
 import * as _ from 'lodash';
+import { getWindowSize } from './common';
 
 @Component({
     selector: 'screens-cmp',
@@ -90,11 +91,10 @@ export class ScreensCmp implements OnInit {
     }
 
     let perRow = Math.ceil((this.screens?.length || 0) / 2);
-    let width = !window['jasmine'] ? window.innerWidth : 800;
+    let {width, height} = getWindowSize();
     if (this.containerWidth) {
       width = this.containerWidth;
     }
-    let height = !window['jasmine'] ? window.innerHeight : 800;
     if (this.containerHeight) {
       height = this.containerHeight;
     }

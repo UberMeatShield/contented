@@ -10,6 +10,7 @@ import { finalize } from 'rxjs/operators';
 import { GlobalBroadcast } from './global_message';
 import * as _ from 'lodash';
 import { initializeDefaults } from './utils';
+import { getWindowSize } from './common';
 
 @Component({
     selector: 'favorites-cmp',
@@ -27,9 +28,9 @@ export class FavoritesCmp implements OnInit, OnDestroy {
   @ViewChild(MatMenuTrigger) contextMenu!: MatMenuTrigger;
   public contextMenuPosition = { x: '0px', y: '0px' };
   public contextMenuContent: Content | undefined;
-  public sub: Subscription;
-  public maxWidth: number;
-  public maxHeight: number;
+  public sub: Subscription | undefined;
+  public maxWidth: number | undefined;
+  public maxHeight: number | undefined;
   public containerVisible = true;
 
   constructor(
@@ -133,8 +134,7 @@ export class FavoritesCmp implements OnInit, OnDestroy {
     // This should be based on the container not the window
     // but unfortunately we call it before it is in the dom and visible
     // so there is a load operation order issue to solve.  Maybe afterViewInit would work?
-    let width = !window['jasmine'] ? window.innerWidth : 800;
-    let height = !window['jasmine'] ? window.innerHeight : 800;
+    const {width, height} = getWindowSize();
 
     // 120 is right if the top nav is hidden, could calculate that it is out of view for the height of things
     this.previewWidth = width / this.maxItems - 12;

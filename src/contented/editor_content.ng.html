@@ -42,7 +42,7 @@
           <mat-form-field class="input-third">
             <input matInput [formControl]="offsetControl" type="number" 
               min="0" 
-              [max]="vidInfo?.format?.duration"
+              [max]="vidInfo?.format?.duration || 0"
               placeholder="Offset to start screens" />
               <label>
               ({{vidInfo?.format?.duration}}) seconds in video
@@ -127,7 +127,7 @@
       <!-- TODO: Dynamically select language based on content type ?-->
       <vscode-editor-cmp #description [editForm]="editForm" [showTagging]="true"></vscode-editor-cmp>
     </mat-card-content>
-    <mat-card-actions align="left">
+    <mat-card-actions align="start">
         <button mat-icon-button (click)="save()" title="Save the description" [disabled]="loading">
           <mat-icon>save</mat-icon>
         </button>

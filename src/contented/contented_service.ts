@@ -11,10 +11,10 @@ import { TAGS_RESPONSE } from './tagging_syntax';
 import { forkJoin, Observable, from as observableFrom } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { GlobalBroadcast } from './global_message';
+import { PageResponse } from './common';
 
 import * as _ from 'lodash';
 import z from 'zod';
-import { PageResponse } from 'src/types/global';
 //import { Z } from 'zod-class';
 
 export const DirectionEnum = z.enum(['asc', 'desc']);
@@ -165,7 +165,7 @@ export class ContentedService {
     return this.http.get(downloadUrl, { responseType: 'text' });
   }
 
-  public fullLoadDir(cnt: Container, limit: number | null = null) {
+  public fullLoadDir(cnt: Container, limit: number | null = null): Observable<Container> {
     if (cnt.count === cnt.total) {
       console.log('Count = total, ignoring', cnt);
       return observableFrom(Promise.resolve(cnt));
@@ -214,7 +214,7 @@ export class ContentedService {
           },
         });
     });
-    return observableFrom(p);
+    return observableFrom(p) as Observable<Container>;
   }
 
   public loadMoreInDir(cnt: Container, limit: number = 9000) {

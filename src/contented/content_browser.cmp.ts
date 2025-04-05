@@ -23,13 +23,13 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
   @Input() idx: number = 0; // Which item within the container are we viewing
 
   public loading: boolean = false;
-  public emptyMessage = null;
+  public emptyMessage = "";
 
   // TODO: Remove this listener
   public fullScreen: boolean = false; // Should we view fullscreen the current item
-  public containers: Array<Container>; // Current set of visible containers
-  public allCnts: Array<Container>; // All the containers we have loaded
-  public sub: Subscription;
+  public containers: Array<Container> = []; // Current set of visible containers
+  public allCnts: Array<Container> = []; // All the containers we have loaded
+  public sub: Subscription | undefined;
 
   constructor(
     public _contentedService: ContentedService,
@@ -41,10 +41,10 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
     // Need to load content if the idx is greater than content loaded (n times potentially)
     this.route.paramMap.pipe().subscribe({
       next: (res: ParamMap) => {
-        this.setPosition(
-          res.get('idx') ? parseInt(res.get('idx'), 10) : this.idx,
-          res.get('rowIdx') ? parseInt(res.get('rowIdx'), 10) : 0
-        );
+
+        const idx = parseInt(res.get('idx') || `${this.idx}`, 10);
+        const rowIdx = parseInt(res.get('rowIdx') || "0", 10);
+        this.setPosition(idx, rowIdx);
       },
       error: err => {
         GlobalBroadcast.error('Failed to set position using route', err);
@@ -80,7 +80,9 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
             this.selectedContent(evt.content, evt.cnt);
             break;
           case NavTypes.SELECT_CONTAINER:
-            this.selectContainer(evt.cnt);
+            if (evt.cnt) {
+              this.selectContainer(evt.cnt);
+            }
             break;
           default:
             break;
@@ -132,7 +134,7 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
         )
         .subscribe({
           next: res => {
-            this.cntResults(cnt, res);
+            this.cntResults(cnt, res.results);
           },
           error: err => {
             console.error(err);
@@ -141,7 +143,7 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
     }
   }
 
-  public cntResults(cnt: Container, response) {
+  public cntResults(cnt: Container, response: Array<Content>) {
     // console.log("Results loading, what is in the results?", response);
     cnt.addContents(cnt.buildImgs(response));
   }
@@ -149,7 +151,7 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
   public reset() {
     this.idx = 0;
     this.allCnts = [];
-    this.emptyMessage = null;
+    this.emptyMessage = "";
   }
 
   public getVisibleContainers() {
@@ -164,8 +166,11 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
         if (obs) {
           obs.subscribe({
             next: content => {
-              if (cnt == currCnt) {
-                GlobalNavEvents.selectContent(cnt.getContent(), cnt);
+              if (cnt?.id == currCnt?.id) {
+                const currentContent = cnt.getContent();
+                if (currentContent) {
+                  GlobalNavEvents.selectContent(currentContent, cnt);
+                }
               }
             },
             error: err => console.error,
@@ -191,8 +196,14 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
   // what has been selected.
   public selectionEvt() {
     let cnt = this.getCurrentContainer();
-    console.log('Selected container ID', cnt.id);
-    GlobalNavEvents.selectContent(cnt.getContent(), cnt);
+    if (!cnt)  {
+      return;
+    }
+    const content = cnt.getContent();
+    console.log('Selected container ID', cnt.id, content?.id);
+    if (content) {
+      GlobalNavEvents.selectContent(content, cnt);
+    }
     this.updateRoute();
   }
 
@@ -238,7 +249,10 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
     this._contentedService.fullLoadDir(cnt).subscribe({
       next: (loadedCnt: Container) => {
         console.log('Fully loaded up the container', loadedCnt.id);
-        GlobalNavEvents.selectContent(loadedCnt.getContent(), loadedCnt);
+        const content = loadedCnt.getContent();
+        if (content && loadedCnt) {
+          GlobalNavEvents.selectContent(content, loadedCnt);
+        }
       },
       error: err => {
         console.error('Failed to load', err);
@@ -248,6 +262,10 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
 
   public loadView(idx: number, rowIdx: number, triggerSelect: boolean = false) {
     let currDir = this.getCurrentContainer();
+    if (!currDir) {
+      return;
+    }
+
     if (rowIdx >= currDir.total) {
       rowIdx = 0;
     }
@@ -259,18 +277,21 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
     if (rowIdx >= currDir.count) {
       this.fullLoadDir(currDir);
     } else if (triggerSelect) {
-      let cnt = this.getCurrentContainer();
-      GlobalNavEvents.selectContent(cnt.getContent(), cnt);
+      const cnt = this.getCurrentContainer();
+      const content = cnt?.getContent();
+      if (content && cnt) {
+        GlobalNavEvents.selectContent(content, cnt);
+      }
     }
   }
 
   // Could probably move this into a saner location
-  public selectedContent(content: Content, cnt: Container) {
+  public selectedContent(content: Content | undefined, cnt: Container | undefined) {
     //console.log("Click event, change currently selected indexes, container etc", content, cnt);
     let idx = _.findIndex(this.allCnts, { id: cnt ? cnt.id : '-1' });
     if (idx >= 0) {
       this.idx = idx;
-      this.rowIdx = cnt.rowIdx;
+      this.rowIdx = cnt?.rowIdx || 0;
       this.updateRoute();
     } else {
       console.error('Should not be able to click an item we cannot find.', cnt, content);

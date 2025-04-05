@@ -11,8 +11,6 @@ import { MockData } from '../test/mock/mock_data';
 import { RouterTestingModule } from '@angular/router/testing';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
-declare var $;
-
 describe('TaskRequestCmp', () => {
   let component: TaskRequestCmp;
   let fixture: ComponentFixture<TaskRequestCmp>;

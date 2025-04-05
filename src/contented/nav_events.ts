@@ -63,7 +63,7 @@ export class NavEvents {
     });
   }
 
-  selectContent(content: Content, container: Container) {
+  selectContent(content: Content, container: Container | undefined = undefined) {
     this.navEvts.emit({
       action: NavTypes.SELECT_MEDIA,
       content: content,

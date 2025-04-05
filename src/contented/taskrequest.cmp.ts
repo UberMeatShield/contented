@@ -27,11 +27,14 @@ export class TaskRequestCmp implements OnInit {
   public loading = false;
   public tasks: Array<TaskRequest> = [];
   public total = 0;
-  public statusFilterControl: FormControl<string>;
-  public searchFilterControl: FormControl<string>;
+  public statusFilterControl = new FormControl('');
+  public searchFilterControl = new FormControl('');
   public reloadSub: Subscription | undefined;
   public throttleSub: Subscription | undefined;
-  public tasksForm: FormGroup;
+  public tasksForm: FormGroup = new FormGroup({
+    status: this.statusFilterControl,
+    search: this.searchFilterControl
+  });
 
   displayedColumns: string[] = [
     'operation',
@@ -51,11 +54,6 @@ export class TaskRequestCmp implements OnInit {
     public _service: ContentedService,
     fb: FormBuilder
   ) {
-    // Initialize default values
-    initializeDefaults(this, {
-      statusFilterControl: createStringControl(''),
-      searchFilterControl: createStringControl('')
-    });
 
     this.tasksForm = new FormGroup({
       status: this.statusFilterControl,
@@ -91,7 +89,7 @@ export class TaskRequestCmp implements OnInit {
 
   reload(initial: boolean) {
     const status = this.statusFilterControl.value as TaskStatus;
-    this.loadTasks(this.contentID, [], status, this.searchFilterControl.value);
+    this.loadTasks(this.contentID, [], status, this.searchFilterControl.value || '');
   }
 
   loadTasks(contentID: string, notComplete: Array<TaskRequest> = [], status: TaskStatus = '', search = '') {

@@ -14,11 +14,11 @@ import * as _ from 'lodash';
     standalone: false
 })
 export class ContainerCmp implements OnInit, OnDestroy {
-  @Input() container: Container;
+  @Input() container: Container | undefined;
   @Input() active: boolean = false;
   @Input() maxWidth: number = 0;
   @Input() maxHeight: number = 0;
-  @ViewChild(MatMenuTrigger) contextMenu: MatMenuTrigger;
+  @ViewChild(MatMenuTrigger) contextMenu: MatMenuTrigger | undefined;
 
   @Input() maxRendered: number = 8; // Default setting for how many should be visible at any given time
   @Input() maxPrevItems: number = 2; // When scrolling through a cnt, how many previous items should be visible
@@ -29,8 +29,8 @@ export class ContainerCmp implements OnInit, OnDestroy {
   // @Output clickEvt: EventEmitter<any>;
   public previewWidth: number = 0;
   public previewHeight: number = 0;
-  public visibleSet: Array<Content>; // The currently visible set of items from in the container
-  public sub: Subscription;
+  public visibleSet: Array<Content> = []; // The currently visible set of items from in the container
+  public sub: Subscription | undefined;
   public contextMenuPosition = { x: '0px', y: '0px' };
 
   constructor(public _contentedService: ContentedService) {}
@@ -57,7 +57,9 @@ export class ContainerCmp implements OnInit, OnDestroy {
               this.toggleFavorite();
               break;
             case NavTypes.SCROLL_MEDIA_INTO_VIEW:
-              this.scrollContent(evt.content);
+              if (evt.content) {
+                this.scrollContent(evt.content);
+              }
               break;
             default:
               break;
@@ -73,12 +75,15 @@ export class ContainerCmp implements OnInit, OnDestroy {
     event.preventDefault();
     this.contextMenuPosition.x = event.clientX + 'px';
     this.contextMenuPosition.y = event.clientY + 'px';
-    this.contextMenu.menuData = { content: content };
-    this.contextMenu.menu.focusFirstItem('mouse');
-    this.contextMenu.openMenu();
+    if (this.contextMenu) {
+      this.contextMenu.menuData = { content: content };
+      this.contextMenu.menu?.focusFirstItem('mouse');
+      this.contextMenu.openMenu();
+    }
   }
 
   public scrollContent(content: Content) {
+
     _.delay(() => {
       let id = `preview_${content.id}`;
       let el = document.getElementById(id);
@@ -102,7 +107,7 @@ export class ContainerCmp implements OnInit, OnDestroy {
    * (keypress 't') If there is a current media element selected then we should toggle it.
    */
   public toggleFavorite() {
-    if (this.container.rowIdx >= 0 && this.container.rowIdx < this.container?.contents?.length) {
+    if (this.container && this.container.rowIdx >= 0 && this.container.rowIdx < this.container.contents.length) {
       const content = this.container.contents[this.container.rowIdx];
       GlobalNavEvents.favoriteContent(content);
     }
@@ -115,14 +120,19 @@ export class ContainerCmp implements OnInit, OnDestroy {
   }
 
   public saveContent() {
-    this._contentedService.download(this.container, this.container.rowIdx);
+    if (this.container) {
+      this._contentedService.download(this.container, this.container.rowIdx);
+    }
   }
 
   public nextContent() {
+    if (!this.container) {
+      return;
+    }
     let contentList = this.container.getContentList() || [];
     if (this.container.rowIdx < contentList.length) {
-      this.container.rowIdx++;
-      if (this.container.rowIdx === contentList.length) {
+        this.container.rowIdx++;
+        if (this.container.rowIdx === contentList.length) {
         GlobalNavEvents.nextContainer();
       } else {
         GlobalNavEvents.selectContent(this.container.getCurrentContent(), this.container);
@@ -130,8 +140,8 @@ export class ContainerCmp implements OnInit, OnDestroy {
     }
   }
 
-  public prevContent() {
-    if (this.container.rowIdx > 0) {
+  prevContent() {
+    if (this.container && this.container.rowIdx > 0) {
       this.container.rowIdx--;
       GlobalNavEvents.selectContent(this.container.getCurrentContent(), this.container);
     } else {
@@ -139,19 +149,25 @@ export class ContainerCmp implements OnInit, OnDestroy {
     }
   }
 
-  public getVisibleSet(currentItem: Content = null, max: number = this.maxRendered) {
-    let content: Content = currentItem || this.container.getCurrentContent();
-    this.visibleSet = this.container.getIntervalAround(content, max, this.maxPrevItems);
+  public getVisibleSet(currentItem: Content | null = null, max: number = this.maxRendered) {
+    let content = currentItem || this.container?.getCurrentContent() || null;
+    if (!content) {
+      return [];
+    }
+    this.visibleSet = this.container?.getIntervalAround(content, max, this.maxPrevItems) || [];
     return this.visibleSet;
   }
 
   // Could also add in full container load information here
-  public imgLoaded(evt) {
+  public imgLoaded(evt: Event) {
     let img = evt.target;
     //console.log("Img Loaded", img.naturalHeight, img.naturalWidth, img);
   }
 
   public clickContent(content: Content) {
+    if (!this.container) {
+      return;
+    }
     // Little strange on the selection
     this.container.rowIdx = _.findIndex(this.container.contents, {
       id: content.id,
