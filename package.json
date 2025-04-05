@@ -32,6 +32,9 @@
     "zod-class": "^0.0.13",
     "zone.js": "~0.14.10"
   },
+  "overrides": {
+    "piscina": "4.5.1"
+  },
   "devDependencies": {
     "jquery": "^3.7.0",
     "@types/node": "^22.14.0",
