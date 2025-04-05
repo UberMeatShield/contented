@@ -21,7 +21,7 @@ import * as _ from 'lodash';
     standalone: false
 })
 export class EditorContentCmp implements OnInit {
-  @ViewChild('description') editor: VSCodeEditorCmp;
+  @ViewChild('description') editor: VSCodeEditorCmp | undefined;
 
   @Input() content?: Content;
 
@@ -29,8 +29,8 @@ export class EditorContentCmp implements OnInit {
   @Input() descriptionControl: FormControl = new FormControl('', Validators.required);
 
   @Input() screensForm?: FormGroup;
-  @Input() offsetControl: FormControl<number>;
-  @Input() countControl: FormControl<number>;
+  @Input() offsetControl: FormControl<number | null> = new FormControl(null, Validators.required);
+  @Input() countControl: FormControl<number | null> = new FormControl(12, Validators.required);
   @Input() checkStates = true;
 
   public taskCreated: EventEmitter<any> = new EventEmitter<any>();
@@ -40,7 +40,7 @@ export class EditorContentCmp implements OnInit {
   public taskLoading: boolean = false;
 
   // Mostly we use format.duration
-  public vidInfo: VideoCodecInfo;
+  public vidInfo: VideoCodecInfo | undefined;
 
   constructor(
     public fb: FormBuilder,
@@ -51,8 +51,6 @@ export class EditorContentCmp implements OnInit {
       description: this.descriptionControl,
     });
 
-    this.offsetControl = new FormControl(undefined, Validators.required);
-    this.countControl = new FormControl(12, Validators.required);
     this.screensForm = this.fb.group({
       offset: this.offsetControl,
       count: this.countControl,
@@ -65,8 +63,8 @@ export class EditorContentCmp implements OnInit {
       this.route.paramMap.pipe().subscribe({
         next: (map: ParamMap) => {
           console.log('Reloading content');
-          this.content = null; // Changing the
-          this.loadContent(map.get('id'));
+          this.content = undefined; // Changing the content will force a reload
+          this.loadContent(map.get('id') || '');
         },
         error: err => {
           GlobalBroadcast.error('Loading content for editing', err);
@@ -91,12 +89,14 @@ export class EditorContentCmp implements OnInit {
   }
 
   save() {
+    if (!this.content || !this.editForm) {
+      return;
+    }
     console.log('Save()', this.editForm.value);
     this.content.description = _.get(this.editForm.value, 'description');
     this.loading = true;
 
-    let tags = this.editor.getTokens();
-    console.log(tags);
+    let tags = this.editor?.getTokens() || [];
     this.content.tags = _.map(tags, tag => new Tag(tag));
     this._service
       .saveContent(this.content)
@@ -112,7 +112,10 @@ export class EditorContentCmp implements OnInit {
   }
 
   clearScreens(content: Content) {
-    this._service.clearScreens(this.content.id).subscribe({
+    if (!content) {
+      return;
+    }
+    this._service.clearScreens(content.id).subscribe({
       next: (content: Content) => {
         this.content = content;
       },
@@ -124,6 +127,9 @@ export class EditorContentCmp implements OnInit {
 
   // Generate incremental screens and then check the request
   incrementalScreens(content: Content) {
+    if (!content || !this.screensForm) {
+      return;
+    }
     let req = this.screensForm.value;
     this.taskLoading = true;
     this._service
@@ -215,23 +221,30 @@ export class EditorContentCmp implements OnInit {
   }
 
   taskUpdated(task: TaskRequest) {
-    console.log('Task updated', task, task.operation);
 
+    console.log('Task updated', task, task.operation);
     const contentId = this.content?.id;
+    if (!this.content || !contentId) {
+      return;
+    }
+
     if (task.operation === TaskOperation.SCREENS) {
-      this.content.screens = null;
+      this.content.screens = [];
       this.loadScreens(contentId);
     }
 
     if (task.operation === TaskOperation.WEBP) {
-      this.content = null;
+      this.content = undefined;
       this.loadContent(contentId);
     }
   }
 
   loadScreens(contentId: string) {
-    this._service.getScreens(this.content.id).subscribe({
+    this._service.getScreens(contentId).subscribe({
       next: (screens: { total: number; results: Array<Screen> }) => {
+        if (!this.content) {
+          return;
+        }
         this.content.screens = screens.results;
       },
       error: err => {

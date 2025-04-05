@@ -8,6 +8,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { EditorComponent } from 'ngx-monaco-editor-v2';
 import { ContentedService } from './contented_service';
 import { GlobalBroadcast } from './global_message';
+import { PageResponse } from 'src/types/global';
 
 // Why is it importing api.d?  Because Monaco does a bunch of css importing in the
 // javascript which breaks the hell out of angular tooling, so just get the 'shapes'
@@ -35,7 +36,7 @@ export class VSCodeEditorCmp implements OnInit {
   @Input() readOnly: boolean = true;
   @Input() language: string = 'tagging';
   @Input() fixedLineCount: number = -1;
-  @Input() placeholder: string;
+  @Input() placeholder: string = '';
   @Input() padLine: number = 1;
 
   @Input() tags: Array<Tag> = [];
@@ -57,7 +58,9 @@ export class VSCodeEditorCmp implements OnInit {
   constructor(
     public fb: FormBuilder,
     public _service: ContentedService
-  ) {}
+  ) {
+
+  }
 
   // Subscribe to options changes, if the definition changes make the call
   public ngOnInit() {
@@ -78,7 +81,7 @@ export class VSCodeEditorCmp implements OnInit {
 
   loadTags() {
     this._service.getTags().subscribe({
-      next: (tagRes: { total: number; results: Tag[] }) => {
+      next: (tagRes: PageResponse<Tag>) => {
         this.assignTagLookup(tagRes.results || []);
       },
       error: err => {
@@ -110,7 +113,7 @@ export class VSCodeEditorCmp implements OnInit {
 
   isInitialized() {
     let self = this;
-    function monacoPoller(resolve, reject) {
+    function monacoPoller(resolve: any, reject: any) {
       if (self.initialized) {
         resolve(self.initialized);
       } else {
@@ -145,7 +148,7 @@ export class VSCodeEditorCmp implements OnInit {
     if (this.editor) {
       this.changeEmitter.pipe(distinctUntilChanged(), debounceTime(10)).subscribe({
         next: (evt: VSCodeChange) => {
-          this.editForm.get('description').setValue(evt.value);
+          this.editForm?.get('description')?.setValue(evt.value);
         },
         error: err => {
           GlobalBroadcast.error('Monaco init failed', err);
@@ -183,7 +186,7 @@ export class VSCodeEditorCmp implements OnInit {
     let tags = new Set<string>();
     if (monaco && this.descriptionControl) {
       let tokenArr = monaco.editor.tokenize(this.descriptionControl.value, language);
-      let m = this.monacoEditor.getModel();
+      let m = this.monacoEditor?.getModel();
 
       // Custom tag matching per line I guess where we remove the matched tags from the loop but it might
       // actually be faster to just do a contains against the entire string.
@@ -196,9 +199,9 @@ export class VSCodeEditorCmp implements OnInit {
       let match = `${tokenType}.${language}`;
       _.each(tokenArr, (tokens, lineIdx: number) => {
         if (!tokens) return;
-        let line;
+        let line: string | undefined;
         try {
-          line = m.getLineContent(lineIdx + 1);
+          line = m?.getLineContent(lineIdx + 1);
         } catch (e) {
           // console.error("A delete can trigger an event and the model updates under you", lineIdx);
         }
@@ -281,7 +284,9 @@ export class VSCodeEditorCmp implements OnInit {
     }, 50);
 
     _.delay(() => {
-      this.createPlaceholder(this.placeholder, this.monacoEditor);
+      if (this.monacoEditor) {
+        this.createPlaceholder(this.placeholder, this.monacoEditor);
+      }
     }, 200);
 
     _.delay(() => {
@@ -302,14 +307,23 @@ export class VSCodeEditorCmp implements OnInit {
   // and do a redraw. Might also be better to hide till the first redraw event.
   // https://github.com/microsoft/monaco-editor/issues/568
   fitContent() {
-    let el = this.container.nativeElement;
+    if (!this.monacoEditor) {
+      return;
+    }
+    let el = this.container?.nativeElement;
+    if (!el) {
+      return;
+    }
     let width = el.offsetWidth;
 
     let updateHeight = () => {
       let editor = this.monacoEditor;
+      if (!editor) {
+        return;
+      }
       let lineCount = this.fixedLineCount;
       if (lineCount < 1) {
-        lineCount = Math.max(editor.getModel()?.getLineCount(), 8);
+        lineCount = Math.max(editor.getModel()?.getLineCount() || 0, 8);
       }
 
       // You would think this would work but unfortunately the height of content is altered

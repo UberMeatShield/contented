@@ -14,6 +14,7 @@ import { GlobalBroadcast } from './global_message';
 
 import * as _ from 'lodash';
 import z from 'zod';
+import { PageResponse } from 'src/types/global';
 //import { Z } from 'zod-class';
 
 export const DirectionEnum = z.enum(['asc', 'desc']);
@@ -47,6 +48,13 @@ export class ContentSearch extends Z.class({
 export const TaskStatusEnum = z.enum(['new', 'pending', 'in_progress', 'canceled', 'error', 'done', 'invalid', '']);
 export type TaskStatus = z.infer<typeof TaskStatusEnum>;
 
+export type ApiError = {
+  error: string;
+  debug?: string;
+  url?: string;
+  code?: number;
+}
+
 export const TaskTypes = {
   ENCODING: 'video_encoding',
   SCREENS: 'screen_capture',
@@ -54,6 +62,8 @@ export const TaskTypes = {
   TAGGING: 'tag_content',
   DUPES: 'detect_duplicates',
 } as const;
+
+
 
 // Odd but works because of a strange constant hackery found in the zod forums.
 export const TaskEnum = z.enum([TaskTypes.ENCODING, ...Object.values(TaskTypes)]);
@@ -317,9 +327,11 @@ export class ContentedService {
 
   public handleError(err: HttpErrorResponse) {
     console.error('Error calling API', err);
-    let parsed = {};
+    let parsed: ApiError = {
+      error: 'Unknown error, or no error text in the result?',
+    };
     if (_.isObject(err.error)) {
-      parsed = _.clone(err.error);
+      parsed = _.clone(err.error) as ApiError;
     } else {
       try {
         parsed = JSON.parse(err.error) || {};
@@ -340,7 +352,7 @@ export class ContentedService {
     if (_.isEmpty(parsed)) {
       parsed = { error: 'Unknown error, or no error text in the result?' };
     }
-    parsed.url = err.url;
+    parsed.url = err.url || undefined;
     parsed.code = err.status;
     return observableFrom(Promise.reject(parsed));
   }
@@ -434,9 +446,9 @@ export class ContentedService {
     let url = ApiDef.contented.containerPreviewsTask.replace('{containerId}', cnt.id);
     url = url.replace('{count}', `${count}`).replace('{startTimeSeconds}', `${startTimeSeconds}`);
     return this.http.post(url, cnt).pipe(
-      map((res: TaskResponse) => {
+      map(res => {
         console.log('Created container previews response', res);
-        return _.map(res['results'], task => new TaskRequest(task));
+        return new PageResponse<TaskRequest>(res);
       })
     );
   }
@@ -445,29 +457,23 @@ export class ContentedService {
     let url = ApiDef.contented.containerVideoEncodingTask.replace('{containerId}', cnt.id);
     return this.http.post(url, cnt).pipe(
       map(res => {
-        // Return an array of task requests I think
-        console.log('Container Encoding task', res);
-        return _.map(res['results'], task => new TaskRequest(task));
+        return new PageResponse<TaskRequest>(res);
       })
     );
   }
 
-  containerTaggingTask(cnt: Container) {
+  containerTaggingTask(cnt: Container): Observable<PageResponse<TaskRequest>> {
     let url = ApiDef.contented.containerTaggingTask.replace('{containerId}', cnt.id);
     return this.http.post(url, cnt).pipe(
       map(res => {
-        return _.map(res['results'], task => new TaskRequest(task));
+        return new PageResponse<TaskRequest>(res);
       })
     );
   }
 
-  getTags(page: number = 1, perPage: number = 1000, tagType: string = '') {
+  getTags(page: number = 1, perPage: number = 1000, tagType: string = ''): Observable<PageResponse<Tag>> {
     if (TAGS_RESPONSE.initialized) {
-      return observableFrom(
-        new Promise((resolve, reject) => {
-          resolve(TAGS_RESPONSE);
-        })
-      );
+      return observableFrom(Promise.resolve(TAGS_RESPONSE));
     }
     let params = new HttpParams();
     params = params.set('page', '' + page);
@@ -479,7 +485,7 @@ export class ContentedService {
         return {
           total: res.total || 0,
           results: _.map(res.results, t => new Tag(t)),
-        };
+        } as PageResponse<Tag>;
       })
     );
   }

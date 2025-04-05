@@ -22,40 +22,62 @@ export enum TaskOperation {
 
 export const COMPLETE_TASKS = [TASK_STATES.CANCELED, TASK_STATES.ERROR, TASK_STATES.DONE];
 
-export class TaskRequest {
-  id: string;
-  content_id: string;
-  created_at: Date | undefined;
-  updated_at: Date | undefined;
-  started_at: Date | undefined;
-  status: string;
-  operation: TaskOperation;
-  number_of_screens: number;
-  start_time_seconds: number;
 
-  codec: string;
-  width: number;
-  height: number;
+import { z } from 'zod';
 
-  message: string;
-  err_msg: string;
+export const TaskRequestSchema = z.object({
+  id: z.string(),
+  content_id: z.string(),
+  created_at: z.string().datetime().optional(),
+  updated_at: z.string().datetime().optional(), 
+  started_at: z.string().datetime().optional(),
+  status: z.string(),
+  operation: z.nativeEnum(TaskOperation),
+  number_of_screens: z.number(),
+  start_time_seconds: z.number(),
+  codec: z.string(),
+  width: z.number(),
+  height: z.number(),
+  message: z.string(),
+  err_msg: z.string(),
+  uxLoading: z.boolean().optional().default(false),
+  complexMessage: z.any().optional()
+});
+
+export type TaskRequestType = z.infer<typeof TaskRequestSchema>;
+
+
+// Look into ZodClass again
+export class TaskRequest implements TaskRequestType {
+  id: string = "";
+  content_id: string = "";
+  created_at: string | undefined;
+  updated_at: string | undefined;
+  started_at: string | undefined;
+  status: string = "";
+  operation: TaskOperation = TaskOperation.ENCODING;
+  number_of_screens: number = 0;
+  start_time_seconds: number = 0;
+  codec: string = "";
+  width: number = 0;
+  height: number = 0;
+  message: string = "";
+  err_msg: string = "";
 
   uxLoading = false;
 
   // For more useful json loading and display of the message
   complexMessage: any;
 
+  // Could make this a full zod class....
   constructor(obj: any) {
-    this.update(obj);
+    const parsed = TaskRequestSchema.parse(obj);
+    this.update(parsed);
   }
 
   update(obj: any) {
     if (obj) {
       Object.assign(this, obj);
-      this.created_at = obj.created_at ? new Date(obj.created_at) : undefined;
-      this.updated_at = obj.updated_at ? new Date(obj.updated_at) : undefined;
-      this.started_at = obj.started_at ? new Date(obj.started_at) : undefined;
-
       if (obj.operation === TaskOperation.DUPES && obj.message) {
         this.complexMessage = JSON.parse(obj.message);
       }

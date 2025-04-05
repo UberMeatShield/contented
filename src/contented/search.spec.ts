@@ -67,7 +67,7 @@ describe('TestingSearchCmp', () => {
     harness.detectChanges();
     expect(comp.searchText).withContext('It should default via route params').toBe('Cthulhu');
 
-    comp.search(comp.searchText, 0, 50, null);
+    comp.search(comp.searchText, 0, 50, undefined);
     let sr = MockData.getSearch();
     expect(sr.results.length).withContext('We need some search results.').toBeGreaterThan(0);
     httpMock.match(req => req.url === ApiDef.contented.searchContents).forEach(req => req.flush(sr));
