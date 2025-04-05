@@ -15,20 +15,12 @@
     "@jridgewell/gen-mapping" "^0.3.5"
     "@jridgewell/trace-mapping" "^0.3.24"
 
-"@angular-devkit/architect@0.1902.6":
+"@angular-devkit/architect@0.1902.6", "@angular-devkit/architect@>= 0.1900.0 < 0.2000.0":
   version "0.1902.6"
   resolved "https://registry.yarnpkg.com/@angular-devkit/architect/-/architect-0.1902.6.tgz#16fca9041ecd911aec4802d9c8b145591619d13f"
   integrity sha512-Dx6yPxpaE5AhP6UtrVRDCc9Ihq9B65LAbmIh3dNOyeehratuaQS0TYNKjbpaevevJojW840DTg80N+CrlfYp9g==
   dependencies:
     "@angular-devkit/core" "19.2.6"
-    rxjs "7.8.1"
-
-"@angular-devkit/architect@>= 0.1800.0 < 0.1900.0":
-  version "0.1802.17"
-  resolved "https://registry.yarnpkg.com/@angular-devkit/architect/-/architect-0.1802.17.tgz#ac0e5fc241c2cf974a225aebfbcb5ab8bfcad7a7"
-  integrity sha512-qIvQzpKimmC3IZFlLvLpcdVGY5RZqnVgVFguBx9jYJSZX608bM3/yUPO1U+I4KLBGrkq/Y6NNibMVoNA/y7Nvg==
-  dependencies:
-    "@angular-devkit/core" "18.2.17"
     rxjs "7.8.1"
 
 "@angular-devkit/build-angular@~19.2.6":
@@ -114,7 +106,7 @@
     rxjs "7.8.1"
     source-map "0.7.4"
 
-"@angular-devkit/core@19.2.6":
+"@angular-devkit/core@19.2.6", "@angular-devkit/core@>= 19.0.0 < 20.0.0":
   version "19.2.6"
   resolved "https://registry.yarnpkg.com/@angular-devkit/core/-/core-19.2.6.tgz#b709c3d3e633691027e03fc01aefb620042efd1f"
   integrity sha512-WFgiYhrDMq83UNaGRAneIM7CYYdBozD+yYA9BjoU8AgBLKtrvn6S8ZcjKAk5heoHtY/u8pEb0mwDTz9gxFmJZQ==
@@ -148,13 +140,13 @@
     ora "5.4.1"
     rxjs "7.8.1"
 
-"@angular-eslint/builder@18.4.3":
-  version "18.4.3"
-  resolved "https://registry.yarnpkg.com/@angular-eslint/builder/-/builder-18.4.3.tgz#800b8a68b464ddfc0d737b0ad38c7804b463d8e1"
-  integrity sha512-NzmrXlr7GFE+cjwipY/CxBscZXNqnuK0us1mO6Z2T6MeH6m+rRcdlY/rZyKoRniyNNvuzl6vpEsfMIMmnfebrA==
+"@angular-eslint/builder@19.3.0":
+  version "19.3.0"
+  resolved "https://registry.yarnpkg.com/@angular-eslint/builder/-/builder-19.3.0.tgz#38b150f3b5a815fb66bd2a7428d40c5c16662ff7"
+  integrity sha512-j9xNrzZJq29ONSG6EaeQHve0Squkm6u6Dm8fZgWP7crTFOrtLXn7Wxgxuyl9eddpbWY1Ov1gjFuwBVnxIdyAqg==
   dependencies:
-    "@angular-devkit/architect" ">= 0.1800.0 < 0.1900.0"
-    "@angular-devkit/core" ">= 18.0.0 < 19.0.0"
+    "@angular-devkit/architect" ">= 0.1900.0 < 0.2000.0"
+    "@angular-devkit/core" ">= 19.0.0 < 20.0.0"
 
 "@angular-eslint/bundled-angular-compiler@18.4.3":
   version "18.4.3"
