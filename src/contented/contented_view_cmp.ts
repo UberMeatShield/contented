@@ -1,4 +1,4 @@
-import { OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener, ViewChild } from '@angular/core';
+import { OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { Content } from './content';
 import { GlobalNavEvents, NavTypes, NavEventMessage } from './nav_events';
 import { Subscription } from 'rxjs';
@@ -8,6 +8,7 @@ import { GlobalBroadcast } from './global_message';
 import { TaskRequest } from './task_request';
 import * as _ from 'lodash';
 import { ScreenAction, ScreenClickEvent, Screen } from './screen';
+import { safeContent } from './utils';
 
 @Component({
     selector: 'contented-view',
@@ -15,30 +16,33 @@ import { ScreenAction, ScreenClickEvent, Screen } from './screen';
     standalone: false
 })
 export class ContentedViewCmp implements OnInit, OnDestroy {
-  @Input() content: Content;
-  @Input() forceWidth: number;
-  @Input() forceHeight: number;
+  @Input() content!: Content;
+  @Input() forceWidth: number = 0;
+  @Input() forceHeight: number = 0;
   @Input() visible: boolean = false;
   @Input() showScreens = true;
   @Input() restrictContentId = '';
-  @ViewChild('VIDEOELEMENT') video;
-
-  public maxWidth: number;
-  public maxHeight: number;
-  public sub: Subscription;
+  @ViewChild('VIDEOELEMENT') video: ElementRef<HTMLVideoElement> | undefined;
+  public defaultWidth = 800;
+  public defaultHeight = 600;
+  public playerType: string | undefined;
+  public maxWidth: number = 0;
+  public maxHeight: number = 0;
+  public sub: Subscription = new Subscription();
   public taskLoading = false;
 
   // This calculation does _not_ work when using a dialog.  Fix?
   // Provide a custom width and height calculation option
   constructor(public _service: ContentedService) {}
 
-  public shouldIgnoreEvt(content: Content) {
-    if (this.restrictContentId) {
-      if (!content || content.id !== this.restrictContentId) {
-        return null;
-      }
+  shouldIgnoreEvt(content?: Content): Content | undefined {
+    if (!content) {
+      return undefined;
     }
-    return content || this.content;
+    if (this.restrictContentId && this.restrictContentId !== content.id) {
+      return undefined;
+    }
+    return content;
   }
 
   public ngOnInit() {
@@ -182,8 +186,8 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
   // Kinda just need the ability to get the task info from the server
   screenshot(content: Content) {
     // Determine how to get the current video index, if not defined then just use the default
-    console.log(this.video.nativeElement.currentTime);
-    let ss = this.video.nativeElement.currentTime;
+    console.log(this.video?.nativeElement.currentTime);
+    let ss = this.video?.nativeElement.currentTime;
     this.taskLoading = true;
     this._service
       .requestScreens(content, 1, ss)
@@ -196,5 +200,23 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
           GlobalBroadcast.error(`Could not get a screen at this time ${ss} and ${content.id}`, err);
         },
       });
+  }
+
+  handleNavEvt(evt: NavEventMessage) {
+    if (evt.action === NavTypes.CONTENT_SELECTED) {
+      const content = this.shouldIgnoreEvt(evt.content);
+      if (content) {
+        this.content = content;
+      }
+      return;
+    }
+
+    if (evt.action === NavTypes.VIEW_FULLSCREEN) {
+      if (!evt.content) {
+        this.content = {} as Content;
+        return;
+      }
+      this.content = this.shouldIgnoreEvt(evt.content) || {} as Content;
+    }
   }
 }

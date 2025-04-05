@@ -1,18 +1,20 @@
 import { Subscription } from 'rxjs';
 import { finalize, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
-import { Input, OnInit, AfterViewInit, Component, HostListener, ViewChild, Inject } from '@angular/core';
+import { Input, OnInit, Component, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { ContentedService, ContentSearchSchema } from './contented_service';
 import { Content, Tag, VSCodeChange } from './content';
 import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 import { FormBuilder, FormGroup, FormControl } from '@angular/forms';
 
 import { PageEvent } from '@angular/material/paginator';
-import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialog } from '@angular/material/dialog';
 import { GlobalBroadcast } from './global_message';
 import * as _ from 'lodash';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { GlobalNavEvents } from './nav_events';
+import { SearchDialog } from './search_dialog.cmp';
+import { initializeDefaults } from './utils';
 
 @Component({
     selector: 'search-cmp',
@@ -23,16 +25,16 @@ export class SearchCmp implements OnInit {
   // Route needs to exist
   // Take in the search text route param
   // Debounce the search
-  @ViewChild('videoForm', { static: true }) searchControl;
-  @ViewChild(MatMenuTrigger) contextMenu: MatMenuTrigger;
-  @Input() tags: Array<Tag>;
+  @ViewChild('videoForm', { static: true }) searchControl: ElementRef;
+  @ViewChild(MatMenuTrigger) contextMenu!: MatMenuTrigger;
+  @Input() tags!: Array<Tag>;
   @Input() showToggleDuplicate: boolean = false;
 
-  throttleSearch: Subscription;
-  options: FormGroup;
+  throttleSearch!: Subscription;
+  options!: FormGroup;
   fb: FormBuilder;
 
-  public content: Array<Content>;
+  public content: Array<Content> = [];
 
   // TODO: Make this a saner calculation
   public previewWidth = 480;
@@ -42,12 +44,13 @@ export class SearchCmp implements OnInit {
   public pageSize = 50;
   public loading: boolean = false;
   public contextMenuPosition = { x: '0px', y: '0px' };
+  public contextMenuContent: Content | undefined;
 
-  public searchText: string; // Initial searchText value if passed in the url
+  public searchText: string = ''; // Initial searchText value if passed in the url
   public searchType = new FormControl('text');
   public duplicateFilterState = new FormControl(false);
   public currentTextChange: VSCodeChange = { value: '', tags: [] };
-  public changedSearch: (evt: VSCodeChange) => void;
+  public changedSearch!: (evt: VSCodeChange) => void;
 
   constructor(
     public _contentedService: ContentedService,
@@ -70,29 +73,33 @@ export class SearchCmp implements OnInit {
       console.log('Changed search', evt);
       // Do not change this.searchText it will re-assign the VS-Code editor in a
       // bad way and muck with the cursor.
-      this.search(evt.value, 0, 50, evt.tags);
+      this.search(evt.value, 0, 50, evt.tags || []);
       this.currentTextChange = evt;
     }, 250);
 
-    this.route.queryParams.pipe().subscribe({
+    this.route.paramMap.subscribe({
       next: (res: ParamMap) => {
-        console.log('Query Params set', res);
-        // Note you do NOT want searchText to be updated by changes
-        // in this component except possibly a 'clear'
-        this.searchText = res['searchText'] || '';
-      },
+        // This could even be done more elegantly with some queryParam binding
+        const searchText = res.get('searchText') || '';
+        this.searchText = searchText;
+        if (!_.isEmpty(searchText)) {
+          this.search(searchText, 0, this.pageSize, []);
+        }
+      }
     });
     this.calculateDimensions();
     this.setupFilterEvts();
   }
 
-  onContextMenu(event: MouseEvent, content: Content) {
+  openContextMenu(event: MouseEvent, content: Content) {
     event.preventDefault();
     this.contextMenuPosition.x = event.clientX + 'px';
     this.contextMenuPosition.y = event.clientY + 'px';
-    this.contextMenu.menuData = { content: content };
-    this.contextMenu.menu.focusFirstItem('mouse');
-    this.contextMenu.openMenu();
+    this.contextMenuContent = content;
+    if (this.contextMenu && this.contextMenu.menu) {
+      this.contextMenu.menu.focusFirstItem('mouse');
+      this.contextMenu.openMenu();
+    }
   }
 
   addFavorite(content: Content) {
@@ -146,14 +153,19 @@ export class SearchCmp implements OnInit {
     this.search(this.currentTextChange.value, offset, limit, this.currentTextChange.tags);
   }
 
-  public search(text: string, offset: number = 0, limit: number = 50, tags: Array<string> = []) {
+  public search(
+    text: string, 
+    offset: number = 0, 
+    limit: number = 50, 
+    tags: Array<string> = []
+  ) {
     console.log('Get the information from the input and search on it', text);
     // TODO: Wrap the content into a fake container
     this.content = [];
     this.loading = true;
 
     // TODO: Make this a bit less sketchy after I work on the actual data tagging.
-    const searchType = this.options.get('searchType').value;
+    const searchType = this.options.get('searchType')?.value;
     if (searchType === 'tags') {
       text = '';
     } else {
@@ -216,49 +228,12 @@ export class SearchCmp implements OnInit {
     });
   }
 
-  imgLoaded(evt) {
+  imgLoaded(evt: Event): void {
     // Debugging / hooks but could also be a hook into a total loaded.
   }
 
   contentClicked(mc: Content) {
     console.log('Click the image', mc);
     this.fullView(mc);
-  }
-}
-
-// This just doesn't seem like a great approach :(
-@Component({
-    selector: 'search-dialog',
-    templateUrl: 'search_dialog.ng.html',
-    standalone: false
-})
-export class SearchDialog implements AfterViewInit {
-  public contentContainer: Content;
-
-  public forceHeight: number;
-  public forceWidth: number;
-  public sizeCalculated: boolean = false;
-
-  @ViewChild('SearchContent', { static: true }) searchContent;
-
-  constructor(
-    @Inject(MAT_DIALOG_DATA) public mc: Content,
-    public _service: ContentedService
-  ) {
-    // console.log("Mass taker opened with items:", items);
-    this.contentContainer = mc;
-  }
-
-  ngAfterViewInit() {
-    // TODO: Sizing content is a little off and the toolbars are visible based on dialog size
-    setTimeout(() => {
-      let el = this.searchContent.nativeElement;
-      if (el) {
-        console.log('Element', el, el.offsetWidth, el.offsetHeight);
-        this.forceHeight = el.offsetHeight - 40;
-        this.forceWidth = el.offsetWidth - 40;
-      }
-      this.sizeCalculated = true;
-    }, 100);
   }
 }

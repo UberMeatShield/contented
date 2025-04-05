@@ -72,7 +72,7 @@ export type TaskSearch = z.infer<typeof TaskSearchSchema>;
 
 @Injectable()
 export class ContentedService {
-  public options = null;
+  public options: { headers: HttpHeaders };
   public LIMIT = 5000; // Default limit will use the server limit in the query
   // public LIMIT = 1; // Default limit will use the server limit in the query
 
@@ -155,7 +155,7 @@ export class ContentedService {
     return this.http.get(downloadUrl, { responseType: 'text' });
   }
 
-  public fullLoadDir(cnt, limit = null) {
+  public fullLoadDir(cnt: Container, limit: number | null = null) {
     if (cnt.count === cnt.total) {
       console.log('Count = total, ignoring', cnt);
       return observableFrom(Promise.resolve(cnt));
@@ -207,11 +207,11 @@ export class ContentedService {
     return observableFrom(p);
   }
 
-  public loadMoreInDir(cnt: Container, limit = null) {
+  public loadMoreInDir(cnt: Container, limit: number = 9000) {
     return this.getFullContainer(cnt.id, cnt.count, limit);
   }
 
-  public getFullContainer(cnt: string, offset: number = 0, limit: number = null) {
+  public getFullContainer(cnt: string, offset: number = 0, limit: number = 9000) {
     let url = ApiDef.contented.containerContent.replace('{cId}', cnt);
     return this.http
       .get(url, {
@@ -264,7 +264,7 @@ export class ContentedService {
     if (cntQ.search) {
       params = params.set('search', cntQ.search);
     }
-    if (cntQ.tags?.length > 0) {
+    if (cntQ.tags?.length) {
       params = params.set('tags', JSON.stringify(cntQ.tags));
     }
     return this.http.get(ApiDef.contented.searchContainers, { params }).pipe(
@@ -280,7 +280,7 @@ export class ContentedService {
   // Could definitely use Zod here as a search type.  Maybe it is worth pulling in at this point.
   public searchContent(cs: ContentSearch) {
     let params = this.getPaginationParams(cs.offset, cs.limit);
-    params = params.set('search', cs.text);
+    params = params.set('search', cs.text || '');
     if (cs.contentType) {
       params = params.set('contentType', cs.contentType);
     }
@@ -290,7 +290,7 @@ export class ContentedService {
 
     // GoBuffalo is being DUMB on the array parsing :(
     // params.get("tags[]") just returns the first entry if there are multiple
-    if (cs.tags?.length > 0) {
+    if (cs.tags?.length) {
       params = params.set('tags', JSON.stringify(cs.tags));
     }
     if (cs.duplicate) {
@@ -340,8 +340,8 @@ export class ContentedService {
     if (_.isEmpty(parsed)) {
       parsed = { error: 'Unknown error, or no error text in the result?' };
     }
-    parsed['url'] = err.url;
-    parsed['code'] = err.status;
+    parsed.url = err.url;
+    parsed.code = err.status;
     return observableFrom(Promise.reject(parsed));
   }
 
@@ -434,7 +434,7 @@ export class ContentedService {
     let url = ApiDef.contented.containerPreviewsTask.replace('{containerId}', cnt.id);
     url = url.replace('{count}', `${count}`).replace('{startTimeSeconds}', `${startTimeSeconds}`);
     return this.http.post(url, cnt).pipe(
-      map(res => {
+      map((res: TaskResponse) => {
         console.log('Created container previews response', res);
         return _.map(res['results'], task => new TaskRequest(task));
       })

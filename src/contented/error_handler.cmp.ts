@@ -116,7 +116,7 @@ export class ErrorDialogCmp implements AfterViewInit {
 
   constructor(
     public dialogRef: MatDialogRef<ErrorDialogCmp>,
-    @Inject(MAT_DIALOG_DATA) public data
+    public data: { errors: Array<CountMessages> }
   ) {
     this.errors = data.errors;
   }

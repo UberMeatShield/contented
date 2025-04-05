@@ -4,8 +4,11 @@ import { ContentedService, TaskSearch, TaskStatus } from './contented_service';
 import { TaskRequest, TASK_STATES } from './task_request';
 import { MatTableDataSource } from '@angular/material/table';
 // import {ActivatedRoute, Router, ParamMap} from '@angular/router';
-import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { GlobalBroadcast } from './global_message';
+import { Subscription } from 'rxjs';
+import { initializeDefaults } from './utils';
+import { createStringControl } from './form_utils';
 
 import * as _ from 'lodash';
 
@@ -17,13 +20,18 @@ import * as _ from 'lodash';
 export class TaskRequestCmp implements OnInit {
   @Input() contentID: string = '';
   @Input() pageSize = 100;
-  @Input() reloadEvt: EventEmitter<any>; // Do you want to reload the task queue
+  @Input() reloadEvt!: EventEmitter<any>; // Do you want to reload the task queue
   @Output() taskUpdated: EventEmitter<TaskRequest> = new EventEmitter<TaskRequest>();
   @Input() checkStates = false;
 
   public loading = false;
-  public tasks: Array<TaskRequest>;
+  public tasks: Array<TaskRequest> = [];
   public total = 0;
+  public statusFilterControl: FormControl<string>;
+  public searchFilterControl: FormControl<string>;
+  public reloadSub: Subscription | undefined;
+  public throttleSub: Subscription | undefined;
+  public tasksForm: FormGroup;
 
   displayedColumns: string[] = [
     'operation',
@@ -39,55 +47,38 @@ export class TaskRequestCmp implements OnInit {
   dataSource = new MatTableDataSource<TaskRequest>([]);
   states = TASK_STATES;
 
-  searchForm: FormGroup;
-  status: FormControl<string> = new FormControl('');
-  search: FormControl<string> = new FormControl('');
-
-  //constructor(public _service: ContentedService, public route: ActivatedRoute) {
   constructor(
     public _service: ContentedService,
     fb: FormBuilder
   ) {
-    this.searchForm = fb.group({
-      search: this.search,
-      status: this.status,
+    // Initialize default values
+    initializeDefaults(this, {
+      statusFilterControl: createStringControl(''),
+      searchFilterControl: createStringControl('')
+    });
+
+    this.tasksForm = new FormGroup({
+      status: this.statusFilterControl,
+      search: this.searchFilterControl
     });
   }
 
   ngOnInit() {
+    this.reload(true);
     if (this.reloadEvt) {
-      this.reloadEvt.subscribe({
-        next: (tr: TaskRequest) => {
-          console.log('Reloading tasks', tr);
-          _.delay(() => {
-            try {
-              const watched = [tr].concat(_.filter(this.tasks, task => !task.isComplete()));
-              this.tasks = [];
-              this.loadTasks(this.contentID, watched);
-            } catch (err) {
-              console.error('Failed to reload the tasks', err);
-            }
-          }, 1000);
-        },
-        error: err => {
-          GlobalBroadcast.error('Failed to reload the tasks', err);
-        },
+      this.reloadSub = this.reloadEvt.subscribe({
+        next: () => {
+          this.reload(true);
+        }
       });
     }
 
-    this.searchForm.valueChanges
-      .pipe(
-        debounceTime(500),
-        distinctUntilChanged()
-        // Prevent bubble on keypress
-      )
+    this.throttleSub = this.tasksForm.valueChanges
+      .pipe(debounceTime(350), distinctUntilChanged())
       .subscribe({
-        next: formData => {
-          return this.loadTasks(this.contentID, [], formData.status, formData.search);
-        },
-        error: error => {
-          console.error('Failed to search Tasks error', error);
-        },
+        next: res => {
+          this.reload(false);
+        }
       });
 
     // If it should be checking for completed tasks, start polling, vs just load it up once for a state check
@@ -96,6 +87,11 @@ export class TaskRequestCmp implements OnInit {
     } else {
       this.loadTasks(this.contentID);
     }
+  }
+
+  reload(initial: boolean) {
+    const status = this.statusFilterControl.value as TaskStatus;
+    this.loadTasks(this.contentID, [], status, this.searchFilterControl.value);
   }
 
   loadTasks(contentID: string, notComplete: Array<TaskRequest> = [], status: TaskStatus = '', search = '') {
@@ -164,7 +160,7 @@ export class TaskRequestCmp implements OnInit {
       return;
     }
     let watching: Array<TaskRequest> = _.filter(this.tasks, task => !task.isComplete()) || [];
-    let vals = this.searchForm.value;
+    let vals = this.tasksForm.value;
     this.loadTasks(this.contentID, watching, vals.status, vals.search);
   }
 

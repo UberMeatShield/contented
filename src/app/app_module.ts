@@ -11,5 +11,5 @@ import { BrowserAnimationsModule, NoopAnimationsModule } from '@angular/platform
 let AnimationsModule = environment['test'] ? NoopAnimationsModule : BrowserAnimationsModule;
 
 @NgModule({ declarations: [App],
-    bootstrap: [App], imports: [BrowserModule, AppRoutes, AppRoutes, ContentedModule, AnimationsModule], providers: [provideHttpClient(withInterceptorsFromDi())] })
+    bootstrap: [App], imports: [BrowserModule, AppRoutes, ContentedModule, AnimationsModule], providers: [provideHttpClient(withInterceptorsFromDi())] })
 export class AppModule {}

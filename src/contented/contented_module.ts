@@ -24,7 +24,8 @@ import { MatRadioModule } from '@angular/material/radio';
 
 import { ContentBrowserCmp } from './content_browser.cmp';
 import { ContentedNavCmp } from './contented_nav.cmp';
-import { SearchCmp, SearchDialog } from './search.cmp';
+import { SearchCmp } from './search.cmp';
+import { SearchDialog } from './search_dialog.cmp';
 import { AdminSearchCmp } from './admin_search.cmp';
 import { AdminContainersCmp } from './admin_containers.cmp';
 import { ContainerCmp } from './container.cmp';
@@ -47,13 +48,16 @@ import { SafePipe } from './safe.pipe';
 
 import { MonacoEditorModule, NgxMonacoEditorConfig } from 'ngx-monaco-editor-v2';
 import { TagLang } from './tagging_syntax';
+import * as monacoEditor from 'monaco-editor';
 
 import { FavoritesCmp } from './favorites.cmp';
 import { PreviewContentCmp } from './preview_content.cmp';
+import { SafeContextMenuDirective, NotificationService } from './directives/material-helpers.directive';
+import { HelpersModule } from './helpers.module';
 
 let MONACO_LOADED = false;
 let GIVE_UP = 0;
-function monacoPoller(resolve, reject) {
+function monacoPoller(resolve: (value: typeof monacoEditor) => void, reject: (reason: string) => void) {
   if (MONACO_LOADED) {
     return resolve((window as any).monaco);
   } else {
@@ -67,10 +71,10 @@ function monacoPoller(resolve, reject) {
   }
 }
 
-export let MonacoLoaded: Promise<any>;
+export let MonacoLoaded: Promise<typeof monacoEditor>;
 
 export async function WaitForMonacoLoad() {
-  MonacoLoaded = new Promise((resolve, reject) => {
+  MonacoLoaded = new Promise<typeof monacoEditor>((resolve, reject) => {
     return monacoPoller(resolve, reject);
   });
   return await MonacoLoaded.then(() => {
@@ -100,8 +104,9 @@ const monacoConfig: NgxMonacoEditorConfig = {
     */
     console.log('onMonacoLoad has been called');
     MONACO_LOADED = true;
+    const monaco = (window as any).monaco;
     let tl = new TagLang();
-    tl.loadLanguage((<any>window).monaco, 'tagging');
+    tl.loadLanguage(monaco, 'tagging');
   },
 };
 
@@ -133,6 +138,7 @@ const monacoConfig: NgxMonacoEditorConfig = {
         VSCodeEditorCmp,
         ErrorHandlerCmp,
         ErrorDialogCmp,
+        SafeContextMenuDirective,
     ],
     exports: [
         ContentBrowserCmp,
@@ -172,5 +178,6 @@ const monacoConfig: NgxMonacoEditorConfig = {
         MatSelectModule,
         MatSnackBarModule,
         MatMenuModule,
-        MatRadioModule], providers: [ContentedService, Title, provideHttpClient(withInterceptorsFromDi())] })
+        MatRadioModule,
+        HelpersModule], providers: [ContentedService, Title, NotificationService, provideHttpClient(withInterceptorsFromDi())] })
 export class ContentedModule {}

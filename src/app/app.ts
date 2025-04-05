@@ -17,7 +17,7 @@ export class App implements OnInit {
   ngOnInit() {
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
-        const { title } = this.activatedRoute.firstChild.snapshot.data;
+        const title = this.activatedRoute.firstChild?.snapshot.data['title'] as string || 'Contented';
         this.titleService.setTitle(title);
       }
     });

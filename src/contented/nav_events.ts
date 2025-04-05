@@ -71,7 +71,7 @@ export class NavEvents {
     });
   }
 
-  nextContent(container: Container = null) {
+  nextContent(container: Container | undefined = undefined) {
     this.navEvts.emit({
       action: NavTypes.NEXT_MEDIA,
       cnt: container,
@@ -79,7 +79,7 @@ export class NavEvents {
     });
   }
 
-  prevContent(container: Container = null) {
+  prevContent(container: Container | undefined = undefined) {
     this.navEvts.emit({
       action: NavTypes.PREV_MEDIA,
       cnt: container,
@@ -87,7 +87,7 @@ export class NavEvents {
     });
   }
 
-  viewFullScreen(content: Content = null, screen?: Screen, container?: Container) {
+  viewFullScreen(content: Content | undefined = undefined, screen?: Screen, container?: Container) {
     this.navEvts.emit({
       action: NavTypes.VIEW_FULLSCREEN,
       content: content,
@@ -105,7 +105,7 @@ export class NavEvents {
     });
   }
 
-  loadMoreContent(container: Container = null) {
+  loadMoreContent(container: Container | undefined = undefined) {
     this.navEvts.emit({
       action: NavTypes.LOAD_MORE,
       cnt: container,
@@ -114,7 +114,7 @@ export class NavEvents {
   }
 
   // Determine if this should require a content element
-  saveContent(content: Content = null) {
+  saveContent(content: Content | undefined = undefined) {
     this.navEvts.emit({
       action: NavTypes.SAVE_MEDIA,
       content: content,
@@ -123,7 +123,7 @@ export class NavEvents {
   }
 
   // Determine if this should require a content element
-  favoriteContent(content: Content = null) {
+  favoriteContent(content: Content | undefined = undefined) {
     this.navEvts.emit({
       action: NavTypes.FAVORITE_MEDIA,
       content: content,
@@ -131,7 +131,7 @@ export class NavEvents {
     });
   }
 
-  removeFavorite(content: Content = null) {
+  removeFavorite(content: Content | undefined = undefined) {
     this.navEvts.emit({
       action: NavTypes.REMOVE_FAVORITE,
       content: content,
@@ -147,7 +147,7 @@ export class NavEvents {
     });
   }
 
-  toggleFavorite(content: Content = null) {
+  toggleFavorite(content: Content | undefined = undefined) {
     console.log('toggleFavorite keypress', content);
     this.navEvts.emit({
       action: NavTypes.TOGGLE_FAVORITE,
@@ -156,7 +156,7 @@ export class NavEvents {
     });
   }
 
-  scrollContentView(content: Content = null) {
+  scrollContentView(content: Content | undefined = undefined) {
     this.navEvts.emit({
       action: NavTypes.SCROLL_MEDIA_INTO_VIEW,
       content: content,
@@ -164,7 +164,7 @@ export class NavEvents {
     });
   }
 
-  toggleDuplicate(content: Content = null) {
+  toggleDuplicate(content: Content | undefined = undefined) {
     this.navEvts.emit({
       action: NavTypes.TOGGLE_DUPLICATE,
       content: content,
@@ -172,7 +172,7 @@ export class NavEvents {
     });
   }
 
-  removeDuplicate(content: Content = null) {
+  removeDuplicate(content: Content | undefined = undefined) {
     this.navEvts.emit({
       action: NavTypes.REMOVE_DUPLICATE,
       content: content,

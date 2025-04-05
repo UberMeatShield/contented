@@ -1,15 +1,15 @@
-import { OnInit, Component, Input, HostListener, OnDestroy, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, HostListener, ViewChild } from '@angular/core';
+import { Container } from './container';
 import { Content } from './content';
-import { ContentedService } from './contented_service';
-
 import { MatMenuTrigger } from '@angular/material/menu';
+import { ActivatedRoute, Router } from '@angular/router';
+import { ContentedService } from './contented_service';
+import { GlobalNavEvents, NavTypes, NavEventMessage } from './nav_events';
+import { Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { GlobalBroadcast } from './global_message';
-import { GlobalNavEvents, NavEventMessage, NavTypes } from './nav_events';
-import { Subscription } from 'rxjs';
-import { Container, getFavorites } from './container';
-
-import _ from 'lodash';
+import * as _ from 'lodash';
+import { initializeDefaults } from './utils';
 
 @Component({
     selector: 'favorites-cmp',
@@ -17,58 +17,65 @@ import _ from 'lodash';
     standalone: false
 })
 export class FavoritesCmp implements OnInit, OnDestroy {
-  @Input() container: Container;
-  @Input() previewWidth: number;
-  @Input() previewHeight: number;
-  @Input() maxVisible: number = 16;
-  @Input() visible: boolean = false;
-  @Input() monitorFavorites: boolean = true;
+  @Input() container!: Container;
+  @Input() previewWidth!: number;
+  @Input() previewHeight!: number;
+  @Input() searchCount = 4;
+  @Input() showToggle = true;
+  @Input() maxItems: number = 16; // For calculating display dimensions
 
-  @ViewChild(MatMenuTrigger) contextMenu: MatMenuTrigger;
-
+  @ViewChild(MatMenuTrigger) contextMenu!: MatMenuTrigger;
   public contextMenuPosition = { x: '0px', y: '0px' };
+  public contextMenuContent: Content | undefined;
   public sub: Subscription;
   public maxWidth: number;
   public maxHeight: number;
-  public loading: boolean = false;
-  public error = null;
-  public active: boolean = false;
+  public containerVisible = true;
 
-  constructor(public _service: ContentedService) {}
+  constructor(
+    public _contentedService: ContentedService,
+    public route: ActivatedRoute,
+    public router: Router
+  ) {
+    // Initialize all properties
+    initializeDefaults(this, {
+      sub: new Subscription(),
+      maxWidth: 0,
+      maxHeight: 0,
+      previewWidth: 200,
+      previewHeight: 200
+    });
+  }
+
+  public ngOnInit() {
+    this.calculateDimensions();
+    this.sub = GlobalNavEvents.navEvts.subscribe({
+      next: (evt: NavEventMessage) => {
+        if (evt.action === NavTypes.TOGGLE_FAVORITE_VISIBILITY) {
+          this.toggleVisible();
+        }
+        if (evt.action === NavTypes.FAVORITE_MEDIA) {
+          this.handleFavorite(evt.content!);
+        }
+        if (evt.action === NavTypes.REMOVE_FAVORITE) {
+          this.removeFavorite(evt.content!);
+        }
+        if (evt.action === NavTypes.TOGGLE_DUPLICATE) {
+          this.handleToggleDuplicate(evt.content!);
+        }
+      },
+    });
+  }
 
   onContextMenu(event: MouseEvent, content: Content) {
     event.preventDefault();
     this.contextMenuPosition.x = event.clientX + 'px';
     this.contextMenuPosition.y = event.clientY + 'px';
-    this.contextMenu.menuData = { content: content };
-    this.contextMenu.menu.focusFirstItem('mouse');
-    this.contextMenu.openMenu();
-  }
-
-  public ngOnInit() {
-    this.container = this.container || getFavorites();
-    this.calculateDimensions();
-
-    this.sub = GlobalNavEvents.navEvts.subscribe({
-      next: (evt: NavEventMessage) => {
-        // This container is not active but it should be monitoring favorites
-        switch (evt.action) {
-          case NavTypes.FAVORITE_MEDIA:
-            this.handleFavorite(evt.content);
-            break;
-          case NavTypes.REMOVE_FAVORITE:
-            this.removeFavorite(evt.content);
-            break;
-          case NavTypes.TOGGLE_DUPLICATE:
-            this.handleToggleDuplicate(evt.content);
-            break;
-          case NavTypes.TOGGLE_FAVORITE_VISIBILITY:
-            this.visible = !this.visible;
-            this.container.visible = this.visible;
-            break;
-        }
-      },
-    });
+    this.contextMenuContent = content;
+    if (this.contextMenu && this.contextMenu.menu) {
+      this.contextMenu.menu.focusFirstItem('mouse');
+      this.contextMenu.openMenu();
+    }
   }
 
   public ngOnDestroy() {
@@ -106,8 +113,8 @@ export class FavoritesCmp implements OnInit, OnDestroy {
 
   public handleToggleDuplicate(content: Content) {
     content.duplicate = !content.duplicate;
-    this._service.saveContent(content).subscribe({
-      next: (updated: Content) => {
+    this._contentedService.saveContent(content).subscribe({
+      next: (updated: any) => {
         content.duplicate = updated.duplicate;
       },
       error: err => {
@@ -130,7 +137,12 @@ export class FavoritesCmp implements OnInit, OnDestroy {
     let height = !window['jasmine'] ? window.innerHeight : 800;
 
     // 120 is right if the top nav is hidden, could calculate that it is out of view for the height of things
-    this.previewWidth = width / this.maxVisible - 12;
+    this.previewWidth = width / this.maxItems - 12;
     this.previewHeight = height / 6;
+  }
+
+  public toggleVisible() {
+    this.containerVisible = !this.containerVisible;
+    this.container.visible = this.containerVisible;
   }
 }
