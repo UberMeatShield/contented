@@ -1,5 +1,5 @@
 <div class="favorites-cmp">
-  <div class="favorites-cnt" [class.hidden]="container?.contents?.length === 0 || !visible">
+  <div class="favorites-cnt" [class.hidden]="container?.contents?.length === 0 || !containerVisible">
 
     <div style="visibility: hidden; position: fixed"
       [style.left]="contextMenuPosition.x"
@@ -13,7 +13,9 @@
     	</ng-template>
     </mat-menu>
 
-    <div *ngIf="container" class="cnt-contents" style="min-height: {{previewHeight}}px; min-width: {{previewWidth}}px;">
+    <div *ngIf="container" class="cnt-contents" 
+      [style.min-height]="`${previewHeight||64}px`"
+      [style.min-width]="`${previewWidth||64}px`">
         <preview-content-cmp *ngFor="let content of container?.contents || []"
           [content]="content"
           [previewWidth]="previewWidth"

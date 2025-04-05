@@ -3,8 +3,9 @@ import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
 
 @Component({
-  selector: 'app-contented',
-  templateUrl: 'app.ng.html',
+    selector: 'app-contented',
+    templateUrl: 'app.ng.html',
+    standalone: false
 })
 export class App implements OnInit {
   constructor(
@@ -16,7 +17,7 @@ export class App implements OnInit {
   ngOnInit() {
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
-        const { title } = this.activatedRoute.firstChild.snapshot.data;
+        const title = this.activatedRoute.firstChild?.snapshot.data['title'] as string || 'Contented';
         this.titleService.setTitle(title);
       }
     });

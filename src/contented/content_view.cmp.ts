@@ -7,17 +7,18 @@ import { finalize } from 'rxjs/operators';
 import { GlobalBroadcast } from './global_message';
 
 @Component({
-  selector: 'content-view',
-  templateUrl: './content_view.ng.html',
+    selector: 'content-view',
+    templateUrl: './content_view.ng.html',
+    standalone: false
 })
 export class ContentViewCmp implements OnInit {
-  @Input() content: Content;
-  @Input() forceWidth: number;
-  @Input() forceHeight: number;
+  @Input() content: Content | undefined;
+  @Input() forceWidth: number | undefined;
+  @Input() forceHeight: number | undefined;
   @Input() visible: boolean = false;
 
-  public maxWidth: number;
-  public maxHeight: number;
+  public maxWidth: number | undefined;
+  public maxHeight: number | undefined;
   public loading: boolean = false;
   public error = null;
 

@@ -11,21 +11,22 @@ import { PageEvent } from '@angular/material/paginator';
 // TODO: When styling out the search add a hover and hover text to make it
 // more obvious when something can be clicked.
 @Component({
-  selector: 'admin-container-cmp',
-  templateUrl: './admin_containers.ng.html',
+    selector: 'admin-container-cmp',
+    templateUrl: './admin_containers.ng.html',
+    standalone: false
 })
 export class AdminContainersCmp implements OnInit {
-  @Input() tags: Array<Tag>;
-  @Input() containers: Array<Container>;
+  @Input() tags: Array<Tag> = [];
+  @Input() containers: Array<Container> = [];
 
   public loading = false;
   public creatingTask = false;
-  changedSearch: (evt: VSCodeChange) => void;
+  public changedSearch: (evt: VSCodeChange) => void;
   currentTextChange: VSCodeChange = { value: '', tags: [] };
 
-  options: FormGroup;
+  options: FormGroup | undefined;
   searchType = new FormControl('text');
-  searchText: string;
+  searchText: string = "";
 
   public total = 0;
   public offset = 0; // Tracking where we are in the position
@@ -34,7 +35,9 @@ export class AdminContainersCmp implements OnInit {
   constructor(
     private service: ContentedService,
     private fb: FormBuilder
-  ) {}
+  ) {
+    this.changedSearch = (evt: VSCodeChange) => {};
+  }
 
   ngOnInit() {
     this.loading = true;

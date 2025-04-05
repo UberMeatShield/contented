@@ -12,13 +12,14 @@ import { Container } from './container';
 import _ from 'lodash';
 
 @Component({
-  selector: 'preview-content-cmp',
-  templateUrl: './preview_content.ng.html',
+    selector: 'preview-content-cmp',
+    templateUrl: './preview_content.ng.html',
+    standalone: false
 })
 export class PreviewContentCmp {
-  @Input() content: Content;
-  @Input() previewWidth: number;
-  @Input() previewHeight: number;
+  @Input() content: Content | undefined;
+  @Input() previewWidth: number | undefined;
+  @Input() previewHeight: number | undefined;
   @Input() active: boolean = false;
 
   @Output() clickEvt: EventEmitter<Content> = new EventEmitter<Content>();

@@ -1,7 +1,7 @@
 import { fakeAsync, getTestBed, tick, ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { HttpParams } from '@angular/common/http';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpParams, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { DebugElement, NgZone } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -33,10 +33,10 @@ describe('TestingContentBrowserCmp', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [FormsModule, ContentedModule, HttpClientTestingModule, NoopAnimationsModule],
-      providers: [ContentedService, provideRouter([{ path: 'ui/browse/:idx/:rowIdx', component: ContentBrowserCmp }])],
-      teardown: { destroyAfterEach: true },
-    }).compileComponents();
+    teardown: { destroyAfterEach: true },
+    imports: [FormsModule, ContentedModule, NoopAnimationsModule],
+    providers: [ContentedService, provideRouter([{ path: 'ui/browse/:idx/:rowIdx', component: ContentBrowserCmp }]), provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+}).compileComponents();
 
     harness = await RouterTestingHarness.create();
     comp = await harness.navigateByUrl('/ui/browse/0/0', ContentBrowserCmp);

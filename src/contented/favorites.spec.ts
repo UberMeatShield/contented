@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { By } from '@angular/platform-browser';
 import { DebugElement } from '@angular/core';
 
@@ -12,6 +12,7 @@ import $ from 'jquery';
 import { GlobalNavEvents } from './nav_events';
 import { getFavorites } from './container';
 import { ApiDef } from './api_def';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('FavoritesCmp', () => {
   let comp: FavoritesCmp;
@@ -23,9 +24,10 @@ describe('FavoritesCmp', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [NoopAnimationsModule, ContentedModule, HttpClientTestingModule],
-      declarations: [FavoritesCmp],
-    });
+    declarations: [FavoritesCmp],
+    imports: [NoopAnimationsModule, ContentedModule],
+    providers: [provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+});
     fixture = TestBed.createComponent(FavoritesCmp);
     comp = fixture.componentInstance;
 

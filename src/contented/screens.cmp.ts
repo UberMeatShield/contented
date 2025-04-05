@@ -6,20 +6,22 @@ import { finalize } from 'rxjs/operators';
 import { Screen, ScreenAction, ScreenClickEvent } from './screen';
 import { GlobalBroadcast } from './global_message';
 import * as _ from 'lodash';
+import { getWindowSize } from './common';
 
 @Component({
-  selector: 'screens-cmp',
-  templateUrl: 'screens.ng.html',
+    selector: 'screens-cmp',
+    templateUrl: 'screens.ng.html',
+    standalone: false
 })
 export class ScreensCmp implements OnInit {
-  @Input() contentId: string;
-  @Input() screens: Array<Screen>;
+  @Input() contentId: string | undefined;
+  @Input() screens: Array<Screen> | undefined;
   @Input() previewWidth: number = 480;
   @Input() previewHeight: number = 480;
 
   // Allow something to force specify the values
-  @Input() containerWidth: number = null;
-  @Input() containerHeight: number = null;
+  @Input() containerWidth: number | null = null;
+  @Input() containerHeight: number | null = null;
 
   @Output() screensLoaded: EventEmitter<Array<Screen>> = new EventEmitter<Array<Screen>>();
   @Output() screenClick: EventEmitter<ScreenClickEvent> = new EventEmitter<ScreenClickEvent>();
@@ -30,9 +32,6 @@ export class ScreensCmp implements OnInit {
     @Input() maxPrevItems: number = 2; // When scrolling through a cnt, how many previous items should be visible
     */
   public loading: boolean = false;
-
-  // @Output clickEvt: EventEmitter<any>;
-  public sub: Subscription;
 
   constructor(public _contentedService: ContentedService) {}
 
@@ -92,11 +91,10 @@ export class ScreensCmp implements OnInit {
     }
 
     let perRow = Math.ceil((this.screens?.length || 0) / 2);
-    let width = !window['jasmine'] ? window.innerWidth : 800;
+    let {width, height} = getWindowSize();
     if (this.containerWidth) {
       width = this.containerWidth;
     }
-    let height = !window['jasmine'] ? window.innerHeight : 800;
     if (this.containerHeight) {
       height = this.containerHeight;
     }

@@ -1,7 +1,7 @@
 import { fakeAsync, getTestBed, tick, ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { HttpParams } from '@angular/common/http';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpParams, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { DebugElement } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
@@ -19,7 +19,6 @@ import { GlobalNavEvents } from '../contented/nav_events';
 import * as _ from 'lodash';
 import { MockData } from '../test/mock/mock_data';
 
-declare var $;
 describe('TestingScreensCmp', () => {
   let fixture: ComponentFixture<ScreensCmp>;
   let service: ContentedService;
@@ -32,14 +31,11 @@ describe('TestingScreensCmp', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [
-        RouterTestingModule.withRoutes([{ path: 'screens/:screenId', component: ScreensCmp }]),
+    imports: [RouterTestingModule.withRoutes([{ path: 'screens/:screenId', component: ScreensCmp }]),
         FormsModule,
-        ContentedModule,
-        HttpClientTestingModule,
-      ],
-      providers: [ContentedService],
-    }).compileComponents();
+        ContentedModule],
+    providers: [ContentedService, provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+}).compileComponents();
 
     service = TestBed.get(ContentedService);
     fixture = TestBed.createComponent(ScreensCmp);

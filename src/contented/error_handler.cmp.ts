@@ -13,13 +13,14 @@ interface CountMessages {
 }
 
 @Component({
-  selector: 'error-handler-cmp',
-  templateUrl: 'error_handler.ng.html',
+    selector: 'error-handler-cmp',
+    templateUrl: 'error_handler.ng.html',
+    standalone: false
 })
 export class ErrorHandlerCmp implements OnInit, OnDestroy {
-  @Input() broadcast: MessageBroadcast;
+  @Input() broadcast: MessageBroadcast = GlobalBroadcast;
   public events: { [id: string]: CountMessages } = {};
-  public sub: Subscription;
+  public sub: Subscription | undefined;
 
   constructor(
     private snack: MatSnackBar,
@@ -106,15 +107,16 @@ export class ErrorHandlerCmp implements OnInit, OnDestroy {
 
 // This just doesn't seem like a great approach :(
 @Component({
-  selector: 'error-dialog',
-  templateUrl: 'error_dialog.ng.html',
+    selector: 'error-dialog',
+    templateUrl: 'error_dialog.ng.html',
+    standalone: false
 })
 export class ErrorDialogCmp implements AfterViewInit {
   public errors: Array<CountMessages>;
 
   constructor(
     public dialogRef: MatDialogRef<ErrorDialogCmp>,
-    @Inject(MAT_DIALOG_DATA) public data
+    @Inject(MAT_DIALOG_DATA) public data: { errors: Array<CountMessages> }
   ) {
     this.errors = data.errors;
   }

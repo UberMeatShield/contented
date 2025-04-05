@@ -11,6 +11,7 @@ import { TAGS_RESPONSE } from './tagging_syntax';
 import { forkJoin, Observable, from as observableFrom } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { GlobalBroadcast } from './global_message';
+import { PageResponse } from './common';
 
 import * as _ from 'lodash';
 import z from 'zod';
@@ -47,6 +48,13 @@ export class ContentSearch extends Z.class({
 export const TaskStatusEnum = z.enum(['new', 'pending', 'in_progress', 'canceled', 'error', 'done', 'invalid', '']);
 export type TaskStatus = z.infer<typeof TaskStatusEnum>;
 
+export type ApiError = {
+  error: string;
+  debug?: string;
+  url?: string;
+  code?: number;
+}
+
 export const TaskTypes = {
   ENCODING: 'video_encoding',
   SCREENS: 'screen_capture',
@@ -54,6 +62,8 @@ export const TaskTypes = {
   TAGGING: 'tag_content',
   DUPES: 'detect_duplicates',
 } as const;
+
+
 
 // Odd but works because of a strange constant hackery found in the zod forums.
 export const TaskEnum = z.enum([TaskTypes.ENCODING, ...Object.values(TaskTypes)]);
@@ -72,7 +82,7 @@ export type TaskSearch = z.infer<typeof TaskSearchSchema>;
 
 @Injectable()
 export class ContentedService {
-  public options = null;
+  public options: { headers: HttpHeaders };
   public LIMIT = 5000; // Default limit will use the server limit in the query
   // public LIMIT = 1; // Default limit will use the server limit in the query
 
@@ -155,7 +165,7 @@ export class ContentedService {
     return this.http.get(downloadUrl, { responseType: 'text' });
   }
 
-  public fullLoadDir(cnt, limit = null) {
+  public fullLoadDir(cnt: Container, limit: number | null = null): Observable<Container> {
     if (cnt.count === cnt.total) {
       console.log('Count = total, ignoring', cnt);
       return observableFrom(Promise.resolve(cnt));
@@ -204,14 +214,14 @@ export class ContentedService {
           },
         });
     });
-    return observableFrom(p);
+    return observableFrom(p) as Observable<Container>;
   }
 
-  public loadMoreInDir(cnt: Container, limit = null) {
+  public loadMoreInDir(cnt: Container, limit: number = 9000) {
     return this.getFullContainer(cnt.id, cnt.count, limit);
   }
 
-  public getFullContainer(cnt: string, offset: number = 0, limit: number = null) {
+  public getFullContainer(cnt: string, offset: number = 0, limit: number = 9000) {
     let url = ApiDef.contented.containerContent.replace('{cId}', cnt);
     return this.http
       .get(url, {
@@ -264,7 +274,7 @@ export class ContentedService {
     if (cntQ.search) {
       params = params.set('search', cntQ.search);
     }
-    if (cntQ.tags?.length > 0) {
+    if (cntQ.tags?.length) {
       params = params.set('tags', JSON.stringify(cntQ.tags));
     }
     return this.http.get(ApiDef.contented.searchContainers, { params }).pipe(
@@ -280,7 +290,7 @@ export class ContentedService {
   // Could definitely use Zod here as a search type.  Maybe it is worth pulling in at this point.
   public searchContent(cs: ContentSearch) {
     let params = this.getPaginationParams(cs.offset, cs.limit);
-    params = params.set('search', cs.text);
+    params = params.set('search', cs.text || '');
     if (cs.contentType) {
       params = params.set('contentType', cs.contentType);
     }
@@ -290,7 +300,7 @@ export class ContentedService {
 
     // GoBuffalo is being DUMB on the array parsing :(
     // params.get("tags[]") just returns the first entry if there are multiple
-    if (cs.tags?.length > 0) {
+    if (cs.tags?.length) {
       params = params.set('tags', JSON.stringify(cs.tags));
     }
     if (cs.duplicate) {
@@ -317,9 +327,11 @@ export class ContentedService {
 
   public handleError(err: HttpErrorResponse) {
     console.error('Error calling API', err);
-    let parsed = {};
+    let parsed: ApiError = {
+      error: 'Unknown error, or no error text in the result?',
+    };
     if (_.isObject(err.error)) {
-      parsed = _.clone(err.error);
+      parsed = _.clone(err.error) as ApiError;
     } else {
       try {
         parsed = JSON.parse(err.error) || {};
@@ -340,8 +352,8 @@ export class ContentedService {
     if (_.isEmpty(parsed)) {
       parsed = { error: 'Unknown error, or no error text in the result?' };
     }
-    parsed['url'] = err.url;
-    parsed['code'] = err.status;
+    parsed.url = err.url || undefined;
+    parsed.code = err.status;
     return observableFrom(Promise.reject(parsed));
   }
 
@@ -436,7 +448,7 @@ export class ContentedService {
     return this.http.post(url, cnt).pipe(
       map(res => {
         console.log('Created container previews response', res);
-        return _.map(res['results'], task => new TaskRequest(task));
+        return new PageResponse<TaskRequest>(res);
       })
     );
   }
@@ -445,29 +457,23 @@ export class ContentedService {
     let url = ApiDef.contented.containerVideoEncodingTask.replace('{containerId}', cnt.id);
     return this.http.post(url, cnt).pipe(
       map(res => {
-        // Return an array of task requests I think
-        console.log('Container Encoding task', res);
-        return _.map(res['results'], task => new TaskRequest(task));
+        return new PageResponse<TaskRequest>(res);
       })
     );
   }
 
-  containerTaggingTask(cnt: Container) {
+  containerTaggingTask(cnt: Container): Observable<PageResponse<TaskRequest>> {
     let url = ApiDef.contented.containerTaggingTask.replace('{containerId}', cnt.id);
     return this.http.post(url, cnt).pipe(
       map(res => {
-        return _.map(res['results'], task => new TaskRequest(task));
+        return new PageResponse<TaskRequest>(res);
       })
     );
   }
 
-  getTags(page: number = 1, perPage: number = 1000, tagType: string = '') {
+  getTags(page: number = 1, perPage: number = 1000, tagType: string = ''): Observable<PageResponse<Tag>> {
     if (TAGS_RESPONSE.initialized) {
-      return observableFrom(
-        new Promise((resolve, reject) => {
-          resolve(TAGS_RESPONSE);
-        })
-      );
+      return observableFrom(Promise.resolve(TAGS_RESPONSE));
     }
     let params = new HttpParams();
     params = params.set('page', '' + page);
@@ -479,7 +485,7 @@ export class ContentedService {
         return {
           total: res.total || 0,
           results: _.map(res.results, t => new Tag(t)),
-        };
+        } as PageResponse<Tag>;
       })
     );
   }

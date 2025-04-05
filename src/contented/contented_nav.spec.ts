@@ -1,7 +1,7 @@
 import { Subscription } from 'rxjs';
 import { fakeAsync, getTestBed, tick, ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { DebugElement } from '@angular/core';
 
 import { ContentedNavCmp } from '../contented/contented_nav.cmp';
@@ -17,6 +17,7 @@ import $ from 'jquery';
 import { MockData } from '../test/mock/mock_data';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('TestingContentedNavCmp', () => {
   let fixture: ComponentFixture<ContentedNavCmp>;
@@ -29,10 +30,10 @@ describe('TestingContentedNavCmp', () => {
 
   beforeEach(waitForAsync(async () => {
     TestBed.configureTestingModule({
-      imports: [ContentedModule, HttpClientTestingModule],
-      providers: [provideRouter([{ path: '', component: ContentedNavCmp }]), ContentedService],
-      teardown: { destroyAfterEach: true },
-    }).compileComponents();
+    teardown: { destroyAfterEach: true },
+    imports: [ContentedModule],
+    providers: [provideRouter([{ path: '', component: ContentedNavCmp }]), ContentedService, provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+}).compileComponents();
 
     await RouterTestingHarness.create();
 

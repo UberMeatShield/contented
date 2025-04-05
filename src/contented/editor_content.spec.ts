@@ -3,13 +3,14 @@ import { By } from '@angular/platform-browser';
 import { RouterTestingModule } from '@angular/router/testing';
 import { EditorContentCmp } from './editor_content.cmp';
 import { DebugElement } from '@angular/core';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { FormControl } from '@angular/forms';
 import { MockData } from '../test/mock/mock_data';
 import { ContentedModule } from './contented_module';
 import { Content } from './content';
 import { ApiDef } from './api_def';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 declare let $: any;
 
@@ -22,10 +23,10 @@ describe('EditorContentCmp', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [RouterTestingModule, HttpClientTestingModule, ContentedModule, NoopAnimationsModule],
-      providers: [],
-      declarations: [EditorContentCmp],
-    }).compileComponents();
+    declarations: [EditorContentCmp],
+    imports: [RouterTestingModule, ContentedModule, NoopAnimationsModule],
+    providers: [provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+}).compileComponents();
 
     fixture = TestBed.createComponent(EditorContentCmp);
     de = fixture.debugElement.query(By.css('.editor-content-cmp'));

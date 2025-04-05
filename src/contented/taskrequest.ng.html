@@ -1,12 +1,14 @@
 <div class="task-request-cmp">
     <div class="task-bar">
-      <form #searchTaskForm [formGroup]="searchForm">
+      <form #searchTaskForm [formGroup]="tasksForm">
         <mat-form-field class="input-third">
-          <input matInput type="text" value="" placeholder="Search in task messages or content_id" [formControl]="search">
+          <input matInput type="text" value="" 
+           placeholder="Search in task messages or content_id" 
+           [formControl]="searchFilterControl">
         </mat-form-field>
 
         <mat-form-field class="input-third">
-        <mat-select [formControl]="status">
+        <mat-select [formControl]="statusFilterControl">
           <mat-option value="">No Filter</mat-option>
           <mat-option *ngFor="let pair of states | keyvalue" [value]="pair.value">
             {{pair.key}}

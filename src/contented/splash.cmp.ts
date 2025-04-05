@@ -12,20 +12,21 @@ import { ContentedService } from './contented_service';
 import { Content } from './content';
 import { Container } from './container';
 
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 
 import { RESUME } from './resume';
 
 @Component({
-  selector: 'splash-cmp',
-  templateUrl: './splash.ng.html',
+    selector: 'splash-cmp',
+    templateUrl: './splash.ng.html',
+    standalone: false
 })
 export class SplashCmp implements OnInit {
   @ViewChild('EDITOR') editor?: EditorComponent;
 
   @Input() editForm?: FormGroup;
   @Input() editorValue: string = RESUME; // TODO: Save this as media
-  @Input() descriptionControl?: FormControl<string>;
+  @Input() descriptionControl?: FormControl<string | null>;
   @Input() readOnly: boolean = true;
   @Input() editorOptions = {
     //theme: 'vs-dark',
@@ -73,8 +74,8 @@ export class SplashCmp implements OnInit {
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: res => {
-          this.c = res.container;
-          this.mc = res.content;
+          this.c = res.container || undefined;
+          this.mc = res.content || undefined;
           this.splashTitle = res.splashTitle || '';
           this.splashContent = res.splashContent || '';
           this.rendererType = res.rendererType;

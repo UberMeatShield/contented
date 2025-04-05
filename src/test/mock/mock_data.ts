@@ -14,6 +14,7 @@ import contentResult from './content.json';
 import containersResult from './containers.json';
 import searchResult from './search.json';
 import videoViewResult from './video_view.json';
+import { HttpTestingController } from '@angular/common/http/testing';
 
 declare var require: any;
 class MockLoader {
@@ -59,7 +60,7 @@ class MockLoader {
 
   public taskRequest(taskId: string) {
     let tasks = _.clone(taskRequestsResult);
-    let task = tasks[0];
+    let task = tasks.results[0];
     task.id = taskId;
     return task;
   }
@@ -68,7 +69,7 @@ class MockLoader {
     return _.clone(taskRequestsResult);
   }
 
-  public getContent(container_id = null, total = null) {
+  public getContent(container_id: string | null = null, total: number | null = null) {
     let res = _.clone(contentResult);
     if (container_id) {
       _.each(res.results, content => {
@@ -77,6 +78,7 @@ class MockLoader {
       });
     }
     // TODO: Create fake content / id info if given a count
+    total = total || res.results.length;
     return {
       results: res.results.slice(0, total),
       total: total,
@@ -113,7 +115,7 @@ class MockLoader {
     };
   }
 
-  public handleCmpDefaultLoad(httpMock, fixture = null) {
+  public handleCmpDefaultLoad(httpMock: HttpTestingController, fixture: any | null = null) {
     let containers = this.handleContainerLoad(httpMock);
     if (fixture) {
       fixture.detectChanges();
@@ -121,14 +123,14 @@ class MockLoader {
     }
   }
 
-  public handleContainerLoad(httpMock): Array<Container> {
+  public handleContainerLoad(httpMock: HttpTestingController): Array<Container> {
     let cntRes = this.getPreview();
     let containersReq = httpMock.expectOne(req => req.url === ApiDef.contented.containers);
     containersReq.flush(cntRes);
     return _.map(cntRes.results, res => new Container(res));
   }
 
-  public handleContainerContentLoad(httpMock, cnts: Array<Container>, count = 2) {
+  public handleContainerContentLoad(httpMock: HttpTestingController, cnts: Array<Container>, count = 2) {
     _.each(cnts, cnt => {
       let url = ApiDef.contented.containerContent.replace('{cId}', cnt.id);
       let reqs = httpMock.match(r => r.url.includes(url));

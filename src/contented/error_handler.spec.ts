@@ -1,6 +1,6 @@
 import { fakeAsync, getTestBed, tick, ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { DebugElement } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -12,6 +12,7 @@ import { ContentedModule } from '../contented/contented_module';
 import * as _ from 'lodash';
 import * as $ from 'jquery';
 import { GlobalBroadcast } from './global_message';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('TestingErrorHandlerCmp', () => {
   let fixture: ComponentFixture<ErrorHandlerCmp>;
@@ -23,9 +24,9 @@ describe('TestingErrorHandlerCmp', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [FormsModule, ContentedModule, HttpClientTestingModule, NoopAnimationsModule],
-      providers: [ContentedService],
-    }).compileComponents();
+    imports: [FormsModule, ContentedModule, NoopAnimationsModule],
+    providers: [ContentedService, provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+}).compileComponents();
 
     fixture = TestBed.createComponent(ErrorHandlerCmp);
     httpMock = TestBed.inject(HttpTestingController);

@@ -1,6 +1,6 @@
 import { fakeAsync, tick, ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { DebugElement } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
@@ -15,6 +15,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import * as _ from 'lodash';
 import { MockData } from '../test/mock/mock_data';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('Testing TagsCmp', () => {
   let fixture: ComponentFixture<TagsCmp>;
@@ -28,15 +29,12 @@ describe('Testing TagsCmp', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [
-        RouterTestingModule.withRoutes([{ path: 'ui/view/:id', component: TagsCmp }]),
+    imports: [RouterTestingModule.withRoutes([{ path: 'ui/view/:id', component: TagsCmp }]),
         FormsModule,
         ContentedModule,
-        HttpClientTestingModule,
-        NoopAnimationsModule,
-      ],
-      providers: [ContentedService],
-    }).compileComponents();
+        NoopAnimationsModule],
+    providers: [ContentedService, provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+}).compileComponents();
 
     service = TestBed.inject(ContentedService);
     fixture = TestBed.createComponent(TagsCmp);

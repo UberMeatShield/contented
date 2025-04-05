@@ -1,7 +1,7 @@
 import { fakeAsync, getTestBed, tick, ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { HttpParams } from '@angular/common/http';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpParams, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { DebugElement } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
@@ -13,11 +13,10 @@ import { ContentedModule } from './contented_module';
 import { VideoPreviewCmp } from './video_preview.cmp';
 import { Content } from './content';
 
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { MockData } from '../test/mock/mock_data';
 import { ApiDef } from './api_def';
 
-declare var $;
 describe('TestingVideoPreviewCmp', () => {
   let fixture: ComponentFixture<VideoPreviewCmp>;
   let service: ContentedService;
@@ -30,14 +29,11 @@ describe('TestingVideoPreviewCmp', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [
-        RouterTestingModule.withRoutes([{ path: 'screens/:screenId', component: VideoPreviewCmp }]),
+    imports: [RouterTestingModule.withRoutes([{ path: 'screens/:screenId', component: VideoPreviewCmp }]),
         FormsModule,
-        ContentedModule,
-        HttpClientTestingModule,
-      ],
-      providers: [ContentedService],
-    }).compileComponents();
+        ContentedModule],
+    providers: [ContentedService, provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+}).compileComponents();
 
     service = TestBed.get(ContentedService);
     fixture = TestBed.createComponent(VideoPreviewCmp);

@@ -1,6 +1,6 @@
 import { fakeAsync, getTestBed, tick, ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { DebugElement } from '@angular/core';
 
 import { RouterTestingModule } from '@angular/router/testing';
@@ -13,6 +13,7 @@ import { ContentedModule } from '../contented/contented_module';
 import _ from 'lodash';
 import $ from 'jquery';
 import { MockData } from '../test/mock/mock_data';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('TestingContainerCmp', () => {
   let fixture: ComponentFixture<ContainerCmp>;
@@ -23,10 +24,10 @@ describe('TestingContainerCmp', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [RouterTestingModule, ContentedModule, HttpClientTestingModule],
-      providers: [ContentedService],
-      teardown: { destroyAfterEach: false },
-    }).compileComponents();
+    teardown: { destroyAfterEach: false },
+    imports: [RouterTestingModule, ContentedModule],
+    providers: [ContentedService, provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+}).compileComponents();
 
     service = TestBed.get(ContentedService);
     fixture = TestBed.createComponent(ContainerCmp);

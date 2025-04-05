@@ -1,31 +1,26 @@
 import { forkJoin, Subscription } from 'rxjs';
 import {
   OnInit,
-  OnDestroy,
   AfterViewInit,
   Component,
-  EventEmitter,
   Input,
-  Output,
   HostListener,
   ViewChild,
   Inject,
+  ElementRef,
 } from '@angular/core';
 import { ContentedService } from './contented_service';
 import { Content } from './content';
-import { Container } from './container';
-import { Screen, ScreenAction } from './screen';
-import { GlobalNavEvents, NavTypes } from './nav_events';
-import { ActivatedRoute, Router, ParamMap } from '@angular/router';
-import { FormBuilder, NgForm, FormControl, FormGroup } from '@angular/forms';
+import { Screen, ScreenAction, ScreenClickEvent } from './screen';
+import { GlobalNavEvents} from './nav_events';
 
-import { PageEvent as PageEvent } from '@angular/material/paginator';
-import { MatDialog as MatDialog, MatDialogConfig as MatDialogConfig, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import * as _ from 'lodash';
 
 @Component({
-  selector: 'video-preview-cmp',
-  templateUrl: './video_preview.ng.html',
+    selector: 'video-preview-cmp',
+    templateUrl: './video_preview.ng.html',
+    standalone: false
 })
 export class VideoPreviewCmp implements OnInit {
   // Is this preview the selected one
@@ -64,8 +59,8 @@ export class VideoPreviewCmp implements OnInit {
 
   // A little awkward and needs to be fixed (attempt to do a lookup)
   public fullView(mc: Content, screen?: Screen) {
-    // This needs to be fixed to not scroll up
-    GlobalNavEvents.selectContent(mc, null);
+    // This needs to be fixed to noElementRefp
+    GlobalNavEvents.selectContent(mc, undefined);
 
     // Just makes sure the selection event doesn't race condition the scroll
     // into view event.  So the click triggers, scrolls and then we scroll to
@@ -78,8 +73,8 @@ export class VideoPreviewCmp implements OnInit {
   // Rather than window I should probably make it the containing dom element?
   @HostListener('window:resize', ['$event'])
   public calculateDimensions() {
-    let width = !window['jasmine'] ? window.innerWidth : 800;
-    let height = !window['jasmine'] ? window.innerHeight : 800;
+    let width = !(window as any).jasmine ? window.innerWidth : 800;
+    let height = !(window as any).jasmine ? window.innerHeight : 800;
 
     this.previewWidth = width / 5;
     this.previewHeight = height / this.maxVisible - 41;
@@ -88,8 +83,8 @@ export class VideoPreviewCmp implements OnInit {
     this.screenWidth = width - this.previewWidth - 41; // Fudge factor
   }
 
-  public screenEvt(evt) {
-    if (evt.action === ScreenAction.PLAY_SCREEN) {
+  public screenEvt(evt: ScreenClickEvent) {
+    if (evt.action === ScreenAction.PLAY_SCREEN && this.content) {
       return this.fullView(this.content, evt.screen);
     }
 
@@ -116,20 +111,21 @@ export class VideoPreviewCmp implements OnInit {
 
 // This just doesn't seem like a great approach :(
 @Component({
-  selector: 'screen-dialog',
-  templateUrl: 'screen_dialog.ng.html',
+    selector: 'screen-dialog',
+    templateUrl: 'screen_dialog.ng.html',
+    standalone: false
 })
 export class ScreenDialog implements AfterViewInit {
   public screen: Screen;
   public screens: Array<Screen>;
 
-  public forceHeight: number;
-  public forceWidth: number;
+  public forceHeight: number = 0;
+  public forceWidth: number = 0;
   public sizeCalculated: boolean = false;
-  @ViewChild('ScreensContent', { static: true }) screenContent;
+  @ViewChild('ScreensContent', { static: true }) screenContent!: ElementRef;
 
   constructor(
-    @Inject(MAT_DIALOG_DATA) public data,
+    @Inject(MAT_DIALOG_DATA) public data: { screen: Screen, screens: Array<Screen> },
     public _service: ContentedService
   ) {
     this.screen = data.screen;

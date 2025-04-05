@@ -1,14 +1,14 @@
 import { ApiDef } from './api_def';
 import { Injectable } from '@angular/core';
 import { Tag } from './content';
+import { PageResponse } from './common';
+import $ from 'jquery';
+import _ from 'lodash';
 
-import * as $ from 'jquery';
-import * as _ from 'lodash-es';
+let languages: Array<string> = [];
 
-let languages = [];
-
-let technologies = [];
-let operators = [
+let technologies: Array<string> = [];
+let operators: Array<string> = [
   '=',
   '>',
   '<',
@@ -53,11 +53,11 @@ let mailFormat = /^[a-z0-9.!$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)
 //let mailFormat = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
 
 let results: Array<Tag> = [];
-export let TAGS_RESPONSE = {
+export let TAGS_RESPONSE: PageResponse<Tag> = new PageResponse<Tag>({
   total: -1,
   initialized: false,
   results: results,
-};
+});
 
 // Mostly empty tagging support, dynamically load the tags and THEN register the language.
 // https://stackoverflow.com/questions/52700307/how-to-use-monaco-editor-for-syntax-highlighting
@@ -217,7 +217,7 @@ export class TagLang {
     }
     lang.setMonarchTokensProvider(languageName, syntax);
     lang.registerCompletionItemProvider(languageName, {
-      provideCompletionItems: (model, position) => {
+      provideCompletionItems: (model: any, position: any) => {
         const suggestions = [
           ...this.getSuggestionsForType(lang.CompletionItemKind.Keyword, keywords),
           ...this.getSuggestionsForType(lang.CompletionItemKind.Type, typeKeywords),
@@ -245,8 +245,8 @@ export class TagLang {
     console.log('Loading language', ApiDef.contented.tags);
 
     $.ajax(ApiDef.contented.tags, {
-      params: { per_page: 1000 },
-      success: res => {
+      data: { per_page: 1000 },
+      success: (res: PageResponse<Tag>) => {
         // I should also change the color of the type and the keyword.
         let results = res.results;
 
@@ -266,7 +266,7 @@ export class TagLang {
         TAGS_RESPONSE.results = tags;
         TAGS_RESPONSE.initialized = true;
       },
-      error: err => {
+      error: (err: any) => {
         console.error('loadLanguage failed to load tags', err);
         this.setMonacoLanguage('tagging', [], [], []);
 
