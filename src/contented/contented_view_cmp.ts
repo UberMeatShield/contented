@@ -10,8 +10,9 @@ import * as _ from 'lodash';
 import { ScreenAction, ScreenClickEvent, Screen } from './screen';
 
 @Component({
-  selector: 'contented-view',
-  templateUrl: './contented_view.ng.html',
+    selector: 'contented-view',
+    templateUrl: './contented_view.ng.html',
+    standalone: false
 })
 export class ContentedViewCmp implements OnInit, OnDestroy {
   @Input() content: Content;

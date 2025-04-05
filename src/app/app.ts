@@ -3,8 +3,9 @@ import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
 
 @Component({
-  selector: 'app-contented',
-  templateUrl: 'app.ng.html',
+    selector: 'app-contented',
+    templateUrl: 'app.ng.html',
+    standalone: false
 })
 export class App implements OnInit {
   constructor(

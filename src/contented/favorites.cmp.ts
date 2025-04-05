@@ -12,8 +12,9 @@ import { Container, getFavorites } from './container';
 import _ from 'lodash';
 
 @Component({
-  selector: 'favorites-cmp',
-  templateUrl: './favorites.ng.html',
+    selector: 'favorites-cmp',
+    templateUrl: './favorites.ng.html',
+    standalone: false
 })
 export class FavoritesCmp implements OnInit, OnDestroy {
   @Input() container: Container;

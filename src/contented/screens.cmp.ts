@@ -8,8 +8,9 @@ import { GlobalBroadcast } from './global_message';
 import * as _ from 'lodash';
 
 @Component({
-  selector: 'screens-cmp',
-  templateUrl: 'screens.ng.html',
+    selector: 'screens-cmp',
+    templateUrl: 'screens.ng.html',
+    standalone: false
 })
 export class ScreensCmp implements OnInit {
   @Input() contentId: string;

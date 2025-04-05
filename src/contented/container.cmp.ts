@@ -9,8 +9,9 @@ import { GlobalNavEvents, NavTypes, NavEventMessage } from './nav_events';
 import * as _ from 'lodash';
 
 @Component({
-  selector: 'container-cmp',
-  templateUrl: 'container.ng.html',
+    selector: 'container-cmp',
+    templateUrl: 'container.ng.html',
+    standalone: false
 })
 export class ContainerCmp implements OnInit, OnDestroy {
   @Input() container: Container;

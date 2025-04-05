@@ -10,8 +10,9 @@ import { GlobalBroadcast } from './global_message';
 import * as _ from 'lodash-es';
 
 @Component({
-  selector: 'task-request-cmp',
-  templateUrl: './taskrequest.ng.html',
+    selector: 'task-request-cmp',
+    templateUrl: './taskrequest.ng.html',
+    standalone: false
 })
 export class TaskRequestCmp implements OnInit {
   @Input() contentID: string = '';

@@ -24,8 +24,9 @@ import { MatDialog as MatDialog, MatDialogConfig as MatDialogConfig, MAT_DIALOG_
 import * as _ from 'lodash';
 
 @Component({
-  selector: 'video-preview-cmp',
-  templateUrl: './video_preview.ng.html',
+    selector: 'video-preview-cmp',
+    templateUrl: './video_preview.ng.html',
+    standalone: false
 })
 export class VideoPreviewCmp implements OnInit {
   // Is this preview the selected one
@@ -116,8 +117,9 @@ export class VideoPreviewCmp implements OnInit {
 
 // This just doesn't seem like a great approach :(
 @Component({
-  selector: 'screen-dialog',
-  templateUrl: 'screen_dialog.ng.html',
+    selector: 'screen-dialog',
+    templateUrl: 'screen_dialog.ng.html',
+    standalone: false
 })
 export class ScreenDialog implements AfterViewInit {
   public screen: Screen;
