@@ -5,7 +5,7 @@ import { TaskRequest, TASK_STATES } from './task_request';
 import { MatTableDataSource } from '@angular/material/table';
 import { FormBuilder, NgForm, FormControl, FormGroup } from '@angular/forms';
 
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 
 @Component({
     selector: 'tasks-cmp',

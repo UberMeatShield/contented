@@ -1,4 +1,4 @@
-import { OnInit, Component, Input, HostListener, ViewChild } from '@angular/core';
+import { OnInit, Component, Input, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { ContentedService } from './contented_service';
 import { Container, getFavorites } from './container';
 import { GlobalNavEvents } from './nav_events';
@@ -8,8 +8,7 @@ import { FormControl } from '@angular/forms';
 import type { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 
-import * as _ from 'lodash';
-import * as $ from 'jquery';
+import _ from 'lodash';
 
 @Component({
     selector: 'contented-nav',
@@ -19,6 +18,7 @@ import * as $ from 'jquery';
 export class ContentedNavCmp implements OnInit {
   @ViewChild(MatRipple) ripple: MatRipple;
   @ViewChild(MatAutocomplete) matAutocomplete: MatAutocomplete;
+  @ViewChild("#CONTENT_FILTER") filterEl: ElementRef;
   @Input() navEvts;
   @Input() loading: boolean;
   @Input() containers: Array<Container>;
@@ -63,8 +63,7 @@ export class ContentedNavCmp implements OnInit {
 
     // If this is not in a delay it will race condition with the selection opening / closing.
     _.delay(() => {
-      const filterEl = $('#CONTENT_FILTER');
-      filterEl.blur();
+      this.filterEl.nativeElement.blur();
 
       // We want to use the container value setValue to ensure the autocomplete doesn't
       // explode.  Using the dom element itself breaks the dropdown a little bit.
@@ -91,15 +90,15 @@ export class ContentedNavCmp implements OnInit {
       return;
     }
 
-    let nodeName = _.get(evt.target, 'nodeName');
+    let nodeName = (evt.target as HTMLElement).nodeName || "";
     let ignoreNodes = ['TEXTAREA', 'INPUT', 'SELECT'];
     if (ignoreNodes.includes(nodeName)) {
       return;
     }
     this.handleKey(evt.key);
 
-    let btn = $(`#BTN_${evt.key}`);
-    let pos = btn.offset();
+    let btn = document.getElementById(`BTN_${evt.key}`);
+    let pos = btn?.getBoundingClientRect();
     if (pos) {
       // console.log("Position and btn value", pos, btn.val());
       let x = pos.left + 32;

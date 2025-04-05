@@ -7,7 +7,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { GlobalBroadcast } from './global_message';
 
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 
 @Component({
     selector: 'task-request-cmp',

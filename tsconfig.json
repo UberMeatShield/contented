@@ -1,25 +1,21 @@
 {
-  "compileOnSave": false,
-  "NARP": "module: \"es2020\" was initially in there, but gulp-typscript barfs",
   "compilerOptions": {
-    "outDir": "./static/build",
-    "sourceMap": true,
-    "esModuleInterop": true,
-    "declaration": false,
+    "target": "es2020",
+    "module": "esnext",
     "moduleResolution": "node",
-    "experimentalDecorators": true,
+    "lib": ["es2020", "dom"],
+    "skipLibCheck": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "esModuleInterop": true,
     "resolveJsonModule": true,
-    "target": "esnext",
-    "typeRoots": [
-      "node_modules/@types"
-    ],
-    "lib": [
-      "esnext",
-      "dom"
-    ]
+    "sourceMap": true,
+    "baseUrl": "./",
+    "paths": {
+      "@app/*": ["src/app/*"],
+      "@assets/*": ["src/assets/*"]
+    }
   },
-  "angularCompilerOptions": {
-    "fullTemplateTypeCheck": true,
-    "strictInjectionParameters": true
-  }
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules"]
 }
