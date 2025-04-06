@@ -55,7 +55,7 @@ describe('TestingVideoPreviewCmp', () => {
 
   it('Should create a screens view component', () => {
     const info = MockData.videoContent();
-    info.preview = "";
+    info.preview = '';
     let content = new Content(info);
 
     expect(content.isVideo()).toBe(true);

@@ -1,6 +1,9 @@
 import * as _ from 'lodash';
 import { ApiDef } from './api_def';
 
+import { z } from 'zod';
+import { Z } from 'zod-class';
+
 export enum ScreenAction {
   VIEW = 'view',
   PLAY_SCREEN = 'play-screen',
@@ -18,31 +21,20 @@ function formatSeconds(seconds: number): string {
   const s = seconds % 60;
   return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
-export class Screen {
-  public id: number;
-  public src: string;
-  public idx: number;
-
-  public content_id: number;
-  public size_bytes: number;
-  public content_container_id: number;
-  public url: string;
-  public timeSeconds: number;
-
-  constructor(obj: any = {}) {
-    this.fromJson(obj);
+export class Screen extends Z.class({
+  id: z.number(),
+  src: z.string(),
+  idx: z.number().default(0),
+  content_id: z.number(),
+  size_bytes: z.number().default(0),
+  content_container_id: z.number().optional(),
+}) {
+  get timeSeconds() {
+    return this.parseSecondsFromScreen() || 0;
   }
 
-  public fromJson(raw: any) {
-    if (raw) {
-      Object.assign(this, raw);
-      this.timeSeconds = this.parseSecondsFromScreen() || 0;
-      this.links();
-    }
-  }
-
-  public links() {
-    this.url = `${ApiDef.contented.screens}${this.id}`;
+  get url() {
+    return `${ApiDef.contented.screens}${this.id}`;
   }
 
   public parseSecondsFromScreen() {

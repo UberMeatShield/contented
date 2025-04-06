@@ -245,7 +245,7 @@ export class TagLang {
     console.log('Loading language', ApiDef.contented.tags);
 
     $.ajax(ApiDef.contented.tags, {
-      params: { per_page: 1000 },
+      data: { per_page: 1000 },
       success: res => {
         // I should also change the color of the type and the keyword.
         let results = res.results;

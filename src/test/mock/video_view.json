@@ -2,297 +2,108 @@
   "total": 4,
   "results": [
     {
-      "id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
-      "created": "0001-01-01T00:00:00Z",
-      "updated": "0001-01-01T00:00:00Z",
-      "src": "181004_10_LABORATORIES-SCIENCE_12_preview.mp4",
+      "id": 83,
+      "created_at": "2025-04-06T10:44:15.228475-04:00",
+      "updated": "2025-04-06T10:44:15.228475-04:00",
+      "DeletedAt": null,
+      "src": "donut_[special( gunk_h265.mp4",
       "content_type": "video/mp4",
-      "preview": "/container_previews/181004_10_LABORATORIES-SCIENCE_12_preview.mp4.webp",
-      "container_id": "fdd3e087-f227-458d-b534-bedb8daec432",
+      "preview": "",
       "idx": 0,
       "active": false,
       "corrupt": false,
-      "size": 4233259,
+      "size": 1660728,
       "description": "",
-      "screens": [
+      "no_file": false,
+      "meta": "{\n    \"streams\": [\n        {\n            \"index\": 0,\n            \"codec_name\": \"hevc\",\n            \"codec_long_name\": \"H.265 / HEVC (High Efficiency Video Coding)\",\n            \"profile\": \"Main\",\n            \"codec_type\": \"video\",\n            \"codec_tag_string\": \"hvc1\",\n            \"codec_tag\": \"0x31637668\",\n            \"width\": 4096,\n            \"height\": 2160,\n            \"coded_width\": 4096,\n            \"coded_height\": 2160,\n            \"closed_captions\": 0,\n            \"film_grain\": 0,\n            \"has_b_frames\": 2,\n            \"pix_fmt\": \"yuv420p\",\n            \"level\": 150,\n            \"color_range\": \"tv\",\n            \"color_space\": \"bt709\",\n            \"color_transfer\": \"bt709\",\n            \"color_primaries\": \"bt709\",\n            \"chroma_location\": \"left\",\n            \"field_order\": \"progressive\",\n            \"refs\": 1,\n            \"view_ids_available\": \"\",\n            \"view_pos_available\": \"\",\n            \"id\": \"0x1\",\n            \"r_frame_rate\": \"25/1\",\n            \"avg_frame_rate\": \"25/1\",\n            \"time_base\": \"1/12800\",\n            \"start_pts\": 0,\n            \"start_time\": \"0.000000\",\n            \"duration_ts\": 129024,\n            \"duration\": \"10.080000\",\n            \"bit_rate\": \"1312788\",\n            \"nb_frames\": \"252\",\n            \"extradata_size\": 2460,\n            \"disposition\": {\n                \"default\": 1,\n                \"dub\": 0,\n                \"original\": 0,\n                \"comment\": 0,\n                \"lyrics\": 0,\n                \"karaoke\": 0,\n                \"forced\": 0,\n                \"hearing_impaired\": 0,\n                \"visual_impaired\": 0,\n                \"clean_effects\": 0,\n                \"attached_pic\": 0,\n                \"timed_thumbnails\": 0,\n                \"non_diegetic\": 0,\n                \"captions\": 0,\n                \"descriptions\": 0,\n                \"metadata\": 0,\n                \"dependent\": 0,\n                \"still_image\": 0,\n                \"multilayer\": 0\n            },\n            \"tags\": {\n                \"language\": \"und\",\n                \"handler_name\": \"L-SMASH Video Handler\",\n                \"vendor_id\": \"[0][0][0][0]\",\n                \"encoder\": \"Lavc61.19.100 libx265\"\n            }\n        }\n    ],\n    \"format\": {\n        \"filename\": \"/Users/ubermeatshield/code/contented/mocks/content/dir2/donut_[special( gunk_h265.mp4\",\n        \"nb_streams\": 1,\n        \"nb_programs\": 0,\n        \"nb_stream_groups\": 0,\n        \"format_name\": \"mov,mp4,m4a,3gp,3g2,mj2\",\n        \"format_long_name\": \"QuickTime / MOV\",\n        \"start_time\": \"0.000000\",\n        \"duration\": \"10.080000\",\n        \"size\": \"1660728\",\n        \"bit_rate\": \"1318038\",\n        \"probe_score\": 100,\n        \"tags\": {\n            \"major_brand\": \"isom\",\n            \"minor_version\": \"512\",\n            \"compatible_brands\": \"isomiso2mp41\",\n            \"encoder\": \"Lavf61.7.100\"\n        }\n    }\n}\n",
+      "duration": 10.08,
+      "screens": null,
+      "container_id": 3,
+      "tags": [
         {
-          "id": "59400077-d6e0-4dbe-87b9-5d5c2de8b41f",
-          "content_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
-          "created": "0001-01-01T00:00:00Z",
-          "updated": "0001-01-01T00:00:00Z",
-          "src": "181004_10_LABORATORIES-SCIENCE_12_preview.mp4.screens.ss00001.jpg",
-          "idx": 0,
-          "size": 23049
-        },
-        {
-          "id": "5abe639b-e4fb-4b6c-925c-508a79b6d5ba",
-          "content_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
-          "created": "0001-01-01T00:00:00Z",
-          "updated": "0001-01-01T00:00:00Z",
-          "src": "181004_10_LABORATORIES-SCIENCE_12_preview.mp4.screens.ss00002.jpg",
-          "idx": 1,
-          "size": 38008
-        },
-        {
-          "id": "e715c2f4-60e1-4b69-a999-5a1703639426",
-          "content_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
-          "created": "0001-01-01T00:00:00Z",
-          "updated": "0001-01-01T00:00:00Z",
-          "src": "181004_10_LABORATORIES-SCIENCE_12_preview.mp4.screens.ss00003.jpg",
-          "idx": 2,
-          "size": 51927
-        },
-        {
-          "id": "1ff786af-42f1-498a-9f4d-ac79b5ede696",
-          "content_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
-          "created": "0001-01-01T00:00:00Z",
-          "updated": "0001-01-01T00:00:00Z",
-          "src": "181004_10_LABORATORIES-SCIENCE_12_preview.mp4.screens.ss00004.jpg",
-          "idx": 3,
-          "size": 33864
-        },
-        {
-          "id": "bf12b5c8-f9c5-4aa1-a1e4-98001e94b0bd",
-          "content_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
-          "created": "0001-01-01T00:00:00Z",
-          "updated": "0001-01-01T00:00:00Z",
-          "src": "181004_10_LABORATORIES-SCIENCE_12_preview.mp4.screens.ss00005.jpg",
-          "idx": 4,
-          "size": 27370
-        },
-        {
-          "id": "1fd32283-a410-4747-89d5-818632361d03",
-          "content_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
-          "created": "0001-01-01T00:00:00Z",
-          "updated": "0001-01-01T00:00:00Z",
-          "src": "181004_10_LABORATORIES-SCIENCE_12_preview.mp4.screens.ss00006.jpg",
-          "idx": 5,
-          "size": 24306
-        },
-        {
-          "id": "3b5cbe27-c7e1-4870-9052-ec2683aba547",
-          "content_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
-          "created": "0001-01-01T00:00:00Z",
-          "updated": "0001-01-01T00:00:00Z",
-          "src": "181004_10_LABORATORIES-SCIENCE_12_preview.mp4.screens.ss00007.jpg",
-          "idx": 6,
-          "size": 20898
-        },
-        {
-          "id": "79e63dfe-94b3-4724-ba7a-753f64b4abf9",
-          "content_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
-          "created": "0001-01-01T00:00:00Z",
-          "updated": "0001-01-01T00:00:00Z",
-          "src": "181004_10_LABORATORIES-SCIENCE_12_preview.mp4.screens.ss00008.jpg",
-          "idx": 7,
-          "size": 18704
-        },
-        {
-          "id": "44af25cd-3713-4484-90ad-4732c803d0f9",
-          "content_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
-          "created": "0001-01-01T00:00:00Z",
-          "updated": "0001-01-01T00:00:00Z",
-          "src": "181004_10_LABORATORIES-SCIENCE_12_preview.mp4.screens.ss00009.jpg",
-          "idx": 8,
-          "size": 17809
-        },
-        {
-          "id": "09978770-cb4f-47ef-9d96-b810e1859ba8",
-          "content_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
-          "created": "0001-01-01T00:00:00Z",
-          "updated": "0001-01-01T00:00:00Z",
-          "src": "181004_10_LABORATORIES-SCIENCE_12_preview.mp4.screens.ss00010.jpg",
-          "idx": 9,
-          "size": 17009
-        },
-        {
-          "id": "4130a54f-362f-41ce-8d3f-a0de44c0f2a7",
-          "content_id": "bfa9c408-ea20-4ca6-b844-ce6da54904f2",
-          "created": "0001-01-01T00:00:00Z",
-          "updated": "0001-01-01T00:00:00Z",
-          "src": "181004_10_LABORATORIES-SCIENCE_12_preview.mp4.screens.ss00011.jpg",
-          "idx": 10,
-          "size": 15862
+          "id": "ci",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "DeletedAt": null,
+          "description": "",
+          "tag_type": "keywords"
         }
       ],
-      "encoding": ""
+      "encoding": "hevc",
+      "duplicate": false
     },
     {
-      "id": "12bdbae5-5644-4b61-8ab9-97dc2f3206ca",
-      "created": "0001-01-01T00:00:00Z",
+      "id": 78,
+      "created_at": "0001-01-01T00:00:00Z",
       "updated": "0001-01-01T00:00:00Z",
-      "src": "donut.mp4",
+      "DeletedAt": null,
+      "src": "SampleVideo_1280x720_1mb.mp4",
       "content_type": "video/mp4",
-      "preview": "/container_previews/donut.mp4.webp",
-      "container_id": "cde6e12a-2737-4d9a-9984-9c8f014f1e87",
-      "idx": 0,
+      "preview": "",
+      "idx": 1,
+      "active": false,
+      "corrupt": false,
+      "size": 1055736,
+      "description": "",
+      "no_file": false,
+      "meta": "{\n    \"streams\": [\n        {\n            \"index\": 0,\n            \"codec_name\": \"h264\",\n            \"codec_long_name\": \"H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10\",\n            \"profile\": \"Main\",\n            \"codec_type\": \"video\",\n            \"codec_tag_string\": \"avc1\",\n            \"codec_tag\": \"0x31637661\",\n            \"width\": 1280,\n            \"height\": 720,\n            \"coded_width\": 1280,\n            \"coded_height\": 720,\n            \"closed_captions\": 0,\n            \"film_grain\": 0,\n            \"has_b_frames\": 0,\n            \"sample_aspect_ratio\": \"1:1\",\n            \"display_aspect_ratio\": \"16:9\",\n            \"pix_fmt\": \"yuv420p\",\n            \"level\": 31,\n            \"chroma_location\": \"left\",\n            \"field_order\": \"progressive\",\n            \"refs\": 1,\n            \"is_avc\": \"true\",\n            \"nal_length_size\": \"4\",\n            \"id\": \"0x1\",\n            \"r_frame_rate\": \"25/1\",\n            \"avg_frame_rate\": \"25/1\",\n            \"time_base\": \"1/12800\",\n            \"start_pts\": 0,\n            \"start_time\": \"0.000000\",\n            \"duration_ts\": 67584,\n            \"duration\": \"5.280000\",\n            \"bit_rate\": \"1205959\",\n            \"bits_per_raw_sample\": \"8\",\n            \"nb_frames\": \"132\",\n            \"extradata_size\": 38,\n            \"disposition\": {\n                \"default\": 1,\n                \"dub\": 0,\n                \"original\": 0,\n                \"comment\": 0,\n                \"lyrics\": 0,\n                \"karaoke\": 0,\n                \"forced\": 0,\n                \"hearing_impaired\": 0,\n                \"visual_impaired\": 0,\n                \"clean_effects\": 0,\n                \"attached_pic\": 0,\n                \"timed_thumbnails\": 0,\n                \"non_diegetic\": 0,\n                \"captions\": 0,\n                \"descriptions\": 0,\n                \"metadata\": 0,\n                \"dependent\": 0,\n                \"still_image\": 0,\n                \"multilayer\": 0\n            },\n            \"tags\": {\n                \"creation_time\": \"1970-01-01T00:00:00.000000Z\",\n                \"language\": \"und\",\n                \"handler_name\": \"VideoHandler\",\n                \"vendor_id\": \"[0][0][0][0]\"\n            }\n        },\n        {\n            \"index\": 1,\n            \"codec_name\": \"aac\",\n            \"codec_long_name\": \"AAC (Advanced Audio Coding)\",\n            \"profile\": \"LC\",\n            \"codec_type\": \"audio\",\n            \"codec_tag_string\": \"mp4a\",\n            \"codec_tag\": \"0x6134706d\",\n            \"sample_fmt\": \"fltp\",\n            \"sample_rate\": \"48000\",\n            \"channels\": 6,\n            \"channel_layout\": \"5.1\",\n            \"bits_per_sample\": 0,\n            \"initial_padding\": 0,\n            \"id\": \"0x2\",\n            \"r_frame_rate\": \"0/0\",\n            \"avg_frame_rate\": \"0/0\",\n            \"time_base\": \"1/48000\",\n            \"start_pts\": 0,\n            \"start_time\": \"0.000000\",\n            \"duration_ts\": 254976,\n            \"duration\": \"5.312000\",\n            \"bit_rate\": \"384828\",\n            \"nb_frames\": \"249\",\n            \"extradata_size\": 2,\n            \"disposition\": {\n                \"default\": 1,\n                \"dub\": 0,\n                \"original\": 0,\n                \"comment\": 0,\n                \"lyrics\": 0,\n                \"karaoke\": 0,\n                \"forced\": 0,\n                \"hearing_impaired\": 0,\n                \"visual_impaired\": 0,\n                \"clean_effects\": 0,\n                \"attached_pic\": 0,\n                \"timed_thumbnails\": 0,\n                \"non_diegetic\": 0,\n                \"captions\": 0,\n                \"descriptions\": 0,\n                \"metadata\": 0,\n                \"dependent\": 0,\n                \"still_image\": 0,\n                \"multilayer\": 0\n            },\n            \"tags\": {\n                \"creation_time\": \"1970-01-01T00:00:00.000000Z\",\n                \"language\": \"und\",\n                \"handler_name\": \"SoundHandler\",\n                \"vendor_id\": \"[0][0][0][0]\"\n            }\n        }\n    ],\n    \"format\": {\n        \"filename\": \"/Users/ubermeatshield/code/contented/mocks/content/test_encoding/SampleVideo_1280x720_1mb.mp4\",\n        \"nb_streams\": 2,\n        \"nb_programs\": 0,\n        \"nb_stream_groups\": 0,\n        \"format_name\": \"mov,mp4,m4a,3gp,3g2,mj2\",\n        \"format_long_name\": \"QuickTime / MOV\",\n        \"start_time\": \"0.000000\",\n        \"duration\": \"5.312000\",\n        \"size\": \"1055736\",\n        \"bit_rate\": \"1589963\",\n        \"probe_score\": 100,\n        \"tags\": {\n            \"major_brand\": \"isom\",\n            \"minor_version\": \"512\",\n            \"compatible_brands\": \"isomiso2avc1mp41\",\n            \"creation_time\": \"1970-01-01T00:00:00.000000Z\",\n            \"encoder\": \"Lavf53.24.2\"\n        }\n    }\n}\n",
+      "duration": 5.312,
+      "screens": null,
+      "container_id": 7,
+      "encoding": "h264",
+      "duplicate": false
+    },
+    {
+      "id": 38,
+      "created_at": "0001-01-01T00:00:00Z",
+      "updated": "2025-04-06T10:44:30.990631-04:00",
+      "DeletedAt": null,
+      "src": "donut_[special( gunk.mp4",
+      "content_type": "video/mp4",
+      "preview": "/container_previews/donut_[special( gunk.mp4.webp",
+      "idx": 2,
       "active": false,
       "corrupt": false,
       "size": 18401008,
       "description": "",
-      "screens": [
+      "no_file": false,
+      "meta": "{\n    \"streams\": [\n        {\n            \"index\": 0,\n            \"codec_name\": \"h264\",\n            \"codec_long_name\": \"H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10\",\n            \"profile\": \"High\",\n            \"codec_type\": \"video\",\n            \"codec_tag_string\": \"avc1\",\n            \"codec_tag\": \"0x31637661\",\n            \"width\": 4096,\n            \"height\": 2160,\n            \"coded_width\": 4096,\n            \"coded_height\": 2160,\n            \"closed_captions\": 0,\n            \"film_grain\": 0,\n            \"has_b_frames\": 2,\n            \"pix_fmt\": \"yuv420p\",\n            \"level\": 52,\n            \"color_range\": \"tv\",\n            \"color_space\": \"bt709\",\n            \"color_transfer\": \"bt709\",\n            \"color_primaries\": \"bt709\",\n            \"chroma_location\": \"left\",\n            \"field_order\": \"progressive\",\n            \"refs\": 1,\n            \"is_avc\": \"true\",\n            \"nal_length_size\": \"4\",\n            \"id\": \"0x1\",\n            \"r_frame_rate\": \"25/1\",\n            \"avg_frame_rate\": \"25/1\",\n            \"time_base\": \"1/25\",\n            \"start_pts\": 0,\n            \"start_time\": \"0.000000\",\n            \"duration_ts\": 252,\n            \"duration\": \"10.080000\",\n            \"bit_rate\": \"14600695\",\n            \"bits_per_raw_sample\": \"8\",\n            \"nb_frames\": \"252\",\n            \"extradata_size\": 48,\n            \"disposition\": {\n                \"default\": 1,\n                \"dub\": 0,\n                \"original\": 0,\n                \"comment\": 0,\n                \"lyrics\": 0,\n                \"karaoke\": 0,\n                \"forced\": 0,\n                \"hearing_impaired\": 0,\n                \"visual_impaired\": 0,\n                \"clean_effects\": 0,\n                \"attached_pic\": 0,\n                \"timed_thumbnails\": 0,\n                \"non_diegetic\": 0,\n                \"captions\": 0,\n                \"descriptions\": 0,\n                \"metadata\": 0,\n                \"dependent\": 0,\n                \"still_image\": 0,\n                \"multilayer\": 0\n            },\n            \"tags\": {\n                \"creation_time\": \"2020-06-18T17:12:26.000000Z\",\n                \"language\": \"und\",\n                \"handler_name\": \"L-SMASH Video Handler\",\n                \"vendor_id\": \"[0][0][0][0]\",\n                \"encoder\": \"AVC Coding\"\n            }\n        }\n    ],\n    \"format\": {\n        \"filename\": \"/Users/ubermeatshield/code/contented/mocks/content/dir2/donut_[special( gunk.mp4\",\n        \"nb_streams\": 1,\n        \"nb_programs\": 0,\n        \"nb_stream_groups\": 0,\n        \"format_name\": \"mov,mp4,m4a,3gp,3g2,mj2\",\n        \"format_long_name\": \"QuickTime / MOV\",\n        \"start_time\": \"0.000000\",\n        \"duration\": \"10.080000\",\n        \"size\": \"18401008\",\n        \"bit_rate\": \"14603974\",\n        \"probe_score\": 100,\n        \"tags\": {\n            \"major_brand\": \"mp42\",\n            \"minor_version\": \"0\",\n            \"compatible_brands\": \"mp42mp41isomavc1\",\n            \"creation_time\": \"2020-06-18T17:12:26.000000Z\"\n        }\n    }\n}\n",
+      "duration": 10.08,
+      "screens": null,
+      "container_id": 3,
+      "tags": [
         {
-          "id": "990da5e0-33be-4661-b6cc-1312c5e9f406",
-          "content_id": "12bdbae5-5644-4b61-8ab9-97dc2f3206ca",
-          "created": "0001-01-01T00:00:00Z",
-          "updated": "0001-01-01T00:00:00Z",
-          "src": "donut.mp4.screens.ss00000.jpg",
-          "idx": 0,
-          "size": 173166
-        },
-        {
-          "id": "6ee5a66a-4b3e-4947-9360-c9ef5bd11895",
-          "content_id": "12bdbae5-5644-4b61-8ab9-97dc2f3206ca",
-          "created": "0001-01-01T00:00:00Z",
-          "updated": "0001-01-01T00:00:00Z",
-          "src": "donut.mp4.screens.ss00001.jpg",
-          "idx": 1,
-          "size": 189305
-        },
-        {
-          "id": "725b4e14-a1c8-4fdf-87a5-deb33723da78",
-          "content_id": "12bdbae5-5644-4b61-8ab9-97dc2f3206ca",
-          "created": "0001-01-01T00:00:00Z",
-          "updated": "0001-01-01T00:00:00Z",
-          "src": "donut.mp4.screens.ss00002.jpg",
-          "idx": 2,
-          "size": 202015
-        },
-        {
-          "id": "3decd312-83cf-48d0-9312-be57f75122c7",
-          "content_id": "12bdbae5-5644-4b61-8ab9-97dc2f3206ca",
-          "created": "0001-01-01T00:00:00Z",
-          "updated": "0001-01-01T00:00:00Z",
-          "src": "donut.mp4.screens.ss00003.jpg",
-          "idx": 3,
-          "size": 205342
-        },
-        {
-          "id": "42dcd26f-edbf-45aa-be35-723dfcebdc81",
-          "content_id": "12bdbae5-5644-4b61-8ab9-97dc2f3206ca",
-          "created": "0001-01-01T00:00:00Z",
-          "updated": "0001-01-01T00:00:00Z",
-          "src": "donut.mp4.screens.ss00004.jpg",
-          "idx": 4,
-          "size": 207010
+          "id": "ci",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "DeletedAt": null,
+          "description": "",
+          "tag_type": "keywords"
         }
       ],
-      "encoding": ""
+      "encoding": "h264",
+      "duplicate": false
     },
     {
-      "id": "c29f7cb8-1573-425d-b79a-52a47e02cdf4",
-      "created": "0001-01-01T00:00:00Z",
+      "id": 80,
+      "created_at": "0001-01-01T00:00:00Z",
       "updated": "0001-01-01T00:00:00Z",
-      "src": "Microscope_5__Scientist__Videvo_preview.mp4",
+      "DeletedAt": null,
+      "src": "SampleVideo_1280x720_1mb_h265.mp4",
       "content_type": "video/mp4",
-      "preview": "/container_previews/Microscope_5__Scientist__Videvo_preview.mp4.webp",
-      "container_id": "fdd3e087-f227-458d-b534-bedb8daec432",
-      "idx": 1,
+      "preview": "",
+      "idx": 2,
       "active": false,
       "corrupt": false,
-      "size": 7366206,
+      "size": 717019,
       "description": "",
-      "screens": [
-        {
-          "id": "b5731e14-2052-41c8-89f6-47187c847fe1",
-          "content_id": "c29f7cb8-1573-425d-b79a-52a47e02cdf4",
-          "created": "0001-01-01T00:00:00Z",
-          "updated": "0001-01-01T00:00:00Z",
-          "src": "Microscope_5__Scientist__Videvo_preview.mp4.screens.ss00000.jpg",
-          "idx": 13,
-          "size": 22923
-        },
-        {
-          "id": "ada214bc-4e35-48d0-b607-815fd739f994",
-          "content_id": "c29f7cb8-1573-425d-b79a-52a47e02cdf4",
-          "created": "0001-01-01T00:00:00Z",
-          "updated": "0001-01-01T00:00:00Z",
-          "src": "Microscope_5__Scientist__Videvo_preview.mp4.screens.ss00001.jpg",
-          "idx": 14,
-          "size": 24918
-        },
-        {
-          "id": "250c210a-8064-418e-817d-b0e7b200806a",
-          "content_id": "c29f7cb8-1573-425d-b79a-52a47e02cdf4",
-          "created": "0001-01-01T00:00:00Z",
-          "updated": "0001-01-01T00:00:00Z",
-          "src": "Microscope_5__Scientist__Videvo_preview.mp4.screens.ss00002.jpg",
-          "idx": 15,
-          "size": 28396
-        },
-        {
-          "id": "a9182fba-a53e-4afd-aeac-cfc9510063af",
-          "content_id": "c29f7cb8-1573-425d-b79a-52a47e02cdf4",
-          "created": "0001-01-01T00:00:00Z",
-          "updated": "0001-01-01T00:00:00Z",
-          "src": "Microscope_5__Scientist__Videvo_preview.mp4.screens.ss00003.jpg",
-          "idx": 16,
-          "size": 28867
-        },
-        {
-          "id": "8db5a374-4a64-4394-8e4e-4741b50d12db",
-          "content_id": "c29f7cb8-1573-425d-b79a-52a47e02cdf4",
-          "created": "0001-01-01T00:00:00Z",
-          "updated": "0001-01-01T00:00:00Z",
-          "src": "Microscope_5__Scientist__Videvo_preview.mp4.screens.ss00004.jpg",
-          "idx": 17,
-          "size": 30334
-        },
-        {
-          "id": "a92bda85-f649-4f2a-9e3f-949e33e52d56",
-          "content_id": "c29f7cb8-1573-425d-b79a-52a47e02cdf4",
-          "created": "0001-01-01T00:00:00Z",
-          "updated": "0001-01-01T00:00:00Z",
-          "src": "Microscope_5__Scientist__Videvo_preview.mp4.screens.ss00005.jpg",
-          "idx": 18,
-          "size": 27239
-        },
-        {
-          "id": "07cdca1c-ea74-43b3-a7df-c6d0f28f8e5e",
-          "content_id": "c29f7cb8-1573-425d-b79a-52a47e02cdf4",
-          "created": "0001-01-01T00:00:00Z",
-          "updated": "0001-01-01T00:00:00Z",
-          "src": "Microscope_5__Scientist__Videvo_preview.mp4.screens.ss00006.jpg",
-          "idx": 19,
-          "size": 24797
-        },
-        {
-          "id": "c73ec05c-5a4e-4518-ac96-14ff8b86e693",
-          "content_id": "c29f7cb8-1573-425d-b79a-52a47e02cdf4",
-          "created": "0001-01-01T00:00:00Z",
-          "updated": "0001-01-01T00:00:00Z",
-          "src": "Microscope_5__Scientist__Videvo_preview.mp4.screens.ss00007.jpg",
-          "idx": 20,
-          "size": 24767
-        }
-      ],
-      "encoding": ""
-    },
-    {
-      "id": "f6eac974-dc55-43b8-b617-82dfab29bb32",
-      "created": "0001-01-01T00:00:00Z",
-      "updated": "0001-01-01T00:00:00Z",
-      "src": "young_chemist.mp4",
-      "content_type": "video/mp4",
-      "preview": "/container_previews/young_chemist.mp4.webp",
-      "container_id": "fdd3e087-f227-458d-b534-bedb8daec432",
-      "idx": 10,
-      "active": false,
-      "corrupt": false,
-      "size": 4246064,
-      "description": "",
-      "screens": [
-        {
-          "id": "f06b13bf-8880-44ff-9e10-6afb6dba88d6",
-          "content_id": "f6eac974-dc55-43b8-b617-82dfab29bb32",
-          "created": "0001-01-01T00:00:00Z",
-          "updated": "0001-01-01T00:00:00Z",
-          "src": "young_chemist.mp4.screens.ss00001.jpg",
-          "idx": 23,
-          "size": 30871
-        }
-      ],
-      "encoding": ""
+      "no_file": false,
+      "meta": "{\n    \"streams\": [\n        {\n            \"index\": 0,\n            \"codec_name\": \"hevc\",\n            \"codec_long_name\": \"H.265 / HEVC (High Efficiency Video Coding)\",\n            \"profile\": \"Main\",\n            \"codec_type\": \"video\",\n            \"codec_tag_string\": \"hvc1\",\n            \"codec_tag\": \"0x31637668\",\n            \"width\": 1280,\n            \"height\": 720,\n            \"coded_width\": 1280,\n            \"coded_height\": 720,\n            \"closed_captions\": 0,\n            \"film_grain\": 0,\n            \"has_b_frames\": 2,\n            \"sample_aspect_ratio\": \"1:1\",\n            \"display_aspect_ratio\": \"16:9\",\n            \"pix_fmt\": \"yuv420p\",\n            \"level\": 93,\n            \"color_range\": \"tv\",\n            \"chroma_location\": \"left\",\n            \"field_order\": \"progressive\",\n            \"refs\": 1,\n            \"view_ids_available\": \"\",\n            \"view_pos_available\": \"\",\n            \"id\": \"0x1\",\n            \"r_frame_rate\": \"25/1\",\n            \"avg_frame_rate\": \"25/1\",\n            \"time_base\": \"1/12800\",\n            \"start_pts\": 0,\n            \"start_time\": \"0.000000\",\n            \"duration_ts\": 67584,\n            \"duration\": \"5.280000\",\n            \"bit_rate\": \"724062\",\n            \"nb_frames\": \"132\",\n            \"extradata_size\": 2453,\n            \"disposition\": {\n                \"default\": 1,\n                \"dub\": 0,\n                \"original\": 0,\n                \"comment\": 0,\n                \"lyrics\": 0,\n                \"karaoke\": 0,\n                \"forced\": 0,\n                \"hearing_impaired\": 0,\n                \"visual_impaired\": 0,\n                \"clean_effects\": 0,\n                \"attached_pic\": 0,\n                \"timed_thumbnails\": 0,\n                \"non_diegetic\": 0,\n                \"captions\": 0,\n                \"descriptions\": 0,\n                \"metadata\": 0,\n                \"dependent\": 0,\n                \"still_image\": 0,\n                \"multilayer\": 0\n            },\n            \"tags\": {\n                \"language\": \"und\",\n                \"handler_name\": \"VideoHandler\",\n                \"vendor_id\": \"[0][0][0][0]\",\n                \"encoder\": \"Lavc60.3.100 libx265\"\n            }\n        },\n        {\n            \"index\": 1,\n            \"codec_name\": \"aac\",\n            \"codec_long_name\": \"AAC (Advanced Audio Coding)\",\n            \"profile\": \"LC\",\n            \"codec_type\": \"audio\",\n            \"codec_tag_string\": \"mp4a\",\n            \"codec_tag\": \"0x6134706d\",\n            \"sample_fmt\": \"fltp\",\n            \"sample_rate\": \"48000\",\n            \"channels\": 6,\n            \"channel_layout\": \"5.1\",\n            \"bits_per_sample\": 0,\n            \"initial_padding\": 0,\n            \"id\": \"0x2\",\n            \"r_frame_rate\": \"0/0\",\n            \"avg_frame_rate\": \"0/0\",\n            \"time_base\": \"1/48000\",\n            \"start_pts\": 0,\n            \"start_time\": \"0.000000\",\n            \"duration_ts\": 254976,\n            \"duration\": \"5.312000\",\n            \"bit_rate\": \"346785\",\n            \"nb_frames\": \"250\",\n            \"extradata_size\": 5,\n            \"disposition\": {\n                \"default\": 1,\n                \"dub\": 0,\n                \"original\": 0,\n                \"comment\": 0,\n                \"lyrics\": 0,\n                \"karaoke\": 0,\n                \"forced\": 0,\n                \"hearing_impaired\": 0,\n                \"visual_impaired\": 0,\n                \"clean_effects\": 0,\n                \"attached_pic\": 0,\n                \"timed_thumbnails\": 0,\n                \"non_diegetic\": 0,\n                \"captions\": 0,\n                \"descriptions\": 0,\n                \"metadata\": 0,\n                \"dependent\": 0,\n                \"still_image\": 0,\n                \"multilayer\": 0\n            },\n            \"tags\": {\n                \"language\": \"und\",\n                \"handler_name\": \"SoundHandler\",\n                \"vendor_id\": \"[0][0][0][0]\"\n            }\n        }\n    ],\n    \"format\": {\n        \"filename\": \"/Users/ubermeatshield/code/contented/mocks/content/test_encoding/SampleVideo_1280x720_1mb_h265.mp4\",\n        \"nb_streams\": 2,\n        \"nb_programs\": 0,\n        \"nb_stream_groups\": 0,\n        \"format_name\": \"mov,mp4,m4a,3gp,3g2,mj2\",\n        \"format_long_name\": \"QuickTime / MOV\",\n        \"start_time\": \"0.000000\",\n        \"duration\": \"5.312000\",\n        \"size\": \"717019\",\n        \"bit_rate\": \"1079847\",\n        \"probe_score\": 100,\n        \"tags\": {\n            \"major_brand\": \"isom\",\n            \"minor_version\": \"512\",\n            \"compatible_brands\": \"isomiso2mp41\",\n            \"encoder\": \"Lavf60.3.100\"\n        }\n    }\n}\n",
+      "duration": 5.312,
+      "screens": null,
+      "container_id": 7,
+      "encoding": "hevc",
+      "duplicate": false
     }
   ]
 }

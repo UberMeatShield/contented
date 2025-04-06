@@ -168,7 +168,7 @@ describe('TestingContentBrowserCmp', () => {
 
     let cnt: Container = comp.getCurrentContainer();
     expect(cnt).not.toBe(null);
-    cnt.contents = []
+    cnt.contents = [];
     cnt.total = 4;
     cnt.count = 0;
 

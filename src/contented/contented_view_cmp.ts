@@ -33,7 +33,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
 
   public shouldIgnoreEvt(content: Content) {
     if (this.restrictContentId > 0) {
-      if (!content || content.id !== this.restrictContentId, 10) {
+      if ((!content || content.id !== this.restrictContentId, 10)) {
         return null;
       }
     }

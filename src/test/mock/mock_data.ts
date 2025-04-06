@@ -140,7 +140,7 @@ class MockLoader {
   }
 
   public getImg() {
-    let img = _.clone(contentResult).results.find((m) => m.content_type === 'image/png');
+    let img = _.clone(contentResult).results.find(m => m.content_type === 'image/png');
     return new Content(img);
   }
 

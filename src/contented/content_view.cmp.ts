@@ -30,7 +30,7 @@ export class ContentViewCmp implements OnInit {
   public ngOnInit() {
     this.route.paramMap.pipe().subscribe({
       next: (res: ParamMap) => {
-        const contentID = parseInt(res.get('id') || "0", 10);
+        const contentID = parseInt(res.get('id') || '0', 10);
         if (contentID) {
           this.loadContent(contentID);
         }

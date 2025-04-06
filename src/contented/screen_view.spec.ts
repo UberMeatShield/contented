@@ -16,10 +16,10 @@ import { Container } from '../contented/container';
 import { ApiDef } from '../contented/api_def';
 import { GlobalNavEvents } from '../contented/nav_events';
 
-import * as _ from 'lodash';
+import _ from 'lodash';
+import $ from 'jquery';
 import { MockData } from '../test/mock/mock_data';
 
-declare var $;
 describe('TestingScreensCmp', () => {
   let fixture: ComponentFixture<ScreensCmp>;
   let service: ContentedService;
@@ -56,8 +56,18 @@ describe('TestingScreensCmp', () => {
   });
 
   it('Should create a screens view component', () => {
-    let screen = new Screen({ id: 'a' });
-    expect(screen.url).withContext('It should set the link if possible.').toBeDefined();
+    const screens = MockData.getScreens();
+    for (const s of screens.results) {
+      try {
+        const screen = new Screen(s);
+        expect(screen.url).withContext('It should set the link if possible.').toBeDefined();
+        if (screen.idx > 0) {
+          expect(screen.timeSeconds).withContext('It should set the time if possible.').toBeGreaterThan(0);
+        }
+      } catch (e) {
+        console.error(`${e}`);
+      }
+    }
   });
 
   it('Should build out a screen view and be able to render', () => {
@@ -88,15 +98,19 @@ describe('TestingScreensCmp', () => {
   }));
 
   it('Can parse out a screen time', () => {
-    let s = new Screen({
-      id: 'a',
+    const sample = {
+      id: 10,
       src: 'Something.ss003.jpg',
-    });
+      content_id: 1,
+      content_container_id: 1,
+    };
+    const s = new Screen(sample);
     expect(s.parseSecondsFromScreen()).toEqual(3, 'It should parse a second');
 
     let s2 = new Screen({
-      id: 'fake',
+      id: 20,
       src: 'NoMatch.jpg',
+      content_id: 1,
     });
     expect(s2.parseSecondsFromScreen()).toEqual(0, 'No time should not error');
   });

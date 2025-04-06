@@ -66,7 +66,7 @@ export class EditorContentCmp implements OnInit {
           console.log('Reloading content');
           this.content = null; // Changing the
 
-          const id = map.get('id') || "0";
+          const id = map.get('id') || '0';
           const contentId = parseInt(id, 10);
           if (contentId) {
             this.loadContent(contentId);

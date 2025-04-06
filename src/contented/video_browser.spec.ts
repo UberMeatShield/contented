@@ -79,7 +79,7 @@ describe('TestingVideoBrowserCmp', () => {
     expect($('.video-view-card').length).toEqual(searchResults.results.length);
 
     for (const content of searchResults.results) {
-      let screenUrl = ApiDef.contented.contentScreens.replace('{mcID}', content.id);
+      let screenUrl = ApiDef.contented.contentScreens.replace('{mcID}', content.id.toString());
       let screenReq = httpMock.expectOne(req => req.url.includes(screenUrl));
       screenReq.flush(MockData.getScreens());
     }
@@ -102,7 +102,7 @@ describe('TestingVideoBrowserCmp', () => {
     harness.detectChanges();
 
     _.each(vRes.results, content => {
-      let screenUrl = ApiDef.contented.contentScreens.replace('{mcID}', content.id);
+      let screenUrl = ApiDef.contented.contentScreens.replace('{mcID}', content.id.toString());
       let screenReq = httpMock.expectOne(req => req.url.includes(screenUrl));
       screenReq.flush(MockData.getScreens());
     });

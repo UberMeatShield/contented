@@ -64,6 +64,14 @@ describe('TestingContainerNavCmp', () => {
     }
   });
 
+  function getRowIdx() {
+    const val = $('.cnt-row-idx').val();
+    if (typeof val === 'string') {
+      return parseInt(val, 10);
+    }
+    return 0;
+  }
+
   it('Should create a contented component', () => {
     expect(comp).toBeDefined('We should have the Contented comp');
     expect(el).toBeDefined('We should have a top level element');
@@ -98,19 +106,19 @@ describe('TestingContainerNavCmp', () => {
     expect(prevBtn.length).withContext('It should have a previous button').toEqual(1);
 
     let rowIdxOriginal = cnt.rowIdx;
-    expect(parseInt(rowIdx.val(), 10)).withContext('It should be on the first element').toEqual(rowIdxOriginal);
+    expect(getRowIdx()).withContext('It should be on the first element').toEqual(rowIdxOriginal);
     nextBtn.trigger('click');
     nextBtn.trigger('click');
     fixture.detectChanges();
     tick(100);
-    expect(parseInt(rowIdx.val(), 10))
+    expect(getRowIdx())
       .withContext('Now we should be on the next element')
       .toEqual(rowIdxOriginal + 2);
 
     prevBtn.trigger('click');
     fixture.detectChanges();
     tick(100);
-    expect(parseInt(rowIdx.val(), 10))
+    expect(getRowIdx())
       .withContext('It should go back one')
       .toEqual(rowIdxOriginal + 1);
   }));
