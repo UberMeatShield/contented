@@ -21,14 +21,35 @@ function formatSeconds(seconds: number): string {
   const s = seconds % 60;
   return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
-export class Screen extends Z.class({
+
+export const ScreenSchema = z.object({
   id: z.number(),
   src: z.string(),
   idx: z.number().default(0),
-  content_id: z.number(),
+  content_id: z.number().optional(),
   size_bytes: z.number().default(0),
   content_container_id: z.number().optional(),
-}) {
+})
+
+export type ScreenInterface = z.infer<typeof ScreenSchema>;
+
+export class Screen implements ScreenInterface {
+  id: number;
+  src: string;
+  idx: number = 0;
+  content_id?: number;
+  size_bytes: number;
+  content_container_id: number;
+
+  constructor(data: any = {}) {
+    this.update(data);
+  }
+
+  update(data: any = {}) {
+    const s = ScreenSchema.parse(data);
+    Object.assign(this, s);
+  }
+
   get timeSeconds() {
     return this.parseSecondsFromScreen() || 0;
   }

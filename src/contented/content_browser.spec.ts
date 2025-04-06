@@ -224,7 +224,7 @@ describe('TestingContentBrowserCmp', () => {
   }));
 
   it('Can handle rendering a text element into the page', waitForAsync(async () => {
-    let containerId = 'A';
+    let containerId = 3;
     let container = new Container({
       id: containerId,
       total: 1,
@@ -232,7 +232,7 @@ describe('TestingContentBrowserCmp', () => {
       contents: null,
     });
 
-    let contentId = 'textId';
+    let contentId = 42;
     let content = {
       id: contentId,
       content_type: 'text/plain; charset=utf-8',
@@ -251,7 +251,7 @@ describe('TestingContentBrowserCmp', () => {
     expect(comp.allCnts.length).toEqual(1);
     expect(comp.getVisibleContainers().length).toEqual(1);
 
-    let url = ApiDef.contented.containerContent.replace('{cId}', containerId);
+    let url = ApiDef.contented.containerContent.replace('{cId}', containerId.toString());
     const contentReq = httpMock.match(r => r.url.includes(url));
     contentReq.forEach(r => r.flush({ results: [content] }));
     harness.detectChanges();

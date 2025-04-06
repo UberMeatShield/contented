@@ -1,19 +1,32 @@
 import * as _ from 'lodash';
 import { ApiDef } from './api_def';
-import { Screen } from './screen';
+import { Screen, ScreenSchema } from './screen';
 
 import { z } from 'zod';
 import { Z } from 'zod-class';
 
 // Why does a TAG have an id?!?!  Because goBuffalo really likes the id field.
-export class Tag extends Z.class({
+export const TagSchema = z.object({
   id: z.string(),
-  tag_type: z.string(),
-}) {
+  tag_type: z.string().optional(),
+}) 
+export type TagInterface = z.infer<typeof TagSchema>;
+export class Tag implements TagInterface {
+  id: string;
+  tag_type: string;
+
+  constructor(data: any = {}) {
+    this.update(data);
+  }
+
+  update(data: any = {}) {
+    const s = TagSchema.parse(data);
+    Object.assign(this, s);
+  }
 
   isProblem() {
     let arr = this.id ? this.id.split(' ') : [this.id];
-    if (arr.length > 1) {
+    if (arr?.length > 1) {
       return true;
     }
     return false;
@@ -26,108 +39,25 @@ export interface VSCodeChange {
   force?: boolean;
 }
 
-export class Content {
-  public id: number;
-  public src: string;
-  public preview: string; // Name of the preview, if not set we do not have one.
-  public idx: number;
-  public description: string = '';
 
-  // Awkward that buffalo makes the API use container_id like the DB
-  // side of things and in url params by default.  So I guess mixed
-  // cases it is.
-  public content_type: string;
-  public container_id: string;
-  public size: number; // size in bytes
+/**
+ * I really don't like the duplication but the Zod Class implementation bails on some of this pretty hard
+ */
+export const VideoFormatSchema = z.object({
+  bit_rate: z.number(),
+  duration: z.number(),
+  filename: z.string(),
+  format_long_name: z.string(),
+  format_name: z.string(),
+  nb_programs: z.number(),
+  nb_streams: z.number(),
+  probe_score: z.number(),
+  size: z.number(),
+  start_time: z.number(),
+})
 
-  // Only defined currently on video
-  public encoding: string | undefined;
-  public previewUrl: string;
-  public fullUrl: string;
-  public screens: Array<Screen>;
-  public tags: Array<Tag>;
-  public meta: string;
-
-  public fullText: string | undefined = undefined;
-  public videoInfo?: VideoCodecInfo;
-
-  public created_at: Date;
-  public updated_at: Date;
-
-  public duplicate: boolean = false;
-
-  constructor(obj: any = {}) {
-    this.fromJson(obj);
-  }
-
-  public fromJson(raw: any) {
-    if (raw) {
-      this.update(raw);
-    }
-  }
-
-  public update(raw: any) {
-    Object.assign(this, raw);
-    this.links();
-    this.screens = _.map(raw.screens, s => new Screen(s));
-
-    this.created_at = new Date(this.created_at);
-    this.updated_at = new Date(this.updated_at);
-
-    if (this.isVideo()) {
-      this.getVideoInfo();
-    }
-  }
-
-  public isImage() {
-    return this.content_type ? !!this.content_type.match('image') : false;
-  }
-
-  public isVideo() {
-    return this.content_type ? !!this.content_type.match('video') : false;
-  }
-
-  public isText() {
-    return this.content_type ? !!this.content_type.match('text') : false;
-  }
-
-  getVideoInfo() {
-    if (!this.videoInfo) {
-      if (this.isVideo() && this.meta) {
-        try {
-          let ffmpegProbe = JSON.parse(this.meta);
-          this.videoInfo = new VideoCodecInfo(ffmpegProbe);
-        } catch (e) {
-          console.error('Failed to parse video meta for ', this.id, e);
-        }
-      }
-    }
-    return this.videoInfo;
-  }
-
-  // Images will just work as a preview source, but video (with no preview) and
-  // text and zips etc should use a content_type based style preview.  This prevents
-  // broken image links when no previews are found for these types.
-  public shouldUseTypedPreview() {
-    if (_.isEmpty(this.preview)) {
-      if (this.isImage()) {
-        return ''; // image we can just display the image (maybe large)
-      } else if (this.isVideo()) {
-        return 'videocam'; // material icon
-      } else if (this.isText()) {
-        return 'article'; // material icon
-      }
-    }
-    return '';
-  }
-
-  public links() {
-    this.previewUrl = `${ApiDef.contented.preview}${this.id}`;
-    this.fullUrl = `${ApiDef.contented.view}${this.id}`;
-  }
-}
-
-class VideoFormat {
+export type VideoFormatInterface = z.infer<typeof VideoFormatSchema>;
+export class VideoFormat implements VideoFormatInterface {
   bit_rate: number;
   duration: number;
   filename: string;
@@ -139,16 +69,33 @@ class VideoFormat {
   size: number;
   start_time: number;
 
-  constructor(obj: any) {
-    Object.assign(this, obj); // Lazy start...
-
+  get durationSeconds(): number  {
     if (!isNaN(this.duration)) {
-      this.duration = Math.floor(this.duration);
+      return Math.floor(this.duration);
     }
+    return 0;
   }
 }
 
-class VideoStream {
+
+export const VideoStreamSchema = z.object({
+  avg_frame_rate: z.string(),
+  bit_rate: z.number(),
+  bits_per_raw_sample: z.number(),
+  chroma_location: z.string(),
+  closed_captions: z.number(),
+  codec_long_name: z.string(),
+  codec_name: z.string(),
+  codec_tag: z.string(),
+  codec_tag_string: z.string(),
+  codec_type: z.string(),
+  coded_height: z.number(),
+  coded_width: z.number(),
+  duration: z.number(),
+})
+
+export type VideoStreamInterface = z.infer<typeof VideoStreamSchema>;
+export class VideoStream implements VideoStreamInterface {
   avg_frame_rate: string;
   bit_rate: number;
   bits_per_raw_sample: number;
@@ -163,22 +110,39 @@ class VideoStream {
   coded_width: number;
   duration: number;
 
-  constructor(obj: any) {
-    Object.assign(this, obj); // lazy
+  constructor(data: any = {}) {
+    this.update(data);
+  }
+
+  update(data: any = {}) {
+    const s = VideoStreamSchema.parse(data);
+    Object.assign(this, s);
   }
 }
 
 // Represents some of the encoding that comes back from ffmpeg probe
-export class VideoCodecInfo {
+export const VideoCodecInfoSchema = z.object({
+  format: VideoFormatSchema,
+  streams: VideoStreamSchema.array().optional(),
+})
+export type VideoCodecInfoInterface = z.infer<typeof VideoCodecInfoSchema>;
+
+
+export class VideoCodecInfo implements VideoCodecInfoInterface {
   format: VideoFormat;
-  streams: Array<VideoStream>;
+  streams: VideoStreamInterface[];
 
-  public CanEncode: boolean = false;
+  constructor(data: any = {}) {
+    this.update(data);
+  }
 
-  constructor(obj: any) {
-    this.format = new VideoFormat(_.get(obj, 'format'));
-    this.streams = _.map(_.get(obj, 'streams'), s => new VideoStream(s));
-    this.CanEncode = this.getVideoCodecName() !== 'hevc';
+  update(data: any = {}) {
+    const s = VideoCodecInfoSchema.parse(data);
+    Object.assign(this, s);
+  }
+
+  get CanEncode() {
+    return this.getVideoCodecName() !== 'hevc';
   }
 
   getVideoStream() {
@@ -196,5 +160,137 @@ export class VideoCodecInfo {
   getVideoCodecName() {
     const stream = this.getVideoStream();
     return stream?.codec_name || '';
+  }
+}
+
+export const ContentSchema = z.object({
+  id: z.number(),
+  src: z.string(),
+  preview: z.string(), // Name of the preview, if not set we do not have one.
+  idx: z.number(),
+  description: z.string(),
+
+  content_type: z.string().optional(),
+  container_id: z.number().optional(),
+  size: z.number().default(0).optional(), // size in bytes
+
+  // Only defined currently on video
+  encoding: z.string().optional(),
+  screens: ScreenSchema.array().default([]).optional(),
+  tags: TagSchema.array().default([]).optional(),
+  meta: z.string().nullable().optional(),
+  fullText: z.string().default("").optional(),
+
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+  duplicate: z.boolean().default(false),
+})
+
+export type ContentInterface = z.infer<typeof ContentSchema>;
+
+export class Content implements ContentInterface {
+  id: number;
+  src: string;
+  preview: string;
+  idx: number;
+  description: string;
+  content_type: string;
+  container_id: number;
+  size: number;
+  encoding: string;
+  screens: Screen[];
+  tags: Tag[];
+  meta: string;
+  fullText: string;
+
+  created_at: string;
+  updated_at: string;
+  duplicate: boolean;
+
+
+  // Implemented
+  videoInfoParsed: VideoCodecInfo;
+
+  constructor(data: any = {}) {
+    this.update(data);
+  }
+
+  update(data: any = {}) {
+    const s = ContentSchema.parse(data);
+    Object.assign(this, s);
+
+    this.screens = (this.screens || []).map(screen => new Screen(screen));
+    this.tags = (this.tags || []).map(tag => new Tag(tag));
+
+    if (this.isVideo() && this.meta) {
+      this.videoInfoParsed = this.getVideoInfo();
+    }
+  }
+
+  get createdAt() {
+    if (this.created_at) {
+      return new Date(this.created_at);
+    }
+    return undefined;
+  }
+
+  get updatedAt() {
+    if (this.updated_at) {
+      return new Date(this.updated_at);
+    }
+  }
+
+  get previewUrl() {
+    return `${ApiDef.contented.preview}${this.id}`;
+  }
+
+  get fullUrl() {
+    return `${ApiDef.contented.view}${this.id}`;
+  }
+
+  get videoInfo(): VideoCodecInfo | undefined {
+    return this.getVideoInfo();
+  }
+
+  public isImage() {
+    return this.content_type ? !!this.content_type.match('image') : false;
+  }
+
+  public isVideo() {
+    return this.content_type ? !!this.content_type.match('video') : false;
+  }
+
+  public isText() {
+    return this.content_type ? !!this.content_type.match('text') : false;
+  }
+
+  getVideoInfo() {
+    if (!this.videoInfoParsed) {
+      if (this.isVideo() && this.meta) {
+        try {
+          let ffmpegProbe = JSON.parse(this.meta);
+          this.videoInfoParsed = new VideoCodecInfo(ffmpegProbe);
+        } catch (e) {
+          console.error('Failed to parse video meta for ', this.id, e);
+        }
+      }
+    }
+    return this.videoInfoParsed;
+  }
+
+  // Images will just work as a preview source, but video (with no preview) and
+  // text and zips etc should use a content_type based style preview.  This prevents
+  // broken image links when no previews are found for these types.
+  public shouldUseTypedPreview() {
+    if (_.isEmpty(this.preview)) {
+      if (this.isImage()) {
+        return ''; // image we can just display the image (maybe large)
+      } else if (this.isVideo()) {
+        return 'videocam'; // material icon
+      } else if (this.isText()) {
+        return 'article'; // material icon
+      }
+    }
+    return '';
   }
 }

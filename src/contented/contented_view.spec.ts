@@ -123,10 +123,10 @@ describe('TestingContentedViewCmp', () => {
   }));
 
   it('Should have a video in the case of a video, image for image', () => {
-    let video = new Content({ content_type: 'video/mp4', fullUrl: 'cthulhu' });
+    let video = new Content({ content_type: 'video/mp4', id: 42});
     let img = new Content({
       content_type: 'image/jpeg',
-      fullUrl: 'cat/pics.jpg',
+      id: 43,
     });
 
     comp.visible = true;

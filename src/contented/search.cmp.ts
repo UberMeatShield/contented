@@ -172,7 +172,7 @@ export class SearchCmp implements OnInit {
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: res => {
-          let content = _.map(res.results || [], m => new Content(m));
+          let content = res.results;
           let total = res['total'] || 0;
           // console.log("Search results", content, total);
           this.content = content;

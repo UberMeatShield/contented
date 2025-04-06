@@ -275,8 +275,8 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: res => {
-          let content = _.map(res.results, m => new Content(m));
-          let total = res['total'] || 0;
+          let content = res.results;
+          let total = res.total || 0;
 
           this.offset = offset;
           this.content = content;

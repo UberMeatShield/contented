@@ -1,6 +1,6 @@
 import { Observable, from as observableFrom } from 'rxjs';
 import { Container } from './../../contented/container';
-import { Content } from './../../contented/content';
+import { Content  } from './../../contented/content';
 import { ApiDef } from './../../contented/api_def';
 import * as _ from 'lodash';
 
@@ -85,7 +85,7 @@ class MockLoader {
 
   public getContentArr(container_id = null, total = null) {
     let cRes = this.getContent(container_id, total);
-    return _.map(cRes.results, r => new Content(r));
+    return _.map(cRes.results, r => new Content(r as any));
   }
 
   public getMockDir(count: number, itemPrefix: string = 'item-', offset: number = 0, total = 20) {
@@ -145,7 +145,8 @@ class MockLoader {
   }
 
   public getVideo(): Content {
-    return new Content(_.clone(videoContentResult));
+    const contentInfo = _.clone(videoContentResult);
+    return new Content(contentInfo);
   }
 }
 export let MockData = new MockLoader();

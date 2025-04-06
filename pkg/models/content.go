@@ -16,8 +16,8 @@ import (
 type Content struct {
 	ID        int64          `json:"id" gorm:"primaryKey"`
 	CreatedAt time.Time      `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time      `json:"updated" db:"updated_at"`
-	DeletedAt gorm.DeletedAt `gorm:"index" db:"deleted_at"`
+	UpdatedAt time.Time      `json:"updated_at" db:"updated_at"`
+	DeletedAt gorm.DeletedAt `json:"deleted_at" gorm:"index" db:"deleted_at"`
 
 	Src         string `json:"src" db:"src"`
 	ContentType string `json:"content_type" db:"content_type"`
@@ -36,7 +36,7 @@ type Content struct {
 
 	// Joins (Eager loading is not working?)
 
-	Screens     Screens `json:"screens" has_many:"preview_screens"`
+	Screens     Screens `json:"screens,omitempty" has_many:"preview_screens"`
 	ContainerID *int64  `json:"container_id" db:"container_id" gorm:"default:null"`
 
 	Tags Tags `json:"tags,omitempty" gorm:"many2many:contents_tags;"`

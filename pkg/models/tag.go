@@ -12,7 +12,7 @@ type Tag struct {
 	ID        string         `json:"id" db:"id" gorm:"primaryKey"`
 	CreatedAt time.Time      `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at" db:"updated_at"`
-	DeletedAt gorm.DeletedAt `gorm:"index" db:"deleted_at"`
+	DeletedAt gorm.DeletedAt `json:"deleted_at" gorm:"index" db:"deleted_at"`
 
 	Description string   `json:"description" db:"description" default:""`
 	TagType     string   `json:"tag_type" db:"tag_type" default:"keyword"`
