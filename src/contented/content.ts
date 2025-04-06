@@ -43,16 +43,16 @@ export interface VSCodeChange {
  * I really don't like the duplication but the Zod Class implementation bails on some of this pretty hard
  */
 export const VideoFormatSchema = z.object({
-  bit_rate: z.number(),
-  duration: z.number(),
+  bit_rate: z.coerce.number(),
+  duration: z.coerce.number(),
   filename: z.string(),
   format_long_name: z.string(),
   format_name: z.string(),
-  nb_programs: z.number(),
-  nb_streams: z.number(),
-  probe_score: z.number(),
-  size: z.number(),
-  start_time: z.number(),
+  nb_programs: z.coerce.number(),
+  nb_streams: z.coerce.number(),
+  probe_score: z.coerce.number(),
+  size: z.coerce.number(),
+  start_time: z.coerce.number(),
 })
 
 export type VideoFormatInterface = z.infer<typeof VideoFormatSchema>;
@@ -68,6 +68,15 @@ export class VideoFormat implements VideoFormatInterface {
   size: number;
   start_time: number;
 
+  constructor(data: any = {}) {
+    this.update(data);
+  }
+
+  update(data: any = {}) {
+    const s = VideoFormatSchema.parse(data);
+    Object.assign(this, s);
+  }
+
   get durationSeconds(): number  {
     if (!isNaN(this.duration)) {
       return Math.floor(this.duration);
@@ -79,18 +88,18 @@ export class VideoFormat implements VideoFormatInterface {
 
 export const VideoStreamSchema = z.object({
   avg_frame_rate: z.string(),
-  bit_rate: z.number(),
-  bits_per_raw_sample: z.number(),
+  bit_rate: z.coerce.number(),
+  bits_per_raw_sample: z.coerce.number(),
   chroma_location: z.string(),
-  closed_captions: z.number(),
+  closed_captions: z.coerce.number(),
   codec_long_name: z.string(),
   codec_name: z.string(),
   codec_tag: z.string(),
   codec_tag_string: z.string(),
   codec_type: z.string(),
-  coded_height: z.number(),
-  coded_width: z.number(),
-  duration: z.number(),
+  coded_height: z.coerce.number(),
+  coded_width: z.coerce.number(),
+  duration: z.coerce.number(),
 })
 
 export type VideoStreamInterface = z.infer<typeof VideoStreamSchema>;
@@ -138,6 +147,11 @@ export class VideoCodecInfo implements VideoCodecInfoInterface {
   update(data: any = {}) {
     const s = VideoCodecInfoSchema.parse(data);
     Object.assign(this, s);
+
+    if (s.format) {
+      this.format = new VideoFormat(s.format);
+    }
+    this.streams = (s.streams || []).map(stream => new VideoStream(stream));
   }
 
   get CanEncode() {
@@ -175,8 +189,8 @@ export const ContentSchema = z.object({
 
   // Only defined currently on video
   encoding: z.string().optional(),
-  screens: ScreenSchema.array().default([]).optional(),
-  tags: TagSchema.array().default([]).optional(),
+  screens: ScreenSchema.array().nullable().default([]).optional(),
+  tags: TagSchema.array().nullable().default([]).optional(),
   meta: z.string().nullable().optional(),
   fullText: z.string().default("").optional(),
 

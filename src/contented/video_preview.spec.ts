@@ -62,7 +62,7 @@ describe('TestingVideoPreviewCmp', () => {
 
     expect(content.shouldUseTypedPreview()).toEqual('videocam');
     expect(content.videoInfo).toBeDefined();
-    expect(content.videoInfo?.format?.duration).toEqual(10);
+    expect(content.videoInfo?.format?.durationSeconds).toEqual(10);
   });
 
   it('Should initialize the video preview component', () => {

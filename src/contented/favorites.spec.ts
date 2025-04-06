@@ -15,7 +15,7 @@ import { ApiDef } from './api_def';
 import { Content, Tag } from './content';
 import { z } from 'zod';
 
-fdescribe('FavoritesCmp', () => {
+describe('FavoritesCmp', () => {
   let comp: FavoritesCmp;
   let fixture: ComponentFixture<FavoritesCmp>;
 
@@ -49,7 +49,7 @@ fdescribe('FavoritesCmp', () => {
     expect(el).toBeDefined();
   }));
 
-  fit('Should be able to render a favorite', fakeAsync(() => {
+  it('Should be able to render a favorite', fakeAsync(() => {
     fixture.detectChanges();
     expect($('.preview-content-cmp').length).toBe(0);
 
@@ -62,16 +62,10 @@ fdescribe('FavoritesCmp', () => {
     expect($('.preview-content-cmp').length).toBe(1);
   }));
 
-  fit('Should be able to remove a favorite video', fakeAsync(() => {
-    try {
-       const content = MockData.getVideo();
-    } catch (e) {
-      expect(e.message).toBeUndefined();
-      console.error(e);
-    }
+  it('Should be able to remove a favorite video', fakeAsync(() => {
+    const content = MockData.getVideo();
 
 
-    /*
     getFavorites().addContents([content]);
     comp.container = getFavorites();
 
@@ -82,7 +76,6 @@ fdescribe('FavoritesCmp', () => {
     tick(100);
     fixture.detectChanges();
     expect($('.preview-content-cmp').length).toBe(0);
-    */
   }));
 
   it('Should be able to toggle duplicate', fakeAsync(() => {
