@@ -13,7 +13,7 @@ import { VSCodeEditorCmp } from './vscode_editor.cmp';
 import { TaskOperation, TaskRequest } from './task_request';
 import { GlobalBroadcast } from './global_message';
 import { Screen } from './screen';
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 
 @Component({
   selector: 'editor-content-cmp',

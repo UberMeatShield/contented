@@ -12,7 +12,7 @@ import { ContentedService } from './contented_service';
 import { Content } from './content';
 import { Container } from './container';
 
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 
 import { RESUME } from './resume';
 

@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { Tag } from './content';
 
 import * as $ from 'jquery';
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 
 let languages = [];
 

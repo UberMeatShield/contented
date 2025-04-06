@@ -14,7 +14,7 @@ import { GlobalBroadcast } from './global_message';
 // correct when doing a compile and move along.
 import { KeyCode, editor as MonacoEditor } from 'monaco-editor/esm/vs/editor/editor.api.d';
 
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 import { Tag, VSCodeChange } from './content';
 
 @Component({

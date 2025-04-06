@@ -1,7 +1,7 @@
 /*
  * Class for representing the tasks in the background task queue.
  */
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 
 export const TASK_STATES = {
   NEW: 'new',
