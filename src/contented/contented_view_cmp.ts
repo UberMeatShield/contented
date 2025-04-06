@@ -71,7 +71,6 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
             this.visible = false;
             break;
           case NavTypes.SELECT_MEDIA:
-            console.log("Select content", evt.content);
             this.content = evt.content;
             break;
         }
