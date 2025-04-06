@@ -3,7 +3,6 @@ import { ApiDef } from './api_def';
 import { Screen, ScreenSchema } from './screen';
 
 import { z } from 'zod';
-import { Z } from 'zod-class';
 
 // Why does a TAG have an id?!?!  Because goBuffalo really likes the id field.
 export const TagSchema = z.object({
