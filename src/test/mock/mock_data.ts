@@ -68,17 +68,17 @@ class MockLoader {
     return _.clone(taskRequestsResult);
   }
 
-  public getContent(container_id = null, total = null) {
-    let res = _.clone(contentResult);
-    if (container_id) {
-      _.each(res.results, content => {
-        content.id = content.id + container_id;
-        content.container_id = container_id;
-      });
+  public getContent(containerId: number | undefined = undefined, total: number = 2) {
+    const contents = _.clone(contentResult);
+
+    let results = contents.results;
+    if (containerId) {
+      results = results.filter(c => c.container_id === containerId);
     }
-    // TODO: Create fake content / id info if given a count
+
+    results = results.slice(0, total);
     return {
-      results: res.results.slice(0, total),
+      results: results,
       total: total,
     };
   }
@@ -89,7 +89,7 @@ class MockLoader {
   }
 
   public getMockDir(count: number, itemPrefix: string = 'item-', offset: number = 0, total = 20) {
-    let containerId = 'test';
+    let containerId = 2;
     let contents = _.map(_.range(0, count), idx => {
       let id = idx + offset;
       return { src: itemPrefix + id, id: id, container_id: containerId };
@@ -130,19 +130,18 @@ class MockLoader {
 
   public handleContainerContentLoad(httpMock, cnts: Array<Container>, count = 2) {
     _.each(cnts, cnt => {
-      let url = ApiDef.contented.containerContent.replace('{cId}', cnt.id);
+      let url = ApiDef.contented.containerContent.replace('{cId}', cnt.id.toString());
       let reqs = httpMock.match(r => r.url.includes(url));
       _.each(reqs, req => {
-        let res = this.getContent(cnt.name, cnt.count);
+        let res = this.getContent(cnt.id, count);
         req.flush(res);
       });
     });
   }
 
   public getImg() {
-    let res = this.getContent('10', 1);
-    let actualContent = res.results[0];
-    return new Content(actualContent);
+    let img = _.clone(contentResult).results.find((m) => m.content_type === 'image/png');
+    return new Content(img);
   }
 
   public getVideo(): Content {

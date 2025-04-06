@@ -49,7 +49,7 @@ export class VideoPreviewCmp implements OnInit {
     if (this.content) {
       this.content.screens = this.content.screens || [];
       _.each(screens, screen => {
-        if (this.content && this.content.id == screen.content_id) {
+        if (this.content && this.content.id === screen.content_id) {
           this.content.screens.push(screen);
         }
       });

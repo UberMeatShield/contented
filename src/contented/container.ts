@@ -22,7 +22,7 @@ export class Container {
   public count: number;
   public path: string;
   public name: string;
-  public id: string;
+  public id: number;
   public previewUrl: string;
 
   // Set on the initial content loads

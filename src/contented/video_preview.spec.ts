@@ -75,7 +75,7 @@ describe('TestingVideoPreviewCmp', () => {
     fixture.detectChanges();
     expect($('.video-view-card').length).toEqual(1);
 
-    let url = ApiDef.contented.contentScreens.replace('{mcID}', comp.content.id);
+    let url = ApiDef.contented.contentScreens.replace('{mcID}', comp.content.id.toString());
     let req = httpMock.expectOne(req => req.url === url);
     let sRes = MockData.getScreens();
     req.flush(sRes);

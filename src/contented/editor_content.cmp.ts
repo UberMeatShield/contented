@@ -65,7 +65,12 @@ export class EditorContentCmp implements OnInit {
         next: (map: ParamMap) => {
           console.log('Reloading content');
           this.content = null; // Changing the
-          this.loadContent(map.get('id'));
+
+          const id = map.get('id') || "0";
+          const contentId = parseInt(id, 10);
+          if (contentId) {
+            this.loadContent(contentId);
+          }
         },
         error: err => {
           GlobalBroadcast.error('Loading content for editing', err);
@@ -74,7 +79,7 @@ export class EditorContentCmp implements OnInit {
     }
   }
 
-  loadContent(id: string) {
+  loadContent(id: number) {
     this._service.getContent(id).subscribe({
       next: (content: Content) => {
         this.content = content;
@@ -228,8 +233,8 @@ export class EditorContentCmp implements OnInit {
     }
   }
 
-  loadScreens(contentId: string) {
-    this._service.getScreens(this.content.id).subscribe({
+  loadScreens(contentId: number) {
+    this._service.getScreens(contentId).subscribe({
       next: (screens: { total: number; results: Array<Screen> }) => {
         this.content.screens = screens.results;
       },

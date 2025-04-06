@@ -12,7 +12,7 @@ import * as _ from 'lodash';
   templateUrl: 'screens.ng.html',
 })
 export class ScreensCmp implements OnInit {
-  @Input() contentId: string;
+  @Input() contentId: number;
   @Input() screens: Array<Screen>;
   @Input() previewWidth: number = 480;
   @Input() previewHeight: number = 480;

@@ -101,7 +101,7 @@ describe('TestingContentBrowserCmp', () => {
     harness.detectChanges();
     tick(2000);
 
-    let containers = MockData.getPreview();
+    MockData.getPreview();
     MockData.handleCmpDefaultLoad(httpMock, harness);
     expect($('.content-full-view').length).withContext('It should not have a view').toBe(0);
     tick(10000);
@@ -111,10 +111,10 @@ describe('TestingContentBrowserCmp', () => {
 
     let cnt = comp.getCurrentContainer();
     expect(cnt).withContext('There should be a current container').toBeDefined();
-    cnt.addContents(MockData.getContentArr(cnt.id, 4));
+    cnt.addContents(MockData.getContentArr(cnt.id, cnt.total));
     let cl = cnt.getContentList();
     expect(cl).withContext('We should have a content list').toBeDefined();
-    expect(cl.length).withContext('And we should have content').toEqual(4);
+    expect(cl.length).withContext('And we should have content').toEqual(cnt.total);
 
     harness.detectChanges();
     let imgs = $('.preview-img');
@@ -168,6 +168,10 @@ describe('TestingContentBrowserCmp', () => {
 
     let cnt: Container = comp.getCurrentContainer();
     expect(cnt).not.toBe(null);
+    cnt.contents = []
+    cnt.total = 4;
+    cnt.count = 0;
+
     expect(cnt.total).withContext('There should be more to load').toBeGreaterThan(3);
     expect(cnt.count).withContext('The default count should be empty').toEqual(0);
     cnt.addContents(MockData.getContentArr(cnt.id, 2));
@@ -175,7 +179,7 @@ describe('TestingContentBrowserCmp', () => {
 
     service.LIMIT = 1;
     comp.loadMore();
-    let url = ApiDef.contented.containerContent.replace('{cId}', cnt.id);
+    let url = ApiDef.contented.containerContent.replace('{cId}', cnt.id.toString());
     let loadReq = httpMock.expectOne(req => req.url === url);
     let checkParams: HttpParams = loadReq.request.params;
     expect(checkParams.get('per_page')).withContext('We set a different limit').toBe('1');

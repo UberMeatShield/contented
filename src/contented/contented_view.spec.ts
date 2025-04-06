@@ -97,9 +97,12 @@ describe('TestingContentedViewCmp', () => {
     fixture.detectChanges();
     expect($('.content-full-view').length).toBe(0, 'Nothing in the view');
 
-    let initialSel = new Content({ id: 'A', content_type: 'image/png' });
-    GlobalNavEvents.selectContent(initialSel, new Container({ id: '1' }));
+    let initialSel = MockData.getImg();
+    const container = new Container({ id: 1, contents: [initialSel] })
+    GlobalNavEvents.selectContent(initialSel, container);
+
     fixture.detectChanges();
+    tick(100);
     expect(comp.content).toEqual(initialSel);
 
     let content = MockData.getImg();

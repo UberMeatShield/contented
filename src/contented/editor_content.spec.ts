@@ -77,7 +77,7 @@ describe('EditorContentCmp', () => {
     cmp.checkStates = false;
     fixture.detectChanges();
 
-    let url = ApiDef.contented.contentScreens.replace('{mcID}', cmp.content.id);
+    let url = ApiDef.contented.contentScreens.replace('{mcID}', cmp.content.id.toString());
     httpMock.expectOne(url).flush(MockData.getScreens());
     fixture.detectChanges();
     tick(10000);
@@ -103,7 +103,7 @@ describe('EditorContentCmp', () => {
     cmp.checkStates = false;
     fixture.detectChanges();
 
-    let url = ApiDef.contented.contentScreens.replace('{mcID}', cmp.content.id);
+    let url = ApiDef.contented.contentScreens.replace('{mcID}', cmp.content.id.toString());
     httpMock.expectOne(url).flush(MockData.getScreens());
     fixture.detectChanges();
     tick(10000);

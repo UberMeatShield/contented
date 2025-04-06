@@ -19,13 +19,13 @@ function formatSeconds(seconds: number): string {
   return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 export class Screen {
-  public id: string;
+  public id: number;
   public src: string;
   public idx: number;
 
-  public content_id: string;
+  public content_id: number;
   public size_bytes: number;
-  public content_container_id: string;
+  public content_container_id: number;
   public url: string;
   public timeSeconds: number;
 

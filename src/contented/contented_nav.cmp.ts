@@ -52,7 +52,7 @@ export class ContentedNavCmp implements OnInit {
     });
   }
 
-  public displaySelection(id: string) {
+  public displaySelection(id: number) {
     const cnt = _.find(this.containers, { id: id });
     return cnt ? cnt.name : '';
   }

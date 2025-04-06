@@ -96,8 +96,8 @@ export class ContentedService {
     );
   }
 
-  public getScreens(contentID: string): Observable<{ total: number; results: Array<Screen> }> {
-    let url = ApiDef.contented.contentScreens.replace('{mcID}', contentID);
+  public getScreens(contentID: number): Observable<{ total: number; results: Array<Screen> }> {
+    let url = ApiDef.contented.contentScreens.replace('{mcID}', contentID.toString());
     return this.http.get(url, this.options).pipe(
       map((res: any) => {
         return {
@@ -109,8 +109,8 @@ export class ContentedService {
     );
   }
 
-  public clearScreens(contentID: string): Observable<Content> {
-    let url = ApiDef.contented.contentScreens.replace('{mcID}', contentID);
+  public clearScreens(contentID: number): Observable<Content> {
+    let url = ApiDef.contented.contentScreens.replace('{mcID}', contentID.toString());
     return this.http.delete(url, this.options).pipe(
       map((res: any) => {
         return new Content(res);
@@ -119,8 +119,8 @@ export class ContentedService {
     );
   }
 
-  public getContent(contentID: string) {
-    let url = ApiDef.contented.content.replace('{id}', contentID);
+  public getContent(contentID: number) {
+    let url = ApiDef.contented.content.replace('{id}', contentID.toString());
     return this.http.get(url, this.options).pipe(
       map(mc => {
         return new Content(mc);
@@ -129,8 +129,8 @@ export class ContentedService {
     );
   }
 
-  public removeContent(contentID: string) {
-    let url = ApiDef.contented.content.replace('{id}', contentID);
+  public removeContent(contentID: number) {
+    let url = ApiDef.contented.content.replace('{id}', contentID.toString());
     return this.http.delete(url, this.options).pipe(catchError(err => this.handleError(err)));
   }
 
@@ -145,13 +145,13 @@ export class ContentedService {
     if (!filename) {
       console.log('No file specified at rowIdx', rowIdx);
     }
-    let downloadUrl = ApiDef.contented.download.replace('{mcID}', content.id);
+    let downloadUrl = ApiDef.contented.download.replace('{mcID}', content.id.toString());
     console.log('DownloadURL', downloadUrl);
     window.open(downloadUrl);
   }
 
   public getTextContent(content: Content) {
-    let downloadUrl = ApiDef.contented.download.replace('{mcID}', content.id);
+    let downloadUrl = ApiDef.contented.download.replace('{mcID}', content.id.toString());
     return this.http.get(downloadUrl, { responseType: 'text' });
   }
 
@@ -211,8 +211,8 @@ export class ContentedService {
     return this.getFullContainer(cnt.id, cnt.count, limit);
   }
 
-  public getFullContainer(cnt: string, offset: number = 0, limit: number = null) {
-    let url = ApiDef.contented.containerContent.replace('{cId}', cnt);
+  public getFullContainer(cId: number, offset: number = 0, limit: number = null) {
+    let url = ApiDef.contented.containerContent.replace('{cId}', cId.toString());
     return this.http
       .get(url, {
         params: this.getPaginationParams(offset, limit),
@@ -242,7 +242,7 @@ export class ContentedService {
     if (cnt.loadState === LoadStates.NotLoaded) {
       cnt.loadState = LoadStates.Loading;
 
-      let url = ApiDef.contented.containerContent.replace('{cId}', cnt.id);
+      let url = ApiDef.contented.containerContent.replace('{cId}', cnt.id.toString());
       return this.http
         .get(url, {
           params: this.getPaginationParams(0, this.LIMIT),
@@ -311,7 +311,7 @@ export class ContentedService {
   }
 
   public saveContent(content: Content) {
-    let url = ApiDef.contented.content.replace('{id}', content.id);
+    let url = ApiDef.contented.content.replace('{id}', content.id.toString());
     return this.http.put(url, content).pipe(catchError(err => this.handleError(err)));
   }
 
@@ -362,7 +362,7 @@ export class ContentedService {
   }
 
   requestScreens(content: Content, count: number = 1, startTime: number = 2) {
-    let url = ApiDef.contented.requestScreens.replace('{id}', content.id);
+    let url = ApiDef.contented.requestScreens.replace('{id}', content.id.toString());
     url = url.replace('{count}', '' + count);
     url = url.replace('{startTimeSeconds}', '' + Math.floor(startTime));
     return this.http.post(url, {}).pipe(
@@ -375,7 +375,7 @@ export class ContentedService {
   encodeVideoContent(content: Content, codec: string = '') {
     let params = new HttpParams();
     params = params.set('codec', codec);
-    let url = ApiDef.contented.encodeVideoContent.replace('{id}', content.id);
+    let url = ApiDef.contented.encodeVideoContent.replace('{id}', content.id.toString());
     return this.http.post(url, { params: params }).pipe(
       map(res => {
         return new TaskRequest(res);
@@ -385,7 +385,7 @@ export class ContentedService {
 
   // Determine what kinds of args we can provide
   createPreviewFromScreens(content: Content) {
-    let url = ApiDef.contented.createPreviewFromScreens.replace('{id}', content.id);
+    let url = ApiDef.contented.createPreviewFromScreens.replace('{id}', content.id.toString());
     return this.http.post(url, {}).pipe(
       map(res => {
         return new TaskRequest(res);
@@ -395,7 +395,7 @@ export class ContentedService {
 
   // Determine what kinds of args we can provide
   createTagContentTask(content: Content) {
-    let url = ApiDef.contented.createTagContentTask.replace('{id}', content.id);
+    let url = ApiDef.contented.createTagContentTask.replace('{id}', content.id.toString());
     return this.http.post(url, {}).pipe(
       map(res => {
         return new TaskRequest(res);
@@ -404,7 +404,7 @@ export class ContentedService {
   }
 
   findDuplicateForContentTask(content: Content) {
-    let url = ApiDef.contented.contentDuplicatesTask.replace('{contentId}', content.id);
+    let url = ApiDef.contented.contentDuplicatesTask.replace('{contentId}', content.id.toString());
     return this.http.post(url, content).pipe(
       map(res => {
         return new TaskRequest(res);
@@ -413,7 +413,7 @@ export class ContentedService {
   }
 
   containerDuplicatesTask(cnt: Container) {
-    let url = ApiDef.contented.containerDuplicatesTask.replace('{containerId}', cnt.id);
+    let url = ApiDef.contented.containerDuplicatesTask.replace('{containerId}', cnt.id.toString());
     return this.http.post(url, cnt).pipe(
       map(res => {
         return [new TaskRequest(res)];
@@ -422,7 +422,7 @@ export class ContentedService {
   }
 
   containerRemoveDuplicatesTask(cnt: Container) {
-    let url = ApiDef.contented.containerRemoveDuplicatesTask.replace('{containerId}', cnt.id);
+    let url = ApiDef.contented.containerRemoveDuplicatesTask.replace('{containerId}', cnt.id.toString());
     return this.http.post(url, cnt).pipe(
       map(res => {
         return [new TaskRequest(res)];
@@ -431,7 +431,7 @@ export class ContentedService {
   }
 
   containerPreviewsTask(cnt: Container, count: number = 16, startTimeSeconds: number = -1) {
-    let url = ApiDef.contented.containerPreviewsTask.replace('{containerId}', cnt.id);
+    let url = ApiDef.contented.containerPreviewsTask.replace('{containerId}', cnt.id.toString());
     url = url.replace('{count}', `${count}`).replace('{startTimeSeconds}', `${startTimeSeconds}`);
     return this.http.post(url, cnt).pipe(
       map(res => {
@@ -442,7 +442,7 @@ export class ContentedService {
   }
 
   containerVideoEncodingTask(cnt: Container) {
-    let url = ApiDef.contented.containerVideoEncodingTask.replace('{containerId}', cnt.id);
+    let url = ApiDef.contented.containerVideoEncodingTask.replace('{containerId}', cnt.id.toString());
     return this.http.post(url, cnt).pipe(
       map(res => {
         // Return an array of task requests I think
@@ -453,7 +453,7 @@ export class ContentedService {
   }
 
   containerTaggingTask(cnt: Container) {
-    let url = ApiDef.contented.containerTaggingTask.replace('{containerId}', cnt.id);
+    let url = ApiDef.contented.containerTaggingTask.replace('{containerId}', cnt.id.toString());
     return this.http.post(url, cnt).pipe(
       map(res => {
         return _.map(res['results'], task => new TaskRequest(task));

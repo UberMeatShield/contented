@@ -31,7 +31,7 @@ export interface VSCodeChange {
 }
 
 export class Content {
-  public id: string;
+  public id: number;
   public src: string;
   public preview: string; // Name of the preview, if not set we do not have one.
   public idx: number;

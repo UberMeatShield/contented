@@ -242,8 +242,9 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     this.search(this.currentTextChange.value, offset, limit, this.getCntId());
   }
 
-  public getCntId() {
-    return !!this.selectedContainer ? this.selectedContainer.id : null;
+  public getCntId(): string {
+    const id = !!this.selectedContainer ? this.selectedContainer.id : 0;
+    return id.toString();
   }
 
   // TODO: Add in optional filter params like the container (filter by container in search?)

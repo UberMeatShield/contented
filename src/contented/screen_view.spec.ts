@@ -66,12 +66,12 @@ describe('TestingScreensCmp', () => {
   });
 
   it('Given a content id it will try and render screens', fakeAsync(() => {
-    let contentId = 'uuid-really';
+    let contentId = 32;
     comp.contentId = contentId;
     fixture.detectChanges();
     expect(comp.loading).toBeTrue();
 
-    let url = ApiDef.contented.contentScreens.replace('{mcID}', contentId);
+    let url = ApiDef.contented.contentScreens.replace('{mcID}', contentId.toString());
     let req = httpMock.expectOne(req => req.url == url);
     let sRes = MockData.getScreens();
 

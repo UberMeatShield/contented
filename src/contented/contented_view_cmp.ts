@@ -19,7 +19,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
   @Input() forceHeight: number;
   @Input() visible: boolean = false;
   @Input() showScreens = true;
-  @Input() restrictContentId = '';
+  @Input() restrictContentId: number = -1;
   @ViewChild('VIDEOELEMENT') video;
 
   public maxWidth: number;
@@ -32,8 +32,8 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
   constructor(public _service: ContentedService) {}
 
   public shouldIgnoreEvt(content: Content) {
-    if (this.restrictContentId) {
-      if (!content || content.id !== this.restrictContentId) {
+    if (this.restrictContentId > 0) {
+      if (!content || content.id !== this.restrictContentId, 10) {
         return null;
       }
     }
@@ -71,6 +71,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
             this.visible = false;
             break;
           case NavTypes.SELECT_MEDIA:
+            console.log("Select content", evt.content);
             this.content = evt.content;
             break;
         }
