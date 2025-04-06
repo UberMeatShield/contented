@@ -2,18 +2,14 @@ import * as _ from 'lodash';
 import { ApiDef } from './api_def';
 import { Screen } from './screen';
 
-// Why does a TAG have an id?!?!  Because goBuffalo really likes the id field.
-export class Tag {
-  public id: string;
-  public tag_type: string;
+import { z } from 'zod';
+import { Z } from 'zod-class';
 
-  constructor(obj: any) {
-    if (typeof obj == 'string') {
-      this.id = obj;
-    } else {
-      Object.assign(this, obj);
-    }
-  }
+// Why does a TAG have an id?!?!  Because goBuffalo really likes the id field.
+export class Tag extends Z.class({
+  id: z.string(),
+  tag_type: z.string(),
+}) {
 
   isProblem() {
     let arr = this.id ? this.id.split(' ') : [this.id];
