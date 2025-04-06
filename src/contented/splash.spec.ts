@@ -62,12 +62,21 @@ describe('TestingSplashCmp', () => {
     fixture.detectChanges();
     tick(10000);
 
-    let splash = MockData.splash();
-    let expectVideoID = 'fa5b3be0-7209-4461-8315-17a04c64f5b4';
+    const splash = MockData.splash();
+    const expectVideoID = 83;
+    const expectSecondVideo = 38;
+    const textContent = 40;
+
     httpMock.expectOne(ApiDef.contented.splash).flush(splash);
     fixture.detectChanges();
     tick(10000);
-    let url = ApiDef.contented.contentScreens.replace('{mcID}', expectVideoID);
+    let url = ApiDef.contented.contentScreens.replace('{mcID}', expectVideoID.toString());
+    httpMock.expectOne(url).flush(MockData.getScreens());
+
+    url = ApiDef.contented.contentScreens.replace('{mcID}', expectSecondVideo.toString());
+    httpMock.expectOne(url).flush(MockData.getScreens());
+
+    url = ApiDef.contented.download.replace('{mcID}', textContent.toString());
     httpMock.expectOne(url).flush(MockData.getScreens());
   }));
 });
