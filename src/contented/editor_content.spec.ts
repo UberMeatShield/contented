@@ -71,7 +71,7 @@ describe('EditorContentCmp', () => {
   it('Should be able to determine if the content can be video encoded', fakeAsync(() => {
     let content = new Content(MockData.videoContent());
     let vidInfo = content.getVideoInfo();
-    let codec = vidInfo.getVideoCodecName();
+    let codec = vidInfo?.getVideoCodecName();
     expect(codec).toEqual('h264');
 
     cmp.content = content;

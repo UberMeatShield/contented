@@ -18,6 +18,19 @@ function formatSeconds(seconds: number): string {
   const s = seconds % 60;
   return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
+
+export interface ScreenData {
+  id?: string;
+  src?: string;
+  idx?: number;
+  content_id?: string;
+  size_bytes?: number;
+  content_container_id?: string;
+  url?: string;
+  time_seconds?: number;
+  timeSeconds?: number;
+}
+
 export class Screen {
   public id: string = '';
   public src: string = '';
@@ -29,20 +42,20 @@ export class Screen {
   public url: string = '';
   public timeSeconds: number = 0;
 
-  constructor(screen?: any) {
+  constructor(screen?: ScreenData) {
     if (screen) {
-      this.id = screen.id;
-      this.src = screen.src;
-      this.idx = screen.idx;
-      this.content_id = screen.content_id;
+      this.id = screen.id || '';
+      this.src = screen.src || '';
+      this.idx = screen.idx || 0;
+      this.content_id = screen.content_id || '';
       this.size_bytes = screen.size_bytes || 0;
-      this.content_container_id = screen.content_container_id;
-      this.url = screen.url;
+      this.content_container_id = screen.content_container_id || '';
+      this.url = screen.url || '';
       this.timeSeconds = screen.time_seconds || screen.timeSeconds || 0;
     }
   }
 
-  public fromJson(raw: any) {
+  public fromJson(raw: ScreenData) {
     if (raw) {
       Object.assign(this, raw);
       this.timeSeconds = this.parseSecondsFromScreen() || 0;

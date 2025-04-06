@@ -21,7 +21,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
   @Input() forceHeight: number = 0;
   @Input() visible: boolean = false;
   @Input() showScreens = true;
-  @Input() restrictContentId = '';
+  @Input() restrictContentId: number | undefined = undefined;
   @ViewChild('VIDEOELEMENT') video: ElementRef<HTMLVideoElement> | undefined;
   public defaultWidth = 800;
   public defaultHeight = 600;

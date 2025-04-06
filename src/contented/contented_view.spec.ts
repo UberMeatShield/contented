@@ -94,8 +94,8 @@ describe('TestingContentedViewCmp', () => {
     fixture.detectChanges();
     expect($('.content-full-view').length).toBe(0, 'Nothing in the view');
 
-    let initialSel = new Content({ id: 'A', content_type: 'image/png' });
-    GlobalNavEvents.selectContent(initialSel, new Container({ id: '1' }));
+    let initialSel = new Content({ id: 23, content_type: 'image/png' });
+    GlobalNavEvents.selectContent(initialSel, new Container({ id: 1 }));
     fixture.detectChanges();
     expect(comp.content).toEqual(initialSel);
 

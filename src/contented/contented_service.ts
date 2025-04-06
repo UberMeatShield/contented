@@ -11,7 +11,7 @@ import { TAGS_RESPONSE } from './tagging_syntax';
 import { forkJoin, Observable, from as observableFrom } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { GlobalBroadcast } from './global_message';
-import { PageResponse } from './common';
+import { PageResponse, TaskPageResponse } from './common';
 
 import * as _ from 'lodash';
 import z from 'zod';
@@ -462,11 +462,11 @@ export class ContentedService {
     );
   }
 
-  containerTaggingTask(cnt: Container): Observable<PageResponse<TaskRequest>> {
+  containerTaggingTask(cnt: Container): Observable<TaskPageResponse> {
     let url = ApiDef.contented.containerTaggingTask.replace('{containerId}', cnt.id);
     return this.http.post(url, cnt).pipe(
       map(res => {
-        return new PageResponse<TaskRequest>(res);
+        return new TaskPageResponse(res);
       })
     );
   }

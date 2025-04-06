@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { Content } from './content';
+import { Content, ContentData } from './content';
 import { ApiDef } from './api_def';
 
 function trail(path: string, whatWith: string) {
@@ -16,47 +16,70 @@ export enum LoadStates {
   Complete,
 }
 
+export interface ContainerData {
+  id?: number;
+  name?: string;
+  path?: string;
+  total?: number;
+  count?: number;
+  contents?: ContentData[] | Content[] | null;
+  previewUrl?: string;
+  rowIdx?: number;
+  loadState?: LoadStates;
+  visible?: boolean;
+}
+
 export class Container {
-  public contents: Array<Content>;
-  public total: number;
-  public count: number;
-  public path: string;
-  public name: string;
-  public id: string;
-  public previewUrl: string;
+  public contents: Array<Content> = [];
+  public total: number = 0;
+  public count: number = 0;
+  public path: string = '';
+  public name: string = '';
+  public id: number = 0;
+  public previewUrl: string = '';
 
   // Set on the initial content loads
   public loadState: LoadStates = LoadStates.NotLoaded;
   public visible: boolean = false;
 
   // All potential items that can be rendered from the contents
-  public renderable: Array<Content>;
-  public visibleSet: Array<Content> = [];
+  public renderable: Array<Content> | undefined;
+  public visibleSet: Array<Content> | undefined = [];
 
   // The currently selected Index
   public rowIdx: number = 0;
 
-  constructor(cnt: any) {
+  constructor(cnt: ContainerData) {
     this.total = _.get(cnt, 'total') || 0;
-    this.id = _.get(cnt, 'id') || '';
+    this.id = _.get(cnt, 'id') || 0;
     this.name = _.get(cnt, 'name') || '';
+    this.path = _.get(cnt, 'path') || '';
     this.previewUrl = _.get(cnt, 'previewUrl') || '';
-    this.setContents(this.buildImgs(_.get(cnt, 'contents') || []));
+    this.rowIdx = _.get(cnt, 'rowIdx') || 0;
+    this.loadState = _.get(cnt, 'loadState') || LoadStates.NotLoaded;
+    this.visible = _.get(cnt, 'visible') || false;
+    
+    const contents = _.get(cnt, 'contents') || [];
+    this.setContents(this.buildImgs(contents));
   }
 
-  public getCurrentContent() {
+  public getCurrentContent(): Content | null {
     let cntList = this.getContentList() || [];
     if (this.rowIdx >= 0 && this.rowIdx < cntList.length) {
       return cntList[this.rowIdx];
     }
-    return cntList[0];
+    return cntList.length > 0 ? cntList[0] : null;
   }
 
   // For use in determining what should actually be visible at any time
-  public getIntervalAround(currentItem: Content, requestedVisible: number = 4, before: number = 0) {
-    this.visibleSet = null;
+  public getIntervalAround(currentItem: Content | null, requestedVisible: number = 4, before: number = 0): Content[] {
+    this.visibleSet = [];
 
     let items = this.getContentList() || [];
+    if (items.length === 0) {
+      return [];
+    }
+    
     let start = 0;
     let max = requestedVisible < items.length ? requestedVisible : items.length;
 
@@ -72,27 +95,30 @@ export class Container {
     let interval = end - start;
     if (interval < max) {
       start = start - (max - interval);
+      start = start >= 0 ? start : 0; // Make sure we don't go negative
     }
     this.visibleSet = items.slice(start, end) || [];
     return this.visibleSet;
   }
 
-  public indexOf(item: Content, contents: Array<Content> = null) {
-    contents = contents || this.getContentList() || [];
-    if (item && contents) {
+  public indexOf(item: Content, media: Array<Content> = []): number {
+    const contents = media.length > 0 ? media : this.getContentList() || [];
+    if (item && contents.length > 0) {
       return _.findIndex(contents, { id: item.id });
     }
     return -1;
   }
 
-  public buildImgs(imgData: Array<any>) {
-    return _.map(imgData, data => new Content(data));
+  public buildImgs(imgData: Array<ContentData | Content>): Content[] {
+    return _.map(imgData, data => {
+      return data instanceof Content ? data : new Content(data);
+    });
   }
 
-  public setContents(contents: Array<Content>) {
+  public setContents(contents: Array<Content>): void {
     this.contents = _.sortBy(_.uniqBy(contents || [], 'id'), 'idx');
     this.count = this.contents.length;
-    this.renderable = null;
+    this.renderable = undefined;
 
     if (this.count === this.total) {
       this.loadState = LoadStates.Complete;
@@ -101,22 +127,22 @@ export class Container {
     }
   }
 
-  public addContents(contents: Array<Content>) {
+  public addContents(contents: Array<Content>): Content[] {
     let sorted = _.sortBy((this.contents || []).concat(contents), 'idx');
     this.setContents(sorted);
     return sorted;
   }
 
-  public getContent(rowIdx: number = null) {
-    rowIdx = rowIdx === null ? this.rowIdx : rowIdx;
-    if (rowIdx >= 0 && rowIdx < this.contents.length) {
-      return this.contents[rowIdx];
+  public getContent(rowIdx: number = 0): Content | null {
+    const index = rowIdx === null ? this.rowIdx : rowIdx;
+    if (index >= 0 && index < this.contents.length) {
+      return this.contents[index];
     }
     return null;
   }
 
   // This is the actual URL you can get a pointer to for the scroll / load
-  public getContentList() {
+  public getContentList(): Content[] {
     if (!this.renderable) {
       this.renderable = _.map(this.contents, (c: Content) => {
         return c;
@@ -131,7 +157,7 @@ let favoriteContainer: Container;
 export function getFavorites() {
   if (!favoriteContainer) {
     favoriteContainer = new Container({
-      id: 'favorites',
+      id: -42,
       name: 'Favorites',
       previewUrl: '', // Find a local one and use that
       contents: [],

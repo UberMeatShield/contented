@@ -135,7 +135,10 @@ export class ContainerCmp implements OnInit, OnDestroy {
         if (this.container.rowIdx === contentList.length) {
         GlobalNavEvents.nextContainer();
       } else {
-        GlobalNavEvents.selectContent(this.container.getCurrentContent(), this.container);
+        const currentContent = this.container.getCurrentContent();
+        if (currentContent) {
+          GlobalNavEvents.selectContent(currentContent, this.container);
+        }
       }
     }
   }
@@ -143,7 +146,10 @@ export class ContainerCmp implements OnInit, OnDestroy {
   prevContent() {
     if (this.container && this.container.rowIdx > 0) {
       this.container.rowIdx--;
-      GlobalNavEvents.selectContent(this.container.getCurrentContent(), this.container);
+      const currentContent = this.container.getCurrentContent();
+      if (currentContent) {
+        GlobalNavEvents.selectContent(currentContent, this.container);
+      }
     } else {
       GlobalNavEvents.prevContainer();
     }

@@ -8,7 +8,7 @@ import { Subscription } from 'rxjs';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ContainerNavCmp } from '../contented/container_nav.cmp';
 import { Container } from '../contented/container';
-import { Content } from '../contented/content';
+import { Content, ContentData } from '../contented/content';
 
 import { ApiDef } from '../contented/api_def';
 import { ContentedService } from '../contented/contented_service';
@@ -44,17 +44,23 @@ describe('TestingContainerNavCmp', () => {
 
     de = fixture.debugElement.query(By.css('.container-nav-cmp'));
     el = de.nativeElement;
-    cnt = new Container(MockData.getPreview()[0]);
+    cnt = new Container(MockData.getPreview().results[0]);
 
     let res = MockData.getContent(cnt.id, 5);
-    let contents = _.map(res.results, c => new Content(c));
+    let contents = _.map(res.results, c => new Content(c as ContentData));
     cnt.addContents(contents);
 
     listener = GlobalNavEvents.navEvts.subscribe(evt => {
       if (evt.action == NavTypes.NEXT_MEDIA) {
-        GlobalNavEvents.selectContent(cnt.getContent(++cnt.rowIdx), cnt);
+        const content = cnt.getContent(++cnt.rowIdx);
+        if (content) {
+          GlobalNavEvents.selectContent(content, cnt);
+        }
       } else if (evt.action == NavTypes.PREV_MEDIA) {
-        GlobalNavEvents.selectContent(cnt.getContent(--cnt.rowIdx), cnt);
+        const content = cnt.getContent(--cnt.rowIdx);
+        if (content) {
+          GlobalNavEvents.selectContent(content, cnt);
+        }
       }
     });
   }));
@@ -81,7 +87,7 @@ describe('TestingContainerNavCmp', () => {
     fullLoadBtn.trigger('click');
     fixture.detectChanges();
 
-    let url = ApiDef.contented.containerContent.replace('{cId}', cnt.id);
+    let url = ApiDef.contented.containerContent.replace('{cId}', cnt.id.toString());
     let req = httpMock.expectOne(r => r.url === url);
   }));
 

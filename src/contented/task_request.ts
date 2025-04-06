@@ -41,7 +41,7 @@ export const TaskRequestSchema = z.object({
   message: z.string(),
   err_msg: z.string(),
   uxLoading: z.boolean().optional().default(false),
-  complexMessage: z.any().optional()
+  complexMessage: z.record(z.unknown()).optional()
 });
 
 export type TaskRequestType = z.infer<typeof TaskRequestSchema>;
@@ -67,19 +67,40 @@ export class TaskRequest implements TaskRequestType {
   uxLoading = false;
 
   // For more useful json loading and display of the message
-  complexMessage: any;
+  complexMessage?: Record<string, unknown>;
 
   // Could make this a full zod class....
-  constructor(obj: any) {
-    const parsed = TaskRequestSchema.parse(obj);
-    this.update(parsed);
+  constructor(obj: TaskRequestType) {
+    try {
+      const parsed = TaskRequestSchema.parse(obj);
+      this.update(parsed);
+    } catch (error) {
+      console.error('Failed to parse TaskRequest:', error);
+      // Initialize with minimal valid data
+      this.id = obj.id || "";
+      this.content_id = obj.content_id || "";
+      this.status = obj.status || "";
+      this.operation = obj.operation || TaskOperation.ENCODING;
+      this.number_of_screens = obj.number_of_screens || 0;
+      this.start_time_seconds = obj.start_time_seconds || 0;
+      this.codec = obj.codec || "";
+      this.width = obj.width || 0;
+      this.height = obj.height || 0;
+      this.message = obj.message || "";
+      this.err_msg = obj.err_msg || "";
+    }
   }
 
-  update(obj: any) {
+  update(obj: TaskRequestType) {
     if (obj) {
       Object.assign(this, obj);
       if (obj.operation === TaskOperation.DUPES && obj.message) {
-        this.complexMessage = JSON.parse(obj.message);
+        try {
+          this.complexMessage = JSON.parse(obj.message);
+        } catch (error) {
+          console.error('Failed to parse complex message:', error);
+          this.complexMessage = {};
+        }
       }
     }
   }

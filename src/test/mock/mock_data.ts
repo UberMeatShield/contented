@@ -1,6 +1,6 @@
 import { Observable, from as observableFrom } from 'rxjs';
 import { Container } from './../../contented/container';
-import { Content } from './../../contented/content';
+import { Content, ContentData } from './../../contented/content';
 import { ApiDef } from './../../contented/api_def';
 import * as _ from 'lodash';
 
@@ -92,9 +92,13 @@ class MockLoader {
 
   public getMockDir(count: number, itemPrefix: string = 'item-', offset: number = 0, total = 20) {
     let containerId = 'test';
-    let contents = _.map(_.range(0, count), idx => {
+    let contents: Array<ContentData> = _.map(_.range(0, count), idx => {
       let id = idx + offset;
-      return { src: itemPrefix + id, id: id, container_id: containerId };
+      return { 
+        src: itemPrefix + id, 
+        id: id, 
+        container_id: containerId 
+      };
     });
 
     let fakeDirResponse = {
@@ -127,12 +131,12 @@ class MockLoader {
     let cntRes = this.getPreview();
     let containersReq = httpMock.expectOne(req => req.url === ApiDef.contented.containers);
     containersReq.flush(cntRes);
-    return _.map(cntRes.results, res => new Container(res));
+    return _.map(cntRes.results, res => new Container(res as ContainerData));
   }
 
   public handleContainerContentLoad(httpMock: HttpTestingController, cnts: Array<Container>, count = 2) {
     _.each(cnts, cnt => {
-      let url = ApiDef.contented.containerContent.replace('{cId}', cnt.id);
+      let url = ApiDef.contented.containerContent.replace('{cId}', cnt.id.toString());
       let reqs = httpMock.match(r => r.url.includes(url));
       _.each(reqs, req => {
         let res = this.getContent(cnt.name, cnt.count);
@@ -144,11 +148,11 @@ class MockLoader {
   public getImg() {
     let res = this.getContent('10', 1);
     let actualContent = res.results[0];
-    return new Content(actualContent);
+    return new Content(actualContent as ContentData);
   }
 
   public getVideo(): Content {
-    return new Content(_.clone(videoContentResult));
+    return new Content(_.clone(videoContentResult) as ContentData);
   }
 }
 export let MockData = new MockLoader();
