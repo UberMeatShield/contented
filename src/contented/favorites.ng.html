@@ -13,7 +13,10 @@
     	</ng-template>
     </mat-menu>
 
-    <div *ngIf="container" class="cnt-contents" style="min-height: {{previewHeight}}px; min-width: {{previewWidth}}px;">
+    <div *ngIf="container" class="cnt-contents" 
+      [style.min-height]="previewHeight + 'px'"
+      [style.min-width]="previewWidth + 'px'"
+    >
         <preview-content-cmp *ngFor="let content of container?.contents || []"
           [content]="content"
           [previewWidth]="previewWidth"

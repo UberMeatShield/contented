@@ -1,5 +1,8 @@
 <mat-dialog-content #ScreensContent class="search-dialog">
-   <div class="screen-dialog" style="width: {{forceWidth}}px; height: {{forceHeight}}px;">
+   <div class="screen-dialog" 
+    [style.width]="forceWidth || 0 + 'px'"
+    [style.height]="forceHeight || 0 + 'px'"
+   >
     <button type="button" mat-button-raised (click)="prev()"
       [disabled]="!(idx() > 0)"
     ><mat-icon>skip_previous</mat-icon></button>

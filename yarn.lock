@@ -8511,10 +8511,10 @@ yocto-queue@^1.0.0:
   resolved "https://registry.yarnpkg.com/yocto-queue/-/yocto-queue-1.0.0.tgz#7f816433fb2cbc511ec8bf7d263c3b58a1a3c251"
   integrity sha512-9bnSc/HEW2uRy67wc+T8UwauLuPJVn28jb+GtJY16iiKWyvmYJRXVT4UamsAEGQfPohgr2q4Tq0sQbQlxTfi1g==
 
-zod-class@^0.0.13:
-  version "0.0.13"
-  resolved "https://registry.yarnpkg.com/zod-class/-/zod-class-0.0.13.tgz#8ba67d99c8a7e0245c58f5da109f3cf5beea8023"
-  integrity sha512-zHEQGBMQq62LNipf8zMYTgmsOZv6SFhI9+c1Ssq8u9lw43ooY/2JGTBR7ipoSDtrItqp+80QNob36ubcPmJ2vQ==
+zod-class@^0.0.18:
+  version "0.0.18"
+  resolved "https://registry.yarnpkg.com/zod-class/-/zod-class-0.0.18.tgz#00b9e07ca15d2896eab9b81e2889ddea70919bcc"
+  integrity sha512-wWWa6u56ualID4zf0DGgDhdDjYI7lP3XphIFBam+sgodMZOrad8lxAFchqBGq1uuGPAel/hIjHITLc5D+TowXg==
   dependencies:
     type-fest "^4.14.0"
 

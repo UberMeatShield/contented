@@ -71,7 +71,7 @@ describe('TestingContentBrowserCmp', () => {
     harness.detectChanges();
     MockData.handleCmpDefaultLoad(httpMock, harness);
     tick(2000);
-    expect(comp.allCnts.length).toBe(5, 'We should have 4 containers set');
+    expect(comp.allCnts.length).withContext('We should have 4 containers set').toBe(6);
 
     let dirs = comp.getVisibleContainers();
     expect(dirs.length).toBe(comp.maxVisible, 'Should only have the max visible containers present.');

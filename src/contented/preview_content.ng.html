@@ -3,7 +3,8 @@
     [class.video-overlay]="content?.content_type?.match('video')"
     [class.current-content]="active"
     [class.content-duplicate]="content.duplicate"
-    style="width:{{previewWidth}}px; height: {{previewHeight}}px;"
+    [style.width]="previewWidth + 'px'"
+    [style.height]="previewHeight + 'px'"
     (click)="clickContent(content)"
     title="{{content.description || content.src}}"
     >
