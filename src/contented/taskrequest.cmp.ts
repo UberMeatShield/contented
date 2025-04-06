@@ -14,7 +14,7 @@ import * as _ from 'lodash';
   templateUrl: './taskrequest.ng.html',
 })
 export class TaskRequestCmp implements OnInit {
-  @Input() contentID: string = '';
+  @Input() contentID: number = 0;
   @Input() pageSize = 100;
   @Input() reloadEvt: EventEmitter<any>; // Do you want to reload the task queue
   @Output() taskUpdated: EventEmitter<TaskRequest> = new EventEmitter<TaskRequest>();
@@ -97,11 +97,11 @@ export class TaskRequestCmp implements OnInit {
     }
   }
 
-  loadTasks(contentID: string, notComplete: Array<TaskRequest> = [], status: TaskStatus = '', search = '') {
+  loadTasks(contentID: number, notComplete: Array<TaskRequest> = [], status: TaskStatus = '', search = '') {
     this.loading = true;
 
     const query: TaskSearch = {
-      contentID,
+      contentID: contentID.toString(),
       status,
       search,
       offset: 0,

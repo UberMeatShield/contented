@@ -24,6 +24,7 @@ export class Container {
   public name: string;
   public id: number;
   public previewUrl: string;
+  public description: string;
 
   // Set on the initial content loads
   public loadState: LoadStates = LoadStates.NotLoaded;
