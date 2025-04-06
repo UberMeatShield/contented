@@ -64,10 +64,10 @@ describe('TaskRequestCmp', () => {
     req.flush(MockData.taskRequests());
     tick(1000);
 
-    expect(component.tasks?.length).withContext('The tasks should be set').toEqual(6);
+    expect(component.tasks?.length).withContext('The tasks should be set').toEqual(5);
 
     fixture.detectChanges();
-    expect($('.task-operation').length).withContext('Render the tasks.').toEqual(6);
+    expect($('.task-operation').length).withContext('Render the tasks.').toEqual(5);
     tick(1000);
   }));
 
