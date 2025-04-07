@@ -2,6 +2,7 @@
  * Class for representing the tasks in the background task queue.
  */
 import * as _ from 'lodash';
+import { z } from 'zod';
 
 export const TASK_STATES = {
   NEW: 'new',
@@ -10,7 +11,7 @@ export const TASK_STATES = {
   CANCELED: 'canceled',
   ERROR: 'error',
   DONE: 'done',
-};
+} as const;
 
 export enum TaskOperation {
   ENCODING = 'video_encoding',
@@ -18,24 +19,58 @@ export enum TaskOperation {
   WEBP = 'webp_from_screens',
   TAGGING = 'tag_content',
   DUPES = 'detect_duplicates',
-}
+};
 
-export const COMPLETE_TASKS = [TASK_STATES.CANCELED, TASK_STATES.ERROR, TASK_STATES.DONE];
+export const TaskOperationEnum = z.enum([
+  TaskOperation.ENCODING,
+  ...Object.values(TaskOperation),
+]);
 
-export class TaskRequest {
-  id: string;
-  content_id: string;
+export const TaskStatesEnum = z.enum([
+  TASK_STATES.NEW,
+  ...Object.values(TASK_STATES),
+]);
+export type TaskState = z.infer<typeof TaskStatesEnum>;
+
+export const COMPLETE_TASKS: Array<TaskState> = [
+  TASK_STATES.CANCELED, 
+  TASK_STATES.ERROR, 
+  TASK_STATES.DONE
+];
+
+
+export const TaskRequestSchema = z.object({
+  id: z.number(),
+  content_id: z.number(),
+  created_at: z.coerce.date().optional(),
+  updated_at: z.coerce.date().optional(),
+  started_at: z.coerce.date().optional(),
+  status: TaskStatesEnum.default(TASK_STATES.NEW),
+  operation: TaskOperationEnum,
+  number_of_screens: z.number().optional(),
+  start_time_seconds: z.number().optional(),
+  codec: z.string().optional(),
+  width: z.number().optional(),
+  height: z.number().optional(),
+  message: z.string().optional(),
+  err_msg: z.string().optional(),
+}); 
+
+export type ITaskRequest = z.infer<typeof TaskRequestSchema>;
+export class TaskRequest implements ITaskRequest {
+  id: number;
+  content_id: number;
   created_at: Date | undefined;
   updated_at: Date | undefined;
   started_at: Date | undefined;
-  status: string;
+  status: TaskState;
   operation: TaskOperation;
   number_of_screens: number;
   start_time_seconds: number;
 
   codec: string;
-  width: number;
-  height: number;
+  width?: number;
+  height?: number;
 
   message: string;
   err_msg: string;
@@ -51,10 +86,8 @@ export class TaskRequest {
 
   update(obj: any) {
     if (obj) {
-      Object.assign(this, obj);
-      this.created_at = obj.created_at ? new Date(obj.created_at) : undefined;
-      this.updated_at = obj.updated_at ? new Date(obj.updated_at) : undefined;
-      this.started_at = obj.started_at ? new Date(obj.started_at) : undefined;
+      const tr = TaskRequestSchema.parse(obj);
+      Object.assign(this, tr);
 
       if (obj.operation === TaskOperation.DUPES && obj.message) {
         this.complexMessage = JSON.parse(obj.message);
@@ -62,7 +95,7 @@ export class TaskRequest {
     }
   }
 
-  isComplete() {
+  isComplete(): boolean {
     return COMPLETE_TASKS.includes(this.status);
   }
 }

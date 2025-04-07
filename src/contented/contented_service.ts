@@ -367,8 +367,13 @@ export class ContentedService {
     return this.http.get(ApiDef.contented.splash).pipe(
       map((res: any) => {
         // Worth an actual class type?
+        let container: Container | undefined;
+        if (_.get(res, 'container.id')) {
+          container = new Container(res.container);
+        }
+
         return {
-          container: _.get(res, 'container.id') ? new Container(res.container) : null,
+          container,
           content: _.get(res, 'content.id') ? new Content(res.content) : null,
           splashTitle: res.splashTitle || '',
           splashContent: res.splashContent || '',
@@ -531,7 +536,7 @@ export class ContentedService {
   }
 
   cancelTask(task: TaskRequest) {
-    const url = ApiDef.tasks.update.replace('{id}', task.id);
+    const url = ApiDef.tasks.update.replace('{id}', task.id.toString());
     const up = _.clone(task);
     up.status = TASK_STATES.CANCELED;
     return this.http.put(url, up).pipe(
