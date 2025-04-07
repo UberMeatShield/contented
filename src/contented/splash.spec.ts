@@ -13,7 +13,7 @@ import { ContentedModule } from '../contented/contented_module';
 import { ApiDef } from '../contented/api_def';
 
 import * as _ from 'lodash';
-import $ from 'jquery';
+import * as $ from 'jquery';
 import { MockData } from '../test/mock/mock_data';
 
 describe('TestingSplashCmp', () => {

@@ -17,7 +17,7 @@ export enum LoadStates {
 }
 
 export class Container {
-  public contents: Array<Content>;
+  public contents: Array<Content> = [];
   public total: number;
   public count: number;
   public path: string;
@@ -42,7 +42,9 @@ export class Container {
     this.id = _.get(cnt, 'id') || '';
     this.name = _.get(cnt, 'name') || '';
     this.previewUrl = _.get(cnt, 'previewUrl') || '';
-    this.setContents(_.get(cnt, 'contents') || []);
+
+    const contents = cnt?.contents ? cnt.contents.map(m => new Content(m)) : [];
+    this.setContents(contents);
   }
 
   public getCurrentContent() {

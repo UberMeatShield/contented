@@ -12,6 +12,7 @@ tmp/*
 .yarn/
 .yarnrc.yml
 .vscode
+.nx
 
 .DS_Store
 build
