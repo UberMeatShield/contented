@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
-import { Content } from './content';
+import { Content, ContentSchema } from './content';
 import { ApiDef } from './api_def';
+import { z } from 'zod';
 
 function trail(path: string, whatWith: string) {
   if (path[path.length - 1] !== whatWith) {
@@ -16,7 +17,18 @@ export enum LoadStates {
   Complete,
 }
 
-export class Container {
+export const ContainerSchema = z.object({
+  id: z.number(),
+  name: z.string().optional(),
+  previewUrl: z.string().optional(),
+  contents: z.array(ContentSchema).nullable().optional(),
+  total: z.number().default(0),
+  description: z.string().default('').optional(),
+});
+
+export type IContainer = z.infer<typeof ContainerSchema>;
+
+export class Container implements IContainer {
   public contents: Array<Content> = [];
   public total: number;
   public count: number;
@@ -38,14 +50,17 @@ export class Container {
   public rowIdx: number = 0;
 
   constructor(cnt: any) {
-    this.total = _.get(cnt, 'total') || 0;
-    this.id = _.get(cnt, 'id') || '';
-    this.name = _.get(cnt, 'name') || '';
-    this.previewUrl = _.get(cnt, 'previewUrl') || '';
+    this.update(cnt);
+  }
 
-    const contents = cnt?.contents ? cnt.contents.map(m => new Content(m)) : [];
+  public update(cnt: any) {
+    const c = ContainerSchema.parse(cnt);
+    Object.assign(this, c);
+
+    const contents = cnt?.contents ? cnt.contents.map(mc => new Content(mc)) : [];
     this.setContents(contents);
   }
+
 
   public getCurrentContent() {
     let cntList = this.getContentList() || [];
@@ -144,7 +159,7 @@ let favoriteContainer: Container;
 export function getFavorites() {
   if (!favoriteContainer) {
     favoriteContainer = new Container({
-      id: 'favorites',
+      id: -42,
       name: 'Favorites',
       previewUrl: '', // Find a local one and use that
       contents: [],

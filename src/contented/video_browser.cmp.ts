@@ -2,7 +2,7 @@ import { Subscription } from 'rxjs';
 import { finalize, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 import { OnInit, OnDestroy, Component, ViewChild, Input } from '@angular/core';
-import { ContentedService, ContentSearchSchema } from './contented_service';
+import { ContentedService, ContentSearchSchema, PageResponse } from './contented_service';
 import { Content, Tag, VSCodeChange } from './content';
 import { Container } from './container';
 import { GlobalNavEvents, NavTypes, NavEventMessage } from './nav_events';
@@ -105,7 +105,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
 
   public loadContainers() {
     this._contentedService.getContainers().subscribe({
-      next: cnts => {
+      next: (cnts: PageResponse<Container>) => {
         this.containers = cnts.results || [];
       },
       error: err => {
@@ -148,7 +148,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
 
   public selectContainer(cnt: Container) {
     let offset = this.offset;
-    if (_.get(cnt, 'id') != _.get(this.selectedContainer, 'id')) {
+    if (cnt?.id !== this.selectedContainer?.id) {
       this.offset = 0;
     }
     this.selectedContainer = cnt;

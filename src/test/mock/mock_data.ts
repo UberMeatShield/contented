@@ -97,7 +97,7 @@ class MockLoader {
     let fakeDirResponse = {
       total: total,
       path: `narp${containerId}/`,
-      name: containerId, // Generate a UUID?
+      name: containerId.toString(), // Generate a UUID?
       id: containerId,
       contents: contents, // Note the API does not currently return contents
     };

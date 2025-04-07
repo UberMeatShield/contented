@@ -51,7 +51,7 @@ describe('TestingContentBrowserCmp', () => {
 
   it('TODO: Fully handles routing arguments', waitForAsync(async () => {
     comp = await harness.navigateByUrl('/ui/browse/2/3', ContentBrowserCmp);
-    comp.allCnts = [new Container({ id: 'A', total: 0, count: 0, contents: [] })];
+    comp.allCnts = [new Container({ id: 2, total: 0, count: 0, contents: [] })];
     harness.detectChanges();
     router = TestBed.inject(Router);
     expect(router.url).toBe('/ui/browse/2/3');

@@ -19,6 +19,7 @@ import { ApiDef } from '../contented/api_def';
 import _ from 'lodash';
 import $ from 'jquery';
 import { MockData } from '../test/mock/mock_data';
+import { ContainerSchema } from './container';
 
 describe('TestingVideoBrowserCmp', () => {
   let fixture: ComponentFixture<VideoBrowserCmp>;
@@ -49,6 +50,15 @@ describe('TestingVideoBrowserCmp', () => {
     httpMock.verify();
   });
 
+  it("Should load containers", () => {
+    const containerResult = MockData.getContainers();
+
+    containerResult.results.forEach(c => {
+      const container = ContainerSchema.safeParse(c);
+      expect(container.success).withContext(container?.error?.message).toBe(true);
+    });
+  });
+
   it('Should create a video component', waitForAsync(async () => {
     comp = await harness.navigateByUrl('/ui/video/', VideoBrowserCmp);
     de = harness.fixture.debugElement.query(By.css('.video-browser-cmp'));
@@ -56,7 +66,7 @@ describe('TestingVideoBrowserCmp', () => {
     expect(comp).withContext('We should have the VideoBrowser comp').toBeDefined();
     expect(el).withContext('We should have a top level element').toBeDefined();
 
-    httpMock.expectOne(ApiDef.contented.containers, 'Empty').flush({ results: [] });
+    httpMock.expectOne(ApiDef.contented.containers, 'Empty').flush({total: 0, results: [] });
   }));
 
   it('It can setup all eventing without exploding', waitForAsync(async () => {
@@ -68,7 +78,7 @@ describe('TestingVideoBrowserCmp', () => {
     harness.detectChanges();
 
     MockData.handleContainerLoad(httpMock);
-    comp.search('Cthulhu', 0, 50, 'A');
+    comp.search('Cthulhu', 0, 50, '1');
 
     let req = httpMock.expectOne(req => req.url === ApiDef.contented.searchContents, 'Failed to find search');
     let searchResults = MockData.getVideos();
