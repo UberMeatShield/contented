@@ -75,7 +75,6 @@ class MockLoader {
     if (containerId) {
       results = results.filter(c => c.container_id === containerId);
     }
-
     results = results.slice(0, total);
     return {
       results: results,

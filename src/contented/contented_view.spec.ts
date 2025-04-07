@@ -18,6 +18,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import * as _ from 'lodash';
 import { MockData } from '../test/mock/mock_data';
+import { ApiDef } from './api_def';
 
 declare var $;
 describe('TestingContentedViewCmp', () => {
@@ -123,10 +124,11 @@ describe('TestingContentedViewCmp', () => {
   }));
 
   it('Should have a video in the case of a video, image for image', () => {
-    let video = new Content({ content_type: 'video/mp4', id: 42});
+    let video = new Content({ content_type: 'video/mp4', id: 42, src: 'test.mp4'});
     let img = new Content({
       content_type: 'image/jpeg',
       id: 43,
+      src: 'test.jpg',
     });
 
     comp.visible = true;
@@ -143,5 +145,9 @@ describe('TestingContentedViewCmp', () => {
     expect(video.isVideo()).toBe(true, 'It should be a video file');
     fixture.detectChanges();
     expect($('.content-video-screens').length).toEqual(1, 'It should have screens');
+
+    const url = ApiDef.contented.contentScreens.replace('{mcID}', video.id.toString());
+    const req = httpMock.expectOne(url);
+    req.flush(MockData.getScreens());
   });
 });

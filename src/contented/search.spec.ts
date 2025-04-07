@@ -20,7 +20,7 @@ import _ from 'lodash';
 import $ from 'jquery';
 import { MockData } from '../test/mock/mock_data';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { Tag } from './content';
+import { Content, ContentSchema, Tag, VideoCodecInfo, VideoCodecInfoSchema, VideoFormatSchema, VideoStreamSchema } from './content';
 
 describe('TestingSearchCmp', () => {
   let fixture: ComponentFixture<SearchCmp>;
@@ -46,6 +46,8 @@ describe('TestingSearchCmp', () => {
     loc = TestBed.inject(Location);
     router = TestBed.inject(Router);
     router.initialNavigation();
+
+    spyOn(console, 'error');
   }));
 
   afterEach(() => {
@@ -62,6 +64,20 @@ describe('TestingSearchCmp', () => {
     expect(el).withContext('We should have a top level element').toBeDefined();
   }));
 
+  it("Should be able to create content for all search results without error", () => {
+    let sr = MockData.getSearch();
+
+    const first = sr.results[0];
+    expect(first.content_type).toBe('video/mp4');
+    const meta = JSON.parse(first.meta);
+    const probe = VideoCodecInfoSchema.parse(meta)
+    //expect(stream.success).toBe(true);
+
+    for (const r of sr.results) {
+      const content = new Content(r);
+    }
+  });
+
   it('It can setup all eventing without exploding', waitForAsync(async () => {
     comp = await harness.navigateByUrl('/ui/search/?searchText=Cthulhu', SearchCmp);
     harness.detectChanges();
@@ -70,7 +86,10 @@ describe('TestingSearchCmp', () => {
     comp.search(comp.searchText, 0, 50, null);
     let sr = MockData.getSearch();
     expect(sr.results.length).withContext('We need some search results.').toBeGreaterThan(0);
-    httpMock.match(req => req.url === ApiDef.contented.searchContents).forEach(req => req.flush(sr));
+
+    const reqs = httpMock.match(req => req.url === ApiDef.contented.searchContents);
+    expect(reqs.length).toBe(1);
+    reqs.forEach(req => req.flush(sr));
     harness.detectChanges();
 
     expect(comp.loading).toBeFalse();

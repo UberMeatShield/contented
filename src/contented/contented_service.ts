@@ -70,6 +70,14 @@ export const TaskSearchSchema = z.object({
 });
 export type TaskSearch = z.infer<typeof TaskSearchSchema>;
 
+
+export interface PageResponse<T> {
+  total: number;
+  results: Array<T>;
+}
+
+
+
 @Injectable()
 export class ContentedService {
   public options = null;
@@ -84,7 +92,7 @@ export class ContentedService {
     this.options = { headers: headers };
   }
 
-  public getContainers() {
+  public getContainers(): Observable<PageResponse<Container>> {
     return this.http.get(ApiDef.contented.containers, this.options).pipe(
       map((res: any) => {
         return {
@@ -96,7 +104,7 @@ export class ContentedService {
     );
   }
 
-  public getScreens(contentID: number): Observable<{ total: number; results: Array<Screen> }> {
+  public getScreens(contentID: number): Observable<PageResponse<Screen>> {
     let url = ApiDef.contented.contentScreens.replace('{mcID}', contentID.toString());
     return this.http.get(url, this.options).pipe(
       map((res: any) => {
@@ -150,20 +158,19 @@ export class ContentedService {
     window.open(downloadUrl);
   }
 
-  public getTextContent(content: Content) {
+  public getTextContent(content: Content): Observable<string> {
     let downloadUrl = ApiDef.contented.download.replace('{mcID}', content.id.toString());
     return this.http.get(downloadUrl, { responseType: 'text' });
   }
 
-  public fullLoadDir(cnt, limit = null) {
+  public fullLoadDir(cnt, limit = null): Observable<Container> {
     if (cnt.count === cnt.total) {
-      console.log('Count = total, ignoring', cnt);
       return observableFrom(Promise.resolve(cnt));
     }
 
     limit = limit || this.LIMIT || 2000;
     // Build out a call to load all the possible data (all at once, it is fast)
-    let p = new Promise((resolve, reject) => {
+    let p: Promise<Container> = new Promise((resolve, reject) => {
       let calls = [];
       let idx = 0;
       for (let offset = cnt.count; offset < cnt.total; offset += limit) {
@@ -173,7 +180,9 @@ export class ContentedService {
             next: res => {
               _.delay(() => {
                 // Hmmm, buildImgs is strange and should be fixed up
-                cnt.addContents(cnt.buildImgs(res.results));
+                if (res.results) {
+                  cnt.addContents(res.results);
+                }
                 yupResolve(cnt);
               }, idx * 500);
             },
@@ -207,11 +216,11 @@ export class ContentedService {
     return observableFrom(p);
   }
 
-  public loadMoreInDir(cnt: Container, limit = null) {
+  public loadMoreInDir(cnt: Container, limit = null): Observable<PageResponse<Content>> {
     return this.getFullContainer(cnt.id, cnt.count, limit);
   }
 
-  public getFullContainer(cId: number, offset: number = 0, limit: number = null) {
+  public getFullContainer(cId: number, offset: number = 0, limit: number = null): Observable<PageResponse<Content>> {
     let url = ApiDef.contented.containerContent.replace('{cId}', cId.toString());
     return this.http
       .get(url, {
@@ -220,9 +229,10 @@ export class ContentedService {
       })
       .pipe(
         map((res: any) => {
+          const results = _.map(res.results, c => new Content(c));
           return {
             total: res.total,
-            results: _.map(res.results, c => new Content(c)),
+            results,
           };
         }),
         catchError(err => this.handleError(err))
@@ -238,7 +248,7 @@ export class ContentedService {
   }
 
   // TODO: Create a pagination page for offset limit calculations
-  public initialLoad(cnt: Container) {
+  public initialLoad(cnt: Container): Observable<Array<Content>> {
     if (cnt.loadState === LoadStates.NotLoaded) {
       cnt.loadState = LoadStates.Loading;
 
@@ -250,13 +260,15 @@ export class ContentedService {
         })
         .pipe(
           map((res: any) => {
-            return cnt.addContents(cnt.buildImgs(res.results));
+            const contents = res.results?.map(c => new Content(c));
+            console.log(`Initial load ${cnt.id}`);
+            return cnt.addContents(contents);
           })
         );
     }
   }
 
-  public searchContainers(cntQ: ContainerSearch) {
+  public searchContainers(cntQ: ContainerSearch): Observable<PageResponse<Container>> {
     let params = this.getPaginationParams(cntQ.offset, cntQ.limit);
     if (cntQ.name) {
       params = params.set('text', cntQ.name);
@@ -278,7 +290,7 @@ export class ContentedService {
   }
 
   // Could definitely use Zod here as a search type.  Maybe it is worth pulling in at this point.
-  public searchContent(cs: ContentSearch) {
+  public searchContent(cs: ContentSearch): Observable<PageResponse<Content>> {
     let params = this.getPaginationParams(cs.offset, cs.limit);
     params = params.set('search', cs.text);
     if (cs.contentType) {
@@ -310,9 +322,14 @@ export class ContentedService {
       );
   }
 
-  public saveContent(content: Content) {
+  public saveContent(content: Content): Observable<Content> {
     let url = ApiDef.contented.content.replace('{id}', content.id.toString());
-    return this.http.put(url, content).pipe(catchError(err => this.handleError(err)));
+    return this.http.put(url, content).pipe(
+      map((res: any) => {
+        return new Content(res);
+      }),
+      catchError(err => this.handleError(err))
+    );
   }
 
   public handleError(err: HttpErrorResponse) {
@@ -361,7 +378,7 @@ export class ContentedService {
     );
   }
 
-  requestScreens(content: Content, count: number = 1, startTime: number = 2) {
+  requestScreens(content: Content, count: number = 1, startTime: number = 2): Observable<TaskRequest> {
     let url = ApiDef.contented.requestScreens.replace('{id}', content.id.toString());
     url = url.replace('{count}', '' + count);
     url = url.replace('{startTimeSeconds}', '' + Math.floor(startTime));
@@ -372,7 +389,7 @@ export class ContentedService {
     );
   }
 
-  encodeVideoContent(content: Content, codec: string = '') {
+  encodeVideoContent(content: Content, codec: string = ''): Observable<TaskRequest> {
     let params = new HttpParams();
     params = params.set('codec', codec);
     let url = ApiDef.contented.encodeVideoContent.replace('{id}', content.id.toString());
@@ -384,7 +401,7 @@ export class ContentedService {
   }
 
   // Determine what kinds of args we can provide
-  createPreviewFromScreens(content: Content) {
+  createPreviewFromScreens(content: Content): Observable<TaskRequest> {
     let url = ApiDef.contented.createPreviewFromScreens.replace('{id}', content.id.toString());
     return this.http.post(url, {}).pipe(
       map(res => {
@@ -394,7 +411,7 @@ export class ContentedService {
   }
 
   // Determine what kinds of args we can provide
-  createTagContentTask(content: Content) {
+  createTagContentTask(content: Content): Observable<TaskRequest> {
     let url = ApiDef.contented.createTagContentTask.replace('{id}', content.id.toString());
     return this.http.post(url, {}).pipe(
       map(res => {
@@ -403,7 +420,7 @@ export class ContentedService {
     );
   }
 
-  findDuplicateForContentTask(content: Content) {
+  findDuplicateForContentTask(content: Content): Observable<TaskRequest> {
     let url = ApiDef.contented.contentDuplicatesTask.replace('{contentId}', content.id.toString());
     return this.http.post(url, content).pipe(
       map(res => {
@@ -412,7 +429,7 @@ export class ContentedService {
     );
   }
 
-  containerDuplicatesTask(cnt: Container) {
+  containerDuplicatesTask(cnt: Container): Observable<Array<TaskRequest>> {
     let url = ApiDef.contented.containerDuplicatesTask.replace('{containerId}', cnt.id.toString());
     return this.http.post(url, cnt).pipe(
       map(res => {
@@ -421,7 +438,7 @@ export class ContentedService {
     );
   }
 
-  containerRemoveDuplicatesTask(cnt: Container) {
+  containerRemoveDuplicatesTask(cnt: Container): Observable<Array<TaskRequest>> {
     let url = ApiDef.contented.containerRemoveDuplicatesTask.replace('{containerId}', cnt.id.toString());
     return this.http.post(url, cnt).pipe(
       map(res => {
@@ -430,7 +447,7 @@ export class ContentedService {
     );
   }
 
-  containerPreviewsTask(cnt: Container, count: number = 16, startTimeSeconds: number = -1) {
+  containerPreviewsTask(cnt: Container, count: number = 16, startTimeSeconds: number = -1): Observable<Array<TaskRequest>> {
     let url = ApiDef.contented.containerPreviewsTask.replace('{containerId}', cnt.id.toString());
     url = url.replace('{count}', `${count}`).replace('{startTimeSeconds}', `${startTimeSeconds}`);
     return this.http.post(url, cnt).pipe(
@@ -441,7 +458,7 @@ export class ContentedService {
     );
   }
 
-  containerVideoEncodingTask(cnt: Container) {
+  containerVideoEncodingTask(cnt: Container): Observable<Array<TaskRequest>> {
     let url = ApiDef.contented.containerVideoEncodingTask.replace('{containerId}', cnt.id.toString());
     return this.http.post(url, cnt).pipe(
       map(res => {
@@ -452,7 +469,7 @@ export class ContentedService {
     );
   }
 
-  containerTaggingTask(cnt: Container) {
+  containerTaggingTask(cnt: Container): Observable<Array<TaskRequest>> {
     let url = ApiDef.contented.containerTaggingTask.replace('{containerId}', cnt.id.toString());
     return this.http.post(url, cnt).pipe(
       map(res => {
@@ -461,10 +478,10 @@ export class ContentedService {
     );
   }
 
-  getTags(page: number = 1, perPage: number = 1000, tagType: string = '') {
+  getTags(page: number = 1, perPage: number = 1000, tagType: string = ''): Observable<PageResponse<Tag>> {
     if (TAGS_RESPONSE.initialized) {
       return observableFrom(
-        new Promise((resolve, reject) => {
+        new Promise<PageResponse<Tag>>((resolve, reject) => {
           resolve(TAGS_RESPONSE);
         })
       );
@@ -485,7 +502,7 @@ export class ContentedService {
   }
 
   // TODO: Update this to a query object
-  getTasks(query: TaskSearch) {
+  getTasks(query: TaskSearch): Observable<PageResponse<TaskRequest>> {
     // TODO: make a toParam() ?
     let params = this.getPaginationParams(query.offset, query.limit);
     if (query.id) {

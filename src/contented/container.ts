@@ -42,7 +42,7 @@ export class Container {
     this.id = _.get(cnt, 'id') || '';
     this.name = _.get(cnt, 'name') || '';
     this.previewUrl = _.get(cnt, 'previewUrl') || '';
-    this.setContents(this.buildImgs(_.get(cnt, 'contents') || []));
+    this.setContents(_.get(cnt, 'contents') || []);
   }
 
   public getCurrentContent() {
@@ -86,10 +86,6 @@ export class Container {
     return -1;
   }
 
-  public buildImgs(imgData: Array<any>) {
-    return _.map(imgData, data => new Content(data));
-  }
-
   public setContents(contents: Array<Content>) {
     this.contents = _.sortBy(_.uniqBy(contents || [], 'id'), 'idx');
     this.count = this.contents.length;
@@ -103,6 +99,20 @@ export class Container {
   }
 
   public addContents(contents: Array<Content>) {
+    if (!contents) {
+      return;
+    }
+    if (!contents || !contents.forEach) {
+      console.error('No contents to add', contents?.length);
+      return;
+    }
+
+    contents.forEach(c => {
+      if (!(c instanceof Content)) {
+        throw new Error(`Content is not an instance of Content ${c}`);
+      }
+    })
+
     let sorted = _.sortBy((this.contents || []).concat(contents), 'idx');
     this.setContents(sorted);
     return sorted;

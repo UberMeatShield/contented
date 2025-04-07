@@ -85,20 +85,19 @@ export class VideoFormat implements VideoFormatInterface {
   }
 }
 
-
 export const VideoStreamSchema = z.object({
   avg_frame_rate: z.string(),
   bit_rate: z.coerce.number(),
-  bits_per_raw_sample: z.coerce.number(),
-  chroma_location: z.string(),
-  closed_captions: z.coerce.number(),
+  bits_per_raw_sample: z.coerce.number().optional(),
+  chroma_location: z.string().optional(),
+  closed_captions: z.coerce.number().optional(),
   codec_long_name: z.string(),
   codec_name: z.string(),
-  codec_tag: z.string(),
-  codec_tag_string: z.string(),
-  codec_type: z.string(),
-  coded_height: z.coerce.number(),
-  coded_width: z.coerce.number(),
+  codec_tag: z.string().optional(),
+  codec_tag_string: z.string().optional(),
+  codec_type: z.string().optional(),
+  coded_height: z.coerce.number().optional(),
+  coded_width: z.coerce.number().optional(),
   duration: z.coerce.number(),
 })
 
@@ -151,6 +150,8 @@ export class VideoCodecInfo implements VideoCodecInfoInterface {
     if (s.format) {
       this.format = new VideoFormat(s.format);
     }
+
+    // Probably need a type check on this
     this.streams = (s.streams || []).map(stream => new VideoStream(stream));
   }
 
@@ -179,9 +180,9 @@ export class VideoCodecInfo implements VideoCodecInfoInterface {
 export const ContentSchema = z.object({
   id: z.number(),
   src: z.string(),
-  preview: z.string(), // Name of the preview, if not set we do not have one.
-  idx: z.number(),
-  description: z.string(),
+  preview: z.string().optional(), // Name of the preview, if not set we do not have one.
+  idx: z.number().default(0).optional(),
+  description: z.string().default("").optional(),
 
   content_type: z.string().optional(),
   container_id: z.number().optional(),
@@ -219,7 +220,6 @@ export class Content implements ContentInterface {
   created_at: string;
   updated_at: string;
   duplicate: boolean;
-
 
   // Implemented
   videoInfoParsed: VideoCodecInfo;

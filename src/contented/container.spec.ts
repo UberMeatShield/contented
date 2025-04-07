@@ -58,20 +58,20 @@ describe('TestingContainer', () => {
   it('Should add more content with more data', () => {
     let dir = new Container(MockData.getMockDir(0));
     dir.setContents(
-      dir.buildImgs([
+      [
         { id: 0, src: 'a' },
         { id: 1, src: 'b' },
-      ])
+      ].map(c => new Content(c))
     );
 
     dir.total = 5;
     expect(dir.count).toBe(2, 'We should have 2 results');
     dir.addContents(
-      dir.buildImgs([
+      [
         { id: 2, src: 'c' },
         { id: 0, src: 'a' },
         { id: 3, src: 'd' },
-      ])
+      ].map(c => new Content(c))
     );
     expect(dir.contents.length).toBe(4, 'It should have added contents');
     expect(dir.count).toBe(4, 'The count should have updated');

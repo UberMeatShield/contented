@@ -111,7 +111,9 @@ describe('TestingContentBrowserCmp', () => {
 
     let cnt = comp.getCurrentContainer();
     expect(cnt).withContext('There should be a current container').toBeDefined();
-    cnt.addContents(MockData.getContentArr(cnt.id, cnt.total));
+    const arr = MockData.getContentArr(cnt.id, cnt.total);
+    cnt.addContents(arr);
+
     let cl = cnt.getContentList();
     expect(cl).withContext('We should have a content list').toBeDefined();
     expect(cl.length).withContext('And we should have content').toEqual(cnt.total);
@@ -121,7 +123,8 @@ describe('TestingContentBrowserCmp', () => {
     expect(imgs.length).withContext('A bunch of images should be visible').toBeGreaterThan(2);
     expect($('.content-full-view').length).withContext('It should not have a view').toBe(0);
 
-    let toClick = $(imgs[3]).trigger('click');
+    let toClick = $(imgs[2]).trigger('click');
+    expect(toClick).toBeDefined();
     tick(100);
     harness.detectChanges();
 
@@ -188,11 +191,16 @@ describe('TestingContentBrowserCmp', () => {
     let offset = page * service.LIMIT;
     expect(page).withContext('It should load more, not the beginning').toBeGreaterThan(0);
     expect(offset).withContext('Calculating the offset should be more than the current count').toEqual(3);
-
-    let content = MockData.getContent(cnt.id, service.LIMIT);
-    loadReq.flush(content);
+    tick(100);
     harness.detectChanges();
 
+    const contentsAll = MockData.getContent(cnt.id, cnt.total);
+    const results = contentsAll.results;
+    contentsAll.results = results.slice(cnt.count, cnt.count + 1);
+
+    loadReq.flush(contentsAll);
+    harness.detectChanges();
+    tick(100);
     expect(cnt.count).withContext('Now we should have loaded more based on the limit').toEqual(3);
     harness.detectChanges();
   }));

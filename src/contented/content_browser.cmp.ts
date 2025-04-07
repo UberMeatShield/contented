@@ -140,9 +140,9 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
     }
   }
 
-  public cntResults(cnt: Container, response) {
+  public cntResults(cnt: Container, response: { total: number, results: Array<Content> }) {
     // console.log("Results loading, what is in the results?", response);
-    cnt.addContents(cnt.buildImgs(response));
+    cnt.addContents(response?.results);
   }
 
   public reset() {
@@ -237,6 +237,7 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
     this._contentedService.fullLoadDir(cnt).subscribe({
       next: (loadedCnt: Container) => {
         console.log('Fully loaded up the container', loadedCnt.id);
+
         GlobalNavEvents.selectContent(loadedCnt.getContent(), loadedCnt);
       },
       error: err => {
