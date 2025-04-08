@@ -34,7 +34,7 @@ export class VSCodeEditorCmp implements OnInit {
   @Input() readOnly: boolean = true;
   @Input() language: string = 'tagging';
   @Input() fixedLineCount: number = -1;
-  @Input() placeholder: string;
+  @Input() placeholder: string | undefined;
   @Input() padLine: number = 1;
 
   @Input() tags: Array<Tag> = [];
@@ -109,7 +109,7 @@ export class VSCodeEditorCmp implements OnInit {
 
   isInitialized() {
     let self = this;
-    function monacoPoller(resolve, reject) {
+    function monacoPoller(resolve: (value: boolean) => void, reject: (reason?: any) => void) {
       if (self.initialized) {
         resolve(self.initialized);
       } else {
@@ -117,7 +117,7 @@ export class VSCodeEditorCmp implements OnInit {
       }
     }
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve: (value: boolean) => void, reject: (reason?: any) => void) => {
       monacoPoller(resolve, reject);
     });
   }
@@ -144,7 +144,7 @@ export class VSCodeEditorCmp implements OnInit {
     if (this.editor) {
       this.changeEmitter.pipe(distinctUntilChanged(), debounceTime(10)).subscribe({
         next: (evt: VSCodeChange) => {
-          this.editForm.get('description').setValue(evt.value);
+          this.editForm?.get('description')?.setValue(evt.value);
         },
         error: err => {
           GlobalBroadcast.error('Monaco init failed', err);
@@ -177,6 +177,10 @@ export class VSCodeEditorCmp implements OnInit {
 
   // TokenType match must be set smarter.
   public getTokens(tokenType: string = 'keyword', language = this.language) {
+    if (!this.monacoEditor) {
+      return [];
+    }
+
     // Dynamically loaded
     let monaco = (window as any).monaco;
     let tags = new Set<string>();
@@ -195,9 +199,9 @@ export class VSCodeEditorCmp implements OnInit {
       let match = `${tokenType}.${language}`;
       _.each(tokenArr, (tokens, lineIdx: number) => {
         if (!tokens) return;
-        let line;
+        let line: string | undefined;
         try {
-          line = m.getLineContent(lineIdx + 1);
+          line = m?.getLineContent(lineIdx + 1);
         } catch (e) {
           // console.error("A delete can trigger an event and the model updates under you", lineIdx);
         }
@@ -235,7 +239,10 @@ export class VSCodeEditorCmp implements OnInit {
   }
 
   // Additional keys for token matching?
-  readToken(str: string, offset: number) {
+  readToken(str: string | undefined, offset: number) {
+    if (!str) {
+      return '';
+    }
     let code, j;
     let len = str.length;
     if (offset > len) {
@@ -280,7 +287,9 @@ export class VSCodeEditorCmp implements OnInit {
     }, 50);
 
     _.delay(() => {
-      this.createPlaceholder(this.placeholder, this.monacoEditor);
+      if (this.monacoEditor) {
+        this.createPlaceholder(this.placeholder || "", this.monacoEditor);
+      }
     }, 200);
 
     _.delay(() => {
@@ -294,21 +303,24 @@ export class VSCodeEditorCmp implements OnInit {
   createPlaceholder(placeholder: string, editor: MonacoEditor.ICodeEditor) {
     // Need to make it so the placeholder cannot be clicked
     //console.log("Placeholder", placeholder, editor, "TS Wrapper", this.editor);
-    new PlaceholderContentWidget(this.placeholder, editor);
+    new PlaceholderContentWidget(this.placeholder || "", editor);
   }
 
   // TODO:  This also needs to handle a window resize event to actually check the content
   // and do a redraw. Might also be better to hide till the first redraw event.
   // https://github.com/microsoft/monaco-editor/issues/568
   fitContent() {
-    let el = this.container.nativeElement;
+    let el = this.container?.nativeElement;
+    if (!el || !this.monacoEditor) {
+      return;
+    }
     let width = el.offsetWidth;
 
     let updateHeight = () => {
       let editor = this.monacoEditor;
       let lineCount = this.fixedLineCount;
       if (lineCount < 1) {
-        lineCount = Math.max(editor.getModel()?.getLineCount(), 8);
+        lineCount = Math.max(editor?.getModel()?.getLineCount() || 0, 8);
       }
 
       // You would think this would work but unfortunately the height of content is altered
@@ -317,7 +329,7 @@ export class VSCodeEditorCmp implements OnInit {
       let contentHeight = 19 * (lineCount + this.padLine);
       el.style.height = `${contentHeight}px `;
       el.style.width = `${width}px `;
-      editor.layout({ width, height: contentHeight });
+      editor?.layout({ width, height: contentHeight });
     };
 
     // Already delayed after the initialization

@@ -39,7 +39,7 @@
 
         <span *ngIf="selectedContainer">
           Filtering inside: {{selectedContainer.name}}
-          <button type="button" mat-mini-fab color="warn" (click)="selectContainer(null)">
+          <button type="button" mat-mini-fab color="warn" (click)="selectContainer(undefined)">
             <mat-icon aria-label="Stop filtering on container">close</mat-icon>
           </button>
         </span>

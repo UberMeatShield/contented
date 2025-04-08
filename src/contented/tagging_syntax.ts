@@ -5,10 +5,10 @@ import { Tag } from './content';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 
-let languages = [];
+let languages: Array<string> = [];
 
-let technologies = [];
-let operators = [
+let technologies: Array<string> = [];
+let operators: Array<string> = [
   '=',
   '>',
   '<',
