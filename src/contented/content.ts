@@ -14,11 +14,11 @@ export class Tag implements TagInterface {
   id: string;
   tag_type: string;
 
-  constructor(data: any = {}) {
+  constructor(data: Partial<TagInterface> = {}) {
     this.update(data);
   }
 
-  update(data: any = {}) {
+  update(data: Partial<TagInterface> = {}) {
     const s = TagSchema.parse(data);
     Object.assign(this, s);
   }
@@ -137,11 +137,11 @@ export class VideoCodecInfo implements VideoCodecInfoInterface {
   format: VideoFormat;
   streams: VideoStreamInterface[];
 
-  constructor(data: any = {}) {
+  constructor(data: Partial<VideoCodecInfoInterface> = {}) {
     this.update(data);
   }
 
-  update(data: any = {}) {
+  update(data: Partial<VideoCodecInfoInterface> = {}) {
     const s = VideoCodecInfoSchema.parse(data);
     Object.assign(this, s);
 
@@ -149,7 +149,6 @@ export class VideoCodecInfo implements VideoCodecInfoInterface {
       this.format = new VideoFormat(s.format);
     }
 
-    // Probably need a type check on this
     this.streams = (s.streams || []).map(stream => new VideoStream(stream));
   }
 

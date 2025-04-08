@@ -10,6 +10,11 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "target": "esnext",
+    "module": "esnext",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
     "typeRoots": [
       "node_modules/@types"
     ],
@@ -23,6 +28,10 @@
     "strictTemplates": true,
     "enableResourceInlining": true,
     "fullTemplateTypeCheck": true,
-    "strictInjectionParameters": true
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictInputTypes": true,
+    "strictNullInputTypes": true,
+    "strictOutputEventTypes": true
   }
 }
