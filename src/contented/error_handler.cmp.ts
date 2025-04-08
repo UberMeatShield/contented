@@ -21,9 +21,9 @@ interface DialogData {
   templateUrl: 'error_handler.ng.html',
 })
 export class ErrorHandlerCmp implements OnInit, OnDestroy {
-  @Input() broadcast: MessageBroadcast;
+  @Input() broadcast: MessageBroadcast | undefined;
   public events: { [id: string]: CountMessages } = {};
-  public sub: Subscription;
+  public sub: Subscription | undefined;
 
   constructor(
     private snack: MatSnackBar,

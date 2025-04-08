@@ -20,12 +20,12 @@ import * as _ from 'lodash';
   templateUrl: './editor_content.ng.html',
 })
 export class EditorContentCmp implements OnInit {
-  @ViewChild('description') editor: VSCodeEditorCmp;
+  @ViewChild('description') editor: VSCodeEditorCmp | undefined;
 
   @Input() content?: Content;
 
   @Input() editForm?: FormGroup;
-  @Input() descriptionControl: FormControl<string> = new FormControl('', Validators.required);
+  @Input() descriptionControl: FormControl<string|null> = new FormControl('', Validators.required);
 
   @Input() screensForm?: FormGroup;
   @Input() offsetControl: FormControl<number | null> = new FormControl(0, Validators.required);
@@ -39,7 +39,7 @@ export class EditorContentCmp implements OnInit {
   public taskLoading: boolean = false;
 
   // Mostly we use format.duration
-  public vidInfo: VideoCodecInfo;
+  public vidInfo: VideoCodecInfo | undefined;
 
   constructor(
     public fb: FormBuilder,
@@ -99,7 +99,7 @@ export class EditorContentCmp implements OnInit {
     this.content.description = _.get(this.editForm.value, 'description');
     this.loading = true;
 
-    let tags = this.editor.getTokens();
+    let tags = this.editor?.getTokens();
     console.log(tags);
     this.content.tags = _.map(tags, tag => new Tag({ id: tag, tag_type: 'user' }));
     this._service
@@ -226,13 +226,18 @@ export class EditorContentCmp implements OnInit {
     console.log('Task updated', task, task.operation);
 
     const contentId = this.content?.id;
+    if (!contentId) {
+      return;
+    }
     if (task.operation === TaskOperation.SCREENS) {
-      this.content.screens = null;
+      if (this.content) {
+        this.content.screens = [];
+      }
       this.loadScreens(contentId);
     }
 
     if (task.operation === TaskOperation.WEBP) {
-      this.content = null;
+      this.content = undefined;
       this.loadContent(contentId);
     }
   }
@@ -240,7 +245,9 @@ export class EditorContentCmp implements OnInit {
   loadScreens(contentId: number) {
     this._service.getScreens(contentId).subscribe({
       next: (screens: { total: number; results: Array<Screen> }) => {
-        this.content.screens = screens.results;
+        if (this.content) {
+          this.content.screens = screens.results;
+        }
       },
       error: err => {
         GlobalBroadcast.error('Failed to load screens', err);

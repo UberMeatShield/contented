@@ -445,9 +445,9 @@ export class ContentedService {
     let url = ApiDef.contented.containerPreviewsTask.replace('{containerId}', cnt.id.toString());
     url = url.replace('{count}', `${count}`).replace('{startTimeSeconds}', `${startTimeSeconds}`);
     return this.http.post(url, cnt).pipe(
-      map(res => {
+      map((res: any) => {
         console.log('Created container previews response', res);
-        return _.map(res['results'], task => new TaskRequest(task));
+        return _.map(res?.results, task => new TaskRequest(task));
       })
     );
   }
@@ -455,7 +455,7 @@ export class ContentedService {
   containerVideoEncodingTask(cnt: Container): Observable<Array<TaskRequest>> {
     let url = ApiDef.contented.containerVideoEncodingTask.replace('{containerId}', cnt.id.toString());
     return this.http.post(url, cnt).pipe(
-      map(res => {
+      map((res: any) => {
         // Return an array of task requests I think
         console.log('Container Encoding task', res);
         return _.map(res['results'], task => new TaskRequest(task));
@@ -466,7 +466,7 @@ export class ContentedService {
   containerTaggingTask(cnt: Container): Observable<Array<TaskRequest>> {
     let url = ApiDef.contented.containerTaggingTask.replace('{containerId}', cnt.id.toString());
     return this.http.post(url, cnt).pipe(
-      map(res => {
+      map((res: any) => {
         return _.map(res['results'], task => new TaskRequest(task));
       })
     );

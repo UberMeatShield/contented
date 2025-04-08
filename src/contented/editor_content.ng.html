@@ -31,7 +31,7 @@
         Take Screenshots
       </mat-card-header>
       <mat-card-content>
-        <form [formGroup]="screensForm">
+        <form *ngIf="screensForm" [formGroup]="screensForm">
           <mat-form-field class="input-third">
             <input matInput [formControl]="countControl" type="number"
              min="1"
@@ -42,10 +42,10 @@
           <mat-form-field class="input-third">
             <input matInput [formControl]="offsetControl" type="number" 
               min="0" 
-              [max]="vidInfo?.format?.duration"
+              [max]="vidInfo?.format?.durationSeconds || 0"
               placeholder="Offset to start screens" />
               <label>
-              ({{vidInfo?.format?.duration}}) seconds in video
+              ({{vidInfo?.format?.durationSeconds}}) seconds in video
               </label>
           </mat-form-field>
           <button type="button" mat-raised-button 
