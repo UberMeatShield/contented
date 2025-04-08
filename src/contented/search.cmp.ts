@@ -1,7 +1,7 @@
 import { Subscription } from 'rxjs';
 import { finalize, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
-import { Input, OnInit, AfterViewInit, Component, HostListener, ViewChild, Inject } from '@angular/core';
+import { Input, OnInit, AfterViewInit, Component, HostListener, ViewChild, Inject, ElementRef } from '@angular/core';
 import { ContentedService, ContentSearchSchema } from './contented_service';
 import { Content, Tag, VSCodeChange } from './content';
 import { ActivatedRoute, Router, ParamMap } from '@angular/router';
@@ -13,6 +13,7 @@ import { GlobalBroadcast } from './global_message';
 import * as _ from 'lodash';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { GlobalNavEvents } from './nav_events';
+import { getWindowSizes } from './common';
 
 @Component({
   selector: 'search-cmp',
@@ -22,16 +23,16 @@ export class SearchCmp implements OnInit {
   // Route needs to exist
   // Take in the search text route param
   // Debounce the search
-  @ViewChild('videoForm', { static: true }) searchControl;
-  @ViewChild(MatMenuTrigger) contextMenu: MatMenuTrigger;
-  @Input() tags: Array<Tag>;
+  @ViewChild('videoForm', { static: true }) searchControl: ElementRef | undefined;
+  @ViewChild(MatMenuTrigger) contextMenu: MatMenuTrigger | undefined;
+  @Input() tags: Array<Tag> = [];
   @Input() showToggleDuplicate: boolean = false;
 
-  throttleSearch: Subscription;
+  throttleSearch: Subscription | undefined;
   options: FormGroup;
   fb: FormBuilder;
 
-  public content: Array<Content>;
+  public content: Array<Content> = [];
 
   // TODO: Make this a saner calculation
   public previewWidth = 480;
@@ -42,11 +43,11 @@ export class SearchCmp implements OnInit {
   public loading: boolean = false;
   public contextMenuPosition = { x: '0px', y: '0px' };
 
-  public searchText: string; // Initial searchText value if passed in the url
+  public searchText: string = ''; // Initial searchText value if passed in the url
   public searchType = new FormControl('text');
   public duplicateFilterState = new FormControl(false);
   public currentTextChange: VSCodeChange = { value: '', tags: [] };
-  public changedSearch: (evt: VSCodeChange) => void;
+  public changedSearch: (evt: VSCodeChange) => void = () => {};
 
   constructor(
     public _contentedService: ContentedService,
@@ -74,11 +75,11 @@ export class SearchCmp implements OnInit {
     }, 250);
 
     this.route.queryParams.pipe().subscribe({
-      next: (res: ParamMap) => {
+      next: (res: any) => {
         console.log('Query Params set', res);
         // Note you do NOT want searchText to be updated by changes
         // in this component except possibly a 'clear'
-        this.searchText = res['searchText'] || '';
+        this.searchText = res.searchText || '';
       },
     });
     this.calculateDimensions();
@@ -87,10 +88,13 @@ export class SearchCmp implements OnInit {
 
   onContextMenu(event: MouseEvent, content: Content) {
     event.preventDefault();
+    if (!this.contextMenu) {
+      return;
+    }
     this.contextMenuPosition.x = event.clientX + 'px';
     this.contextMenuPosition.y = event.clientY + 'px';
     this.contextMenu.menuData = { content: content };
-    this.contextMenu.menu.focusFirstItem('mouse');
+    this.contextMenu.menu?.focusFirstItem('mouse');
     this.contextMenu.openMenu();
   }
 
@@ -152,7 +156,7 @@ export class SearchCmp implements OnInit {
     this.loading = true;
 
     // TODO: Make this a bit less sketchy after I work on the actual data tagging.
-    const searchType = this.options.get('searchType').value;
+    const searchType = this.options.get('searchType')?.value;
     if (searchType === 'tags') {
       text = '';
     } else {
@@ -191,8 +195,7 @@ export class SearchCmp implements OnInit {
   // TODO: Being called abusively in the content rather than on page resize events
   @HostListener('window:resize', ['$event'])
   public calculateDimensions() {
-    let width = !window['jasmine'] ? window.innerWidth : 800;
-    let height = !window['jasmine'] ? window.innerHeight : 800;
+    const {width, height} = getWindowSizes();
 
     this.previewWidth = width / 4 - 41;
     this.previewHeight = height / this.maxVisible - 41;
@@ -215,7 +218,7 @@ export class SearchCmp implements OnInit {
     });
   }
 
-  imgLoaded(evt) {
+  imgLoaded(evt: any) {
     // Debugging / hooks but could also be a hook into a total loaded.
   }
 
@@ -233,11 +236,11 @@ export class SearchCmp implements OnInit {
 export class SearchDialog implements AfterViewInit {
   public contentContainer: Content;
 
-  public forceHeight: number;
-  public forceWidth: number;
+  public forceHeight: number = 800;
+  public forceWidth: number = 600;
   public sizeCalculated: boolean = false;
 
-  @ViewChild('SearchContent', { static: true }) searchContent;
+  @ViewChild('SearchContent', { static: true }) searchContent: ElementRef | undefined;
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public mc: Content,
@@ -250,9 +253,8 @@ export class SearchDialog implements AfterViewInit {
   ngAfterViewInit() {
     // TODO: Sizing content is a little off and the toolbars are visible based on dialog size
     setTimeout(() => {
-      let el = this.searchContent.nativeElement;
+      let el = this.searchContent?.nativeElement;
       if (el) {
-        console.log('Element', el, el.offsetWidth, el.offsetHeight);
         this.forceHeight = el.offsetHeight - 40;
         this.forceWidth = el.offsetWidth - 40;
       }

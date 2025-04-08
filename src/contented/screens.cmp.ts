@@ -6,14 +6,15 @@ import { finalize } from 'rxjs/operators';
 import { Screen, ScreenAction, ScreenClickEvent } from './screen';
 import { GlobalBroadcast } from './global_message';
 import * as _ from 'lodash';
+import { getWindowSizes } from './common';
 
 @Component({
   selector: 'screens-cmp',
   templateUrl: 'screens.ng.html',
 })
 export class ScreensCmp implements OnInit {
-  @Input() contentId: number;
-  @Input() screens: Array<Screen>;
+  @Input() contentId: number = 0;
+  @Input() screens: Array<Screen> = [];
   @Input() previewWidth: number = 480;
   @Input() previewHeight: number = 480;
 
@@ -32,7 +33,7 @@ export class ScreensCmp implements OnInit {
   public loading: boolean = false;
 
   // @Output clickEvt: EventEmitter<any>;
-  public sub: Subscription;
+  public sub: Subscription | undefined;
 
   constructor(public _contentedService: ContentedService) {}
 
@@ -92,11 +93,10 @@ export class ScreensCmp implements OnInit {
     }
 
     let perRow = Math.ceil((this.screens?.length || 0) / 2);
-    let width = !window['jasmine'] ? window.innerWidth : 800;
+    let { width, height } = getWindowSizes();
     if (this.containerWidth) {
       width = this.containerWidth;
     }
-    let height = !window['jasmine'] ? window.innerHeight : 800;
     if (this.containerHeight) {
       height = this.containerHeight;
     }

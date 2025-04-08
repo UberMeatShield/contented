@@ -16,9 +16,9 @@ import _ from 'lodash';
   templateUrl: './preview_content.ng.html',
 })
 export class PreviewContentCmp {
-  @Input() content: Content;
-  @Input() previewWidth: number;
-  @Input() previewHeight: number;
+  @Input() content!: Content;
+  @Input() previewWidth: number = 480;
+  @Input() previewHeight: number = 480;
   @Input() active: boolean = false;
 
   @Output() clickEvt: EventEmitter<Content> = new EventEmitter<Content>();

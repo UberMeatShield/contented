@@ -17,9 +17,9 @@ import { getWindowSizes } from './common';
   templateUrl: './favorites.ng.html',
 })
 export class FavoritesCmp implements OnInit, OnDestroy {
-  @Input() container: Container;
-  @Input() previewWidth: number;
-  @Input() previewHeight: number;
+  @Input() container: Container | undefined;
+  @Input() previewWidth: number = 480;
+  @Input() previewHeight: number = 480;
   @Input() maxVisible: number = 16;
   @Input() visible: boolean = false;
   @Input() monitorFavorites: boolean = true;
@@ -27,14 +27,16 @@ export class FavoritesCmp implements OnInit, OnDestroy {
   @ViewChild(MatMenuTrigger) contextMenu!: MatMenuTrigger;
 
   public contextMenuPosition = { x: '0px', y: '0px' };
-  public sub: Subscription;
-  public maxWidth: number;
-  public maxHeight: number;
+  public sub: Subscription | undefined;
+  public maxWidth: number | undefined;
+  public maxHeight: number | undefined;
   public loading: boolean = false;
   public error: string | undefined;
   public active: boolean = false;
 
-  constructor(public _service: ContentedService) {}
+  constructor(public _service: ContentedService) {
+    this.container = this.container || getFavorites();
+  }
 
   onContextMenu(event: MouseEvent, content: Content) {
     event.preventDefault();
@@ -49,7 +51,6 @@ export class FavoritesCmp implements OnInit, OnDestroy {
   }
 
   public ngOnInit() {
-    this.container = this.container || getFavorites();
     this.calculateDimensions();
 
     this.sub = GlobalNavEvents.navEvts.subscribe({
@@ -69,7 +70,9 @@ export class FavoritesCmp implements OnInit, OnDestroy {
             break;
           case NavTypes.TOGGLE_FAVORITE_VISIBILITY:
             this.visible = !this.visible;
-            this.container.visible = this.visible;
+            if (this.container) {
+              this.container.visible = this.visible;
+            }
             break;
         }
       },
@@ -85,6 +88,9 @@ export class FavoritesCmp implements OnInit, OnDestroy {
    * @param content
    */
   public handleFavorite(content: Content) {
+    if (!this.container) {
+      return;
+    }
     let idx = _.findIndex(this.container.contents, { id: content.id });
     if (idx >= 0) {
       _.remove(this.container.contents, { id: content.id });
@@ -95,6 +101,9 @@ export class FavoritesCmp implements OnInit, OnDestroy {
   }
 
   public removeFavorite(content: Content) {
+    if (!this.container) {
+      return;
+    }
     let idx = _.findIndex(this.container.contents, { id: content.id });
     if (idx >= 0) {
       _.remove(this.container.contents, { id: content.id });
