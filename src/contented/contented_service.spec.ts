@@ -80,7 +80,7 @@ describe('TestingContentedService', () => {
 
     service.fullLoadDir(dir, 5000);
 
-    let url = ApiDef.contented.containerContent.replace('{cId}', dir.id);
+    let url = ApiDef.contented.containerContent.replace('{cId}', dir.id.toString());
     let calls = httpMock.match(r => r.url.includes(url));
     expect(calls.length).toEqual(9, 'It should make a lot of calls');
 
@@ -135,15 +135,15 @@ describe('TestingContentedService', () => {
 
     let loaded: Container;
     let expectedNumberCalls = content.total - content.count;
-    service.fullLoadDir(content, 1).subscribe(
-      (dir: Container) => {
+    service.fullLoadDir(content, 1).subscribe({
+      next: (dir: Container) => {
         loaded = dir;
       },
-      err => {
+      error: (err: any) => {
         fail(err);
-      }
-    );
-    let url = ApiDef.contented.containerContent.replace('{cId}', content.id);
+      },
+    });
+    let url = ApiDef.contented.containerContent.replace('{cId}', content.id.toString());
     let calls = httpMock.match((req: HttpRequest<any>) => {
       return req.url === url;
     });

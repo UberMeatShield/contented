@@ -12,6 +12,8 @@ import $ from 'jquery';
 import { GlobalNavEvents } from './nav_events';
 import { getFavorites } from './container';
 import { ApiDef } from './api_def';
+import { Content, Tag } from './content';
+import { z } from 'zod';
 
 describe('FavoritesCmp', () => {
   let comp: FavoritesCmp;
@@ -42,7 +44,7 @@ describe('FavoritesCmp', () => {
     httpMock.verify();
   });
 
-  it('Should be able to render favorites', fakeAsync(() => {
+  it('Should be able to Initialize the component', fakeAsync(() => {
     expect(comp).toBeDefined();
     expect(el).toBeDefined();
   }));
@@ -50,6 +52,9 @@ describe('FavoritesCmp', () => {
   it('Should be able to render a favorite', fakeAsync(() => {
     fixture.detectChanges();
     expect($('.preview-content-cmp').length).toBe(0);
+
+    let contentData = MockData.getImg();
+    const content = new Content(contentData);
 
     GlobalNavEvents.favoriteContent(MockData.getImg());
     tick(100);
@@ -59,6 +64,7 @@ describe('FavoritesCmp', () => {
 
   it('Should be able to remove a favorite video', fakeAsync(() => {
     const content = MockData.getVideo();
+
     getFavorites().addContents([content]);
     comp.container = getFavorites();
 

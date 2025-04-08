@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
-import { Content } from './content';
+import { Content, ContentSchema } from './content';
 import { ApiDef } from './api_def';
+import { z } from 'zod';
 
 function trail(path: string, whatWith: string) {
   if (path[path.length - 1] !== whatWith) {
@@ -16,14 +17,26 @@ export enum LoadStates {
   Complete,
 }
 
-export class Container {
-  public contents: Array<Content>;
+export const ContainerSchema = z.object({
+  id: z.number(),
+  name: z.string().optional(),
+  previewUrl: z.string().optional(),
+  contents: z.array(ContentSchema).nullable().optional(),
+  total: z.number().default(0),
+  description: z.string().default('').optional(),
+});
+
+export type IContainer = z.infer<typeof ContainerSchema>;
+
+export class Container implements IContainer {
+  public contents: Array<Content> = [];
   public total: number;
   public count: number;
   public path: string;
   public name: string;
-  public id: string;
+  public id: number;
   public previewUrl: string;
+  public description: string;
 
   // Set on the initial content loads
   public loadState: LoadStates = LoadStates.NotLoaded;
@@ -37,11 +50,15 @@ export class Container {
   public rowIdx: number = 0;
 
   constructor(cnt: any) {
-    this.total = _.get(cnt, 'total') || 0;
-    this.id = _.get(cnt, 'id') || '';
-    this.name = _.get(cnt, 'name') || '';
-    this.previewUrl = _.get(cnt, 'previewUrl') || '';
-    this.setContents(this.buildImgs(_.get(cnt, 'contents') || []));
+    this.update(cnt);
+  }
+
+  public update(cnt: any) {
+    const c = ContainerSchema.parse(cnt);
+    Object.assign(this, c);
+
+    const contents = cnt?.contents ? cnt.contents.map(mc => new Content(mc)) : [];
+    this.setContents(contents);
   }
 
   public getCurrentContent() {
@@ -85,10 +102,6 @@ export class Container {
     return -1;
   }
 
-  public buildImgs(imgData: Array<any>) {
-    return _.map(imgData, data => new Content(data));
-  }
-
   public setContents(contents: Array<Content>) {
     this.contents = _.sortBy(_.uniqBy(contents || [], 'id'), 'idx');
     this.count = this.contents.length;
@@ -102,6 +115,20 @@ export class Container {
   }
 
   public addContents(contents: Array<Content>) {
+    if (!contents) {
+      return;
+    }
+    if (!contents || !contents.forEach) {
+      console.error('No contents to add', contents?.length);
+      return;
+    }
+
+    contents.forEach(c => {
+      if (!(c instanceof Content)) {
+        throw new Error(`Content is not an instance of Content ${c}`);
+      }
+    });
+
     let sorted = _.sortBy((this.contents || []).concat(contents), 'idx');
     this.setContents(sorted);
     return sorted;
@@ -131,7 +158,7 @@ let favoriteContainer: Container;
 export function getFavorites() {
   if (!favoriteContainer) {
     favoriteContainer = new Container({
-      id: 'favorites',
+      id: -42,
       name: 'Favorites',
       previewUrl: '', // Find a local one and use that
       contents: [],

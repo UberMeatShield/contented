@@ -21,7 +21,7 @@
             <mat-icon>navigate_before</mat-icon>
           </button>
           <form #navFormIndexing [formGroup]="navForm">
-            <mat-form-field floatLabel="true">
+            <mat-form-field floatLabel="auto">
               <input class="cnt-row-idx" matInput [formControl]="idxControl" name="rowIdx" type="number" min="0" max="{{cnt.total}}">
             </mat-form-field>
           </form>

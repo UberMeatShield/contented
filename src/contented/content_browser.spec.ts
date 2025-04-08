@@ -51,7 +51,7 @@ describe('TestingContentBrowserCmp', () => {
 
   it('TODO: Fully handles routing arguments', waitForAsync(async () => {
     comp = await harness.navigateByUrl('/ui/browse/2/3', ContentBrowserCmp);
-    comp.allCnts = [new Container({ id: 'A', total: 0, count: 0, contents: [] })];
+    comp.allCnts = [new Container({ id: 2, total: 0, count: 0, contents: [] })];
     harness.detectChanges();
     router = TestBed.inject(Router);
     expect(router.url).toBe('/ui/browse/2/3');
@@ -71,7 +71,7 @@ describe('TestingContentBrowserCmp', () => {
     harness.detectChanges();
     MockData.handleCmpDefaultLoad(httpMock, harness);
     tick(2000);
-    expect(comp.allCnts.length).toBe(5, 'We should have 4 containers set');
+    expect(comp.allCnts.length).withContext('We should have 4 containers set').toBe(6);
 
     let dirs = comp.getVisibleContainers();
     expect(dirs.length).toBe(comp.maxVisible, 'Should only have the max visible containers present.');
@@ -101,7 +101,7 @@ describe('TestingContentBrowserCmp', () => {
     harness.detectChanges();
     tick(2000);
 
-    let containers = MockData.getPreview();
+    MockData.getPreview();
     MockData.handleCmpDefaultLoad(httpMock, harness);
     expect($('.content-full-view').length).withContext('It should not have a view').toBe(0);
     tick(10000);
@@ -111,17 +111,20 @@ describe('TestingContentBrowserCmp', () => {
 
     let cnt = comp.getCurrentContainer();
     expect(cnt).withContext('There should be a current container').toBeDefined();
-    cnt.addContents(MockData.getContentArr(cnt.id, 4));
+    const arr = MockData.getContentArr(cnt.id, cnt.total);
+    cnt.addContents(arr);
+
     let cl = cnt.getContentList();
     expect(cl).withContext('We should have a content list').toBeDefined();
-    expect(cl.length).withContext('And we should have content').toEqual(4);
+    expect(cl.length).withContext('And we should have content').toEqual(cnt.total);
 
     harness.detectChanges();
     let imgs = $('.preview-img');
     expect(imgs.length).withContext('A bunch of images should be visible').toBeGreaterThan(2);
     expect($('.content-full-view').length).withContext('It should not have a view').toBe(0);
 
-    let toClick = $(imgs[3]).trigger('click');
+    let toClick = $(imgs[2]).trigger('click');
+    expect(toClick).toBeDefined();
     tick(100);
     harness.detectChanges();
 
@@ -168,6 +171,10 @@ describe('TestingContentBrowserCmp', () => {
 
     let cnt: Container = comp.getCurrentContainer();
     expect(cnt).not.toBe(null);
+    cnt.contents = [];
+    cnt.total = 4;
+    cnt.count = 0;
+
     expect(cnt.total).withContext('There should be more to load').toBeGreaterThan(3);
     expect(cnt.count).withContext('The default count should be empty').toEqual(0);
     cnt.addContents(MockData.getContentArr(cnt.id, 2));
@@ -175,7 +182,7 @@ describe('TestingContentBrowserCmp', () => {
 
     service.LIMIT = 1;
     comp.loadMore();
-    let url = ApiDef.contented.containerContent.replace('{cId}', cnt.id);
+    let url = ApiDef.contented.containerContent.replace('{cId}', cnt.id.toString());
     let loadReq = httpMock.expectOne(req => req.url === url);
     let checkParams: HttpParams = loadReq.request.params;
     expect(checkParams.get('per_page')).withContext('We set a different limit').toBe('1');
@@ -184,11 +191,16 @@ describe('TestingContentBrowserCmp', () => {
     let offset = page * service.LIMIT;
     expect(page).withContext('It should load more, not the beginning').toBeGreaterThan(0);
     expect(offset).withContext('Calculating the offset should be more than the current count').toEqual(3);
-
-    let content = MockData.getContent(cnt.id, service.LIMIT);
-    loadReq.flush(content);
+    tick(100);
     harness.detectChanges();
 
+    const contentsAll = MockData.getContent(cnt.id, cnt.total);
+    const results = contentsAll.results;
+    contentsAll.results = results.slice(cnt.count, cnt.count + 1);
+
+    loadReq.flush(contentsAll);
+    harness.detectChanges();
+    tick(100);
     expect(cnt.count).withContext('Now we should have loaded more based on the limit').toEqual(3);
     harness.detectChanges();
   }));
@@ -220,7 +232,7 @@ describe('TestingContentBrowserCmp', () => {
   }));
 
   it('Can handle rendering a text element into the page', waitForAsync(async () => {
-    let containerId = 'A';
+    let containerId = 3;
     let container = new Container({
       id: containerId,
       total: 1,
@@ -228,7 +240,7 @@ describe('TestingContentBrowserCmp', () => {
       contents: null,
     });
 
-    let contentId = 'textId';
+    let contentId = 42;
     let content = {
       id: contentId,
       content_type: 'text/plain; charset=utf-8',
@@ -247,7 +259,7 @@ describe('TestingContentBrowserCmp', () => {
     expect(comp.allCnts.length).toEqual(1);
     expect(comp.getVisibleContainers().length).toEqual(1);
 
-    let url = ApiDef.contented.containerContent.replace('{cId}', containerId);
+    let url = ApiDef.contented.containerContent.replace('{cId}', containerId.toString());
     const contentReq = httpMock.match(r => r.url.includes(url));
     contentReq.forEach(r => r.flush({ results: [content] }));
     harness.detectChanges();

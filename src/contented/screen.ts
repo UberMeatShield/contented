@@ -1,6 +1,8 @@
 import * as _ from 'lodash';
 import { ApiDef } from './api_def';
 
+import { z } from 'zod';
+
 export enum ScreenAction {
   VIEW = 'view',
   PLAY_SCREEN = 'play-screen',
@@ -18,31 +20,41 @@ function formatSeconds(seconds: number): string {
   const s = seconds % 60;
   return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
-export class Screen {
-  public id: string;
-  public src: string;
-  public idx: number;
 
-  public content_id: string;
-  public size_bytes: number;
-  public content_container_id: string;
-  public url: string;
-  public timeSeconds: number;
+export const ScreenSchema = z.object({
+  id: z.number(),
+  src: z.string(),
+  idx: z.number().default(0),
+  content_id: z.number().optional(),
+  size_bytes: z.number().default(0),
+  content_container_id: z.number().optional(),
+});
 
-  constructor(obj: any = {}) {
-    this.fromJson(obj);
+export type ScreenInterface = z.infer<typeof ScreenSchema>;
+
+export class Screen implements ScreenInterface {
+  id: number;
+  src: string;
+  idx: number = 0;
+  content_id?: number;
+  size_bytes: number;
+  content_container_id: number;
+
+  constructor(data: any = {}) {
+    this.update(data);
   }
 
-  public fromJson(raw: any) {
-    if (raw) {
-      Object.assign(this, raw);
-      this.timeSeconds = this.parseSecondsFromScreen() || 0;
-      this.links();
-    }
+  update(data: any = {}) {
+    const s = ScreenSchema.parse(data);
+    Object.assign(this, s);
   }
 
-  public links() {
-    this.url = `${ApiDef.contented.screens}${this.id}`;
+  get timeSeconds() {
+    return this.parseSecondsFromScreen() || 0;
+  }
+
+  get url() {
+    return `${ApiDef.contented.screens}${this.id}`;
   }
 
   public parseSecondsFromScreen() {

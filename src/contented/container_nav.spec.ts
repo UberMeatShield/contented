@@ -15,8 +15,8 @@ import { ContentedService } from '../contented/contented_service';
 import { ContentedModule } from '../contented/contented_module';
 import { GlobalNavEvents, NavTypes } from '../contented/nav_events';
 
-import * as _ from 'lodash';
-import * as $ from 'jquery';
+import _ from 'lodash';
+import $ from 'jquery';
 import { MockData } from '../test/mock/mock_data';
 
 describe('TestingContainerNavCmp', () => {
@@ -43,7 +43,9 @@ describe('TestingContainerNavCmp', () => {
 
     de = fixture.debugElement.query(By.css('.container-nav-cmp'));
     el = de.nativeElement;
-    cnt = new Container(MockData.getPreview()[0]);
+
+    const containerResponse = MockData.getPreview();
+    cnt = new Container(containerResponse.results[0]);
 
     let res = MockData.getContent(cnt.id, 5);
     let contents = _.map(res.results, c => new Content(c));
@@ -64,6 +66,14 @@ describe('TestingContainerNavCmp', () => {
     }
   });
 
+  function getRowIdx() {
+    const val = $('.cnt-row-idx').val();
+    if (typeof val === 'string') {
+      return parseInt(val, 10);
+    }
+    return 0;
+  }
+
   it('Should create a contented component', () => {
     expect(comp).toBeDefined('We should have the Contented comp');
     expect(el).toBeDefined('We should have a top level element');
@@ -80,7 +90,7 @@ describe('TestingContainerNavCmp', () => {
     fullLoadBtn.trigger('click');
     fixture.detectChanges();
 
-    let url = ApiDef.contented.containerContent.replace('{cId}', cnt.id);
+    let url = ApiDef.contented.containerContent.replace('{cId}', cnt.id.toString());
     let req = httpMock.expectOne(r => r.url === url);
   }));
 
@@ -98,19 +108,19 @@ describe('TestingContainerNavCmp', () => {
     expect(prevBtn.length).withContext('It should have a previous button').toEqual(1);
 
     let rowIdxOriginal = cnt.rowIdx;
-    expect(parseInt(rowIdx.val(), 10)).withContext('It should be on the first element').toEqual(rowIdxOriginal);
+    expect(getRowIdx()).withContext('It should be on the first element').toEqual(rowIdxOriginal);
     nextBtn.trigger('click');
     nextBtn.trigger('click');
     fixture.detectChanges();
     tick(100);
-    expect(parseInt(rowIdx.val(), 10))
+    expect(getRowIdx())
       .withContext('Now we should be on the next element')
       .toEqual(rowIdxOriginal + 2);
 
     prevBtn.trigger('click');
     fixture.detectChanges();
     tick(100);
-    expect(parseInt(rowIdx.val(), 10))
+    expect(getRowIdx())
       .withContext('It should go back one')
       .toEqual(rowIdxOriginal + 1);
   }));

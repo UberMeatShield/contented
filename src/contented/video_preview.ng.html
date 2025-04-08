@@ -13,7 +13,7 @@
           </a>
           <span class="video-title">{{content.src}}</span>
           <span class="video-encoding">Encoding: {{content.encoding}}</span>
-          <span class="video-duration">Duration: {{content.videoInfo?.format?.duration | durationFormat: 's':'hhmmss'}}</span>
+          <span class="video-duration">Duration: {{content.videoInfo?.format?.durationSeconds | durationFormat: 's':'hhmmss'}}</span>
           <span class="video-resolution">Resolution: {{content.videoInfo?.getResolution()}}</span>
         </mat-card-title>
         <mat-card-subtitle *ngIf="content.description">{{content.description}}</mat-card-subtitle>
@@ -24,7 +24,8 @@
           <div class="preview-content video-result preview-is{{content.shouldUseTypedPreview()}}"
             [class.video-overlay]="content?.content_type?.match('video')"
             [class.content-duplicate]="content.duplicate"
-            style="width: {{previewWidth}}px; height: {{previewHeight}}px;"
+            [style.width]="previewWidth + 'px'"
+            [style.height]="previewHeight + 'px'"
             (click)="imgClicked(content)"
             title="{{content.duplicate ? 'Marked as a duplicate.' : 'Click to play the video (ESC to hide)'}}">
             <!-- TODO: no preview video should use a differnt icon (content|video browser)-->

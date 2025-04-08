@@ -11,7 +11,11 @@ tmp/*
 .grifter/
 .yarn/
 .yarnrc.yml
+.vscode
+.nx
+
 .DS_Store
+build
 /mocks/.DS_Store
 /mocks/content/*
 /mocks/content/*/container_previews/*

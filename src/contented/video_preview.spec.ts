@@ -55,11 +55,14 @@ describe('TestingVideoPreviewCmp', () => {
 
   it('Should create a screens view component', () => {
     const info = MockData.videoContent();
+    info.preview = '';
     let content = new Content(info);
+
+    expect(content.isVideo()).toBe(true);
 
     expect(content.shouldUseTypedPreview()).toEqual('videocam');
     expect(content.videoInfo).toBeDefined();
-    expect(content.videoInfo?.format?.duration).toEqual(13090);
+    expect(content.videoInfo?.format?.durationSeconds).toEqual(10);
   });
 
   it('Should initialize the video preview component', () => {
@@ -72,7 +75,7 @@ describe('TestingVideoPreviewCmp', () => {
     fixture.detectChanges();
     expect($('.video-view-card').length).toEqual(1);
 
-    let url = ApiDef.contented.contentScreens.replace('{mcID}', comp.content.id);
+    let url = ApiDef.contented.contentScreens.replace('{mcID}', comp.content.id.toString());
     let req = httpMock.expectOne(req => req.url === url);
     let sRes = MockData.getScreens();
     req.flush(sRes);
@@ -80,6 +83,6 @@ describe('TestingVideoPreviewCmp', () => {
     fixture.detectChanges();
 
     expect($('.screen').length).toEqual(sRes.results.length);
-    expect($('.video-duration').text()).toEqual('Duration: 03:38:10');
+    expect($('.video-duration').text()).toEqual('Duration: 00:00:10');
   }));
 });

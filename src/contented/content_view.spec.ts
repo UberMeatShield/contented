@@ -20,13 +20,13 @@ declare var $;
 
 const donutMock = {
   active: false,
-  container_id: 'a9b4697a-3e8d-4770-a90a-7a0a0a39be6b',
+  container_id: 22,
   content_type: 'video/mp4',
   corrupt: false,
   created: '0001-01-01T00:00:00Z',
   description: '',
   encoding: '',
-  id: '6947f867-79e6-454f-8838-6a1f672e75ce',
+  id: 42,
   idx: 1,
   preview: '/container_previews/donut.mp4.webp',
   size: 18401008,
@@ -103,13 +103,13 @@ describe('TestingContentViewCmp', () => {
     fixture.detectChanges();
     expect($('.loading').length).toEqual(1, 'Loading UI should be present');
 
-    let url = ApiDef.contented.content.replace('{id}', fakeID);
+    let url = ApiDef.contented.content.replace('{id}', fakeID.toString());
     let req = httpMock.expectOne(url);
     req.flush(donutMock);
     fixture.detectChanges();
     expect($('.content-view-fullscreen').length).toEqual(1, 'It should now be visible');
 
-    let screenUrl = ApiDef.contented.contentScreens.replace('{mcID}', fakeID);
+    let screenUrl = ApiDef.contented.contentScreens.replace('{mcID}', fakeID.toString());
     let screenReq = httpMock.expectOne(screenUrl);
     let screens = MockData.getScreens();
     screenReq.flush(screens);

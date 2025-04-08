@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { Tag } from './content';
 
 import * as $ from 'jquery';
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 
 let languages = [];
 
@@ -245,7 +245,7 @@ export class TagLang {
     console.log('Loading language', ApiDef.contented.tags);
 
     $.ajax(ApiDef.contented.tags, {
-      params: { per_page: 1000 },
+      data: { per_page: 1000 },
       success: res => {
         // I should also change the color of the type and the keyword.
         let results = res.results;

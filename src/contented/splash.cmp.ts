@@ -12,7 +12,7 @@ import { ContentedService } from './contented_service';
 import { Content } from './content';
 import { Container } from './container';
 
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 
 import { RESUME } from './resume';
 
@@ -73,6 +73,7 @@ export class SplashCmp implements OnInit {
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: res => {
+          console.log('Splash', res);
           this.c = res.container;
           this.mc = res.content;
           this.splashTitle = res.splashTitle || '';

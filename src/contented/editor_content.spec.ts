@@ -44,15 +44,15 @@ describe('EditorContentCmp', () => {
   });
 
   it('Should be able to render the monaco editor and get a reference', fakeAsync(() => {
-    let id = 'A';
-    cmp.content = new Content({ id: id, content_type: 'video/mp4' });
+    let id = 42;
+    cmp.content = new Content({ id: id, content_type: 'video/mp4', src: 'Derp.mp4' });
     cmp.checkStates = false;
     tick(1000);
     fixture.detectChanges();
     expect($('.vscode-editor-cmp').length).withContext('There should be an editor').toEqual(1);
     tick(1000);
 
-    let url = ApiDef.contented.contentScreens.replace('{mcID}', id);
+    let url = ApiDef.contented.contentScreens.replace('{mcID}', id.toString());
     httpMock.expectOne(url).flush(MockData.getScreens());
     fixture.detectChanges();
     tick(1000);
@@ -77,7 +77,7 @@ describe('EditorContentCmp', () => {
     cmp.checkStates = false;
     fixture.detectChanges();
 
-    let url = ApiDef.contented.contentScreens.replace('{mcID}', cmp.content.id);
+    let url = ApiDef.contented.contentScreens.replace('{mcID}', cmp.content.id.toString());
     httpMock.expectOne(url).flush(MockData.getScreens());
     fixture.detectChanges();
     tick(10000);
@@ -103,7 +103,7 @@ describe('EditorContentCmp', () => {
     cmp.checkStates = false;
     fixture.detectChanges();
 
-    let url = ApiDef.contented.contentScreens.replace('{mcID}', cmp.content.id);
+    let url = ApiDef.contented.contentScreens.replace('{mcID}', cmp.content.id.toString());
     httpMock.expectOne(url).flush(MockData.getScreens());
     fixture.detectChanges();
     tick(10000);

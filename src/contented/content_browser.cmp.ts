@@ -140,9 +140,9 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
     }
   }
 
-  public cntResults(cnt: Container, response) {
+  public cntResults(cnt: Container, response: { total: number; results: Array<Content> }) {
     // console.log("Results loading, what is in the results?", response);
-    cnt.addContents(cnt.buildImgs(response));
+    cnt.addContents(response?.results);
   }
 
   public reset() {
@@ -237,6 +237,7 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
     this._contentedService.fullLoadDir(cnt).subscribe({
       next: (loadedCnt: Container) => {
         console.log('Fully loaded up the container', loadedCnt.id);
+
         GlobalNavEvents.selectContent(loadedCnt.getContent(), loadedCnt);
       },
       error: err => {
@@ -266,7 +267,7 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
   // Could probably move this into a saner location
   public selectedContent(content: Content, cnt: Container) {
     //console.log("Click event, change currently selected indexes, container etc", content, cnt);
-    let idx = _.findIndex(this.allCnts, { id: cnt ? cnt.id : '-1' });
+    let idx = _.findIndex(this.allCnts, { id: cnt ? cnt.id : -1 });
     if (idx >= 0) {
       this.idx = idx;
       this.rowIdx = cnt.rowIdx;

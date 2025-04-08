@@ -18,6 +18,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import * as _ from 'lodash';
 import { MockData } from '../test/mock/mock_data';
+import { ApiDef } from './api_def';
 
 declare var $;
 describe('TestingContentedViewCmp', () => {
@@ -97,9 +98,12 @@ describe('TestingContentedViewCmp', () => {
     fixture.detectChanges();
     expect($('.content-full-view').length).toBe(0, 'Nothing in the view');
 
-    let initialSel = new Content({ id: 'A', content_type: 'image/png' });
-    GlobalNavEvents.selectContent(initialSel, new Container({ id: '1' }));
+    let initialSel = MockData.getImg();
+    const container = new Container({ id: 1, contents: [initialSel] });
+    GlobalNavEvents.selectContent(initialSel, container);
+
     fixture.detectChanges();
+    tick(100);
     expect(comp.content).toEqual(initialSel);
 
     let content = MockData.getImg();
@@ -120,10 +124,11 @@ describe('TestingContentedViewCmp', () => {
   }));
 
   it('Should have a video in the case of a video, image for image', () => {
-    let video = new Content({ content_type: 'video/mp4', fullUrl: 'cthulhu' });
+    let video = new Content({ content_type: 'video/mp4', id: 42, src: 'test.mp4' });
     let img = new Content({
       content_type: 'image/jpeg',
-      fullUrl: 'cat/pics.jpg',
+      id: 43,
+      src: 'test.jpg',
     });
 
     comp.visible = true;
@@ -140,5 +145,9 @@ describe('TestingContentedViewCmp', () => {
     expect(video.isVideo()).toBe(true, 'It should be a video file');
     fixture.detectChanges();
     expect($('.content-video-screens').length).toEqual(1, 'It should have screens');
+
+    const url = ApiDef.contented.contentScreens.replace('{mcID}', video.id.toString());
+    const req = httpMock.expectOne(url);
+    req.flush(MockData.getScreens());
   });
 });

@@ -1,60 +1,83 @@
 {
-  "total": 5,
+  "total": 6,
   "results": [
     {
-      "id": "09986d65-3d93-49fa-879c-bbd4788f9815",
-      "total": 4,
-      "name": "dir2",
-      "created": "2023-10-11T09:32:32.783466Z",
-      "updated": "2023-10-12T09:47:14.763649Z",
+      "id": 2,
+      "created": "0001-01-01T00:00:00Z",
+      "updated": "0001-01-01T00:00:00Z",
+      "DeletedAt": null,
+      "total": 5,
+      "name": "dir1",
+      "description": "",
       "active": true,
       "idx": 1,
       "contents": null,
-      "previewUrl": "/preview/8d16b293-578c-4019-9627-5dda177a2375"
+      "previewUrl": "/api/preview/10"
     },
     {
-      "id": "fc0deb63-2bc0-4543-bf68-6d3cb160be39",
-      "total": 12,
-      "name": "dir1",
-      "created": "2023-10-11T09:32:32.763927Z",
-      "updated": "2023-10-12T09:47:14.754076Z",
-      "active": true,
-      "idx": 0,
-      "contents": null,
-      "previewUrl": "/preview/0d9f7102-9238-4e90-9bd9-f7d8970ddff2"
-    },
-    {
-      "id": "e7540203-280c-4fb9-bc62-6fda5a716453",
-      "total": 2,
-      "name": "screens_sub_dir",
-      "created": "2023-10-11T09:32:32.808355Z",
-      "updated": "2023-10-12T09:47:20.766627Z",
-      "active": true,
-      "idx": 4,
-      "contents": null,
-      "previewUrl": "/preview/afeac250-abe4-48e6-a503-4887b4a5b9f7"
-    },
-    {
-      "id": "6118b9fa-874b-4da9-a01e-5e378d95537c",
-      "total": 10,
-      "name": "dir3",
-      "created": "2023-10-11T09:32:32.789762Z",
-      "updated": "2023-10-12T09:47:20.547605Z",
+      "id": 3,
+      "created": "0001-01-01T00:00:00Z",
+      "updated": "0001-01-01T00:00:00Z",
+      "DeletedAt": null,
+      "total": 4,
+      "name": "dir2",
+      "description": "",
       "active": true,
       "idx": 2,
       "contents": null,
-      "previewUrl": "/preview/01b26c02-2f2d-467c-8de8-5d87245783aa"
+      "previewUrl": "/api/preview/36"
     },
     {
-      "id": "efd07144-aae6-4d4a-b994-190305064a46",
-      "total": 4,
-      "name": "screens",
-      "created": "2023-10-11T09:32:32.802173Z",
-      "updated": "2023-10-12T09:47:20.55202Z",
+      "id": 4,
+      "created": "0001-01-01T00:00:00Z",
+      "updated": "0001-01-01T00:00:00Z",
+      "DeletedAt": null,
+      "total": 10,
+      "name": "dir3",
+      "description": "",
       "active": true,
       "idx": 3,
       "contents": null,
-      "previewUrl": "/preview/d7ed2c17-dbe5-4389-8c3a-198699c40a3b"
+      "previewUrl": "/api/preview/44"
+    },
+    {
+      "id": 6,
+      "created": "0001-01-01T00:00:00Z",
+      "updated": "0001-01-01T00:00:00Z",
+      "DeletedAt": null,
+      "total": 4,
+      "name": "screens",
+      "description": "",
+      "active": true,
+      "idx": 6,
+      "contents": null,
+      "previewUrl": "/api/preview/64"
+    },
+    {
+      "id": 9,
+      "created": "0001-01-01T00:00:00Z",
+      "updated": "0001-01-01T00:00:00Z",
+      "DeletedAt": null,
+      "total": 2,
+      "name": "screens_sub_dir",
+      "description": "",
+      "active": true,
+      "idx": 7,
+      "contents": null,
+      "previewUrl": "/api/preview/72"
+    },
+    {
+      "id": 7,
+      "created": "0001-01-01T00:00:00Z",
+      "updated": "0001-01-01T00:00:00Z",
+      "DeletedAt": null,
+      "total": 2,
+      "name": "test_encoding",
+      "description": "",
+      "active": true,
+      "idx": 8,
+      "contents": null,
+      "previewUrl": "/api/preview/78"
     }
   ]
 }

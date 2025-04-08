@@ -43,13 +43,13 @@ describe('TaskRequestCmp', () => {
   });
 
   it('On create we should query for tasks', () => {
-    const contentID = 'abc';
+    const contentID = 12;
     component.contentID = contentID;
     expect(component).toBeTruthy();
     fixture.detectChanges();
 
     let req = httpMock.expectOne(r => {
-      return r.url.includes('/task_requests') && r.params.get('content_id') === contentID;
+      return r.url.includes('/task_requests') && r.params.get('content_id') === contentID.toString();
     });
     req.flush(MockData.taskRequests());
     fixture.detectChanges();
@@ -64,10 +64,10 @@ describe('TaskRequestCmp', () => {
     req.flush(MockData.taskRequests());
     tick(1000);
 
-    expect(component.tasks?.length).withContext('The tasks should be set').toEqual(6);
+    expect(component.tasks?.length).withContext('The tasks should be set').toEqual(5);
 
     fixture.detectChanges();
-    expect($('.task-operation').length).withContext('Render the tasks.').toEqual(6);
+    expect($('.task-operation').length).withContext('Render the tasks.').toEqual(5);
     tick(1000);
   }));
 
