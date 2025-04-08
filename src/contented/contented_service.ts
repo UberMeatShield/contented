@@ -70,13 +70,10 @@ export const TaskSearchSchema = z.object({
 });
 export type TaskSearch = z.infer<typeof TaskSearchSchema>;
 
-
 export interface PageResponse<T> {
   total: number;
   results: Array<T>;
 }
-
-
 
 @Injectable()
 export class ContentedService {
@@ -452,7 +449,11 @@ export class ContentedService {
     );
   }
 
-  containerPreviewsTask(cnt: Container, count: number = 16, startTimeSeconds: number = -1): Observable<Array<TaskRequest>> {
+  containerPreviewsTask(
+    cnt: Container,
+    count: number = 16,
+    startTimeSeconds: number = -1
+  ): Observable<Array<TaskRequest>> {
     let url = ApiDef.contented.containerPreviewsTask.replace('{containerId}', cnt.id.toString());
     url = url.replace('{count}', `${count}`).replace('{startTimeSeconds}', `${startTimeSeconds}`);
     return this.http.post(url, cnt).pipe(

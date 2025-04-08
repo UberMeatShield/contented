@@ -20,7 +20,15 @@ import _ from 'lodash';
 import $ from 'jquery';
 import { MockData } from '../test/mock/mock_data';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { Content, ContentSchema, Tag, VideoCodecInfo, VideoCodecInfoSchema, VideoFormatSchema, VideoStreamSchema } from './content';
+import {
+  Content,
+  ContentSchema,
+  Tag,
+  VideoCodecInfo,
+  VideoCodecInfoSchema,
+  VideoFormatSchema,
+  VideoStreamSchema,
+} from './content';
 
 describe('TestingSearchCmp', () => {
   let fixture: ComponentFixture<SearchCmp>;
@@ -64,13 +72,13 @@ describe('TestingSearchCmp', () => {
     expect(el).withContext('We should have a top level element').toBeDefined();
   }));
 
-  it("Should be able to create content for all search results without error", () => {
+  it('Should be able to create content for all search results without error', () => {
     let sr = MockData.getSearch();
 
     const first = sr.results[0];
     expect(first.content_type).toBe('video/mp4');
     const meta = JSON.parse(first.meta);
-    const probe = VideoCodecInfoSchema.parse(meta)
+    const probe = VideoCodecInfoSchema.parse(meta);
     //expect(stream.success).toBe(true);
 
     for (const r of sr.results) {

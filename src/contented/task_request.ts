@@ -19,25 +19,14 @@ export enum TaskOperation {
   WEBP = 'webp_from_screens',
   TAGGING = 'tag_content',
   DUPES = 'detect_duplicates',
-};
+}
 
-export const TaskOperationEnum = z.enum([
-  TaskOperation.ENCODING,
-  ...Object.values(TaskOperation),
-]);
+export const TaskOperationEnum = z.enum([TaskOperation.ENCODING, ...Object.values(TaskOperation)]);
 
-export const TaskStatesEnum = z.enum([
-  TASK_STATES.NEW,
-  ...Object.values(TASK_STATES),
-]);
+export const TaskStatesEnum = z.enum([TASK_STATES.NEW, ...Object.values(TASK_STATES)]);
 export type TaskState = z.infer<typeof TaskStatesEnum>;
 
-export const COMPLETE_TASKS: Array<TaskState> = [
-  TASK_STATES.CANCELED, 
-  TASK_STATES.ERROR, 
-  TASK_STATES.DONE
-];
-
+export const COMPLETE_TASKS: Array<TaskState> = [TASK_STATES.CANCELED, TASK_STATES.ERROR, TASK_STATES.DONE];
 
 export const TaskRequestSchema = z.object({
   id: z.number(),
@@ -54,7 +43,7 @@ export const TaskRequestSchema = z.object({
   height: z.number().optional(),
   message: z.string().optional(),
   err_msg: z.string().optional(),
-}); 
+});
 
 export type ITaskRequest = z.infer<typeof TaskRequestSchema>;
 export class TaskRequest implements ITaskRequest {

@@ -140,7 +140,7 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
     }
   }
 
-  public cntResults(cnt: Container, response: { total: number, results: Array<Content> }) {
+  public cntResults(cnt: Container, response: { total: number; results: Array<Content> }) {
     // console.log("Results loading, what is in the results?", response);
     cnt.addContents(response?.results);
   }

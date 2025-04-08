@@ -8,7 +8,7 @@ import { MockData } from '../test/mock/mock_data';
 
 describe('TestingContainer', () => {
   it('Should be able to create a container.', () => {
-    let d = new Container({id: 0});
+    let d = new Container({ id: 0 });
   });
 
   it('Should be able to create a set of container objects', () => {

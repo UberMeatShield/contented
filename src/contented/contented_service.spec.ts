@@ -141,7 +141,7 @@ describe('TestingContentedService', () => {
       },
       error: (err: any) => {
         fail(err);
-      }
+      },
     });
     let url = ApiDef.contented.containerContent.replace('{cId}', content.id.toString());
     let calls = httpMock.match((req: HttpRequest<any>) => {

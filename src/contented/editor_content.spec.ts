@@ -45,7 +45,7 @@ describe('EditorContentCmp', () => {
 
   it('Should be able to render the monaco editor and get a reference', fakeAsync(() => {
     let id = 42;
-    cmp.content = new Content({ id: id, content_type: 'video/mp4', src: "Derp.mp4" });
+    cmp.content = new Content({ id: id, content_type: 'video/mp4', src: 'Derp.mp4' });
     cmp.checkStates = false;
     tick(1000);
     fixture.detectChanges();

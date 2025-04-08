@@ -73,8 +73,7 @@ export class SplashCmp implements OnInit {
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: res => {
-
-          console.log("Splash", res);
+          console.log('Splash', res);
           this.c = res.container;
           this.mc = res.content;
           this.splashTitle = res.splashTitle || '';

@@ -1,6 +1,6 @@
 import { Observable, from as observableFrom } from 'rxjs';
 import { Container } from './../../contented/container';
-import { Content  } from './../../contented/content';
+import { Content } from './../../contented/content';
 import { ApiDef } from './../../contented/api_def';
 import * as _ from 'lodash';
 

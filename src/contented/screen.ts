@@ -28,7 +28,7 @@ export const ScreenSchema = z.object({
   content_id: z.number().optional(),
   size_bytes: z.number().default(0),
   content_container_id: z.number().optional(),
-})
+});
 
 export type ScreenInterface = z.infer<typeof ScreenSchema>;
 

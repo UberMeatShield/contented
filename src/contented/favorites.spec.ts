@@ -65,7 +65,6 @@ describe('FavoritesCmp', () => {
   it('Should be able to remove a favorite video', fakeAsync(() => {
     const content = MockData.getVideo();
 
-
     getFavorites().addContents([content]);
     comp.container = getFavorites();
 

@@ -8,7 +8,7 @@ import { z } from 'zod';
 export const TagSchema = z.object({
   id: z.string(),
   tag_type: z.string().optional(),
-}) 
+});
 export type TagInterface = z.infer<typeof TagSchema>;
 export class Tag implements TagInterface {
   id: string;
@@ -38,7 +38,6 @@ export interface VSCodeChange {
   force?: boolean;
 }
 
-
 /**
  * I really don't like the duplication but the Zod Class implementation bails on some of this pretty hard
  */
@@ -53,7 +52,7 @@ export const VideoFormatSchema = z.object({
   probe_score: z.coerce.number(),
   size: z.coerce.number(),
   start_time: z.coerce.number(),
-})
+});
 
 export type VideoFormatInterface = z.infer<typeof VideoFormatSchema>;
 export class VideoFormat implements VideoFormatInterface {
@@ -77,7 +76,7 @@ export class VideoFormat implements VideoFormatInterface {
     Object.assign(this, s);
   }
 
-  get durationSeconds(): number  {
+  get durationSeconds(): number {
     if (!isNaN(this.duration)) {
       return Math.floor(this.duration);
     }
@@ -99,7 +98,7 @@ export const VideoStreamSchema = z.object({
   coded_height: z.coerce.number().optional(),
   coded_width: z.coerce.number().optional(),
   duration: z.coerce.number(),
-})
+});
 
 export type VideoStreamInterface = z.infer<typeof VideoStreamSchema>;
 export class VideoStream implements VideoStreamInterface {
@@ -131,9 +130,8 @@ export class VideoStream implements VideoStreamInterface {
 export const VideoCodecInfoSchema = z.object({
   format: VideoFormatSchema,
   streams: VideoStreamSchema.array().optional(),
-})
+});
 export type VideoCodecInfoInterface = z.infer<typeof VideoCodecInfoSchema>;
-
 
 export class VideoCodecInfo implements VideoCodecInfoInterface {
   format: VideoFormat;
@@ -182,7 +180,7 @@ export const ContentSchema = z.object({
   src: z.string(),
   preview: z.string().optional(), // Name of the preview, if not set we do not have one.
   idx: z.number().default(0).optional(),
-  description: z.string().default("").optional(),
+  description: z.string().default('').optional(),
 
   content_type: z.string().optional(),
   container_id: z.number().optional(),
@@ -193,12 +191,12 @@ export const ContentSchema = z.object({
   screens: ScreenSchema.array().nullable().default([]).optional(),
   tags: TagSchema.array().nullable().default([]).optional(),
   meta: z.string().nullable().optional(),
-  fullText: z.string().default("").optional(),
+  fullText: z.string().default('').optional(),
 
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
   duplicate: z.boolean().default(false),
-})
+});
 
 export type ContentInterface = z.infer<typeof ContentSchema>;
 

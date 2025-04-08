@@ -61,7 +61,6 @@ export class Container implements IContainer {
     this.setContents(contents);
   }
 
-
   public getCurrentContent() {
     let cntList = this.getContentList() || [];
     if (this.rowIdx >= 0 && this.rowIdx < cntList.length) {
@@ -128,7 +127,7 @@ export class Container implements IContainer {
       if (!(c instanceof Content)) {
         throw new Error(`Content is not an instance of Content ${c}`);
       }
-    })
+    });
 
     let sorted = _.sortBy((this.contents || []).concat(contents), 'idx');
     this.setContents(sorted);

@@ -50,7 +50,7 @@ describe('TestingVideoBrowserCmp', () => {
     httpMock.verify();
   });
 
-  it("Should load containers", () => {
+  it('Should load containers', () => {
     const containerResult = MockData.getContainers();
 
     containerResult.results.forEach(c => {
@@ -66,7 +66,7 @@ describe('TestingVideoBrowserCmp', () => {
     expect(comp).withContext('We should have the VideoBrowser comp').toBeDefined();
     expect(el).withContext('We should have a top level element').toBeDefined();
 
-    httpMock.expectOne(ApiDef.contented.containers, 'Empty').flush({total: 0, results: [] });
+    httpMock.expectOne(ApiDef.contented.containers, 'Empty').flush({ total: 0, results: [] });
   }));
 
   it('It can setup all eventing without exploding', waitForAsync(async () => {
