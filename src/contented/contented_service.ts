@@ -77,7 +77,7 @@ export interface PageResponse<T> {
 
 @Injectable()
 export class ContentedService {
-  public options = null;
+  public options: { headers: HttpHeaders } | undefined;
   public LIMIT = 5000; // Default limit will use the server limit in the query
   // public LIMIT = 1; // Default limit will use the server limit in the query
 
@@ -160,15 +160,15 @@ export class ContentedService {
     return this.http.get(downloadUrl, { responseType: 'text' });
   }
 
-  public fullLoadDir(cnt, limit = null): Observable<Container> {
+  public fullLoadDir(cnt: Container, limit?: number): Observable<Container> {
     if (cnt.count === cnt.total) {
-      return observableFrom(Promise.resolve(cnt));
+      return observableFrom(Promise.resolve<Container>(cnt));
     }
 
     limit = limit || this.LIMIT || 2000;
     // Build out a call to load all the possible data (all at once, it is fast)
     let p: Promise<Container> = new Promise((resolve, reject) => {
-      let calls = [];
+      let calls: Array<Observable<Container>> = [];
       let idx = 0;
       for (let offset = cnt.count; offset < cnt.total; offset += limit) {
         ++idx;
@@ -194,7 +194,7 @@ export class ContentedService {
           // TODO: Make something else sensible here.
           break;
         }
-        calls.push(observableFrom(delayP));
+        calls.push(observableFrom<Container>(delayP));
       }
 
       // Join all the results and let the call function resolve once the cnt is updated.
@@ -213,16 +213,16 @@ export class ContentedService {
     return observableFrom(p);
   }
 
-  public loadMoreInDir(cnt: Container, limit = null): Observable<PageResponse<Content>> {
+  public loadMoreInDir(cnt: Container, limit?: number): Observable<PageResponse<Content>> {
     return this.getFullContainer(cnt.id, cnt.count, limit);
   }
 
-  public getFullContainer(cId: number, offset: number = 0, limit: number = null): Observable<PageResponse<Content>> {
+  public getFullContainer(cId: number, offset: number = 0, limit?: number): Observable<PageResponse<Content>> {
     let url = ApiDef.contented.containerContent.replace('{cId}', cId.toString());
     return this.http
       .get(url, {
         params: this.getPaginationParams(offset, limit),
-        headers: this.options.headers,
+        headers: this.options?.headers,
       })
       .pipe(
         map((res: any) => {
@@ -237,7 +237,7 @@ export class ContentedService {
   }
 
   public getPaginationParams(offset: number = 0, limit: number = 0) {
-    if (limit <= 0 || limit == null) {
+    if (limit <= 0 || limit === undefined) {
       limit = this.LIMIT;
     }
     let params = new HttpParams().set('page', '' + (Math.floor(offset / limit) + 1)).set('per_page', '' + limit);
@@ -246,77 +246,65 @@ export class ContentedService {
 
   // TODO: Create a pagination page for offset limit calculations
   public initialLoad(cnt: Container): Observable<Array<Content>> {
-    if (cnt.loadState === LoadStates.NotLoaded) {
-      cnt.loadState = LoadStates.Loading;
-
-      let url = ApiDef.contented.containerContent.replace('{cId}', cnt.id.toString());
-      return this.http
-        .get(url, {
-          params: this.getPaginationParams(0, this.LIMIT),
-          headers: this.options.headers,
-        })
-        .pipe(
-          map((res: any) => {
-            const contents = res.results?.map(c => new Content(c));
-            console.log(`Initial load ${cnt.id}`);
-            return cnt.addContents(contents);
-          })
-        );
-    }
+    return this.getFullContainer(cnt.id, 0, this.LIMIT).pipe(
+      map((res: PageResponse<Content>) => {
+        if (res.results) {
+          cnt.addContents(res.results);
+          return res.results;
+        }
+        return [];
+      })
+    );
   }
 
   public searchContainers(cntQ: ContainerSearch): Observable<PageResponse<Container>> {
-    let params = this.getPaginationParams(cntQ.offset, cntQ.limit);
-    if (cntQ.name) {
-      params = params.set('text', cntQ.name);
+    let url = ApiDef.contented.containers;
+    let params = new HttpParams();
+    if (cntQ.search) params = params.set('search', cntQ.search);
+    if (cntQ.offset) params = params.set('offset', cntQ.offset.toString());
+    if (cntQ.limit) params = params.set('limit', cntQ.limit.toString());
+    if (cntQ.name) params = params.set('name', cntQ.name);
+    if (cntQ.tags && cntQ.tags.length > 0) {
+      params = params.set('tags', cntQ.tags.join(','));
     }
-    if (cntQ.search) {
-      params = params.set('search', cntQ.search);
-    }
-    if (cntQ.tags?.length > 0) {
-      params = params.set('tags', JSON.stringify(cntQ.tags));
-    }
-    return this.http.get(ApiDef.contented.searchContainers, { params }).pipe(
+    if (cntQ.order) params = params.set('order', cntQ.order);
+
+    return this.http.get(url, { params, headers: this.options?.headers }).pipe(
       map((res: any) => {
         return {
           total: res.total,
-          results: _.map(res.results, r => new Container(r)),
+          results: _.map(res.results, cnt => new Container(cnt)),
         };
-      })
+      }),
+      catchError(err => this.handleError(err))
     );
   }
 
   // Could definitely use Zod here as a search type.  Maybe it is worth pulling in at this point.
   public searchContent(cs: ContentSearch): Observable<PageResponse<Content>> {
-    let params = this.getPaginationParams(cs.offset, cs.limit);
-    params = params.set('search', cs.text);
-    if (cs.contentType) {
-      params = params.set('contentType', cs.contentType);
+    let url = ApiDef.contented.content;
+    let params = new HttpParams();
+    if (cs.search) params = params.set('search', cs.search);
+    if (cs.offset) params = params.set('offset', cs.offset.toString());
+    if (cs.limit) params = params.set('limit', cs.limit.toString());
+    if (cs.cId) params = params.set('cId', cs.cId);
+    if (cs.contentType) params = params.set('contentType', cs.contentType);
+    if (cs.text) params = params.set('text', cs.text);
+    if (cs.duplicate) params = params.set('duplicate', cs.duplicate.toString());
+    if (cs.tags && cs.tags.length > 0) {
+      params = params.set('tags', cs.tags.join(','));
     }
-    if (cs.cId) {
-      params = params.set('cId', cs.cId);
-    }
+    if (cs.order) params = params.set('order', cs.order);
 
-    // GoBuffalo is being DUMB on the array parsing :(
-    // params.get("tags[]") just returns the first entry if there are multiple
-    if (cs.tags?.length > 0) {
-      params = params.set('tags', JSON.stringify(cs.tags));
-    }
-    if (cs.duplicate) {
-      params = params.set('duplicate', 'true');
-    }
-    return this.http
-      .get(ApiDef.contented.searchContents, {
-        params,
-      })
-      .pipe(
-        map((res: any) => {
-          return {
-            total: res.total,
-            results: _.map(res.results, r => new Content(r)),
-          };
-        })
-      );
+    return this.http.get(url, { params, headers: this.options?.headers }).pipe(
+      map((res: any) => {
+        return {
+          total: res.total,
+          results: _.map(res.results, cnt => new Content(cnt)),
+        };
+      }),
+      catchError(err => this.handleError(err))
+    );
   }
 
   public saveContent(content: Content): Observable<Content> {

@@ -71,7 +71,7 @@ export class Container implements IContainer {
 
   // For use in determining what should actually be visible at any time
   public getIntervalAround(currentItem: Content, requestedVisible: number = 4, before: number = 0) {
-    this.visibleSet = null;
+    this.visibleSet = [];
 
     let items = this.getContentList() || [];
     let start = 0;
@@ -94,7 +94,7 @@ export class Container implements IContainer {
     return this.visibleSet;
   }
 
-  public indexOf(item: Content, contents: Array<Content> = null) {
+  public indexOf(item: Content, contents?: Array<Content>) {
     contents = contents || this.getContentList() || [];
     if (item && contents) {
       return _.findIndex(contents, { id: item.id });
@@ -105,7 +105,7 @@ export class Container implements IContainer {
   public setContents(contents: Array<Content>) {
     this.contents = _.sortBy(_.uniqBy(contents || [], 'id'), 'idx');
     this.count = this.contents.length;
-    this.renderable = null;
+    this.renderable = [];
 
     if (this.count === this.total) {
       this.loadState = LoadStates.Complete;
@@ -134,12 +134,12 @@ export class Container implements IContainer {
     return sorted;
   }
 
-  public getContent(rowIdx: number = null) {
-    rowIdx = rowIdx === null ? this.rowIdx : rowIdx;
+  public getContent(rowIdx?: number) {
+    rowIdx = rowIdx === undefined ? this.rowIdx : rowIdx;
     if (rowIdx >= 0 && rowIdx < this.contents.length) {
       return this.contents[rowIdx];
     }
-    return null;
+    return undefined;
   }
 
   // This is the actual URL you can get a pointer to for the scroll / load

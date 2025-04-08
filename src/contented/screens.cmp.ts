@@ -18,8 +18,8 @@ export class ScreensCmp implements OnInit {
   @Input() previewHeight: number = 480;
 
   // Allow something to force specify the values
-  @Input() containerWidth: number = null;
-  @Input() containerHeight: number = null;
+  @Input() containerWidth?: number;
+  @Input() containerHeight?: number;
 
   @Output() screensLoaded: EventEmitter<Array<Screen>> = new EventEmitter<Array<Screen>>();
   @Output() screenClick: EventEmitter<ScreenClickEvent> = new EventEmitter<ScreenClickEvent>();

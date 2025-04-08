@@ -25,11 +25,11 @@ export class EditorContentCmp implements OnInit {
   @Input() content?: Content;
 
   @Input() editForm?: FormGroup;
-  @Input() descriptionControl: FormControl = new FormControl('', Validators.required);
+  @Input() descriptionControl: FormControl<string> = new FormControl('', Validators.required);
 
   @Input() screensForm?: FormGroup;
-  @Input() offsetControl: FormControl<number>;
-  @Input() countControl: FormControl<number>;
+  @Input() offsetControl: FormControl<number | null> = new FormControl(0, Validators.required);
+  @Input() countControl: FormControl<number | null> = new FormControl(12, Validators.required);
   @Input() checkStates = true;
 
   public taskCreated: EventEmitter<any> = new EventEmitter<any>();
@@ -50,8 +50,6 @@ export class EditorContentCmp implements OnInit {
       description: this.descriptionControl,
     });
 
-    this.offsetControl = new FormControl(undefined, Validators.required);
-    this.countControl = new FormControl(12, Validators.required);
     this.screensForm = this.fb.group({
       offset: this.offsetControl,
       count: this.countControl,
@@ -64,7 +62,7 @@ export class EditorContentCmp implements OnInit {
       this.route.paramMap.pipe().subscribe({
         next: (map: ParamMap) => {
           console.log('Reloading content');
-          this.content = null; // Changing the
+          this.content = undefined; // Changing the
 
           const id = map.get('id') || '0';
           const contentId = parseInt(id, 10);
@@ -95,13 +93,15 @@ export class EditorContentCmp implements OnInit {
   }
 
   save() {
+    if (!this.content || !this.editForm) return;
+    
     console.log('Save()', this.editForm.value);
     this.content.description = _.get(this.editForm.value, 'description');
     this.loading = true;
 
     let tags = this.editor.getTokens();
     console.log(tags);
-    this.content.tags = _.map(tags, tag => new Tag(tag));
+    this.content.tags = _.map(tags, tag => new Tag({ id: tag, tag_type: 'user' }));
     this._service
       .saveContent(this.content)
       .pipe(finalize(() => (this.loading = false)))
@@ -116,9 +116,12 @@ export class EditorContentCmp implements OnInit {
   }
 
   clearScreens(content: Content) {
+    if (!this.content) return;
+    
     this._service.clearScreens(this.content.id).subscribe({
       next: (content: Content) => {
         this.content = content;
+        this.content.screens = [];
       },
       error: err => {
         GlobalBroadcast.error('Could not clear screens', err);
@@ -126,8 +129,9 @@ export class EditorContentCmp implements OnInit {
     });
   }
 
-  // Generate incremental screens and then check the request
   incrementalScreens(content: Content) {
+    if (!this.content || !this.screensForm) return;
+    
     let req = this.screensForm.value;
     this.taskLoading = true;
     this._service

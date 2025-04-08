@@ -14,7 +14,7 @@ import {
 import { ContentedService } from './contented_service';
 import { Content } from './content';
 import { Container } from './container';
-import { Screen, ScreenAction } from './screen';
+import { Screen, ScreenAction, ScreenClickEvent } from './screen';
 import { GlobalNavEvents, NavTypes } from './nav_events';
 import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 import { FormBuilder, NgForm, FormControl, FormGroup } from '@angular/forms';
@@ -92,7 +92,7 @@ export class VideoPreviewCmp implements OnInit {
     this.screenWidth = width - this.previewWidth - 41; // Fudge factor
   }
 
-  public screenEvt(evt: { action: ScreenAction; screen: Screen; screens: Screen[] }): void {
+  public screenEvt(evt: ScreenClickEvent): void {
     if (evt.action === ScreenAction.PLAY_SCREEN && this.content) {
       return this.fullView(this.content, evt.screen);
     }

@@ -22,12 +22,12 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
   @Input() idx: number = 0; // Which item within the container are we viewing
 
   public loading: boolean = false;
-  public emptyMessage = null;
+  public emptyMessage: string | undefined;
 
   // TODO: Remove this listener
   public fullScreen: boolean = false; // Should we view fullscreen the current item
-  public containers: Array<Container>; // Current set of visible containers
-  public allCnts: Array<Container>; // All the containers we have loaded
+  public containers: Array<Container> = []; // Current set of visible containers
+  public allCnts: Array<Container> = []; // All the containers we have loaded
   public sub: Subscription;
 
   constructor(
@@ -148,7 +148,7 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
   public reset() {
     this.idx = 0;
     this.allCnts = [];
-    this.emptyMessage = null;
+    this.emptyMessage = undefined;
   }
 
   public getVisibleContainers() {
@@ -164,7 +164,10 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
           obs.subscribe({
             next: content => {
               if (cnt == currCnt) {
-                GlobalNavEvents.selectContent(cnt.getContent(), cnt);
+                const currentContent = cnt.getContent();
+                if (currentContent) {
+                  GlobalNavEvents.selectContent(currentContent, cnt);
+                }
               }
             },
             error: err => console.error,
@@ -190,16 +193,21 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
   // what has been selected.
   public selectionEvt() {
     let cnt = this.getCurrentContainer();
-    console.log('Selected container ID', cnt.id);
-    GlobalNavEvents.selectContent(cnt.getContent(), cnt);
-    this.updateRoute();
+    if (cnt) {
+      console.log('Selected container ID', cnt.id);
+      const currentContent = cnt.getContent();
+      if (currentContent) {
+        GlobalNavEvents.selectContent(currentContent, cnt);
+      }
+      this.updateRoute();
+    }
   }
 
-  public getCurrentContainer() {
+  public getCurrentContainer(): Container | undefined {
     if (this.idx < this.allCnts.length && this.idx >= 0) {
       return this.allCnts[this.idx];
     }
-    return null;
+    return undefined;
   }
 
   public updateRoute() {

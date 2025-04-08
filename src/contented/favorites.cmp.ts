@@ -23,14 +23,14 @@ export class FavoritesCmp implements OnInit, OnDestroy {
   @Input() visible: boolean = false;
   @Input() monitorFavorites: boolean = true;
 
-  @ViewChild(MatMenuTrigger) contextMenu: MatMenuTrigger;
+  @ViewChild(MatMenuTrigger) contextMenu!: MatMenuTrigger;
 
   public contextMenuPosition = { x: '0px', y: '0px' };
   public sub: Subscription;
   public maxWidth: number;
   public maxHeight: number;
   public loading: boolean = false;
-  public error = null;
+  public error: string | undefined;
   public active: boolean = false;
 
   constructor(public _service: ContentedService) {}
@@ -51,6 +51,8 @@ export class FavoritesCmp implements OnInit, OnDestroy {
     this.sub = GlobalNavEvents.navEvts.subscribe({
       next: (evt: NavEventMessage) => {
         // This container is not active but it should be monitoring favorites
+        if (!evt.content) return;
+        
         switch (evt.action) {
           case NavTypes.FAVORITE_MEDIA:
             this.handleFavorite(evt.content);

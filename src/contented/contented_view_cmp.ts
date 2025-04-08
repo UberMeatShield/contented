@@ -14,7 +14,7 @@ import { ScreenAction, ScreenClickEvent, Screen } from './screen';
   templateUrl: './contented_view.ng.html',
 })
 export class ContentedViewCmp implements OnInit, OnDestroy {
-  @Input() content: Content;
+  @Input() content?: Content;
   @Input() forceWidth: number;
   @Input() forceHeight: number;
   @Input() visible: boolean = false;
@@ -31,10 +31,10 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
   // Provide a custom width and height calculation option
   constructor(public _service: ContentedService) {}
 
-  public shouldIgnoreEvt(content: Content) {
+  public shouldIgnoreEvt(content: Content): Content | undefined {
     if (this.restrictContentId > 0) {
       if ((!content || content.id !== this.restrictContentId, 10)) {
-        return null;
+        return undefined;
       }
     }
     return content || this.content;
@@ -53,7 +53,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
           case NavTypes.VIEW_FULLSCREEN:
             if (this.content) {
               // Akward but without a digest it will NOT change the video if it is already playing
-              this.content = null;
+              this.content = undefined;
               setTimeout(() => {
                 this.selectFullScreenContent(content, evt.screen);
               }, 50);
@@ -92,22 +92,23 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
     }
   }
 
-  selectFullScreenContent(content: Content, screen?: Screen) {
+  public selectFullScreenContent(content: Content, screen?: Screen) {
+    if (!content) return;
+    
     this.content = content;
     this.visible = true;
 
-    if (this.content) {
-      this.scrollContent(this.content);
-      this.handleTextContent(this.content);
+    this.scrollContent(content);
+    this.handleTextContent(content);
 
-      if (screen) {
-        this.clickedScreen({ screen, action: ScreenAction.PLAY_SCREEN });
-      }
+    if (screen) {
+      this.clickedScreen({ screen, action: ScreenAction.PLAY_SCREEN });
     }
   }
 
   openWindow(content: Content) {
-    window.open(content?.fullUrl);
+    if (!content) return;
+    window.open(content.fullUrl);
   }
 
   public ngOnDestroy() {
@@ -115,8 +116,10 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
   }
 
   public handleTextContent(content: Content) {
+    if (!content) return;
+    
     // This would be better in a method but I would like another example type.
-    if (this.content.isText() && !this.content.fullText) {
+    if (content.isText() && !content.fullText) {
       this._service.getTextContent(content).subscribe({
         next: (text: string) => {
           content.fullText = text;
@@ -161,9 +164,11 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
   }
 
   public clickedScreen(evt: ScreenClickEvent, count: number = 0) {
+    if (!this.content) return;
+    
     // These screens are associated with the currently selected content
     const findVideo = (attempt = 0) => {
-      const videoEl = <HTMLVideoElement>document.getElementById(`VIDEO_${this.content.id}`);
+      const videoEl = <HTMLVideoElement>document.getElementById(`VIDEO_${this.content?.id}`);
       if (videoEl) {
         videoEl.currentTime = evt.screen?.parseSecondsFromScreen() || 0;
         videoEl.play();

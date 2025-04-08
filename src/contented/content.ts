@@ -187,9 +187,9 @@ export const ContentSchema = z.object({
 
   // Only defined currently on video
   encoding: z.string().optional(),
-  screens: ScreenSchema.array().nullable().default([]).optional(),
-  tags: TagSchema.array().nullable().default([]).optional(),
-  meta: z.string().nullable().optional(),
+  screens: ScreenSchema.array().default([]).optional(),
+  tags: TagSchema.array().default([]).optional(),
+  meta: z.string().optional(),
   fullText: z.string().default('').optional(),
 
   created_at: z.string().optional(),
