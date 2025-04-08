@@ -16,7 +16,7 @@
 
 
 
-  <div *ngIf="rendererType === 'container'">
+  <div *ngIf="rendererType === 'container' && c">
     <container-cmp [container]="c">
     </container-cmp>
     <mat-card *ngIf="mc" class="primary-card">

@@ -184,7 +184,7 @@ export class TagLang {
     typeKeywords: Array<string>,
     operators: Array<string> = []
   ) {
-    let lang = (window as any).monaco.languages;
+    let lang: any = (window as any).monaco.languages;
     let syntax = _.clone(TAGGING_SYNTAX);
 
     // HACKERY!   WEEEEE
@@ -217,7 +217,7 @@ export class TagLang {
     }
     lang.setMonarchTokensProvider(languageName, syntax);
     lang.registerCompletionItemProvider(languageName, {
-      provideCompletionItems: (model, position) => {
+      provideCompletionItems: (model: any, position: any) => {
         const suggestions = [
           ...this.getSuggestionsForType(lang.CompletionItemKind.Keyword, keywords),
           ...this.getSuggestionsForType(lang.CompletionItemKind.Type, typeKeywords),
@@ -231,8 +231,8 @@ export class TagLang {
 
   // Would be nice to get these imported properly with typing
   // TODO: Should this only suggest lower case?
-  getSuggestionsForType(kind: number, tags: Array<string>) {
-    return tags.map((val: string, _idx) => {
+  getSuggestionsForType(kind: any, tags: Array<string>) {
+    return tags.map((val: string, _idx: any) => {
       return {
         label: val,
         kind: kind,
@@ -246,7 +246,7 @@ export class TagLang {
 
     $.ajax(ApiDef.contented.tags, {
       data: { per_page: 1000 },
-      success: res => {
+      success: (res: any) => {
         // I should also change the color of the type and the keyword.
         let results = res.results;
 
@@ -266,7 +266,7 @@ export class TagLang {
         TAGS_RESPONSE.results = tags;
         TAGS_RESPONSE.initialized = true;
       },
-      error: err => {
+      error: (err: any) => {
         console.error('loadLanguage failed to load tags', err);
         this.setMonacoLanguage('tagging', [], [], []);
 

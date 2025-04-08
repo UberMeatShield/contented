@@ -45,24 +45,23 @@ export const TaskRequestSchema = z.object({
   err_msg: z.string().optional(),
 });
 
+
 export type ITaskRequest = z.infer<typeof TaskRequestSchema>;
 export class TaskRequest implements ITaskRequest {
-  id: number;
-  content_id: number;
+  id: number = -1;
+  content_id: number = 0;
   created_at: Date | undefined;
   updated_at: Date | undefined;
   started_at: Date | undefined;
-  status: TaskState;
-  operation: TaskOperation;
-  number_of_screens: number;
-  start_time_seconds: number;
-
-  codec: string;
+  status: TaskState = TASK_STATES.NEW;
+  operation: TaskOperation = TaskOperation.ENCODING;
+  number_of_screens: number = 0;
+  start_time_seconds: number = 0;
+  codec: string = '';
   width?: number;
   height?: number;
-
-  message: string;
-  err_msg: string;
+  message: string = '';
+  err_msg: string = '';
 
   uxLoading = false;
 
@@ -74,13 +73,11 @@ export class TaskRequest implements ITaskRequest {
   }
 
   update(obj: any) {
-    if (obj) {
-      const tr = TaskRequestSchema.parse(obj);
-      Object.assign(this, tr);
+    const tr = TaskRequestSchema.parse(obj);
+    Object.assign(this, tr);
 
-      if (obj.operation === TaskOperation.DUPES && obj.message) {
-        this.complexMessage = JSON.parse(obj.message);
-      }
+    if (obj.operation === TaskOperation.DUPES && obj.message) {
+      this.complexMessage = JSON.parse(obj.message);
     }
   }
 

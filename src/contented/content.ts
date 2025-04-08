@@ -200,26 +200,23 @@ export const ContentSchema = z.object({
 export type ContentInterface = z.infer<typeof ContentSchema>;
 
 export class Content implements ContentInterface {
-  id: number;
-  src: string;
-  preview: string;
-  idx: number;
-  description: string;
-  content_type: string;
-  container_id: number;
-  size: number;
-  encoding: string;
-  screens: Screen[];
-  tags: Tag[];
-  meta: string;
-  fullText: string;
-
-  created_at: string;
-  updated_at: string;
-  duplicate: boolean;
-
-  // Implemented
-  videoInfoParsed: VideoCodecInfo;
+  id: number = 0;
+  src: string = '';
+  preview: string = '';
+  idx: number = 0;
+  description: string = '';
+  content_type: string = '';
+  container_id: number = 0;
+  size: number = 0;
+  encoding: string = '';
+  screens: Screen[] = [];
+  tags: Tag[] = [];
+  meta: string = '';
+  fullText: string = '';
+  created_at: string = '';
+  updated_at: string = '';
+  duplicate: boolean = false;
+  videoInfoParsed: VideoCodecInfo | undefined = undefined;
 
   constructor(data: any = {}) {
     this.update(data);
