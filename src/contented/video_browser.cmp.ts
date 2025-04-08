@@ -22,23 +22,23 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
   // Route needs to exist
   // Take in the search text route param
   // Debounce the search
-  @ViewChild('searchForm', { static: true }) searchControl;
-  @ViewChild(MatMenuTrigger) contextMenu: MatMenuTrigger;
-  @Input() tags: Array<Tag>;
-  throttleSearch: Subscription;
+  @ViewChild('searchForm', { static: true }) searchControl: any;
+  @ViewChild(MatMenuTrigger) contextMenu: MatMenuTrigger | undefined;
+  @Input() tags: Array<Tag> = [];
+  throttleSearch: Subscription | undefined;
 
-  searchText: string; // Initial value
+  searchText: string = ''; // Initial value
   searchType = new FormControl('text');
   currentTextChange: VSCodeChange = { value: '', tags: [] };
-  changedSearch: (evt: VSCodeChange) => void;
+  changedSearch: (evt: VSCodeChange) => void = () => {};
 
-  options: FormGroup;
+  options: FormGroup | undefined;
   fb: FormBuilder;
 
   public selectedContent: Content | undefined; // For keeping track of where we are in the page
-  public selectedContainer: Container; // For filtering
-  public content: Array<Content>;
-  public containers: Array<Container>;
+  public selectedContainer: Container | undefined; // For filtering
+  public content: Array<Content> = [];
+  public containers: Array<Container> = [];
 
   // TODO: Make this a saner calculation
   public maxVisible = 3; // How many results show vertically
@@ -46,7 +46,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
   public offset = 0; // Tracking where we are in the position
   public pageSize = 50;
   public loading: boolean = false;
-  public sub: Subscription; // Listening for GlobalNavEvents
+  public sub: Subscription | undefined; // Listening for GlobalNavEvents
 
   constructor(
     public _contentedService: ContentedService,
@@ -221,6 +221,9 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     if (this.throttleSearch) {
       this.throttleSearch.unsubscribe();
     }
+    if (!this.options) {
+      return;
+    }
     this.throttleSearch = this.options.valueChanges
       .pipe(
         debounceTime(250),
@@ -240,7 +243,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
   }
 
   getValues() {
-    return this.options.value;
+    return this.options?.value;
   }
 
   pageEvt(evt: PageEvent) {

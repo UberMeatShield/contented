@@ -10,6 +10,7 @@ import { Subscription } from 'rxjs';
 import { Container, getFavorites } from './container';
 
 import _ from 'lodash';
+import { getWindowSizes } from './common';
 
 @Component({
   selector: 'favorites-cmp',
@@ -37,10 +38,13 @@ export class FavoritesCmp implements OnInit, OnDestroy {
 
   onContextMenu(event: MouseEvent, content: Content) {
     event.preventDefault();
+    if (!this.contextMenu) {
+      return;
+    }
     this.contextMenuPosition.x = event.clientX + 'px';
     this.contextMenuPosition.y = event.clientY + 'px';
     this.contextMenu.menuData = { content: content };
-    this.contextMenu.menu.focusFirstItem('mouse');
+    this.contextMenu.menu?.focusFirstItem('mouse');
     this.contextMenu.openMenu();
   }
 
@@ -127,8 +131,7 @@ export class FavoritesCmp implements OnInit, OnDestroy {
     // This should be based on the container not the window
     // but unfortunately we call it before it is in the dom and visible
     // so there is a load operation order issue to solve.  Maybe afterViewInit would work?
-    let width = !window['jasmine'] ? window.innerWidth : 800;
-    let height = !window['jasmine'] ? window.innerHeight : 800;
+    const {width, height} = getWindowSizes();
 
     // 120 is right if the top nav is hidden, could calculate that it is out of view for the height of things
     this.previewWidth = width / this.maxVisible - 12;
