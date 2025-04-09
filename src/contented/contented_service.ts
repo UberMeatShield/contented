@@ -172,7 +172,7 @@ export class ContentedService {
       let idx = 0;
       for (let offset = cnt.count; offset < cnt.total; offset += limit) {
         ++idx;
-        let delayP = new Promise((yupResolve, nopeReject) => {
+        let delayP = new Promise<Container>((yupResolve, nopeReject) => {
           this.getFullContainer(cnt.id, offset, limit).subscribe({
             next: res => {
               _.delay(() => {
@@ -182,6 +182,7 @@ export class ContentedService {
                 }
                 yupResolve(cnt);
               }, idx * 500);
+              return cnt;
             },
             error: err => {
               GlobalBroadcast.error('Failed to load', err);
@@ -194,7 +195,7 @@ export class ContentedService {
           // TODO: Make something else sensible here.
           break;
         }
-        calls.push(observableFrom<Container>(delayP));
+        calls.push(observableFrom(delayP));
       }
 
       // Join all the results and let the call function resolve once the cnt is updated.
@@ -319,7 +320,7 @@ export class ContentedService {
 
   public handleError(err: HttpErrorResponse) {
     console.error('Error calling API', err);
-    let parsed = {};
+    let parsed: any = {};
     if (_.isObject(err.error)) {
       parsed = _.clone(err.error);
     } else {
@@ -342,8 +343,8 @@ export class ContentedService {
     if (_.isEmpty(parsed)) {
       parsed = { error: 'Unknown error, or no error text in the result?' };
     }
-    parsed['url'] = err.url;
-    parsed['code'] = err.status;
+    parsed.url = err.url;
+    parsed.code = err.status;
     return observableFrom(Promise.reject(parsed));
   }
 

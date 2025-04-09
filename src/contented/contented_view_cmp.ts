@@ -1,4 +1,4 @@
-import { OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener, ViewChild } from '@angular/core';
+import { OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { Content } from './content';
 import { GlobalNavEvents, NavTypes, NavEventMessage } from './nav_events';
 import { Subscription } from 'rxjs';
@@ -8,6 +8,7 @@ import { GlobalBroadcast } from './global_message';
 import { TaskRequest } from './task_request';
 import * as _ from 'lodash';
 import { ScreenAction, ScreenClickEvent, Screen } from './screen';
+import { getWindowSizes } from './common';
 
 @Component({
   selector: 'contented-view',
@@ -15,16 +16,16 @@ import { ScreenAction, ScreenClickEvent, Screen } from './screen';
 })
 export class ContentedViewCmp implements OnInit, OnDestroy {
   @Input() content?: Content;
-  @Input() forceWidth: number;
-  @Input() forceHeight: number;
+  @Input() forceWidth: number = 0;
+  @Input() forceHeight: number = 0;
   @Input() visible: boolean = false;
   @Input() showScreens = true;
   @Input() restrictContentId: number = -1;
-  @ViewChild('VIDEOELEMENT') video;
+  @ViewChild('VIDEOELEMENT') video: ElementRef<HTMLVideoElement> | undefined;
 
-  public maxWidth: number;
-  public maxHeight: number;
-  public sub: Subscription;
+  public maxWidth: number = 800;
+  public maxHeight: number = 600;
+  public sub: Subscription | undefined;
   public taskLoading = false;
 
   // This calculation does _not_ work when using a dialog.  Fix?
@@ -44,8 +45,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
     this.sub = GlobalNavEvents.navEvts.subscribe({
       next: (evt: NavEventMessage) => {
         // Restrict content ID might need to be a bit smarter
-
-        let content = this.shouldIgnoreEvt(evt.content);
+        const content = evt.content ? this.shouldIgnoreEvt(evt.content) : undefined;
         if (!content) {
           return;
         }
@@ -83,7 +83,9 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
     if (this.content && this.content.isText() && this.visible) {
       this._service.getTextContent(this.content).subscribe({
         next: (text: string) => {
-          this.content.fullText = text;
+          if (this.content) {
+            this.content.fullText = text;
+          }
         },
         error: err => {
           GlobalBroadcast.error('Failed to get description', err);
@@ -135,10 +137,10 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
   public calculateDimensions() {
     // Probably should just set it via dom calculation of the actual parent
     // container?  Maybe?  but then I actually DO want scroll in some cases.
+    const { width, height } = getWindowSizes();
     if (this.forceWidth > 0) {
       this.maxWidth = this.forceWidth;
     } else {
-      let width = window.innerWidth; //
       this.maxWidth = width - 20 > 0 ? width - 20 : 640;
     }
 
@@ -147,7 +149,6 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
       console.log('Force height', this.forceWidth, this.forceHeight);
       this.maxHeight = this.forceHeight;
     } else {
-      let height = window.innerHeight; // document.body.clientHeight;
       this.maxHeight = height - 20 > 0 ? height - 64 : 480;
     }
   }
@@ -186,8 +187,9 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
   // Kinda just need the ability to get the task info from the server
   screenshot(content: Content) {
     // Determine how to get the current video index, if not defined then just use the default
-    console.log(this.video.nativeElement.currentTime);
-    let ss = this.video.nativeElement.currentTime;
+    console.log(this.video?.nativeElement?.currentTime);
+
+    let ss = this.video?.nativeElement?.currentTime || 0;
     this.taskLoading = true;
     this._service
       .requestScreens(content, 1, ss)
