@@ -45,7 +45,6 @@ export const TaskRequestSchema = z.object({
   err_msg: z.string().optional(),
 });
 
-
 export type ITaskRequest = z.infer<typeof TaskRequestSchema>;
 export class TaskRequest implements ITaskRequest {
   id: number = -1;

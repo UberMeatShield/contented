@@ -16,13 +16,13 @@ import * as _ from 'lodash';
 })
 export class ContainerNavCmp implements OnInit, OnDestroy {
   // This is actually required
-  @Input() cnt: Container;
+  @Input() cnt!: Container;
 
   // Do we actually care?
   @Input() totalContainers: number = 0;
 
   // current view Item should be something you trigger per directory (move view ?)
-  public currentContent: Content;
+  public currentContent: Content | undefined;
   public ContainerLoadStates = LoadStates;
 
   // idx and current view item might be better as a top level nav / hover should be allowed?
@@ -33,18 +33,19 @@ export class ContainerNavCmp implements OnInit, OnDestroy {
   @Input() rowIdx: number = 0; // Which content item is selected
   @Input() idx: number = 0; // What is our index compared to other containers
 
-  private sub: Subscription;
+  private sub: Subscription | undefined;
 
-  public navForm: FormGroup;
-  public idxControl: FormControl<number>;
+  public navForm: FormGroup | undefined;
+  public idxControl: FormControl<number | null>;
 
   constructor(
     public fb: FormBuilder,
     public _contentedService: ContentedService
-  ) {}
+  ) {
+    this.idxControl = new FormControl(this.idx || this.cnt?.rowIdx || 0, Validators.required);
+  }
 
   public ngOnInit() {
-    this.idxControl = new FormControl(this.idx || this.cnt.rowIdx || 0, Validators.required);
     this.navForm = this.fb.group({
       idxControl: this.idxControl,
     });
@@ -55,7 +56,7 @@ export class ContainerNavCmp implements OnInit, OnDestroy {
         if (evt.action == NavTypes.SELECT_MEDIA && evt.cnt == this.cnt && evt.content) {
           //console.log("Container Nav found select content", evt, evt.cnt.name);
           this.currentContent = evt.content;
-          this.idxControl.setValue(this.cnt.rowIdx);
+          this.idxControl?.setValue(this.cnt.rowIdx);
         }
       },
     });
@@ -64,7 +65,8 @@ export class ContainerNavCmp implements OnInit, OnDestroy {
     if (this.cnt) {
       this.currentContent = this.cnt.getContent();
     }
-    this.navForm.get('idxControl').valueChanges.subscribe({
+
+    this.navForm.get('idxControl')?.valueChanges.subscribe({
       next: idx => {
         if (idx != this.cnt.rowIdx) {
           let content = this.cnt.getContent(idx);

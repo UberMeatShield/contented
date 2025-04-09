@@ -2,7 +2,7 @@
     <contented-nav [loading]="loading"></contented-nav>
     <div></div>
 
-    <form #containerForm [formGroup]="options" (keypress)="$event.stopPropagation()">
+    <form #containerForm *ngIf="options" [formGroup]="options" (keypress)="$event.stopPropagation()">
     <div class="search-form">
       <div class="search-tags" *ngIf="this.options">
         <tags-cmp

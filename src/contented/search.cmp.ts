@@ -195,7 +195,7 @@ export class SearchCmp implements OnInit {
   // TODO: Being called abusively in the content rather than on page resize events
   @HostListener('window:resize', ['$event'])
   public calculateDimensions() {
-    const {width, height} = getWindowSizes();
+    const { width, height } = getWindowSizes();
 
     this.previewWidth = width / 4 - 41;
     this.previewHeight = height / this.maxVisible - 41;

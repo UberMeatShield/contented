@@ -63,7 +63,7 @@ export class NavEvents {
     });
   }
 
-  selectContent(content: Content, container: Container | undefined) {
+  selectContent(content: Content | undefined, container: Container | undefined) {
     this.navEvts.emit({
       action: NavTypes.SELECT_MEDIA,
       content: content,
@@ -71,7 +71,7 @@ export class NavEvents {
     });
   }
 
-  nextContent(container: Container | undefined) {
+  nextContent(container: Container | undefined = undefined) {
     this.navEvts.emit({
       action: NavTypes.NEXT_MEDIA,
       cnt: container,
@@ -79,7 +79,7 @@ export class NavEvents {
     });
   }
 
-  prevContent(container: Container | undefined) {
+  prevContent(container: Container | undefined = undefined) {
     this.navEvts.emit({
       action: NavTypes.PREV_MEDIA,
       cnt: container,
@@ -87,7 +87,7 @@ export class NavEvents {
     });
   }
 
-  viewFullScreen(content: Content | undefined, screen?: Screen, container?: Container) {
+  viewFullScreen(content: Content | undefined = undefined, screen?: Screen, container?: Container) {
     this.navEvts.emit({
       action: NavTypes.VIEW_FULLSCREEN,
       content: content,
@@ -105,7 +105,7 @@ export class NavEvents {
     });
   }
 
-  loadMoreContent(container: Container | undefined) {
+  loadMoreContent(container: Container | undefined = undefined) {
     this.navEvts.emit({
       action: NavTypes.LOAD_MORE,
       cnt: container,
@@ -114,7 +114,7 @@ export class NavEvents {
   }
 
   // Determine if this should require a content element
-  saveContent(content: Content | undefined) {
+  saveContent(content: Content | undefined = undefined) {
     this.navEvts.emit({
       action: NavTypes.SAVE_MEDIA,
       content: content,
@@ -147,11 +147,10 @@ export class NavEvents {
     });
   }
 
-  toggleFavorite(content: Content | undefined) {
-    console.log('toggleFavorite keypress', content);
+  toggleFavorite(content: Content | undefined = undefined) {
     this.navEvts.emit({
       action: NavTypes.TOGGLE_FAVORITE,
-      content: undefined,
+      content: content,
       cnt: undefined,
     });
   }

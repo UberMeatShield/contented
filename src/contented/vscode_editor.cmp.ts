@@ -288,7 +288,7 @@ export class VSCodeEditorCmp implements OnInit {
 
     _.delay(() => {
       if (this.monacoEditor) {
-        this.createPlaceholder(this.placeholder || "", this.monacoEditor);
+        this.createPlaceholder(this.placeholder || '', this.monacoEditor);
       }
     }, 200);
 
@@ -303,7 +303,7 @@ export class VSCodeEditorCmp implements OnInit {
   createPlaceholder(placeholder: string, editor: MonacoEditor.ICodeEditor) {
     // Need to make it so the placeholder cannot be clicked
     //console.log("Placeholder", placeholder, editor, "TS Wrapper", this.editor);
-    new PlaceholderContentWidget(this.placeholder || "", editor);
+    new PlaceholderContentWidget(this.placeholder || '', editor);
   }
 
   // TODO:  This also needs to handle a window resize event to actually check the content

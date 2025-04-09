@@ -83,7 +83,7 @@ export class VideoPreviewCmp implements OnInit {
   // Rather than window I should probably make it the containing dom element?
   @HostListener('window:resize', ['$event'])
   public calculateDimensions(): void {
-    const {width, height} = getWindowSizes();
+    const { width, height } = getWindowSizes();
 
     this.previewWidth = width / 5;
     this.previewHeight = height / this.maxVisible - 41;

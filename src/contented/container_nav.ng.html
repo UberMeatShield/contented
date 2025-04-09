@@ -48,9 +48,9 @@
         </span>
 
         <!-- Event emit for the rowIdx for this component -->
-        <form class="container-meta-text bar-spacer">
-          Loaded: <span class="cnt-max-count">{{cnt?.contents?.length}}</span>/<span class="cnt-total">{{cnt?.total}}</span>
-          <span *ngIf="cnt?.contents?.length < cnt.total">
+        <form class="container-meta-text bar-spacer" *ngIf="cnt && cnt.contents">
+          Loaded: <span class="cnt-max-count">{{cnt.contents.length}}</span>/<span class="cnt-total">{{cnt.total}}</span>
+          <span *ngIf="cnt.contents.length && cnt.contents.length < cnt.total">
             press (F) or: 
             <button class="btn-full-load-ctn" (click)="fullLoadContainer(cnt)">
               Load ({{ cnt.total - cnt.count }}) Items

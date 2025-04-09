@@ -139,7 +139,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
             // It might not be TOO abusive to override this and make it page next?
             break;
           case NavTypes.SELECT_MEDIA:
-              this.selectContent(evt.content, evt.cnt || undefined);
+            this.selectContent(evt.content, evt.cnt || undefined);
             break;
           case NavTypes.SELECT_CONTAINER:
             this.selectContainer(evt.cnt);
@@ -254,7 +254,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
   }
 
   public getCntId(): string {
-    return !!this.selectedContainer ? this.selectedContainer.id.toString() : "";
+    return !!this.selectedContainer ? this.selectedContainer.id.toString() : '';
   }
 
   // TODO: Add in optional filter params like the container (filter by container in search?)
@@ -262,7 +262,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     text: string = '',
     offset: number = 0,
     limit: number = 50,
-    cntId: string = "",
+    cntId: string = '',
     tags: Array<string> = []
   ) {
     console.log('Get the information from the input and search on it', text, offset, limit, cntId);

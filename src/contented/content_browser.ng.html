@@ -23,7 +23,7 @@
           <container-nav
             [cnt]="cnt"
             [active]="cnt === getCurrentContainer()"
-            [totalContainers]="allCnts?.length"
+            [totalContainers]="allCnts.length || 0"
             [rowIdx]="cnt.rowIdx"
             [idx]="idx"
           ></container-nav>

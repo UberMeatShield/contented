@@ -57,7 +57,7 @@ export class FavoritesCmp implements OnInit, OnDestroy {
       next: (evt: NavEventMessage) => {
         // This container is not active but it should be monitoring favorites
         if (!evt.content) return;
-        
+
         switch (evt.action) {
           case NavTypes.FAVORITE_MEDIA:
             this.handleFavorite(evt.content);
@@ -140,7 +140,7 @@ export class FavoritesCmp implements OnInit, OnDestroy {
     // This should be based on the container not the window
     // but unfortunately we call it before it is in the dom and visible
     // so there is a load operation order issue to solve.  Maybe afterViewInit would work?
-    const {width, height} = getWindowSizes();
+    const { width, height } = getWindowSizes();
 
     // 120 is right if the top nav is hidden, could calculate that it is out of view for the height of things
     this.previewWidth = width / this.maxVisible - 12;

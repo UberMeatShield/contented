@@ -30,20 +30,20 @@ export type IContainer = z.infer<typeof ContainerSchema>;
 
 export class Container implements IContainer {
   public contents: Array<Content> = [];
-  public total: number;
-  public count: number;
-  public path: string;
-  public name: string;
-  public id: number;
-  public previewUrl: string;
-  public description: string;
+  public total: number = 0;
+  public count: number = 0;
+  public path: string = '';
+  public name: string = '';
+  public id: number = 0;
+  public previewUrl: string = '';
+  public description: string = '';
 
   // Set on the initial content loads
   public loadState: LoadStates = LoadStates.NotLoaded;
   public visible: boolean = false;
 
   // All potential items that can be rendered from the contents
-  public renderable: Array<Content>;
+  public renderable: Array<Content> = [];
   public visibleSet: Array<Content> = [];
 
   // The currently selected Index
@@ -57,7 +57,7 @@ export class Container implements IContainer {
     const c = ContainerSchema.parse(cnt);
     Object.assign(this, c);
 
-    const contents = cnt?.contents ? cnt.contents.map(mc => new Content(mc)) : [];
+    const contents = cnt?.contents ? cnt.contents.map((mc: any) => new Content(mc)) : [];
     this.setContents(contents);
   }
 

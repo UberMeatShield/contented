@@ -8,7 +8,7 @@ import { App } from './app';
 
 import { environment } from './../environments/environment';
 import { BrowserAnimationsModule, NoopAnimationsModule } from '@angular/platform-browser/animations';
-let AnimationsModule = environment['test'] ? NoopAnimationsModule : BrowserAnimationsModule;
+let AnimationsModule = !environment.production ? NoopAnimationsModule : BrowserAnimationsModule;
 
 @NgModule({
   imports: [BrowserModule, AppRoutes, HttpClientModule, AppRoutes, ContentedModule, AnimationsModule],

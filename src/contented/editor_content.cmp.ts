@@ -25,7 +25,7 @@ export class EditorContentCmp implements OnInit {
   @Input() content?: Content;
 
   @Input() editForm?: FormGroup;
-  @Input() descriptionControl: FormControl<string|null> = new FormControl('', Validators.required);
+  @Input() descriptionControl: FormControl<string | null> = new FormControl('', Validators.required);
 
   @Input() screensForm?: FormGroup;
   @Input() offsetControl: FormControl<number | null> = new FormControl(0, Validators.required);
@@ -94,7 +94,7 @@ export class EditorContentCmp implements OnInit {
 
   save() {
     if (!this.content || !this.editForm) return;
-    
+
     console.log('Save()', this.editForm.value);
     this.content.description = _.get(this.editForm.value, 'description');
     this.loading = true;
@@ -117,7 +117,7 @@ export class EditorContentCmp implements OnInit {
 
   clearScreens(content: Content) {
     if (!this.content) return;
-    
+
     this._service.clearScreens(this.content.id).subscribe({
       next: (content: Content) => {
         this.content = content;
@@ -131,7 +131,7 @@ export class EditorContentCmp implements OnInit {
 
   incrementalScreens(content: Content) {
     if (!this.content || !this.screensForm) return;
-    
+
     let req = this.screensForm.value;
     this.taskLoading = true;
     this._service

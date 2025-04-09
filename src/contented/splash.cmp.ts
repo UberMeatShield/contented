@@ -25,7 +25,7 @@ export class SplashCmp implements OnInit {
 
   @Input() editForm?: FormGroup;
   @Input() editorValue: string = RESUME; // TODO: Save this as media
-  @Input() descriptionControl?: FormControl<string|null>;
+  @Input() descriptionControl?: FormControl<string | null>;
   @Input() readOnly: boolean = true;
   @Input() editorOptions = {
     //theme: 'vs-dark',

@@ -7,17 +7,18 @@ import { Container } from './container';
 import { Content } from './content';
 import { GlobalNavEvents, NavTypes, NavEventMessage } from './nav_events';
 import * as _ from 'lodash';
+import { getWindowSizes } from './common';
 
 @Component({
   selector: 'container-cmp',
   templateUrl: 'container.ng.html',
 })
 export class ContainerCmp implements OnInit, OnDestroy {
-  @Input() container: Container;
+  @Input() container!: Container;
   @Input() active: boolean = false;
   @Input() maxWidth: number = 0;
   @Input() maxHeight: number = 0;
-  @ViewChild(MatMenuTrigger) contextMenu: MatMenuTrigger;
+  @ViewChild(MatMenuTrigger) contextMenu: MatMenuTrigger | undefined;
 
   @Input() maxRendered: number = 8; // Default setting for how many should be visible at any given time
   @Input() maxPrevItems: number = 2; // When scrolling through a cnt, how many previous items should be visible
@@ -28,8 +29,8 @@ export class ContainerCmp implements OnInit, OnDestroy {
   // @Output clickEvt: EventEmitter<any>;
   public previewWidth: number = 0;
   public previewHeight: number = 0;
-  public visibleSet: Array<Content>; // The currently visible set of items from in the container
-  public sub: Subscription;
+  public visibleSet: Array<Content> = []; // The currently visible set of items from in the container
+  public sub: Subscription | undefined;
   public contextMenuPosition = { x: '0px', y: '0px' };
 
   constructor(public _contentedService: ContentedService) {}
@@ -56,7 +57,9 @@ export class ContainerCmp implements OnInit, OnDestroy {
               this.toggleFavorite();
               break;
             case NavTypes.SCROLL_MEDIA_INTO_VIEW:
-              this.scrollContent(evt.content);
+              if (evt.content) {
+                this.scrollContent(evt.content);
+              }
               break;
             default:
               break;
@@ -70,10 +73,13 @@ export class ContainerCmp implements OnInit, OnDestroy {
 
   onContextMenu(event: MouseEvent, content: Content) {
     event.preventDefault();
+    if (!this.contextMenu) {
+      return;
+    }
     this.contextMenuPosition.x = event.clientX + 'px';
     this.contextMenuPosition.y = event.clientY + 'px';
     this.contextMenu.menuData = { content: content };
-    this.contextMenu.menu.focusFirstItem('mouse');
+    this.contextMenu.menu?.focusFirstItem('mouse');
     this.contextMenu.openMenu();
   }
 
@@ -138,16 +144,10 @@ export class ContainerCmp implements OnInit, OnDestroy {
     }
   }
 
-  public getVisibleSet(currentItem: Content = null, max: number = this.maxRendered) {
+  public getVisibleSet(currentItem: Content | undefined = undefined, max: number = this.maxRendered) {
     let content: Content = currentItem || this.container.getCurrentContent();
     this.visibleSet = this.container.getIntervalAround(content, max, this.maxPrevItems);
     return this.visibleSet;
-  }
-
-  // Could also add in full container load information here
-  public imgLoaded(evt) {
-    let img = evt.target;
-    //console.log("Img Loaded", img.naturalHeight, img.naturalWidth, img);
   }
 
   public clickContent(content: Content) {
@@ -169,8 +169,7 @@ export class ContainerCmp implements OnInit, OnDestroy {
     // This should be based on the container not the window
     // but unfortunately we call it before it is in the dom and visible
     // so there is a load operation order issue to solve.  Maybe afterViewInit would work?
-    let width = this.maxWidth || !window['jasmine'] ? window.innerWidth : 800;
-    let height = this.maxHeight || !window['jasmine'] ? window.innerHeight : 800;
+    const { width, height } = getWindowSizes();
 
     // 120 is right if the top nav is hidden, could calculate that it is out of view for the height of things
     // when doing navigation. Potentially the sizing could be done in the container and the max with provided

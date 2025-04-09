@@ -1,4 +1,14 @@
-import { OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener, ViewChild, ElementRef } from '@angular/core';
+import {
+  OnInit,
+  OnDestroy,
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  HostListener,
+  ViewChild,
+  ElementRef,
+} from '@angular/core';
 import { Content } from './content';
 import { GlobalNavEvents, NavTypes, NavEventMessage } from './nav_events';
 import { Subscription } from 'rxjs';
@@ -96,7 +106,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
 
   public selectFullScreenContent(content: Content, screen?: Screen) {
     if (!content) return;
-    
+
     this.content = content;
     this.visible = true;
 
@@ -119,7 +129,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
 
   public handleTextContent(content: Content) {
     if (!content) return;
-    
+
     // This would be better in a method but I would like another example type.
     if (content.isText() && !content.fullText) {
       this._service.getTextContent(content).subscribe({
@@ -166,7 +176,7 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
 
   public clickedScreen(evt: ScreenClickEvent, count: number = 0) {
     if (!this.content) return;
-    
+
     // These screens are associated with the currently selected content
     const findVideo = (attempt = 0) => {
       const videoEl = <HTMLVideoElement>document.getElementById(`VIDEO_${this.content?.id}`);

@@ -11,8 +11,8 @@ export const TagSchema = z.object({
 });
 export type TagInterface = z.infer<typeof TagSchema>;
 export class Tag implements TagInterface {
-  id: string;
-  tag_type: string;
+  id: string = '';
+  tag_type: string = '';
 
   constructor(data: Partial<TagInterface> = {}) {
     this.update(data);
@@ -56,16 +56,16 @@ export const VideoFormatSchema = z.object({
 
 export type VideoFormatInterface = z.infer<typeof VideoFormatSchema>;
 export class VideoFormat implements VideoFormatInterface {
-  bit_rate: number;
-  duration: number;
-  filename: string;
-  format_long_name: string;
-  format_name: string;
-  nb_programs: number;
-  nb_streams: number;
-  probe_score: number;
-  size: number;
-  start_time: number;
+  bit_rate: number = 0;
+  duration: number = 0;
+  filename: string = '';
+  format_long_name: string = '';
+  format_name: string = '';
+  nb_programs: number = 0;
+  nb_streams: number = 0;
+  probe_score: number = 0;
+  size: number = 0;
+  start_time: number = 0;
 
   constructor(data: any = {}) {
     this.update(data);
@@ -102,19 +102,19 @@ export const VideoStreamSchema = z.object({
 
 export type VideoStreamInterface = z.infer<typeof VideoStreamSchema>;
 export class VideoStream implements VideoStreamInterface {
-  avg_frame_rate: string;
-  bit_rate: number;
-  bits_per_raw_sample: number;
-  chroma_location: string;
-  closed_captions: number;
-  codec_long_name: string;
-  codec_name: string;
-  codec_tag: string;
-  codec_tag_string: string;
-  codec_type: string;
-  coded_height: number;
-  coded_width: number;
-  duration: number;
+  avg_frame_rate: string = '';
+  bit_rate: number = 0;
+  bits_per_raw_sample: number = 0;
+  chroma_location: string = '';
+  closed_captions: number = 0;
+  codec_long_name: string = '';
+  codec_name: string = '';
+  codec_tag: string = '';
+  codec_tag_string: string = '';
+  codec_type: string = '';
+  coded_height: number = 0;
+  coded_width: number = 0;
+  duration: number = 0;
 
   constructor(data: any = {}) {
     this.update(data);
@@ -128,14 +128,14 @@ export class VideoStream implements VideoStreamInterface {
 
 // Represents some of the encoding that comes back from ffmpeg probe
 export const VideoCodecInfoSchema = z.object({
-  format: VideoFormatSchema,
+  format: VideoFormatSchema.optional(),
   streams: VideoStreamSchema.array().optional(),
 });
 export type VideoCodecInfoInterface = z.infer<typeof VideoCodecInfoSchema>;
 
 export class VideoCodecInfo implements VideoCodecInfoInterface {
-  format: VideoFormat;
-  streams: VideoStreamInterface[];
+  format?: VideoFormat | undefined;
+  streams?: VideoStreamInterface[];
 
   constructor(data: Partial<VideoCodecInfoInterface> = {}) {
     this.update(data);

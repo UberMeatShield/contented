@@ -1,44 +1,44 @@
-import { OnInit, Component, Input, HostListener, ViewChild } from '@angular/core';
+import { OnInit, Component, Input, HostListener, ViewChild, EventEmitter } from '@angular/core';
 import { ContentedService } from './contented_service';
 import { Container, getFavorites } from './container';
-import { GlobalNavEvents } from './nav_events';
+import { GlobalNavEvents, NavEventMessage } from './nav_events';
 import { MatRipple } from '@angular/material/core';
 import { MatAutocomplete } from '@angular/material/autocomplete';
 import { FormControl } from '@angular/forms';
 import type { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 
-import * as _ from 'lodash';
-import * as $ from 'jquery';
+import _ from 'lodash';
+import $ from 'jquery';
 
 @Component({
   selector: 'contented-nav',
   templateUrl: 'contented_nav.ng.html',
 })
 export class ContentedNavCmp implements OnInit {
-  @ViewChild(MatRipple) ripple: MatRipple;
-  @ViewChild(MatAutocomplete) matAutocomplete: MatAutocomplete;
-  @Input() navEvts;
-  @Input() loading: boolean;
-  @Input() containers: Array<Container>;
+  @ViewChild(MatRipple) ripple: MatRipple | undefined;
+  @ViewChild(MatAutocomplete) matAutocomplete: MatAutocomplete | undefined;
+  @Input() navEvts: EventEmitter<NavEventMessage> | undefined;
+  @Input() loading: boolean = false;
+  @Input() containers: Array<Container> = [];
   @Input() noKeyPress = false;
   @Input() title = '';
   @Input() showFavorites = true;
 
-  public containerFilter = new FormControl<string>('');
+  public containerFilter = new FormControl<string | null>('');
   public filteredContainers: Observable<Container[]>;
-  public favoriteContainer: Container;
+  public favoriteContainer: Container | undefined;
 
   constructor(public _contentedService: ContentedService) {
     this.favoriteContainer = getFavorites();
-  }
-
-  ngOnInit() {
-    this.navEvts = this.navEvts || GlobalNavEvents.navEvts;
     this.filteredContainers = this.containerFilter.valueChanges.pipe(
       startWith(''),
       map(value => (value ? this.filter(value) : this.containers))
     );
+  }
+
+  ngOnInit() {
+    this.navEvts = this.navEvts || GlobalNavEvents.navEvts;
   }
 
   public toggleFavorites() {
@@ -75,7 +75,7 @@ export class ContentedNavCmp implements OnInit {
   // it is not obvious it works from the documentation
   public chooseFirstOption() {
     // On enter should turn off focus
-    if (this.matAutocomplete.options.first) {
+    if (this.matAutocomplete?.options.first) {
       this.matAutocomplete.options.first.select();
     }
   }
@@ -92,7 +92,7 @@ export class ContentedNavCmp implements OnInit {
 
     let nodeName = _.get(evt.target, 'nodeName');
     let ignoreNodes = ['TEXTAREA', 'INPUT', 'SELECT'];
-    if (ignoreNodes.includes(nodeName)) {
+    if (nodeName && ignoreNodes.includes(nodeName)) {
       return;
     }
     this.handleKey(evt.key);
@@ -103,12 +103,12 @@ export class ContentedNavCmp implements OnInit {
       // console.log("Position and btn value", pos, btn.val());
       let x = pos.left + 32;
       let y = pos.top + 20;
-      let rippleRef = this.ripple.launch(x, y, {
+      let rippleRef = this.ripple?.launch(x, y, {
         persistent: true,
         radius: 24,
       });
       _.delay(() => {
-        rippleRef.fadeOut();
+        rippleRef?.fadeOut();
       }, 250);
     }
   }

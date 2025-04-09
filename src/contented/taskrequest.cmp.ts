@@ -88,12 +88,7 @@ export class TaskRequestCmp implements OnInit {
       )
       .subscribe({
         next: (formData: Partial<{ search: string | null; status: string | null }>) => {
-          return this.loadTasks(
-            this.contentID,
-            [],
-            formData.status as TaskStatus || '',
-            formData.search || ''
-          );
+          return this.loadTasks(this.contentID, [], (formData.status as TaskStatus) || '', formData.search || '');
         },
         error: (error: unknown) => {
           console.error('Failed to search Tasks error', error);
@@ -108,12 +103,7 @@ export class TaskRequestCmp implements OnInit {
     }
   }
 
-  loadTasks(
-    contentID: number,
-    notComplete: TaskRequest[] = [],
-    status: TaskStatus = '',
-    search = ''
-  ): void {
+  loadTasks(contentID: number, notComplete: TaskRequest[] = [], status: TaskStatus = '', search = ''): void {
     this.loading = true;
 
     const query: TaskSearch = {
@@ -129,7 +119,7 @@ export class TaskRequestCmp implements OnInit {
       .getTasks(query)
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
-        next: (taskResponse) => {
+        next: taskResponse => {
           // On an initial load we need to get the not complete tasks and don't want events
           // for tasks completed long ago.
           this.tasks = taskResponse.results;
@@ -151,7 +141,7 @@ export class TaskRequestCmp implements OnInit {
       .cancelTask(task)
       .pipe(finalize(() => (task.uxLoading = false)))
       .subscribe({
-        next: (taskResponse) => {
+        next: taskResponse => {
           return new TaskRequest(taskResponse);
         },
         error: (err: unknown) => console.error,
@@ -160,7 +150,7 @@ export class TaskRequestCmp implements OnInit {
 
   checkComplete(tasks: TaskRequest[], watching: TaskRequest[] = []): void {
     const check = _.keyBy(watching, 'id');
-    (tasks || []).forEach((task) => {
+    (tasks || []).forEach(task => {
       if (check[task.id] && task.isComplete()) {
         this.taskUpdated.emit(task);
       }
@@ -178,9 +168,9 @@ export class TaskRequestCmp implements OnInit {
     if (this.loading) {
       return;
     }
-    const watching: TaskRequest[] = _.filter(this.tasks, (task) => !task.isComplete()) || [];
+    const watching: TaskRequest[] = _.filter(this.tasks, task => !task.isComplete()) || [];
     const vals = this.searchForm.value;
-    this.loadTasks(this.contentID, watching, vals.status as TaskStatus || '', vals.search || '');
+    this.loadTasks(this.contentID, watching, (vals.status as TaskStatus) || '', vals.search || '');
   }
 
   pageEvt(evt: PageEvent): void {

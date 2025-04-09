@@ -53,7 +53,7 @@ import { PreviewContentCmp } from './preview_content.cmp';
 
 let MONACO_LOADED = false;
 let GIVE_UP = 0;
-function monacoPoller(resolve, reject) {
+function monacoPoller(resolve: any, reject: any) {
   if (MONACO_LOADED) {
     return resolve((window as any).monaco);
   } else {
@@ -70,7 +70,7 @@ function monacoPoller(resolve, reject) {
 export let MonacoLoaded: Promise<any>;
 
 export async function WaitForMonacoLoad() {
-  MonacoLoaded = new Promise((resolve, reject) => {
+  MonacoLoaded = new Promise((resolve: any, reject: any) => {
     return monacoPoller(resolve, reject);
   });
   return await MonacoLoaded.then(() => {
