@@ -59,7 +59,7 @@ func SetupRoutes(r *gin.Engine) {
 
 	// CRUD
 	// Containers
-	r.GET("/api/containers/", ContainersResourceList)
+	r.GET("/api/containers", ContainersResourceList)
 	r.GET("/api/containers/:container_id", ContainersResourceShow)
 	r.GET("/api/containers/:container_id/contents", ContentsResourceList)
 	r.POST("/api/containers", ContainersResourceCreate)
