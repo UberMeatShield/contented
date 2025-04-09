@@ -9,8 +9,8 @@ import { ErrorHandlerCmp } from '../contented/error_handler.cmp';
 import { ContentedService } from '../contented/contented_service';
 import { ContentedModule } from '../contented/contented_module';
 
-import * as _ from 'lodash';
-import * as $ from 'jquery';
+import _ from 'lodash';
+import $ from 'jquery';
 import { GlobalBroadcast } from './global_message';
 
 describe('TestingErrorHandlerCmp', () => {

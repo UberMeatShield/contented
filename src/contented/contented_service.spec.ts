@@ -86,8 +86,8 @@ describe('TestingContentedService', () => {
 
     let expectedMaxFound = false;
     _.each(calls, req => {
-      const limit = parseInt(req.request.params.get('per_page'), 10);
-      const page = parseInt(req.request.params.get('page'), 10);
+      const limit = parseInt(req.request.params.get('per_page') || '0', 10);
+      const page = parseInt(req.request.params.get('page') || '0', 10);
       expect(page).withContext('There should only be 9 page requests, we already loaded 2').toBeLessThan(12);
       const offset = (page - 1) * limit;
 
@@ -110,7 +110,7 @@ describe('TestingContentedService', () => {
   }));
 
   it('Can load the entire container', fakeAsync(() => {
-    let cnts: Array<Container> = null;
+    let cnts: Array<Container> = [];
     service.getContainers().subscribe(
       res => {
         cnts = res.results;

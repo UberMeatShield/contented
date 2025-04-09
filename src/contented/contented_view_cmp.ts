@@ -56,19 +56,16 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
       next: (evt: NavEventMessage) => {
         // Restrict content ID might need to be a bit smarter
         const content = evt.content ? this.shouldIgnoreEvt(evt.content) : undefined;
-        if (!content) {
-          return;
-        }
         switch (evt.action) {
           case NavTypes.VIEW_FULLSCREEN:
             if (this.content) {
               // Akward but without a digest it will NOT change the video if it is already playing
               this.content = undefined;
               setTimeout(() => {
-                this.selectFullScreenContent(content, evt.screen);
+                content && this.selectFullScreenContent(content, evt.screen);
               }, 50);
             } else {
-              this.selectFullScreenContent(content, evt.screen);
+              content && this.selectFullScreenContent(content, evt.screen);
             }
 
             break;

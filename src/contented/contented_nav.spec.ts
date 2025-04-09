@@ -25,7 +25,7 @@ describe('TestingContentedNavCmp', () => {
   let el: HTMLElement;
   let de: DebugElement;
   let httpMock: HttpTestingController;
-  let sub: Subscription;
+  let sub: Subscription | undefined;
 
   beforeEach(waitForAsync(async () => {
     TestBed.configureTestingModule({
@@ -48,7 +48,7 @@ describe('TestingContentedNavCmp', () => {
   afterEach(() => {
     if (sub) {
       sub.unsubscribe();
-      sub = null;
+      sub = undefined;
     }
   });
 
@@ -84,7 +84,7 @@ describe('TestingContentedNavCmp', () => {
   it('Should be able to handle a document keyup', fakeAsync(() => {
     fixture.detectChanges();
 
-    let validate: NavTypes = null;
+    let validate: NavTypes | undefined;
     sub = GlobalNavEvents.navEvts.subscribe(evt => {
       validate = evt.action;
     });

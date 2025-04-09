@@ -166,7 +166,8 @@ describe('TestingContentBrowserCmp', () => {
 
     let progBars = $('mat-progress-bar');
     expect(progBars.length).toBe(2, 'We should have two rendered bars');
-    expect($(progBars.get(0)).attr('mode')).toBe('buffer', 'First dir is not fully loaded');
+
+    expect($(progBars[0]).attr('mode')).toBe('buffer', 'First dir is not fully loaded');
   });
 
   it('Pull in more contents in a dir', fakeAsync(() => {
@@ -196,7 +197,7 @@ describe('TestingContentBrowserCmp', () => {
     let checkParams: HttpParams = loadReq.request.params;
     expect(checkParams.get('per_page')).withContext('We set a different limit').toBe('1');
 
-    let page = parseInt(checkParams.get('page'), 10);
+    let page = parseInt(checkParams.get('page') || '0', 10);
     let offset = page * service.LIMIT;
     expect(page).withContext('It should load more, not the beginning').toBeGreaterThan(0);
     expect(offset).withContext('Calculating the offset should be more than the current count').toEqual(3);

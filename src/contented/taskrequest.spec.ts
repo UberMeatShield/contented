@@ -9,8 +9,7 @@ import { TaskRequestCmp } from './taskrequest.cmp';
 import { TaskRequest } from './task_request';
 import { MockData } from '../test/mock/mock_data';
 import { RouterTestingModule } from '@angular/router/testing';
-
-declare var $;
+import $ from 'jquery';
 
 describe('TaskRequestCmp', () => {
   let component: TaskRequestCmp;
