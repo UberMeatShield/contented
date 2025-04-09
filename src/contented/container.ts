@@ -144,7 +144,7 @@ export class Container implements IContainer {
 
   // This is the actual URL you can get a pointer to for the scroll / load
   public getContentList() {
-    if (!this.renderable) {
+    if (this.renderable?.length === 0) {
       this.renderable = _.map(this.contents, (c: Content) => {
         return c;
       });

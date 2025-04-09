@@ -10,8 +10,6 @@ import { Container } from '../contented/container';
 import { ContentedService } from '../contented/contented_service';
 import { ContentedModule } from '../contented/contented_module';
 
-import * as _ from 'lodash';
-import * as $ from 'jquery';
 import { MockData } from '../test/mock/mock_data';
 import { ApiDef } from './api_def';
 import { provideRouter, Router } from '@angular/router';

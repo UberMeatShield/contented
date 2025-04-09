@@ -1,7 +1,7 @@
 import { Subscription } from 'rxjs';
 import { OnInit, OnDestroy, Component, Input, HostListener } from '@angular/core';
 import { ContentedService } from './contented_service';
-import { Container } from './container';
+import { Container, LoadStates } from './container';
 import { Content } from './content';
 import { finalize } from 'rxjs/operators';
 
@@ -121,8 +121,7 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
   }
 
   public loadMoreInDir(cnt: Container) {
-    // This is being changed to just load more content up
-    if (cnt.count < cnt.total && !this.loading) {
+    if (cnt.count < cnt.total && cnt.loadState === LoadStates.Partial) {
       this.loading = true;
       this._contentedService
         .loadMoreInDir(cnt)
@@ -157,10 +156,12 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
     if (this.allCnts) {
       let start = this.idx < this.allCnts.length ? this.idx : this.allCnts.length - 1;
       let end = start + this.maxVisible <= this.allCnts.length ? start + this.maxVisible : this.allCnts.length;
+
       // Only loads if cnt.loadState = LoadStates.NotLoaded
       let currCnt = this.getCurrentContainer();
       let cnts = this.allCnts.slice(start, end);
-      _.each(cnts, (cnt, idx) => {
+
+      _.each(cnts, (cnt, _idx) => {
         let obs = this._contentedService.initialLoad(cnt);
         if (obs) {
           obs.subscribe({
@@ -248,9 +249,7 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
   public fullLoadDir(cnt: Container) {
     this._contentedService.fullLoadDir(cnt).subscribe({
       next: (loadedCnt: Container) => {
-        console.log('Fully loaded up the container', loadedCnt.id);
-
-        GlobalNavEvents.selectContent(loadedCnt.getContent(), loadedCnt);
+        console.log('What the heck is this doing?', loadedCnt);
       },
       error: err => {
         console.error('Failed to load', err);
@@ -268,7 +267,6 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
       currDir.rowIdx = rowIdx;
     }
 
-    console.log('LoadView', currDir, rowIdx, triggerSelect);
     // This handles the case where we need to fully load a container to reach the row
     if (currDir && rowIdx >= currDir.count) {
       this.fullLoadDir(currDir);

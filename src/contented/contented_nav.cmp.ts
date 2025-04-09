@@ -42,6 +42,7 @@ export class ContentedNavCmp implements OnInit {
   }
 
   public toggleFavorites() {
+    console.log('Toggle favorites');
     GlobalNavEvents.toggleFavoriteVisibility();
   }
 

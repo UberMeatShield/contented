@@ -43,6 +43,8 @@ describe('TestingContentBrowserCmp', () => {
     service = TestBed.inject(ContentedService);
     httpMock = TestBed.inject(HttpTestingController);
     router = TestBed.inject(Router);
+    el = harness.fixture.debugElement.nativeElement;
+    de = harness.fixture.debugElement;
   });
 
   afterEach(() => {
@@ -84,7 +86,7 @@ describe('TestingContentBrowserCmp', () => {
   }));
 
   it('Should be able to tell you that nothing was loaded up', fakeAsync(() => {
-    expect(comp.emptyMessage).toBe(null);
+    expect(comp.emptyMessage).toBe(undefined);
     expect($('.no-content').length).toBe(0, 'Nothing is loaded.');
     harness.detectChanges();
 
@@ -93,7 +95,7 @@ describe('TestingContentBrowserCmp', () => {
     tick(1000);
     harness.detectChanges();
 
-    expect(comp.emptyMessage).not.toBe(null, 'Now we should have an error message');
+    expect(comp.emptyMessage).not.toBe(undefined, 'Now we should have an error message');
     expect($('.no-content').length).toBe(1, 'We should now have a visible UI msg');
   }));
 
@@ -110,13 +112,17 @@ describe('TestingContentBrowserCmp', () => {
     harness.detectChanges();
 
     let cnt = comp.getCurrentContainer();
+    expect(cnt).toBeDefined();
+    if (!cnt) {
+      throw new Error("no current test container.")
+    }
     expect(cnt).withContext('There should be a current container').toBeDefined();
-    const arr = MockData.getContentArr(cnt.id, cnt.total);
-    cnt.addContents(arr);
+    const arr = MockData.getContentArr(cnt?.id, cnt?.total);
+    cnt?.addContents(arr);
 
-    let cl = cnt.getContentList();
+    let cl = cnt?.getContentList() || [];
     expect(cl).withContext('We should have a content list').toBeDefined();
-    expect(cl.length).withContext('And we should have content').toEqual(cnt.total);
+    expect(cl.length).withContext('And we should have content').toEqual(cnt?.total);
 
     harness.detectChanges();
     let imgs = $('.preview-img');
@@ -169,8 +175,11 @@ describe('TestingContentBrowserCmp', () => {
     harness.detectChanges();
     tick(1000);
 
-    let cnt: Container = comp.getCurrentContainer();
-    expect(cnt).not.toBe(null);
+    let cnt: Container | undefined = comp.getCurrentContainer();
+    expect(cnt).not.toBe(undefined);
+    if (!cnt) {
+      throw new Error("no current test container.")
+    }
     cnt.contents = [];
     cnt.total = 4;
     cnt.count = 0;

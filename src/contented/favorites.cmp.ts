@@ -56,17 +56,16 @@ export class FavoritesCmp implements OnInit, OnDestroy {
     this.sub = GlobalNavEvents.navEvts.subscribe({
       next: (evt: NavEventMessage) => {
         // This container is not active but it should be monitoring favorites
-        if (!evt.content) return;
 
         switch (evt.action) {
           case NavTypes.FAVORITE_MEDIA:
-            this.handleFavorite(evt.content);
+            evt.content && this.handleFavorite(evt.content);
             break;
           case NavTypes.REMOVE_FAVORITE:
-            this.removeFavorite(evt.content);
+            evt.content && this.removeFavorite(evt.content);
             break;
           case NavTypes.TOGGLE_DUPLICATE:
-            this.handleToggleDuplicate(evt.content);
+            evt.content && this.handleToggleDuplicate(evt.content);
             break;
           case NavTypes.TOGGLE_FAVORITE_VISIBILITY:
             this.visible = !this.visible;

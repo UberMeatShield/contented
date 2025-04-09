@@ -172,8 +172,9 @@ export class ContentedService {
       let idx = 0;
       for (let offset = cnt.count; offset < cnt.total; offset += limit) {
         ++idx;
+
         let delayP = new Promise<Container>((yupResolve, nopeReject) => {
-          this.getFullContainer(cnt.id, offset, limit).subscribe({
+          return this.getFullContainer(cnt.id, offset, limit).subscribe({
             next: res => {
               _.delay(() => {
                 // Hmmm, buildImgs is strange and should be fixed up
@@ -246,14 +247,19 @@ export class ContentedService {
   }
 
   // TODO: Create a pagination page for offset limit calculations
-  public initialLoad(cnt: Container): Observable<Array<Content>> {
+  public initialLoad(cnt: Container): Observable<Array<Content>> | undefined {
+    if (cnt.loadState !== LoadStates.NotLoaded) {
+      return undefined;
+    }
+    console.log('Initial load for container', cnt.id);
+    cnt.loadState = LoadStates.Loading;
     return this.getFullContainer(cnt.id, 0, this.LIMIT).pipe(
       map((res: PageResponse<Content>) => {
         if (res.results) {
+          console.log('Add contents', res.results.length);
           cnt.addContents(res.results);
-          return res.results;
         }
-        return [];
+        return cnt.contents;
       })
     );
   }
@@ -283,7 +289,7 @@ export class ContentedService {
 
   // Could definitely use Zod here as a search type.  Maybe it is worth pulling in at this point.
   public searchContent(cs: ContentSearch): Observable<PageResponse<Content>> {
-    let url = ApiDef.contented.content;
+    let url = ApiDef.contented.searchContents;
     let params = new HttpParams();
     if (cs.search) params = params.set('search', cs.search);
     if (cs.offset) params = params.set('offset', cs.offset.toString());

@@ -140,6 +140,7 @@ export class NavEvents {
   }
 
   toggleFavoriteVisibility() {
+    console.log('What on earth?');
     this.navEvts.emit({
       action: NavTypes.TOGGLE_FAVORITE_VISIBILITY,
       content: undefined,
