@@ -22,7 +22,7 @@
       <mat-card-content [class.current-content]="selected">
         <div class="video-view">
           <div class="preview-content video-result preview-is{{content.shouldUseTypedPreview()}}"
-            [class.video-overlay]="content?.content_type?.match('video')"
+            [class.video-overlay]="content.content_type.match('video')"
             [class.content-duplicate]="content.duplicate"
             [style.width]="previewWidth + 'px'"
             [style.height]="previewHeight + 'px'"
