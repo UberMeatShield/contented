@@ -114,7 +114,7 @@ describe('TestingContentBrowserCmp', () => {
     let cnt = comp.getCurrentContainer();
     expect(cnt).toBeDefined();
     if (!cnt) {
-      throw new Error("no current test container.")
+      throw new Error('no current test container.');
     }
     expect(cnt).withContext('There should be a current container').toBeDefined();
     const arr = MockData.getContentArr(cnt?.id, cnt?.total);
@@ -179,7 +179,7 @@ describe('TestingContentBrowserCmp', () => {
     let cnt: Container | undefined = comp.getCurrentContainer();
     expect(cnt).not.toBe(undefined);
     if (!cnt) {
-      throw new Error("no current test container.")
+      throw new Error('no current test container.');
     }
     cnt.contents = [];
     cnt.total = 4;

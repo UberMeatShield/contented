@@ -265,7 +265,7 @@ export class ContentedService {
   }
 
   public searchContainers(cntQ: ContainerSearch): Observable<PageResponse<Container>> {
-    let url = ApiDef.contented.containers;
+    let url = ApiDef.contented.searchContainers;
     let params = new HttpParams();
     if (cntQ.search) params = params.set('search', cntQ.search);
     if (cntQ.offset) params = params.set('offset', cntQ.offset.toString());
@@ -276,6 +276,7 @@ export class ContentedService {
     }
     if (cntQ.order) params = params.set('order', cntQ.order);
 
+    console.log;
     return this.http.get(url, { params, headers: this.options?.headers }).pipe(
       map((res: any) => {
         return {

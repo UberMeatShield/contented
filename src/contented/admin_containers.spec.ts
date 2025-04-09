@@ -13,6 +13,7 @@ import { ContentedModule } from '../contented/contented_module';
 import { MockData } from '../test/mock/mock_data';
 import { ApiDef } from './api_def';
 import { provideRouter, Router } from '@angular/router';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 describe('TestingAdminContainersCmp', () => {
   let fixture: ComponentFixture<AdminContainersCmp>;
@@ -25,7 +26,7 @@ describe('TestingAdminContainersCmp', () => {
 
   beforeEach(waitForAsync(async () => {
     TestBed.configureTestingModule({
-      imports: [ContentedModule, HttpClientTestingModule],
+      imports: [ContentedModule, HttpClientTestingModule, NoopAnimationsModule],
       providers: [ContentedService, provideRouter([{ path: 'ui/admin/containers', component: AdminContainersCmp }])],
       teardown: { destroyAfterEach: false },
     }).compileComponents();
@@ -46,6 +47,7 @@ describe('TestingAdminContainersCmp', () => {
     el = de.nativeElement;
     expect(comp).withContext('We should have the Contented comp').toBeDefined();
     expect(el).withContext('We should have a top level element').toBeDefined();
+    harness.detectChanges();
 
     const req = httpMock.expectOne(r => r.url.includes(ApiDef.contented.searchContainers));
     req.flush({ results: [] });

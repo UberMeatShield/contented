@@ -17,6 +17,7 @@ import $ from 'jquery';
 import { MockData } from '../test/mock/mock_data';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 describe('TestingContentedNavCmp', () => {
   let fixture: ComponentFixture<ContentedNavCmp>;
@@ -29,7 +30,7 @@ describe('TestingContentedNavCmp', () => {
 
   beforeEach(waitForAsync(async () => {
     TestBed.configureTestingModule({
-      imports: [ContentedModule, HttpClientTestingModule],
+      imports: [ContentedModule, HttpClientTestingModule, NoopAnimationsModule],
       providers: [provideRouter([{ path: '', component: ContentedNavCmp }]), ContentedService],
       teardown: { destroyAfterEach: true },
     }).compileComponents();

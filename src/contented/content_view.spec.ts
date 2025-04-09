@@ -17,7 +17,6 @@ import * as _ from 'lodash';
 import $ from 'jquery';
 import { MockData } from '../test/mock/mock_data';
 
-
 const donutMock = {
   active: false,
   container_id: 22,

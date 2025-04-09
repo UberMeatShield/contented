@@ -55,6 +55,7 @@ export class AdminContainersCmp implements OnInit {
   }
 
   search(search: string, offset: number, limit: number, tags: Array<string> = []) {
+    console.log('SEARCH');
     const query = ContainerSearchSchema.parse({
       search,
       offset,
