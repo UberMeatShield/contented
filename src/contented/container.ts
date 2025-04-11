@@ -30,20 +30,20 @@ export type IContainer = z.infer<typeof ContainerSchema>;
 
 export class Container implements IContainer {
   public contents: Array<Content> = [];
-  public total: number;
-  public count: number;
-  public path: string;
-  public name: string;
-  public id: number;
-  public previewUrl: string;
-  public description: string;
+  public total: number = 0;
+  public count: number = 0;
+  public path: string = '';
+  public name: string = '';
+  public id: number = 0;
+  public previewUrl: string = '';
+  public description: string = '';
 
   // Set on the initial content loads
   public loadState: LoadStates = LoadStates.NotLoaded;
   public visible: boolean = false;
 
   // All potential items that can be rendered from the contents
-  public renderable: Array<Content>;
+  public renderable: Array<Content> = [];
   public visibleSet: Array<Content> = [];
 
   // The currently selected Index
@@ -57,7 +57,7 @@ export class Container implements IContainer {
     const c = ContainerSchema.parse(cnt);
     Object.assign(this, c);
 
-    const contents = cnt?.contents ? cnt.contents.map(mc => new Content(mc)) : [];
+    const contents = cnt?.contents ? cnt.contents.map((mc: any) => new Content(mc)) : [];
     this.setContents(contents);
   }
 
@@ -71,7 +71,7 @@ export class Container implements IContainer {
 
   // For use in determining what should actually be visible at any time
   public getIntervalAround(currentItem: Content, requestedVisible: number = 4, before: number = 0) {
-    this.visibleSet = null;
+    this.visibleSet = [];
 
     let items = this.getContentList() || [];
     let start = 0;
@@ -94,7 +94,7 @@ export class Container implements IContainer {
     return this.visibleSet;
   }
 
-  public indexOf(item: Content, contents: Array<Content> = null) {
+  public indexOf(item: Content, contents?: Array<Content>) {
     contents = contents || this.getContentList() || [];
     if (item && contents) {
       return _.findIndex(contents, { id: item.id });
@@ -105,7 +105,7 @@ export class Container implements IContainer {
   public setContents(contents: Array<Content>) {
     this.contents = _.sortBy(_.uniqBy(contents || [], 'id'), 'idx');
     this.count = this.contents.length;
-    this.renderable = null;
+    this.renderable = [];
 
     if (this.count === this.total) {
       this.loadState = LoadStates.Complete;
@@ -134,17 +134,17 @@ export class Container implements IContainer {
     return sorted;
   }
 
-  public getContent(rowIdx: number = null) {
-    rowIdx = rowIdx === null ? this.rowIdx : rowIdx;
+  public getContent(rowIdx?: number) {
+    rowIdx = rowIdx === undefined ? this.rowIdx : rowIdx;
     if (rowIdx >= 0 && rowIdx < this.contents.length) {
       return this.contents[rowIdx];
     }
-    return null;
+    return undefined;
   }
 
   // This is the actual URL you can get a pointer to for the scroll / load
   public getContentList() {
-    if (!this.renderable) {
+    if (this.renderable?.length === 0) {
       this.renderable = _.map(this.contents, (c: Content) => {
         return c;
       });

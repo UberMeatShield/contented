@@ -10,60 +10,68 @@ import { Subscription } from 'rxjs';
 import { Container, getFavorites } from './container';
 
 import _ from 'lodash';
+import { getWindowSizes } from './common';
 
 @Component({
   selector: 'favorites-cmp',
   templateUrl: './favorites.ng.html',
 })
 export class FavoritesCmp implements OnInit, OnDestroy {
-  @Input() container: Container;
-  @Input() previewWidth: number;
-  @Input() previewHeight: number;
+  @Input() container: Container | undefined;
+  @Input() previewWidth: number = 480;
+  @Input() previewHeight: number = 480;
   @Input() maxVisible: number = 16;
   @Input() visible: boolean = false;
   @Input() monitorFavorites: boolean = true;
 
-  @ViewChild(MatMenuTrigger) contextMenu: MatMenuTrigger;
+  @ViewChild(MatMenuTrigger) contextMenu!: MatMenuTrigger;
 
   public contextMenuPosition = { x: '0px', y: '0px' };
-  public sub: Subscription;
-  public maxWidth: number;
-  public maxHeight: number;
+  public sub: Subscription | undefined;
+  public maxWidth: number | undefined;
+  public maxHeight: number | undefined;
   public loading: boolean = false;
-  public error = null;
+  public error: string | undefined;
   public active: boolean = false;
 
-  constructor(public _service: ContentedService) {}
+  constructor(public _service: ContentedService) {
+    this.container = this.container || getFavorites();
+  }
 
   onContextMenu(event: MouseEvent, content: Content) {
     event.preventDefault();
+    if (!this.contextMenu) {
+      return;
+    }
     this.contextMenuPosition.x = event.clientX + 'px';
     this.contextMenuPosition.y = event.clientY + 'px';
     this.contextMenu.menuData = { content: content };
-    this.contextMenu.menu.focusFirstItem('mouse');
+    this.contextMenu.menu?.focusFirstItem('mouse');
     this.contextMenu.openMenu();
   }
 
   public ngOnInit() {
-    this.container = this.container || getFavorites();
     this.calculateDimensions();
 
     this.sub = GlobalNavEvents.navEvts.subscribe({
       next: (evt: NavEventMessage) => {
         // This container is not active but it should be monitoring favorites
+
         switch (evt.action) {
           case NavTypes.FAVORITE_MEDIA:
-            this.handleFavorite(evt.content);
+            evt.content && this.handleFavorite(evt.content);
             break;
           case NavTypes.REMOVE_FAVORITE:
-            this.removeFavorite(evt.content);
+            evt.content && this.removeFavorite(evt.content);
             break;
           case NavTypes.TOGGLE_DUPLICATE:
-            this.handleToggleDuplicate(evt.content);
+            evt.content && this.handleToggleDuplicate(evt.content);
             break;
           case NavTypes.TOGGLE_FAVORITE_VISIBILITY:
             this.visible = !this.visible;
-            this.container.visible = this.visible;
+            if (this.container) {
+              this.container.visible = this.visible;
+            }
             break;
         }
       },
@@ -79,6 +87,9 @@ export class FavoritesCmp implements OnInit, OnDestroy {
    * @param content
    */
   public handleFavorite(content: Content) {
+    if (!this.container) {
+      return;
+    }
     let idx = _.findIndex(this.container.contents, { id: content.id });
     if (idx >= 0) {
       _.remove(this.container.contents, { id: content.id });
@@ -89,6 +100,9 @@ export class FavoritesCmp implements OnInit, OnDestroy {
   }
 
   public removeFavorite(content: Content) {
+    if (!this.container) {
+      return;
+    }
     let idx = _.findIndex(this.container.contents, { id: content.id });
     if (idx >= 0) {
       _.remove(this.container.contents, { id: content.id });
@@ -125,8 +139,7 @@ export class FavoritesCmp implements OnInit, OnDestroy {
     // This should be based on the container not the window
     // but unfortunately we call it before it is in the dom and visible
     // so there is a load operation order issue to solve.  Maybe afterViewInit would work?
-    let width = !window['jasmine'] ? window.innerWidth : 800;
-    let height = !window['jasmine'] ? window.innerHeight : 800;
+    const { width, height } = getWindowSizes();
 
     // 120 is right if the top nav is hidden, could calculate that it is out of view for the height of things
     this.previewWidth = width / this.maxVisible - 12;

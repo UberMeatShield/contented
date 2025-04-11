@@ -6,8 +6,14 @@ import { MatTableDataSource } from '@angular/material/table';
 // import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { GlobalBroadcast } from './global_message';
+import { PageEvent } from '@angular/material/paginator';
 
 import * as _ from 'lodash';
+
+interface TaskRequestForm {
+  search: FormControl<string | null>;
+  status: FormControl<string | null>;
+}
 
 @Component({
   selector: 'task-request-cmp',
@@ -16,12 +22,12 @@ import * as _ from 'lodash';
 export class TaskRequestCmp implements OnInit {
   @Input() contentID: number = 0;
   @Input() pageSize = 100;
-  @Input() reloadEvt: EventEmitter<any>; // Do you want to reload the task queue
+  @Input() reloadEvt: EventEmitter<TaskRequest> = new EventEmitter<TaskRequest>();
   @Output() taskUpdated: EventEmitter<TaskRequest> = new EventEmitter<TaskRequest>();
   @Input() checkStates = false;
 
   public loading = false;
-  public tasks: Array<TaskRequest>;
+  public tasks: TaskRequest[] = [];
   public total = 0;
 
   displayedColumns: string[] = [
@@ -38,16 +44,16 @@ export class TaskRequestCmp implements OnInit {
   dataSource = new MatTableDataSource<TaskRequest>([]);
   states = TASK_STATES;
 
-  searchForm: FormGroup;
-  status: FormControl<string> = new FormControl('');
-  search: FormControl<string> = new FormControl('');
+  searchForm: FormGroup<TaskRequestForm>;
+  status: FormControl<string | null> = new FormControl<string | null>('');
+  search: FormControl<string | null> = new FormControl<string | null>('');
 
   //constructor(public _service: ContentedService, public route: ActivatedRoute) {
   constructor(
     public _service: ContentedService,
     fb: FormBuilder
   ) {
-    this.searchForm = fb.group({
+    this.searchForm = fb.group<TaskRequestForm>({
       search: this.search,
       status: this.status,
     });
@@ -68,7 +74,7 @@ export class TaskRequestCmp implements OnInit {
             }
           }, 1000);
         },
-        error: err => {
+        error: (err: unknown) => {
           GlobalBroadcast.error('Failed to reload the tasks', err);
         },
       });
@@ -81,10 +87,10 @@ export class TaskRequestCmp implements OnInit {
         // Prevent bubble on keypress
       )
       .subscribe({
-        next: formData => {
-          return this.loadTasks(this.contentID, [], formData.status, formData.search);
+        next: (formData: Partial<{ search: string | null; status: string | null }>) => {
+          return this.loadTasks(this.contentID, [], (formData.status as TaskStatus) || '', formData.search || '');
         },
-        error: error => {
+        error: (error: unknown) => {
           console.error('Failed to search Tasks error', error);
         },
       });
@@ -97,7 +103,7 @@ export class TaskRequestCmp implements OnInit {
     }
   }
 
-  loadTasks(contentID: number, notComplete: Array<TaskRequest> = [], status: TaskStatus = '', search = '') {
+  loadTasks(contentID: number, notComplete: TaskRequest[] = [], status: TaskStatus = '', search = ''): void {
     this.loading = true;
 
     const query: TaskSearch = {
@@ -109,7 +115,7 @@ export class TaskRequestCmp implements OnInit {
     };
 
     console.log('Loading tasks', query, notComplete);
-    return this._service
+    this._service
       .getTasks(query)
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
@@ -122,13 +128,13 @@ export class TaskRequestCmp implements OnInit {
 
           this.checkComplete(this.tasks, notComplete);
         },
-        error: err => {
+        error: (err: unknown) => {
           GlobalBroadcast.error('Failed to load tasks', err);
         },
       });
   }
 
-  cancelTask(task: TaskRequest) {
+  cancelTask(task: TaskRequest): void {
     console.log('Attempt to cancel task', task);
     task.uxLoading = true;
     this._service
@@ -138,12 +144,12 @@ export class TaskRequestCmp implements OnInit {
         next: taskResponse => {
           return new TaskRequest(taskResponse);
         },
-        error: err => console.error,
+        error: (err: unknown) => console.error,
       });
   }
 
-  checkComplete(tasks: Array<TaskRequest>, watching: Array<TaskRequest> = []) {
-    let check = _.keyBy(watching, 'id');
+  checkComplete(tasks: TaskRequest[], watching: TaskRequest[] = []): void {
+    const check = _.keyBy(watching, 'id');
     (tasks || []).forEach(task => {
       if (check[task.id] && task.isComplete()) {
         this.taskUpdated.emit(task);
@@ -151,23 +157,23 @@ export class TaskRequestCmp implements OnInit {
     });
   }
 
-  pollStart() {
+  pollStart(): void {
     this.pollTasks();
     _.delay(() => {
       this.pollStart();
     }, 1000 * 10);
   }
 
-  pollTasks() {
+  pollTasks(): void {
     if (this.loading) {
       return;
     }
-    let watching: Array<TaskRequest> = _.filter(this.tasks, task => !task.isComplete()) || [];
-    let vals = this.searchForm.value;
-    this.loadTasks(this.contentID, watching, vals.status, vals.search);
+    const watching: TaskRequest[] = _.filter(this.tasks, task => !task.isComplete()) || [];
+    const vals = this.searchForm.value;
+    this.loadTasks(this.contentID, watching, (vals.status as TaskStatus) || '', vals.search || '');
   }
 
-  pageEvt(evt: any) {
+  pageEvt(evt: PageEvent): void {
     console.log('Page event is annoying to handle', evt);
   }
 }

@@ -92,7 +92,7 @@ describe('VSCodeEditorCmp', () => {
     let types = _.map(keywords, 'id').slice(keywords.length - 2, keywords.length);
     tagLang.setMonacoLanguage(cmp.language, ids, types);
 
-    expect(cmp.descriptionControl.value).toEqual(editorValue);
+    expect(cmp.descriptionControl?.value).toEqual(editorValue);
     let tokens = cmp.getTokens();
 
     expect(cmp.editor).withContext('It should have initialized').toBeDefined();

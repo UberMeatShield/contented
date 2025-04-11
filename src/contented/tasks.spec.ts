@@ -9,8 +9,6 @@ import { TasksCmp } from './tasks.cmp';
 import { MockData } from '../test/mock/mock_data';
 import { RouterTestingModule } from '@angular/router/testing';
 
-declare var $;
-
 describe('TasksCmp', () => {
   let component: TasksCmp;
   let fixture: ComponentFixture<TasksCmp>;

@@ -16,11 +16,10 @@ import { Container } from '../contented/container';
 import { GlobalNavEvents } from '../contented/nav_events';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
-import * as _ from 'lodash';
+import $ from 'jquery';
 import { MockData } from '../test/mock/mock_data';
 import { ApiDef } from './api_def';
 
-declare var $;
 describe('TestingContentedViewCmp', () => {
   let fixture: ComponentFixture<ContentedViewCmp>;
   let service: ContentedService;
@@ -65,7 +64,7 @@ describe('TestingContentedViewCmp', () => {
   });
 
   it('Can render an image and render', () => {
-    comp.content = null;
+    comp.content = undefined;
     comp.visible = true;
     fixture.detectChanges();
     expect($('.content-full-view').length).toBe(0, 'It should not be visible');
@@ -120,6 +119,7 @@ describe('TestingContentedViewCmp', () => {
 
     GlobalNavEvents.hideFullScreen();
     fixture.detectChanges();
+    tick(100);
     expect(comp.visible).toBe(false, 'It should not be visible now');
   }));
 

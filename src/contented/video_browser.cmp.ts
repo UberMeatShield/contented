@@ -6,7 +6,7 @@ import { ContentedService, ContentSearchSchema, PageResponse } from './contented
 import { Content, Tag, VSCodeChange } from './content';
 import { Container } from './container';
 import { GlobalNavEvents, NavTypes, NavEventMessage } from './nav_events';
-import { ActivatedRoute, Router, ParamMap } from '@angular/router';
+import { ActivatedRoute, Router, ParamMap, Params } from '@angular/router';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { GlobalBroadcast } from './global_message';
 
@@ -22,23 +22,23 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
   // Route needs to exist
   // Take in the search text route param
   // Debounce the search
-  @ViewChild('searchForm', { static: true }) searchControl;
-  @ViewChild(MatMenuTrigger) contextMenu: MatMenuTrigger;
-  @Input() tags: Array<Tag>;
-  throttleSearch: Subscription;
+  @ViewChild('searchForm', { static: true }) searchControl: any;
+  @ViewChild(MatMenuTrigger) contextMenu: MatMenuTrigger | undefined;
+  @Input() tags: Array<Tag> = [];
+  throttleSearch: Subscription | undefined;
 
-  searchText: string; // Initial value
+  searchText: string = ''; // Initial value
   searchType = new FormControl('text');
   currentTextChange: VSCodeChange = { value: '', tags: [] };
-  changedSearch: (evt: VSCodeChange) => void;
+  changedSearch: (evt: VSCodeChange) => void = () => {};
 
-  options: FormGroup;
+  options: FormGroup | undefined;
   fb: FormBuilder;
 
-  public selectedContent: Content; // For keeping track of where we are in the page
-  public selectedContainer: Container; // For filtering
-  public content: Array<Content>;
-  public containers: Array<Container>;
+  public selectedContent: Content | undefined; // For keeping track of where we are in the page
+  public selectedContainer: Container | undefined; // For filtering
+  public content: Array<Content> = [];
+  public containers: Array<Container> = [];
 
   // TODO: Make this a saner calculation
   public maxVisible = 3; // How many results show vertically
@@ -46,7 +46,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
   public offset = 0; // Tracking where we are in the position
   public pageSize = 50;
   public loading: boolean = false;
-  public sub: Subscription; // Listening for GlobalNavEvents
+  public sub: Subscription | undefined; // Listening for GlobalNavEvents
 
   constructor(
     public _contentedService: ContentedService,
@@ -69,7 +69,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     this.resetForm();
     this.setupEvtListener();
     this.route.queryParams.pipe().subscribe({
-      next: (res: ParamMap) => {
+      next: (res: Params) => {
         this.searchText = res['searchText'] || '';
 
         // Add in a param for container_id ?
@@ -82,10 +82,13 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
   public contextMenuPosition = { x: '0px', y: '0px' };
   onContextMenu(event: MouseEvent, content: Content) {
     event.preventDefault();
+    if (!this.contextMenu) {
+      return;
+    }
     this.contextMenuPosition.x = event.clientX + 'px';
     this.contextMenuPosition.y = event.clientY + 'px';
     this.contextMenu.menuData = { content: content };
-    this.contextMenu.menu.focusFirstItem('mouse');
+    this.contextMenu.menu?.focusFirstItem('mouse');
     this.contextMenu.openMenu();
   }
 
@@ -127,14 +130,16 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
             break;
           case NavTypes.HIDE_FULLSCREEN:
             // Scroll back into view
-            this.selectContent(this.selectedContent, this.selectedContainer);
+            if (this.selectedContent) {
+              this.selectContent(this.selectedContent, this.selectedContainer);
+            }
             break;
           case NavTypes.LOAD_MORE:
             // this.loadMore();
             // It might not be TOO abusive to override this and make it page next?
             break;
           case NavTypes.SELECT_MEDIA:
-            this.selectContent(evt.content, evt.cnt);
+            this.selectContent(evt.content, evt.cnt || undefined);
             break;
           case NavTypes.SELECT_CONTAINER:
             this.selectContainer(evt.cnt);
@@ -146,7 +151,10 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     });
   }
 
-  public selectContainer(cnt: Container) {
+  public selectContainer(cnt: Container | undefined) {
+    if (!cnt) {
+      return;
+    }
     let offset = this.offset;
     if (cnt?.id !== this.selectedContainer?.id) {
       this.offset = 0;
@@ -184,7 +192,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     }
   }
 
-  public selectContent(content: Content, container: Container) {
+  public selectContent(content: Content | undefined, container: Container | undefined) {
     this.selectedContent = content;
     if (!content) {
       return;
@@ -213,6 +221,9 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     if (this.throttleSearch) {
       this.throttleSearch.unsubscribe();
     }
+    if (!this.options) {
+      return;
+    }
     this.throttleSearch = this.options.valueChanges
       .pipe(
         debounceTime(250),
@@ -232,7 +243,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
   }
 
   getValues() {
-    return this.options.value;
+    return this.options?.value;
   }
 
   pageEvt(evt: PageEvent) {
@@ -242,8 +253,8 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     this.search(this.currentTextChange.value, offset, limit, this.getCntId());
   }
 
-  public getCntId(): string | null {
-    return !!this.selectedContainer ? this.selectedContainer.id.toString() : null;
+  public getCntId(): string {
+    return !!this.selectedContainer ? this.selectedContainer.id.toString() : '';
   }
 
   // TODO: Add in optional filter params like the container (filter by container in search?)
@@ -251,12 +262,12 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     text: string = '',
     offset: number = 0,
     limit: number = 50,
-    cntId: string = null,
+    cntId: string = '',
     tags: Array<string> = []
   ) {
     console.log('Get the information from the input and search on it', text, offset, limit, cntId);
 
-    this.selectedContent = null;
+    this.selectedContent = undefined;
     this.content = [];
     this.loading = true;
 

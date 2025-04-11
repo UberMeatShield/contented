@@ -13,11 +13,11 @@ import { ContentedModule } from './contented_module';
 import { VideoPreviewCmp } from './video_preview.cmp';
 import { Content } from './content';
 
-import * as _ from 'lodash';
+import _ from 'lodash';
+import $ from 'jquery';
 import { MockData } from '../test/mock/mock_data';
 import { ApiDef } from './api_def';
 
-declare var $;
 describe('TestingVideoPreviewCmp', () => {
   let fixture: ComponentFixture<VideoPreviewCmp>;
   let service: ContentedService;

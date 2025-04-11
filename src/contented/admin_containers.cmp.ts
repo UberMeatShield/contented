@@ -15,17 +15,17 @@ import { PageEvent } from '@angular/material/paginator';
   templateUrl: './admin_containers.ng.html',
 })
 export class AdminContainersCmp implements OnInit {
-  @Input() tags: Array<Tag>;
-  @Input() containers: Array<Container>;
+  @Input() tags: Array<Tag> = [];
+  @Input() containers: Array<Container> = [];
 
   public loading = false;
   public creatingTask = false;
-  changedSearch: (evt: VSCodeChange) => void;
+  changedSearch: (evt: VSCodeChange) => void = () => {};
   currentTextChange: VSCodeChange = { value: '', tags: [] };
 
-  options: FormGroup;
+  options: FormGroup | undefined;
   searchType = new FormControl('text');
-  searchText: string;
+  searchText: string = '';
 
   public total = 0;
   public offset = 0; // Tracking where we are in the position
@@ -34,7 +34,9 @@ export class AdminContainersCmp implements OnInit {
   constructor(
     private service: ContentedService,
     private fb: FormBuilder
-  ) {}
+  ) {
+    this.resetForm();
+  }
 
   ngOnInit() {
     this.loading = true;
@@ -53,6 +55,7 @@ export class AdminContainersCmp implements OnInit {
   }
 
   search(search: string, offset: number, limit: number, tags: Array<string> = []) {
+    console.log('SEARCH');
     const query = ContainerSearchSchema.parse({
       search,
       offset,

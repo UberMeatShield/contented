@@ -11,16 +11,15 @@ import { GlobalBroadcast } from './global_message';
   templateUrl: './content_view.ng.html',
 })
 export class ContentViewCmp implements OnInit {
-  @Input() content: Content;
-  @Input() forceWidth: number;
-  @Input() forceHeight: number;
+  @Input() content: Content | undefined;
+  @Input() forceWidth: number = 0;
+  @Input() forceHeight: number = 0;
   @Input() visible: boolean = false;
 
-  public maxWidth: number;
-  public maxHeight: number;
+  public maxWidth: number = 0;
+  public maxHeight: number = 0;
   public loading: boolean = false;
-  public error = null;
-
+  public error: string | null = null;
   constructor(
     public _service: ContentedService,
     public route: ActivatedRoute,
@@ -56,6 +55,7 @@ export class ContentViewCmp implements OnInit {
         },
         error: err => {
           GlobalBroadcast.error(`Could not find ${contentID}`, err);
+          this.error = `Could not find ${contentID}`;
         },
       });
   }

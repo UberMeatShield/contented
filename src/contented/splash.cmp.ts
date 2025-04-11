@@ -25,7 +25,7 @@ export class SplashCmp implements OnInit {
 
   @Input() editForm?: FormGroup;
   @Input() editorValue: string = RESUME; // TODO: Save this as media
-  @Input() descriptionControl?: FormControl<string>;
+  @Input() descriptionControl?: FormControl<string | null>;
   @Input() readOnly: boolean = true;
   @Input() editorOptions = {
     //theme: 'vs-dark',
@@ -55,8 +55,9 @@ export class SplashCmp implements OnInit {
   // Subscribe to options changes, if the definition changes make the call
   public ngOnInit() {
     if (!this.editForm) {
+      this.descriptionControl = this.descriptionControl || new FormControl(this.editorValue || '');
       this.editForm = this.fb.group({
-        description: (this.descriptionControl = this.descriptionControl || new FormControl(this.editorValue || '')),
+        description: this.descriptionControl,
       });
     }
     if (!this.mc && !this.c) {
@@ -75,7 +76,7 @@ export class SplashCmp implements OnInit {
         next: res => {
           console.log('Splash', res);
           this.c = res.container;
-          this.mc = res.content;
+          this.mc = res.content || undefined;
           this.splashTitle = res.splashTitle || '';
           this.splashContent = res.splashContent || '';
           this.rendererType = res.rendererType;

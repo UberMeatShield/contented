@@ -3,13 +3,13 @@
     <mat-progress-bar
       [value]="cnt.count ? ((cnt.rowIdx + 1) * 100 / cnt.count) : 1"
       [color]="'primary'"
-      [bufferValue]="cnt?.total"
+      [bufferValue]="cnt.total || 0"
       [mode]="cnt.count === cnt.total ? 'determinate' : 'buffer'"
     ></mat-progress-bar>
 
     <div class="container-bar primary">
       <div class="container-preview-loc">
-        <img class="container-preview-img" [src]="cnt?.previewUrl">
+        <img class="container-preview-img" [src]="cnt.previewUrl" *ngIf="cnt.previewUrl">
       </div>
 
       <div class="container-bar-info">
@@ -36,21 +36,21 @@
         <span class="bar-spacer">
           Selected: 
           <a target="window" class="cnt-name"
-            href="/api/containers/{{cnt?.id}}"
-          >{{cnt?.name}}</a>
+            href="/api/containers/{{cnt.id}}"
+          >{{cnt.name}}</a>
           
           <span *ngIf="currentContent">
             /
-            <a target="window" class="current-item" href="{{currentContent.fullUrl}}"> {{currentContent?.src}}</a>
+            <a target="window" class="current-item" href="{{currentContent.fullUrl}}"> {{currentContent.src}}</a>
             <span class="content-size-info"> {{currentContent.size | byteFormatter: 0}}</span>
-            <span class="content-content-type"> {{currentContent?.content_type}}</span>
+            <span class="content-content-type"> {{currentContent.content_type}}</span>
           </span>
         </span>
 
         <!-- Event emit for the rowIdx for this component -->
-        <form class="container-meta-text bar-spacer">
-          Loaded: <span class="cnt-max-count">{{cnt?.contents?.length}}</span>/<span class="cnt-total">{{cnt?.total}}</span>
-          <span *ngIf="cnt?.contents?.length < cnt.total">
+        <form class="container-meta-text bar-spacer" *ngIf="cnt && cnt.contents">
+          Loaded: <span class="cnt-max-count">{{cnt.contents.length}}</span>/<span class="cnt-total">{{cnt.total}}</span>
+          <span *ngIf="cnt.contents.length && cnt.contents.length < cnt.total">
             press (F) or: 
             <button class="btn-full-load-ctn" (click)="fullLoadContainer(cnt)">
               Load ({{ cnt.total - cnt.count }}) Items

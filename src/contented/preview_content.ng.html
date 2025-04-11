@@ -1,6 +1,6 @@
 <div class="preview-content-cmp">
-  <div *ngIf="!!content" class="preview-content preview-is{{content?.shouldUseTypedPreview()}}"
-    [class.video-overlay]="content?.content_type?.match('video')"
+  <div *ngIf="!!content" class="preview-content preview-is{{content.shouldUseTypedPreview()}}"
+    [class.video-overlay]="content.isVideo()"
     [class.current-content]="active"
     [class.content-duplicate]="content.duplicate"
     [style.width]="previewWidth + 'px'"
@@ -11,7 +11,7 @@
     <!-- Assume that every preview is actually going to be an image -->
     <img class="preview-img"
       [id]="'preview_' + content.id"
-      [src]="content?.previewUrl" 
+      [src]="content.previewUrl" 
       *ngIf="!content.shouldUseTypedPreview()"
     > 
 

@@ -33,12 +33,12 @@ export const ScreenSchema = z.object({
 export type ScreenInterface = z.infer<typeof ScreenSchema>;
 
 export class Screen implements ScreenInterface {
-  id: number;
-  src: string;
+  id: number = 0;
+  src: string = '';
   idx: number = 0;
   content_id?: number;
-  size_bytes: number;
-  content_container_id: number;
+  size_bytes: number = 0;
+  content_container_id: number = 0;
 
   constructor(data: any = {}) {
     this.update(data);

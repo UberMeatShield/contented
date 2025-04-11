@@ -55,7 +55,9 @@ describe('TestingVideoBrowserCmp', () => {
 
     containerResult.results.forEach(c => {
       const container = ContainerSchema.safeParse(c);
-      expect(container.success).withContext(container?.error?.message).toBe(true);
+      expect(container.success)
+        .withContext(container?.error?.message || 'Container failed schema parse')
+        .toBe(true);
     });
   });
 

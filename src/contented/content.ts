@@ -11,14 +11,14 @@ export const TagSchema = z.object({
 });
 export type TagInterface = z.infer<typeof TagSchema>;
 export class Tag implements TagInterface {
-  id: string;
-  tag_type: string;
+  id: string = '';
+  tag_type: string = '';
 
-  constructor(data: any = {}) {
+  constructor(data: Partial<TagInterface> = {}) {
     this.update(data);
   }
 
-  update(data: any = {}) {
+  update(data: Partial<TagInterface> = {}) {
     const s = TagSchema.parse(data);
     Object.assign(this, s);
   }
@@ -56,16 +56,16 @@ export const VideoFormatSchema = z.object({
 
 export type VideoFormatInterface = z.infer<typeof VideoFormatSchema>;
 export class VideoFormat implements VideoFormatInterface {
-  bit_rate: number;
-  duration: number;
-  filename: string;
-  format_long_name: string;
-  format_name: string;
-  nb_programs: number;
-  nb_streams: number;
-  probe_score: number;
-  size: number;
-  start_time: number;
+  bit_rate: number = 0;
+  duration: number = 0;
+  filename: string = '';
+  format_long_name: string = '';
+  format_name: string = '';
+  nb_programs: number = 0;
+  nb_streams: number = 0;
+  probe_score: number = 0;
+  size: number = 0;
+  start_time: number = 0;
 
   constructor(data: any = {}) {
     this.update(data);
@@ -102,19 +102,19 @@ export const VideoStreamSchema = z.object({
 
 export type VideoStreamInterface = z.infer<typeof VideoStreamSchema>;
 export class VideoStream implements VideoStreamInterface {
-  avg_frame_rate: string;
-  bit_rate: number;
-  bits_per_raw_sample: number;
-  chroma_location: string;
-  closed_captions: number;
-  codec_long_name: string;
-  codec_name: string;
-  codec_tag: string;
-  codec_tag_string: string;
-  codec_type: string;
-  coded_height: number;
-  coded_width: number;
-  duration: number;
+  avg_frame_rate: string = '';
+  bit_rate: number = 0;
+  bits_per_raw_sample: number = 0;
+  chroma_location: string = '';
+  closed_captions: number = 0;
+  codec_long_name: string = '';
+  codec_name: string = '';
+  codec_tag: string = '';
+  codec_tag_string: string = '';
+  codec_type: string = '';
+  coded_height: number = 0;
+  coded_width: number = 0;
+  duration: number = 0;
 
   constructor(data: any = {}) {
     this.update(data);
@@ -128,20 +128,20 @@ export class VideoStream implements VideoStreamInterface {
 
 // Represents some of the encoding that comes back from ffmpeg probe
 export const VideoCodecInfoSchema = z.object({
-  format: VideoFormatSchema,
+  format: VideoFormatSchema.optional(),
   streams: VideoStreamSchema.array().optional(),
 });
 export type VideoCodecInfoInterface = z.infer<typeof VideoCodecInfoSchema>;
 
 export class VideoCodecInfo implements VideoCodecInfoInterface {
-  format: VideoFormat;
-  streams: VideoStreamInterface[];
+  format?: VideoFormat | undefined;
+  streams?: VideoStreamInterface[];
 
-  constructor(data: any = {}) {
+  constructor(data: Partial<VideoCodecInfoInterface> = {}) {
     this.update(data);
   }
 
-  update(data: any = {}) {
+  update(data: Partial<VideoCodecInfoInterface> = {}) {
     const s = VideoCodecInfoSchema.parse(data);
     Object.assign(this, s);
 
@@ -149,7 +149,6 @@ export class VideoCodecInfo implements VideoCodecInfoInterface {
       this.format = new VideoFormat(s.format);
     }
 
-    // Probably need a type check on this
     this.streams = (s.streams || []).map(stream => new VideoStream(stream));
   }
 
@@ -190,7 +189,7 @@ export const ContentSchema = z.object({
   encoding: z.string().optional(),
   screens: ScreenSchema.array().nullable().default([]).optional(),
   tags: TagSchema.array().nullable().default([]).optional(),
-  meta: z.string().nullable().optional(),
+  meta: z.string().optional(),
   fullText: z.string().default('').optional(),
 
   created_at: z.string().optional(),
@@ -201,26 +200,23 @@ export const ContentSchema = z.object({
 export type ContentInterface = z.infer<typeof ContentSchema>;
 
 export class Content implements ContentInterface {
-  id: number;
-  src: string;
-  preview: string;
-  idx: number;
-  description: string;
-  content_type: string;
-  container_id: number;
-  size: number;
-  encoding: string;
-  screens: Screen[];
-  tags: Tag[];
-  meta: string;
-  fullText: string;
-
-  created_at: string;
-  updated_at: string;
-  duplicate: boolean;
-
-  // Implemented
-  videoInfoParsed: VideoCodecInfo;
+  id: number = 0;
+  src: string = '';
+  preview: string = '';
+  idx: number = 0;
+  description: string = '';
+  content_type: string = '';
+  container_id: number = 0;
+  size: number = 0;
+  encoding: string = '';
+  screens: Screen[] = [];
+  tags: Tag[] = [];
+  meta: string = '';
+  fullText: string = '';
+  created_at: string = '';
+  updated_at: string = '';
+  duplicate: boolean = false;
+  videoInfoParsed: VideoCodecInfo | undefined = undefined;
 
   constructor(data: any = {}) {
     this.update(data);

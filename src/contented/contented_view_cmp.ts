@@ -1,4 +1,14 @@
-import { OnInit, OnDestroy, Component, EventEmitter, Input, Output, HostListener, ViewChild } from '@angular/core';
+import {
+  OnInit,
+  OnDestroy,
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  HostListener,
+  ViewChild,
+  ElementRef,
+} from '@angular/core';
 import { Content } from './content';
 import { GlobalNavEvents, NavTypes, NavEventMessage } from './nav_events';
 import { Subscription } from 'rxjs';
@@ -8,33 +18,34 @@ import { GlobalBroadcast } from './global_message';
 import { TaskRequest } from './task_request';
 import * as _ from 'lodash';
 import { ScreenAction, ScreenClickEvent, Screen } from './screen';
+import { getWindowSizes } from './common';
 
 @Component({
   selector: 'contented-view',
   templateUrl: './contented_view.ng.html',
 })
 export class ContentedViewCmp implements OnInit, OnDestroy {
-  @Input() content: Content;
-  @Input() forceWidth: number;
-  @Input() forceHeight: number;
+  @Input() content?: Content;
+  @Input() forceWidth: number = 0;
+  @Input() forceHeight: number = 0;
   @Input() visible: boolean = false;
   @Input() showScreens = true;
   @Input() restrictContentId: number = -1;
-  @ViewChild('VIDEOELEMENT') video;
+  @ViewChild('VIDEOELEMENT') video: ElementRef<HTMLVideoElement> | undefined;
 
-  public maxWidth: number;
-  public maxHeight: number;
-  public sub: Subscription;
+  public maxWidth: number = 800;
+  public maxHeight: number = 600;
+  public sub: Subscription | undefined;
   public taskLoading = false;
 
   // This calculation does _not_ work when using a dialog.  Fix?
   // Provide a custom width and height calculation option
   constructor(public _service: ContentedService) {}
 
-  public shouldIgnoreEvt(content: Content) {
+  public shouldIgnoreEvt(content: Content): Content | undefined {
     if (this.restrictContentId > 0) {
       if ((!content || content.id !== this.restrictContentId, 10)) {
-        return null;
+        return undefined;
       }
     }
     return content || this.content;
@@ -44,21 +55,17 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
     this.sub = GlobalNavEvents.navEvts.subscribe({
       next: (evt: NavEventMessage) => {
         // Restrict content ID might need to be a bit smarter
-
-        let content = this.shouldIgnoreEvt(evt.content);
-        if (!content) {
-          return;
-        }
+        const content = evt.content ? this.shouldIgnoreEvt(evt.content) : undefined;
         switch (evt.action) {
           case NavTypes.VIEW_FULLSCREEN:
             if (this.content) {
               // Akward but without a digest it will NOT change the video if it is already playing
-              this.content = null;
+              this.content = undefined;
               setTimeout(() => {
-                this.selectFullScreenContent(content, evt.screen);
+                content && this.selectFullScreenContent(content, evt.screen);
               }, 50);
             } else {
-              this.selectFullScreenContent(content, evt.screen);
+              content && this.selectFullScreenContent(content, evt.screen);
             }
 
             break;
@@ -83,7 +90,9 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
     if (this.content && this.content.isText() && this.visible) {
       this._service.getTextContent(this.content).subscribe({
         next: (text: string) => {
-          this.content.fullText = text;
+          if (this.content) {
+            this.content.fullText = text;
+          }
         },
         error: err => {
           GlobalBroadcast.error('Failed to get description', err);
@@ -92,22 +101,23 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
     }
   }
 
-  selectFullScreenContent(content: Content, screen?: Screen) {
+  public selectFullScreenContent(content: Content, screen?: Screen) {
+    if (!content) return;
+
     this.content = content;
     this.visible = true;
 
-    if (this.content) {
-      this.scrollContent(this.content);
-      this.handleTextContent(this.content);
+    this.scrollContent(content);
+    this.handleTextContent(content);
 
-      if (screen) {
-        this.clickedScreen({ screen, action: ScreenAction.PLAY_SCREEN });
-      }
+    if (screen) {
+      this.clickedScreen({ screen, action: ScreenAction.PLAY_SCREEN });
     }
   }
 
   openWindow(content: Content) {
-    window.open(content?.fullUrl);
+    if (!content) return;
+    window.open(content.fullUrl);
   }
 
   public ngOnDestroy() {
@@ -115,8 +125,10 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
   }
 
   public handleTextContent(content: Content) {
+    if (!content) return;
+
     // This would be better in a method but I would like another example type.
-    if (this.content.isText() && !this.content.fullText) {
+    if (content.isText() && !content.fullText) {
       this._service.getTextContent(content).subscribe({
         next: (text: string) => {
           content.fullText = text;
@@ -132,10 +144,10 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
   public calculateDimensions() {
     // Probably should just set it via dom calculation of the actual parent
     // container?  Maybe?  but then I actually DO want scroll in some cases.
+    const { width, height } = getWindowSizes();
     if (this.forceWidth > 0) {
       this.maxWidth = this.forceWidth;
     } else {
-      let width = window.innerWidth; //
       this.maxWidth = width - 20 > 0 ? width - 20 : 640;
     }
 
@@ -144,7 +156,6 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
       console.log('Force height', this.forceWidth, this.forceHeight);
       this.maxHeight = this.forceHeight;
     } else {
-      let height = window.innerHeight; // document.body.clientHeight;
       this.maxHeight = height - 20 > 0 ? height - 64 : 480;
     }
   }
@@ -161,9 +172,11 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
   }
 
   public clickedScreen(evt: ScreenClickEvent, count: number = 0) {
+    if (!this.content) return;
+
     // These screens are associated with the currently selected content
     const findVideo = (attempt = 0) => {
-      const videoEl = <HTMLVideoElement>document.getElementById(`VIDEO_${this.content.id}`);
+      const videoEl = <HTMLVideoElement>document.getElementById(`VIDEO_${this.content?.id}`);
       if (videoEl) {
         videoEl.currentTime = evt.screen?.parseSecondsFromScreen() || 0;
         videoEl.play();
@@ -181,8 +194,9 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
   // Kinda just need the ability to get the task info from the server
   screenshot(content: Content) {
     // Determine how to get the current video index, if not defined then just use the default
-    console.log(this.video.nativeElement.currentTime);
-    let ss = this.video.nativeElement.currentTime;
+    console.log(this.video?.nativeElement?.currentTime);
+
+    let ss = this.video?.nativeElement?.currentTime || 0;
     this.taskLoading = true;
     this._service
       .requestScreens(content, 1, ss)

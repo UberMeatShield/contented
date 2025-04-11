@@ -1,6 +1,6 @@
 import { OnInit, Component, Input, Output, ViewChild, EventEmitter } from '@angular/core';
 import { Tag, VSCodeChange } from './content';
-import { ContentedService } from './contented_service';
+import { ContentedService, PageResponse } from './contented_service';
 
 import * as _ from 'lodash';
 import { GlobalBroadcast } from './global_message';
@@ -58,18 +58,16 @@ export class TagsCmp {
   // Route needs to exist
   // Take in the search text route param
   // Debounce the search
-  @ViewChild('searchForm', { static: true }) searchControl;
-
   @Input() editorValue: string = '';
-  @Input() editorOptions;
+  @Input() editorOptions = editorOptions;
 
   @Output() tagsChanged = new EventEmitter<VSCodeChange>();
 
   // I don't think I need to load the tags, the monaco editor should get them.
-  @Input() tags: Array<Tag>;
-  @Input() TEST_MODE: boolean = window['jasmine'] ? true : false;
+  @Input() tags: Array<Tag> = [];
+  @Input() TEST_MODE: boolean = (window as any).jasmine ? true : false;
 
-  matchedTags: Array<Tag>;
+  matchedTags: Array<Tag> = [];
 
   public loading: boolean = false;
   public pageSize: number = 1000;
@@ -81,7 +79,7 @@ export class TagsCmp {
 
   public search(searchText: string) {
     this._contentedService.getTags().subscribe({
-      next: (res: any) => {
+      next: (res: PageResponse<Tag>) => {
         this.tags = res.results;
       },
       error: err => {

@@ -12,14 +12,18 @@ interface CountMessages {
   uxVisible: boolean;
 }
 
+interface DialogData {
+  errors: Array<CountMessages>;
+}
+
 @Component({
   selector: 'error-handler-cmp',
   templateUrl: 'error_handler.ng.html',
 })
 export class ErrorHandlerCmp implements OnInit, OnDestroy {
-  @Input() broadcast: MessageBroadcast;
+  @Input() broadcast: MessageBroadcast | undefined;
   public events: { [id: string]: CountMessages } = {};
-  public sub: Subscription;
+  public sub: Subscription | undefined;
 
   constructor(
     private snack: MatSnackBar,
@@ -104,7 +108,6 @@ export class ErrorHandlerCmp implements OnInit, OnDestroy {
   }
 }
 
-// This just doesn't seem like a great approach :(
 @Component({
   selector: 'error-dialog',
   templateUrl: 'error_dialog.ng.html',
@@ -114,7 +117,7 @@ export class ErrorDialogCmp implements AfterViewInit {
 
   constructor(
     public dialogRef: MatDialogRef<ErrorDialogCmp>,
-    @Inject(MAT_DIALOG_DATA) public data
+    @Inject(MAT_DIALOG_DATA) public data: DialogData
   ) {
     this.errors = data.errors;
   }
@@ -130,7 +133,7 @@ export class ErrorDialogCmp implements AfterViewInit {
     console.log('After view init');
   }
 
-  hasDebug(info: any) {
+  hasDebug(info: Record<string, unknown>) {
     return !_.isEmpty(info);
   }
 }

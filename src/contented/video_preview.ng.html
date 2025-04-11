@@ -13,7 +13,7 @@
           </a>
           <span class="video-title">{{content.src}}</span>
           <span class="video-encoding">Encoding: {{content.encoding}}</span>
-          <span class="video-duration">Duration: {{content.videoInfo?.format?.durationSeconds | durationFormat: 's':'hhmmss'}}</span>
+          <span class="video-duration">Duration: {{content.videoInfo?.format?.durationSeconds || 0 | durationFormat: 's':'hhmmss'}}</span>
           <span class="video-resolution">Resolution: {{content.videoInfo?.getResolution()}}</span>
         </mat-card-title>
         <mat-card-subtitle *ngIf="content.description">{{content.description}}</mat-card-subtitle>
@@ -22,7 +22,7 @@
       <mat-card-content [class.current-content]="selected">
         <div class="video-view">
           <div class="preview-content video-result preview-is{{content.shouldUseTypedPreview()}}"
-            [class.video-overlay]="content?.content_type?.match('video')"
+            [class.video-overlay]="content.content_type.match('video')"
             [class.content-duplicate]="content.duplicate"
             [style.width]="previewWidth + 'px'"
             [style.height]="previewHeight + 'px'"

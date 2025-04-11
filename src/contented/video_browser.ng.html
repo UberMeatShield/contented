@@ -15,7 +15,7 @@
     </ng-template>
   </mat-menu>
 
-  <form #videoForm [formGroup]="options" (keypress)="$event.stopPropagation()">
+  <form *ngIf="options" #videoForm [formGroup]="options" (keypress)="$event.stopPropagation()">
     <div class="search-form">
         <div class="search-tags" *ngIf="this.options">
           <tags-cmp
@@ -39,7 +39,7 @@
 
         <span *ngIf="selectedContainer">
           Filtering inside: {{selectedContainer.name}}
-          <button type="button" mat-mini-fab color="warn" (click)="selectContainer(null)">
+          <button type="button" mat-mini-fab color="warn" (click)="selectContainer(undefined)">
             <mat-icon aria-label="Stop filtering on container">close</mat-icon>
           </button>
         </span>

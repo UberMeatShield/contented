@@ -17,6 +17,7 @@ import $ from 'jquery';
 import { MockData } from '../test/mock/mock_data';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 describe('TestingContentedNavCmp', () => {
   let fixture: ComponentFixture<ContentedNavCmp>;
@@ -25,11 +26,11 @@ describe('TestingContentedNavCmp', () => {
   let el: HTMLElement;
   let de: DebugElement;
   let httpMock: HttpTestingController;
-  let sub: Subscription;
+  let sub: Subscription | undefined;
 
   beforeEach(waitForAsync(async () => {
     TestBed.configureTestingModule({
-      imports: [ContentedModule, HttpClientTestingModule],
+      imports: [ContentedModule, HttpClientTestingModule, NoopAnimationsModule],
       providers: [provideRouter([{ path: '', component: ContentedNavCmp }]), ContentedService],
       teardown: { destroyAfterEach: true },
     }).compileComponents();
@@ -48,7 +49,7 @@ describe('TestingContentedNavCmp', () => {
   afterEach(() => {
     if (sub) {
       sub.unsubscribe();
-      sub = null;
+      sub = undefined;
     }
   });
 
@@ -84,7 +85,7 @@ describe('TestingContentedNavCmp', () => {
   it('Should be able to handle a document keyup', fakeAsync(() => {
     fixture.detectChanges();
 
-    let validate: NavTypes = null;
+    let validate: NavTypes | undefined;
     sub = GlobalNavEvents.navEvts.subscribe(evt => {
       validate = evt.action;
     });

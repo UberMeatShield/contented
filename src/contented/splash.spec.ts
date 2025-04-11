@@ -15,6 +15,7 @@ import { ApiDef } from '../contented/api_def';
 import * as _ from 'lodash';
 import * as $ from 'jquery';
 import { MockData } from '../test/mock/mock_data';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 describe('TestingSplashCmp', () => {
   let fixture: ComponentFixture<SplashCmp>;
@@ -33,6 +34,7 @@ describe('TestingSplashCmp', () => {
         FormsModule,
         ContentedModule,
         HttpClientTestingModule,
+        NoopAnimationsModule,
       ],
       providers: [ContentedService],
     }).compileComponents();
