@@ -1,5 +1,4 @@
 /// <reference types="vitest" />
-
 import angular from '@analogjs/vite-plugin-angular';
 
 import { defineConfig } from 'vite';
@@ -22,6 +21,8 @@ export default defineConfig(({ mode }) => {
     },
     define: {
       'import.meta.vitest': mode !== 'production',
+      global: {},
+      VITEST: true
     },
   };
 });

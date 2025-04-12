@@ -113,8 +113,6 @@ export class ContentedNavCmp implements OnInit {
     let btn = document.getElementById(`BTN_${evt.key}`);
     
     let pos = btn ? this.getOffset(btn) : {top: 0, left: 0};
-    console.log('Button', btn, pos);
-
     if (pos) {
       // console.log("Position and btn value", pos, btn.val());
       let x = pos.left + 32;

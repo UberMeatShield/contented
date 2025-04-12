@@ -51,10 +51,11 @@ import { TagLang } from './tagging_syntax';
 import { FavoritesCmp } from './favorites.cmp';
 import { PreviewContentCmp } from './preview_content.cmp';
 
-let MONACO_LOADED = false;
+var MONACO_LOADED = false;
 let GIVE_UP = 0;
 function monacoPoller(resolve: any, reject: any) {
   if (MONACO_LOADED) {
+    console.log("Monaco loaded");
     return resolve((window as any).monaco);
   } else {
     if (GIVE_UP > 4) {
@@ -62,6 +63,7 @@ function monacoPoller(resolve: any, reject: any) {
     }
     GIVE_UP++;
     setTimeout(() => {
+      console.log("Waiting for Monaco to load");
       monacoPoller(resolve, reject);
     }, GIVE_UP * 500);
   }

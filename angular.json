@@ -24,7 +24,7 @@
             "extractLicenses": false,
             "buildOptimizer": false,
             "sourceMap": true,
-            "optimization": false,
+            "optimization": true,
             "namedChunks": true
           },
           "configurations": {
