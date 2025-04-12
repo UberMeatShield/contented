@@ -98,7 +98,7 @@ describe('TestingContentViewCmp', () => {
 
     let fakeID = donutMock.id;
     comp.loadContent(fakeID);
-    expect(comp.loading).toBeTrue();
+    expect(comp.loading).toBe(true);
     fixture.detectChanges();
     expect($('.loading').length).toEqual(1, 'Loading UI should be present');
 

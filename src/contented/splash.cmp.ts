@@ -14,8 +14,6 @@ import { Container } from './container';
 
 import * as _ from 'lodash';
 
-import { RESUME } from './resume';
-
 @Component({
   selector: 'splash-cmp',
   templateUrl: './splash.ng.html',
@@ -24,7 +22,7 @@ export class SplashCmp implements OnInit {
   @ViewChild('EDITOR') editor?: EditorComponent;
 
   @Input() editForm?: FormGroup;
-  @Input() editorValue: string = RESUME; // TODO: Save this as media
+  @Input() editorValue: string = '';
   @Input() descriptionControl?: FormControl<string | null>;
   @Input() readOnly: boolean = true;
   @Input() editorOptions = {

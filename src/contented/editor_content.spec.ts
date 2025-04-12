@@ -11,7 +11,8 @@ import { ContentedModule } from './contented_module';
 import { Content } from './content';
 import { ApiDef } from './api_def';
 
-declare let $: any;
+import $ from 'jquery';
+import { describe } from 'vitest';
 
 describe('EditorContentCmp', () => {
   let fixture: ComponentFixture<EditorContentCmp>;

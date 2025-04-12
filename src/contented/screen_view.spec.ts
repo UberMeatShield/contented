@@ -19,6 +19,7 @@ import { GlobalNavEvents } from '../contented/nav_events';
 import _ from 'lodash';
 import $ from 'jquery';
 import { MockData } from '../test/mock/mock_data';
+import { describe } from 'vitest';
 
 describe('TestingScreensCmp', () => {
   let fixture: ComponentFixture<ScreensCmp>;
@@ -79,7 +80,7 @@ describe('TestingScreensCmp', () => {
     let contentId = 32;
     comp.contentId = contentId;
     fixture.detectChanges();
-    expect(comp.loading).toBeTrue();
+    expect(comp.loading).toBe(true);
 
     let url = ApiDef.contented.contentScreens.replace('{mcID}', contentId.toString());
     let req = httpMock.expectOne(req => req.url == url);
@@ -91,7 +92,7 @@ describe('TestingScreensCmp', () => {
 
     fixture.detectChanges();
     let expectCount = sRes.results.length;
-    expect(comp.loading).toBeFalse(); // It should no longer be loading
+    expect(comp.loading).toBe(false); // It should no longer be loading
     expect(comp.screens.length).withContext('We should have assigned screens').toEqual(expectCount);
     expect($('.screen-img', el).length).withContext('There should be screens rendered').toEqual(expectCount);
     expect($('.screen', el).length).withContext('There should be screens rendered').toEqual(expectCount);

@@ -65,7 +65,7 @@ export class TagsCmp {
 
   // I don't think I need to load the tags, the monaco editor should get them.
   @Input() tags: Array<Tag> = [];
-  @Input() TEST_MODE: boolean = (window as any).jasmine ? true : false;
+  @Input() TEST_MODE: boolean = (window as any).VITEST ? true : false;
 
   matchedTags: Array<Tag> = [];
 

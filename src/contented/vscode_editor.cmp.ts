@@ -12,10 +12,10 @@ import { GlobalBroadcast } from './global_message';
 // Why is it importing api.d?  Because Monaco does a bunch of css importing in the
 // javascript which breaks the hell out of angular tooling, so just get the 'shapes'
 // correct when doing a compile and move along.
-//import { KeyCode, editor as MonacoEditor } from 'monaco-editor/esm/vs/editor/editor.api.d';
+import { KeyCode, editor as MonacoEditor } from 'monaco-editor/esm/vs/editor/editor.api.d';
 
-export type KeyCode = any;
-export type MonacoEditor = any
+//export type KeyCode = any;
+//export type MonacoEditor = any
 
 import * as _ from 'lodash';
 import { Tag, VSCodeChange } from './content';

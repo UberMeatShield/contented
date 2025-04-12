@@ -9,7 +9,7 @@ import { TagLang, TAGS_RESPONSE } from './tagging_syntax';
 import { ApiDef } from './api_def';
 import { VSCodeEditorCmp } from './vscode_editor.cmp';
 
-declare let $: any;
+import $ from 'jquery';
 let editorValue = ` class Funky() {
   public answer: number = 42;
    constructor (zug: number) {

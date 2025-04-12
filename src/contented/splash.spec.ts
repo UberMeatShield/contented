@@ -12,8 +12,7 @@ import { ContentedService } from '../contented/contented_service';
 import { ContentedModule } from '../contented/contented_module';
 import { ApiDef } from '../contented/api_def';
 
-import * as _ from 'lodash';
-import * as $ from 'jquery';
+import _ from 'lodash';
 import { MockData } from '../test/mock/mock_data';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
