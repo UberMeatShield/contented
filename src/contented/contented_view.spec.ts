@@ -113,7 +113,7 @@ describe('TestingContentedViewCmp', () => {
     expect($('.content-full-view').length).toBe(1, 'It should now be visible');
 
     expect(comp.content).toEqual(content);
-    expect(comp.visible).toBeTrue();
+    expect(comp.visible).toBe(true);
     expect($('.full-view-img').length).withContext('It should be an image').toEqual(1);
     expect(comp.content).toEqual(content, 'A view event with a content item should change it');
 

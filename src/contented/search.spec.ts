@@ -54,8 +54,6 @@ describe('TestingSearchCmp', () => {
     loc = TestBed.inject(Location);
     router = TestBed.inject(Router);
     router.initialNavigation();
-
-    spyOn(console, 'error');
   }));
 
   afterEach(() => {
@@ -100,9 +98,9 @@ describe('TestingSearchCmp', () => {
     reqs.forEach(req => req.flush(sr));
     harness.detectChanges();
 
-    expect(comp.loading).toBeFalse();
+    expect(comp.loading).toBe(false);
     harness.detectChanges();
     expect(comp.content.length).withContext('It should have results').toEqual(sr.results.length);
-    expect(comp.loading).toBeFalse();
+    expect(comp.loading).toBe(false);
   }));
 });

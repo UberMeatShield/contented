@@ -14,6 +14,8 @@ import { MockData } from '../test/mock/mock_data';
 import { ApiDef } from './api_def';
 import { provideRouter, Router } from '@angular/router';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import $ from 'jquery';
+import { describe } from 'vitest';
 
 describe('TestingAdminContainersCmp', () => {
   let fixture: ComponentFixture<AdminContainersCmp>;

@@ -20,6 +20,7 @@ import _ from 'lodash';
 import $ from 'jquery';
 import { MockData } from '../test/mock/mock_data';
 import { ContainerSchema } from './container';
+import { describe } from 'vitest';
 
 describe('TestingVideoBrowserCmp', () => {
   let fixture: ComponentFixture<VideoBrowserCmp>;
@@ -33,7 +34,7 @@ describe('TestingVideoBrowserCmp', () => {
   let loc: Location;
   let harness: RouterTestingHarness;
 
-  beforeEach(waitForAsync(async () => {
+  beforeEach(async () => {
     TestBed.configureTestingModule({
       imports: [FormsModule, ContentedModule, HttpClientTestingModule, NoopAnimationsModule],
       providers: [ContentedService, provideRouter([{ path: 'ui/video/', component: VideoBrowserCmp }])],
@@ -44,7 +45,7 @@ describe('TestingVideoBrowserCmp', () => {
     service = TestBed.inject(ContentedService);
     httpMock = TestBed.inject(HttpTestingController);
     loc = TestBed.inject(Location);
-  }));
+  });
 
   afterEach(() => {
     httpMock.verify();

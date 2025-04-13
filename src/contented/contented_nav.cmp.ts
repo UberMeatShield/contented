@@ -9,7 +9,6 @@ import type { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 
 import _ from 'lodash';
-import $ from 'jquery';
 
 @Component({
   selector: 'contented-nav',
@@ -63,8 +62,8 @@ export class ContentedNavCmp implements OnInit {
 
     // If this is not in a delay it will race condition with the selection opening / closing.
     _.delay(() => {
-      const filterEl = $('#CONTENT_FILTER');
-      filterEl.blur();
+      const filterEl = document.getElementById('CONTENT_FILTER');
+      filterEl?.blur();
 
       // We want to use the container value setValue to ensure the autocomplete doesn't
       // explode.  Using the dom element itself breaks the dropdown a little bit.
@@ -79,6 +78,19 @@ export class ContentedNavCmp implements OnInit {
     if (this.matAutocomplete?.options.first) {
       this.matAutocomplete.options.first.select();
     }
+  }
+
+  getOffset(element: HTMLElement) {
+    if (!element.getClientRects().length) {
+      return { top: 0, left: 0 };
+    }
+
+    let rect = element.getBoundingClientRect();
+    let win = element.ownerDocument.defaultView;
+    return {
+      top: rect.top + window.pageYOffset,
+      left: rect.left + window.pageXOffset,
+    };
   }
 
   // On the document keypress events, listen for them (probably need to set them only to component somehow)
@@ -98,15 +110,16 @@ export class ContentedNavCmp implements OnInit {
     }
     this.handleKey(evt.key);
 
-    let btn = $(`#BTN_${evt.key}`);
-    let pos = btn.offset();
+    let btn = document.getElementById(`BTN_${evt.key}`);
+
+    let pos = btn ? this.getOffset(btn) : { top: 0, left: 0 };
     if (pos) {
       // console.log("Position and btn value", pos, btn.val());
       let x = pos.left + 32;
-      let y = pos.top + 20;
+      let y = pos.top + 16;
       let rippleRef = this.ripple?.launch(x, y, {
         persistent: true,
-        radius: 24,
+        radius: 12,
       });
       _.delay(() => {
         rippleRef?.fadeOut();

@@ -20,6 +20,7 @@ import { GlobalNavEvents } from '../contented/nav_events';
 import _ from 'lodash';
 import $ from 'jquery';
 import { MockData } from '../test/mock/mock_data';
+import { describe } from 'vitest';
 
 describe('TestingContentBrowserCmp', () => {
   let service: ContentedService;
@@ -221,7 +222,7 @@ describe('TestingContentBrowserCmp', () => {
     harness.detectChanges();
     tick(10000); // Important to let the paged loading finish
 
-    expect(_.isEmpty(comp.allCnts)).withContext('We should have content').toBeFalse();
+    expect(_.isEmpty(comp.allCnts)).withContext('We should have content').toBe(false);
     expect(comp.allCnts.length).withContext('We should have containers').toBeGreaterThan(4);
 
     let lastIdx = comp.allCnts.length - 1;

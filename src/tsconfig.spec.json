@@ -4,13 +4,14 @@
     "outDir": "../static/tests",
     "baseUrl": "./test/",
     "types": [
-      "jasmine",
+      "vitest/globals",
       "node"
-    ]
+    ],
+    "target": "esnext"
   },
   "files": [
-    "test.ts",
-    "polyfills.ts"
+    "polyfills.ts",
+    "test-setup.ts"
   ],
   "include": [
     "**/*.spec.ts",

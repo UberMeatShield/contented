@@ -1,6 +1,5 @@
 {
   "compileOnSave": false,
-  "NARP": "module: \"es2020\" was initially in there, but gulp-typscript barfs",
   "compilerOptions": {
     "outDir": "./static/build",
     "sourceMap": true,
