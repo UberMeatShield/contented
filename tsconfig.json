@@ -6,7 +6,6 @@
     "declaration": false,
     "moduleResolution": "node",
     "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "target": "esnext",
     "module": "esnext",
