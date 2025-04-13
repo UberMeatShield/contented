@@ -31,7 +31,7 @@ describe('VSCodeEditorCmp', () => {
   let httpMock: HttpTestingController;
   let tagLang: TagLang;
 
-  beforeEach(waitForAsync( async () => {
+  beforeEach(waitForAsync(async () => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule, ContentedModule, NoopAnimationsModule],
       providers: [],
@@ -79,13 +79,13 @@ describe('VSCodeEditorCmp', () => {
     cmp.tags = [];
     fixture.detectChanges();
     fixture.detectChanges();
-    console.log("Past detectChanges");
+    console.log('Past detectChanges');
     await WaitForMonacoLoad();
-    console.log("Past monaco load");
+    console.log('Past monaco load');
     await cmp.isInitialized();
-    console.log("Past isInitialized");
+    console.log('Past isInitialized');
     await fixture.whenRenderingDone();
-    console.log("Past whenRenderingDone the fuck");
+    console.log('Past whenRenderingDone the fuck');
     expect(cmp.initialized).toBe(true);
 
     httpMock.expectOne(r => r.url.includes(ApiDef.contented.tags)).flush(tags);

@@ -82,16 +82,16 @@ export class ContentedNavCmp implements OnInit {
 
   getOffset(element: HTMLElement) {
     if (!element.getClientRects().length) {
-        return { top: 0, left: 0 };
+      return { top: 0, left: 0 };
     }
 
     let rect = element.getBoundingClientRect();
     let win = element.ownerDocument.defaultView;
     return {
-        top: rect.top + window.pageYOffset,
-        left: rect.left + window.pageXOffset
+      top: rect.top + window.pageYOffset,
+      left: rect.left + window.pageXOffset,
     };
-}
+  }
 
   // On the document keypress events, listen for them (probably need to set them only to component somehow)
   @HostListener('document:keyup', ['$event'])
@@ -111,8 +111,8 @@ export class ContentedNavCmp implements OnInit {
     this.handleKey(evt.key);
 
     let btn = document.getElementById(`BTN_${evt.key}`);
-    
-    let pos = btn ? this.getOffset(btn) : {top: 0, left: 0};
+
+    let pos = btn ? this.getOffset(btn) : { top: 0, left: 0 };
     if (pos) {
       // console.log("Position and btn value", pos, btn.val());
       let x = pos.left + 32;

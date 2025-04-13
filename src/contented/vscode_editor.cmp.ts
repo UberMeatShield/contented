@@ -14,7 +14,6 @@ import { GlobalBroadcast } from './global_message';
 // correct when doing a compile and move along.
 window.global ||= window;
 
-
 import { KeyCode, editor as MonacoEditor } from 'monaco-editor/esm/vs/editor/editor.api';
 
 //export type KeyCode = any;

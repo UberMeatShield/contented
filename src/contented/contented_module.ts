@@ -55,7 +55,7 @@ var MONACO_LOADED = false;
 let GIVE_UP = 0;
 function monacoPoller(resolve: any, reject: any) {
   if (MONACO_LOADED) {
-    console.log("Monaco loaded");
+    console.log('Monaco loaded');
     return resolve((window as any).monaco);
   } else {
     if (GIVE_UP > 4) {
@@ -63,7 +63,7 @@ function monacoPoller(resolve: any, reject: any) {
     }
     GIVE_UP++;
     setTimeout(() => {
-      console.log("Waiting for Monaco to load");
+      console.log('Waiting for Monaco to load');
       monacoPoller(resolve, reject);
     }, GIVE_UP * 500);
   }
