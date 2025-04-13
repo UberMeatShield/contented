@@ -1,12 +1,12 @@
+@use 'sass:map';
 @use '@angular/material' as mat;
-/* You can add global styles to this file, and also import other style files */
-@import '@angular/material/theming';
-@include mat.core();
 
-/* ======== Angular material custom themes ======== */
-$content-primary: mat.define-palette(mat.$blue-palette, 500);
-$content-accent: mat.define-palette(mat.$orange-palette, 100, 500, A100);
-$content-warn: mat.define-palette(mat.$red-palette);
+
+
+/*
+https://stackoverflow.com/questions/78569146/angular-18-material-3-font-size
+
+They really don't like us modifying the settings anymore.
 
 $smaller-fonts: mat-typography-config(
     $font-family:   'Roboto',
@@ -24,15 +24,30 @@ $smaller-fonts: mat-typography-config(
     $button:        mat-typography-level(12px, 14px, 500),
     $input:         mat-typography-level(inherit, 1, 400)
 );
+*/
 
-$content-theme: mat.define-light-theme((
+// Define the theme
+$content-theme: mat.define-theme((
   color: (
-    primary: $content-primary,
-    accent: $content-accent,
-    warn: $content-warn,
+    theme-type: light,
+    primary: mat.$azure-palette,
+    use-system-variables: true
   ),
-  typography: $smaller-fonts,
-  density: -2,
+  typography: (
+    plain-family: Roboto,
+    brand-family: Open Sans,
+    bold-weight: 800,
+    medium-weight: 400,
+    regular-weight: 200,
+    use-system-variables: true
+  ),
+  density: (scale: -4)
 ));
-@include mat.all-component-themes($content-theme);
-@include mat.form-field-density(-4);
+
+// Apply the theme
+:root {
+  @include mat.core();
+  @include mat.all-component-themes($content-theme);
+  @include mat.system-level-colors($content-theme);
+  @include mat.system-level-typography($content-theme);
+}
