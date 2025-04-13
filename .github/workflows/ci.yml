@@ -25,7 +25,7 @@ jobs:
       run: make monaco-copy
 
     - name: Run Angular tests
-      run: yarn run ng test --watch=false --browsers=ChromeHeadless
+      run: yarn run ng test --watch=false
 
     - name: Run linter
       run: yarn run lint
