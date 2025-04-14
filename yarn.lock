@@ -2317,10 +2317,10 @@
   resolved "https://registry.yarnpkg.com/@pkgjs/parseargs/-/parseargs-0.11.0.tgz#a77ea742fab25775145434eb1d2328cf5013ac33"
   integrity sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==
 
-"@pkgr/core@^0.2.1":
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/@pkgr/core/-/core-0.2.2.tgz#224e466468489466a3ca77832be80cdd0bb8e523"
-  integrity sha512-25L86MyPvnlQoX2MTIV2OiUcb6vJ6aRbFa9pbwByn95INKD5mFH2smgjDhq+fwJoqAgvgbdJLj6Tz7V9X5CFAQ==
+"@pkgr/core@^0.2.3":
+  version "0.2.3"
+  resolved "https://registry.yarnpkg.com/@pkgr/core/-/core-0.2.3.tgz#4946c50a8e1272a5529ebd4e2d5869db183a3cbe"
+  integrity sha512-yMV8bb9prWI21N6FsrnPCbhoYb8UUvYCDGoSvPHBloVC095Ef2ker43hzXkJ6TpJPw53S8FeFYkARa7GGIGwxg==
 
 "@polka/url@^1.0.0-next.24":
   version "1.0.0-next.29"
@@ -4102,9 +4102,9 @@ ejs@^3.1.7:
     jake "^10.8.5"
 
 electron-to-chromium@^1.5.73:
-  version "1.5.136"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.5.136.tgz#854b45e6a892137762cb026ed6ec77391fc5c07b"
-  integrity sha512-kL4+wUTD7RSA5FHx5YwWtjDnEEkIIikFgWHR4P6fqjw1PPLlqYkxeOb++wAauAssat0YClCy8Y3C5SxgSkjibQ==
+  version "1.5.137"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.5.137.tgz#53a7fef3ea9f7eb5fcf704454050ff930c43ed92"
+  integrity sha512-/QSJaU2JyIuTbbABAo/crOs+SuAZLS+fVVS10PVrIT9hrRkmZl8Hb0xPSkKRUUWHQtYzXHpQUW3Dy5hwMzGZkA==
 
 emoji-regex@^10.3.0:
   version "10.4.0"
@@ -5959,10 +5959,15 @@ mlly@^1.6.1, mlly@^1.7.1, mlly@^1.7.4:
     pkg-types "^1.3.0"
     ufo "^1.5.4"
 
-monaco-editor@^0.44.0:
-  version "0.44.0"
-  resolved "https://registry.yarnpkg.com/monaco-editor/-/monaco-editor-0.44.0.tgz#3c0fe3655923bbf7dd647057302070b5095b6c59"
-  integrity sha512-5SmjNStN6bSuSE5WPT2ZV+iYn1/yI9sd4Igtk23ChvqB7kDk9lZbB9F5frsuvpB+2njdIeGGFf2G4gbE6rCC9Q==
+monaco-editor@^0.50.0:
+  version "0.50.0"
+  resolved "https://registry.yarnpkg.com/monaco-editor/-/monaco-editor-0.50.0.tgz#44e62b124c8aed224e1d310bbbe6ffd6d5122413"
+  integrity sha512-8CclLCmrRRh+sul7C08BmPBP3P8wVWfBHomsTcndxg5NRCEPfu/mc2AGU8k37ajjDVXcXFc12ORAMUkmk+lkFA==
+
+monaco-languages@^2.11.1:
+  version "2.11.1"
+  resolved "https://registry.yarnpkg.com/monaco-languages/-/monaco-languages-2.11.1.tgz#5e485677dfb71673c777e19da862b458aadf55a1"
+  integrity sha512-XLd6RtqCTYQ1AD7Tz/JzT/Eag/OfvjUtsetqVe6Hm+Tj01osGgnlKsjmPPfTddOIfnSsT6S3TR5aMRL57bSrJg==
 
 mrmime@2.0.0:
   version "2.0.0"
@@ -6025,10 +6030,10 @@ negotiator@^0.6.3:
   resolved "https://registry.yarnpkg.com/negotiator/-/negotiator-0.6.4.tgz#777948e2452651c570b712dd01c23e262713fff7"
   integrity sha512-myRT3DiWPHqho5PrJaIRyaMv2kgYf0mUVgBNOYMuCH5Ki1yEiQaf/ZJuQ62nvpc44wL5WDbTX7yGJi1Neevw8w==
 
-ngx-monaco-editor-v2@^17.0.1:
-  version "17.0.1"
-  resolved "https://registry.yarnpkg.com/ngx-monaco-editor-v2/-/ngx-monaco-editor-v2-17.0.1.tgz#3276c7febd2e0c15cff30ce3b99497fa6efff63c"
-  integrity sha512-GP+Ni6zKFQjF/ve5ZQtfE9eRLKL4GxMvdmDTrla1x6F5pSIcYGCcjZ4gQ1/AHMa5dgarfs+Et+1bBtAOJtI6KA==
+ngx-monaco-editor-v2@18:
+  version "18.1.0"
+  resolved "https://registry.yarnpkg.com/ngx-monaco-editor-v2/-/ngx-monaco-editor-v2-18.1.0.tgz#b66b27ae512908848e703e30ef45fe91c0c2b2ac"
+  integrity sha512-e/TaZ8lf8CauzVtPvKZhYLq8YKdZwCgbV23foDV2rMRTP2htFwmNUieJXetoqWjdZPmuqrMB3+PDZhrMvBGvug==
   dependencies:
     tslib "^2.1.0"
 
@@ -7592,11 +7597,11 @@ symbol-tree@^3.2.4:
   integrity sha512-9QNk5KwDF+Bvz+PyObkmSYjI5ksVUYtjW7AU22r2NKcfLJcXp96hkDWU3+XndOsUb+AQ9QhfzfCT2O+CNWT5Tw==
 
 synckit@^0.11.0:
-  version "0.11.3"
-  resolved "https://registry.yarnpkg.com/synckit/-/synckit-0.11.3.tgz#8b83e145d7cedc56c01e3510cf516d91a0e568c2"
-  integrity sha512-szhWDqNNI9etJUvbZ1/cx1StnZx8yMmFxme48SwR4dty4ioSY50KEZlpv0qAfgc1fpRzuh9hBXEzoCpJ779dLg==
+  version "0.11.4"
+  resolved "https://registry.yarnpkg.com/synckit/-/synckit-0.11.4.tgz#48972326b59723fc15b8d159803cf8302b545d59"
+  integrity sha512-Q/XQKRaJiLiFIBNN+mndW7S/RHxvwzuZS6ZwmRzUBqJBv/5QIKCEwkBC8GBf8EQJKYnaFs0wOZbKTXBPj8L9oQ==
   dependencies:
-    "@pkgr/core" "^0.2.1"
+    "@pkgr/core" "^0.2.3"
     tslib "^2.8.1"
 
 system-architecture@^0.1.0:

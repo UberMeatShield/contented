@@ -82,7 +82,8 @@ export async function WaitForMonacoLoad() {
 
 // Kinda annoying this has to be configured like this but I suppose it ok.
 const monacoConfig: NgxMonacoEditorConfig = {
-  baseUrl: '/public/static',
+  baseUrl: '/public/static/monaco/min/vs',
+
   defaultOptions: {
     wordWrap: 'on',
     minimap: { enabled: false },
