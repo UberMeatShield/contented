@@ -10,6 +10,10 @@ import { environment } from './../environments/environment';
 import { BrowserAnimationsModule, NoopAnimationsModule } from '@angular/platform-browser/animations';
 let AnimationsModule = !environment.production ? NoopAnimationsModule : BrowserAnimationsModule;
 
-@NgModule({ declarations: [App],
-    bootstrap: [App], imports: [BrowserModule, AppRoutes, AppRoutes, ContentedModule, AnimationsModule], providers: [provideHttpClient(withInterceptorsFromDi())] })
+@NgModule({
+  declarations: [App],
+  bootstrap: [App],
+  imports: [BrowserModule, AppRoutes, AppRoutes, ContentedModule, AnimationsModule],
+  providers: [provideHttpClient(withInterceptorsFromDi())],
+})
 export class AppModule {}

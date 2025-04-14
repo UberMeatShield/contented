@@ -3,7 +3,7 @@ import { By } from '@angular/platform-browser';
 import { RouterTestingModule } from '@angular/router/testing';
 import { EditorContentCmp } from './editor_content.cmp';
 import { DebugElement } from '@angular/core';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpClientTestingModule, HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { FormControl } from '@angular/forms';
 import { MockData } from '../test/mock/mock_data';
@@ -12,7 +12,6 @@ import { Content } from './content';
 import { ApiDef } from './api_def';
 
 import $ from 'jquery';
-import { describe } from 'vitest';
 
 describe('EditorContentCmp', () => {
   let fixture: ComponentFixture<EditorContentCmp>;
@@ -23,8 +22,8 @@ describe('EditorContentCmp', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [RouterTestingModule, HttpClientTestingModule, ContentedModule, NoopAnimationsModule],
-      providers: [],
+      imports: [RouterTestingModule, ContentedModule, NoopAnimationsModule],
+      providers: [provideHttpClientTesting()],
       declarations: [EditorContentCmp],
     }).compileComponents();
 
@@ -100,6 +99,7 @@ describe('EditorContentCmp', () => {
 
   it('Should be able to screen new screens', fakeAsync(() => {
     let content = new Content(MockData.videoContent());
+    expect(content.isVideo()).toBeTruthy();
     cmp.content = content;
     cmp.checkStates = false;
     fixture.detectChanges();
