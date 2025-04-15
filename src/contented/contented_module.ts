@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule, Title } from '@angular/platform-browser';
-import { HttpClientModule } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 
 import { MatCardModule } from '@angular/material/card';
@@ -82,7 +82,8 @@ export async function WaitForMonacoLoad() {
 
 // Kinda annoying this has to be configured like this but I suppose it ok.
 const monacoConfig: NgxMonacoEditorConfig = {
-  baseUrl: '/public/static',
+  baseUrl: '/public/static/monaco/min/vs',
+
   defaultOptions: {
     wordWrap: 'on',
     minimap: { enabled: false },
@@ -108,31 +109,6 @@ const monacoConfig: NgxMonacoEditorConfig = {
 };
 
 @NgModule({
-  imports: [
-    BrowserModule,
-    HttpClientModule,
-    FormsModule,
-    ReactiveFormsModule,
-    RouterModule,
-    MonacoEditorModule.forRoot(monacoConfig),
-    MatProgressBarModule,
-    MatCardModule,
-    MatButtonModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatIconModule,
-    MatPaginatorModule,
-    MatRippleModule,
-    MatProgressSpinnerModule,
-    MatAutocompleteModule,
-    MatToolbarModule,
-    MatTableModule,
-    MatSelectModule,
-    MatSnackBarModule,
-    MatMenuModule,
-    MatRadioModule,
-  ],
   declarations: [
     ContentBrowserCmp,
     ContentedNavCmp,
@@ -180,6 +156,30 @@ const monacoConfig: NgxMonacoEditorConfig = {
     VSCodeEditorCmp,
     ErrorHandlerCmp,
   ],
-  providers: [ContentedService, Title],
+  imports: [
+    BrowserModule,
+    FormsModule,
+    ReactiveFormsModule,
+    RouterModule,
+    MonacoEditorModule.forRoot(monacoConfig),
+    MatProgressBarModule,
+    MatCardModule,
+    MatButtonModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatIconModule,
+    MatPaginatorModule,
+    MatRippleModule,
+    MatProgressSpinnerModule,
+    MatAutocompleteModule,
+    MatToolbarModule,
+    MatTableModule,
+    MatSelectModule,
+    MatSnackBarModule,
+    MatMenuModule,
+    MatRadioModule,
+  ],
+  providers: [ContentedService, Title, provideHttpClient(withInterceptorsFromDi())],
 })
 export class ContentedModule {}

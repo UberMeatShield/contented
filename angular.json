@@ -9,23 +9,30 @@
       "projectType": "application",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:browser-esbuild",
+          "builder": "@angular/build:application",
           "options": {
-            "outputPath": "public/build",
+            "outputPath": {
+              "base": "public/build",
+              "browser": ""
+            },
             "index": "src/index.html",
-            "main": "src/main.ts",
             "tsConfig": "src/tsconfig.app.json",
-            "polyfills": "src/polyfills.ts",
+            "polyfills": [
+              "src/polyfills.ts"
+            ],
             "assets": ["src/assets", "src/favicon.ico"],
             "styles": ["src/scss/app-theme.scss", "src/scss/main.scss"],
             "scripts": [],
-            "allowedCommonJsDependencies": ["lodash", "moment", "d3"],
-            "vendorChunk": true,
+            "allowedCommonJsDependencies": [
+              "lodash",
+              "moment",
+              "d3"
+            ],
             "extractLicenses": false,
-            "buildOptimizer": false,
             "sourceMap": true,
             "optimization": true,
-            "namedChunks": true
+            "namedChunks": true,
+            "browser": "src/main.ts"
           },
           "configurations": {
             "dev": {
@@ -54,8 +61,6 @@
               "sourceMap": false,
               "namedChunks": false,
               "extractLicenses": true,
-              "vendorChunk": false,
-              "buildOptimizer": true,
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
@@ -66,7 +71,7 @@
           }
         },
         "serve": {
-          "builder": "@angular-devkit/build-angular:dev-server",
+          "builder": "@angular/build:dev-server",
           "options": {
             "buildTarget": "contented:build"
           },
@@ -80,7 +85,7 @@
           }
         },
         "extract-i18n": {
-          "builder": "@angular-devkit/build-angular:extract-i18n",
+          "builder": "@angular/build:extract-i18n",
           "options": {
             "buildTarget": "contented:build"
           }
