@@ -31,7 +31,8 @@ $content-theme: mat.define-theme((
   color: (
     theme-type: light,
     primary: mat.$azure-palette,
-    use-system-variables: true
+    use-system-variables: true,
+    system-variables-prefix: sys,
   ),
   typography: (
     plain-family: Roboto,
@@ -39,14 +40,16 @@ $content-theme: mat.define-theme((
     bold-weight: 800,
     medium-weight: 400,
     regular-weight: 200,
-    use-system-variables: true
+    use-system-variables: true,
+    system-variables-prefix: sys,
   ),
   density: (scale: -4)
 ));
 
 // Apply the theme
 :root {
-  @include mat.core();
+  @include mat.elevation-classes();
+  @include mat.app-background();
   @include mat.all-component-themes($content-theme);
   @include mat.system-level-colors($content-theme);
   @include mat.system-level-typography($content-theme);
