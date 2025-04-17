@@ -1,11 +1,11 @@
 {
-  "name": "Contented",
+  "name": "contented",
   "version": "0.0.1",
   "authors": [
     "UberMeatShield"
   ],
   "license": "BSD",
-  "description": "GoLang starter project with some @angular",
+  "description": "GoLang starter project with some @angular.io that helps with video encoding and previews",
   "scripts": {
     "lint": "ng lint",
     "test": "vitest"
