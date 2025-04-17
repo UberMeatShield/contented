@@ -102,9 +102,10 @@ monaco-copy:
 	rsync -u ./node_modules/monaco-editor/min/vs/loader.js ./public/static/monaco/min/vs/
 	rsync -u ./node_modules/monaco-editor/min/vs/editor/editor.main.js ./public/static/monaco/min/vs/editor/
 	rsync -u ./node_modules/monaco-editor/min/vs/editor/editor.main.css ./public/static/monaco/min/vs/editor/
-	rsync -u ./node_modules/monaco-editor/min/vs/editor/editor.main.nls.js public/static/monaco/min/vs/editor
 	rsync -u ./node_modules/monaco-editor/min/vs/base/worker/workerMain.js ./public/static/monaco/min/vs/base/worker/
-	rsync -u ./node_modules/monaco-editor/min/vs/base/common/worker/simpleWorker.nls.js ./public/static/monaco/min/vs/base/common/worker/
+	# nls no longer needed somehow?
+	#rsync -u ./node_modules/monaco-editor/min/vs/editor/editor.main.nls.js public/static/monaco/min/vs/editor
+	#rsync -u ./node_modules/monaco-editor/min/vs/base/common/worker/simpleWorker.nls.js ./public/static/monaco/min/vs/base/common/worker/
 
 
 
