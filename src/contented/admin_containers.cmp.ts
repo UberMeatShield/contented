@@ -11,8 +11,9 @@ import { PageEvent } from '@angular/material/paginator';
 // TODO: When styling out the search add a hover and hover text to make it
 // more obvious when something can be clicked.
 @Component({
-  selector: 'admin-container-cmp',
-  templateUrl: './admin_containers.ng.html',
+    selector: 'admin-container-cmp',
+    templateUrl: './admin_containers.ng.html',
+    standalone: false
 })
 export class AdminContainersCmp implements OnInit {
   @Input() tags: Array<Tag> = [];

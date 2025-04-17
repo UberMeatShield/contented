@@ -9,8 +9,9 @@ import * as _ from 'lodash';
 import { getWindowSizes } from './common';
 
 @Component({
-  selector: 'screens-cmp',
-  templateUrl: 'screens.ng.html',
+    selector: 'screens-cmp',
+    templateUrl: 'screens.ng.html',
+    standalone: false
 })
 export class ScreensCmp implements OnInit {
   @Input() contentId: number = 0;

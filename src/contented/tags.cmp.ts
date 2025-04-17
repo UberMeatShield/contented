@@ -51,8 +51,9 @@ const editorOptions = {
 };
 
 @Component({
-  selector: 'tags-cmp',
-  templateUrl: './tags.ng.html',
+    selector: 'tags-cmp',
+    templateUrl: './tags.ng.html',
+    standalone: false
 })
 export class TagsCmp {
   // Route needs to exist

@@ -15,8 +15,9 @@ import { Container } from './container';
 import * as _ from 'lodash';
 
 @Component({
-  selector: 'splash-cmp',
-  templateUrl: './splash.ng.html',
+    selector: 'splash-cmp',
+    templateUrl: './splash.ng.html',
+    standalone: false
 })
 export class SplashCmp implements OnInit {
   @ViewChild('EDITOR') editor?: EditorComponent;

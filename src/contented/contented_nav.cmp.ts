@@ -11,8 +11,9 @@ import { map, startWith } from 'rxjs/operators';
 import _ from 'lodash';
 
 @Component({
-  selector: 'contented-nav',
-  templateUrl: 'contented_nav.ng.html',
+    selector: 'contented-nav',
+    templateUrl: 'contented_nav.ng.html',
+    standalone: false
 })
 export class ContentedNavCmp implements OnInit {
   @ViewChild(MatRipple) ripple: MatRipple | undefined;

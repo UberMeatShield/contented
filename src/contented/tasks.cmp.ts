@@ -8,8 +8,9 @@ import { FormBuilder, NgForm, FormControl, FormGroup } from '@angular/forms';
 import * as _ from 'lodash';
 
 @Component({
-  selector: 'tasks-cmp',
-  templateUrl: './tasks.ng.html',
+    selector: 'tasks-cmp',
+    templateUrl: './tasks.ng.html',
+    standalone: false
 })
 export class TasksCmp implements OnInit {
   constructor(
