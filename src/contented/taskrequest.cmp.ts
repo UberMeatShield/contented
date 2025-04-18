@@ -18,6 +18,7 @@ interface TaskRequestForm {
 @Component({
   selector: 'task-request-cmp',
   templateUrl: './taskrequest.ng.html',
+  standalone: false,
 })
 export class TaskRequestCmp implements OnInit {
   @Input() contentID: number = 0;

@@ -14,6 +14,7 @@ import _ from 'lodash';
 @Component({
   selector: 'content-browser',
   templateUrl: 'content_browser.ng.html',
+  standalone: false,
 })
 export class ContentBrowserCmp implements OnInit, OnDestroy {
   @Input() maxVisible: number = 2; // How many of the loaded containers should we be viewing

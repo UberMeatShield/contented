@@ -12,6 +12,7 @@ import { getWindowSizes } from './common';
 @Component({
   selector: 'container-cmp',
   templateUrl: 'container.ng.html',
+  standalone: false,
 })
 export class ContainerCmp implements OnInit, OnDestroy {
   @Input() container!: Container;

@@ -9,6 +9,7 @@ import * as _ from 'lodash';
 @Component({
   selector: 'admin-search-cmp',
   templateUrl: './search.ng.html',
+  standalone: false,
 })
 export class AdminSearchCmp extends SearchCmp {
   @Input() showToggleDuplicate: boolean = true;

@@ -13,6 +13,7 @@ import { PageEvent } from '@angular/material/paginator';
 @Component({
   selector: 'admin-container-cmp',
   templateUrl: './admin_containers.ng.html',
+  standalone: false,
 })
 export class AdminContainersCmp implements OnInit {
   @Input() tags: Array<Tag> = [];

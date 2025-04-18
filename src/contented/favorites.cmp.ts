@@ -15,6 +15,7 @@ import { getWindowSizes } from './common';
 @Component({
   selector: 'favorites-cmp',
   templateUrl: './favorites.ng.html',
+  standalone: false,
 })
 export class FavoritesCmp implements OnInit, OnDestroy {
   @Input() container: Container | undefined;

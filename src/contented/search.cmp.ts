@@ -18,6 +18,7 @@ import { getWindowSizes } from './common';
 @Component({
   selector: 'search-cmp',
   templateUrl: './search.ng.html',
+  standalone: false,
 })
 export class SearchCmp implements OnInit {
   // Route needs to exist
@@ -232,6 +233,7 @@ export class SearchCmp implements OnInit {
 @Component({
   selector: 'search-dialog',
   templateUrl: 'search_dialog.ng.html',
+  standalone: false,
 })
 export class SearchDialog implements AfterViewInit {
   public contentContainer: Content;
