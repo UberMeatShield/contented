@@ -16,9 +16,9 @@ import { Screen } from './screen';
 import * as _ from 'lodash';
 
 @Component({
-    selector: 'editor-content-cmp',
-    templateUrl: './editor_content.ng.html',
-    standalone: false
+  selector: 'editor-content-cmp',
+  templateUrl: './editor_content.ng.html',
+  standalone: false,
 })
 export class EditorContentCmp implements OnInit {
   @ViewChild('description') editor: VSCodeEditorCmp | undefined;

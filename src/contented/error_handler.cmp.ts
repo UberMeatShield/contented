@@ -17,9 +17,9 @@ interface DialogData {
 }
 
 @Component({
-    selector: 'error-handler-cmp',
-    templateUrl: 'error_handler.ng.html',
-    standalone: false
+  selector: 'error-handler-cmp',
+  templateUrl: 'error_handler.ng.html',
+  standalone: false,
 })
 export class ErrorHandlerCmp implements OnInit, OnDestroy {
   @Input() broadcast: MessageBroadcast | undefined;
@@ -110,9 +110,9 @@ export class ErrorHandlerCmp implements OnInit, OnDestroy {
 }
 
 @Component({
-    selector: 'error-dialog',
-    templateUrl: 'error_dialog.ng.html',
-    standalone: false
+  selector: 'error-dialog',
+  templateUrl: 'error_dialog.ng.html',
+  standalone: false,
 })
 export class ErrorDialogCmp implements AfterViewInit {
   public errors: Array<CountMessages>;

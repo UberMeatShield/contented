@@ -12,9 +12,9 @@ import { Container } from './container';
 import _ from 'lodash';
 
 @Component({
-    selector: 'preview-content-cmp',
-    templateUrl: './preview_content.ng.html',
-    standalone: false
+  selector: 'preview-content-cmp',
+  templateUrl: './preview_content.ng.html',
+  standalone: false,
 })
 export class PreviewContentCmp {
   @Input() content!: Content;

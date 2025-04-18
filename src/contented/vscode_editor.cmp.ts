@@ -23,9 +23,9 @@ import * as _ from 'lodash';
 import { Tag, VSCodeChange } from './content';
 
 @Component({
-    selector: 'vscode-editor-cmp',
-    templateUrl: './vscode_editor.ng.html',
-    standalone: false
+  selector: 'vscode-editor-cmp',
+  templateUrl: './vscode_editor.ng.html',
+  standalone: false,
 })
 export class VSCodeEditorCmp implements OnInit {
   // The mix of actual M$ monaco types and the ngx-monaco-editor-v2 is a little hard to

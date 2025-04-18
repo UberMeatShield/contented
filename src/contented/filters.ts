@@ -2,8 +2,8 @@ import { Pipe, PipeTransform } from '@angular/core';
 
 // https://gist.github.com/thomseddon/3511330
 @Pipe({
-    name: 'byteFormatter',
-    standalone: false
+  name: 'byteFormatter',
+  standalone: false,
 })
 export class ByteFormatterPipe implements PipeTransform {
   transform(bytes: string | number, precision: number): any {
@@ -28,8 +28,8 @@ export class ByteFormatterPipe implements PipeTransform {
 
 // From Brave AI results
 @Pipe({
-    name: 'durationFormat',
-    standalone: false
+  name: 'durationFormat',
+  standalone: false,
 })
 export class DurationFormatPipe implements PipeTransform {
   transform(value: number, inputType: 'ms' | 's', format: 'hhmmss' | 'ddhhmmss' | 'ddhhmmssLong' = 'hhmmss'): string {

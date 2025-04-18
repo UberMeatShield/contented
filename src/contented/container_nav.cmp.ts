@@ -11,9 +11,9 @@ import { GlobalBroadcast } from './global_message';
 import * as _ from 'lodash';
 
 @Component({
-    selector: 'container-nav',
-    templateUrl: 'container_nav.ng.html',
-    standalone: false
+  selector: 'container-nav',
+  templateUrl: 'container_nav.ng.html',
+  standalone: false,
 })
 export class ContainerNavCmp implements OnInit, OnDestroy {
   // This is actually required

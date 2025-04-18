@@ -21,9 +21,9 @@ import { ScreenAction, ScreenClickEvent, Screen } from './screen';
 import { getWindowSizes } from './common';
 
 @Component({
-    selector: 'contented-view',
-    templateUrl: './contented_view.ng.html',
-    standalone: false
+  selector: 'contented-view',
+  templateUrl: './contented_view.ng.html',
+  standalone: false,
 })
 export class ContentedViewCmp implements OnInit, OnDestroy {
   @Input() content?: Content;

@@ -7,9 +7,9 @@ import { finalize } from 'rxjs/operators';
 import { GlobalBroadcast } from './global_message';
 
 @Component({
-    selector: 'content-view',
-    templateUrl: './content_view.ng.html',
-    standalone: false
+  selector: 'content-view',
+  templateUrl: './content_view.ng.html',
+  standalone: false,
 })
 export class ContentViewCmp implements OnInit {
   @Input() content: Content | undefined;

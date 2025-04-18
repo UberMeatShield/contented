@@ -30,9 +30,9 @@ interface ScreenDialogData {
 }
 
 @Component({
-    selector: 'video-preview-cmp',
-    templateUrl: './video_preview.ng.html',
-    standalone: false
+  selector: 'video-preview-cmp',
+  templateUrl: './video_preview.ng.html',
+  standalone: false,
 })
 export class VideoPreviewCmp implements OnInit {
   // Is this preview the selected one
@@ -120,9 +120,9 @@ export class VideoPreviewCmp implements OnInit {
 }
 
 @Component({
-    selector: 'screen-dialog',
-    templateUrl: 'screen_dialog.ng.html',
-    standalone: false
+  selector: 'screen-dialog',
+  templateUrl: 'screen_dialog.ng.html',
+  standalone: false,
 })
 export class ScreenDialog implements AfterViewInit {
   public screen: Screen;

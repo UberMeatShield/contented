@@ -15,9 +15,9 @@ import * as _ from 'lodash';
 import { MatMenuTrigger } from '@angular/material/menu';
 
 @Component({
-    selector: 'video-browser-cmp',
-    templateUrl: './video_browser.ng.html',
-    standalone: false
+  selector: 'video-browser-cmp',
+  templateUrl: './video_browser.ng.html',
+  standalone: false,
 })
 export class VideoBrowserCmp implements OnInit, OnDestroy {
   // Route needs to exist
