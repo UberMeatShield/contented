@@ -40,7 +40,7 @@
     "@analogjs/vite-plugin-angular": "^1.7.0",
     "@analogjs/vitest-angular": "^1.7.0",
     "@angular-eslint/builder": "19.3.0",
-    "@angular-eslint/eslint-plugin": "18.4.3",
+    "@angular-eslint/eslint-plugin": "19.3.0",
     "@angular-eslint/eslint-plugin-template": "18.4.3",
     "@angular-eslint/schematics": "18.4.3",
     "@angular-eslint/template-parser": "18.4.3",
