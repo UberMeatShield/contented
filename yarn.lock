@@ -52,12 +52,12 @@
     "@angular-devkit/core" "19.2.7"
     rxjs "7.8.1"
 
-"@angular-devkit/architect@>= 0.1800.0 < 0.1900.0":
-  version "0.1802.18"
-  resolved "https://registry.yarnpkg.com/@angular-devkit/architect/-/architect-0.1802.18.tgz#e0b5f8a6b5227f5512a68d8174ea501e1b6ff09a"
-  integrity sha512-3OitvTddHp7bSqEGOJlH7Zqv07DdmZHktU2jsekjcbUxmoC1WIpWSYy+Bqyu7HjidJc0xVP7wyE/NPYkrwT5SA==
+"@angular-devkit/architect@>= 0.1900.0 < 0.2000.0":
+  version "0.1902.8"
+  resolved "https://registry.yarnpkg.com/@angular-devkit/architect/-/architect-0.1902.8.tgz#7c363c9e31f420f0ff88d7ebe2fc2fb601c3872f"
+  integrity sha512-0A1EhtC/A/N7ukOD+s04l7sCyeSF5llBupkZdksSfi5y56s8U6Lt7KuqrbsErkOKgaCWrP/+Ef8fo0RmYpnefQ==
   dependencies:
-    "@angular-devkit/core" "18.2.18"
+    "@angular-devkit/core" "19.2.8"
     rxjs "7.8.1"
 
 "@angular-devkit/core@18.2.18", "@angular-devkit/core@>= 18.0.0 < 19.0.0":
@@ -76,6 +76,18 @@
   version "19.2.7"
   resolved "https://registry.yarnpkg.com/@angular-devkit/core/-/core-19.2.7.tgz#f8a53906801b486a596038dd3e40d1276ffe4ce5"
   integrity sha512-WeX/7HuNooJ4UhvVdremj6it0cX3nreG0/5r3QfrQd5Tz3sCHnh/lO5TW31gHtSqVgPjBGmzSzsyZ1Mi0lI7FA==
+  dependencies:
+    ajv "8.17.1"
+    ajv-formats "3.0.1"
+    jsonc-parser "3.3.1"
+    picomatch "4.0.2"
+    rxjs "7.8.1"
+    source-map "0.7.4"
+
+"@angular-devkit/core@19.2.8", "@angular-devkit/core@>= 19.0.0 < 20.0.0":
+  version "19.2.8"
+  resolved "https://registry.yarnpkg.com/@angular-devkit/core/-/core-19.2.8.tgz#0dd367e754a8611e9d2529435aa4b8bc5b143496"
+  integrity sha512-kcxUHKf5Hi98r4gAvMP3ntJV8wuQ3/i6wuU9RcMP0UKUt2Rer5Ryis3MPqT92jvVVwg6lhrLIhXsFuWJMiYjXQ==
   dependencies:
     ajv "8.17.1"
     ajv-formats "3.0.1"
@@ -106,13 +118,13 @@
     ora "5.4.1"
     rxjs "7.8.1"
 
-"@angular-eslint/builder@18.4.3":
-  version "18.4.3"
-  resolved "https://registry.yarnpkg.com/@angular-eslint/builder/-/builder-18.4.3.tgz#800b8a68b464ddfc0d737b0ad38c7804b463d8e1"
-  integrity sha512-NzmrXlr7GFE+cjwipY/CxBscZXNqnuK0us1mO6Z2T6MeH6m+rRcdlY/rZyKoRniyNNvuzl6vpEsfMIMmnfebrA==
+"@angular-eslint/builder@19.3.0":
+  version "19.3.0"
+  resolved "https://registry.yarnpkg.com/@angular-eslint/builder/-/builder-19.3.0.tgz#38b150f3b5a815fb66bd2a7428d40c5c16662ff7"
+  integrity sha512-j9xNrzZJq29ONSG6EaeQHve0Squkm6u6Dm8fZgWP7crTFOrtLXn7Wxgxuyl9eddpbWY1Ov1gjFuwBVnxIdyAqg==
   dependencies:
-    "@angular-devkit/architect" ">= 0.1800.0 < 0.1900.0"
-    "@angular-devkit/core" ">= 18.0.0 < 19.0.0"
+    "@angular-devkit/architect" ">= 0.1900.0 < 0.2000.0"
+    "@angular-devkit/core" ">= 19.0.0 < 20.0.0"
 
 "@angular-eslint/bundled-angular-compiler@18.4.3":
   version "18.4.3"
