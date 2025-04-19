@@ -59,6 +59,9 @@ export class VSCodeEditorCmp implements OnInit {
   public problemTags: Array<Tag> = [];
   public tagLookup: { [id: string]: Tag } = {};
 
+  public editorHeight: number = 0;
+  public editorWidth: number = 0;
+
   constructor(
     public fb: FormBuilder,
     public _service: ContentedService
@@ -290,7 +293,7 @@ export class VSCodeEditorCmp implements OnInit {
     }
     _.delay(() => {
       this.fitContent();
-    }, 50);
+    }, 100);
 
     _.delay(() => {
       if (this.monacoEditor) {
@@ -320,7 +323,8 @@ export class VSCodeEditorCmp implements OnInit {
     if (!el || !this.monacoEditor) {
       return;
     }
-    let width = el.offsetWidth;
+    let width = el.offsetWidth || 800;
+    console.log('Width is acting freaky', width);
 
     let updateHeight = () => {
       let editor = this.monacoEditor;
@@ -333,8 +337,20 @@ export class VSCodeEditorCmp implements OnInit {
       // by the spacing of the render so it expands forever.
       //const contentHeight = Math.min(2000, this.monacoEditor.getContentHeight());
       let contentHeight = 19 * (lineCount + this.padLine);
+      console.log('What is the height?', contentHeight);
       el.style.height = `${contentHeight}px `;
       el.style.width = `${width}px `;
+
+      console.log('Need to figure out a height based on content length but also with a max height');
+
+      // TODO: Fix this
+      //something about the layout is not working either.
+
+      this.editorHeight = contentHeight;
+      this.editorWidth = width - 64;
+
+      console.log('Fit height is set to', this.editorHeight, 'and width is', this.editorWidth);
+
       editor?.layout({ width, height: contentHeight });
     };
 
