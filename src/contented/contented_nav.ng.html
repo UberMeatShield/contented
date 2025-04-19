@@ -83,7 +83,7 @@
   </button>&nbsp;&nbsp;
 
   <span class="nav-title">{{title}}</span>
-  <form *ngIf="containers" class="container-search-form" (keypress)="$event.stopPropagation()">
+  <form *ngIf="containers && containers.length > 0" class="container-search-form" (keypress)="$event.stopPropagation()">
     <mat-form-field class="container-nav-search" appearance="outline">
       <input type="text"
         placeholder="Navigate to container"
