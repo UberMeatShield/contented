@@ -154,7 +154,6 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
 
     if (this.forceHeight > 0) {
       // Probably need to do this off the current overall container
-      console.log('Force height', this.forceWidth, this.forceHeight);
       this.maxHeight = this.forceHeight;
     } else {
       this.maxHeight = height - 20 > 0 ? height - 64 : 480;

@@ -7,29 +7,29 @@
     <div *ngIf="content"
       class="content-full-view" 
       [style.width]="maxWidth + 'px'"
-      [style.height]="maxHeight + 'px'"
     >
 
         <img class="content-img" *ngIf="content?.isImage()" 
           class="full-view-img content-img" 
           [src]="content.fullUrl"
+          [style.height]="maxHeight + 'px'"
         >
 
         <!-- TODO: should the fullscreen for a video should be totally different? -->
         <video #VIDEOELEMENT *ngIf="content.isVideo()" 
           id="VIDEO_{{content.id}}"
           class="content-video"
-          [width]="maxWidth"
-          [height]="maxHeight"
+          [style.width]="maxWidth + 'px'"
+          [style.height]="maxHeight + 'px'"
           controls>
           <source [src]="content.fullUrl" [type]="content.content_type">
         </video>
 
 
-        <div *ngIf="content.isText() && content.fullText">
+        <div *ngIf="content.isText() && content.fullText" class="full-text-editor">
         <!-- Should make it so it just raw loads text info. -->
           <vscode-editor-cmp 
-            *ngIf="content.isText()"
+            [style.width]="maxWidth + 'px'"
             [editorValue]="content.fullText"
             [readOnly]="true"
           ></vscode-editor-cmp>
