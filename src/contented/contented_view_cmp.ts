@@ -43,43 +43,43 @@ export class ContentedViewCmp implements OnInit, OnDestroy {
   // Provide a custom width and height calculation option
   constructor(public _service: ContentedService) {}
 
-  public shouldIgnoreEvt(content: Content): Content | undefined {
+  public shouldIgnoreEvt(content: Content | undefined): boolean {
     if (this.restrictContentId > 0) {
-      if ((!content || content.id !== this.restrictContentId, 10)) {
-        return undefined;
+      if (!content || content.id !== this.restrictContentId) {
+        return true;
       }
     }
-    return content || this.content;
+    return false;
   }
 
   public ngOnInit() {
     this.sub = GlobalNavEvents.navEvts.subscribe({
       next: (evt: NavEventMessage) => {
         // Restrict content ID might need to be a bit smarter
-        const content = evt.content ? this.shouldIgnoreEvt(evt.content) : undefined;
+        if (this.shouldIgnoreEvt(evt.content)) {
+          return;
+        }
+
+        const content = evt.content;
         switch (evt.action) {
           case NavTypes.VIEW_FULLSCREEN:
-            if (this.content) {
+            if (content) {
               // Akward but without a digest it will NOT change the video if it is already playing
-              this.content = undefined;
+              this.content = content;
               setTimeout(() => {
-                content && this.selectFullScreenContent(content, evt.screen);
+                this.selectFullScreenContent(content, evt.screen);
               }, 50);
-            } else {
-              content && this.selectFullScreenContent(content, evt.screen);
             }
-
             break;
 
           case NavTypes.HIDE_FULLSCREEN:
-            console.log('Hide fullscreen', this.content);
-            if (this.visible && this.content) {
-              GlobalNavEvents.scrollContentView(this.content);
+            if (this.visible && content) {
+              GlobalNavEvents.scrollContentView(evt.content);
             }
             this.visible = false;
             break;
           case NavTypes.SELECT_MEDIA:
-            this.content = evt.content;
+            this.content = content;
             break;
         }
       },
