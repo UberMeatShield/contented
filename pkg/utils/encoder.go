@@ -173,7 +173,7 @@ func GetVideoConversionName(srcFile string) string {
 //   - (encoded: bool) : Did actual encoding take place vs just 'should not do it (ie: already encoded)'
 func ConvertVideoToH265(srcFile string, dstFile string) (string, error, bool) {
 	reason, err, shouldConvert := ShouldEncodeVideo(srcFile, dstFile)
-	if shouldConvert == false {
+	if shouldConvert {
 		log.Printf("Not converting %s", reason)
 		return reason, err, shouldConvert
 	}
@@ -181,6 +181,10 @@ func ConvertVideoToH265(srcFile string, dstFile string) (string, error, bool) {
 	// If codec in list of conversion codecs, then do it
 	cfg := config.GetCfg()
 	log.Printf("About to convert %s to codec %s", reason, cfg.CodecForConversion)
+
+	// ffmpeg -hwaccel cuvid -hwaccel_output_format cuda -c:v hevc_nvenc -preset slow -movflags faststart output.mp4
+	// Might need a new version of the ffmpeg-go library
+
 	encode_err := ffmpeg.Input(srcFile).
 		Output(dstFile, ffmpeg.KwArgs{"c:v": cfg.CodecForConversion, "tag:v": "hvc1"}).
 		GlobalArgs("-loglevel", "quiet").

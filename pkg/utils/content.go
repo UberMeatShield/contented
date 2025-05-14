@@ -88,7 +88,7 @@ func FindContentMatcher(cnt models.Container, limit int64, start_offset int, yup
 
 	// TODO: Move away from "img" into something else
 	total := 0
-	imgs := []os.FileInfo{} // To get indexing 'right' you have to exlcude directories
+	imgs := []os.FileInfo{} // To get indexing 'right' you have to exclude directories
 	for _, img := range maybe_content {
 		if !img.IsDir() {
 			info, _ := img.Info()
@@ -173,8 +173,16 @@ func SniffFileType(content *os.File) (string, error) {
 	return ctype, nil
 }
 
-// This is a little slow so the video info might need to be a lazy load
+// This is a little slow using the memory library so there needs to be some optimizations
 func GetContent(id int64, fileInfo os.FileInfo, path string) models.Content {
+	return GetContentOptionalMetadata(id, fileInfo, path, true)
+}
+
+/**
+ * Get a content object with optional metadata. If you have a LOT of content loading the image and video metadata
+ * can take a very long time so this allows you to load the content without the metadata.
+ */
+func GetContentOptionalMetadata(id int64, fileInfo os.FileInfo, path string, withMetadata bool) models.Content {
 	// https://golangcode.com/get-the-content-type-of-file/
 	contentType, err := GetMimeType(path, fileInfo.Name())
 	if err != nil {
@@ -184,27 +192,29 @@ func GetContent(id int64, fileInfo os.FileInfo, path string) models.Content {
 
 	// I could do an ffmpeg.Probe(srcFile) to determine encoding and resolution
 	// For images I could try and probe the encoding & resolution
-
 	meta := ""
 	encoding := ""
 	corrupt := false
 	duration := 0.0
 	srcFile := filepath.Join(path, fileInfo.Name())
-	if strings.Contains(contentType, "image") {
-		// TODO: Determine if we can use the image library to get some information about the file.
-		meta, corrupt = GetImageMeta(srcFile)
-	} else if strings.Contains(contentType, "video") {
-		vidInfo, probeErr := GetVideoInfo(srcFile)
-		if probeErr == nil {
-			meta = vidInfo
-			encoding = gjson.Get(meta, "streams.0.codec_name").String() // hate
-			duration = gjson.Get(meta, "format.duration").Float()
-		} else {
-			meta = fmt.Sprintf("Failed to probe video %s", probeErr)
-			corrupt = true
+
+	//
+	if withMetadata {
+		if strings.Contains(contentType, "image") {
+			// TODO: Determine if we can use the image library to get some information about the file.
+			meta, corrupt = GetImageMeta(srcFile)
+		} else if strings.Contains(contentType, "video") {
+			vidInfo, probeErr := GetVideoInfo(srcFile)
+			if probeErr == nil {
+				meta = vidInfo
+				encoding = gjson.Get(meta, "streams.0.codec_name").String() // hate
+				duration = gjson.Get(meta, "format.duration").Float()
+			} else {
+				meta = fmt.Sprintf("Failed to probe video %s", probeErr)
+				corrupt = true
+			}
 		}
 	}
-
 	id = AssignNumerical(id, "contents")
 	content := models.Content{
 		ID:          id,
