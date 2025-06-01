@@ -173,7 +173,7 @@ func GetVideoConversionName(srcFile string) string {
 //   - (encoded: bool) : Did actual encoding take place vs just 'should not do it (ie: already encoded)'
 func ConvertVideoToH265(srcFile string, dstFile string) (string, error, bool) {
 	reason, err, shouldConvert := ShouldEncodeVideo(srcFile, dstFile)
-	if shouldConvert {
+	if !shouldConvert {
 		log.Printf("Not converting %s", reason)
 		return reason, err, shouldConvert
 	}
@@ -182,13 +182,29 @@ func ConvertVideoToH265(srcFile string, dstFile string) (string, error, bool) {
 	cfg := config.GetCfg()
 	log.Printf("About to convert %s to codec %s", reason, cfg.CodecForConversion)
 
-	// ffmpeg -hwaccel cuvid -hwaccel_output_format cuda -c:v hevc_nvenc -preset slow -movflags faststart output.mp4
+	// ffmpeg
+	//	-hwaccel cuvid
+	//	-hwaccel_output_format cuda
+	//	-c:v hevc_nvenc -preset slow -movflags faststart output.mp4
 	// Might need a new version of the ffmpeg-go library
 
-	encode_err := ffmpeg.Input(srcFile).
-		Output(dstFile, ffmpeg.KwArgs{"c:v": cfg.CodecForConversion, "tag:v": "hvc1"}).
-		GlobalArgs("-loglevel", "quiet").
-		OverWriteOutput().ErrorToStdOut().Run()
+	var encode_err error
+	if cfg.CodecForConversion == "hevc_nvenc" {
+		kwArgs := ffmpeg.KwArgs{"c:v": cfg.CodecForConversion, "tag:v": "hvc1", "preset": "slow", "movflags": "faststart"}
+
+		encode_err = ffmpeg.Input(srcFile).
+			Output(dstFile, kwArgs).
+			GlobalArgs("-hwaccel", "cuda").
+			GlobalArgs("-hwaccel_device", fmt.Sprintf("%d", 0)).
+			GlobalArgs("-hwaccel_output_format", "cuda").
+			GlobalArgs("-loglevel", "quiet").
+			OverWriteOutput().ErrorToStdOut().Run()
+	} else {
+		encode_err = ffmpeg.Input(srcFile).
+			Output(dstFile, ffmpeg.KwArgs{"c:v": cfg.CodecForConversion, "tag:v": "hvc1"}).
+			GlobalArgs("-loglevel", "quiet").
+			OverWriteOutput().ErrorToStdOut().Run()
+	}
 
 	if encode_err != nil {
 		log.Printf("Encoding error when actually running ffmpeg  %s", encode_err)
