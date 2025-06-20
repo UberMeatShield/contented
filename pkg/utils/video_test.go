@@ -8,7 +8,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/gjson"
+	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
 func nukeFile(dstFile string) {
@@ -49,7 +51,8 @@ func Test_VideoEncoding(t *testing.T) {
 	// Check if the dstFile exists and delete it if it does.
 
 	cfg := config.GetCfg()
-	cfg.CodecForConversion = "hevc_nvenc"
+	cfg.CodecForConversion = "libx265" // For testing in CI
+	//cfg.CodecForConversionName = "libx265" for testing if you have a working nvida setup hevc_nvenc
 	config.SetCfg(*cfg)
 
 	msg, err, encoded := ConvertVideoToH265(srcFile, dstFile)
@@ -66,40 +69,38 @@ func Test_VideoEncoding(t *testing.T) {
 		t.Errorf("It should have encoded but something went wrong: %s, err: %s", msg, err)
 	}
 
-	/*
-		vidInfo, err := ffmpeg.Probe(dstFile)
-		assert.NoError(t, err, fmt.Sprintf("Failed to probe dstFile %s", dstFile))
+	vidInfo, err := ffmpeg.Probe(dstFile)
+	assert.NoError(t, err, fmt.Sprintf("Failed to probe dstFile %s", dstFile))
 
-		totalTimeSrc, _, _ := GetTotalVideoLength(srcFile)
-		totalTimeDst, _, _ := GetTotalVideoLength(dstFile)
-		if totalTimeSrc != totalTimeDst {
-			t.Errorf("Invalid output times are different %f vs %f", totalTimeSrc, totalTimeDst)
-		}
-		codecName := gjson.Get(vidInfo, "streams.0.codec_name").String()
-		if codecName != "hevc" {
-			t.Errorf("Failed encoding %s dstFile: %s was not the requested codec %s but %s", cfg.CodecForConversionName, dstFile, cfg.CodecForConversion, codecName)
-		}
+	totalTimeSrc, _, _ := GetTotalVideoLength(srcFile)
+	totalTimeDst, _, _ := GetTotalVideoLength(dstFile)
+	if totalTimeSrc != totalTimeDst {
+		t.Errorf("Invalid output times are different %f vs %f", totalTimeSrc, totalTimeDst)
+	}
+	codecName := gjson.Get(vidInfo, "streams.0.codec_name").String()
+	if codecName != "hevc" {
+		t.Errorf("Failed encoding %s dstFile: %s was not the requested codec %s but %s", cfg.CodecForConversionName, dstFile, cfg.CodecForConversion, codecName)
+	}
 
-		// Now check if we think the srcFile is a duplicate
-		isDuplicate, dupeErr := IsDuplicateVideo(dstFile, srcFile)
-		if dupeErr != nil {
-			t.Errorf("The srcFile had an error when determining if it was a dupe %s", dupeErr)
-		}
-		if isDuplicate == false {
-			t.Errorf("The srcFile was not detected as a duplicate and it should be a candidate for removal")
-		}
+	// Now check if we think the srcFile is a duplicate
+	isDuplicate, dupeErr := IsDuplicateVideo(dstFile, srcFile)
+	if dupeErr != nil {
+		t.Errorf("The srcFile had an error when determining if it was a dupe %s", dupeErr)
+	}
+	if isDuplicate == false {
+		t.Errorf("The srcFile was not detected as a duplicate and it should be a candidate for removal")
+	}
 
-		shouldNotEncodeTwice := dstFile + "ShouldNotEncodeAlreadyDone.mp4"
-		checkMsg, err, encoded := ConvertVideoToH265(dstFile, shouldNotEncodeTwice)
-		if !strings.Contains(checkMsg, "ignored because it matched") || err != nil {
-			t.Errorf("This should be encoded as hevc and shouldn't work %s err: %s", checkMsg, err)
-		}
-		if encoded == true {
-			t.Errorf("It should not consider an already encoded file as something converted")
-		}
-		nukeFile(dstFile)
-		nukeFile(shouldNotEncodeTwice) // If it did encode it should error out blow it up anyway
-	*/
+	shouldNotEncodeTwice := dstFile + "ShouldNotEncodeAlreadyDone.mp4"
+	checkMsg, err, encoded := ConvertVideoToH265(dstFile, shouldNotEncodeTwice)
+	if !strings.Contains(checkMsg, "ignored because it matched") || err != nil {
+		t.Errorf("This should be encoded as hevc and shouldn't work %s err: %s", checkMsg, err)
+	}
+	if encoded == true {
+		t.Errorf("It should not consider an already encoded file as something converted")
+	}
+	nukeFile(dstFile)
+	nukeFile(shouldNotEncodeTwice) // If it did encode it should error out blow it up anyway
 }
 
 func Test_VideoEncodingNotMatching(t *testing.T) {
