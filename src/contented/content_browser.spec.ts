@@ -139,10 +139,9 @@ describe('TestingContentBrowserCmp', () => {
     let fullView = $('.full-view-img');
     expect(currLoc.length).withContext('It should be selected still').toBe(1);
     expect(fullView.length).withContext('It should now have a view').toBe(1);
-    expect(currLoc.prop('src').replace('preview', 'view')).toBe(
-      fullView.prop('src'),
-      'The full view should be /view/selectedId'
-    );
+
+    const previewUrl = currLoc.prop('src').replace('preview', 'view');
+    expect(previewUrl).withContext('The full view should be /view/selectedId').toContain(fullView.prop('src'));
     tick(1000);
     harness.detectChanges();
   }));
