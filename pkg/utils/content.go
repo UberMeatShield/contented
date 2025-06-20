@@ -225,6 +225,8 @@ func GetContentOptionalMetadata(id int64, fileInfo os.FileInfo, path string, wit
 		Duration:    duration,
 		Corrupt:     corrupt,
 		Encoding:    encoding,
+		CreatedAt:   fileInfo.ModTime(),
+		UpdatedAt:   fileInfo.ModTime(),
 	}
 	return content
 }

@@ -192,8 +192,8 @@ export const ContentSchema = z.object({
   meta: z.string().optional(),
   fullText: z.string().default('').optional(),
 
-  created_at: z.string().optional(),
-  updated_at: z.string().optional(),
+  created_at: z.coerce.date().optional(),
+  updated_at: z.coerce.date().optional(),
   duplicate: z.boolean().default(false),
 });
 
@@ -213,8 +213,8 @@ export class Content implements ContentInterface {
   tags: Tag[] = [];
   meta: string = '';
   fullText: string = '';
-  created_at: string = '';
-  updated_at: string = '';
+  created_at: Date = new Date();
+  updated_at: Date = new Date();
   duplicate: boolean = false;
   videoInfoParsed: VideoCodecInfo | undefined = undefined;
 
@@ -248,7 +248,7 @@ export class Content implements ContentInterface {
   }
 
   get previewUrl() {
-    return `${ApiDef.contented.preview}${this.id}`;
+    return `${ApiDef.contented.preview}${this.id}?updated_at=${this.updated_at?.getTime()}`;
   }
 
   get fullUrl() {

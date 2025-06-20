@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -25,6 +26,8 @@ func CreateContentNamed(src string, containerID *int64, t *testing.T, router *gi
 		Preview:     "",
 		ContainerID: containerID,
 		NoFile:      true,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 	return CreateContent(mc, t, router)
 }
@@ -142,6 +145,12 @@ func TestMemoryAPIBasics(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, searchCode, "It should search")
 	assert.Equal(t, 5, len(*validateSearch.Results), fmt.Sprintf("In memory should have these %s", validateSearch))
+
+	// Ensure that we are actually providing an updated time
+	fiveYearsAgo := time.Now().AddDate(-5, 0, 0)
+	for _, content := range validate.Results {
+		assert.Greater(t, content.UpdatedAt, fiveYearsAgo, "UpdatedAt should be greater than CreatedAt now")
+	}
 }
 
 func TestContentsResourceListDB(t *testing.T) {
@@ -210,6 +219,8 @@ func ValidateUpdateContent(t *testing.T, router *gin.Engine) {
 	tags := validate.Tags
 	assert.NotNil(t, tags, "There should be tags associated now")
 	assert.Equal(t, 1, len(tags), "There should be 1 tag actually in the DB")
+
+	assert.Greater(t, validate.UpdatedAt, validate.CreatedAt, "UpdatedAt should be greater than CreatedAt now")
 }
 
 func TestContentsResourceDestroyDB(t *testing.T) {
@@ -303,7 +314,6 @@ func TestActionsDbContentScreensDestroy(t *testing.T) {
 func ValidateContentScreensDestroy(t *testing.T, router *gin.Engine) {
 	containerPreviews, testDir := test_common.CreateTestPreviewsContainerDirectory(t)
 	utils.ResetPreviewDir(containerPreviews)
-	print("WHAT IS THE PREVIEW DIRECTORY %s", containerPreviews)
 
 	container := models.Container{
 		Name: "dir2",
