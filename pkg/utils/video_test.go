@@ -49,6 +49,12 @@ func Test_VideoEncoding(t *testing.T) {
 
 	nukeFile(dstFile)
 	// Check if the dstFile exists and delete it if it does.
+
+	cfg := config.GetCfg()
+	cfg.CodecForConversion = "libx265" // For testing in CI
+	//cfg.CodecForConversionName = "libx265" for testing if you have a working nvida setup hevc_nvenc
+	config.SetCfg(*cfg)
+
 	msg, err, encoded := ConvertVideoToH265(srcFile, dstFile)
 	if err != nil {
 		t.Errorf("Failed to convert %s", err)
@@ -63,7 +69,6 @@ func Test_VideoEncoding(t *testing.T) {
 		t.Errorf("It should have encoded but something went wrong: %s, err: %s", msg, err)
 	}
 
-	cfg := config.GetCfg()
 	vidInfo, err := ffmpeg.Probe(dstFile)
 	assert.NoError(t, err, fmt.Sprintf("Failed to probe dstFile %s", dstFile))
 
@@ -74,7 +79,7 @@ func Test_VideoEncoding(t *testing.T) {
 	}
 	codecName := gjson.Get(vidInfo, "streams.0.codec_name").String()
 	if codecName != "hevc" {
-		t.Errorf("Failed encoding %s dstFile: %s was not hevc but %s", cfg.CodecForConversion, dstFile, codecName)
+		t.Errorf("Failed encoding %s dstFile: %s was not the requested codec %s but %s", cfg.CodecForConversionName, dstFile, cfg.CodecForConversion, codecName)
 	}
 
 	// Now check if we think the srcFile is a duplicate
