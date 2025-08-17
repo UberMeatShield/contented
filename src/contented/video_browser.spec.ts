@@ -21,7 +21,7 @@ import { MockData } from '../test/mock/mock_data';
 import { ContainerSchema } from './container';
 import { describe } from 'vitest';
 
-describe.only('TestingVideoBrowserCmp', () => {
+describe('TestingVideoBrowserCmp', () => {
   let fixture: ComponentFixture<VideoBrowserCmp>;
   let service: ContentedService;
   let comp: VideoBrowserCmp;
