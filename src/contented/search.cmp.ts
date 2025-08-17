@@ -1,7 +1,17 @@
 import { Subscription } from 'rxjs';
 import { finalize, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
-import { Input, OnInit, AfterViewInit, Component, HostListener, ViewChild, Inject, ElementRef, OnDestroy } from '@angular/core';
+import {
+  Input,
+  OnInit,
+  AfterViewInit,
+  Component,
+  HostListener,
+  ViewChild,
+  Inject,
+  ElementRef,
+  OnDestroy,
+} from '@angular/core';
 import { ContentedService, ContentSearchSchema } from './contented_service';
 import { Content, Tag, VSCodeChange } from './content';
 import { ActivatedRoute, Router, ParamMap } from '@angular/router';

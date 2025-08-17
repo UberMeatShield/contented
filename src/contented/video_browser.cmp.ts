@@ -68,7 +68,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
       if (this.isDestroyed) {
         return;
       }
-      
+
       // Do not change this.searchText it will re-assign the VS-Code editor in a
       // bad way and muck with the cursor.
       this.search(evt.value, this.offset, this.pageSize, this.getCntId(), evt.tags);
@@ -92,12 +92,12 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
   }
   ngOnDestroy() {
     this.isDestroyed = true;
-    
+
     if (this.sub) {
       this.sub.unsubscribe();
       this.sub = undefined;
     }
-    
+
     // Cancel any pending debounced operations
     if (this.changedSearch && (this.changedSearch as any).cancel) {
       (this.changedSearch as any).cancel();
@@ -124,7 +124,6 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
   public toggleDuplicate(content: Content) {
     GlobalNavEvents.toggleDuplicate(content);
   }
-
 
   public loadContainers() {
     this._contentedService.getContainers().subscribe({
