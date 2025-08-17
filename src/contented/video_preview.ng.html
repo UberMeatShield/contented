@@ -37,7 +37,7 @@
             {{content.content_type}}
           </div>
 
-          <div class="video-view-screens">
+          <div class="video-view-screens" *ngIf="allowScreens">
             <screens-cmp 
               [contentId]="content.id"
               [screens]="content.screens"

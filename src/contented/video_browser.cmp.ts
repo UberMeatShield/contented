@@ -14,6 +14,8 @@ import { PageEvent as PageEvent } from '@angular/material/paginator';
 import * as _ from 'lodash';
 import { MatMenuTrigger } from '@angular/material/menu';
 
+const MAX_VISIBLE = 50;
+
 @Component({
   selector: 'video-browser-cmp',
   templateUrl: './video_browser.ng.html',
@@ -38,16 +40,17 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
 
   public selectedContent: Content | undefined; // For keeping track of where we are in the page
   public selectedContainer: Container | undefined; // For filtering
-  public content: Array<Content> = [];
+  public content: Array<Content> | undefined;
   public containers: Array<Container> = [];
 
   // TODO: Make this a saner calculation
-  public maxVisible = 3; // How many results show vertically
   public total = 0;
   public offset = 0; // Tracking where we are in the position
-  public pageSize = 50;
+  public pageSize = MAX_VISIBLE;
   public loading: boolean = false;
   public sub: Subscription | undefined; // Listening for GlobalNavEvents
+
+  public screenLoadQueue: Array<Content> = [];
 
   constructor(
     public _contentedService: ContentedService,
@@ -62,19 +65,21 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     this.changedSearch = _.debounce((evt: VSCodeChange) => {
       // Do not change this.searchText it will re-assign the VS-Code editor in a
       // bad way and muck with the cursor.
-      this.search(evt.value, 0, 50, this.getCntId(), evt.tags);
+      this.search(evt.value, this.offset, this.pageSize, this.getCntId(), evt.tags);
       this.currentTextChange = evt;
-    }, 250);
+    }, 100);
 
     // This should also preserve the current page we have selected and restore it.
     this.resetForm();
     this.setupEvtListener();
+
     this.route.queryParams.pipe().subscribe({
       next: (res: Params) => {
+        console.log('Query params', res);
         this.searchText = res['searchText'] || '';
 
         // Add in a param for container_id ?
-        // this.search(this.searchText, this.offset, this.pageSize, this.getCntId());
+        this.changedSearch({ value: this.searchText, tags: [] });
         this.loadContainers();
       },
     });
@@ -262,14 +267,12 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
   public search(
     text: string = '',
     offset: number = 0,
-    limit: number = 50,
+    limit: number = MAX_VISIBLE,
     cntId: string = '',
     tags: Array<string> = []
   ) {
-    console.log('Get the information from the input and search on it', text, offset, limit, cntId);
-
     this.selectedContent = undefined;
-    this.content = [];
+    this.content = undefined;
     this.loading = true;
 
     const cs = ContentSearchSchema.parse({
@@ -292,6 +295,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
           this.offset = offset;
           this.content = content;
           this.total = total;
+          this.playNiceScreenLoader(content);
 
           if (content && content.length > 0) {
             let mc = content[0];
@@ -302,6 +306,36 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
           GlobalBroadcast.error('Failed to search for video content.', err);
         },
       });
+  }
+
+  // I need to make a screen nice loader so it loads the current screens and then one by one
+  // loads additional screen information. The first 2-3 in the page can load but then the rest
+  // should kick off a bit later.
+  public allowLoad: { [key: string]: boolean } = {};
+  public allowLoadedCount = 5;
+  public playNiceScreenLoader(content: Content[]) {
+    if (content.length === 0) {
+      return;
+    }
+    // Grab up to 3 + number loaded and set them to allow loading
+    for (let i = 0; i < this.allowLoadedCount && i < content.length; ++i) {
+      this.allowLoad[content[i].id] = true;
+    }
+  }
+
+  public onLoadedScreensComplete(content: Content) {
+    // This content has loaded the screens
+    this.allowLoadedCount++;
+
+    // This should probably be in a debounce / delay but good enough for 10 or so per page
+    // It was real sketchy when it was 50 x 12+ screens
+    _.delay(() => {
+      this.playNiceScreenLoader(this.content || []);
+    }, 1500);
+  }
+
+  public shouldLoadScreens(content: Content): boolean {
+    return this.allowLoad[content.id] || false;
   }
 
   // This will have to be updated to actually work

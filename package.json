@@ -13,6 +13,9 @@
   "homepage": "",
   "private": true,
   "dependencies": {
+    "@analogjs/platform": "^1.19.4",
+    "@analogjs/vite-plugin-angular": "^1.19.4",
+    "@analogjs/vitest-angular": "^1.19.4",
     "@angular/animations": "^19.2.6",
     "@angular/cdk": "^19.2.10",
     "@angular/common": "^19.2.6",
@@ -36,9 +39,6 @@
     "zone.js": "~0.15.0"
   },
   "devDependencies": {
-    "@analogjs/platform": "^1.15.1",
-    "@analogjs/vite-plugin-angular": "^1.7.0",
-    "@analogjs/vitest-angular": "^1.7.0",
     "@angular-eslint/builder": "19.3.0",
     "@angular-eslint/eslint-plugin": "19.3.0",
     "@angular-eslint/eslint-plugin-template": "19.3.0",

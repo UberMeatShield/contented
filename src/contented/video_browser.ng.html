@@ -49,11 +49,17 @@
   <!-- Hidden unless the user expands it -->
   <contented-view></contented-view>
 
-  <video-preview-cmp 
-    [selected]="selectedContent?.id === content.id"
-    [maxVisible]="3"
-    [content]="content"
-    *ngFor="let content of getVisibleSet()"
-    (contextmenu)="onContextMenu($event, content)"
-  ></video-preview-cmp>
+  <div *ngIf="content && content.length > 0">
+    <video-preview-cmp 
+      [selected]="selectedContent?.id === content.id"
+      [content]="content"
+      *ngFor="let content of getVisibleSet()"
+      [allowScreens]="shouldLoadScreens(content)"
+      (loadedScreensComplete)="onLoadedScreensComplete(content)"
+      (contextmenu)="onContextMenu($event, content)"
+    ></video-preview-cmp>
+  </div>
+  <div *ngIf="content && content.length === 0">
+    <p>No content found</p>
+  </div>
 </div>

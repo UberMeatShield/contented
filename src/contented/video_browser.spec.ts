@@ -1,6 +1,5 @@
 import { fakeAsync, getTestBed, tick, ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { HttpParams } from '@angular/common/http';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
@@ -22,7 +21,7 @@ import { MockData } from '../test/mock/mock_data';
 import { ContainerSchema } from './container';
 import { describe } from 'vitest';
 
-describe('TestingVideoBrowserCmp', () => {
+describe.only('TestingVideoBrowserCmp', () => {
   let fixture: ComponentFixture<VideoBrowserCmp>;
   let service: ContentedService;
   let comp: VideoBrowserCmp;
@@ -35,7 +34,7 @@ describe('TestingVideoBrowserCmp', () => {
   let harness: RouterTestingHarness;
 
   beforeEach(async () => {
-    TestBed.configureTestingModule({
+    await TestBed.configureTestingModule({
       imports: [FormsModule, ContentedModule, HttpClientTestingModule, NoopAnimationsModule],
       providers: [ContentedService, provideRouter([{ path: 'ui/video/', component: VideoBrowserCmp }])],
       teardown: { destroyAfterEach: true },
@@ -45,6 +44,7 @@ describe('TestingVideoBrowserCmp', () => {
     service = TestBed.inject(ContentedService);
     httpMock = TestBed.inject(HttpTestingController);
     loc = TestBed.inject(Location);
+    router = TestBed.inject(Router);
   });
 
   afterEach(() => {
@@ -53,7 +53,6 @@ describe('TestingVideoBrowserCmp', () => {
 
   it('Should load containers', () => {
     const containerResult = MockData.getContainers();
-
     containerResult.results.forEach(c => {
       const container = ContainerSchema.safeParse(c);
       expect(container.success)

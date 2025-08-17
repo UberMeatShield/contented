@@ -13,11 +13,8 @@ import {
 } from '@angular/core';
 import { ContentedService } from './contented_service';
 import { Content } from './content';
-import { Container } from './container';
 import { Screen, ScreenAction, ScreenClickEvent } from './screen';
-import { GlobalNavEvents, NavTypes } from './nav_events';
-import { ActivatedRoute, Router, ParamMap } from '@angular/router';
-import { FormBuilder, NgForm, FormControl, FormGroup } from '@angular/forms';
+import { GlobalNavEvents } from './nav_events';
 
 import { PageEvent as PageEvent } from '@angular/material/paginator';
 import { MatDialog as MatDialog, MatDialogConfig as MatDialogConfig, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -38,11 +35,13 @@ export class VideoPreviewCmp implements OnInit {
   // Is this preview the selected one
   @Input() selected = false;
   @Input() content?: Content;
-
+  @Input() allowScreens = true;
   // Used to show that only a certain number are visible on the page at a given time
   // which is used to sort of set a height on the components.
   @Input() maxVisible = 2;
   @Input() inlineView = false;
+
+  @Output() loadedScreensComplete: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   // TODO: Make this a saner calculation
   public previewWidth = 480;
@@ -53,13 +52,12 @@ export class VideoPreviewCmp implements OnInit {
 
   public screensLoaded(screens: Screen[]): void {
     if (this.content) {
-      this.content.screens = this.content.screens || [];
-      _.each(screens, screen => {
-        if (this.content && this.content.id === screen.content_id) {
-          this.content.screens.push(screen);
-        }
-      });
+      const content = this.content;
+      const filteredScreens = _.filter(screens, { content_id: content.id });
+      const currentScreens = content.screens || [];
+      content.screens = _.uniqBy([...currentScreens, ...filteredScreens], 'id');
       this.calculateDimensions();
+      this.loadedScreensComplete.emit(true);
     }
   }
 
