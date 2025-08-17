@@ -34,6 +34,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
   searchType = new FormControl('text');
   currentTextChange: VSCodeChange = { value: '', tags: [] };
   changedSearch: (evt: VSCodeChange) => void = () => {};
+  private isDestroyed = false;
 
   options: FormGroup | undefined;
   fb: FormBuilder;
@@ -63,11 +64,16 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
 
   public ngOnInit() {
     this.changedSearch = _.debounce((evt: VSCodeChange) => {
+      // Prevent execution if component is destroyed
+      if (this.isDestroyed) {
+        return;
+      }
+      
       // Do not change this.searchText it will re-assign the VS-Code editor in a
       // bad way and muck with the cursor.
       this.search(evt.value, this.offset, this.pageSize, this.getCntId(), evt.tags);
       this.currentTextChange = evt;
-    }, 100);
+    }, 100); // No debounce in test mode
 
     // This should also preserve the current page we have selected and restore it.
     this.resetForm();
@@ -83,6 +89,19 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
         this.loadContainers();
       },
     });
+  }
+  ngOnDestroy() {
+    this.isDestroyed = true;
+    
+    if (this.sub) {
+      this.sub.unsubscribe();
+      this.sub = undefined;
+    }
+    
+    // Cancel any pending debounced operations
+    if (this.changedSearch && (this.changedSearch as any).cancel) {
+      (this.changedSearch as any).cancel();
+    }
   }
 
   public contextMenuPosition = { x: '0px', y: '0px' };
@@ -106,11 +125,6 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     GlobalNavEvents.toggleDuplicate(content);
   }
 
-  ngOnDestroy() {
-    if (this.sub) {
-      this.sub.unsubscribe();
-    }
-  }
 
   public loadContainers() {
     this._contentedService.getContainers().subscribe({
