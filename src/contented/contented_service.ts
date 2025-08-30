@@ -19,8 +19,8 @@ import z from 'zod';
 export const DirectionEnum = z.enum(['asc', 'desc']);
 export const SearchSchema = z.object({
   search: z.string().optional(), // Searches inside description
-  offset: z.number().optional().default(0),
-  limit: z.number().optional(),
+  page: z.number().optional().default(1),
+  per_page: z.number().optional(),
   tags: z.string().array().optional(),
   order: DirectionEnum.optional(),
 });
@@ -60,8 +60,8 @@ export const TaskEnum = z.enum([TaskTypes.ENCODING, ...Object.values(TaskTypes)]
 
 export const TaskSearchSchema = z.object({
   id: z.string().optional().nullable(), // The task.ID
-  offset: z.number().optional().default(0),
-  limit: z.number().optional(),
+  page: z.number().optional().default(1),
+  per_page: z.number().optional(),
   contentID: z.string().optional(),
   containerID: z.string().optional(),
   search: z.string().optional(),
@@ -174,7 +174,8 @@ export class ContentedService {
         ++idx;
 
         let delayP = new Promise<Container>((yupResolve, nopeReject) => {
-          return this.getFullContainer(cnt.id, offset, limit).subscribe({
+          const page = Math.floor(offset / limit) + 1;
+          return this.getFullContainer(cnt.id, page, limit).subscribe({
             next: res => {
               _.delay(() => {
                 // Hmmm, buildImgs is strange and should be fixed up
@@ -216,14 +217,15 @@ export class ContentedService {
   }
 
   public loadMoreInDir(cnt: Container, limit?: number): Observable<PageResponse<Content>> {
-    return this.getFullContainer(cnt.id, cnt.count, limit);
+    const page = Math.floor(cnt.count / (limit || this.LIMIT)) + 1;
+    return this.getFullContainer(cnt.id, page, limit);
   }
 
-  public getFullContainer(cId: number, offset: number = 0, limit?: number): Observable<PageResponse<Content>> {
+  public getFullContainer(cId: number, page: number = 1, perPage?: number): Observable<PageResponse<Content>> {
     let url = ApiDef.contented.containerContent.replace('{cId}', cId.toString());
     return this.http
       .get(url, {
-        params: this.getPaginationParams(offset, limit),
+        params: this.getPaginationParams(page, perPage),
         headers: this.options?.headers,
       })
       .pipe(
@@ -238,11 +240,11 @@ export class ContentedService {
       );
   }
 
-  public getPaginationParams(offset: number = 0, limit: number = 0) {
-    if (limit <= 0 || limit === undefined) {
-      limit = this.LIMIT;
+  public getPaginationParams(page: number = 1, perPage?: number) {
+    if (!perPage || perPage <= 0) {
+      perPage = this.LIMIT;
     }
-    let params = new HttpParams().set('page', '' + (Math.floor(offset / limit) + 1)).set('per_page', '' + limit);
+    let params = new HttpParams().set('page', '' + page).set('per_page', '' + perPage);
     return params;
   }
 
@@ -253,7 +255,7 @@ export class ContentedService {
     }
     console.log('Initial load for container', cnt.id);
     cnt.loadState = LoadStates.Loading;
-    return this.getFullContainer(cnt.id, 0, this.LIMIT).pipe(
+    return this.getFullContainer(cnt.id, 1, this.LIMIT).pipe(
       map((res: PageResponse<Content>) => {
         if (res.results) {
           console.log('Add contents', res.results.length);
@@ -268,8 +270,8 @@ export class ContentedService {
     let url = ApiDef.contented.searchContainers;
     let params = new HttpParams();
     if (cntQ.search) params = params.set('search', cntQ.search);
-    if (cntQ.offset) params = params.set('offset', cntQ.offset.toString());
-    if (cntQ.limit) params = params.set('limit', cntQ.limit.toString());
+    if (cntQ.page) params = params.set('page', cntQ.page.toString());
+    if (cntQ.per_page) params = params.set('per_page', cntQ.per_page.toString());
     if (cntQ.name) params = params.set('name', cntQ.name);
     if (cntQ.tags && cntQ.tags.length > 0) {
       params = params.set('tags', cntQ.tags.join(','));
@@ -293,8 +295,8 @@ export class ContentedService {
     let url = ApiDef.contented.searchContents;
     let params = new HttpParams();
     if (cs.search) params = params.set('search', cs.search);
-    if (cs.offset) params = params.set('offset', cs.offset.toString());
-    if (cs.limit) params = params.set('limit', cs.limit.toString());
+    if (cs.page) params = params.set('page', cs.page.toString());
+    if (cs.per_page) params = params.set('per_page', cs.per_page.toString());
     if (cs.cId) params = params.set('cId', cs.cId);
     if (cs.contentType) params = params.set('contentType', cs.contentType);
     if (cs.text) params = params.set('text', cs.text);
@@ -506,7 +508,7 @@ export class ContentedService {
   // TODO: Update this to a query object
   getTasks(query: TaskSearch): Observable<PageResponse<TaskRequest>> {
     // TODO: make a toParam() ?
-    let params = this.getPaginationParams(query.offset, query.limit);
+    let params = this.getPaginationParams(query.page, query.per_page);
     if (query.id) {
       params = params.set('id', query.id);
     }

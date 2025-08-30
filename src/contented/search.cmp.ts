@@ -156,12 +156,12 @@ export class SearchCmp implements OnInit {
 
   pageEvt(evt: PageEvent) {
     console.log('Event', evt, this.searchText);
-    let offset = evt.pageIndex * evt.pageSize;
-    let limit = evt.pageSize;
-    this.search(this.currentTextChange.value, offset, limit, this.currentTextChange.tags);
+    let page = evt.pageIndex + 1; // Angular Material uses 0-based index, we use 1-based
+    let perPage = evt.pageSize;
+    this.search(this.currentTextChange.value, page, perPage, this.currentTextChange.tags);
   }
 
-  public search(text: string, offset: number = 0, limit: number = 50, tags: Array<string> = []) {
+  public search(text: string, page: number = 1, perPage: number = 50, tags: Array<string> = []) {
     console.log('Get the information from the input and search on it', text);
     // TODO: Wrap the content into a fake container
     this.content = [];
@@ -177,8 +177,8 @@ export class SearchCmp implements OnInit {
     // TODO: Make the tags optional
     const cs = ContentSearchSchema.parse({
       text,
-      offset,
-      limit,
+      page,
+      per_page: perPage,
       tags,
       ...(this.duplicateFilterState.value ? { duplicate: true } : {}),
     });

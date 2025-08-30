@@ -46,7 +46,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
 
   // TODO: Make this a saner calculation
   public total = 0;
-  public offset = 0; // Tracking where we are in the position
+  public page = 1; // Tracking current page
   public pageSize = MAX_VISIBLE;
   public loading: boolean = false;
   public sub: Subscription | undefined; // Listening for GlobalNavEvents
@@ -71,9 +71,9 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
 
       // Do not change this.searchText it will re-assign the VS-Code editor in a
       // bad way and muck with the cursor.
-      this.search(evt.value, this.offset, this.pageSize, this.getCntId(), evt.tags);
+      this.search(evt.value, this.page, this.pageSize, this.getCntId(), evt.tags);
       this.currentTextChange = evt;
-    }, 100); // No debounce in test mode
+    }, 250); // No debounce in test mode
 
     // This should also preserve the current page we have selected and restore it.
     this.resetForm();
@@ -174,12 +174,11 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     if (!cnt) {
       return;
     }
-    let offset = this.offset;
     if (cnt?.id !== this.selectedContainer?.id) {
-      this.offset = 0;
+      this.page = 1;
     }
     this.selectedContainer = cnt;
-    this.search(this.currentTextChange.value, this.offset, this.pageSize, this.getCntId());
+    this.search(this.currentTextChange.value, this.page, this.pageSize, this.getCntId());
   }
 
   public next() {
@@ -191,8 +190,8 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
         if (m.id != this.selectedContent.id) {
           GlobalNavEvents.selectContent(m, new Container({ id: m.container_id }));
         }
-      } else if (this.offset + this.pageSize < this.total) {
-        this.search(this.currentTextChange.value, this.offset + this.pageSize, this.pageSize, this.getCntId());
+      } else if (this.page * this.pageSize < this.total) {
+        this.search(this.currentTextChange.value, this.page + 1, this.pageSize, this.getCntId());
       }
     }
   }
@@ -205,8 +204,8 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
         if (m.id != this.selectedContent.id) {
           GlobalNavEvents.selectContent(m, new Container({ id: m.container_id }));
         }
-      } else if (this.offset - this.pageSize >= 0) {
-        this.search(this.currentTextChange.value, this.offset - this.pageSize, this.pageSize, this.getCntId());
+      } else if (this.page - 1 >= 1) {
+        this.search(this.currentTextChange.value, this.page - 1, this.pageSize, this.getCntId());
       }
     }
   }
@@ -253,7 +252,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
         next: formData => {
           console.log('Form data changing');
           // If the text changes do we reset the search offset etc.
-          this.search(this.currentTextChange.value, 0, this.pageSize, this.getCntId(), this.currentTextChange.tags);
+          this.search(this.currentTextChange.value, 1, this.pageSize, this.getCntId(), this.currentTextChange.tags);
         },
         error: error => {
           GlobalBroadcast.error('Failed to search', error);
@@ -267,9 +266,9 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
 
   pageEvt(evt: PageEvent) {
     console.log('Event', evt, this.currentTextChange.value);
-    let offset = evt.pageIndex * evt.pageSize;
-    let limit = evt.pageSize;
-    this.search(this.currentTextChange.value, offset, limit, this.getCntId());
+    let page = evt.pageIndex + 1; // Angular Material uses 0-based index, we use 1-based
+    let perPage = evt.pageSize;
+    this.search(this.currentTextChange.value, page, perPage, this.getCntId());
   }
 
   public getCntId(): string {
@@ -279,8 +278,8 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
   // TODO: Add in optional filter params like the container (filter by container in search?)
   public search(
     text: string = '',
-    offset: number = 0,
-    limit: number = MAX_VISIBLE,
+    page: number = 1,
+    perPage: number = MAX_VISIBLE,
     cntId: string = '',
     tags: Array<string> = []
   ) {
@@ -291,8 +290,8 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     const cs = ContentSearchSchema.parse({
       text,
       cId: cntId,
-      offset,
-      limit,
+      page,
+      per_page: perPage,
       contentType: 'video',
       tags,
     });
@@ -305,7 +304,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
           let content = res.results;
           let total = res.total || 0;
 
-          this.offset = offset;
+          this.page = page;
           this.content = content;
           this.total = total;
           this.playNiceScreenLoader(content);

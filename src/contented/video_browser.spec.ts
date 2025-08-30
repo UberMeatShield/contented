@@ -80,7 +80,7 @@ describe('TestingVideoBrowserCmp', () => {
     harness.detectChanges();
 
     MockData.handleContainerLoad(httpMock);
-    comp.search('Cthulhu', 0, 50, '1');
+    comp.search('Cthulhu', 1, 50, '1');
 
     let req = httpMock.expectOne(req => req.url === ApiDef.contented.searchContents, 'Failed to find search');
     let searchResults = MockData.getVideos();
@@ -107,7 +107,7 @@ describe('TestingVideoBrowserCmp', () => {
     harness.detectChanges();
     MockData.handleContainerLoad(httpMock);
 
-    comp.search('Cthulhu', 0, 50, 'A');
+    comp.search('Cthulhu', 1, 50, 'A');
     harness.detectChanges();
     let req = httpMock.expectOne(req => req.url === ApiDef.contented.searchContents);
     req.flush(vRes);

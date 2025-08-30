@@ -153,6 +153,17 @@ func TestMemoryAPIBasics(t *testing.T) {
 	}
 }
 
+func TestSearchVideoContents(t *testing.T) {
+	_, _, router := InitFakeRouterApp(false)
+	src := "test_list"
+	validate := ContentsResponse{}
+	code, err := GetJson("/api/search/contents?limit=1&contentType=video", "", &validate, router)
+	assert.Equal(t, http.StatusOK, code)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(validate.Results), "It should have one item")
+	assert.Equal(t, src, validate.Results[0].Src)
+}
+
 func TestContentsResourceListDB(t *testing.T) {
 	_, _, router := InitFakeRouterApp(true)
 	src := "test_list"

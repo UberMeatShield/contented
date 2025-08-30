@@ -64,9 +64,9 @@ describe('TestingContentedService', () => {
   });
 
   it('Will be able to get some pagination params correct', () => {
-    let params = service.getPaginationParams(1001, 100);
+    let params = service.getPaginationParams(11, 100);
     expect(params.get('page')).toEqual('11', 'We should be on page 11');
-    expect(params.get('per_page')).toEqual('100', 'The limits should not change');
+    expect(params.get('per_page')).toEqual('100', 'The per_page should not change');
   });
 
   it('Can load up a lot of data and get the offset right', fakeAsync(() => {
