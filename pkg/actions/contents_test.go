@@ -19,10 +19,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func CreateContentNamed(src string, containerID *int64, t *testing.T, router *gin.Engine) models.Content {
+func CreateContentNamed(src string, containerID *int64, t *testing.T, router *gin.Engine, contentType string) models.Content {
+	if contentType == "" {
+		contentType = "test"
+	}
 	mc := &models.Content{
 		Src:         src,
-		ContentType: "test",
+		ContentType: contentType,
 		Preview:     "",
 		ContainerID: containerID,
 		NoFile:      true,
@@ -70,14 +73,14 @@ func TestContentSubQueryDB(t *testing.T) {
 	defer test_common.CleanupContainer(&c2)
 	defer test_common.CleanupContainer(&c3)
 
-	CreateContentNamed("a", &c1.ID, t, router)
-	CreateContentNamed("b", &c1.ID, t, router)
-	CreateContentNamed("c", &c2.ID, t, router)
-	CreateContentNamed("donut", &c2.ID, t, router)
-	CreateContentNamed("e", &c2.ID, t, router)
+	CreateContentNamed("a", &c1.ID, t, router, "test")
+	CreateContentNamed("b", &c1.ID, t, router, "test")
+	CreateContentNamed("c", &c2.ID, t, router, "test")
+	CreateContentNamed("donut", &c2.ID, t, router, "test")
+	CreateContentNamed("e", &c2.ID, t, router, "test")
 
 	// TODO: Update this to work with the memory setup too (no good way to update the Hidden)
-	hiddenDonut := CreateContentNamed("donut_2_search_should_fail", &c3.ID, t, router)
+	hiddenDonut := CreateContentNamed("donut_2_search_should_fail", &c3.ID, t, router, "video")
 	hiddenDonut.Hidden = true
 	upRes := db.Save(hiddenDonut)
 	assert.NoError(t, upRes.Error, "We should be able to update the hidden param")
@@ -118,7 +121,7 @@ func TestManagerPreviewDB(t *testing.T) {
 
 	for _, mc := range contents {
 
-		content := CreateContentNamed(mc.Src, &cnt.ID, t, router)
+		content := CreateContentNamed(mc.Src, &cnt.ID, t, router, "test")
 		assert.NotZero(t, content.ID, fmt.Sprintf("Failed creating should create item %s", mc.Src))
 
 		pCode, _, pErr := ValidateContentPreview(content.ID, router)
@@ -153,21 +156,36 @@ func TestMemoryAPIBasics(t *testing.T) {
 	}
 }
 
-func TestSearchVideoContents(t *testing.T) {
+func TestSearchVideoContentLimit(t *testing.T) {
 	_, _, router := InitFakeRouterApp(false)
-	src := "test_list"
 	validate := ContentsResponse{}
-	code, err := GetJson("/api/search/contents?limit=1&contentType=video", "", &validate, router)
+	code, err := GetJson("/api/search/contents?per_page=1&contentType=video", "", &validate, router)
 	assert.Equal(t, http.StatusOK, code)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(validate.Results), "It should have one item")
-	assert.Equal(t, src, validate.Results[0].Src)
+}
+
+func TestSearchVideoContentLimitDB(t *testing.T) {
+	_, _, router := InitFakeRouterApp(true)
+	validate := ContentsResponse{}
+
+	// Create 3 video files
+	cnt := CreateNamedContainer("test_video_limit", t, router)
+	CreateContentNamed("video1.mp4", &cnt.ID, t, router, "video")
+	CreateContentNamed("video2.mp4", &cnt.ID, t, router, "video")
+	CreateContentNamed("video3.mp4", &cnt.ID, t, router, "video")
+	defer test_common.CleanupContainer(&cnt)
+
+	code, err := GetJson("/api/search/contents?per_page=2&contentType=video", "", &validate, router)
+	assert.Equal(t, http.StatusOK, code)
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(validate.Results), "It should have one item")
 }
 
 func TestContentsResourceListDB(t *testing.T) {
 	_, _, router := InitFakeRouterApp(true)
 	src := "test_list"
-	CreateContentNamed(src, nil, t, router)
+	CreateContentNamed(src, nil, t, router, "test")
 	validate := ContentsResponse{}
 	code, err := GetJson("/api/contents", "", &validate, router)
 	assert.Equal(t, http.StatusOK, code)
@@ -180,7 +198,7 @@ func TestContentsResourceListDB(t *testing.T) {
 func TestContentsResourceShow(t *testing.T) {
 	_, _, router := InitFakeRouterApp(true)
 	src := "test_query"
-	content := CreateContentNamed(src, nil, t, router)
+	content := CreateContentNamed(src, nil, t, router, "test")
 
 	url := fmt.Sprintf("/api/contents/%d", content.ID)
 	validate := models.Content{}
@@ -192,13 +210,13 @@ func TestContentsResourceShow(t *testing.T) {
 
 func TestContentsResourceCreateDb(t *testing.T) {
 	_, _, router := InitFakeRouterApp(true)
-	mc := CreateContentNamed("test_create", nil, t, router)
+	mc := CreateContentNamed("test_create", nil, t, router, "test")
 	assert.Greater(t, mc.ID, int64(0))
 }
 
 func TestContentsResourceCreateMemory(t *testing.T) {
 	_, _, router := InitFakeRouterApp(false)
-	mc := CreateContentNamed("test_create", nil, t, router)
+	mc := CreateContentNamed("test_create", nil, t, router, "test")
 	assert.Greater(t, mc.ID, int64(0))
 }
 
@@ -213,7 +231,7 @@ func TestContentsResourceUpdateMemory(t *testing.T) {
 }
 
 func ValidateUpdateContent(t *testing.T, router *gin.Engine) {
-	mc := CreateContentNamed("test_update", nil, t, router)
+	mc := CreateContentNamed("test_update", nil, t, router, "test")
 	tag := CreateTag("TAG", t, router)
 
 	invalid := models.Tag{ID: "Notinthesystem"}
@@ -245,7 +263,7 @@ func TestContentsResourceDestroyMemory(t *testing.T) {
 }
 
 func ValidateDestroyContent(t *testing.T, router *gin.Engine) {
-	mc := CreateContentNamed("NukeTest", nil, t, router)
+	mc := CreateContentNamed("NukeTest", nil, t, router, "test")
 	url := fmt.Sprintf("/api/contents/%d", mc.ID)
 	code, err := DeleteJson(url, router)
 	assert.Equal(t, http.StatusOK, code, "It should delete")
