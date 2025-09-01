@@ -250,7 +250,7 @@ export class ContentBrowserCmp implements OnInit, OnDestroy {
   public fullLoadDir(cnt: Container) {
     this._contentedService.fullLoadDir(cnt).subscribe({
       next: (loadedCnt: Container) => {
-        console.log('What the heck is this doing?', loadedCnt);
+        console.log('Loading all content in directory', loadedCnt.id);
       },
       error: err => {
         console.error('Failed to load', err);

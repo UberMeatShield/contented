@@ -111,8 +111,8 @@ export class TaskRequestCmp implements OnInit {
       contentID: contentID.toString(),
       status,
       search,
-      offset: 0,
-      limit: this.pageSize,
+      page: 1,
+      per_page: this.pageSize,
     };
 
     console.log('Loading tasks', query, notComplete);

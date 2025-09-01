@@ -13,4 +13,6 @@ Object.defineProperty(window, 'getComputedStyle', {
   },
 });
 
+(window as any).VITEST = true;
+
 getTestBed().initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());

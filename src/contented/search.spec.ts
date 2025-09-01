@@ -89,7 +89,7 @@ describe('TestingSearchCmp', () => {
     harness.detectChanges();
     expect(comp.searchText).withContext('It should default via route params').toBe('Cthulhu');
 
-    comp.search(comp.searchText, 0, 50, undefined);
+    comp.search(comp.searchText, 1, 50, undefined);
     let sr = MockData.getSearch();
     expect(sr.results.length).withContext('We need some search results.').toBeGreaterThan(0);
 

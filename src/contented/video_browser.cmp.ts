@@ -14,6 +14,8 @@ import { PageEvent as PageEvent } from '@angular/material/paginator';
 import * as _ from 'lodash';
 import { MatMenuTrigger } from '@angular/material/menu';
 
+const MAX_VISIBLE = 50;
+
 @Component({
   selector: 'video-browser-cmp',
   templateUrl: './video_browser.ng.html',
@@ -32,22 +34,24 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
   searchType = new FormControl('text');
   currentTextChange: VSCodeChange = { value: '', tags: [] };
   changedSearch: (evt: VSCodeChange) => void = () => {};
+  private isDestroyed = false;
 
   options: FormGroup | undefined;
   fb: FormBuilder;
 
   public selectedContent: Content | undefined; // For keeping track of where we are in the page
   public selectedContainer: Container | undefined; // For filtering
-  public content: Array<Content> = [];
+  public content: Array<Content> | undefined;
   public containers: Array<Container> = [];
 
   // TODO: Make this a saner calculation
-  public maxVisible = 3; // How many results show vertically
   public total = 0;
-  public offset = 0; // Tracking where we are in the position
-  public pageSize = 50;
+  public page = 1; // Tracking current page
+  public pageSize = MAX_VISIBLE;
   public loading: boolean = false;
   public sub: Subscription | undefined; // Listening for GlobalNavEvents
+
+  public screenLoadQueue: Array<Content> = [];
 
   constructor(
     public _contentedService: ContentedService,
@@ -60,24 +64,44 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
 
   public ngOnInit() {
     this.changedSearch = _.debounce((evt: VSCodeChange) => {
+      // Prevent execution if component is destroyed
+      if (this.isDestroyed) {
+        return;
+      }
+
       // Do not change this.searchText it will re-assign the VS-Code editor in a
       // bad way and muck with the cursor.
-      this.search(evt.value, 0, 50, this.getCntId(), evt.tags);
+      this.search(evt.value, this.page, this.pageSize, this.getCntId(), evt.tags);
       this.currentTextChange = evt;
-    }, 250);
+    }, 250); // No debounce in test mode
 
     // This should also preserve the current page we have selected and restore it.
     this.resetForm();
     this.setupEvtListener();
+
     this.route.queryParams.pipe().subscribe({
       next: (res: Params) => {
+        console.log('Query params', res);
         this.searchText = res['searchText'] || '';
 
         // Add in a param for container_id ?
-        // this.search(this.searchText, this.offset, this.pageSize, this.getCntId());
+        this.changedSearch({ value: this.searchText, tags: [] });
         this.loadContainers();
       },
     });
+  }
+  ngOnDestroy() {
+    this.isDestroyed = true;
+
+    if (this.sub) {
+      this.sub.unsubscribe();
+      this.sub = undefined;
+    }
+
+    // Cancel any pending debounced operations
+    if (this.changedSearch && (this.changedSearch as any).cancel) {
+      (this.changedSearch as any).cancel();
+    }
   }
 
   public contextMenuPosition = { x: '0px', y: '0px' };
@@ -99,12 +123,6 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
 
   public toggleDuplicate(content: Content) {
     GlobalNavEvents.toggleDuplicate(content);
-  }
-
-  ngOnDestroy() {
-    if (this.sub) {
-      this.sub.unsubscribe();
-    }
   }
 
   public loadContainers() {
@@ -156,12 +174,11 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     if (!cnt) {
       return;
     }
-    let offset = this.offset;
     if (cnt?.id !== this.selectedContainer?.id) {
-      this.offset = 0;
+      this.page = 1;
     }
     this.selectedContainer = cnt;
-    this.search(this.currentTextChange.value, this.offset, this.pageSize, this.getCntId());
+    this.search(this.currentTextChange.value, this.page, this.pageSize, this.getCntId());
   }
 
   public next() {
@@ -173,8 +190,8 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
         if (m.id != this.selectedContent.id) {
           GlobalNavEvents.selectContent(m, new Container({ id: m.container_id }));
         }
-      } else if (this.offset + this.pageSize < this.total) {
-        this.search(this.currentTextChange.value, this.offset + this.pageSize, this.pageSize, this.getCntId());
+      } else if (this.page * this.pageSize < this.total) {
+        this.search(this.currentTextChange.value, this.page + 1, this.pageSize, this.getCntId());
       }
     }
   }
@@ -187,8 +204,8 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
         if (m.id != this.selectedContent.id) {
           GlobalNavEvents.selectContent(m, new Container({ id: m.container_id }));
         }
-      } else if (this.offset - this.pageSize >= 0) {
-        this.search(this.currentTextChange.value, this.offset - this.pageSize, this.pageSize, this.getCntId());
+      } else if (this.page - 1 >= 1) {
+        this.search(this.currentTextChange.value, this.page - 1, this.pageSize, this.getCntId());
       }
     }
   }
@@ -235,7 +252,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
         next: formData => {
           console.log('Form data changing');
           // If the text changes do we reset the search offset etc.
-          this.search(this.currentTextChange.value, 0, this.pageSize, this.getCntId(), this.currentTextChange.tags);
+          this.search(this.currentTextChange.value, 1, this.pageSize, this.getCntId(), this.currentTextChange.tags);
         },
         error: error => {
           GlobalBroadcast.error('Failed to search', error);
@@ -249,9 +266,9 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
 
   pageEvt(evt: PageEvent) {
     console.log('Event', evt, this.currentTextChange.value);
-    let offset = evt.pageIndex * evt.pageSize;
-    let limit = evt.pageSize;
-    this.search(this.currentTextChange.value, offset, limit, this.getCntId());
+    let page = evt.pageIndex + 1; // Angular Material uses 0-based index, we use 1-based
+    let perPage = evt.pageSize;
+    this.search(this.currentTextChange.value, page, perPage, this.getCntId());
   }
 
   public getCntId(): string {
@@ -261,22 +278,20 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
   // TODO: Add in optional filter params like the container (filter by container in search?)
   public search(
     text: string = '',
-    offset: number = 0,
-    limit: number = 50,
+    page: number = 1,
+    perPage: number = MAX_VISIBLE,
     cntId: string = '',
     tags: Array<string> = []
   ) {
-    console.log('Get the information from the input and search on it', text, offset, limit, cntId);
-
     this.selectedContent = undefined;
-    this.content = [];
+    this.content = undefined;
     this.loading = true;
 
     const cs = ContentSearchSchema.parse({
       text,
       cId: cntId,
-      offset,
-      limit,
+      page,
+      per_page: perPage,
       contentType: 'video',
       tags,
     });
@@ -289,9 +304,10 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
           let content = res.results;
           let total = res.total || 0;
 
-          this.offset = offset;
+          this.page = page;
           this.content = content;
           this.total = total;
+          this.playNiceScreenLoader(content);
 
           if (content && content.length > 0) {
             let mc = content[0];
@@ -302,6 +318,36 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
           GlobalBroadcast.error('Failed to search for video content.', err);
         },
       });
+  }
+
+  // I need to make a screen nice loader so it loads the current screens and then one by one
+  // loads additional screen information. The first 2-3 in the page can load but then the rest
+  // should kick off a bit later.
+  public allowLoad: { [key: string]: boolean } = {};
+  public allowLoadedCount = 5;
+  public playNiceScreenLoader(content: Content[]) {
+    if (content.length === 0) {
+      return;
+    }
+    // Grab up to 3 + number loaded and set them to allow loading
+    for (let i = 0; i < this.allowLoadedCount && i < content.length; ++i) {
+      this.allowLoad[content[i].id] = true;
+    }
+  }
+
+  public onLoadedScreensComplete(content: Content) {
+    // This content has loaded the screens
+    this.allowLoadedCount++;
+
+    // This should probably be in a debounce / delay but good enough for 10 or so per page
+    // It was real sketchy when it was 50 x 12+ screens
+    _.delay(() => {
+      this.playNiceScreenLoader(this.content || []);
+    }, 1500);
+  }
+
+  public shouldLoadScreens(content: Content): boolean {
+    return this.allowLoad[content.id] || false;
   }
 
   // This will have to be updated to actually work

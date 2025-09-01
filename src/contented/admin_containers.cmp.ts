@@ -29,7 +29,7 @@ export class AdminContainersCmp implements OnInit {
   searchText: string = '';
 
   public total = 0;
-  public offset = 0; // Tracking where we are in the position
+  public page = 1; // Tracking current page
   public pageSize = 50;
 
   constructor(
@@ -47,20 +47,20 @@ export class AdminContainersCmp implements OnInit {
       // Do not change this.searchText it will re-assign the VS-Code editor in a
       // bad way and muck with the cursor.
       if (this.currentTextChange.value != evt.value) {
-        this.search(evt.value, this.offset, this.pageSize, evt.tags);
+        this.search(evt.value, this.page, this.pageSize, evt.tags);
       }
       this.currentTextChange = evt;
     }, 250);
 
-    this.search(this.currentTextChange.value, this.offset, this.pageSize, this.currentTextChange.tags);
+    this.search(this.currentTextChange.value, this.page, this.pageSize, this.currentTextChange.tags);
   }
 
-  search(search: string, offset: number, limit: number, tags: Array<string> = []) {
+  search(search: string, page: number, perPage: number, tags: Array<string> = []) {
     console.log('SEARCH');
     const query = ContainerSearchSchema.parse({
       search,
-      offset,
-      limit,
+      page,
+      per_page: perPage,
       tags,
     });
     this.loading = true;
@@ -84,9 +84,9 @@ export class AdminContainersCmp implements OnInit {
 
   pageEvt(evt: PageEvent) {
     console.log('Event', evt, this.currentTextChange.value);
-    let offset = evt.pageIndex * evt.pageSize;
-    let limit = evt.pageSize;
-    this.search(this.currentTextChange.value, offset, limit, this.currentTextChange.tags);
+    let page = evt.pageIndex + 1; // Angular Material uses 0-based index, we use 1-based
+    let perPage = evt.pageSize;
+    this.search(this.currentTextChange.value, page, perPage, this.currentTextChange.tags);
   }
 
   public resetForm(setupFilterEvents: boolean = false) {

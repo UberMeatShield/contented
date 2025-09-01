@@ -1,6 +1,5 @@
 import { fakeAsync, getTestBed, tick, ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { HttpParams } from '@angular/common/http';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
@@ -35,7 +34,7 @@ describe('TestingVideoBrowserCmp', () => {
   let harness: RouterTestingHarness;
 
   beforeEach(async () => {
-    TestBed.configureTestingModule({
+    await TestBed.configureTestingModule({
       imports: [FormsModule, ContentedModule, HttpClientTestingModule, NoopAnimationsModule],
       providers: [ContentedService, provideRouter([{ path: 'ui/video/', component: VideoBrowserCmp }])],
       teardown: { destroyAfterEach: true },
@@ -45,6 +44,7 @@ describe('TestingVideoBrowserCmp', () => {
     service = TestBed.inject(ContentedService);
     httpMock = TestBed.inject(HttpTestingController);
     loc = TestBed.inject(Location);
+    router = TestBed.inject(Router);
   });
 
   afterEach(() => {
@@ -53,7 +53,6 @@ describe('TestingVideoBrowserCmp', () => {
 
   it('Should load containers', () => {
     const containerResult = MockData.getContainers();
-
     containerResult.results.forEach(c => {
       const container = ContainerSchema.safeParse(c);
       expect(container.success)
@@ -81,7 +80,7 @@ describe('TestingVideoBrowserCmp', () => {
     harness.detectChanges();
 
     MockData.handleContainerLoad(httpMock);
-    comp.search('Cthulhu', 0, 50, '1');
+    comp.search('Cthulhu', 1, 50, '1');
 
     let req = httpMock.expectOne(req => req.url === ApiDef.contented.searchContents, 'Failed to find search');
     let searchResults = MockData.getVideos();
@@ -108,7 +107,7 @@ describe('TestingVideoBrowserCmp', () => {
     harness.detectChanges();
     MockData.handleContainerLoad(httpMock);
 
-    comp.search('Cthulhu', 0, 50, 'A');
+    comp.search('Cthulhu', 1, 50, 'A');
     harness.detectChanges();
     let req = httpMock.expectOne(req => req.url === ApiDef.contented.searchContents);
     req.flush(vRes);
