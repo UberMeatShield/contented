@@ -277,7 +277,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
 
   // TODO: Add in optional filter params like the container (filter by container in search?)
   public search(
-    text: string = '',
+    search: string = '',
     page: number = 1,
     perPage: number = MAX_VISIBLE,
     cntId: string = '',
@@ -288,7 +288,7 @@ export class VideoBrowserCmp implements OnInit, OnDestroy {
     this.loading = true;
 
     const cs = ContentSearchSchema.parse({
-      text,
+      search,
       cId: cntId,
       page,
       per_page: perPage,

@@ -41,7 +41,7 @@ export class VideoPreviewCmp implements OnInit {
   @Input() maxVisible = 2;
   @Input() inlineView = false;
 
-  @Output() loadedScreensComplete: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Output() loadedScreensComplete: EventEmitter<Content> = new EventEmitter<Content>();
 
   // TODO: Make this a saner calculation
   public previewWidth = 480;
@@ -57,7 +57,7 @@ export class VideoPreviewCmp implements OnInit {
       const currentScreens = content.screens || [];
       content.screens = _.uniqBy([...currentScreens, ...filteredScreens], 'id');
       this.calculateDimensions();
-      this.loadedScreensComplete.emit(true);
+      this.loadedScreensComplete.emit(content);
     }
   }
 
@@ -144,8 +144,9 @@ export class ScreenDialog implements AfterViewInit {
       let el = this.screenContent.nativeElement;
       if (el) {
         console.log('Element', el, el.offsetWidth, el.offsetHeight);
-        this.forceHeight = el.offsetHeight - 100;
-        this.forceWidth = el.offsetWidth - 100;
+        // Use most of the available space, leaving room for navigation buttons
+        this.forceHeight = el.offsetHeight - 60;
+        this.forceWidth = el.offsetWidth - 60;
       }
       this.sizeCalculated = true;
     }, 100);

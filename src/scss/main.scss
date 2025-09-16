@@ -246,8 +246,101 @@ body {
 }                                        
                                          
 .search-dialog {                        
-    min-height: calc(100vh - 100px);     
     width: 100%;                         
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1;
+}
+
+.screen-dialog {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    gap: 10px;
+    flex: 1;
+    min-height: 0;
+}
+
+.screen-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 0;
+}
+
+.screen-img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+}
+
+// Ensure images in contented-view also scale properly
+.contented-view img,
+.contented-view video {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+}
+
+.nav-button {
+    flex-shrink: 0;
+    min-width: 48px;
+    height: 48px;
+}
+
+// Fix Angular 19 dialog container layout
+.mat-dialog-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-height: 90vh;
+}
+
+// Ensure dialog content takes up most of the space
+.mat-mdc-dialog-content {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: auto;
+    padding: 16px 24px;
+}
+
+// Ensure dialog title doesn't interfere with content
+.mat-mdc-dialog-title {
+    margin-bottom: 0;
+    padding: 16px 24px 8px 24px;
+    flex-shrink: 0;
+}
+
+// Ensure dialog actions stay at bottom
+.mat-mdc-dialog-actions {
+    flex-shrink: 0;
+    margin-top: auto;
+    padding: 8px 24px 16px 24px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+// Content viewer container for search dialog
+.content-viewer-container {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }                                        
                                          
 .current-item {                          
