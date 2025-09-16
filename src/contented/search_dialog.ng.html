@@ -1,5 +1,6 @@
+<h2 mat-dialog-title>{{contentContainer.src || 'Content Viewer'}}</h2>
 <mat-dialog-content #SearchContent class="search-dialog">
-  <div *ngIf="sizeCalculated">
+  <div *ngIf="sizeCalculated" class="content-viewer-container">
     <contented-view [content]="contentContainer"
         [visible]="true"
         [forceWidth]="forceWidth"

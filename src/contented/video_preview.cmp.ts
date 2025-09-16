@@ -14,7 +14,7 @@ import {
 import { ContentedService } from './contented_service';
 import { Content } from './content';
 import { Screen, ScreenAction, ScreenClickEvent } from './screen';
-import { GlobalNavEvents } from './nav_events';
+import { GlobalNavEvents,  } from './nav_events';
 
 import { PageEvent as PageEvent } from '@angular/material/paginator';
 import { MatDialog as MatDialog, MatDialogConfig as MatDialogConfig, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -41,7 +41,7 @@ export class VideoPreviewCmp implements OnInit {
   @Input() maxVisible = 2;
   @Input() inlineView = false;
 
-  @Output() loadedScreensComplete: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Output() loadedScreensComplete: EventEmitter<Content> = new EventEmitter<Content>();
 
   // TODO: Make this a saner calculation
   public previewWidth = 480;
@@ -53,11 +53,11 @@ export class VideoPreviewCmp implements OnInit {
   public screensLoaded(screens: Screen[]): void {
     if (this.content) {
       const content = this.content;
-      const filteredScreens = _.filter(screens, { content_id: content.id });
+      const filteredScreens = _.filter(screens, {content_id: content.id });
       const currentScreens = content.screens || [];
       content.screens = _.uniqBy([...currentScreens, ...filteredScreens], 'id');
       this.calculateDimensions();
-      this.loadedScreensComplete.emit(true);
+      this.loadedScreensComplete.emit(content);
     }
   }
 
@@ -144,8 +144,9 @@ export class ScreenDialog implements AfterViewInit {
       let el = this.screenContent.nativeElement;
       if (el) {
         console.log('Element', el, el.offsetWidth, el.offsetHeight);
-        this.forceHeight = el.offsetHeight - 100;
-        this.forceWidth = el.offsetWidth - 100;
+        // Use most of the available space, leaving room for navigation buttons
+        this.forceHeight = el.offsetHeight - 60;
+        this.forceWidth = el.offsetWidth - 60;
       }
       this.sizeCalculated = true;
     }, 100);
