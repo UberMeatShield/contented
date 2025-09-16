@@ -161,7 +161,7 @@ export class SearchCmp implements OnInit {
     this.search(this.currentTextChange.value, page, perPage, this.currentTextChange.tags);
   }
 
-  public search(text: string, page: number = 1, perPage: number = 50, tags: Array<string> = []) {
+  public search(search: string, page: number = 1, perPage: number = 50, tags: Array<string> = []) {
     console.log('Get the information from the input and search on it', text);
     // TODO: Wrap the content into a fake container
     this.content = [];
@@ -170,13 +170,13 @@ export class SearchCmp implements OnInit {
     // TODO: Make this a bit less sketchy after I work on the actual data tagging.
     const searchType = this.options.get('searchType')?.value;
     if (searchType === 'tags') {
-      text = '';
+      search = '';
     } else {
       tags = [];
     }
     // TODO: Make the tags optional
     const cs = ContentSearchSchema.parse({
-      text,
+      search,
       page,
       per_page: perPage,
       tags,
