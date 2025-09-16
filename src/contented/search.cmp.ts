@@ -162,7 +162,7 @@ export class SearchCmp implements OnInit {
   }
 
   public search(search: string, page: number = 1, perPage: number = 50, tags: Array<string> = []) {
-    console.log('Get the information from the input and search on it', text);
+    console.log('Get the information from the input and search on it', search);
     // TODO: Wrap the content into a fake container
     this.content = [];
     this.loading = true;
